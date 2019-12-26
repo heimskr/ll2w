@@ -1,5 +1,5 @@
 COMPILER	?= clang++
-CFLAGS		?= -std=c++2a -O0 -g -Wall -Wextra
+CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
 OUTPUT		?= ll2w
 MAIN		:= main
 MODULES		:= Node Graph

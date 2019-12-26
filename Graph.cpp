@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdexcept>
 
 #include "Graph.h"
@@ -15,8 +16,12 @@ namespace LL2W {
 			delete node;
 	}
 
-	bool Graph::has_label(const std::string &label) const {
-		return label_map.find(label) != label_map.end();
+	bool Graph::hasLabel(const std::string &label) const {
+		return labelMap.find(label) != labelMap.end();
+	}
+
+	size_t Graph::size() const {
+		return nodes.size();
 	}
 
 	Node & Graph::operator[](size_t index) const {
@@ -29,10 +34,19 @@ namespace LL2W {
 	}
 
 	Node & Graph::operator[](const std::string &label) const {
-		auto iter = label_map.find(label);
-		if (iter == label_map.end())
+		auto iter = labelMap.find(label);
+		if (iter == labelMap.end())
 			throw std::out_of_range("No node with label \"" + label + "\" found");
 		return *iter->second;
+	}
+
+	Node & Graph::operator+=(const std::string &label) {
+		if (hasLabel(label))
+			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");
+		Node *node = new Node(this, label);
+		labelMap.insert({label, node});
+		nodes.push_back(node);
+		return *node;
 	}
 
 	Node & Graph::rename(const std::string &old_label, const std::string &new_label) {
@@ -48,11 +62,28 @@ namespace LL2W {
 			throw std::invalid_argument("Can't rename a null node");
 		if (node->label == new_label)
 			return *node;
-		if (has_label(new_label))
+		if (hasLabel(new_label))
 			throw std::runtime_error("Can't rename: a node with label \"" + new_label + "\" already exists");
-		label_map.erase(node->label);
+		labelMap.erase(node->label);
 		node->label = new_label;
-		label_map.insert({new_label, node});
+		labelMap.insert({new_label, node});
 		return *node;
+	}
+
+	void Graph::link(const std::string &from, const std::string &to, bool bidirectional) {
+		(*this)[from].link((*this)[to], bidirectional);
+	}
+
+	void Graph::addEdges(const std::string &pairs) {
+		size_t last = 0, space;
+		while (last != std::string::npos) {
+			space = pairs.find(' ', last + 1);
+			const std::string sub = pairs.substr(last? last + 1 : 0, space - (last + (last? 1 : 0)));
+			const size_t colon = sub.find(':');
+			const std::string from = sub.substr(0, colon);
+			const std::string to = sub.substr(colon + 1);
+			link(from, to, false);
+			last = space;
+		}
 	}
 }

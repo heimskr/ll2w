@@ -2,6 +2,7 @@
 #define NODE_H_
 
 #include <string>
+#include <unordered_set>
 
 namespace LL2W {
 	class Graph;
@@ -12,6 +13,7 @@ namespace LL2W {
 		private:
 			Graph *parent;
 			std::string label;
+			std::unordered_set<Node *> adjacent;
 
 		public:
 			Node() = delete;
@@ -23,6 +25,8 @@ namespace LL2W {
 			Node(Graph *parent_, const std::string &label_ = "");
 
 			Node & rename(const std::string &);
+			bool reflexive() const;
+			bool link(Node &, bool bidirectional = false);
 	};
 }
 
