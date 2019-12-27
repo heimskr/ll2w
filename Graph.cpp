@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #include "Graph.h"
@@ -8,7 +9,7 @@ namespace LL2W {
 
 	Graph::Graph(size_t node_count) {
 		for (size_t i = 0; i < node_count; ++i)
-			nodes.push_back(new Node(this));
+			nodes.push_back(new Node(this, std::to_string(i)));
 	}
 
 	Graph::~Graph() {
@@ -85,5 +86,32 @@ namespace LL2W {
 			link(from, to, false);
 			last = space;
 		}
+	}
+
+	std::string Graph::toDot(const std::string &direction) const {
+		std::list<Node *> reflexives;
+		for (Node *node: nodes) {
+			if (node->reflexive())
+				reflexives.push_back(node);
+		}
+
+		std::ostringstream out;
+		out << "digraph rendered_graph {\n";
+		out << "\trankdir=" << direction << ";\n";
+		if (!reflexives.empty()) {
+			out << "\tnode [shape = doublecircle];";
+			for (Node *node: reflexives)
+				out << " " << node->label;
+			out << ";\n";
+		}
+		out << "\tnode [shape = circle];\n";
+		for (const Node *node: nodes) {
+			for (const Node *neighbor: node->adjacent) {
+				if (neighbor != node)
+					out << "\t" << node->label << " -> " << neighbor->label << ";\n";
+			}
+		}
+		out << "}\n";
+		return out.str();
 	}
 }

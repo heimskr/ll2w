@@ -1,0 +1,113 @@
+#!/bin/bash
+
+export YIKES="\x1b[2m[\x1b[0;31m\xe2\x9c\x98\x1b[0;2m]\x1b[0m"
+export INFO="\x1b[2m[\x1b[0;36mi\x1b[0;2m]\x1b[0m"
+export GOOD="\x1b[2m[\x1b[0;32m\xe2\x9c\x94\x1b[0;2m]\x1b[0m"
+
+yikes() { echo -e "$YIKES $*"; exit 1; }
+info()  { echo -e "$INFO $*"; }
+good()  { echo -e "$GOOD $*"; }
+
+escape_name() { echo "$1" | sed -E 's/[^A-Za-z0-9]/_/g'; }
+to_upper()    { printf '%s\n' "$1" | awk '{ print toupper($0) }'; }
+
+check_for() {
+	for dep in "$@"; do
+		info "Checking for $dep..."
+		pkg-config --exists "$dep" 2>/dev/null
+		if [ $? -eq 0 ]; then
+			good "Found $dep version `pkg-config --modversion "$dep"`."
+			echo
+		else
+			yikes "Couldn't find $dep."
+		fi
+		upper=$(to_upper `escape_name "$dep"`)
+		export LD_$upper="`pkg-config --libs "$dep"`"
+		export CFLAGS_$upper="`pkg-config --cflags "$dep"`"
+	done
+}
+
+add_dep() {
+	for dep in "$@"; do
+		upper=$(to_upper `escape_name "$dep"`)
+		libs="LD_$upper"
+		cflags="CFLAGS_$upper"
+		printf "%-16s:= " "LD_$upper" >> Makefile
+		echo ${!libs} >> Makefile
+		printf "%-16s:= " "CFLAGS_$upper" >> Makefile
+		echo ${!cflags} >> Makefile
+		echo "DEP_LD			+= \$($libs)" >> Makefile
+		echo "DEP_CFLAGS		+= \$($cflags)" >> Makefile
+		echo >> Makefile
+	done
+}
+
+add_include() {
+	upper=$(to_upper `escape_name "$1"`)
+	cflags="CFLAGS_$upper"
+	printf "%-16s:= " "CFLAGS_$upper" >> Makefile
+	echo ${!cflags} >> Makefile
+}
+
+add_lib() {
+	upper=$(to_upper `escape_name "$1"`)
+	libs="LD_$upper"
+	printf "%-16s:= " "LD_$upper" >> Makefile
+	echo ${!libs} >> Makefile
+}
+
+add_both() {
+	add_include "$1"
+	add_lib "$1"
+}
+
+init_makefile() {
+	> Makefile
+}
+
+do_all() {
+	check_for $*
+	add_dep $*
+}
+
+init_makefile
+do_all libcgraph
+
+cat >> Makefile <<"BASE"
+COMPILER	?= clang++
+CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
+OUTPUT		?= ll2w
+MAIN		:= main
+MODULES		:= Node Graph
+SOURCES		:= $(addsuffix .cpp,$(MODULES))
+OBJECTS		:= $(addsuffix .o,$(MODULES))
+
+.PHONY: all test clean
+
+all: $(OUTPUT)
+
+$(OUTPUT): $(MAIN).o $(OBJECTS)
+	$(COMPILER) -o $@ $^ $(LDFLAGS)
+
+%.o: %.cpp
+	$(COMPILER) $(CFLAGS) -c $< -o $@
+
+test: $(OUTPUT)
+	./$< syntax.ll syntax.wasm
+
+clean:
+	rm -f $(OUTPUT) *.o
+
+DEPFILE  = .dep
+DEPTOKEN = "\# MAKEDEPENDS"
+DEPFLAGS = -f $(DEPFILE) -s $(DEPTOKEN)
+
+depend:
+	@ echo $(DEPTOKEN) > $(DEPFILE)
+	makedepend $(DEPFLAGS) -- $(COMPILER) $(CFLAGS) -- $(SOURCES) 2>/dev/null
+	@ rm $(DEPFILE).bak
+
+sinclude $(DEPFILE)
+BASE
+
+good "Wrote Makefile."

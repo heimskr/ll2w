@@ -34,6 +34,8 @@ namespace LL2W {
 
 			/** Takes a space-separated list of colon-separated pairs of labels and links each pair of nodes. */
 			void addEdges(const std::string &);
+
+			std::string toDot(const std::string &direction = "LR") const;
 	};
 }
 

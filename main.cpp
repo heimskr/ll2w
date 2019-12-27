@@ -14,5 +14,6 @@ int main(int argc, char **argv) {
 	graph += "two";
 	graph += "three";
 	graph += "four";
-	graph.addEdges("one:two two:three three:four four:one one:four one:three two:four");
+	graph.addEdges("one:two two:three three:four four:one one:four one:three two:four three:three");
+	std::cout << graph.toDot();
 }

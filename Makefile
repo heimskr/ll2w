@@ -1,5 +1,10 @@
+LD_LIBCGRAPH    := -L/usr/local/Cellar/graphviz/2.40.1_1/lib -lcgraph -lcdt
+CFLAGS_LIBCGRAPH:= -I/usr/local/Cellar/graphviz/2.40.1_1/include/graphviz
+DEP_LD			+= $(LD_LIBCGRAPH)
+DEP_CFLAGS		+= $(CFLAGS_LIBCGRAPH)
+
 COMPILER	?= clang++
-CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
+CFLAGS		:= $(strip -std=c++2a -O0 -g -Wall -Wextra $(DEP_CFLAGS))
 OUTPUT		?= ll2w
 MAIN		:= main
 MODULES		:= Node Graph
@@ -11,7 +16,7 @@ OBJECTS		:= $(addsuffix .o,$(MODULES))
 all: $(OUTPUT)
 
 $(OUTPUT): $(MAIN).o $(OBJECTS)
-	$(COMPILER) -o $@ $^ $(LDFLAGS)
+	$(COMPILER) -o $@ $^ $(LDFLAGS) $(DEP_LD)
 
 %.o: %.cpp
 	$(COMPILER) $(CFLAGS) -c $< -o $@

@@ -22,7 +22,7 @@ namespace LL2W {
 			Node & operator=(Node &&) = delete;
 			Node & operator=(const Node &) = delete;
 
-			Node(Graph *parent_, const std::string &label_ = "");
+			Node(Graph *parent_, const std::string &label_);
 
 			Node & rename(const std::string &);
 			bool reflexive() const;
