@@ -36,6 +36,9 @@ namespace LL2W {
 			void addEdges(const std::string &);
 
 			std::string toDot(const std::string &direction = "LR") const;
+
+			/** Renders a PNG representation of the graph to an output file. */
+			void renderTo(const std::string &png_path);
 	};
 }
 

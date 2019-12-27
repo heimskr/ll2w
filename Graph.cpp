@@ -1,6 +1,9 @@
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+#include <unistd.h>
 
 #include "Graph.h"
 
@@ -113,5 +116,14 @@ namespace LL2W {
 		}
 		out << "}\n";
 		return out.str();
+	}
+
+	void Graph::renderTo(const std::string &png_path) {
+		std::ofstream out;
+		out.open("/tmp/ll2w_graph.dot");
+		out << toDot();
+		out.close();
+		if (fork() == 0)
+			execlp("dot", "dot", "-Tpng", "/tmp/ll2w_graph.dot", "-o", png_path.c_str(), nullptr);
 	}
 }

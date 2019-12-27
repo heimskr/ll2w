@@ -71,7 +71,6 @@ do_all() {
 }
 
 init_makefile
-do_all libcgraph
 
 cat >> Makefile <<"BASE"
 COMPILER	?= clang++
