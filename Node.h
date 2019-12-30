@@ -27,6 +27,18 @@ namespace LL2W {
 			Node & rename(const std::string &);
 			bool reflexive() const;
 			bool link(Node &, bool bidirectional = false);
+
+			/** Adds a neighbor. */
+			Node & operator+=(Node &);
+
+			/** Adds a neighbor. */
+			Node & operator+=(Node *);
+
+			/** Removes a neighbor. */
+			Node & operator-=(Node &);
+
+			/** Removes a neighbor. */
+			Node & operator-=(Node *);
 	};
 }
 

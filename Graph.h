@@ -24,7 +24,13 @@ namespace LL2W {
 
 			Node & operator[](size_t) const;
 			Node & operator[](const std::string &) const;
-			Node & operator+=(const std::string &);
+			Graph & operator+=(const std::string &);
+			/** Removes and deletes a node. */
+			Graph & operator-=(Node &);
+			/** Removes and deletes a node. */
+			Graph & operator-=(Node *);
+			/** Removes and deletes a node with a given label. */
+			Graph & operator-=(const std::string &);
 
 			Node & rename(const std::string &, const std::string &);
 			Node & rename(Node &, const std::string &);

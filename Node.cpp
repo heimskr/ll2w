@@ -20,4 +20,22 @@ namespace LL2W {
 			other.link(*this);
 		return already_linked;
 	}
+
+	Node & Node::operator+=(Node &neighbor) {
+		return *this += &neighbor;
+	}
+
+	Node & Node::operator+=(Node *neighbor) {
+		adjacent.insert(neighbor);
+		return *this;
+	}
+
+	Node & Node::operator-=(Node &neighbor) {
+		return *this -= &neighbor;
+	}
+
+	Node & Node::operator-=(Node *neighbor) {
+		adjacent.erase(neighbor);
+		return *this;
+	}
 }

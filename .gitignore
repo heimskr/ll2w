@@ -34,4 +34,5 @@
 ll2w
 *.wasm
 .dep
-
+*.png
+.DS_Store

@@ -44,13 +44,37 @@ namespace LL2W {
 		return *iter->second;
 	}
 
-	Node & Graph::operator+=(const std::string &label) {
+	Graph & Graph::operator+=(const std::string &label) {
 		if (hasLabel(label))
 			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");
 		Node *node = new Node(this, label);
 		labelMap.insert({label, node});
 		nodes.push_back(node);
-		return *node;
+		return *this;
+	}
+
+	Graph & Graph::operator-=(Node &to_remove) {
+		return *this -= &to_remove;
+	}
+
+	Graph & Graph::operator-=(Node *to_remove) {
+		auto iter = std::find(nodes.begin(), nodes.end(), to_remove);
+		if (iter == nodes.end())
+			throw std::out_of_range("Can't remove: node is not in graph");
+		for (Node *node: nodes)
+			*node -= to_remove;
+		nodes.erase(iter);
+		delete to_remove;
+		return *this;
+	}
+
+	Graph & Graph::operator-=(const std::string &label) {
+		for (Node *node: nodes) {
+			if (node->label == label)
+				return *this -= node;
+		}
+
+		throw std::out_of_range("Can't remove: no node with label \"" + label + "\" found");
 	}
 
 	Node & Graph::rename(const std::string &old_label, const std::string &new_label) {
