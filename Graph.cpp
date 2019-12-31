@@ -107,6 +107,10 @@ namespace LL2W {
 		(*this)[from].link((*this)[to], bidirectional);
 	}
 
+	void Graph::unlink(const std::string &from, const std::string &to, bool bidirectional) {
+		(*this)[from].unlink((*this)[to], bidirectional);
+	}
+
 	void Graph::addEdges(const std::string &pairs) {
 		size_t last = 0, space;
 		while (last != std::string::npos) {

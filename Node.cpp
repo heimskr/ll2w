@@ -30,6 +30,19 @@ namespace LL2W {
 		return already_linked;
 	}
 
+	bool Node::unlink(Node &other, bool bidirectional) {
+		return unlink(&other, bidirectional);
+	}
+
+	bool Node::unlink(Node *other, bool bidirectional) {
+		bool exists = adjacent.count(other) == 1;
+		if (exists)
+			adjacent.erase(other);
+		if (bidirectional)
+			other->unlink(*this);
+		return exists;
+	}
+
 	Node & Node::operator+=(Node &neighbor) {
 		return *this += &neighbor;
 	}

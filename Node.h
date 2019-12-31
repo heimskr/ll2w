@@ -34,10 +34,17 @@ namespace LL2W {
 			/** Returns whether the node is connected to itself. */
 			bool reflexive() const;
 
-			/** Adds a connection (unidirectional by default) to another node. */
+			/** Adds an edge (unidirectional by default) to another node. Returns true if the edge already existed. */
 			bool link(Node &, bool bidirectional = false);
-			/** Adds a connection (unidirectional by default) to another node. */
+			/** Adds an edge (unidirectional by default) to another node. Returns true if the edge already existed. */
 			bool link(Node *, bool bidirectional = false);
+
+			/** Removes a edge (and optionally the opposite edge) between this node and another.
+			 *  Returns true if the edge existed and was removed. */
+			bool unlink(Node &, bool bidirectional = false);
+			/** Removes a edge (and optionally the opposite edge) between this node and another.
+			 *  Returns true if the edge existed and was removed. */
+			bool unlink(Node *, bool bidirectional = false);
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);

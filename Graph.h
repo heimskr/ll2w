@@ -55,6 +55,9 @@ namespace LL2W {
 			/** Connects two nodes with given labels (unidirectionally by default). */
 			void link(const std::string &, const std::string &, bool bidirectional = false);
 
+			/** Removes any connection between two nodes with given labels (and optionally the inverse edge too). */
+			void unlink(const std::string &, const std::string &, bool bidirectional = false);
+
 			/** Takes a space-separated list of colon-separated pairs of labels and links each pair of nodes. */
 			void addEdges(const std::string &);
 
