@@ -115,6 +115,11 @@ namespace LL2W {
 		}
 	}
 
+	void Graph::reset() {
+		while (!nodes.empty())
+			*this -= nodes.front();
+	}
+
 	std::string Graph::toDot(const std::string &direction) const {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes) {
@@ -142,12 +147,20 @@ namespace LL2W {
 		return out.str();
 	}
 
-	void Graph::renderTo(const std::string &png_path) {
+	void Graph::renderTo(const std::string &png_path, const std::string &direction) {
 		std::ofstream out;
 		out.open("/tmp/ll2w_graph.dot");
-		out << toDot();
+		out << toDot(direction);
 		out.close();
 		if (fork() == 0)
 			execlp("dot", "dot", "-Tpng", "/tmp/ll2w_graph.dot", "-o", png_path.c_str(), nullptr);
+	}
+
+	decltype(Graph::labelMap)::iterator Graph::begin() {
+		return labelMap.begin();
+	}
+
+	decltype(Graph::labelMap)::iterator Graph::end() {
+		return labelMap.end();
 	}
 }

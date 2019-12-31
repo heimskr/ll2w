@@ -13,11 +13,15 @@ namespace LL2W {
 	}
 
 	bool Node::link(Node &other, bool bidirectional) {
-		bool already_linked = adjacent.count(&other) == 1;
+		return link(&other, bidirectional);
+	}
+
+	bool Node::link(Node *other, bool bidirectional) {
+		bool already_linked = adjacent.count(other) == 1;
 		if (!already_linked)
-			adjacent.insert(&other);
+			adjacent.insert(other);
 		if (bidirectional)
-			other.link(*this);
+			other->link(*this);
 		return already_linked;
 	}
 
@@ -37,5 +41,14 @@ namespace LL2W {
 	Node & Node::operator-=(Node *neighbor) {
 		adjacent.erase(neighbor);
 		return *this;
+	}
+
+	Node & Node::operator-=(const std::string &label) {
+		for (Node *node: adjacent) {
+			if (node->label == label)
+				return *this -= node;
+		}
+
+		throw std::out_of_range("Can't remove: no neighbor with label \"" + label + "\" found");
 	}
 }
