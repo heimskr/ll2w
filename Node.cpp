@@ -1,8 +1,13 @@
+#include <iostream>
 #include "Graph.h"
 #include "Node.h"
 
 namespace LL2W {
-	Node::Node(Graph *parent_, const std::string &label_): parent(parent_), label(label_) {}
+	Node::Node(Graph *parent_, const std::string &label__): parent(parent_), label_(label__) {}
+
+	const std::string & Node::label() const {
+		return label_;
+	}
 
 	Node & Node::rename(const std::string &new_label) {
 		return parent->rename(this, new_label);
@@ -45,7 +50,7 @@ namespace LL2W {
 
 	Node & Node::operator-=(const std::string &label) {
 		for (Node *node: adjacent) {
-			if (node->label == label)
+			if (node->label() == label)
 				return *this -= node;
 		}
 

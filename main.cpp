@@ -11,11 +11,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	LL2W::Graph graph;
-	graph += "one";
-	graph += "two";
-	graph += "three";
-	graph += "four";
+	LL2W::Graph graph {"one", "two", "three", "four"};
 	graph.addEdges("one:two two:three three:four four:one one:four one:three two:four three:three");
 	std::cout << graph.toDot();
 	graph.renderTo("graph1234.png");

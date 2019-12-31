@@ -16,8 +16,11 @@ namespace LL2W {
 			/** Constructs a graph with no nodes. */
 			Graph();
 
-			/** Constructs a new graph with a number n of nodes with labels 0, 1, ..., n. */
+			/** Constructs a graph with a number n of nodes with labels 0, 1, ..., n. */
 			Graph(size_t);
+
+			/** Constructs a graph with nodes with given labels. */
+			Graph(std::initializer_list<std::string>);
 
 			~Graph();
 

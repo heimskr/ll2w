@@ -12,7 +12,12 @@ namespace LL2W {
 
 	Graph::Graph(size_t node_count) {
 		for (size_t i = 0; i < node_count; ++i)
-			nodes.push_back(new Node(this, std::to_string(i)));
+			*this += std::to_string(i);
+	}
+
+	Graph::Graph(std::initializer_list<std::string> labels) {
+		for (const std::string &label: labels)
+			*this += label;
 	}
 
 	Graph::~Graph() {
@@ -70,7 +75,7 @@ namespace LL2W {
 
 	Graph & Graph::operator-=(const std::string &label) {
 		for (Node *node: nodes) {
-			if (node->label == label)
+			if (node->label() == label)
 				return *this -= node;
 		}
 
@@ -88,12 +93,12 @@ namespace LL2W {
 	Node & Graph::rename(Node *node, const std::string &new_label) {
 		if (!node)
 			throw std::invalid_argument("Can't rename a null node");
-		if (node->label == new_label)
+		if (node->label() == new_label)
 			return *node;
 		if (hasLabel(new_label))
 			throw std::runtime_error("Can't rename: a node with label \"" + new_label + "\" already exists");
-		labelMap.erase(node->label);
-		node->label = new_label;
+		labelMap.erase(node->label());
+		node->label_ = new_label;
 		labelMap.insert({new_label, node});
 		return *node;
 	}
@@ -133,14 +138,14 @@ namespace LL2W {
 		if (!reflexives.empty()) {
 			out << "\tnode [shape = doublecircle];";
 			for (Node *node: reflexives)
-				out << " " << node->label;
+				out << " " << node->label();
 			out << ";\n";
 		}
 		out << "\tnode [shape = circle];\n";
 		for (const Node *node: nodes) {
 			for (const Node *neighbor: node->adjacent) {
 				if (neighbor != node)
-					out << "\t" << node->label << " -> " << neighbor->label << ";\n";
+					out << "\t" << node->label() << " -> " << neighbor->label() << ";\n";
 			}
 		}
 		out << "}\n";

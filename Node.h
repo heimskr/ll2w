@@ -12,7 +12,7 @@ namespace LL2W {
 
 		private:
 			Graph *parent;
-			std::string label;
+			std::string label_;
 			std::unordered_set<Node *> adjacent;
 
 		public:
@@ -24,6 +24,9 @@ namespace LL2W {
 
 			/** Creates a node with a parent graph and a given label. */
 			Node(Graph *, const std::string &);
+
+			/** Returns a const reference to the node's label. */
+			const std::string & label() const;
 
 			/** Changes the node's label. */
 			Node & rename(const std::string &);
