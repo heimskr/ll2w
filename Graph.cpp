@@ -138,6 +138,50 @@ namespace LL2W {
 		return nullptr;
 	}
 
+	DFSResult Graph::DFS(Node *start) {
+		DFSResult::map_type parents, discovered, finished;
+		int time = 0;
+
+		auto visit = [&](Node *node) {
+			discovered[node] = ++time;
+			// (*this)
+		};
+
+		//  const visit = (u: NodeID) => {
+		//  	discovered[u] = ++time;
+		//  	this.getNodeSafe(u).out.sort().forEach(v => {
+		//  		if (discovered[v] == null) {
+		//  			parents[v] = u;
+		//  			visit(v);
+		//  		}
+		//  	});
+		//  	finished[u] = ++time;
+		//  };
+
+		// visit(getID(startID));
+		// return {parents: parents as NodeID[], discovered: discovered as NodeID[], finished: finished as NodeID[]};
+	}
+
+	Graph Graph::makeDTree(Node *node, bool bidirectional) {
+		// const [lentar] = this.lengauerTarjan(getID(startID));
+		// const out = new Graph(Object.keys(lentar).length, {});
+		// const fn = (bidirectional? out.edge : out.arc).bind(out);
+		// Object.entries(lentar).forEach(([k, v]) => {
+		// 	out.nodes[k].data = this.nodes[k].data;
+		// 	fn(v == undefined? k : v, k)
+		// });
+
+		// return out;
+	}
+
+	Graph Graph::makeDTree(Node &node, bool bidirectional) {
+		return makeDTree(&node, bidirectional);
+	}
+
+	Graph Graph::makeDTree(const std::string &label, bool bidirectional) {
+		return makeDTree((*this)[label], bidirectional);
+	}
+
 	std::string Graph::toDot(const std::string &direction) const {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes) {
@@ -169,7 +213,7 @@ namespace LL2W {
 		out << "\n";
 
 		for (const Node *node: nodes) {
-			for (const Node *neighbor: node->adjacent) {
+			for (const Node *neighbor: node->adjacent()) {
 				if (neighbor != node)
 					out << "\t" << node->label() << " -> " << neighbor->label() << ";\n";
 			}

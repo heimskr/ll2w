@@ -1,8 +1,8 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+#include <set>
 #include <string>
-#include <unordered_set>
 
 namespace LL2W {
 	class Graph;
@@ -10,10 +10,18 @@ namespace LL2W {
 	class Node {
 		friend class Graph;
 
+
+		struct Node_less {
+			bool operator()(Node *left, Node *right) const {
+				return left->index() < right->index();
+			}
+		};
+
 		private:
 			Graph *parent;
 			std::string label_;
-			std::unordered_set<Node *> adjacent;
+			std::set<Node *, Node_less> adjacent_;
+			int index_ = -1;
 
 		public:
 			Node() = delete;
@@ -48,6 +56,15 @@ namespace LL2W {
 
 			/** Returns whether the node lacks any neighbors. */
 			bool isolated() const;
+
+			/** Should be called whenever a node's index in the parent graph changes. */
+			void dirty();
+
+			/** Returns the node's index in the parent graph. */
+			int index();
+
+			/** Returns a const set of the node's outward edges. */
+			const std::set<Node *, Node_less> adjacent() const;
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);

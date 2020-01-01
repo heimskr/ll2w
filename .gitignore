@@ -36,3 +36,5 @@ ll2w
 .dep
 *.png
 .DS_Store
+.vscode
+
