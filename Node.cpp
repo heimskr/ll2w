@@ -25,7 +25,7 @@ namespace LL2W {
 		bool already_linked = adjacent.count(other) == 1;
 		if (!already_linked)
 			adjacent.insert(other);
-		if (bidirectional)
+		if (bidirectional && other != this)
 			other->link(*this);
 		return already_linked;
 	}
@@ -38,7 +38,7 @@ namespace LL2W {
 		bool exists = adjacent.count(other) == 1;
 		if (exists)
 			adjacent.erase(other);
-		if (bidirectional)
+		if (bidirectional && other != this)
 			other->unlink(*this);
 		return exists;
 	}
