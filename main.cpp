@@ -19,4 +19,11 @@ int main(int argc, char **argv) {
 	graph -= "four";
 	std::cout << graph.toDot();
 	graph.renderTo("graph123.png");
+	usleep(100000);
+	graph.unlink("one", "two");
+	graph.unlink("one", "three");
+	graph.unlink("two", "three");
+	graph.unlink("three", "three");
+	std::cout << graph.toDot();
+	graph.renderTo("graph_unlinked.png");
 }
