@@ -66,8 +66,11 @@ namespace LL2W {
 		auto iter = std::find(nodes.begin(), nodes.end(), to_remove);
 		if (iter == nodes.end())
 			throw std::out_of_range("Can't remove: node is not in graph");
-		for (Node *node: nodes)
+		for (Node *node: nodes) {
 			*node -= to_remove;
+			node->dirty();
+		}
+
 		nodes.erase(iter);
 		delete to_remove;
 		return *this;
