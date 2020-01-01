@@ -139,13 +139,24 @@ namespace LL2W {
 	}
 
 	DFSResult Graph::DFS(Node *start) {
-		DFSResult::map_type parents, discovered, finished;
+		DFSResult::parent_map parents;
+		DFSResult::time_map discovered, finished;
 		int time = 0;
 
-		auto visit = [&](Node *node) {
+		std::function<void(Node *)> visit = [&](Node *node) {
 			discovered[node] = ++time;
-			// (*this)
+			for (Node *out: node->adjacent()) {
+				if (discovered.count(out) == 0) {
+					parents[out] = node;
+					visit(out);
+				}
+			}
+
+			finished[node] = ++time;
 		};
+
+		visit(start);
+		return {this, parents, discovered, finished};
 
 		//  const visit = (u: NodeID) => {
 		//  	discovered[u] = ++time;
