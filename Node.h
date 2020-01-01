@@ -46,6 +46,9 @@ namespace LL2W {
 			 *  Returns true if the edge existed and was removed. */
 			bool unlink(Node *, bool bidirectional = false);
 
+			/** Returns whether the node lacks any neighbors. */
+			bool isolated() const;
+
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);
 			/** Adds a neighbor. */

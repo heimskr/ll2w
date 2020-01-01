@@ -43,6 +43,10 @@ namespace LL2W {
 		return exists;
 	}
 
+	bool Node::isolated() const {
+		return adjacent.empty();
+	}
+
 	Node & Node::operator+=(Node &neighbor) {
 		return *this += &neighbor;
 	}

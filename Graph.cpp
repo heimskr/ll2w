@@ -154,7 +154,20 @@ namespace LL2W {
 				out << " " << node->label();
 			out << ";\n";
 		}
-		out << "\tnode [shape = circle];\n";
+
+		out << "\tnode [shape = circle];";
+		bool any_added = false;
+		for (Node *node: nodes) {
+			if (node->isolated()) {
+				out << " " << node->label();
+				any_added = true;
+			}
+		}
+
+		if (any_added)
+			out << ";";
+		out << "\n";
+
 		for (const Node *node: nodes) {
 			for (const Node *neighbor: node->adjacent) {
 				if (neighbor != node)
