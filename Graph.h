@@ -71,6 +71,10 @@ namespace LL2W {
 
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(Node *);
+			/** Runs a depth-first search at a given start node. */
+			DFSResult DFS(Node &);
+			/** Runs a depth-first search at a given start node. */
+			DFSResult DFS(const std::string &);
 
 			/** * Calculates the dominator tree of the graph for a given start node and returns a tree in which each
 			 * node other than the start node is linked to by its immediate dominator. */

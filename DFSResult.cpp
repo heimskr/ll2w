@@ -19,4 +19,17 @@ namespace LL2W {
 		for (int i = 0, len = finished_.size(); i < len; ++i)
 			finished[&(*graph)[i]] = finished_[i];
 	}
+
+	std::ostream & operator<<(std::ostream &os, const DFSResult &result) {
+		os << "Parents    [";
+		for (const auto &pair: result.parents)
+			os << " " << pair.first->label() << "<-" << pair.second->label();
+		os << " ]\nDiscovered [";
+		for (const auto &pair: result.discovered)
+			os << " " << pair.first->label() << ":" << pair.second;
+		os << " ]\nFinished   [";
+		for (const auto &pair: result.finished)
+			os << " " << pair.first->label() << ":" << pair.second;
+		return os << "]\n";
+	}
 }

@@ -157,20 +157,14 @@ namespace LL2W {
 
 		visit(start);
 		return {this, parents, discovered, finished};
+	}
 
-		//  const visit = (u: NodeID) => {
-		//  	discovered[u] = ++time;
-		//  	this.getNodeSafe(u).out.sort().forEach(v => {
-		//  		if (discovered[v] == null) {
-		//  			parents[v] = u;
-		//  			visit(v);
-		//  		}
-		//  	});
-		//  	finished[u] = ++time;
-		//  };
+	DFSResult Graph::DFS(Node &start) {
+		return DFS(&start);
+	}
 
-		// visit(getID(startID));
-		// return {parents: parents as NodeID[], discovered: discovered as NodeID[], finished: finished as NodeID[]};
+	DFSResult Graph::DFS(const std::string &start_label) {
+		return DFS((*this)[start_label]);
 	}
 
 	Graph Graph::makeDTree(Node *node, bool bidirectional) {

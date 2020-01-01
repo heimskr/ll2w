@@ -1,6 +1,7 @@
 #ifndef DFSRESULT_H_
 #define DFSRESULT_H_
 
+#include <ostream>
 #include <unordered_map>
 #include <vector>
 
@@ -23,6 +24,8 @@ namespace LL2W {
 		          const std::vector<int> &discovered_,
 		          const std::vector<int> &finished_);
 	};
+
+	std::ostream & operator<<(std::ostream &, const DFSResult &);
 }
 
 #endif
