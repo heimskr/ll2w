@@ -129,6 +129,15 @@ namespace LL2W {
 			*this -= nodes.front();
 	}
 
+	Node * Graph::find(std::function<bool(Node &)> predicate) {
+		for (Node *node: nodes) {
+			if (predicate(*node))
+				return node;
+		}
+
+		return nullptr;
+	}
+
 	std::string Graph::toDot(const std::string &direction) const {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes) {

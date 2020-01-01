@@ -1,6 +1,7 @@
 #ifndef GRAPH_H_
 #define GRAPH_H_
 
+#include <functional>
 #include <list>
 #include <unordered_map>
 
@@ -63,6 +64,9 @@ namespace LL2W {
 
 			/** Removes all nodes from the graph. */
 			void reset();
+
+			/** Attempts to find the first node matching a predicate function. */
+			Node * find(std::function<bool(Node &)>);
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			std::string toDot(const std::string &direction = "LR") const;
