@@ -53,6 +53,8 @@ namespace LL2W {
 			/** Removes a edge (and optionally the opposite edge) between this node and another.
 			 *  Returns true if the edge existed and was removed. */
 			bool unlink(Node *, bool bidirectional = false);
+			/** Removes all edges from this node. */
+			void unlink();
 
 			/** Returns whether the node lacks any neighbors. */
 			bool isolated() const;
@@ -77,6 +79,9 @@ namespace LL2W {
 			Node & operator-=(Node *);
 			/** Removes a neighbor with a given label. */
 			Node & operator-=(const std::string &);
+
+			decltype(adjacent_)::iterator begin();
+			decltype(adjacent_)::iterator end();
 	};
 }
 

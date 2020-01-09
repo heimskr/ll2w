@@ -59,6 +59,10 @@ namespace LL2W {
 
 			/** Removes any connection between two nodes with given labels (and optionally the inverse edge too). */
 			void unlink(const std::string &, const std::string &, bool bidirectional = false);
+			/** Removes all edges in the graph. */
+			void unlink();
+
+			Graph clone();
 
 			/** Takes a space-separated list of colon-separated pairs of labels and links each pair of nodes. */
 			void addEdges(const std::string &);
@@ -75,6 +79,10 @@ namespace LL2W {
 			DFSResult DFS(Node &);
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(const std::string &);
+
+			Graph lengauerTarjan(Node *);
+			Graph lengauerTarjan(Node &);
+			Graph lengauerTarjan(const std::string &);
 
 			/** * Calculates the dominator tree of the graph for a given start node and returns a tree in which each
 			 * node other than the start node is linked to by its immediate dominator. */

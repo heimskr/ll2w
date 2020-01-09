@@ -45,6 +45,10 @@ namespace LL2W {
 		return exists;
 	}
 
+	void Node::unlink() {
+		adjacent_.clear();
+	}
+
 	bool Node::isolated() const {
 		return adjacent_.empty();
 	}
@@ -95,5 +99,13 @@ namespace LL2W {
 		}
 
 		throw std::out_of_range("Can't remove: no neighbor with label \"" + label + "\" found");
+	}
+
+	decltype(Node::adjacent_)::iterator Node::begin() {
+		return adjacent_.begin();
+	}
+
+	decltype(Node::adjacent_)::iterator Node::end() {
+		return adjacent_.end();
 	}
 }

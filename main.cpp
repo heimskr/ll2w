@@ -21,6 +21,12 @@ int main(int argc, char **argv) {
 	complex.renderTo("graph_complex.png");
 	usleep(100000);
 
+	LL2W::Graph lt_input {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "R"};
+	lt_input.addEdges("A:D A:B B:A B:D B:E B:R C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H");
+	lt_input.lengauerTarjan("A");
+	lt_input.renderTo("graph_lt_in.png");
+	usleep(100000);
+
 	std::cout << graph.toDot();
 	graph.renderTo("graph_1234.png");
 	usleep(100000);
