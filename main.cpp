@@ -22,9 +22,10 @@ int main(int argc, char **argv) {
 	usleep(100000);
 
 	LL2W::Graph lt_input {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "R"};
-	lt_input.addEdges("A:D A:B B:A B:D B:E B:R C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H");
-	lt_input.lengauerTarjan("A");
+	lt_input.addEdges("A:D A:B B:A B:D B:E B:R C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H R:A R:B R:C");
 	lt_input.renderTo("graph_lt_in.png");
+	usleep(100000);
+	lt_input.lengauerTarjan(lt_input["R"]).renderTo("graph_lt_out.png");
 	usleep(100000);
 
 	std::cout << graph.toDot();

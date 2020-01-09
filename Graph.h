@@ -62,7 +62,8 @@ namespace LL2W {
 			/** Removes all edges in the graph. */
 			void unlink();
 
-			Graph clone();
+			/** Returns a clone of the graph. */
+			Graph clone(std::unordered_map<Node *, Node *> *rename_map = nullptr);
 
 			/** Takes a space-separated list of colon-separated pairs of labels and links each pair of nodes. */
 			void addEdges(const std::string &);
@@ -95,10 +96,10 @@ namespace LL2W {
 			Graph makeDTree(const std::string &, bool bidirectional = false);
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
-			std::string toDot(const std::string &direction = "LR") const;
+			std::string toDot(const std::string &direction = "TB") const;
 
 			/** Renders a PNG representation of the graph to an output file. */
-			void renderTo(const std::string &png_path, const std::string &direction = "LR");
+			void renderTo(const std::string &png_path, const std::string &direction = "TB");
 
 			decltype(labelMap)::iterator begin();
 			decltype(labelMap)::iterator end();

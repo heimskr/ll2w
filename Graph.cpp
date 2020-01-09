@@ -122,7 +122,7 @@ namespace LL2W {
 			pair.second->unlink();
 	}
 
-	Graph Graph::clone() {
+	Graph Graph::clone(std::unordered_map<Node *, Node *> *rename_map) {
 		Graph new_graph;
 
 		// Maps old nodes to new nodes.
@@ -131,6 +131,7 @@ namespace LL2W {
 			Node *new_node = new Node(&new_graph, node->label());
 			node_map.insert({node, new_node});
 			new_graph.nodes.push_back(new_node);
+			new_graph.labelMap.insert({node->label(), new_node});
 		}
 
 		for (auto &pair: node_map) {
@@ -138,6 +139,9 @@ namespace LL2W {
 			for (Node *old_link: old_node->adjacent())
 				new_node->link(node_map.at(old_link), false);
 		}
+
+		if (rename_map)
+			*rename_map = node_map;
 
 		return new_graph;
 	}
@@ -331,6 +335,14 @@ namespace LL2W {
 		// The root should dominate itself.
 		assert(doms[0] == 0);
 
+		std::unordered_map<int, Node *> visited_inverse {};
+		for (const auto &pair: visited)
+			visited_inverse.insert({pair.second, pair.first});
+
+		Graph out_graph = clone();
+		out_graph.unlink();
+		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
+			out_graph.link(visited_inverse.at(i)->label(), visited_inverse.at(doms[i])->label());
 
 		// procedure DOMINATORS(integer set array succ(1::n); integer r, n; integer array dom(1::n));
 		// begin
@@ -424,10 +436,10 @@ namespace LL2W {
 		// end DOMINATORS;
 
 		std::cerr << "\e[0m";
-		return {};
+		return out_graph;
 	}
 
-	Graph Graph::makeDTree(Node *start, bool bidirectional) {
+	Graph Graph::makeDTree(Node */* start */, bool /* bidirectional */) {
 		// const [lentar] = this.lengauerTarjan(getID(startID));
 		// const out = new Graph(Object.keys(lentar).length, {});
 		// const fn = (bidirectional? out.edge : out.arc).bind(out);
@@ -437,6 +449,7 @@ namespace LL2W {
 		// });
 
 		// return out;
+		return {};
 	}
 
 	Graph Graph::makeDTree(Node &start, bool bidirectional) {
