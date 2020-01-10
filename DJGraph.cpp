@@ -1,4 +1,6 @@
 #include <iostream>
+#include <map>
+#include <set>
 
 #include "DJGraph.h"
 #include "DTree.h"
@@ -10,12 +12,21 @@ namespace LL2W {
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
 
-		for (const auto [src, dest]: allEdges()) {
+		std::cout << "Dom keys:";
+		for (const auto &pair: doms) {
+			std::cout << pair.first << ":";
+			for (const auto &x: pair.second)
+				std::cout << " " << x;
+			std::cout << "\n";
+		}
+
+		for (const auto [src, dest]: dt.allEdges()) {
+			std::cout << "Checking doms[" << dest.label() << "]\n";
 			if (doms.at(dest.label()).count(src.label()) != 0)
 				continue;
-			src.link(dest);
+			link(src.label(), dest.label());
 			std::cout << "J edge between " << src << " and " << dest << "\n";
-			jEdges.push_back({src, dest});
+			jEdges.push_back({(*this)[src.label()], (*this)[dest.label()]});
 		}
 	}
 }

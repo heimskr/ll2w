@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unordered_set>
 
 #include "DTree.h"
@@ -124,7 +125,9 @@ namespace LL2W {
 	std::unordered_map<std::string, std::unordered_set<std::string>> DTree::strictDominatorLabels() const {
 		std::unordered_map<std::string, std::unordered_set<std::string>> out_map;
 		for (const auto & [node, set]: strictDominators()) {
+			std::cout << "Found " << *node << " from strict dominators.\n";
 			const std::string &label = node->label();
+			out_map.insert({label, {}});
 			for (Node *sub: set)
 				out_map[label].insert(sub->label());
 		}

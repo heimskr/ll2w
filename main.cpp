@@ -40,6 +40,8 @@ void djtest() {
 	graph.renderTo("graph_dj_in.png");
 	usleep(100000);
 	LL2W::DJGraph dj(graph, "1");
+	LL2W::DTree(graph, "1").renderTo("graph_dj_dt.png", "BT");
+	usleep(100000);
 	dj.renderTo("graph_dj_out.png", "BT");
 	usleep(100000);
 	for (const auto [src, dest]: dj.jEdges)
