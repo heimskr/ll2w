@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <list>
+#include <vector>
 #include <unordered_map>
+#include <utility>
 
 #include "DFSResult.h"
 #include "Node.h"
@@ -65,6 +67,9 @@ namespace LL2W {
 			/** Removes all edges in the graph. */
 			void unlink();
 
+			/** Clones the graph into another graph. */
+			void cloneTo(Graph &, std::unordered_map<Node *, Node *> *rename_map = nullptr);
+
 			/** Returns a clone of the graph. */
 			Graph clone(std::unordered_map<Node *, Node *> *rename_map = nullptr);
 
@@ -84,15 +89,15 @@ namespace LL2W {
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(const std::string &);
 
-			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
-			 *  other than the start node is linked to by its immediate dominator. */
-			Graph dTree(Node *);
-			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
-			 *  other than the start node is linked to by its immediate dominator. */
-			Graph dTree(Node &);
-			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
-			 *  other than the start node is linked to by its immediate dominator. */
-			Graph dTree(const std::string &);
+			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
+			std::vector<std::pair<Node *, Node *>> allEdges() const;
+
+			/** Computes the DJ graph. */
+			Graph djGraph(Node *);
+			/** Computes the DJ graph. */
+			Graph djGraph(Node &);
+			/** Computes the DJ graph. */
+			Graph djGraph(const std::string &);
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			std::string toDot(const std::string &direction = "TB") const;

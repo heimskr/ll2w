@@ -3,8 +3,6 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <unordered_map>
-#include <unordered_set>
 
 #include <unistd.h>
 
@@ -126,16 +124,16 @@ namespace LL2W {
 			pair.second->unlink();
 	}
 
-	Graph Graph::clone(std::unordered_map<Node *, Node *> *rename_map) {
-		Graph new_graph;
+	void Graph::cloneTo(Graph &out, std::unordered_map<Node *, Node *> *rename_map) {
+		out.reset();
 
 		// Maps old nodes to new nodes.
 		std::unordered_map<Node *, Node *> node_map {};
 		for (Node *node: nodes_) {
-			Node *new_node = new Node(&new_graph, node->label());
+			Node *new_node = new Node(&out, node->label());
 			node_map.insert({node, new_node});
-			new_graph.nodes_.push_back(new_node);
-			new_graph.labelMap.insert({node->label(), new_node});
+			out.nodes_.push_back(new_node);
+			out.labelMap.insert({node->label(), new_node});
 		}
 
 		for (auto &pair: node_map) {
@@ -146,7 +144,11 @@ namespace LL2W {
 
 		if (rename_map)
 			*rename_map = node_map;
+	}
 
+	Graph Graph::clone(std::unordered_map<Node *, Node *> *rename_map) {
+		Graph new_graph;
+		cloneTo(new_graph, rename_map);
 		return new_graph;
 	}
 
@@ -206,99 +208,45 @@ namespace LL2W {
 		return DFS((*this)[start_label]);
 	}
 
-	Graph Graph::dTree(Node &start) {
-		return dTree(&start);
-	}
-
-	Graph Graph::dTree(const std::string &label) {
-		return dTree((*this)[label]);
-	}
-
-	Graph Graph::dTree(Node *start) {
-		const size_t gsize = size();
-		std::unordered_map<Node *, int> visited;
-		std::vector<Node *> stack {start}, vertices;
-		std::vector<int> semis(gsize, -1);
-		std::vector<int> ancestors(gsize, -1);
-		std::vector<int> labels(gsize, -1);
-		std::vector<int> parents(gsize, -1);
-		std::vector<int> doms(gsize, -1);
-		std::vector<std::unordered_set<int>> preds(gsize), buckets(gsize);
-
-		std::function<void(Node *)> dfs = [&](Node *node) {
-			visited[node] = vertices.size();
-			const int v = node->index();
-			assert(semis[v] == -1);
-			semis[v] = vertices.size();
-			vertices.push_back(node);
-			labels[v] = v;
-			for (Node *successor: *node) {
-				const int w = successor->index();
-				if (semis.at(w) == -1) {
-					parents[w] = v;
-					dfs(successor);
-				}
-
-				preds.at(w).insert(v);
-			}
-		};
-
-		std::function<void(int)> compress = [&](int v) {
-			if (ancestors.at(ancestors.at(v)) != -1) {
-				compress(ancestors[v]);
-				if (semis.at(labels.at(ancestors.at(v))) <= semis.at(labels.at(v)))
-					labels.at(v) = labels.at(ancestors.at(v));
-				ancestors[v] = ancestors.at(ancestors.at(v));
-			}
-		};
-
-		std::function<int(int)> eval = [&](int v) {
-			if (ancestors[v] == -1) {
-				return v;
-			} else {
-				compress(v);
-				return labels[v];
-			}
-		};
-
-		dfs(start);
-
-		for (int i = gsize - 1; 1 <= i; --i) {
-			int w = vertices[i]->index();
-
-			for (int v: preds.at(w)) {
-				int u = eval(v);
-				if (semis.at(u) < semis.at(w))
-					semis.at(w) = semis.at(u);
-			}
-
-			buckets[vertices.at(semis.at(w))->index()].insert(w);
-			ancestors[w] = parents.at(w);
-
-			std::unordered_set<int> &bucket = buckets.at(parents.at(w));
-			for (auto iter = bucket.begin(); iter != bucket.end();) {
-				int v = *iter;
-				bucket.erase(iter++);
-				int u = eval(v);
-				doms[v] = semis.at(u) < semis.at(v)? u : parents.at(w);
-			}
+	std::vector<std::pair<Node *, Node *>> Graph::allEdges() const {
+		std::vector<std::pair<Node *, Node *>> out;
+		for (Node *node: nodes_) {
+			for (Node *successor: *node)
+				out.push_back({node, successor});
 		}
 
-		for (size_t i = 1; i < gsize; ++i) {
-			int w = vertices.at(i)->index();
-			if (doms.at(w) != vertices.at(semis.at(w))->index())
-				doms[w] = doms.at(doms.at(w));
+		return out;
+	} //*/
+
+	/*
+
+	Graph Graph::djGraph(Node &node) {
+		return djGraph(&node);
+	}
+
+	Graph Graph::djGraph(const std::string &label) {
+		return djGraph((*this)[label]);
+	}
+
+	Graph Graph::djGraph(Node *node) {
+		Graph dj = dTree(node);
+		std::unordered_map<Node *, Node *> doms = dominators();
+		for (const std::pair<Node *, Node *> &edge: allEdges()) {
+
 		}
 
-		doms[start->index()] = 0;
+		return dj;
 
-		Graph out_graph = clone();
-		out_graph.unlink();
-		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
-			out_graph.link(out_graph[i].label(), out_graph[doms.at(i)].label());
 
-		return out_graph;
-	}
+		// const dj: DJGraph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
+		// const sdom = Graph.strictDominators(dj);
+		// dj.data.jEdges = [];
+		// this.allEdges()
+		// 	.filter(([src, dst]) => !sdom[dst].includes(src))
+		// 	.forEach(([src, dst]) => (dj.arc(src, dst), dj.data.jEdges.push([src, dst])));
+		// dj.title = "DJ Graph";
+		// return dj;
+	} //*/
 
 	std::string Graph::toDot(const std::string &direction) const {
 		std::list<Node *> reflexives;
