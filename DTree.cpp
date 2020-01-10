@@ -88,7 +88,7 @@ namespace LL2W {
 			link((*this)[i].label(), (*this)[doms.at(i)].label());
 	}
 
-	std::unordered_map<Node *, Node *> DTree::dominators() const {
+	std::unordered_map<Node *, Node *> DTree::immediateDominators() const {
 		std::unordered_map<Node *, Node *> out;
 		for (Node *node: nodes()) {
 			for (Node *successor: *node) {
@@ -98,5 +98,24 @@ namespace LL2W {
 		}
 
 		return out;
+	}
+
+	std::unordered_map<Node *, std::unordered_set<Node *>> DTree::strictDominators() const {
+		std::unordered_map<Node *, std::unordered_set<Node *>> out_map;
+
+		for (Node *node: nodes()) {
+			out_map[node] = {};
+			if (node->in().empty())
+				continue;
+			Node *parent = *node->in().begin();
+			for (;;) {
+				out_map[node].insert(parent);
+				if (parent->in().empty() || *parent->in().begin() == parent)
+					break;
+				parent = *parent->in().begin();
+			}
+		}
+
+		return out_map;
 	}
 }
