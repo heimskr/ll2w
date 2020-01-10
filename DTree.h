@@ -5,7 +5,6 @@ namespace LL2W {
 		public:
 			/** Constructs a dominator tree from a graph. The dominator tree is a tree in which each node of the
 			 *  original graph is linked to by its immediate dominator. */
-			DTree(Graph &, Node *);
 			DTree(Graph &, Node &);
 			DTree(Graph &, const std::string &);
 

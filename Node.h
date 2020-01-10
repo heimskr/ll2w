@@ -20,7 +20,8 @@ namespace LL2W {
 		private:
 			Graph *parent;
 			std::string label_;
-			std::set<Node *, Node_less> adjacent_;
+			std::set<Node *, Node_less> out_;
+			std::set<Node *, Node_less> in_;
 			int index_ = -1;
 
 		public:
@@ -66,7 +67,10 @@ namespace LL2W {
 			int index();
 
 			/** Returns a const set of the node's outward edges. */
-			const std::set<Node *, Node_less> adjacent() const;
+			const std::set<Node *, Node_less> out() const;
+
+			/** Returns a const set of the node's inward edges. */
+			const std::set<Node *, Node_less> in() const;
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);
@@ -80,8 +84,11 @@ namespace LL2W {
 			/** Removes a neighbor with a given label. */
 			Node & operator-=(const std::string &);
 
-			decltype(adjacent_)::iterator begin();
-			decltype(adjacent_)::iterator end();
+			decltype(out_)::iterator begin();
+			decltype(out_)::iterator end();
+
+			decltype(in_)::iterator ibegin();
+			decltype(in_)::iterator iend();
 	};
 }
 

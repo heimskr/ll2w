@@ -3,12 +3,11 @@
 #include "DTree.h"
 
 namespace LL2W {
-	DTree::DTree(Graph &graph, Node &start): DTree(graph, &start) {}
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
-	DTree::DTree(Graph &graph, Node *start) {
+	DTree::DTree(Graph &graph, Node &start) {
 		const size_t gsize = graph.size();
 		std::unordered_map<Node *, int> visited;
-		std::vector<Node *> stack {start}, vertices;
+		std::vector<Node *> stack {&start}, vertices;
 		std::vector<int> semis(gsize, -1);
 		std::vector<int> ancestors(gsize, -1);
 		std::vector<int> labels(gsize, -1);
@@ -52,7 +51,7 @@ namespace LL2W {
 			}
 		};
 
-		dfs(start);
+		dfs(&start);
 
 		for (int i = gsize - 1; 1 <= i; --i) {
 			int w = vertices[i]->index();
@@ -81,7 +80,7 @@ namespace LL2W {
 				doms[w] = doms.at(doms.at(w));
 		}
 
-		doms[start->index()] = 0;
+		doms[start.index()] = 0;
 
 		graph.cloneTo(*this);
 		unlink();

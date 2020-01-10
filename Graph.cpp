@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "Graph.h"
+#include "DTree.h"
 
 namespace LL2W {
 	Graph::Graph() {}
@@ -138,7 +139,7 @@ namespace LL2W {
 
 		for (auto &pair: node_map) {
 			Node *old_node = pair.first, *new_node = pair.second;
-			for (Node *old_link: old_node->adjacent())
+			for (Node *old_link: old_node->out())
 				new_node->link(node_map.at(old_link), false);
 		}
 
@@ -186,7 +187,7 @@ namespace LL2W {
 
 		std::function<void(Node *)> visit = [&](Node *node) {
 			discovered[node] = ++time;
-			for (Node *out: node->adjacent()) {
+			for (Node *out: node->out()) {
 				if (discovered.count(out) == 0) {
 					parents[out] = node;
 					visit(out);
@@ -216,9 +217,8 @@ namespace LL2W {
 		}
 
 		return out;
-	} //*/
+	}
 
-	/*
 
 	Graph Graph::djGraph(Node &node) {
 		return djGraph(&node);
@@ -229,8 +229,8 @@ namespace LL2W {
 	}
 
 	Graph Graph::djGraph(Node *node) {
-		Graph dj = dTree(node);
-		std::unordered_map<Node *, Node *> doms = dominators();
+		DTree dj(*this, *node);
+		std::unordered_map<Node *, Node *> doms = dj.dominators();
 		for (const std::pair<Node *, Node *> &edge: allEdges()) {
 
 		}
@@ -246,7 +246,7 @@ namespace LL2W {
 		// 	.forEach(([src, dst]) => (dj.arc(src, dst), dj.data.jEdges.push([src, dst])));
 		// dj.title = "DJ Graph";
 		// return dj;
-	} //*/
+	}
 
 	std::string Graph::toDot(const std::string &direction) const {
 		std::list<Node *> reflexives;
@@ -279,7 +279,7 @@ namespace LL2W {
 		out << "\n";
 
 		for (const Node *node: nodes_) {
-			for (const Node *neighbor: node->adjacent()) {
+			for (const Node *neighbor: node->out()) {
 				if (neighbor != node)
 					out << "\t" << node->label() << " -> " << neighbor->label() << ";\n";
 			}
