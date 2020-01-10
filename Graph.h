@@ -90,14 +90,7 @@ namespace LL2W {
 			DFSResult DFS(const std::string &);
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
-			std::vector<std::pair<Node *, Node *>> allEdges() const;
-
-			/** Computes the DJ graph. */
-			Graph djGraph(Node *);
-			/** Computes the DJ graph. */
-			Graph djGraph(Node &);
-			/** Computes the DJ graph. */
-			Graph djGraph(const std::string &);
+			std::vector<std::pair<Node &, Node &>> allEdges() const;
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			std::string toDot(const std::string &direction = "TB") const;

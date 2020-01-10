@@ -209,43 +209,14 @@ namespace LL2W {
 		return DFS((*this)[start_label]);
 	}
 
-	std::vector<std::pair<Node *, Node *>> Graph::allEdges() const {
-		std::vector<std::pair<Node *, Node *>> out;
+	std::vector<std::pair<Node &, Node &>> Graph::allEdges() const {
+		std::vector<std::pair<Node &, Node &>> out;
 		for (Node *node: nodes_) {
 			for (Node *successor: *node)
-				out.push_back({node, successor});
+				out.push_back({*node, *successor});
 		}
 
 		return out;
-	}
-
-
-	Graph Graph::djGraph(Node &node) {
-		return djGraph(&node);
-	}
-
-	Graph Graph::djGraph(const std::string &label) {
-		return djGraph((*this)[label]);
-	}
-
-	Graph Graph::djGraph(Node *node) {
-		DTree dj(*this, *node);
-		std::unordered_map<Node *, Node *> doms = dj.dominators();
-		for (const std::pair<Node *, Node *> &edge: allEdges()) {
-
-		}
-
-		return dj;
-
-
-		// const dj: DJGraph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
-		// const sdom = Graph.strictDominators(dj);
-		// dj.data.jEdges = [];
-		// this.allEdges()
-		// 	.filter(([src, dst]) => !sdom[dst].includes(src))
-		// 	.forEach(([src, dst]) => (dj.arc(src, dst), dj.data.jEdges.push([src, dst])));
-		// dj.title = "DJ Graph";
-		// return dj;
 	}
 
 	std::string Graph::toDot(const std::string &direction) const {

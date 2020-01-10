@@ -2,7 +2,7 @@ COMPILER	?= clang++
 CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
 OUTPUT		?= ll2w
 MAIN		:= main
-MODULES		:= Node Graph DFSResult DTree
+MODULES		:= Node Graph DFSResult DTree DJGraph
 SOURCES		:= $(addsuffix .cpp,$(MODULES))
 OBJECTS		:= $(addsuffix .o,$(MODULES))
 
