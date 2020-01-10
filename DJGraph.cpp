@@ -12,11 +12,15 @@ namespace LL2W {
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
 
-		std::cout << "Dom keys:";
-		for (const auto &pair: doms) {
+		std::cout << "Dom keys:\n";
+		for (const auto &pair: std::map<std::string, std::unordered_set<std::string>>(doms.begin(), doms.end())) {
 			std::cout << pair.first << ":";
-			for (const auto &x: pair.second)
-				std::cout << " " << x;
+			if (pair.second.empty()) {
+				std::cout << " -";
+			} else {
+				for (const auto &x: std::set<std::string>(pair.second.begin(), pair.second.end()))
+					std::cout << " " << x;
+			}
 			std::cout << "\n";
 		}
 
