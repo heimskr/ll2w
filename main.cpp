@@ -17,8 +17,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	// lttest();
+	lttest();
 	djtest();
+	rendertest();
 }
 
 void lttest() {
@@ -55,7 +56,7 @@ void rendertest() {
 	LL2W::Graph complex {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 	complex.addEdges("1:2 1:5 1:8 2:3 3:4 2:4 4:5 6:7 7:6 6:8 8:9");
 	LL2W::DFSResult result = complex.DFS("1");
-	// std::cout << result;
+	std::cout << result;
 	complex.renderTo("graph_complex.png");
 	usleep(100000);
 

@@ -19,6 +19,7 @@ namespace LL2W {
 			/** Returns a map that maps each node to a set of all its strict dominators. */
 			std::unordered_map<Node *, std::unordered_set<Node *>> strictDominators() const;
 
+			/** Returns a map that maps each node's label to a set of the labels of all its strict dominators. */
 			std::unordered_map<std::string, std::unordered_set<std::string>> strictDominatorLabels() const;
 	};
 }

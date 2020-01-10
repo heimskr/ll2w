@@ -230,7 +230,7 @@ namespace LL2W {
 		out << "digraph rendered_graph {\n";
 		out << "graph [fontname = \"helvetica\"];\n";
 		out << "node [fontname = \"helvetica\"];\n";
-		out << "edge [fontname = \"helvetica\"];\n";
+		out << "edge [fontname = \"helvetica\", arrowhead=open, arrowsize=0.666];\n";
 		out << "\trankdir=" << direction << ";\n";
 		if (!reflexives.empty()) {
 			out << "\tnode [shape = doublecircle];";
