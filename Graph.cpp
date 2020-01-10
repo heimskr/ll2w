@@ -209,6 +209,31 @@ namespace LL2W {
 		return DFS((*this)[start_label]);
 	}
 
+	std::vector<Node *> Graph::BFS(Node &start) {
+		std::list<Node *> queue = {&start};
+		std::unordered_set<Node *> visited;
+		std::vector<Node *> order;
+		order.reserve(size());
+
+		while (!queue.empty()) {
+			Node *next = queue.front();
+			queue.pop_front();
+			for (Node *out: next->out()) {
+				if (visited.count(out) == 0) {
+					visited.insert(out);
+					order.push_back(out);
+					queue.push_back(out);
+				}
+			}
+		}
+
+		return order;
+	}
+
+	std::vector<Node *> Graph::BFS(const std::string &start_label) {
+		return BFS((*this)[start_label]);
+	}
+
 	std::vector<std::pair<Node &, Node &>> Graph::allEdges() const {
 		std::vector<std::pair<Node &, Node &>> out;
 		for (Node *node: nodes_) {

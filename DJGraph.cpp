@@ -13,23 +13,10 @@ namespace LL2W {
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
 
-		std::cout << "Dom keys:\n";
-		for (const auto &pair: std::map<std::string, std::unordered_set<std::string>>(doms.begin(), doms.end())) {
-			std::cout << pair.first << ":";
-			if (pair.second.empty()) {
-				std::cout << " -";
-			} else {
-				for (const auto &x: std::set<std::string>(pair.second.begin(), pair.second.end()))
-					std::cout << " " << x;
-			}
-			std::cout << "\n";
-		}
-
 		for (const auto [src, dest]: graph.allEdges()) {
 			if (doms.at(dest.label()).count(src.label()) != 0)
 				continue;
 			link(src.label(), dest.label());
-			std::cout << "J edge between " << src << " and " << dest << "\n";
 			jEdges.push_back({(*this)[src.label()], (*this)[dest.label()]});
 			jMap[&(*this)[src.label()]].insert(&(*this)[dest.label()]);
 		}
@@ -80,5 +67,9 @@ namespace LL2W {
 		}
 		out << "}\n";
 		return out.str();
+	}
+
+	Node::Map DJGraph::mergeSets(Node &start, Node &exit) {
+		
 	}
 }

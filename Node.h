@@ -4,13 +4,14 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace LL2W {
 	class Graph;
 
 	class Node {
 		friend class Graph;
-
 
 		struct Node_less {
 			bool operator()(Node *left, Node *right) const {
@@ -26,6 +27,7 @@ namespace LL2W {
 			int index_ = -1;
 
 		public:
+			using Map = std::unordered_map<Node *, std::unordered_set<Node *>>;
 			Node() = delete;
 			Node(Node &&) = delete;
 			Node(const Node &) = delete;

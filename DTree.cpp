@@ -101,8 +101,8 @@ namespace LL2W {
 		return out;
 	}
 
-	std::unordered_map<Node *, std::unordered_set<Node *>> DTree::strictDominators() const {
-		std::unordered_map<Node *, std::unordered_set<Node *>> out_map;
+	Node::Map DTree::strictDominators() const {
+		Node::Map out_map;
 
 		// For each node, add its parent to the set, and its parent's parent, and so on.
 		for (Node *node: nodes()) {

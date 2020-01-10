@@ -8,7 +8,7 @@
 namespace LL2W {
 	class DJGraph: public Graph {
 		private:
-			std::unordered_map<Node *, std::unordered_set<Node *>> jMap;
+			Node::Map jMap;
 
 		public:
 			std::vector<std::pair<Node &, Node &>> jEdges;
@@ -17,6 +17,8 @@ namespace LL2W {
 			DJGraph(Graph &, const std::string &);
 
 			virtual std::string toDot(const std::string &direction = "TB") override;
+
+			Node::Map mergeSets(Node &start, Node &exit);
 	};
 }
 

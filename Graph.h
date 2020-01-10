@@ -89,6 +89,11 @@ namespace LL2W {
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(const std::string &);
 
+			/** Returns a list of nodes in level (breadth-first) order. */
+			std::vector<Node *> BFS(Node &);
+			/** Returns a list of nodes in level (breadth-first) order. */
+			std::vector<Node *> BFS(const std::string &);
+
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
 			std::vector<std::pair<Node &, Node &>> allEdges() const;
 
