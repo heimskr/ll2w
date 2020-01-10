@@ -206,15 +206,15 @@ namespace LL2W {
 		return DFS((*this)[start_label]);
 	}
 
-	Graph Graph::lengauerTarjan(Node &start) {
-		return lengauerTarjan(&start);
+	Graph Graph::dTree(Node &start) {
+		return dTree(&start);
 	}
 
-	Graph Graph::lengauerTarjan(const std::string &label) {
-		return lengauerTarjan((*this)[label]);
+	Graph Graph::dTree(const std::string &label) {
+		return dTree((*this)[label]);
 	}
 
-	Graph Graph::lengauerTarjan(Node *start) {
+	Graph Graph::dTree(Node *start) {
 		const size_t gsize = size();
 		std::unordered_map<Node *, int> visited;
 		std::vector<Node *> stack {start}, vertices;
@@ -298,27 +298,6 @@ namespace LL2W {
 			out_graph.link(out_graph[i].label(), out_graph[doms.at(i)].label());
 
 		return out_graph;
-	}
-
-	Graph Graph::makeDTree(Node */* start */, bool /* bidirectional */) {
-		// const [lentar] = this.lengauerTarjan(getID(startID));
-		// const out = new Graph(Object.keys(lentar).length, {});
-		// const fn = (bidirectional? out.edge : out.arc).bind(out);
-		// Object.entries(lentar).forEach(([k, v]) => {
-		// 	out.nodes[k].data = this.nodes[k].data;
-		// 	fn(v == undefined? k : v, k)
-		// });
-
-		// return out;
-		return {};
-	}
-
-	Graph Graph::makeDTree(Node &start, bool bidirectional) {
-		return makeDTree(&start, bidirectional);
-	}
-
-	Graph Graph::makeDTree(const std::string &label, bool bidirectional) {
-		return makeDTree((*this)[label], bidirectional);
 	}
 
 	std::string Graph::toDot(const std::string &direction) const {

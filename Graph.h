@@ -84,19 +84,15 @@ namespace LL2W {
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(const std::string &);
 
-			Graph lengauerTarjan(Node *);
-			Graph lengauerTarjan(Node &);
-			Graph lengauerTarjan(const std::string &);
-
-			/** * Calculates the dominator tree of the graph for a given start node and returns a tree in which each
-			 * node other than the start node is linked to by its immediate dominator. */
-			Graph makeDTree(Node *, bool bidirectional = false);
-			/** * Calculates the dominator tree of the graph for a given start node and returns a tree in which each
-			 * node other than the start node is linked to by its immediate dominator. */
-			Graph makeDTree(Node &, bool bidirectional = false);
-			/** * Calculates the dominator tree of the graph for a given start node and returns a tree in which each
-			 * node other than the start node is linked to by its immediate dominator. */
-			Graph makeDTree(const std::string &, bool bidirectional = false);
+			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
+			 *  other than the start node is linked to by its immediate dominator. */
+			Graph dTree(Node *);
+			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
+			 *  other than the start node is linked to by its immediate dominator. */
+			Graph dTree(Node &);
+			/** Calculates the dominator tree of the graph for a given start node and returns a tree in which each node
+			 *  other than the start node is linked to by its immediate dominator. */
+			Graph dTree(const std::string &);
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			std::string toDot(const std::string &direction = "TB") const;

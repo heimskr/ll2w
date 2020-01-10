@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
 	lt_input.renderTo("graph_lt_in.png");
 	usleep(100000);
-	lt_input.lengauerTarjan(lt_input[0]).renderTo("graph_lt_out.png", "BT");
+	lt_input.dTree(lt_input[0]).renderTo("graph_lt_out.png", "BT");
 	usleep(100000);
 
 	graph.renderTo("graph_1234.png");
