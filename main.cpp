@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	usleep(100000);
 
 	LL2W::Graph lt_input {"R", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"};
-	lt_input.addEdges("A:D A:B B:A B:D B:E B:R C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H R:A R:B R:C");
+	lt_input.addEdges("A:D B:A B:D B:E C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H R:A R:B R:C");
 	// LL2W::Graph lt_input {"0", "1", "2", "3", "4", "5", "6", "7"};
 	// lt_input.addEdges("0:1 1:2 1:3 2:7 3:4 4:5 4:6 5:7 6:4");
 

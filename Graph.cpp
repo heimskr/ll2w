@@ -298,11 +298,14 @@ namespace LL2W {
 		//		ancestor(v) := ancestor(ancestor(v))
 		//	fi
 		std::function<void(int)> compress = [&](int v) {
-			if (ancestors[v] != -1 && ancestors[ancestors[v]] != -1) {
+			std::cout << "\e[1mCOMPRESS(" << v << ")\e[0m anc == " << lbl(ancestors.at(v)) << "\n";
+			// if (ancestors.at(v) != -1 && ancestors.at(ancestors.at(v)) != -1) {
+			if (ancestors.at(ancestors.at(v)) != -1) {
 				compress(ancestors[v]);
-				if (semis[labels[ancestors[v]]] <= semis[labels[v]])
-					labels[v] = labels[ancestors[v]];
-				ancestors[v] = ancestors[ancestors[v]];
+				if (semis.at(labels.at(ancestors.at(v))) <= semis.at(labels.at(v)))
+					labels.at(v) = labels.at(ancestors.at(v));
+				std::cout << "Anc[" << lbl(v) << "]: " << lbl(ancestors[v]) << " -> " << lbl(ancestors[ancestors[v]]) << "\n";
+				ancestors[v] = ancestors.at(ancestors.at(v));
 			}
 		};
 
@@ -314,6 +317,7 @@ namespace LL2W {
 		// 			EVAL := label(v);
 		// 		fi
 		std::function<int(int)> eval = [&](int v) {
+			std::cout << "\e[1mEVAL(" << v << ")\e[0m: ancestors[" << lbl(v) << "] == " << lbl(ancestors[v]) << "\n";
 			if (ancestors[v] == -1) {
 				return v;
 			} else {
@@ -348,10 +352,12 @@ namespace LL2W {
 		// 			od
 		// 			add w to bucket(vertex(semi(w)));
 		// 			LINK(parent(w), w)
+			std::cout << "\e[35mEnumerating preds for \e[1m" << lbl(w) << "\e[22m.\e[0m\n";
 			for (int v: preds.at(w)) {
+				std::cout << "\e[35m- " << v << "\e[0m\n";
 				int u = eval(v);
-				std::cout << "semis[" << lbl(u) << "]: " << semis.at(u) << "; semis[" << lbl(w) << "]: " << semis.at(w) << "\n";
-				if (semis.at(u) > semis.at(w))
+				std::cout << "\e[2msemis[" << lbl(u) << "] == " << semis.at(u) << "  [" << lbl(w) << "] == " << semis.at(w) << "\e[0m\n";
+				if (semis.at(u) < semis.at(w))
 					semis.at(w) = semis.at(u);
 			}
 
@@ -414,8 +420,7 @@ namespace LL2W {
 			}
 		}
 
-		assert(doms.at(start->index()) == 0);
-		// doms[start->index()] = 0;
+		doms[start->index()] = 0;
 
 		std::unordered_map<int, Node *> visited_inverse {};
 		for (const auto &pair: visited)
