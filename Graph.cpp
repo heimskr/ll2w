@@ -232,25 +232,7 @@ namespace LL2W {
 		std::vector<int> doms(gsize, -1);
 		std::vector<std::unordered_set<int>> preds(gsize), buckets(gsize);
 
-		// auto lbl = [&](int x) -> std::string { return x == -1? "-1" : (std::to_string(x) + ":" + vertices.at(x)->label()); };
 		auto lbl = [&](int x) -> std::string { return x == -1? "-1" : (std::to_string(x) + ":" + (*this)[x].label()); };
-
-		/*
-		// Converts a DFS index into a node index.
-		auto d2n = [&](int dfs_index) -> int {
-			return visited.at(vertices.at(dfs_index));
-		};
-
-		// Converts a node index into a DFS index.
-		auto n2d = [&](int node_index) -> int {
-			return visited.at((*this)[node_index]);
-		};
-
-		// Gets the value in semis for a DFS index.
-		auto semi = [&](int dfs_index) -> int {
-			return semis[d2n(dfs_index)];
-		};
-		//*/
 
 		// 	procedure DFS(integer v); begin
 		// 		semi(v) := n := n + 1;
@@ -277,11 +259,8 @@ namespace LL2W {
 				const int w = successor->index();
 				if (semis.at(w) == -1) {
 					std::cout << successor->label() << " [Ind:" << w << "]'s parent is " << node->label() << " [Ind:" << v << " DFS:" << semis[v] << "]\n";
-					// std::cout << lbl(w) << "'s parent is " << node->label() << " [I:" << v << " D:" << semis[v] << "]\n";
 					parents[w] = v;
-
 					std::cout << "\e[36mparent[" << lbl(w) << "] == " << lbl(parents.at(w)) << "\e[0m\n";
-
 					dfs(successor);
 				}
 
@@ -299,7 +278,6 @@ namespace LL2W {
 		//	fi
 		std::function<void(int)> compress = [&](int v) {
 			std::cout << "\e[1mCOMPRESS(" << v << ")\e[0m anc == " << lbl(ancestors.at(v)) << "\n";
-			// if (ancestors.at(v) != -1 && ancestors.at(ancestors.at(v)) != -1) {
 			if (ancestors.at(ancestors.at(v)) != -1) {
 				compress(ancestors[v]);
 				if (semis.at(labels.at(ancestors.at(v))) <= semis.at(labels.at(v)))
@@ -362,10 +340,6 @@ namespace LL2W {
 			}
 
 			std::cout << "semis[" << lbl(w) << "] == " << lbl(semis.at(w)) << "\n";
-
-			// std::cout << "\e[31mbuckets[" << lbl(visited.at(vertices.at(semis.at(w)))) << "].insert(" << lbl(w) << ")\e[0m\n";
-			// buckets[visited.at(vertices.at(semis.at(w)))].insert(w);
-
 			std::cout << "\e[31mbuckets[\e[1m" << lbl(vertices.at(semis.at(w))->index()) << "\e[22m].insert(\e[1m" << lbl(w) << "\e[22m)\e[0m\n";
 			buckets[vertices.at(semis.at(w))->index()].insert(w);
 
@@ -382,10 +356,8 @@ namespace LL2W {
 		// 				fi
 		// 			od
 		// 		od
-			// std::cout << "Parent for " << lbl(w) << " is " << lbl(parents.at(vertices.at(w)->index())) << "\n";
 			std::cout << "Parent for " << lbl(w) << " is " << lbl(parents.at(w)) << "\n";
 			std::unordered_set<int> &bucket = buckets.at(parents.at(w));
-			// std::unordered_set<int> &bucket = buckets.at(parents.at(vertices.at(w)->index()));
 
 			std::cout << "\e[32mBucket for \e[1m" << lbl(parents.at(w)) << "\e[22m:";
 			if (bucket.empty()) std::cout << " (empty)";
@@ -411,7 +383,6 @@ namespace LL2W {
 		// 		od
 		// 		dom(r) := 0
 		// end DOMINATORS;
-
 		for (size_t i = 1; i < gsize; ++i) {
 			int w = vertices.at(i)->index();
 			if (doms.at(w) != vertices.at(semis.at(w))->index()) {
@@ -422,16 +393,25 @@ namespace LL2W {
 
 		doms[start->index()] = 0;
 
-		std::unordered_map<int, Node *> visited_inverse {};
-		for (const auto &pair: visited)
-			visited_inverse.insert({pair.second, pair.first});
+		for (size_t i = 0; i < gsize; ++i)
+			std::cout << "Dom of " << lbl(i) << " is " << lbl(doms[i]) << "\n";
 
 		Graph out_graph = clone();
 		out_graph.unlink();
 		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
-			out_graph.link(visited_inverse.at(i)->label(), visited_inverse.at(doms.at(i))->label());
+			out_graph.link(out_graph[i].label(), out_graph[doms.at(i)].label());
 
-		std::cerr << "\e[0m";
+		for (Node *node: nodes_) std::cout << node->label() << " ";
+		std::cout << "\n";
+		for (Node *node: out_graph.nodes()) {
+			std::cout << node->label() << ":";
+			for (Node *succ: node->adjacent())
+				std::cout << " " << succ->label();
+			std::cout << "\n";
+		}
+
+
+
 		return out_graph;
 	}
 
