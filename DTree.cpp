@@ -103,6 +103,7 @@ namespace LL2W {
 	std::unordered_map<Node *, std::unordered_set<Node *>> DTree::strictDominators() const {
 		std::unordered_map<Node *, std::unordered_set<Node *>> out_map;
 
+		// For each node, add its parent to the set, and its parent's parent, and so on.
 		for (Node *node: nodes()) {
 			out_map[node] = {};
 			if (node->in().empty())
@@ -110,10 +111,22 @@ namespace LL2W {
 			Node *parent = *node->in().begin();
 			for (;;) {
 				out_map[node].insert(parent);
+				// Stop when we've reached the root. The node will have either no parents or only itself as its parent.
 				if (parent->in().empty() || *parent->in().begin() == parent)
 					break;
 				parent = *parent->in().begin();
 			}
+		}
+
+		return out_map;
+	}
+
+	std::unordered_map<std::string, std::unordered_set<std::string>> DTree::strictDominatorLabels() const {
+		std::unordered_map<std::string, std::unordered_set<std::string>> out_map;
+		for (const auto & [node, set]: strictDominators()) {
+			const std::string &label = node->label();
+			for (Node *sub: set)
+				out_map[label].insert(sub->label());
 		}
 
 		return out_map;

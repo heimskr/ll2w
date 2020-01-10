@@ -8,8 +8,8 @@ namespace LL2W {
 		public:
 			std::vector<std::pair<Node &, Node &>> jEdges;
 
-			DJGraph(Graph &, const std::string &);
 			DJGraph(Graph &, Node &);
+			DJGraph(Graph &, const std::string &);
 	};
 }
 

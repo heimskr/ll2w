@@ -1,6 +1,7 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+#include <ostream>
 #include <set>
 #include <string>
 
@@ -90,6 +91,8 @@ namespace LL2W {
 			decltype(in_)::iterator ibegin();
 			decltype(in_)::iterator iend();
 	};
+
+	std::ostream & operator<<(std::ostream &, const Node &);
 }
 
 #endif

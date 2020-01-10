@@ -128,4 +128,8 @@ namespace LL2W {
 	decltype(Node::in_)::iterator Node::iend() {
 		return in_.end();
 	}
+
+	std::ostream & operator<<(std::ostream &os, const Node &node) {
+		return os << node.label();
+	}
 }

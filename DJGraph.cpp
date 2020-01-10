@@ -1,26 +1,21 @@
+#include <iostream>
+
 #include "DJGraph.h"
 #include "DTree.h"
 
 namespace LL2W {
 	DJGraph::DJGraph(Graph &graph, const std::string &label): DJGraph(graph, graph[label]) {}
-
 	DJGraph::DJGraph(Graph &graph, Node &start) {
 		DTree dt(graph, start);
-		std::unordered_map<Node *, std::unordered_set<Node *>> doms = dt.strictDominators();
-		// for (const std::pair<Node &, Node &> &edge: allEdges()) {
-		// 	if (doms.at(&edge.first).count(&edge.second) != 0)
-		// 		continue;
-		// }
+		dt.cloneTo(*this);
+		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
 
-
-
-		// const dj: DJGraph = start instanceof Graph? start.clone(false) : this.dTree(start, bidirectional);
-		// const sdom = Graph.strictDominators(dj);
-		// dj.data.jEdges = [];
-		// this.allEdges()
-		// 	.filter(([src, dst]) => !sdom[dst].includes(src))
-		// 	.forEach(([src, dst]) => (dj.arc(src, dst), dj.data.jEdges.push([src, dst])));
-		// dj.title = "DJ Graph";
-		// return dj;
+		for (const auto [src, dest]: allEdges()) {
+			if (doms.at(dest.label()).count(src.label()) != 0)
+				continue;
+			src.link(dest);
+			std::cout << "J edge between " << src << " and " << dest << "\n";
+			jEdges.push_back({src, dest});
+		}
 	}
 }

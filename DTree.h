@@ -16,7 +16,10 @@ namespace LL2W {
 			/** Returns a map of every node in the graph to its immediate dominator. */
 			std::unordered_map<Node *, Node *> immediateDominators() const;
 
+			/** Returns a map that maps each node to a set of all its strict dominators. */
 			std::unordered_map<Node *, std::unordered_set<Node *>> strictDominators() const;
+
+			std::unordered_map<std::string, std::unordered_set<std::string>> strictDominatorLabels() const;
 	};
 }
 
