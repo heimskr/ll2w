@@ -228,6 +228,9 @@ namespace LL2W {
 
 		std::ostringstream out;
 		out << "digraph rendered_graph {\n";
+		out << "graph [fontname = \"helvetica\"];\n";
+		out << "node [fontname = \"helvetica\"];\n";
+		out << "edge [fontname = \"helvetica\"];\n";
 		out << "\trankdir=" << direction << ";\n";
 		if (!reflexives.empty()) {
 			out << "\tnode [shape = doublecircle];";
