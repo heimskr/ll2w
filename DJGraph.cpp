@@ -24,8 +24,7 @@ namespace LL2W {
 			std::cout << "\n";
 		}
 
-		for (const auto [src, dest]: dt.allEdges()) {
-			std::cout << "Checking doms[" << dest.label() << "]\n";
+		for (const auto [src, dest]: graph.allEdges()) {
 			if (doms.at(dest.label()).count(src.label()) != 0)
 				continue;
 			link(src.label(), dest.label());
