@@ -215,12 +215,6 @@ namespace LL2W {
 	}
 
 	Graph Graph::lengauerTarjan(Node *start) {
-		// procedure DOMINATORS(integer set array succ(1::n); integer r, n; integer array dom(1::n));
-		// begin
-		// 	integer array parent, ancestor, [child,] vertex(1::n);
-		// 	integer array label, semi[, size](0::n);
-		// 	integer set array pred, bucket(1::n);
-		// 	integer u, v, x;
 		const size_t gsize = size();
 		std::unordered_map<Node *, int> visited;
 		std::vector<Node *> stack {start}, vertices;
@@ -231,19 +225,6 @@ namespace LL2W {
 		std::vector<int> doms(gsize, -1);
 		std::vector<std::unordered_set<int>> preds(gsize), buckets(gsize);
 
-		// 	procedure DFS(integer v); begin
-		// 		semi(v) := n := n + 1;
-		// 		vertex(n) := label(v) := v;
-		// 		ancestor(v) := [child(v) :=] 0;
-		// 		[size(v) := 1;]
-		// 		for each w in succ(v) do
-		// 			if semi(w) == 0 then
-		// 				parent(w) := v;
-		// 				DFS (w);
-		// 			fi
-		// 			add v to pred(w)
-		// 		od
-		// 	end DFS;
 		std::function<void(Node *)> dfs = [&](Node *node) {
 			visited[node] = vertices.size();
 			const int v = node->index();
@@ -262,14 +243,6 @@ namespace LL2W {
 			}
 		};
 
-		//	procedure COMPRESS(integer v);
-		//	if ancestor(ancestor(v)) != 0 then
-		//		COMPRESS(ancestor(v))
-		//		if semi(label(ancestor(v))) <= semi(label(v)) then
-		//			label(v) := label(ancestor(v))
-		//		fi
-		//		ancestor(v) := ancestor(ancestor(v))
-		//	fi
 		std::function<void(int)> compress = [&](int v) {
 			if (ancestors.at(ancestors.at(v)) != -1) {
 				compress(ancestors[v]);
@@ -279,13 +252,6 @@ namespace LL2W {
 			}
 		};
 
-		// 	integer procedure EVAL(integer v);
-		// 		if ancestor(v) == 0 then
-		// 			EVAL := v
-		// 		else
-		// 			COMPRESS(v);
-		// 			EVAL := label(v);
-		// 		fi
 		std::function<int(int)> eval = [&](int v) {
 			if (ancestors[v] == -1) {
 				return v;
@@ -295,32 +261,11 @@ namespace LL2W {
 			}
 		};
 
-		// 	procedure LINK(integer v, w);
-		// 		ancestor(w) := v;
-
-		// step1:
-		//		for v := 1 until n do
-		// 			pred(v) := bucket(v) := ∅;
-		// 			semi(v) := 0;
-		// 		od
-		// 		n := 0
-		// 		DFS(r);
-		// 		[size(0) := label(0) := semi(0) := 0];
-		// 		for i := n by -1 until 2 do
-		// 			w := vertex(i);
 		dfs(start);
+
 		for (int i = gsize - 1; 1 <= i; --i) {
 			int w = vertices[i]->index();
 
-		// step2:
-		//			for each v in pred(w) do
-		// 				u := EVAL(v);
-		// 				if semi(u) > semi(w) then
-		// 					semi(w) := semi(u);
-		// 				fi
-		// 			od
-		// 			add w to bucket(vertex(semi(w)));
-		// 			LINK(parent(w), w)
 			for (int v: preds.at(w)) {
 				int u = eval(v);
 				if (semis.at(u) < semis.at(w))
@@ -330,17 +275,6 @@ namespace LL2W {
 			buckets[vertices.at(semis.at(w))->index()].insert(w);
 			ancestors[w] = parents.at(w);
 
-		// step3:
-		//			for each v in bucket(parent(w)) do
-		// 				delete v from bucket(parent(w));
-		// 				u := EVAL(v);
-		// 				if semi(u) < semi(v) then
-		// 					dom(v) := u
-		// 				else
-		// 					dom(v) := parent(w)
-		// 				fi
-		// 			od
-		// 		od
 			std::unordered_set<int> &bucket = buckets.at(parents.at(w));
 			for (auto iter = bucket.begin(); iter != bucket.end();) {
 				int v = *iter;
@@ -350,15 +284,6 @@ namespace LL2W {
 			}
 		}
 
-		// step4:
-		//		i := 2 until n do
-		// 			w := vertex(i);
-		// 			if dom(w) != vertex(semi(w)) then
-		// 				dom(w) := dom(dom(w))
-		// 			fi
-		// 		od
-		// 		dom(r) := 0
-		// end DOMINATORS;
 		for (size_t i = 1; i < gsize; ++i) {
 			int w = vertices.at(i)->index();
 			if (doms.at(w) != vertices.at(semis.at(w))->index())
