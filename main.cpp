@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	lttest();
+	// lttest();
 	djtest();
 }
 
@@ -32,15 +32,15 @@ void lttest() {
 
 void djtest() {
 	// http://citeseerx.ist.psu.edu/viewdoc/download;?doi=10.1.1.55.4084&rep=rep1&type=pdf
-	LL2W::Graph graph {"S", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "E"};
-	graph.addEdges("S:1 1:2 2:4 2:5 3:5 3:6 4:8 4:9 5:7 6:7 7:12 8:10 8:15 9:10 9:11 9:13 10:14 11:13 12:3 12:15 13:15 14:13 15:3 15:E S:E");
-	// LL2W::Graph graph {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"};
-	// graph.addEdges("1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8");
+	// LL2W::Graph graph {"S", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "E"};
+	// graph.addEdges("S:1 1:2 2:4 2:5 3:5 3:6 4:8 4:9 5:7 6:7 7:12 8:10 8:15 9:10 9:11 9:13 10:14 11:13 12:3 12:15 13:15 14:13 15:3 15:E S:E");
+	LL2W::Graph graph {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"};
+	graph.addEdges("1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8");
 
 	graph.renderTo("graph_dj_in.png");
 	usleep(100000);
-	LL2W::DJGraph dj(graph, "S");
-	LL2W::DTree(graph, "S").renderTo("graph_dj_dt.png", "BT");
+	LL2W::DJGraph dj(graph, graph[0]);
+	LL2W::DTree(graph, graph[0]).renderTo("graph_dj_dt.png", "BT");
 	usleep(100000);
 	dj.renderTo("graph_dj_out.png", "BT");
 	usleep(100000);

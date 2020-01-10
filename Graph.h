@@ -93,7 +93,7 @@ namespace LL2W {
 			std::vector<std::pair<Node &, Node &>> allEdges() const;
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
-			std::string toDot(const std::string &direction = "TB") const;
+			virtual std::string toDot(const std::string &direction = "TB");
 
 			/** Renders a PNG representation of the graph to an output file. */
 			void renderTo(const std::string &png_path, const std::string &direction = "TB");

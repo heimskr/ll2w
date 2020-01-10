@@ -219,7 +219,7 @@ namespace LL2W {
 		return out;
 	}
 
-	std::string Graph::toDot(const std::string &direction) const {
+	std::string Graph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes_) {
 			if (node->reflexive())
