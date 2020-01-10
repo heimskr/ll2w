@@ -61,9 +61,9 @@ namespace LL2W {
 		if (index_ != -1)
 			return index_;
 
-		for (const std::pair<const std::string &, Node *> pair: *parent) {
+		for (const Node *node: parent->nodes()) {
 			++index_;
-			if (pair.second == this)
+			if (node == this)
 				return index_;
 		}
 

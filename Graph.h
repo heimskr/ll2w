@@ -11,7 +11,7 @@
 namespace LL2W {
 	class Graph {
 		private:
-			std::list<Node *> nodes;
+			std::list<Node *> nodes_;
 			std::unordered_map<std::string, Node *> labelMap;
 
 		public:
@@ -31,6 +31,9 @@ namespace LL2W {
 
 			/** Returns the number of nodes in the graph. */
 			size_t size() const;
+
+			/** Returns a constant reference to the list of nodes. */
+			const std::list<Node *> nodes() const;
 
 			/** Returns the node at a given index. Throws an exception if no node exists at the index. */
 			Node & operator[](size_t) const;
