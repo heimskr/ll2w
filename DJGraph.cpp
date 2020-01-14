@@ -69,7 +69,9 @@ namespace LL2W {
 		return out.str();
 	}
 
-	Node::Map DJGraph::mergeSets(Node &start, Node &exit) {
-		
+	Node::Map DJGraph::mergeSets(Node &/* start */, Node &/* exit */) {
+		// std::vector<Node *> level_order = BFS(start);
+		// Node::Map visited;
+		return {};
 	}
 }

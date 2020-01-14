@@ -6,10 +6,13 @@
 #include "Graph.h"
 #include "DTree.h"
 #include "DJGraph.h"
+#include "parser/Parser.h"
+#include "parser/Lexer.h"
 
 void lttest();
 void djtest();
 void rendertest();
+void parsertest();
 
 int main(int argc, char **argv) {
 	if (argc != 3) {
@@ -17,9 +20,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	lttest();
-	djtest();
-	rendertest();
+	// lttest();
+	// djtest();
+	// rendertest();
+	parsertest();
 }
 
 void lttest() {
@@ -72,4 +76,11 @@ void rendertest() {
 	graph.unlink("two", "three");
 	graph.unlink("three", "three");
 	graph.renderTo("graph_unlinked.png");
+}
+
+void parsertest() {
+	LL2W::Parser::open("basic.ll");
+	LL2W::Parser::parse();
+	LL2W::Parser::root->debug();
+	LL2W::Parser::done();
 }
