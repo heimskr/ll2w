@@ -44,6 +44,9 @@ using AN = LL2W::ASTNode;
 %token TOK_X "x"
 %token TOK_LANGLE "<"
 %token TOK_RANGLE ">"
+%token TOK_VOID "void"
+%token TOK_ELLIPSE "..."
+%token TOK_ASTERISK "*"
 
 // Conversion operations
 %token TOK_TRUNC "trunc"
@@ -97,7 +100,7 @@ using AN = LL2W::ASTNode;
 %token TOK_COMDAT "comdat"
 %token TOK_ALIGN "align"
 
-%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER GDEF_EXTRAS
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS
 
 %start start
 
@@ -133,27 +136,28 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; }
                  ;
 
-// dotident: dotident "."             { $1->adopt($2); }
-//         | dotident TOK_IDENT       { $1->adopt($2); }
-//         | dotident TOK_DECIMAL { $1->adopt($2); }
-//         | { $$ = new AN(TOK_DOTIDENT, ""); }
-//         ;
-
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
 
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr;
+// Types
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function;
 type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
 type_ptr: type_any "*" { $$ = (new AN(POINTER, "*"))->adopt($1); delete $2; };
+type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$4, $3}); delete $2; delete $5; delete $6; }
+             | type_any "(" optional_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt($3); delete $2; delete $4; delete $5; };
+types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
+extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
+optional_ellipse: "..." | { $$ = nullptr; };
 
+
+// Variables
 variable: "%" varname { $$ = $1->adopt($2); }
 varname: dotident | TOK_STRING;
 
 floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
 // Globals
-
 globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
            global_or_constant type_any initial_value gdef_extras
            { delete $2; $$ = $1->adopt({$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13}); };
@@ -183,17 +187,11 @@ gdef_comdat: TOK_COMDAT "$" dotident { $$ = $1->adopt($3); delete $2; };
 gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Constants
-
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); }
 constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
 parattr: TOK_PARATTR | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; };
-
-// constant -> type_any (__ parattr):* " " (operand | const_expr) {% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
-// cst_to_type[X] -> $X __ constant to type_any
-// operand				->	(variable | dec | global | getelementptr_expr) | "null"
-
 operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); delete $3; }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP

@@ -78,6 +78,9 @@ DEREF				("dereferenceable"|"deferenceable_or_null")
 "float"						{ RTOKEN(FLOAT) }
 "<"							{ RTOKEN(LANGLE) }
 ">"							{ RTOKEN(RANGLE) }
+"void"						{ RTOKEN(VOID) }
+"..."						{ RTOKEN(ELLIPSE) }
+"*"							{ RTOKEN(ASTERISK) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
