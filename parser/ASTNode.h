@@ -29,7 +29,7 @@ namespace LL2W {
 		ASTNode(int sym, const Location &loc, const std::string *info);
 		ASTNode(int sym, const char *info);
 		ASTNode(int sym, const std::string *info);
-		~ASTNode();
+		virtual ~ASTNode();
 
 		ASTNode * adopt(ASTNode *);
 		ASTNode * adopt(std::initializer_list<ASTNode *>);
@@ -38,6 +38,7 @@ namespace LL2W {
 		/** Concatenates the lexerInfo fields of every element of the children vector. */
 		std::string concatenate() const;
 		void debug(int indent = 0);
+		virtual std::string debugExtra();
 
 		static void destroy(std::initializer_list<ASTNode *>);
 	};
@@ -45,6 +46,7 @@ namespace LL2W {
 	struct MetadataDef: public ASTNode {
 		bool distinct;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
+		std::string debugExtra() override;
 	};
 
 

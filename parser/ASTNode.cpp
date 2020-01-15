@@ -82,10 +82,14 @@ namespace LL2W {
 	void ASTNode::debug(int indent) {
 		for (int i = 0; i < indent; ++i)
 			std::cerr << "\e[2m│\e[0m   ";
-		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m @" << location << "\x1b[0;35m " << *lexerInfo << "\e[0m";
-		std::cerr << "\n";
+		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m @" << location << "\x1b[0;35m " << *lexerInfo;
+		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
 			child->debug(indent + 1);
+	}
+
+	std::string ASTNode::debugExtra() {
+		return "";
 	}
 
 	void ASTNode::destroy(std::initializer_list<ASTNode *> to_destroy) {
@@ -96,11 +100,15 @@ namespace LL2W {
 	}
 
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
-		ASTNode(TOK_BANG, StringSet::intern(dotident_node->concatenate().c_str())) {
+		ASTNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		distinct = distinct_node != nullptr;
 		if (distinct_node)
 			delete distinct_node;
 		adopt(dotident_node);
 		adopt(list);
+	}
+
+	std::string MetadataDef::debugExtra() {
+		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct";
 	}
 }
