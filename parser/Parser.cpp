@@ -1,15 +1,9 @@
 #include <fstream>
 #include <sstream>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <llvm/AsmParser/Parser.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/IR/LLVMContext.h>
-#pragma GCC diagnostic pop
-
 #include "Parser.h"
 #include "Lexer.h"
+#include "StringSet.h"
 
 namespace LL2W {
 	std::string Parser::filename = "";
@@ -20,20 +14,24 @@ namespace LL2W {
 		yyin = fopen(filename_.c_str(), "r");
 		yy_flex_debug = 0;
 		yydebug = 0;
-
-		std::ifstream ifs(filename_, std::ifstream::in);
-		std::stringstream ss;
-		ss << ifs.rdbuf();
-
-		llvm::SMDiagnostic err;
-		llvm::LLVMContext context;
 	}
 
 	void Parser::parse() {
 		yyparse();
+		Parser::combineDotIdents(Parser::root);
 	}
 
 	void Parser::done() {
 		yylex_destroy();
+	}
+
+	void Parser::combineDotIdents(ASTNode *node) {
+		if (node->symbol == TOK_DOTIDENT) {
+			node->lexerInfo = StringSet::intern(node->concatenate().c_str());
+			node->clear();
+		} else {
+			for (ASTNode *child: node->children)
+				Parser::combineDotIdents(child);
+		}
 	}
 }

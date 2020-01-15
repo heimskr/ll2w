@@ -65,6 +65,13 @@ namespace LL2W {
 		return this;
 	}
 
+	ASTNode * ASTNode::clear() {
+		for (ASTNode *child: children)
+			delete child;
+		children.clear();
+		return this;
+	}
+
 	std::string ASTNode::concatenate() const {
 		std::string out;
 		for (ASTNode *child: children)

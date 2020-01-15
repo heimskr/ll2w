@@ -19,7 +19,8 @@ using AN = LL2W::ASTNode;
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0, 0}, "");
 }
 
-%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_INT_LITERAL TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST TOK_PARATTR
+%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_INT_LITERAL TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
+%token TOK_PARATTR TOK_CONSTANT
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -59,7 +60,10 @@ metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); delete $2; }
 
 metadata_listitem: "!" TOK_STRING      { delete $1; $$ = $2; }
                  | "!" TOK_INT_LITERAL { delete $1; $$ = $2; }
+                 | constant
                  | "null";
+
+constant: TOK_INTTYPE TOK_INT_LITERAL { $$ = (new AN(TOK_CONSTANT, ""))->adopt({$1, $2}); }
 
 // constant -> type_any (__ parattr):* " " (operand | const_expr) {% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
 

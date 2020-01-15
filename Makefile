@@ -1,6 +1,5 @@
 COMPILER	?= clang++
-CFLAGS		:= $(strip $(shell llvm-config --cxxflags)) -std=c++2a -O0 -g -Wall -Wextra
-LDFLAGS		:= $(shell llvm-config --ldflags --libs --system-libs)
+CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
 OUTPUT		?= ll2w
 MAIN		:= main
 MODULES		:= Node Graph DFSResult DTree DJGraph parser/ASTNode parser/Lexer parser/yylex parser/yyparse \

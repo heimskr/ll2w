@@ -18,6 +18,7 @@ namespace LL2W {
 			static void open(const std::string &filename);
 			static void parse();
 			static void done();
+			static void combineDotIdents(ASTNode *node = Parser::root);
 
 			static const char * getName(int symbol);
 	};
