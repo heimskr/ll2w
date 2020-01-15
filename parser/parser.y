@@ -19,7 +19,7 @@ using AN = LL2W::ASTNode;
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0, 0}, "");
 }
 
-%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOAT TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
+%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
@@ -34,6 +34,7 @@ using AN = LL2W::ASTNode;
 %token TOK_RCURLY "}"
 %token TOK_COMMA ","
 %token TOK_NULL "null"
+%token TOK_FLOAT "float"
 %token TOK_PERCENT "%"
 %token TOK_AT "@"
 %token TOK_LPAR "("
@@ -41,6 +42,8 @@ using AN = LL2W::ASTNode;
 %token TOK_LSQUARE "["
 %token TOK_RSQUARE "]"
 %token TOK_X "x"
+%token TOK_LANGLE "<"
+%token TOK_RANGLE ">"
 
 // Conversion operations
 %token TOK_TRUNC "trunc"
@@ -94,7 +97,7 @@ using AN = LL2W::ASTNode;
 %token TOK_COMDAT "comdat"
 %token TOK_ALIGN "align"
 
-%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE GDEF_EXTRAS
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER GDEF_EXTRAS
 
 %start start
 
@@ -138,13 +141,16 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
 
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr;
 type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
+type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
+vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
+type_ptr: type_any "*" { $$ = (new AN(POINTER, "*"))->adopt($1); delete $2; };
 
 variable: "%" varname { $$ = $1->adopt($2); }
 varname: dotident | TOK_STRING;
 
-floatdecnull: TOK_FLOAT | TOK_DECIMAL | "null";
+floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
 // Globals
 
@@ -162,7 +168,7 @@ unnamed_addr: "local_unnamed_addr" | "unnamed_addr" | { $$ = nullptr; };
 addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
-initial_value: TOK_CSTRING | TOK_FLOAT | TOK_DECIMAL | initial_value_zero | "null"
+initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | initial_value_zero | "null"
              | type_any floatdecnull { $$ = $1->adopt($2); }
              | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
 initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
@@ -178,7 +184,7 @@ gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Constants
 
-constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2}); }
+constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); }
 constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
 parattr: TOK_PARATTR | retattr;

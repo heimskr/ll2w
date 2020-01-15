@@ -26,8 +26,8 @@ GVAR				("@"{DOTIDENT})
 PVAR				("%"{DOTIDENT})
 DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
-FLOAT				("-"?{DIGIT}+"."{DIGIT}+)
-FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
+FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
+FLOATTYPE			("half"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"inalloca"|"sret"|"nocapture"|"readonly")
@@ -59,7 +59,7 @@ DEREF				("dereferenceable"|"deferenceable_or_null")
 {STRING}					{ RTOKEN(STRING) }
 "target"					{ RTOKEN(TARGET) }
 "triple"					{ RTOKEN(TRIPLE) }
-{FLOAT}						{ RTOKEN(FLOAT) }
+{FLOATING}					{ RTOKEN(FLOATING) }
 {NUMBER}					{ RTOKEN(DECIMAL) }
 "distinct"					{ RTOKEN(DISTINCT) }
 "."							{ RTOKEN(DOT) }
@@ -75,6 +75,9 @@ DEREF				("dereferenceable"|"deferenceable_or_null")
 "]"							{ RTOKEN(RSQUARE) }
 "x"							{ RTOKEN(X) }
 "null"						{ RTOKEN(NULL) }
+"float"						{ RTOKEN(FLOAT) }
+"<"							{ RTOKEN(LANGLE) }
+">"							{ RTOKEN(RANGLE) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
