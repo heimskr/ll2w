@@ -161,23 +161,22 @@ floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
 // Globals
 globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
-           global_or_constant type_any initial_value gdef_extras
+           global_or_constant type_any optional_initial_value gdef_extras
            { delete $2; $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
        | "weak_odr" | "external"  | "common" | "internal"  | { $$ = nullptr; };
 visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
 dll_storage_class: TOK_DLLPORT | { $$ = nullptr; };
-thread_local: "thread_local" "(" thread_local_interior ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
-thread_local_interior: TOK_THREAD_LOCAL_TYPE;
+thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 unnamed_addr: "local_unnamed_addr" | "unnamed_addr" | { $$ = nullptr; };
 addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
+optional_initial_value: initial_value | { $$ = nullptr; };
 initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | initial_value_zero | "null"
              | type_any floatdecnull { $$ = $1->adopt($2); }
-             | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; }
-             | { $$ = nullptr; };
+             | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
 initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
