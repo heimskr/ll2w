@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "ASTNode.h"
 #include "StringSet.h"
@@ -117,5 +118,78 @@ namespace LL2W {
 
 	std::string MetadataDef::debugExtra() {
 		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
+	}
+
+	GlobalVarDef::GlobalVarDef(ASTNode *gvar_, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class_,
+	                           ASTNode *thread_local_, ASTNode *unnamed_addr_, ASTNode *addrspace_,
+	                           ASTNode *externally_initialized_, ASTNode *global_or_constant_, ASTNode *type_,
+	                           ASTNode *initial_value_, ASTNode *gdef_extras_): ASTNode(TOK_GVAR, gvar_->lexerInfo) {
+		if (linkage_) {
+			const std::string &link = *linkage_->lexerInfo;
+			if (link == "private")
+				linkage = Linkage::Private;
+			else if (link == "appending")
+				linkage = Linkage::Appending;
+			else if (link == "available_externally")
+				linkage = Linkage::AvailableExternally;
+			else if (link == "weak")
+				linkage = Linkage::Weak;
+			else if (link == "linkonce")
+				linkage = Linkage::Linkonce;
+			else if (link == "extern_weak")
+				linkage = Linkage::ExternWeak;
+			else if (link == "linkonce_odr")
+				linkage = Linkage::LinkonceOdr;
+			else if (link == "weak_odr")
+				linkage = Linkage::WeakOdr;
+			else if (link == "external")
+				linkage = Linkage::External;
+			else if (link == "common")
+				linkage = Linkage::Common;
+			else if (link == "internal")
+				linkage = Linkage::Internal;
+			delete linkage_;
+		}
+
+		if (visibility_) {
+			visibility = *visibility_->lexerInfo == "hidden"? Visibility::Hidden :
+				(*visibility_->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
+			delete visibility_;
+		}
+
+		if (dll_storage_class_) {
+			dllStorageClass = *dll_storage_class_->lexerInfo == "dllimport"?
+				DllStorageClass::Import : DllStorageClass::Export;
+			delete dll_storage_class_;
+		}
+	}
+
+	std::string GlobalVarDef::debugExtra() {
+		std::stringstream out;
+		out << "\e[36m";
+		switch (linkage) {
+			case Linkage::Default:             out << " l:default"; break;
+			case Linkage::Private:             out << " l:private"; break;
+			case Linkage::Appending:           out << " l:appending"; break;
+			case Linkage::AvailableExternally: out << " l:available_externally"; break;
+			case Linkage::Weak:                out << " l:weak"; break;
+			case Linkage::Linkonce:            out << " l:linkonce"; break;
+			case Linkage::ExternWeak:          out << " l:extern_weak"; break;
+			case Linkage::LinkonceOdr:         out << " l:linkonce_odr"; break;
+			case Linkage::WeakOdr:             out << " l:weak_odr"; break;
+			case Linkage::External:            out << " l:external"; break;
+			case Linkage::Common:              out << " l:common"; break;
+			case Linkage::Internal:            out << " l:internal"; break;
+		}
+		switch (visibility) {
+			case Visibility::Hidden:    out << " v:hidden"; break;
+			case Visibility::Protected: out << " v:protected"; break;
+		}
+		switch (dllStorageClass) {
+			case DllStorageClass::Import: out << " d:import"; break;
+			case DllStorageClass::Export: out << " d:export"; break;
+		}
+		out << "\e[0m";
+		return out.str();
 	}
 }
