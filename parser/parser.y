@@ -19,8 +19,8 @@ using AN = LL2W::ASTNode;
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0, 0}, "");
 }
 
-%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_INT_LITERAL TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
-%token TOK_PARATTR TOK_CONSTANT TOK_METADATA
+%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOAT TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
+%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -30,9 +30,69 @@ using AN = LL2W::ASTNode;
 %token TOK_TRIPLE "triple"
 %token TOK_DISTINCT "distinct"
 %token TOK_METADATA_OPEN "!{"
-%token TOK_CURLYC "}"
+%token TOK_LCURLY "{"
+%token TOK_RCURLY "}"
 %token TOK_COMMA ","
 %token TOK_NULL "null"
+%token TOK_PERCENT "%"
+%token TOK_AT "@"
+%token TOK_LPAR "("
+%token TOK_RPAR ")"
+
+// Conversion operations
+%token TOK_TRUNC "trunc"
+%token TOK_ZEXT "zext"
+%token TOK_SEXT "sext"
+%token TOK_FPTRUNC "fptrunc"
+%token TOK_FPEXT "fpext"
+%token TOK_FPTOUI "fptoui"
+%token TOK_FPTOSI "fptosi"
+%token TOK_UITOFP "uitofp"
+%token TOK_SITOFP "sitofp"
+%token TOK_PTRTOINT "ptrtoint"
+%token TOK_INTTOPTR "inttoptr"
+%token TOK_BITCAST "bitcast"
+%token TOK_ADDRSPACECAST "addrspacecast"
+
+%token TOK_TO "to"
+
+// Linkage
+%token TOK_PRIVATE "private"
+%token TOK_APPENDING "appending"
+%token TOK_AVAILABLE_EXTERNALLY "available_externally"
+%token TOK_WEAK "weak"
+%token TOK_LINKONCE "linkonce"
+%token TOK_EXTERN_WEAK "extern_weak"
+%token TOK_LINKONCE_ODR "linkonce_odr"
+%token TOK_WEAK_ODR "weak_odr"
+%token TOK_EXTERNAL "external"
+%token TOK_COMMON "common"
+%token TOK_INTERNAL "internal"
+
+// Visibility
+%token TOK_DEFAULT "default"
+%token TOK_HIDDEN "hidden"
+%token TOK_PROTECTED "protected"
+
+%token TOK_DLLIMPORT "dllimport"
+%token TOK_DLLEXPORT "dllexport"
+%token TOK_THREAD_LOCAL "thread_local"
+
+%token TOK_LOCALDYNAMIC "localdynamic"
+%token TOK_INITIALEXEC "initialexec"
+%token TOK_LOCALEXEC "localexec"
+%token TOK_LOCAL_UNNAMED_ADDR "local_unnamed_addr"
+%token TOK_UNNAMED_ADDR "unnamed_addr"
+%token TOK_ADDRSPACE "addrspace"
+%token TOK_ZEROINITIALIZER "zeroinitializer"
+%token TOK_EXTERNALLY_INITIALIZED "externally_initialized"
+%token TOK_GLOBAL "global"
+%token TOK_CONSTANT "constant"
+%token TOK_SECTION "section"
+%token TOK_COMDAT "comdat"
+%token TOK_ALIGN "align"
+
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST
 
 %start start
 
@@ -51,7 +111,7 @@ source_filename: "source_filename" "=" TOK_STRING { AN::destroy({$1, $2}); $$ = 
 target: TOK_TARGET target_type "=" TOK_STRING { $$ = $1->adopt({$2, $4}); }
 target_type: "datalayout" | "triple";
 
-metadata_def: "!" dotident "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_CURLYC { AN::destroy({$1, $3, $5, $7}); $$ = new MetadataDef($2, $4, $6); };
+metadata_def: "!" TOK_DOTIDENT "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_RCURLY { AN::destroy({$1, $3, $5, $7}); $$ = new MetadataDef($2, $4, $6); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); delete $2; }
              | metadata_listitem { $$ = (new AN(TOK_METADATA_LIST, ""))->adopt($1); }
@@ -59,27 +119,67 @@ metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); delete $2; }
              ;
 
 metadata_listitem: "!" TOK_STRING      { delete $1; $$ = $2; }
-                 | "!" TOK_INT_LITERAL { delete $1; $$ = $2; }
+                 | "!" TOK_DECIMAL { delete $1; $$ = $2; }
                  | constant
                  | "null";
-
-constant: TOK_INTTYPE TOK_INT_LITERAL { $$ = (new AN(TOK_CONSTANT, ""))->adopt({$1, $2}); }
-
-// constant -> type_any (__ parattr):* " " (operand | const_expr) {% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; }
                  ;
 
-// decvar: TOK_INT_LITERAL | TOK_IDENT;
+// dotident: dotident "."             { $1->adopt($2); }
+//         | dotident TOK_IDENT       { $1->adopt($2); }
+//         | dotident TOK_DECIMAL { $1->adopt($2); }
+//         | { $$ = new AN(TOK_DOTIDENT, ""); }
+//         ;
 
-dotident: dotident "."             { $1->adopt($2); }
-        | dotident TOK_IDENT       { $1->adopt($2); }
-        | dotident TOK_INT_LITERAL { $1->adopt($2); }
-        | { $$ = new AN(TOK_DOTIDENT, ""); }
-        ;
+type_any: TOK_INTTYPE;
 
-// type_any: TOK_INTTYPE;
+variable: "%" varname { $$ = $1->adopt($2); }
+varname: TOK_DOTIDENT | TOK_DECIMAL | TOK_STRING;
+
+floatdecnull: TOK_FLOAT | TOK_DECIMAL | "null";
+
+// Globals
+
+globalvar: "@" TOK_DOTIDENT;
+globaldef: globalvar "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
+           global_or_constant type_any initial_value gdef_section gdef_comdat gdef_align
+           { delete $2; $$ = $1->adopt({$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15}); };
+
+linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
+       | "weak_odr" | "external"  | "common" | "internal"  | { $$ = nullptr; };
+visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
+dll_storage_class: "dllimport" | "dllexport" | { $$ = nullptr; };
+thread_local: "thread_local" "(" thread_local_interior ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+thread_local_interior: "localdynamic" | "initialexec" | "localexec";
+unnamed_addr: "local_unnamed_addr" | "unnamed_addr";
+addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
+global_or_constant: "global" | "constant";
+initial_value: TOK_CSTRING | TOK_FLOAT | TOK_DECIMAL | initial_value_zero | "null"
+             | type_any floatdecnull { $$ = $1->adopt($2); }
+             | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
+initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
+initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
+                  | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
+gdef_section: "," TOK_SECTION TOK_STRING { $$ = $2->adopt($3); delete $1; } | { $$ = nullptr; };
+gdef_comdat: "," TOK_COMDAT "$" TOK_DOTIDENT { $$ = $2->adopt($4); delete $1; delete $3; } | { $$ = nullptr; };
+gdef_align: "," TOK_ALIGN TOK_DECIMAL { $$ = $2->adopt($3); delete $1; } | { $$ = nullptr; };
+
+// Constants
+
+constant: type_any constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2}); }
+constant_right: operand | const_expr;
+
+// constant -> type_any (__ parattr):* " " (operand | const_expr) {% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
+// cst_to_type[X] -> $X __ constant to type_any
+// operand				->	(variable | dec | global | getelementptr_expr) | "null"
+
+operand: variable | TOK_DECIMAL | globalvar | /* getelementptr_expr | */ "null";
+const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); delete $3; }
+conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
+       | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
 
 %%
 

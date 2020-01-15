@@ -37,7 +37,7 @@ namespace LL2W {
 		ASTNode * clear();
 		/** Concatenates the lexerInfo fields of every element of the children vector. */
 		std::string concatenate() const;
-		void debug(int indent = 0);
+		void debug(int indent = 0, bool is_last = false);
 		virtual std::string debugExtra();
 
 		static void destroy(std::initializer_list<ASTNode *>);

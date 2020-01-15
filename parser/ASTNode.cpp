@@ -79,13 +79,20 @@ namespace LL2W {
 		return out;
 	}
 
-	void ASTNode::debug(int indent) {
-		for (int i = 0; i < indent; ++i)
-			std::cerr << "\e[2m│\e[0m   ";
+	void ASTNode::debug(int indent, bool is_last) {
+		for (int i = 0; i < indent; ++i) {
+			std::cerr << "\e[2m";
+			if (i == indent - 1)
+				std::cerr << (is_last? "└── " : "├── ");
+			else
+				std::cerr << "│   ";
+			std::cerr << "\e[0m";
+		}
+
 		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m @" << location << "\x1b[0;35m " << *lexerInfo;
 		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
-			child->debug(indent + 1);
+			child->debug(indent + 1, child == children.back());
 	}
 
 	std::string ASTNode::debugExtra() {
@@ -109,6 +116,6 @@ namespace LL2W {
 	}
 
 	std::string MetadataDef::debugExtra() {
-		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct";
+		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
 	}
 }

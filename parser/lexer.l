@@ -15,48 +15,108 @@
 
 LETTER          [A-Za-z_]
 DIGIT           [0-9]
-NUMBER          ({DIGIT}+)
+NUMBER          ("-"?{DIGIT}+)
 IDENT           ({LETTER}({LETTER}|{DIGIT}|_)*)
 CHARCON         ('([^\\'\n]|\\[\\'"0nt])')
-PERCENTID       (%({LETTER}|{DIGIT})+)
 STRING          (\"([^\\"\n]|\\[\\’"0nt])*\")
 SGCOMMENT       (";"[^\n]*)
 MLCOMMENT       ("/*"([^*]|"*"[^/])*"*/")
 INTTYPE         ("i"{DIGIT}+)
+GVAR            ("@"{DOTIDENT})
+PVAR            ("%"{DOTIDENT})
+DOTIDENT        (({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
+CSTRING         ("c"{STRING})
+FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
 
 %%
 
-{SGCOMMENT}     { }
-{MLCOMMENT}     { }
-[ \t]+          { }
-\n              { LL2W::Lexer::newline(); }
+{SGCOMMENT}					{ }
+{MLCOMMENT}					{ }
+[ \t]+						{ }
+\n							{ LL2W::Lexer::newline(); }
 
-{PERCENTID}     { RTOKEN(PERCENTID) }
-{INTTYPE}       { RTOKEN(INTTYPE);  }
+{PVAR}						{ RTOKEN(PVAR) }
+{GVAR}						{ RTOKEN(GVAR) }
+{INTTYPE}					{ RTOKEN(INTTYPE)  }
 
-"!"						{ RTOKEN(BANG);  }
-"datalayout"			{ RTOKEN(DATALAYOUT) }
-"="						{ RTOKEN(EQUALS) }
-"source_filename"		{ RTOKEN(SOURCE_FILENAME) }
-{STRING}				{ RTOKEN(STRING) }
-"target"				{ RTOKEN(TARGET) }
-"triple"				{ RTOKEN(TRIPLE) }
-{NUMBER}				{ RTOKEN(INT_LITERAL) }
-"distinct"				{ RTOKEN(DISTINCT) }
-"."						{ RTOKEN(DOT) }
-"!{"					{ RTOKEN(METADATA_OPEN) }
-"}"						{ RTOKEN(CURLYC) }
-","						{ RTOKEN(COMMA) }
-"null"					{ RTOKEN(NULL) }
-"byval"					{ RTOKEN(PARATTR) }
-"inalloca"				{ RTOKEN(PARATTR) }
-"sret"					{ RTOKEN(PARATTR) }
-"nocapture"				{ RTOKEN(PARATTR) }
-"readonly"				{ RTOKEN(PARATTR) }
+"!"							{ RTOKEN(BANG)  }
+"datalayout"				{ RTOKEN(DATALAYOUT) }
+"="							{ RTOKEN(EQUALS) }
+"source_filename"			{ RTOKEN(SOURCE_FILENAME) }
+{CSTRING}					{ RTOKEN(CSTRING) }
+{STRING}					{ RTOKEN(STRING) }
+"target"					{ RTOKEN(TARGET) }
+"triple"					{ RTOKEN(TRIPLE) }
+{FLOAT}						{ RTOKEN(FLOAT) }
+{NUMBER}					{ RTOKEN(DECIMAL) }
+"distinct"					{ RTOKEN(DISTINCT) }
+"."							{ RTOKEN(DOT) }
+"!{"						{ RTOKEN(METADATA_OPEN) }
+"{"							{ RTOKEN(LCURLY) }
+"}"							{ RTOKEN(RCURLY) }
+","							{ RTOKEN(COMMA) }
+"%"							{ RTOKEN(PERCENT) }
+"@"							{ RTOKEN(AT) }
+"("							{ RTOKEN(LPAR) }
+")"							{ RTOKEN(RPAR) }
+"null"						{ RTOKEN(NULL) }
+"byval"						{ RTOKEN(PARATTR) }
+"inalloca"					{ RTOKEN(PARATTR) }
+"sret"						{ RTOKEN(PARATTR) }
+"nocapture"					{ RTOKEN(PARATTR) }
+"readonly"					{ RTOKEN(PARATTR) }
 
-{IDENT}					{ RTOKEN(IDENT) }
+"trunc"						{ RTOKEN(TRUNC) }
+"zext"						{ RTOKEN(ZEXT) }
+"sext"						{ RTOKEN(SEXT) }
+"fptrunc"					{ RTOKEN(FPTRUNC) }
+"fpext"						{ RTOKEN(FPEXT) }
+"fptoui"					{ RTOKEN(FPTOUI) }
+"fptosi"					{ RTOKEN(FPTOSI) }
+"uitofp"					{ RTOKEN(UITOFP) }
+"sitofp"					{ RTOKEN(SITOFP) }
+"ptrtoint"					{ RTOKEN(PTRTOINT) }
+"inttoptr"					{ RTOKEN(INTTOPTR) }
+"bitcast"					{ RTOKEN(BITCAST) }
+"addrspacecast"				{ RTOKEN(ADDRSPACECAST) }
 
-.				{ LL2W::Lexer::badchar(*yytext); }
+"private"					{ RTOKEN(PRIVATE) }
+"appending"					{ RTOKEN(APPENDING) }
+"available_externally"		{ RTOKEN(AVAILABLE_EXTERNALLY) }
+"weak"						{ RTOKEN(WEAK) }
+"linkonce"					{ RTOKEN(LINKONCE) }
+"extern_weak"				{ RTOKEN(EXTERN_WEAK) }
+"linkonce_odr"				{ RTOKEN(LINKONCE_ODR) }
+"weak_odr"					{ RTOKEN(WEAK_ODR) }
+"external"					{ RTOKEN(EXTERNAL) }
+"common"					{ RTOKEN(COMMON) }
+"internal"					{ RTOKEN(INTERNAL) }
+
+"default"					{ RTOKEN(DEFAULT) }
+"hidden"					{ RTOKEN(HIDDEN) }
+"protected"					{ RTOKEN(PROTECTED) }
+
+"dllimport"					{ RTOKEN(DLLIMPORT) }
+"dllexport"					{ RTOKEN(DLLEXPORT) }
+"thread_local"				{ RTOKEN(THREAD_LOCAL) }
+
+"localdynamic"				{ RTOKEN(LOCALDYNAMIC) }
+"initialexec"				{ RTOKEN(INITIALEXEC) }
+"localexec"					{ RTOKEN(LOCALEXEC) }
+"local_unnamed_addr"		{ RTOKEN(LOCAL_UNNAMED_ADDR) }
+"unnamed_addr"				{ RTOKEN(UNNAMED_ADDR) }
+"addrspace"					{ RTOKEN(ADDRSPACE) }
+"zeroinitializer"			{ RTOKEN(ZEROINITIALIZER) }
+"externally_initialized"	{ RTOKEN(EXTERNALLY_INITIALIZED) }
+"global"					{ RTOKEN(GLOBAL) }
+"constant"					{ RTOKEN(CONSTANT) }
+"section"					{ RTOKEN(SECTION) }
+"comdat"					{ RTOKEN(COMDAT) }
+"align"						{ RTOKEN(ALIGN) }
+
+{DOTIDENT}					{ RTOKEN(DOTIDENT) }
+
+.						{ LL2W::Lexer::badchar(*yytext); }
 %%
 
 #undef RTOKEN
