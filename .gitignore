@@ -37,4 +37,5 @@ ll2w
 *.png
 .DS_Store
 .vscode
+parser/yyparse*
 
