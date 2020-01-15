@@ -33,6 +33,7 @@ THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"inalloca"|"sret"|"nocapture"|"readonly")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"deferenceable_or_null")
+STRUCTVAR			("%struct."{IDENT})
 
 %%
 
@@ -41,6 +42,7 @@ DEREF				("dereferenceable"|"deferenceable_or_null")
 [ \t]+						{ }
 \n							{ LL2W::Lexer::newline(); }
 
+{STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
 {PVAR}						{ RTOKEN(PVAR) }
 {GVAR}						{ RTOKEN(GVAR) }
 {INTTYPE}					{ RTOKEN(INTTYPE)  }

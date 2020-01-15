@@ -21,6 +21,7 @@ using AN = LL2W::ASTNode;
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
+%token TOK_STRUCTVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -139,7 +140,7 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
 
 // Types
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function | type_struct;
 type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
@@ -149,6 +150,7 @@ type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION,
 types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
+type_struct: TOK_STRUCTVAR;
 
 
 // Variables
@@ -160,7 +162,7 @@ floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 // Globals
 globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
            global_or_constant type_any initial_value gdef_extras
-           { delete $2; $$ = $1->adopt({$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13}); };
+           { delete $2; $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
        | "weak_odr" | "external"  | "common" | "internal"  | { $$ = nullptr; };
@@ -174,7 +176,8 @@ externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
 initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | initial_value_zero | "null"
              | type_any floatdecnull { $$ = $1->adopt($2); }
-             | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
+             | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; }
+             | { $$ = nullptr; };
 initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
