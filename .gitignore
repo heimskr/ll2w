@@ -38,4 +38,5 @@ ll2w
 .DS_Store
 .vscode
 parser/yyparse*
+parser/yylex*
 
