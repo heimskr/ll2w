@@ -59,6 +59,9 @@ FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
 "@"							{ RTOKEN(AT) }
 "("							{ RTOKEN(LPAR) }
 ")"							{ RTOKEN(RPAR) }
+"["							{ RTOKEN(LSQUARE) }
+"]"							{ RTOKEN(RSQUARE) }
+"x"							{ RTOKEN(X) }
 "null"						{ RTOKEN(NULL) }
 "byval"						{ RTOKEN(PARATTR) }
 "inalloca"					{ RTOKEN(PARATTR) }

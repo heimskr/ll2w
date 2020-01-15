@@ -38,6 +38,9 @@ using AN = LL2W::ASTNode;
 %token TOK_AT "@"
 %token TOK_LPAR "("
 %token TOK_RPAR ")"
+%token TOK_LSQUARE "["
+%token TOK_RSQUARE "]"
+%token TOK_X "x"
 
 // Conversion operations
 %token TOK_TRUNC "trunc"
@@ -92,7 +95,7 @@ using AN = LL2W::ASTNode;
 %token TOK_COMDAT "comdat"
 %token TOK_ALIGN "align"
 
-%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE GDEF_EXTRAS
 
 %start start
 
@@ -103,6 +106,7 @@ start: program { $$ = $1 = nullptr; };
 program: program source_filename { $1->adopt($2); }
        | program target          { $1->adopt($2); }
        | program metadata_def    { $1->adopt($2); }
+       | program globaldef       { $1->adopt($2); }
        | { $$ = Parser::root; }
        ;
 
@@ -111,7 +115,7 @@ source_filename: "source_filename" "=" TOK_STRING { AN::destroy({$1, $2}); $$ = 
 target: TOK_TARGET target_type "=" TOK_STRING { $$ = $1->adopt({$2, $4}); }
 target_type: "datalayout" | "triple";
 
-metadata_def: "!" TOK_DOTIDENT "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_RCURLY { AN::destroy({$1, $3, $5, $7}); $$ = new MetadataDef($2, $4, $6); };
+metadata_def: "!" dotident "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_RCURLY { AN::destroy({$1, $3, $5, $7}); $$ = new MetadataDef($2, $4, $6); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); delete $2; }
              | metadata_listitem { $$ = (new AN(TOK_METADATA_LIST, ""))->adopt($1); }
@@ -133,28 +137,30 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 //         | { $$ = new AN(TOK_DOTIDENT, ""); }
 //         ;
 
-type_any: TOK_INTTYPE;
+dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
+
+type_any: TOK_INTTYPE | type_array;
+type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 
 variable: "%" varname { $$ = $1->adopt($2); }
-varname: TOK_DOTIDENT | TOK_DECIMAL | TOK_STRING;
+varname: dotident | TOK_STRING;
 
 floatdecnull: TOK_FLOAT | TOK_DECIMAL | "null";
 
 // Globals
 
-globalvar: "@" TOK_DOTIDENT;
-globaldef: globalvar "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
-           global_or_constant type_any initial_value gdef_section gdef_comdat gdef_align
-           { delete $2; $$ = $1->adopt({$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15}); };
+globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
+           global_or_constant type_any initial_value gdef_extras
+           { delete $2; $$ = $1->adopt({$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13}); };
 
 linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
        | "weak_odr" | "external"  | "common" | "internal"  | { $$ = nullptr; };
 visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
 dll_storage_class: "dllimport" | "dllexport" | { $$ = nullptr; };
-thread_local: "thread_local" "(" thread_local_interior ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+thread_local: "thread_local" "(" thread_local_interior ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 thread_local_interior: "localdynamic" | "initialexec" | "localexec";
-unnamed_addr: "local_unnamed_addr" | "unnamed_addr";
-addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+unnamed_addr: "local_unnamed_addr" | "unnamed_addr" | { $$ = nullptr; };
+addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
 initial_value: TOK_CSTRING | TOK_FLOAT | TOK_DECIMAL | initial_value_zero | "null"
@@ -163,9 +169,13 @@ initial_value: TOK_CSTRING | TOK_FLOAT | TOK_DECIMAL | initial_value_zero | "nul
 initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
-gdef_section: "," TOK_SECTION TOK_STRING { $$ = $2->adopt($3); delete $1; } | { $$ = nullptr; };
-gdef_comdat: "," TOK_COMDAT "$" TOK_DOTIDENT { $$ = $2->adopt($4); delete $1; delete $3; } | { $$ = nullptr; };
-gdef_align: "," TOK_ALIGN TOK_DECIMAL { $$ = $2->adopt($3); delete $1; } | { $$ = nullptr; };
+gdef_extras: gdef_extras "," gdef_section { $$ = $1->adopt($3); delete $2; }
+           | gdef_extras "," gdef_comdat { $$ = $1->adopt($3); delete $2; }
+           | gdef_extras "," gdef_align { $$ = $1->adopt($3); delete $2; }
+           | { $$ = new AN(GDEF_EXTRAS, ""); };
+gdef_section: TOK_SECTION TOK_STRING { $$ = $1->adopt($2); };
+gdef_comdat: TOK_COMDAT "$" dotident { $$ = $1->adopt($3); delete $2; };
+gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Constants
 
@@ -176,7 +186,7 @@ constant_right: operand | const_expr;
 // cst_to_type[X] -> $X __ constant to type_any
 // operand				->	(variable | dec | global | getelementptr_expr) | "null"
 
-operand: variable | TOK_DECIMAL | globalvar | /* getelementptr_expr | */ "null";
+operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); delete $3; }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
        | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
