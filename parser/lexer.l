@@ -13,20 +13,26 @@
 %option noyywrap
 %option warn
 
-LETTER          [A-Za-z_]
-DIGIT           [0-9]
-NUMBER          ("-"?{DIGIT}+)
-IDENT           ({LETTER}({LETTER}|{DIGIT}|_)*)
-CHARCON         ('([^\\'\n]|\\[\\'"0nt])')
-STRING          (\"([^\\"\n]|\\[\\’"0nt])*\")
-SGCOMMENT       (";"[^\n]*)
-MLCOMMENT       ("/*"([^*]|"*"[^/])*"*/")
-INTTYPE         ("i"{DIGIT}+)
-GVAR            ("@"{DOTIDENT})
-PVAR            ("%"{DOTIDENT})
-DOTIDENT        (({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
-CSTRING         ("c"{STRING})
-FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
+LETTER				[A-Za-z_]
+DIGIT				[0-9]
+NUMBER				("-"?{DIGIT}+)
+IDENT				({LETTER}({LETTER}|{DIGIT}|_)*)
+CHARCON				('([^\\'\n]|\\[\\'"0nt])')
+STRING				(\"([^\\"\n]|\\[\\’"0nt])*\")
+SGCOMMENT			(";"[^\n]*)
+MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
+INTTYPE				("i"{DIGIT}+)
+GVAR				("@"{DOTIDENT})
+PVAR				("%"{DOTIDENT})
+DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
+CSTRING				("c"{STRING})
+FLOAT				("-"?{DIGIT}+"."{DIGIT}+)
+FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
+DLLPORT				("dllimport"|"dllexport")
+THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
+PARATTR				("byval"|"inalloca"|"sret"|"nocapture"|"readonly")
+RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
+DEREF				("dereferenceable"|"deferenceable_or_null")
 
 %%
 
@@ -38,6 +44,12 @@ FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
 {PVAR}						{ RTOKEN(PVAR) }
 {GVAR}						{ RTOKEN(GVAR) }
 {INTTYPE}					{ RTOKEN(INTTYPE)  }
+{FLOATTYPE}					{ RTOKEN(FLOATTYPE)  }
+{DLLPORT}					{ RTOKEN(DLLPORT) }
+{THREAD_LOCAL_TYPE}			{ RTOKEN(THREAD_LOCAL_TYPE) }
+{PARATTR}					{ RTOKEN(PARATTR) }
+{RETATTR}					{ RTOKEN(RETATTR) }
+{DEREF}						{ RTOKEN(DEREF) }
 
 "!"							{ RTOKEN(BANG)  }
 "datalayout"				{ RTOKEN(DATALAYOUT) }
@@ -63,11 +75,6 @@ FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
 "]"							{ RTOKEN(RSQUARE) }
 "x"							{ RTOKEN(X) }
 "null"						{ RTOKEN(NULL) }
-"byval"						{ RTOKEN(PARATTR) }
-"inalloca"					{ RTOKEN(PARATTR) }
-"sret"						{ RTOKEN(PARATTR) }
-"nocapture"					{ RTOKEN(PARATTR) }
-"readonly"					{ RTOKEN(PARATTR) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
@@ -99,13 +106,8 @@ FLOAT           ("-"?{DIGIT}+"."{DIGIT}+)
 "hidden"					{ RTOKEN(HIDDEN) }
 "protected"					{ RTOKEN(PROTECTED) }
 
-"dllimport"					{ RTOKEN(DLLIMPORT) }
-"dllexport"					{ RTOKEN(DLLEXPORT) }
 "thread_local"				{ RTOKEN(THREAD_LOCAL) }
 
-"localdynamic"				{ RTOKEN(LOCALDYNAMIC) }
-"initialexec"				{ RTOKEN(INITIALEXEC) }
-"localexec"					{ RTOKEN(LOCALEXEC) }
 "local_unnamed_addr"		{ RTOKEN(LOCAL_UNNAMED_ADDR) }
 "unnamed_addr"				{ RTOKEN(UNNAMED_ADDR) }
 "addrspace"					{ RTOKEN(ADDRSPACE) }

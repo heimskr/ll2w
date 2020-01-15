@@ -20,7 +20,7 @@ using AN = LL2W::ASTNode;
 }
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOAT TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
-%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR
+%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -77,9 +77,8 @@ using AN = LL2W::ASTNode;
 %token TOK_HIDDEN "hidden"
 %token TOK_PROTECTED "protected"
 
-%token TOK_DLLIMPORT "dllimport"
-%token TOK_DLLEXPORT "dllexport"
 %token TOK_THREAD_LOCAL "thread_local"
+%token TOK_THREAD_LOCAL_TYPE
 
 %token TOK_LOCALDYNAMIC "localdynamic"
 %token TOK_INITIALEXEC "initialexec"
@@ -139,7 +138,7 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
 
-type_any: TOK_INTTYPE | type_array;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array;
 type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 
 variable: "%" varname { $$ = $1->adopt($2); }
@@ -156,9 +155,9 @@ globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unname
 linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
        | "weak_odr" | "external"  | "common" | "internal"  | { $$ = nullptr; };
 visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
-dll_storage_class: "dllimport" | "dllexport" | { $$ = nullptr; };
+dll_storage_class: TOK_DLLPORT | { $$ = nullptr; };
 thread_local: "thread_local" "(" thread_local_interior ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
-thread_local_interior: "localdynamic" | "initialexec" | "localexec";
+thread_local_interior: TOK_THREAD_LOCAL_TYPE;
 unnamed_addr: "local_unnamed_addr" | "unnamed_addr" | { $$ = nullptr; };
 addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
@@ -179,8 +178,11 @@ gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Constants
 
-constant: type_any constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2}); }
+constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2}); }
 constant_right: operand | const_expr;
+parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
+parattr: TOK_PARATTR | retattr;
+retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; };
 
 // constant -> type_any (__ parattr):* " " (operand | const_expr) {% d => [d[0], d[3][0], d[1].map(x => x[1])] %}
 // cst_to_type[X] -> $X __ constant to type_any
