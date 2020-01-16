@@ -12,8 +12,8 @@ namespace LL2W {
 
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 	                           ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
-	                           ASTNode *externally_initialized_, ASTNode *global_or_constant_, ASTNode *type_,
-	                           ASTNode *initial_value_, ASTNode *gdef_extras_): ASTNode(TOK_GVAR, gvar->lexerInfo) {
+	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *type_,
+	                           ASTNode *initial_value, ASTNode *gdef_extras): ASTNode(TOK_GVAR, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
 			for (const std::pair<Linkage, std::string> &pair: linkages) {
@@ -60,6 +60,12 @@ namespace LL2W {
 			addrspace = atoi(addrspace_->children.front()->lexerInfo->c_str());
 			delete addrspace_;
 		}
+
+		if (externally_initialized) {
+			externallyInitialized = true;
+			delete externally_initialized;
+		}
+
 	}
 
 	std::string GlobalVarDef::debugExtra() {
@@ -90,6 +96,8 @@ namespace LL2W {
 		}
 		if (addrspace != -1)
 			out << " addrspace(" << addrspace << ")";
+		if (externallyInitialized)
+			out << " externally_initialized";
 
 		out << "\e[0m";
 		return out.str();

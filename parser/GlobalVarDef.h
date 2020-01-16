@@ -21,6 +21,7 @@ namespace LL2W {
 		ThreadLocal threadLocal = ThreadLocal::None;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		int addrspace = -1;
+		bool externallyInitialized = false;
 
 		GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 		             ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
