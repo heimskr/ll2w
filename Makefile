@@ -2,7 +2,7 @@ COMPILER	?= clang++
 CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
 OUTPUT		?= ll2w
 MAIN		:= main
-MODULES		:= Node Graph DFSResult DTree DJGraph parser/ASTNode parser/Lexer parser/yylex parser/yyparse \
+MODULES		:= main Node Graph DFSResult DTree DJGraph parser/ASTNode parser/Lexer parser/yylex parser/yyparse \
 			   parser/StringSet parser/Parser
 SOURCES		:= $(addsuffix .cpp,$(MODULES))
 OBJECTS		:= $(addsuffix .o,$(MODULES)) parser/yylex.o
