@@ -4,6 +4,7 @@
 #include "Lexer.h"
 #include "ASTNode.h"
 #include "Parser.h"
+#include "GlobalVarDef.h"
 
 using namespace LL2W;
 using AN = LL2W::ASTNode;
