@@ -8,7 +8,7 @@
 
 namespace LL2W {
 	Location::operator std::string() const {
-		return *filename() + ":" + std::to_string(line + 1) + "." + std::to_string(column);
+		return *filename() + ":" + std::to_string(line + 1) + ":" + std::to_string(column);
 	}
 
 	const std::string * Location::filename() const {
@@ -90,7 +90,7 @@ namespace LL2W {
 			std::cerr << "\e[0m";
 		}
 
-		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m @" << location << "\x1b[0;35m " << *lexerInfo;
+		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
 		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
 			child->debug(indent + 1, child == children.back());
@@ -162,33 +162,53 @@ namespace LL2W {
 				DllStorageClass::Import : DllStorageClass::Export;
 			delete dll_storage_class_;
 		}
+
+		if (thread_local_) {
+			const std::string &tl = *thread_local_->children[0]->lexerInfo;
+			if (tl == "localdynamic")
+				threadLocal = ThreadLocal::LocalDynamic;
+			else if (tl == "initialexec")
+				threadLocal = ThreadLocal::InitialExec;
+			else if (tl == "localexec")
+				threadLocal = ThreadLocal::LocalExec;
+			delete thread_local_;
+		}
 	}
 
 	std::string GlobalVarDef::debugExtra() {
 		std::stringstream out;
 		out << "\e[36m";
 		switch (linkage) {
-			case Linkage::Default:             out << " l:default"; break;
-			case Linkage::Private:             out << " l:private"; break;
-			case Linkage::Appending:           out << " l:appending"; break;
-			case Linkage::AvailableExternally: out << " l:available_externally"; break;
-			case Linkage::Weak:                out << " l:weak"; break;
-			case Linkage::Linkonce:            out << " l:linkonce"; break;
-			case Linkage::ExternWeak:          out << " l:extern_weak"; break;
-			case Linkage::LinkonceOdr:         out << " l:linkonce_odr"; break;
-			case Linkage::WeakOdr:             out << " l:weak_odr"; break;
-			case Linkage::External:            out << " l:external"; break;
-			case Linkage::Common:              out << " l:common"; break;
-			case Linkage::Internal:            out << " l:internal"; break;
+			case Linkage::Default:             out << " default"; break;
+			case Linkage::Private:             out << " private"; break;
+			case Linkage::Appending:           out << " appending"; break;
+			case Linkage::AvailableExternally: out << " available_externally"; break;
+			case Linkage::Weak:                out << " weak"; break;
+			case Linkage::Linkonce:            out << " linkonce"; break;
+			case Linkage::ExternWeak:          out << " extern_weak"; break;
+			case Linkage::LinkonceOdr:         out << " linkonce_odr"; break;
+			case Linkage::WeakOdr:             out << " weak_odr"; break;
+			case Linkage::External:            out << " external"; break;
+			case Linkage::Common:              out << " common"; break;
+			case Linkage::Internal:            out << " internal"; break;
 		}
 		switch (visibility) {
-			case Visibility::Hidden:    out << " v:hidden"; break;
-			case Visibility::Protected: out << " v:protected"; break;
+			case Visibility::Hidden:    out << " hidden"; break;
+			case Visibility::Protected: out << " protected"; break;
+			default:;
 		}
 		switch (dllStorageClass) {
-			case DllStorageClass::Import: out << " d:import"; break;
-			case DllStorageClass::Export: out << " d:export"; break;
+			case DllStorageClass::Import: out << " import"; break;
+			case DllStorageClass::Export: out << " export"; break;
+			default:;
 		}
+		switch (threadLocal) {
+			case ThreadLocal::LocalDynamic: out << " localdynamic"; break;
+			case ThreadLocal::InitialExec:  out << " initialexec"; break;
+			case ThreadLocal::LocalExec:    out << " localexec"; break;
+			default:;
+		}
+
 		out << "\e[0m";
 		return out.str();
 	}
