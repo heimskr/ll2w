@@ -58,7 +58,11 @@ namespace LL2W {
 		}
 
 		if (unnamed_addr_) {
-
+			if (*unnamed_addr_->lexerInfo == "unnamed_addr")
+				unnamedAddr = UnnamedAddr::Unnamed;
+			else if (*unnamed_addr_->lexerInfo == "local_unnamed_addr")
+				unnamedAddr = UnnamedAddr::LocalUnnamed;
+			delete unnamed_addr_;
 		}
 	}
 
@@ -93,6 +97,11 @@ namespace LL2W {
 			case ThreadLocal::LocalDynamic: out << " localdynamic"; break;
 			case ThreadLocal::InitialExec:  out << " initialexec"; break;
 			case ThreadLocal::LocalExec:    out << " localexec"; break;
+			default:;
+		}
+		switch (unnamedAddr) {
+			case UnnamedAddr::Unnamed: out << " unnamed_addr"; break;
+			case UnnamedAddr::LocalUnnamed: out << " local_unnamed_addr"; break;
 			default:;
 		}
 

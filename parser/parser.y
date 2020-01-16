@@ -22,6 +22,7 @@ using AN = LL2W::ASTNode;
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
+%token TOK_UNNAMED_ADDR_TYPE
 %token TOK_STRUCTVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
@@ -91,8 +92,6 @@ using AN = LL2W::ASTNode;
 %token TOK_LOCALDYNAMIC "localdynamic"
 %token TOK_INITIALEXEC "initialexec"
 %token TOK_LOCALEXEC "localexec"
-%token TOK_LOCAL_UNNAMED_ADDR "local_unnamed_addr"
-%token TOK_UNNAMED_ADDR "unnamed_addr"
 %token TOK_ADDRSPACE "addrspace"
 %token TOK_ZEROINITIALIZER "zeroinitializer"
 %token TOK_EXTERNALLY_INITIALIZED "externally_initialized"
@@ -161,8 +160,8 @@ varname: dotident | TOK_STRING;
 floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
 // Globals
-globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local unnamed_addr addrspace externally_initialized
-           global_or_constant type_any optional_initial_value gdef_extras
+globaldef: TOK_GVAR "=" linkage visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
+           externally_initialized global_or_constant type_any optional_initial_value gdef_extras
            { delete $2; $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce" | "extern_weak" | "linkonce_odr"
@@ -170,7 +169,6 @@ linkage: "private"  | "appending" | "available_externally" | "weak" | "linkonce"
 visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
 dll_storage_class: TOK_DLLPORT | { $$ = nullptr; };
 thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
-unnamed_addr: "local_unnamed_addr" | "unnamed_addr" | { $$ = nullptr; };
 addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";

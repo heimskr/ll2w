@@ -12,12 +12,14 @@ namespace LL2W {
 	enum class Visibility {Default, Hidden, Protected};
 	enum class DllStorageClass {None, Import, Export};
 	enum class ThreadLocal {None, LocalDynamic, InitialExec, LocalExec};
+	enum class UnnamedAddr {Default, Unnamed, LocalUnnamed};
 
 	struct GlobalVarDef: public ASTNode {
 		Linkage linkage = Linkage::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
 		ThreadLocal threadLocal = ThreadLocal::None;
+		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 
 		GlobalVarDef(ASTNode *gvar_, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class_,
 		             ASTNode *thread_local_, ASTNode *unnamed_addr_, ASTNode *addrspace_,

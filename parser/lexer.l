@@ -34,6 +34,7 @@ PARATTR				("byval"|"inalloca"|"sret"|"nocapture"|"readonly")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"deferenceable_or_null")
 STRUCTVAR			("%struct."{IDENT})
+UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 
 %%
 
@@ -52,6 +53,7 @@ STRUCTVAR			("%struct."{IDENT})
 {PARATTR}					{ RTOKEN(PARATTR) }
 {RETATTR}					{ RTOKEN(RETATTR) }
 {DEREF}						{ RTOKEN(DEREF) }
+{UNNAMED_ADDR_TYPE}			{ RTOKEN(UNNAMED_ADDR_TYPE) }
 
 "!"							{ RTOKEN(BANG)  }
 "datalayout"				{ RTOKEN(DATALAYOUT) }
@@ -116,8 +118,6 @@ STRUCTVAR			("%struct."{IDENT})
 
 "thread_local"				{ RTOKEN(THREAD_LOCAL) }
 
-"local_unnamed_addr"		{ RTOKEN(LOCAL_UNNAMED_ADDR) }
-"unnamed_addr"				{ RTOKEN(UNNAMED_ADDR) }
 "addrspace"					{ RTOKEN(ADDRSPACE) }
 "zeroinitializer"			{ RTOKEN(ZEROINITIALIZER) }
 "externally_initialized"	{ RTOKEN(EXTERNALLY_INITIALIZED) }
