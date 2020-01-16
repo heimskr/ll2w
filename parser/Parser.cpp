@@ -18,20 +18,9 @@ namespace LL2W {
 
 	void Parser::parse() {
 		yyparse();
-		Parser::combineDotIdents(Parser::root);
 	}
 
 	void Parser::done() {
 		yylex_destroy();
-	}
-
-	void Parser::combineDotIdents(ASTNode *node) {
-		if (node->symbol == TOK_DOTIDENT) {
-			node->lexerInfo = StringSet::intern(node->concatenate().c_str());
-			node->clear();
-		} else {
-			for (ASTNode *child: node->children)
-				Parser::combineDotIdents(child);
-		}
 	}
 }
