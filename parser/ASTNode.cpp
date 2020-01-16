@@ -81,6 +81,22 @@ namespace LL2W {
 		return this;
 	}
 
+	ASTNode * ASTNode::copy() const {
+		ASTNode *out = new ASTNode();
+		out->symbol = symbol;
+		out->location = location;
+		out->lexerInfo = lexerInfo;
+		out->parent = parent;
+		out->children.reserve(children.size());
+		for (ASTNode *child: children) {
+			ASTNode *copy = child->copy();
+			copy->parent = out;
+			out->children.push_back(copy);
+		}
+
+		return out;
+	}
+
 	std::string ASTNode::concatenate() const {
 		std::string out;
 		for (ASTNode *child: children)
