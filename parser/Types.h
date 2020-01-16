@@ -46,7 +46,7 @@ namespace LL2W {
 		FloatType::Type type;
 		FloatType(FloatType::Type type_): type(type_) {}
 		operator std::string() override;
-		virtual Type * copy() const override { return new FloatType(type); }
+		virtual LL2W::Type * copy() const override { return new FloatType(type); }
 	};
 
 	struct PointerType: public Type {
@@ -55,7 +55,7 @@ namespace LL2W {
 		template <typename T>
 		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
 		~PointerType() { delete subtype; }
-		operator std::string() override { return std::string(subtype) + " *"; }
+		operator std::string() override { return std::string(*subtype) + " *"; }
 	};
 
 	class FunctionType: public Type {
@@ -68,6 +68,7 @@ namespace LL2W {
 			bool ellipse;
 			FunctionType(ASTNode *);
 			~FunctionType();
+			void uncache() { cached.clear(); }
 			operator std::string() override;
 	};
 

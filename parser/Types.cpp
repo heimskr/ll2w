@@ -20,29 +20,41 @@ namespace LL2W {
 		}
 	}
 
+	FunctionType::FunctionType(ASTNode *node) {
+		returnType = getType(node->children.at(0));
+		if (node->children.size() == 3) {
+			ASTNode *list = node->children.at(2);
+			argumentTypes.reserve(list->children.size());
+			for (ASTNode *child: list->children)
+				argumentTypes.push_back(getType(child));
+		}
+
+		ellipse = node->children.at(1) != nullptr;
+	}
+
+	FunctionType::~FunctionType() {
+		delete returnType;
+		for (Type *argumentType: argumentTypes)
+			delete argumentType;
+	}
+
 	FunctionType::operator std::string() {
 		if (!cached.empty())
 			return cached;
 
 		std::stringstream out;
+		out << std::string(*returnType) << " (";
 
-		Type *return_type = getType(node->children.at(0));
-		out << std::string(*return_type) << " (";
-		delete return_type;
-
-		if (node->children.size() == 3) {
-			ASTNode *list = node->children.at(2);
-			for (size_t i = 0, l = list->children.size(); i < l; ++i) {
+		if (!argumentTypes.empty()) {
+			for (size_t i = 0, l = argumentTypes.size(); i < l; ++i) {
 				if (i)
 					out << ", ";
-				Type *arg_type = getType(list->children.at(i));
-				out << std::string(*arg_type);
-				delete arg_type;
+				out << std::string(*argumentTypes.at(i));
 			}
 
-			if (node->children.at(1))
+			if (ellipse)
 				out << ", ...";
-		} else if (node->children.at(1)) {
+		} else if (ellipse) {
 			out << "...";
 		}
 
