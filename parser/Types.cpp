@@ -90,6 +90,7 @@ namespace LL2W {
 			case VECTORTYPE: return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
 			case POINTER: return new PointerType(getType(node->at(0)));
 			case TOK_VOID: return new VoidType();
+			case TOK_STRUCTVAR: return new StructType(node->lexerInfo);
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}
