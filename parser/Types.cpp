@@ -52,7 +52,7 @@ namespace LL2W {
 
 	Type * getType(ASTNode *node) {
 		switch (node->symbol) {
-			
+
 		}
 	}
 }
