@@ -66,11 +66,16 @@ namespace LL2W {
 			delete externally_initialized;
 		}
 
+		if (global_or_constant) {
+			isConstant = *global_or_constant->lexerInfo == "constant";
+			delete global_or_constant;
+		}
 	}
 
 	std::string GlobalVarDef::debugExtra() {
 		std::stringstream out;
 		out << "\e[36m";
+
 		if (linkage != Linkage::Default)
 			out << " " << linkages.at(linkage);
 		switch (visibility) {
@@ -98,6 +103,7 @@ namespace LL2W {
 			out << " addrspace(" << addrspace << ")";
 		if (externallyInitialized)
 			out << " externally_initialized";
+		out << (isConstant? " constant" : " global");
 
 		out << "\e[0m";
 		return out.str();
