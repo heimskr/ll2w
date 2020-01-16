@@ -132,8 +132,8 @@ type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->ado
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
 type_ptr: type_any "*" { $$ = (new AN(POINTER, "*"))->adopt($1); delete $2; };
-type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$4, $3}); delete $2; delete $5; delete $6; }
-             | type_any "(" optional_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt($3); delete $2; delete $4; delete $5; };
+type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $4, $3}); delete $2; delete $5; delete $6; }
+             | type_any "(" optional_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $3}); delete $2; delete $4; delete $5; };
 types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
