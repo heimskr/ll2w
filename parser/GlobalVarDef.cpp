@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <sstream>
 
 #include "GlobalVarDef.h"
@@ -56,7 +57,8 @@ namespace LL2W {
 		}
 
 		if (addrspace_) {
-
+			addrspace = atoi(addrspace_->children.front()->lexerInfo->c_str());
+			delete addrspace_;
 		}
 	}
 
@@ -86,6 +88,8 @@ namespace LL2W {
 			case UnnamedAddr::LocalUnnamed: out << " local_unnamed_addr"; break;
 			default:;
 		}
+		if (addrspace != -1)
+			out << " addrspace(" << addrspace << ")";
 
 		out << "\e[0m";
 		return out.str();

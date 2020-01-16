@@ -35,6 +35,7 @@ RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"deferenceable_or_null")
 STRUCTVAR			("%struct."{IDENT})
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
+LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
 
 %%
 
@@ -54,6 +55,7 @@ UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 {RETATTR}					{ RTOKEN(RETATTR) }
 {DEREF}						{ RTOKEN(DEREF) }
 {UNNAMED_ADDR_TYPE}			{ RTOKEN(UNNAMED_ADDR_TYPE) }
+{LINKAGE}					{ RTOKEN(LINKAGE) }
 
 "!"							{ RTOKEN(BANG)  }
 "datalayout"				{ RTOKEN(DATALAYOUT) }
@@ -99,18 +101,6 @@ UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 "inttoptr"					{ RTOKEN(INTTOPTR) }
 "bitcast"					{ RTOKEN(BITCAST) }
 "addrspacecast"				{ RTOKEN(ADDRSPACECAST) }
-
-"private"					{ RTOKEN(PRIVATE) }
-"appending"					{ RTOKEN(APPENDING) }
-"available_externally"		{ RTOKEN(AVAILABLE_EXTERNALLY) }
-"weak"						{ RTOKEN(WEAK) }
-"linkonce"					{ RTOKEN(LINKONCE) }
-"extern_weak"				{ RTOKEN(EXTERN_WEAK) }
-"linkonce_odr"				{ RTOKEN(LINKONCE_ODR) }
-"weak_odr"					{ RTOKEN(WEAK_ODR) }
-"external"					{ RTOKEN(EXTERNAL) }
-"common"					{ RTOKEN(COMMON) }
-"internal"					{ RTOKEN(INTERNAL) }
 
 "default"					{ RTOKEN(DEFAULT) }
 "hidden"					{ RTOKEN(HIDDEN) }

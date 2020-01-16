@@ -1,6 +1,6 @@
 @.str.6 = private unnamed_addr constant [6 x i8] c"%d %d\00", align 1
 @.str.7 = private default unnamed_addr constant [37 x i8] c"Adjacency list representation of G:\0A\00", align 1
-@__stderrp = external hidden dllimport thread_local(localexec) local_unnamed_addr global %struct.__sFILE*, align 8
+@__stderrp = external hidden dllimport thread_local(localexec) local_unnamed_addr addrspace(42) global %struct.__sFILE*, align 8
 @.str.1.16 = private protected unnamed_addr constant [1 x i8] zeroinitializer, align 1
 /*
 source_filename = "foobar"
