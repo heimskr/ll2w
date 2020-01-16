@@ -88,7 +88,10 @@ using AN = LL2W::ASTNode;
 %token TOK_COMDAT "comdat"
 %token TOK_ALIGN "align"
 
-%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS
+%token TOK_TYPE "type"
+%token TOK_OPAQUE "opaque"
+
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
 
 %start start
 
@@ -97,11 +100,11 @@ using AN = LL2W::ASTNode;
 start: program { $$ = $1 = nullptr; };
 
 program: program source_filename { $1->adopt($2); }
+       | program struct_def      { $1->adopt($2); }
        | program target          { $1->adopt($2); }
        | program metadata_def    { $1->adopt($2); }
-       | program globaldef       { $1->adopt($2); }
-       | { $$ = Parser::root; }
-       ;
+       | program global_def      { $1->adopt($2); }
+       | { $$ = Parser::root; };
 
 source_filename: "source_filename" "=" TOK_STRING { AN::destroy({$1, $2}); $$ = new AN(TOK_SOURCE_FILENAME, $3->lexerInfo); }
 
@@ -112,8 +115,7 @@ metadata_def: "!" dotident "=" metadata_distinct TOK_METADATA_OPEN metadata_list
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); delete $2; }
              | metadata_listitem { $$ = (new AN(TOK_METADATA_LIST, ""))->adopt($1); }
-             | { $$ = nullptr; }
-             ;
+             | { $$ = nullptr; };
 
 metadata_listitem: "!" TOK_STRING      { delete $1; $$ = $2; }
                  | "!" TOK_DECIMAL { delete $1; $$ = $2; }
@@ -121,13 +123,12 @@ metadata_listitem: "!" TOK_STRING      { delete $1; $$ = $2; }
                  | "null";
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
-                 |            { $$ = nullptr; }
-                 ;
+                 |            { $$ = nullptr; };
 
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; } | TOK_DOTIDENT;
 
 // Types
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function | type_struct;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR;
 type_array: "[" TOK_DECIMAL "x" type_any "]" { $$ = (new AN(ARRAYTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); delete $1; delete $3; delete $5; };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
@@ -137,7 +138,6 @@ type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION,
 types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
-type_struct: TOK_STRUCTVAR;
 
 
 // Variables
@@ -146,8 +146,16 @@ varname: dotident | TOK_STRING;
 
 floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
+// Struct definitions
+struct_def: struct_def_left "opaque" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2); delete $1; }
+          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; };
+struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; delete $2; delete $3; };
+//struct_def: TOK_STRUCTVAR "=" struct_def_right { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; delete $2; }
+//struct_def_right: "opaque"
+//                | "{" types "}" { $$ = $2; delete $1; delete $3; };
+
 // Globals
-globaldef: TOK_GVAR "=" TOK_LINKAGE visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
+global_def: TOK_GVAR "=" TOK_LINKAGE visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
            externally_initialized global_or_constant type_any optional_initial_value gdef_extras
            { delete $2; $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 

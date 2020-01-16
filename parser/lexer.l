@@ -117,6 +117,9 @@ LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"exte
 "comdat"					{ RTOKEN(COMDAT) }
 "align"						{ RTOKEN(ALIGN) }
 
+"type"						{ RTOKEN(TYPE) }
+"opaque"					{ RTOKEN(OPAQUE) }
+
 {DOTIDENT}					{ RTOKEN(DOTIDENT) }
 
 .						{ LL2W::Lexer::badchar(*yytext); }
