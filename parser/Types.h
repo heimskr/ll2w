@@ -13,6 +13,12 @@ namespace LL2W {
 		virtual Type * copy() const = 0;
 	};
 
+	struct VoidType: public Type {
+		VoidType() {}
+		virtual operator std::string() override { return "void"; }
+		virtual Type * copy() const override { return new VoidType(); }
+	};
+
 	struct IntType: public Type {
 		int width;
 		IntType(int width_): width(width_) {}
@@ -47,6 +53,7 @@ namespace LL2W {
 		FloatType(FloatType::Type type_): type(type_) {}
 		operator std::string() override;
 		virtual LL2W::Type * copy() const override { return new FloatType(type); }
+		static Type getType(const std::string &);
 	};
 
 	struct PointerType: public Type {
@@ -56,6 +63,7 @@ namespace LL2W {
 		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
 		~PointerType() { delete subtype; }
 		operator std::string() override { return std::string(*subtype) + " *"; }
+		virtual LL2W::Type * copy() const override { return new PointerType(subtype->copy()); }
 	};
 
 	class FunctionType: public Type {
@@ -67,9 +75,12 @@ namespace LL2W {
 			std::vector<Type *> argumentTypes;
 			bool ellipse;
 			FunctionType(ASTNode *);
+			FunctionType(Type *return_type, std::vector<Type *> &argument_types):
+				returnType(return_type), argumentTypes(std::move(argument_types)) {}
 			~FunctionType();
 			void uncache() { cached.clear(); }
 			operator std::string() override;
+			virtual Type * copy() const override;
 	};
 
 	Type * getType(ASTNode *);

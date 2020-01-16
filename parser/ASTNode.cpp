@@ -43,6 +43,14 @@ namespace LL2W {
 			delete child;
 	}
 
+	ASTNode * ASTNode::operator[](size_t index) const {
+		return children[index];
+	}
+
+	ASTNode * ASTNode::at(size_t index) const {
+		return children.at(index);
+	}
+
 	ASTNode * ASTNode::adopt(ASTNode *child) {
 		if (child) {
 			children.push_back(child);

@@ -31,6 +31,8 @@ namespace LL2W {
 		ASTNode(int sym, const std::string *info);
 		virtual ~ASTNode();
 
+		ASTNode * operator[](size_t) const;
+		ASTNode * at(size_t) const;
 		ASTNode * adopt(ASTNode *);
 		ASTNode * adopt(std::initializer_list<ASTNode *>);
 		ASTNode * absorb(ASTNode *);
@@ -39,6 +41,7 @@ namespace LL2W {
 		std::string concatenate() const;
 		void debug(int indent = 0, bool is_last = false);
 		virtual std::string debugExtra();
+
 
 		static void destroy(std::initializer_list<ASTNode *>);
 	};
