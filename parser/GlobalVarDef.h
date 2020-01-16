@@ -3,6 +3,7 @@
 
 #include "ASTNode.h"
 #include "Lexer.h"
+#include "Types.h"
 
 namespace LL2W {
 	enum class Linkage {
@@ -23,12 +24,14 @@ namespace LL2W {
 		int addrspace = -1;
 		bool externallyInitialized = false;
 		bool isConstant = false; // Global if false, constant if true
-		ASTNode *type;
+		Type *type;
 
 		GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 		             ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
 		             ASTNode *externally_initialized_, ASTNode *global_or_constant_, ASTNode *type_,
 		             ASTNode *initial_value_, ASTNode *gdef_extras_);
+
+		~GlobalVarDef() { delete type; }
 
 		std::string debugExtra() override;
 	};

@@ -70,6 +70,8 @@ namespace LL2W {
 			isConstant = *global_or_constant->lexerInfo == "constant";
 			delete global_or_constant;
 		}
+
+		type = getType(type_);
 	}
 
 	std::string GlobalVarDef::debugExtra() {
