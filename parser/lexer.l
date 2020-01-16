@@ -39,7 +39,7 @@ DEREF				("dereferenceable"|"deferenceable_or_null")
 STRUCTVAR			("%struct."{IDENT})
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
-FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|"inaccessiblemem_or_argmemonly"|"sspreq"|"sanitize_memory"|"jumptable"|"minsize"|"nobuiltin"|"noduplicate"|"noimplicitfloat"|"builtin"|"uwtable"|"nounwind"|"optnone"|"optsize"|"readnone"|"naked"|"readonly"|"writeonly"|"argmemonly"|"returns_twice"|"safestack"|"inaccessiblememonly"|"cold"|"noreturn"|"nonlazybind"|"sanitize_thread"|"thunk"|"sspstrong"|"sanitize_address"|"noinline"|"ssp"|"speculatable"|"sanitize_hwaddress")
+FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|"inaccessiblemem_or_argmemonly"|"sspreq"|"sanitize_memory"|"jumptable"|"minsize"|"nobuiltin"|"noduplicate"|"noimplicitfloat"|"builtin"|"uwtable"|"nounwind"|"optnone"|"optsize"|"readnone"|"naked"|"writeonly"|"argmemonly"|"returns_twice"|"safestack"|"inaccessiblememonly"|"cold"|"noreturn"|"nonlazybind"|"sanitize_thread"|"thunk"|"sspstrong"|"sanitize_address"|"noinline"|"ssp"|"speculatable"|"sanitize_hwaddress")
 
 %%
 

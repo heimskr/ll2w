@@ -107,12 +107,24 @@ using AN = LL2W::ASTNode;
 start: program { $$ = $1 = nullptr; };
 
 program: program source_filename { $1->adopt($2); }
-       | program struct_def      { $1->adopt($2); }
        | program target          { $1->adopt($2); }
        | program metadata_def    { $1->adopt($2); }
        | program global_def      { $1->adopt($2); }
        | program attributes      { $1->adopt($2); }
+       | program struct_def      { $1->adopt($2); }
+//       | program TOK_STRUCTVAR "=" "type" "opaque" { $1->adopt((new AN(STRUCTDEF, $2->lexerInfo))->adopt($5)); delete $3; delete $4; }
+//       | program TOK_STRUCTVAR "=" "type" "{" types "}" { $1->adopt((new AN(STRUCTDEF, $2->lexerInfo))->adopt($6)); delete $3; delete $4; delete $5; delete $7; }
        | { $$ = Parser::root; };
+
+
+
+// Struct definitions
+struct_def: struct_def_left "opaque" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2); delete $1; }
+          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; };
+struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; delete $2; delete $3; };
+//struct_def: TOK_STRUCTVAR "=" struct_def_right { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; delete $2; }
+//struct_def_right: "opaque"
+//                | "{" types "}" { $$ = $2; delete $1; delete $3; };
 
 // Attributes
 attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); delete $2; delete $4; delete $5; delete $7; };
@@ -163,14 +175,6 @@ extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
 
 floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
-
-// Struct definitions
-struct_def: struct_def_left "opaque" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2); delete $1; }
-          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; };
-struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; delete $2; delete $3; };
-//struct_def: TOK_STRUCTVAR "=" struct_def_right { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; delete $2; }
-//struct_def_right: "opaque"
-//                | "{" types "}" { $$ = $2; delete $1; delete $3; };
 
 // Globals
 global_def: TOK_GVAR "=" TOK_LINKAGE visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
