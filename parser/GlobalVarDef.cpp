@@ -72,6 +72,7 @@ namespace LL2W {
 		}
 
 		type = getType(type_);
+		initialValue = initial_value;
 	}
 
 	std::string GlobalVarDef::debugExtra() {
@@ -106,6 +107,7 @@ namespace LL2W {
 		if (externallyInitialized)
 			out << " externally_initialized";
 		out << (isConstant? " constant" : " global");
+		out << " \e[0;32m" << std::string(*type);
 
 		out << "\e[0m";
 		return out.str();

@@ -25,13 +25,16 @@ namespace LL2W {
 		bool externallyInitialized = false;
 		bool isConstant = false; // Global if false, constant if true
 		Type *type;
+		// It's assumed that GlobalVarDef is constructed in a parser action. Instead of deleting the initial_value node,
+		// we take ownership of it here. It'll be deleted once the GlobalVarDef object is destroyed.
+		ASTNode *initialValue;
 
 		GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 		             ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
 		             ASTNode *externally_initialized_, ASTNode *global_or_constant_, ASTNode *type_,
 		             ASTNode *initial_value_, ASTNode *gdef_extras_);
 
-		~GlobalVarDef() { delete type; }
+		~GlobalVarDef() { delete type; delete initialValue; }
 
 		std::string debugExtra() override;
 	};
