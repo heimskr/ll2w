@@ -22,7 +22,7 @@ using AN = LL2W::ASTNode;
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
-%token TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE
+%token TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC
 %token TOK_STRUCTVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
@@ -50,6 +50,7 @@ using AN = LL2W::ASTNode;
 %token TOK_VOID "void"
 %token TOK_ELLIPSE "..."
 %token TOK_ASTERISK "*"
+%token TOK_HASH "#"
 
 // Conversion operations
 %token TOK_TRUNC "trunc"
@@ -90,8 +91,14 @@ using AN = LL2W::ASTNode;
 
 %token TOK_TYPE "type"
 %token TOK_OPAQUE "opaque"
+%token TOK_ATTRIBUTES "attributes"
+%token TOK_ALIGNSTACK "alignstack"
+%token TOK_ALLOCSIZE "allocsize"
+%token TOK_PATCHABLE_PROLOGUE "patchable-function=\"prologue-short-redirect\""
+%token TOK_READONLY "readonly"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
+%token ATTRIBUTE_LIST
 
 %start start
 
@@ -104,8 +111,24 @@ program: program source_filename { $1->adopt($2); }
        | program target          { $1->adopt($2); }
        | program metadata_def    { $1->adopt($2); }
        | program global_def      { $1->adopt($2); }
+       | program attributes      { $1->adopt($2); }
        | { $$ = Parser::root; };
 
+// Attributes
+attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); delete $2; delete $4; delete $5; delete $7; };
+attribute_list: attribute_list attribute { $$ = $1->adopt($2); }
+              | { $$ = new AN(ATTRIBUTE_LIST, ""); };
+attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }
+         | TOK_STRING
+         | fnattr;
+
+fnattr: TOK_FNATTR_BASIC | TOK_READONLY
+      | "alignstack" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+      | "allocsize" "(" TOK_DECIMAL "," TOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); delete $2; delete $4; delete $6; }
+      | "allocsize" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
+      | TOK_PATCHABLE_PROLOGUE;
+
+//
 source_filename: "source_filename" "=" TOK_STRING { AN::destroy({$1, $2}); $$ = new AN(TOK_SOURCE_FILENAME, $3->lexerInfo); }
 
 target: TOK_TARGET target_type "=" TOK_STRING { $$ = $1->adopt({$2, $4}); }
@@ -179,7 +202,7 @@ gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); }
 constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
-parattr: TOK_PARATTR | retattr;
+parattr: TOK_PARATTR | TOK_READONLY | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); delete $3; }

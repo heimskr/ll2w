@@ -2,6 +2,9 @@
 #include "Lexer.h"
 #define YY_USER_ACTION { LL2W::Lexer::advance(); }
 #define RTOKEN(x) return LL2W::Lexer::token(TOK_##x);
+
+// PARATTR and FNATTR_BASIC both include "readonly", which has to be treated specially.
+
 %}
 
 %option 8bit
@@ -30,12 +33,13 @@ FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
 FLOATTYPE			("half"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
-PARATTR				("byval"|"inalloca"|"sret"|"nocapture"|"readonly")
+PARATTR				("byval"|"inalloca"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"deferenceable_or_null")
 STRUCTVAR			("%struct."{IDENT})
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
+FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|"inaccessiblemem_or_argmemonly"|"sspreq"|"sanitize_memory"|"jumptable"|"minsize"|"nobuiltin"|"noduplicate"|"noimplicitfloat"|"builtin"|"uwtable"|"nounwind"|"optnone"|"optsize"|"readnone"|"naked"|"readonly"|"writeonly"|"argmemonly"|"returns_twice"|"safestack"|"inaccessiblememonly"|"cold"|"noreturn"|"nonlazybind"|"sanitize_thread"|"thunk"|"sspstrong"|"sanitize_address"|"noinline"|"ssp"|"speculatable"|"sanitize_hwaddress")
 
 %%
 
@@ -56,11 +60,14 @@ LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"exte
 {DEREF}						{ RTOKEN(DEREF) }
 {UNNAMED_ADDR_TYPE}			{ RTOKEN(UNNAMED_ADDR_TYPE) }
 {LINKAGE}					{ RTOKEN(LINKAGE) }
+{FNATTR_BASIC}				{ RTOKEN(FNATTR_BASIC) }
 
+"readonly"					{ RTOKEN(READONLY) }
 "!"							{ RTOKEN(BANG)  }
 "datalayout"				{ RTOKEN(DATALAYOUT) }
 "="							{ RTOKEN(EQUALS) }
 "source_filename"			{ RTOKEN(SOURCE_FILENAME) }
+"patchable-function=\"prologue-short-redirect\"" { RTOKEN(PATCHABLE_PROLOGUE) }
 {CSTRING}					{ RTOKEN(CSTRING) }
 {STRING}					{ RTOKEN(STRING) }
 "target"					{ RTOKEN(TARGET) }
@@ -87,6 +94,7 @@ LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"exte
 "void"						{ RTOKEN(VOID) }
 "..."						{ RTOKEN(ELLIPSE) }
 "*"							{ RTOKEN(ASTERISK) }
+"#"							{ RTOKEN(HASH) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
@@ -119,6 +127,9 @@ LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"exte
 
 "type"						{ RTOKEN(TYPE) }
 "opaque"					{ RTOKEN(OPAQUE) }
+"attributes"				{ RTOKEN(ATTRIBUTES) }
+"alignstack"				{ RTOKEN(ALIGNSTACK) }
+"allocsize"					{ RTOKEN(ALLOCSIZE) }
 
 {DOTIDENT}					{ RTOKEN(DOTIDENT) }
 
