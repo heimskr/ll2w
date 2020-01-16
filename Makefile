@@ -2,10 +2,8 @@ COMPILER	?= clang++
 CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
 OUTPUT		?= ll2w
 MAIN		:= main
-MODULES		:= main Node Graph DFSResult DTree DJGraph parser/ASTNode parser/Lexer parser/yylex parser/yyparse \
-			   parser/StringSet parser/Parser
-SOURCES		:= $(addsuffix .cpp,$(MODULES))
-OBJECTS		:= $(addsuffix .o,$(MODULES)) parser/yylex.o
+SOURCES		:= $(shell find *.cpp **/*.cpp)
+OBJECTS		:= $(SOURCES:.cpp=.o) parser/yylex.o parser/yyparse.o
 
 LEXFLAGS	:= -Wno-sign-compare -Wno-register
 LEXCPP		:= parser/yylex.cpp
