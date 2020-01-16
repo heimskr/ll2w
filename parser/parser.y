@@ -139,11 +139,6 @@ types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
 
-
-// Variables
-variable: "%" varname { $$ = $1->adopt($2); }
-varname: dotident | TOK_STRING;
-
 floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
 
 // Struct definitions
@@ -186,7 +181,7 @@ constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
 parattr: TOK_PARATTR | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; };
-operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); delete $3; }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
        | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
