@@ -48,6 +48,8 @@ namespace LL2W {
 			virtual std::string debugExtra();
 
 			static void destroy(std::initializer_list<ASTNode *>);
+
+			std::string extractName() const;
 	};
 
 	struct MetadataDef: public ASTNode {

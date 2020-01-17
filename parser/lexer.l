@@ -29,7 +29,6 @@ GVAR				("@"{DOTIDENT})
 GSTRING				("@"{STRING})
 PVAR				("%"{DOTIDENT})
 PSTRING				("%"{STRING})
-PDECIMAL			("%"{DIGIT}+)
 DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
 FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
@@ -54,7 +53,6 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 \n							{ LL2W::Lexer::newline(); }
 
 {STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
-{PDECIMAL}					{ RTOKEN(PDECIMAL) }
 {PVAR}						{ RTOKEN(PVAR) }
 {PSTRING}					{ RTOKEN(PSTRING) }
 {GVAR}						{ RTOKEN(GVAR) }

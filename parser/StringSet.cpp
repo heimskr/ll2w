@@ -12,4 +12,9 @@ namespace LL2W {
 		auto handle = set.insert(str);
 		return &*handle.first;
 	}
+
+	const std::string * StringSet::intern(const std::string &str) {
+		auto handle = set.insert(str);
+		return &*handle.first;
+	}
 }

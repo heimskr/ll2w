@@ -10,6 +10,7 @@ namespace LL2W {
 
 		static std::unordered_set<std::string> set;
 		static const std::string * intern(const char *);
+		static const std::string * intern(const std::string &);
 	};
 }
 

@@ -43,7 +43,11 @@ namespace LL2W {
 
 	struct FunctionArgs: public ASTNode {
 		bool ellipse;
-		FunctionArgs(ASTNode *list, bool ellipse_): ASTNode(FUNCTION_ARGS, ""), ellipse(ellipse_) { adopt(list); }
+		FunctionArgs(ASTNode *list, bool ellipse_): ASTNode(FUNCTION_ARGS, ""), ellipse(ellipse_) { absorb(list); }
+	};
+
+	struct FunctionArgument {
+		Type *type;
 	};
 }
 

@@ -140,6 +140,14 @@ namespace LL2W {
 		}
 	}
 
+	std::string ASTNode::extractName() const {
+		if (symbol == TOK_PVAR || symbol == TOK_GVAR)
+			return lexerInfo->substr(1);
+		else if (symbol == TOK_PSTRING || symbol == TOK_GSTRING)
+			return lexerInfo->substr(2, lexerInfo->size() - 3);
+		throw std::runtime_error("extractName() was called on an inappropriate symbol");
+	}
+
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
 		ASTNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		distinct = distinct_node != nullptr;

@@ -34,17 +34,7 @@ namespace LL2W {
 	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
 	                               N function_name, N function_args, N unnamed_addr, N fnattrs_):
 	                               ASTNode(FUNCTION_HEADER, function_name->lexerInfo) {
-		std::cout << "\e[31m" << Parser::getName(function_name->symbol) << "\e[0m\n\e[32m" << *function_name->lexerInfo << "\e[0m\n";
-		switch (function_name->symbol) {
-			case TOK_GSTRING:
-				name = StringSet::intern(function_name->lexerInfo->substr(2, function_name->lexerInfo->length() - 3).c_str());
-				break;
-			case TOK_GVAR:
-				name = StringSet::intern(function_name->lexerInfo->substr(1).c_str());
-				break;
-			default:
-				throw std::runtime_error("Unknown symbol for function name: " + std::string(Parser::getName(function_name->symbol)));
-		}
+		name = StringSet::intern(function_name->extractName());
 
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
@@ -113,6 +103,11 @@ namespace LL2W {
 		returnType = getType(type);
 
 		adopt(function_args);
+		argumentTypes.reserve(function_args->children.size());
+		for (ASTNode *child: function_args->children) {
+			// Each function argument can have PARATTR_LIST and TOK_PVAR/TOK_PSTRING/TOK_PDECIMAL children at the end.
+			argumentTypes.push_back(getType(child));
+		}
 	}
 	
 	std::string FunctionHeader::debugExtra() {

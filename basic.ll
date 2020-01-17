@@ -6,7 +6,7 @@ declare i32 @fscanf(%struct.__sFILE* nocapture, i8* nocapture readonly, ...) loc
 declare i32 @fprintf(%struct.__sFILE* nocapture, i8* nocapture readonly, ...) local_unnamed_addr #1
 declare noalias i8* @calloc(i64, i64) local_unnamed_addr #1
 declare i32 @fclose(%struct.__sFILE* nocapture) local_unnamed_addr #1
-declare void @free(i8* nocapture) local_unnamed_addr #1
+declare void @free(i8* nocapture %foooooooooooooooooooooo, i8 nocapture %barrrrrrrrrrr) local_unnamed_addr #1
 declare void @ellipse(...) local_unnamed_addr #1
 
 /*
