@@ -15,6 +15,8 @@ namespace LL2W {
 	enum class ThreadLocal {None, LocalDynamic, InitialExec, LocalExec};
 	enum class UnnamedAddr {Default, Unnamed, LocalUnnamed};
 
+	extern std::unordered_map<Linkage, std::string> linkage_map;
+
 	struct GlobalVarDef: public ASTNode {
 		Linkage linkage = Linkage::Default;
 		Visibility visibility = Visibility::Default;
@@ -29,10 +31,10 @@ namespace LL2W {
 		// we take ownership of it here. It'll be deleted once the GlobalVarDef object is destroyed.
 		ASTNode *initialValue;
 
-		GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
-		             ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
-		             ASTNode *externally_initialized_, ASTNode *global_or_constant_, ASTNode *type_,
-		             ASTNode *initial_value_, ASTNode *gdef_extras_);
+		using N = ASTNode *;
+		GlobalVarDef(N gvar, N linkage_, N visibility_, N dll_storage_class, N thread_local_, N unnamed_addr,
+		             N addrspace_, N externally_initialized_, N global_or_constant_, N type_, N initial_value_,
+		             N gdef_extras_);
 
 		~GlobalVarDef() { delete type; delete initialValue; }
 

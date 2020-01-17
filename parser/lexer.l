@@ -26,7 +26,10 @@ SGCOMMENT			(";"[^\n]*)
 MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 INTTYPE				("i"{DIGIT}+)
 GVAR				("@"{DOTIDENT})
+GSTRING				("@"{STRING})
 PVAR				("%"{DOTIDENT})
+PSTRING				("%"{STRING})
+PDECIMAL			("%"{DIGIT}+)
 DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
 FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
@@ -35,11 +38,13 @@ DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"inalloca"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
-DEREF				("dereferenceable"|"deferenceable_or_null")
+DEREF				("dereferenceable"|"dereferenceable_or_null")
 STRUCTVAR			("%struct."{IDENT})
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
+VISIBILITY			("default"|"hidden"|"protected")
 FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|"inaccessiblemem_or_argmemonly"|"sspreq"|"sanitize_memory"|"jumptable"|"minsize"|"nobuiltin"|"noduplicate"|"noimplicitfloat"|"builtin"|"uwtable"|"nounwind"|"optnone"|"optsize"|"readnone"|"naked"|"writeonly"|"argmemonly"|"returns_twice"|"safestack"|"inaccessiblememonly"|"cold"|"noreturn"|"nonlazybind"|"sanitize_thread"|"thunk"|"sspstrong"|"sanitize_address"|"noinline"|"ssp"|"speculatable"|"sanitize_hwaddress")
+CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"preserve_mostcc"|"x86_vectorcallcc"|"cc10"|"cc11"|"arm_apcscc"|"coldcc"|"webkit_jscc"|"cc64"|"cc65"|"cc66"|"ptx_device"|"x86_stdcallcc"|"cc67"|"cc68"|"cc69"|"cc70"|"cc1023"|"anyregcc"|"cc71"|"cc72"|"cc75"|"msp430_intrcc"|"ptx_kernel"|"cc76"|"cc77"|"cc78"|"spir_func"|"x86_64_win64cc"|"cc79"|"cc80"|"arm_aapcs_vfpcc"|"intel_ocl_bicc"|"x86_64_sysvcc"|"x86_fastcallcc"|"x86_thiscallcc"|"arm_aapcscc"|"spir_kernel")
 
 %%
 
@@ -49,8 +54,11 @@ FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|
 \n							{ LL2W::Lexer::newline(); }
 
 {STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
+{PDECIMAL}					{ RTOKEN(PDECIMAL) }
 {PVAR}						{ RTOKEN(PVAR) }
+{PSTRING}					{ RTOKEN(PSTRING) }
 {GVAR}						{ RTOKEN(GVAR) }
+{GSTRING}					{ RTOKEN(GSTRING) }
 {INTTYPE}					{ RTOKEN(INTTYPE)  }
 {FLOATTYPE}					{ RTOKEN(FLOATTYPE)  }
 {DLLPORT}					{ RTOKEN(DLLPORT) }
@@ -60,7 +68,9 @@ FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|
 {DEREF}						{ RTOKEN(DEREF) }
 {UNNAMED_ADDR_TYPE}			{ RTOKEN(UNNAMED_ADDR_TYPE) }
 {LINKAGE}					{ RTOKEN(LINKAGE) }
+{VISIBILITY}				{ RTOKEN(VISIBILITY) }
 {FNATTR_BASIC}				{ RTOKEN(FNATTR_BASIC) }
+{CCONV}						{ RTOKEN(CCONV) }
 
 "declare"					{ RTOKEN(DECLARE) }
 "readonly"					{ RTOKEN(READONLY) }
@@ -110,10 +120,6 @@ FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|
 "inttoptr"					{ RTOKEN(INTTOPTR) }
 "bitcast"					{ RTOKEN(BITCAST) }
 "addrspacecast"				{ RTOKEN(ADDRSPACECAST) }
-
-"default"					{ RTOKEN(DEFAULT) }
-"hidden"					{ RTOKEN(HIDDEN) }
-"protected"					{ RTOKEN(PROTECTED) }
 
 "thread_local"				{ RTOKEN(THREAD_LOCAL) }
 

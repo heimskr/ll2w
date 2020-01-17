@@ -4,7 +4,7 @@
 #include "GlobalVarDef.h"
 
 namespace LL2W {
-	std::unordered_map<Linkage, std::string> linkages {
+	std::unordered_map<Linkage, std::string> linkage_map {
 		{Linkage::Private, "private"}, {Linkage::Appending, "appending"}, {Linkage::AvailableExternally,
 		"available_externally"}, { Linkage::Weak, "weak"}, {Linkage::Linkonce, "linkonce"}, {Linkage::ExternWeak,
 		"extern_weak"}, {Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::WeakOdr, "weak_odr"}, {Linkage::External,
@@ -16,7 +16,7 @@ namespace LL2W {
 	                           ASTNode *initial_value, ASTNode *gdef_extras): ASTNode(TOK_GVAR, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
-			for (const std::pair<Linkage, std::string> &pair: linkages) {
+			for (const std::pair<Linkage, std::string> &pair: linkage_map) {
 				if (link == pair.second) {
 					linkage = pair.first;
 					break;
@@ -80,7 +80,7 @@ namespace LL2W {
 		out << "\e[36m";
 
 		if (linkage != Linkage::Default)
-			out << " " << linkages.at(linkage);
+			out << " " << linkage_map.at(linkage);
 		switch (visibility) {
 			case Visibility::Hidden:    out << " hidden"; break;
 			case Visibility::Protected: out << " protected"; break;

@@ -5,6 +5,7 @@
 #include "ASTNode.h"
 #include "Parser.h"
 #include "GlobalVarDef.h"
+#include "FunctionHeader.h"
 
 using namespace LL2W;
 using AN = LL2W::ASTNode;
@@ -21,8 +22,8 @@ using AN = LL2W::ASTNode;
 }
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
-%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_RETATTR TOK_DEREF
-%token TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC
+%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_PDECIMAL TOK_GVAR TOK_GSTRING TOK_FLOATTYPE
+%token TOK_DLLPORT TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY
 %token TOK_STRUCTVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
@@ -69,11 +70,6 @@ using AN = LL2W::ASTNode;
 
 %token TOK_TO "to"
 
-// Visibility
-%token TOK_DEFAULT "default"
-%token TOK_HIDDEN "hidden"
-%token TOK_PROTECTED "protected"
-
 %token TOK_THREAD_LOCAL "thread_local"
 %token TOK_THREAD_LOCAL_TYPE
 
@@ -99,7 +95,7 @@ using AN = LL2W::ASTNode;
 %token TOK_DECLARE "declare"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
-%token ATTRIBUTE_LIST
+%token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER
 
 %start start
 
@@ -113,10 +109,10 @@ program: program source_filename { $1->adopt($2); }
        | program global_def      { $1->adopt($2); }
        | program attributes      { $1->adopt($2); }
        | program struct_def      { $1->adopt($2); }
-//       | program declaration     { $1->adopt($2); }
+       | program declaration     { $1->adopt($2); }
        | { $$ = Parser::root; };
 
-// declaration: "declare" function_header { $1->adopt($2); };
+declaration: "declare" function_header { $1->adopt($2); };
 
 
 // Struct definitions
@@ -132,7 +128,8 @@ attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }
          | TOK_STRING
          | fnattr;
 
-fnattr: TOK_FNATTR_BASIC | TOK_READONLY
+basic_fnattr: TOK_FNATTR_BASIC | TOK_READONLY { $1->symbol = TOK_FNATTR_BASIC; };
+fnattr: basic_fnattr
       | "alignstack" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
       | "allocsize" "(" TOK_DECIMAL "," TOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); delete $2; delete $4; delete $6; }
       | "allocsize" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; }
@@ -167,39 +164,57 @@ type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
 type_ptr: type_any "*" { $$ = (new AN(POINTER, "*"))->adopt($1); delete $2; };
 type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $4, $3}); delete $2; delete $5; delete $6; }
-             | type_any "(" optional_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $3}); delete $2; delete $4; delete $5; };
+             | type_any "(" _ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $3}); delete $2; delete $4; delete $5; };
 types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
-optional_ellipse: "..." | { $$ = nullptr; };
+_ellipse: "..." | { $$ = nullptr; };
 
 // Globals
-global_def: TOK_GVAR "=" TOK_LINKAGE visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
-           externally_initialized global_or_constant type_any optional_initial_value gdef_extras
+global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
+           _externally_initialized global_or_constant type_any _initial_value gdef_extras
            { delete $2; $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
-visibility: "default" | "hidden" | "protected" | { $$ = nullptr; };
-dll_storage_class: TOK_DLLPORT | { $$ = nullptr; };
-thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
-addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
-externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
+_linkage: TOK_LINKAGE | { $$ = nullptr; };
+_visibility: TOK_VISIBILITY | { $$ = nullptr; };
+_dll_storage_class: TOK_DLLPORT | { $$ = nullptr; };
+_thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
+_addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; } | { $$ = nullptr; };
+_externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
-optional_initial_value: initial_value | { $$ = nullptr; };
+_initial_value: initial_value | { $$ = nullptr; };
 initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | "zeroinitializer" | "null"
              | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
-gdef_extras: gdef_extras "," gdef_section { $$ = $1->adopt($3); delete $2; }
-           | gdef_extras "," gdef_comdat { $$ = $1->adopt($3); delete $2; }
-           | gdef_extras "," gdef_align { $$ = $1->adopt($3); delete $2; }
+gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); delete $2; }
+           | gdef_extras "," comdat  { $$ = $1->adopt($3); delete $2; }
+           | gdef_extras "," align   { $$ = $1->adopt($3); delete $2; }
            | { $$ = new AN(GDEF_EXTRAS, ""); };
-gdef_section: TOK_SECTION TOK_STRING { $$ = $1->adopt($2); };
-gdef_comdat: TOK_COMDAT "$" dotident { $$ = $1->adopt($3); delete $2; };
-gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
+section: TOK_SECTION TOK_STRING   { $$ = $1->adopt($2); };
+comdat:  TOK_COMDAT  "$" dotident { $$ = $1->adopt($3); delete $2; };
+align:   TOK_ALIGN   TOK_DECIMAL  { $$ = $1->adopt($2); };
+
+// Functions
+function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" _function_types ")"
+                 _unnamed_addr _fnattrs
+//                 { $$ = (new AN(FUNCTION_HEADER, $7->lexerInfo))->adopt({$1, $2, $3, $4, $5, $6, $7, $9, $11, $12}); delete $8; delete $10; };
+                { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12); delete $8; delete $10; };
+_retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST, ""); };
+_function_types: _function_types function_type | { $$ = new AN(FUNCTION_TYPE_LIST, ""); };
+function_type: type_any _parattr_list _variable { $$ = $1->adopt({$2, $3}); };
+_cconv: TOK_CCONV | { $$ = nullptr; };
+_fnattrs: "#" TOK_DECIMAL { $$ = $2; delete $1; } | fnattr_list;
+fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST, ""); };
+_unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
+function_name: TOK_GVAR | TOK_GSTRING;
+_variable: variable | { $$ = nullptr; };
+variable: TOK_PVAR | TOK_PSTRING | TOK_PDECIMAL;
+
 
 // Constants
-constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); }
+constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };
 constant_right: operand | const_expr;
-parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = nullptr; };
+_parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
 parattr: TOK_PARATTR | TOK_READONLY | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; delete $4; };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
