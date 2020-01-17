@@ -2,21 +2,11 @@
 #define PARSER_GLOBALVARDEF_H_
 
 #include "ASTNode.h"
+#include "Enums.h"
 #include "Lexer.h"
 #include "Types.h"
 
 namespace LL2W {
-	enum class Linkage {
-		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
-		Common, Internal
-	};
-	enum class Visibility {Default, Hidden, Protected};
-	enum class DllStorageClass {None, Import, Export};
-	enum class ThreadLocal {None, LocalDynamic, InitialExec, LocalExec};
-	enum class UnnamedAddr {Default, Unnamed, LocalUnnamed};
-
-	extern std::unordered_map<Linkage, std::string> linkage_map;
-
 	struct GlobalVarDef: public ASTNode {
 		Linkage linkage = Linkage::Default;
 		Visibility visibility = Visibility::Default;

@@ -10,30 +10,10 @@
 // TODO: reduce duplication of GlobalVarDef code
 
 namespace LL2W {
-	std::unordered_map<CConv, std::string> cconv_map {
-		{CConv::Default, "default"}, {CConv::ccc, "ccc"}, {CConv::cxx_fast_tlscc, "cxx_fast_tlscc"},
-		{CConv::fastcc, "fastcc"}, {CConv::ghccc, "ghccc"}, {CConv::swiftcc, "swiftcc"},
-		{CConv::preserve_allcc, "preserve_allcc"}, {CConv::preserve_mostcc, "preserve_mostcc"},
-		{CConv::x86_vectorcallcc, "x86_vectorcallcc"}, {CConv::cc10, "cc10"}, {CConv::cc11, "cc11"},
-		{CConv::arm_apcscc, "arm_apcscc"}, {CConv::coldcc, "coldcc"}, {CConv::webkit_jscc, "webkit_jscc"},
-		{CConv::cc64, "cc64"}, {CConv::cc65, "cc65"}, {CConv::cc66, "cc66"}, {CConv::ptx_device, "ptx_device"},
-		{CConv::x86_stdcallcc, "x86_stdcallcc"}, {CConv::cc67, "cc67"}, {CConv::cc68, "cc68"}, {CConv::cc69, "cc69"},
-		{CConv::cc70, "cc70"}, {CConv::cc1023, "cc1023"}, {CConv::anyregcc, "anyregcc"}, {CConv::cc71, "cc71"},
-		{CConv::cc72, "cc72"}, {CConv::cc75, "cc75"}, {CConv::msp430_intrcc, "msp430_intrcc"},
-		{CConv::ptx_kernel, "ptx_kernel"}, {CConv::cc76, "cc76"}, {CConv::cc77, "cc77"}, {CConv::cc78, "cc78"},
-		{CConv::spir_func, "spir_func"}, {CConv::x86_64_win64cc, "x86_64_win64cc"}, {CConv::cc79, "cc79"},
-		{CConv::cc80, "cc80"}, {CConv::arm_aapcs_vfpcc, "arm_aapcs_vfpcc"}, {CConv::intel_ocl_bicc, "intel_ocl_bicc"},
-		{CConv::x86_64_sysvcc, "x86_64_sysvcc"}, {CConv::x86_fastcallcc, "x86_fastcallcc"},
-		{CConv::x86_thiscallcc, "x86_thiscallcc"}, {CConv::arm_aapcscc, "arm_aapcscc"},
-		{CConv::spir_kernel, "spir_kernel"}};
-	
-	std::unordered_map<RetAttr, std::string> retattr_map {
-		{RetAttr::Zeroext, "zeroext"}, {RetAttr::Signext, "signext"}, {RetAttr::Inreg, "inreg"},
-		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
 
 	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
 	                               N function_name, N function_args, N unnamed_addr, N fnattrs_):
-	                               ASTNode(FUNCTION_HEADER, function_name->lexerInfo) {
+		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
 
 		if (linkage_) {
@@ -102,12 +82,13 @@ namespace LL2W {
 
 		returnType = getType(type);
 
-		adopt(function_args);
-		argumentTypes.reserve(function_args->children.size());
-		for (ASTNode *child: function_args->children) {
-			// Each function argument can have PARATTR_LIST and TOK_PVAR/TOK_PSTRING/TOK_PDECIMAL children at the end.
-			argumentTypes.push_back(getType(child));
-		}
+		// adopt(function_args);
+		// argumentTypes.reserve(function_args->children.size());
+		// for (ASTNode *child: function_args->children) {
+		// 	arguments.push_back(FunctionArgument
+		// }
+		// function_args->children.clear();
+		// delete function_args;
 	}
 	
 	std::string FunctionHeader::debugExtra() {

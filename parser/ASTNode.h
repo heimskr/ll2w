@@ -37,6 +37,7 @@ namespace LL2W {
 
 			ASTNode * operator[](size_t) const;
 			ASTNode * at(size_t) const;
+			size_t size() const;
 			ASTNode * adopt(ASTNode *);
 			ASTNode * adopt(std::initializer_list<ASTNode *>);
 			ASTNode * absorb(ASTNode *);

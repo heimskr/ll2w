@@ -51,6 +51,10 @@ namespace LL2W {
 		return *std::next(children.begin(), index);
 	}
 
+	size_t ASTNode::size() const {
+		return children.size();
+	}
+
 	ASTNode * ASTNode::adopt(ASTNode *child) {
 		if (child) {
 			children.push_back(child);

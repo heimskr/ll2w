@@ -4,12 +4,6 @@
 #include "GlobalVarDef.h"
 
 namespace LL2W {
-	std::unordered_map<Linkage, std::string> linkage_map {
-		{Linkage::Private, "private"}, {Linkage::Appending, "appending"}, {Linkage::AvailableExternally,
-		"available_externally"}, { Linkage::Weak, "weak"}, {Linkage::Linkonce, "linkonce"}, {Linkage::ExternWeak,
-		"extern_weak"}, {Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::WeakOdr, "weak_odr"}, {Linkage::External,
-		"external"}, {Linkage::Common, "common"}, {Linkage::Internal, "internal"}};
-
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 	                           ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
 	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *type_,
