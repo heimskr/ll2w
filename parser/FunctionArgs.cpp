@@ -10,10 +10,8 @@ namespace LL2W {
 	FunctionArgs::FunctionArgs(ASTNode *list, bool ellipse_): ASTNode(FUNCTION_ARGS, ""), ellipse(ellipse_) {
 		if (list) {
 			arguments.reserve(list->size());
-			for (ASTNode *child: list->children) {
-				arguments.push_back(child);
-			}
-
+			for (ASTNode *child: list->children)
+				arguments.emplace_back(child);
 			delete list;
 		}
 	}

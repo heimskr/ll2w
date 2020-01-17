@@ -95,6 +95,16 @@ namespace LL2W {
 		std::stringstream out;
 		out << " \e[0;33m" << std::string(*returnType);
 		out << " \e[0;32m" << *name << "\e[36m";
+		out << "\e[0;94m(";
+		for (auto iter = arguments->arguments.begin(), end = arguments->arguments.end(); iter != end; ++iter) {
+			if (iter != arguments->arguments.begin())
+				out << ", ";
+			const FunctionArgument &arg = *iter;
+			out << std::string(*arg.type);
+		}
+		if (arguments->ellipse)
+			out << (arguments->arguments.empty()? "..." : ", ...");
+		out << ")\e[0;36m";
 		if (linkage != Linkage::Default)
 			out << " " << linkage_map.at(linkage);
 		switch (visibility) {
