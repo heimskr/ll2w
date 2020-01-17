@@ -28,7 +28,23 @@ namespace LL2W {
 		{RetAttr::Zeroext, "zeroext"}, {RetAttr::Signext, "signext"}, {RetAttr::Inreg, "inreg"},
 		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
 
-	std::unordered_map<ParAttr, std::string> parattr_map { // enum class ParAttr {Byval, Inalloca, Sret, Nocapture};
+	std::unordered_map<ParAttr, std::string> parattr_map {
 		{ParAttr::Byval, "byval"}, {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret, "sret"},
 		{ParAttr::Nocapture, "nocapture"}, {ParAttr::Readonly, "readonly"}};
+
+	std::unordered_map<FnAttr, std::string> fnattr_map {
+		{FnAttr::alwaysinline, "alwaysinline"}, {FnAttr::noredzone, "noredzone"}, {FnAttr::convergent, "convergent"},
+		{FnAttr::norecurse, "norecurse"}, {FnAttr::inlinehint, "inlinehint"},
+		{FnAttr::inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"}, {FnAttr::sspreq, "sspreq"},
+		{FnAttr::sanitize_memory, "sanitize_memory"}, {FnAttr::jumptable, "jumptable"}, {FnAttr::minsize, "minsize"},
+		{FnAttr::nobuiltin, "nobuiltin"}, {FnAttr::noduplicate, "noduplicate"},
+		{FnAttr::noimplicitfloat, "noimplicitfloat"}, {FnAttr::builtin, "builtin"}, {FnAttr::uwtable, "uwtable"},
+		{FnAttr::nounwind, "nounwind"}, {FnAttr::optnone, "optnone"}, {FnAttr::optsize, "optsize"},
+		{FnAttr::readnone, "readnone"}, {FnAttr::naked, "naked"}, {FnAttr::writeonly, "writeonly"},
+		{FnAttr::argmemonly, "argmemonly"}, {FnAttr::returns_twice, "returns_twice"}, {FnAttr::safestack, "safestack"},
+		{FnAttr::inaccessiblememonly, "inaccessiblememonly"}, {FnAttr::cold, "cold"}, {FnAttr::noreturn, "noreturn"},
+		{FnAttr::nonlazybind, "nonlazybind"}, {FnAttr::sanitize_thread, "sanitize_thread"}, {FnAttr::thunk, "thunk"},
+		{FnAttr::sspstrong, "sspstrong"}, {FnAttr::sanitize_address, "sanitize_address"},
+		{FnAttr::noinline, "noinline"}, {FnAttr::ssp, "ssp"}, {FnAttr::speculatable, "speculatable"},
+		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}};
 }

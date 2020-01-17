@@ -21,11 +21,18 @@ namespace LL2W {
 	enum class RetAttr {Zeroext, Signext, Inreg, Noalias, Nonnull};
 	enum class ParAttr {Byval, Inalloca, Sret, Nocapture, Readonly};
 	enum class Deref {Default, Dereferenceable, DereferenceableOrNull};
+	enum class FnAttr {
+		alwaysinline, noredzone, convergent, norecurse, inlinehint, inaccessiblemem_or_argmemonly, sspreq,
+		sanitize_memory, jumptable, minsize, nobuiltin, noduplicate, noimplicitfloat, builtin, uwtable, nounwind,
+		optnone, optsize, readnone, naked, writeonly, argmemonly, returns_twice, safestack, inaccessiblememonly, cold,
+		noreturn, nonlazybind, sanitize_thread, thunk, sspstrong, sanitize_address, noinline, ssp, speculatable,
+		sanitize_hwaddress};
 
 	extern std::unordered_map<Linkage, std::string> linkage_map;
 	extern std::unordered_map<CConv,   std::string> cconv_map;
 	extern std::unordered_map<RetAttr, std::string> retattr_map;
 	extern std::unordered_map<ParAttr, std::string> parattr_map;
+	extern std::unordered_map<FnAttr,  std::string> fnattr_map;
 }
 
 #endif
