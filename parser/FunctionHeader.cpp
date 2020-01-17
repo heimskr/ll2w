@@ -81,6 +81,8 @@ namespace LL2W {
 		}
 
 		returnType = getType(type);
+
+		adopt(fnattrs_);
 	}
 	
 	std::string FunctionHeader::debugExtra() {

@@ -19,7 +19,7 @@ namespace LL2W {
 		cc79, cc80, arm_aapcs_vfpcc, intel_ocl_bicc, x86_64_sysvcc, x86_fastcallcc, x86_thiscallcc, arm_aapcscc,
 		spir_kernel};
 	enum class RetAttr {Zeroext, Signext, Inreg, Noalias, Nonnull};
-	enum class ParAttr {Byval, Inalloca, Sret, Nocapture};
+	enum class ParAttr {Byval, Inalloca, Sret, Nocapture, Readonly};
 	enum class Deref {Default, Dereferenceable, DereferenceableOrNull};
 
 	extern std::unordered_map<Linkage, std::string> linkage_map;

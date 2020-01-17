@@ -1,4 +1,5 @@
-declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #1
+declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr readonly convergent
+/*
 declare private hidden dllimport fastcc zeroext signext dereferenceable_or_null(42) i32 @puts(i8* nocapture readonly, [3 x i64]) #5
 declare void @exit(i32) local_unnamed_addr #2
 declare %struct.__sFILE* @"\01_fopen"(i8*, i8*) local_unnamed_addr #3
@@ -6,7 +7,7 @@ declare i32 @fscanf(%struct.__sFILE* nocapture, i8* nocapture readonly, ...) loc
 declare i32 @fprintf(%struct.__sFILE* nocapture, i8* nocapture readonly, ...) local_unnamed_addr #1
 declare noalias i8* @calloc(i64, i64) local_unnamed_addr #1
 declare i32 @fclose(%struct.__sFILE* nocapture) local_unnamed_addr #1
-declare void @free(i8* nocapture %foooooooooooooooooooooo, i8 nocapture %barrrrrrrrrrr) local_unnamed_addr #1
+declare void @free(i8* nocapture %foooooooooooooooooooooo, i8 nocapture %barrrrrrrrrrr) local_unnamed_addr
 declare void @ellipse(...) local_unnamed_addr #1
 
 /*

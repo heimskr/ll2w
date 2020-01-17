@@ -30,5 +30,5 @@ namespace LL2W {
 
 	std::unordered_map<ParAttr, std::string> parattr_map { // enum class ParAttr {Byval, Inalloca, Sret, Nocapture};
 		{ParAttr::Byval, "byval"}, {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret, "sret"},
-		{ParAttr::Nocapture, "nocapture"}};
+		{ParAttr::Nocapture, "nocapture"}, {ParAttr::Readonly, "readonly"}};
 }
