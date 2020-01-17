@@ -96,6 +96,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ALLOCSIZE "allocsize"
 %token TOK_PATCHABLE_PROLOGUE "patchable-function=\"prologue-short-redirect\""
 %token TOK_READONLY "readonly"
+%token TOK_DECLARE "declare"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
 %token ATTRIBUTE_LIST
@@ -112,19 +113,16 @@ program: program source_filename { $1->adopt($2); }
        | program global_def      { $1->adopt($2); }
        | program attributes      { $1->adopt($2); }
        | program struct_def      { $1->adopt($2); }
-//       | program TOK_STRUCTVAR "=" "type" "opaque" { $1->adopt((new AN(STRUCTDEF, $2->lexerInfo))->adopt($5)); delete $3; delete $4; }
-//       | program TOK_STRUCTVAR "=" "type" "{" types "}" { $1->adopt((new AN(STRUCTDEF, $2->lexerInfo))->adopt($6)); delete $3; delete $4; delete $5; delete $7; }
+//       | program declaration     { $1->adopt($2); }
        | { $$ = Parser::root; };
 
+// declaration: "declare" function_header { $1->adopt($2); };
 
 
 // Struct definitions
 struct_def: struct_def_left "opaque" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2); delete $1; }
           | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; };
 struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; delete $2; delete $3; };
-//struct_def: TOK_STRUCTVAR "=" struct_def_right { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; delete $2; }
-//struct_def_right: "opaque"
-//                | "{" types "}" { $$ = $2; delete $1; delete $3; };
 
 // Attributes
 attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); delete $2; delete $4; delete $5; delete $7; };
@@ -174,8 +172,6 @@ types: types "," type_any { $$ = $1->adopt($3); delete $2; } | type_any { $$ = (
 extra_ellipse: "," "..." { delete $1; $$ = $2; } | { $$ = nullptr; };
 optional_ellipse: "..." | { $$ = nullptr; };
 
-floatdecnull: TOK_FLOATING | TOK_DECIMAL | "null";
-
 // Globals
 global_def: TOK_GVAR "=" TOK_LINKAGE visibility dll_storage_class thread_local TOK_UNNAMED_ADDR_TYPE addrspace
            externally_initialized global_or_constant type_any optional_initial_value gdef_extras
@@ -188,10 +184,8 @@ addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); delete $2; dele
 externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
 optional_initial_value: initial_value | { $$ = nullptr; };
-initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | initial_value_zero | "null"
-             | type_any floatdecnull { $$ = $1->adopt($2); }
+initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | "zeroinitializer" | "null"
              | "{" initial_value_list "}" { $$ = $2; delete $1; delete $3; };
-initial_value_zero: "zeroinitializer" | type_any "zeroinitializer" {$$ = $2->adopt($1); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
 gdef_extras: gdef_extras "," gdef_section { $$ = $1->adopt($3); delete $2; }

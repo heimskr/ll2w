@@ -62,6 +62,7 @@ FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|
 {LINKAGE}					{ RTOKEN(LINKAGE) }
 {FNATTR_BASIC}				{ RTOKEN(FNATTR_BASIC) }
 
+"declare"					{ RTOKEN(DECLARE) }
 "readonly"					{ RTOKEN(READONLY) }
 "!"							{ RTOKEN(BANG)  }
 "datalayout"				{ RTOKEN(DATALAYOUT) }
