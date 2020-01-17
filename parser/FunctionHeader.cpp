@@ -10,7 +10,6 @@
 // TODO: reduce duplication of GlobalVarDef code
 
 namespace LL2W {
-
 	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
 	                               N function_name, N function_args, N unnamed_addr, N fnattrs_):
 		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
@@ -83,6 +82,16 @@ namespace LL2W {
 		returnType = getType(type);
 		delete type;
 
+		if (unnamed_addr) {
+			const std::string &uatype = *unnamed_addr->lexerInfo;
+			if (uatype == "local_unnamed_addr")
+				unnamedAddr = UnnamedAddr::LocalUnnamed;
+			else if (uatype == "unnamed_addr")
+				unnamedAddr = UnnamedAddr::Unnamed;
+			else throw std::runtime_error("Invalid lexerinfo for unnamed_addr: " + uatype);
+			delete unnamed_addr;
+		}
+
 		if (fnattrs_->symbol == TOK_DECIMAL) {
 			fnattrsIndex = atoi(fnattrs_->lexerInfo->c_str());
 		} else if (fnattrs_->symbol == FNATTR_LIST) {
@@ -137,6 +146,10 @@ namespace LL2W {
 			out << " dereferenceable(" << dereferenceableBytes << ")";
 		else if (deref == Deref::DereferenceableOrNull)
 			out << " dereferenceable_or_null(" << dereferenceableBytes << ")";
+		if (unnamedAddr == UnnamedAddr::Unnamed)
+			out << " unnamed_addr";
+		else if (unnamedAddr == UnnamedAddr::LocalUnnamed)
+			out << " local_unnamed_addr";
 		for (FnAttr fnattr: fnattrs)
 			out << " " << fnattr_map.at(fnattr);
 		if (fnattrsIndex != -1)

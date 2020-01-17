@@ -18,6 +18,7 @@ namespace LL2W {
 		int dereferenceableBytes = -1; // TODO: separate values for dereferenceable and dereferenceable_or_null?
 		Type *returnType;
 		FunctionArgs *arguments;
+		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		std::unordered_set<FnAttr> fnattrs;
 		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
 		
