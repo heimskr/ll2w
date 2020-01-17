@@ -81,14 +81,6 @@ namespace LL2W {
 		}
 
 		returnType = getType(type);
-
-		// adopt(function_args);
-		// argumentTypes.reserve(function_args->children.size());
-		// for (ASTNode *child: function_args->children) {
-		// 	arguments.push_back(FunctionArgument
-		// }
-		// function_args->children.clear();
-		// delete function_args;
 	}
 	
 	std::string FunctionHeader::debugExtra() {
@@ -101,6 +93,8 @@ namespace LL2W {
 				out << ", ";
 			const FunctionArgument &arg = *iter;
 			out << std::string(*arg.type);
+			for (ParAttr parattr: arg.parattrs)
+				out << " " << parattr_map.at(parattr);
 		}
 		if (arguments->ellipse)
 			out << (arguments->arguments.empty()? "..." : ", ...");
