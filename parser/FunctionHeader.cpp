@@ -32,7 +32,7 @@ namespace LL2W {
 		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
 
 	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
-	                               N function_name, N function_types, N unnamed_addr, N fnattrs_):
+	                               N function_name, N function_args, N unnamed_addr, N fnattrs_):
 	                               ASTNode(FUNCTION_HEADER, function_name->lexerInfo) {
 		std::cout << "\e[31m" << Parser::getName(function_name->symbol) << "\e[0m\n\e[32m" << *function_name->lexerInfo << "\e[0m\n";
 		switch (function_name->symbol) {
@@ -111,6 +111,8 @@ namespace LL2W {
 		}
 
 		returnType = getType(type);
+
+		adopt(function_args);
 	}
 	
 	std::string FunctionHeader::debugExtra() {

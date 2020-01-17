@@ -31,13 +31,19 @@ namespace LL2W {
 		std::unordered_set<RetAttr> retattrs;
 		int dereferenceableBytes = -1; // TODO: separate values for dereferenceable and dereferenceable_or_null?
 		Type *returnType;
+		std::vector<Type *> argumentTypes;
 		
 		using N = ASTNode *;
 		FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type, N function_name,
-		               N function_types, N unnamed_addr, N fnattrs_);
+		               N function_args, N unnamed_addr, N fnattrs_);
 		~FunctionHeader() { delete returnType; }
 
 		std::string debugExtra() override;
+	};
+
+	struct FunctionArgs: public ASTNode {
+		bool ellipse;
+		FunctionArgs(ASTNode *list, bool ellipse_): ASTNode(FUNCTION_ARGS, ""), ellipse(ellipse_) { adopt(list); }
 	};
 }
 

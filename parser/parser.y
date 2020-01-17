@@ -95,7 +95,7 @@ using AN = LL2W::ASTNode;
 %token TOK_DECLARE "declare"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
-%token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER
+%token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 
 %start start
 
@@ -195,12 +195,14 @@ comdat:  TOK_COMDAT  "$" dotident { $$ = $1->adopt($3); delete $2; };
 align:   TOK_ALIGN   TOK_DECIMAL  { $$ = $1->adopt($2); };
 
 // Functions
-function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" _function_types ")"
-                 _unnamed_addr _fnattrs
-//                 { $$ = (new AN(FUNCTION_HEADER, $7->lexerInfo))->adopt({$1, $2, $3, $4, $5, $6, $7, $9, $11, $12}); delete $8; delete $10; };
+function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs
                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12); delete $8; delete $10; };
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST, ""); };
-_function_types: _function_types function_type | { $$ = new AN(FUNCTION_TYPE_LIST, ""); };
+function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); delete $2; delete $3; }
+             | function_types { $$ = new FunctionArgs($1, false); }
+             | "..." { $$ = new FunctionArgs(nullptr, true); }
+             | { $$ = new FunctionArgs(nullptr, false); };
+function_types: function_types "," function_type { $1->adopt($3); delete $2; } | function_type { $$ = (new AN(FUNCTION_TYPE_LIST, ""))->adopt($1); };
 function_type: type_any _parattr_list _variable { $$ = $1->adopt({$2, $3}); };
 _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; delete $1; } | fnattr_list;
