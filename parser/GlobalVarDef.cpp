@@ -38,7 +38,7 @@ namespace LL2W {
 		}
 
 		if (thread_local_) {
-			const std::string &tl = *thread_local_->children[0]->lexerInfo;
+			const std::string &tl = *thread_local_->at(0)->lexerInfo;
 			if (tl == "localdynamic")
 				threadLocal = ThreadLocal::LocalDynamic;
 			else if (tl == "initialexec")

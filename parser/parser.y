@@ -121,7 +121,7 @@ program: program source_filename { $1->adopt($2); }
 
 // Struct definitions
 struct_def: struct_def_left "opaque" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2); delete $1; }
-          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($3); delete $1; };
+          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->absorb($3); delete $1; };
 struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; delete $2; delete $3; };
 
 // Attributes

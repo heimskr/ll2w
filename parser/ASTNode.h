@@ -2,9 +2,9 @@
 #define PARSER_ASTNODE_H_
 
 #include <initializer_list>
+#include <list>
 #include <ostream>
 #include <string>
-#include <vector>
 
 namespace LL2W {
 	struct Location {
@@ -27,7 +27,7 @@ namespace LL2W {
 			Location location;
 			const std::string *lexerInfo;
 			ASTNode *parent;
-			std::vector<ASTNode *> children;
+			std::list<ASTNode *> children;
 
 			ASTNode(int sym, const Location &loc, const char *info);
 			ASTNode(int sym, const Location &loc, const std::string *info);

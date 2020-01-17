@@ -44,11 +44,11 @@ namespace LL2W {
 	}
 
 	ASTNode * ASTNode::operator[](size_t index) const {
-		return children[index];
+		return at(index);
 	}
 
 	ASTNode * ASTNode::at(size_t index) const {
-		return children.at(index);
+		return *std::next(children.begin(), index);
 	}
 
 	ASTNode * ASTNode::adopt(ASTNode *child) {
@@ -67,6 +67,13 @@ namespace LL2W {
 	}
 
 	ASTNode * ASTNode::absorb(ASTNode *to_absorb) {
+		for (auto iter = children.begin(), end = children.end(); iter != end; ++iter) {
+			if (*iter == to_absorb) {
+				children.erase(iter);
+				break;
+			}
+		}
+
 		for (ASTNode *child: to_absorb->children)
 			adopt(child);
 		to_absorb->children.clear();
@@ -87,7 +94,6 @@ namespace LL2W {
 		out->location = location;
 		out->lexerInfo = lexerInfo;
 		out->parent = parent;
-		out->children.reserve(children.size());
 		for (ASTNode *child: children) {
 			ASTNode *copy = child->copy();
 			copy->parent = out;

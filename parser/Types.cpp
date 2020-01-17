@@ -33,15 +33,15 @@ namespace LL2W {
 	}
 
 	FunctionType::FunctionType(ASTNode *node) {
-		returnType = getType(node->children.at(0));
+		returnType = getType(node->at(0));
 		if (node->children.size() == 3) {
-			ASTNode *list = node->children.at(2);
+			ASTNode *list = node->at(2);
 			argumentTypes.reserve(list->children.size());
 			for (ASTNode *child: list->children)
 				argumentTypes.push_back(getType(child));
 		}
 
-		ellipse = node->children.at(1) != nullptr;
+		ellipse = node->at(1) != nullptr;
 	}
 
 	FunctionType::~FunctionType() {
