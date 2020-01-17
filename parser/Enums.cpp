@@ -46,5 +46,5 @@ namespace LL2W {
 		{FnAttr::nonlazybind, "nonlazybind"}, {FnAttr::sanitize_thread, "sanitize_thread"}, {FnAttr::thunk, "thunk"},
 		{FnAttr::sspstrong, "sspstrong"}, {FnAttr::sanitize_address, "sanitize_address"},
 		{FnAttr::noinline, "noinline"}, {FnAttr::ssp, "ssp"}, {FnAttr::speculatable, "speculatable"},
-		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}};
+		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly, "readonly"}};
 }

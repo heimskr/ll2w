@@ -1,5 +1,4 @@
 declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr readonly convergent
-/*
 declare private hidden dllimport fastcc zeroext signext dereferenceable_or_null(42) i32 @puts(i8* nocapture readonly, [3 x i64]) #5
 declare void @exit(i32) local_unnamed_addr #2
 declare %struct.__sFILE* @"\01_fopen"(i8*, i8*) local_unnamed_addr #3

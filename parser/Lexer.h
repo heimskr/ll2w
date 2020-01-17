@@ -31,7 +31,7 @@ namespace LL2W {
 		static std::string line;
 		static yysize last_yylength;
 		static std::vector<std::string> filenames;
-		static std::unordered_map<int, std::unordered_map<int, std::string>> lines;
+		static std::unordered_map<int, std::string> lines;
 		static bool failed;
 
 		static const std::string * filename(int fileno);

@@ -5,8 +5,8 @@
 namespace LL2W {
 	yysize Lexer::last_yylength = 0;
 	std::string Lexer::line;
-	Location Lexer::location = {0, 0, 1};
-	std::unordered_map<int, std::unordered_map<int, std::string>> Lexer::lines;
+	Location Lexer::location = {0, 1};
+	std::unordered_map<int, std::string> Lexer::lines;
 	bool Lexer::failed = false;
 
 	void Lexer::advance() {
@@ -16,7 +16,7 @@ namespace LL2W {
 	}
 
 	void Lexer::newline() {
-		Lexer::lines[Lexer::location.fileno].insert({Lexer::location.line, Lexer::line});
+		Lexer::lines.insert({Lexer::location.line, Lexer::line});
 		Lexer::line.clear();
 		++Lexer::location.line;
 		Lexer::location.column = 0;

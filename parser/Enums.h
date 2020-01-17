@@ -26,7 +26,7 @@ namespace LL2W {
 		sanitize_memory, jumptable, minsize, nobuiltin, noduplicate, noimplicitfloat, builtin, uwtable, nounwind,
 		optnone, optsize, readnone, naked, writeonly, argmemonly, returns_twice, safestack, inaccessiblememonly, cold,
 		noreturn, nonlazybind, sanitize_thread, thunk, sspstrong, sanitize_address, noinline, ssp, speculatable,
-		sanitize_hwaddress};
+		sanitize_hwaddress, readonly};
 
 	extern std::unordered_map<Linkage, std::string> linkage_map;
 	extern std::unordered_map<CConv,   std::string> cconv_map;

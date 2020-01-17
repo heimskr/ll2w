@@ -8,12 +8,7 @@
 
 namespace LL2W {
 	Location::operator std::string() const {
-		return *filename() + ":" + std::to_string(line + 1) + ":" + std::to_string(column);
-	}
-
-	const std::string * Location::filename() const {
-		static std::string wh = "?"; return &wh;
-		// return "?";
+		return std::to_string(line + 1) + ":" + std::to_string(column);
 	}
 
 	std::ostream & operator<<(std::ostream &os, const Location &location) {

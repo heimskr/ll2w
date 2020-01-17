@@ -19,7 +19,7 @@ using AN = LL2W::ASTNode;
 %verbose
 
 %initial-action {
-    LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0, 0}, "");
+    LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0}, "");
 }
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST

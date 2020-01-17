@@ -18,6 +18,8 @@ namespace LL2W {
 		int dereferenceableBytes = -1; // TODO: separate values for dereferenceable and dereferenceable_or_null?
 		Type *returnType;
 		FunctionArgs *arguments;
+		std::unordered_set<FnAttr> fnattrs;
+		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
 		
 		using N = ASTNode *;
 		FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type, N function_name,

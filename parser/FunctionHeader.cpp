@@ -81,8 +81,24 @@ namespace LL2W {
 		}
 
 		returnType = getType(type);
+		delete type;
 
-		adopt(fnattrs_);
+		if (fnattrs_->symbol == TOK_DECIMAL) {
+			fnattrsIndex = atoi(fnattrs_->lexerInfo->c_str());
+		} else if (fnattrs_->symbol == FNATTR_LIST) {
+			for (ASTNode *fnattr: fnattrs_->children) {
+				const std::string &fnattr_name = *fnattr->lexerInfo;
+				for (const std::pair<FnAttr, std::string> &pair: fnattr_map) {
+					if (fnattr_name == pair.second) {
+						fnattrs.insert(pair.first);
+						break;
+					}
+				}
+			}
+			delete fnattrs_;
+		} else {
+			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(Parser::getName(fnattrs_->symbol)));
+		}
 	}
 	
 	std::string FunctionHeader::debugExtra() {
@@ -121,6 +137,10 @@ namespace LL2W {
 			out << " dereferenceable(" << dereferenceableBytes << ")";
 		else if (deref == Deref::DereferenceableOrNull)
 			out << " dereferenceable_or_null(" << dereferenceableBytes << ")";
+		for (FnAttr fnattr: fnattrs)
+			out << " " << fnattr_map.at(fnattr);
+		if (fnattrsIndex != -1)
+			out << " #" << fnattrsIndex;
 		out << "\e[0m";
 		return out.str();
 	}

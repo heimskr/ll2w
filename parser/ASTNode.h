@@ -8,12 +8,10 @@
 
 namespace LL2W {
 	struct Location {
-		int fileno;
 		size_t line;
 		size_t column;
 
 		operator std::string() const;
-		const std::string * filename() const;
 	};
 
 	std::ostream & operator<<(std::ostream &, const Location &);
