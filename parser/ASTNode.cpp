@@ -67,6 +67,9 @@ namespace LL2W {
 	}
 
 	ASTNode * ASTNode::absorb(ASTNode *to_absorb) {
+		if (!to_absorb)
+			return this;
+
 		for (auto iter = children.begin(), end = children.end(); iter != end; ++iter) {
 			if (*iter == to_absorb) {
 				children.erase(iter);
