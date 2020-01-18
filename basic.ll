@@ -1,6 +1,13 @@
 define i32* @hello() {
 	foo: %foo = select nnan ninf fast i1 true, i8 5, <5 x i1> <i1 1, i1 2, i1 3, i1 4, i1 5>
+	%bar = alloca inalloca i32, i32 666, align 4, addrspace(42)
 	%bar = alloca inalloca i32, i32 666, align 4
+	%bar = alloca inalloca i32, i32 666
+	%bar = alloca inalloca i32, align 4
+	%bar = alloca inalloca i32, align 4, addrspace(42)
+	%bar = alloca inalloca i32, i32 666, addrspace(42)
+	%bar = alloca inalloca i32, addrspace(42)
+	%bar = alloca inalloca i32
 }
 
 /*

@@ -35,6 +35,7 @@ namespace LL2W {
 		Type *numelementsType = nullptr;
 		Value *numelementsValue = nullptr;
 		int align = -1;
+		int addrspace = -1;
 
 		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 		           ASTNode *addrspace_);

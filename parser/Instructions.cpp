@@ -87,6 +87,8 @@ namespace LL2W {
 
 		if (addrspace_) {
 			addrspace_->debug();
+			addrspace = atoi(addrspace_->lexerInfo->c_str());
+			delete addrspace_;
 		}
 	}
 
@@ -106,6 +108,8 @@ namespace LL2W {
 			out << "\e[2m,\e[0m " << std::string(*numelementsType) << " " << std::string(*numelementsValue);
 		if (align != -1)
 			out << "\e[2m,\e[0;36m align\e[0m " << align;
+		if (addrspace != -1)
+			out << "\e[2m,\e[0;36m addrspace\e[0m(" << addrspace << ")";
 		return out.str();
 	}
 }

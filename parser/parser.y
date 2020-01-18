@@ -29,6 +29,7 @@ using AN = LL2W::ASTNode;
 %error-verbose
 %token-table
 %verbose
+%glr-parser
 
 %initial-action {
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0}, "");
