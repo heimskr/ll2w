@@ -255,9 +255,11 @@ instruction: i_select | i_alloca;
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
 
-i_alloca: variable "=" "alloca" _inalloca
-          { $$ = new AllocaNode($1, $4); D($2, $3); };
+i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements
+          { $$ = new AllocaNode($1, $4, $5, $6); D($2, $3); };
 _inalloca: "inalloca" | { $$ = nullptr; };
+_alloca_numelements: alloca_numelements | { $$ = nullptr; };
+alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); };
 
 
 // Constants

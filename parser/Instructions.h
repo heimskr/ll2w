@@ -24,14 +24,20 @@ namespace LL2W {
 
 		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);
+		~SelectNode();
 		virtual std::string debugExtra() override;
 	};
 
 	struct AllocaNode: public InstructionNode {
 		const std::string *result;
 		bool inalloca = false;
+		Type *type;
+		Type *numelementsType = nullptr;
+		Value *numelementsValue = nullptr;
 
-		AllocaNode(ASTNode *result_, ASTNode *inalloca_);
+		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_);
+		~AllocaNode();
+		virtual std::string debugExtra() override;
 	};
 }
 

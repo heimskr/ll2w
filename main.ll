@@ -1,3 +1,4 @@
+/*
 ; ModuleID = 'main.cpp'
 source_filename = "main.cpp"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
@@ -214,9 +215,10 @@ target triple = "x86_64-apple-macosx10.15.0"
 @_ZN4LL2W6Parser4rootE = external global %"class.LL2W::ASTNode"*, align 8
 @_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, align 8
 @_ZNSt3__15ctypeIcE2idE = external global %"class.std::__1::locale::id", align 8
-
+;*/
 ; Function Attrs: noinline norecurse optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
+  %foo = alloca i32, i32 666
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
   %5 = alloca i8**, align 8
