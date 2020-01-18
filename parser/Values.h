@@ -57,6 +57,16 @@ namespace LL2W {
 		operator std::string() override { return value? "true" : "false"; }
 	};
 
+	struct RegisterValue: public Value {
+		int index;
+		RegisterValue(int index_): index(index_) {}
+		RegisterValue(const std::string &index_): RegisterValue(atoi(index_.c_str())) {}
+		RegisterValue(const std::string *index_): RegisterValue(*index_) {}
+		RegisterValue(const ASTNode *node): RegisterValue(node->lexerInfo) {}
+		Value * copy() const override { return new RegisterValue(index); }
+		operator std::string() override { return "\e[32m%" + std::to_string(index) + "\e[39m"; }
+	};
+
 	Value * getValue(ASTNode *);
 }
 

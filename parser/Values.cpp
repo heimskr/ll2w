@@ -46,6 +46,7 @@ namespace LL2W {
 			case TOK_DECIMAL:  return new IntValue(node);
 			case TOK_BOOL:     return new BoolValue(node);
 			case VECTOR:       return new VectorValue(node);
+			case TOK_PDECIMAL: return new RegisterValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}
