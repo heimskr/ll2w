@@ -84,8 +84,10 @@ namespace LL2W {
 	};
 
 	struct StructType: public Type {
+		enum class Form {Struct, Class, Union};
 		const std::string *name;
-		StructType(const std::string *name_): name(name_) {}
+		Form form = Form::Struct;
+		StructType(const std::string *name_, Form form_ = Form::Struct): name(name_), form(form_) {}
 		operator std::string() override { return *name; }
 		Type * copy() const override { return new StructType(name); }
 	};

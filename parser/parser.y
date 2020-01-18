@@ -50,7 +50,6 @@ using AN = LL2W::ASTNode;
 %token TOK_RCURLY "}"
 %token TOK_COMMA ","
 %token TOK_NULL "null"
-%token TOK_FLOAT "float"
 %token TOK_PERCENT "%"
 %token TOK_AT "@"
 %token TOK_LPAR "("
@@ -134,9 +133,9 @@ declaration: "declare" function_header { $1->adopt($2); };
 
 
 // Struct definitions
-struct_def: struct_def_left "opaque"      { $$ = new StructNode(StructNode::StructType::Opaque, $1, nullptr); D($2); }
-          | struct_def_left "{" types "}" { $$ = new StructNode(StructNode::StructType::Default, $1, $3); D($2, $4); }
-          | struct_def_left "<" "{" types "}" ">" { $$ = new StructNode(StructNode::StructType::Packed, $1, $4); D($2, $3, $5, $6); };
+struct_def: struct_def_left "opaque"      { $$ = new StructNode(StructNode::Shape::Opaque, $1, nullptr); D($2); }
+          | struct_def_left "{" types "}" { $$ = new StructNode(StructNode::Shape::Default, $1, $3); D($2, $4); }
+          | struct_def_left "<" "{" types "}" ">" { $$ = new StructNode(StructNode::Shape::Packed, $1, $4); D($2, $3, $5, $6); };
 struct_def_left: csuvar "=" "type" { $$ = $1; D($2, $3); };
 csuvar: TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 
@@ -188,7 +187,7 @@ vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})
 type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); D($1, $3, $5); };
-vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
+vector_type: TOK_INTTYPE | type_ptr | TOK_FLOATTYPE;
 type_ptr: type_any "*" { $$ = (new AN(POINTERTYPE, "*"))->adopt($1); D($2); };
 type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $4, $3}); D($2, $5, $6); }
              | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $3});     D($2, $4, $5); };

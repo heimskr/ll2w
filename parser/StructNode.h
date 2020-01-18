@@ -10,18 +10,18 @@
 
 namespace LL2W {
 	struct StructNode: public ASTNode {
-		enum class StructType {Default, Opaque, Packed};
+		enum class Shape {Default, Opaque, Packed};
 		const std::string *name;
-		StructType type = StructType::Default;
+		Shape shape = Shape::Default;
 		std::vector<Type *> types;
 
 		StructNode(): ASTNode(STRUCTDEF, "") {}
-		StructNode(std::initializer_list<Type *>  types_, StructType type_):
-			ASTNode(STRUCTDEF, ""), type(type_), types(types_) {}
-		StructNode(const     std::vector<Type *> &types_, StructType type_):
-			ASTNode(STRUCTDEF, ""), type(type_), types(types_) {}
+		StructNode(std::initializer_list<Type *>  types_, Shape shape_):
+			ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
+		StructNode(const     std::vector<Type *> &types_, Shape shape_):
+			ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
 
-		StructNode(StructType, ASTNode *left, ASTNode *types_);
+		StructNode(Shape, ASTNode *left, ASTNode *types_);
 
 		virtual std::string debugExtra() override;
 		virtual std::string style() const override { return "\e[33m"; }

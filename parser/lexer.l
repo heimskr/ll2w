@@ -32,15 +32,15 @@ PSTRING				("%"{STRING})
 DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
 FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
-FLOATTYPE			("half"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
+FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"inalloca"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"dereferenceable_or_null")
-STRUCTVAR			(("%struct."{IDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
-CLASSVAR			(("%class."{IDENT})|("%\"class."([^\\"\n]|\\[\\’"0nt])+\"))
-UNIONVAR			(("%union."{IDENT})|("%\"union."([^\\"\n]|\\[\\’"0nt])+\"))
+STRUCTVAR			(("%struct."{DOTIDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
+CLASSVAR			(("%class."{DOTIDENT})|("%\"class."([^\\"\n]|\\[\\’"0nt])+\"))
+UNIONVAR			(("%union."{DOTIDENT})|("%\"union."([^\\"\n]|\\[\\’"0nt])+\"))
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
 VISIBILITY			("default"|"hidden"|"protected")
@@ -106,7 +106,6 @@ BOOL				("true"|"false")
 "]"							{ RTOKEN(RSQUARE) }
 "x"							{ RTOKEN(X) }
 "null"						{ RTOKEN(NULL) }
-"float"						{ RTOKEN(FLOAT) }
 "<"							{ RTOKEN(LANGLE) }
 ">"							{ RTOKEN(RANGLE) }
 "void"						{ RTOKEN(VOID) }

@@ -83,14 +83,16 @@ namespace LL2W {
 
 	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {
-			case FUNCTIONTYPE: return new FunctionType(node);
-			case TOK_INTTYPE: return new IntType(atoi(node->lexerInfo->substr(1).c_str()));
+			case FUNCTIONTYPE:  return new FunctionType(node);
+			case TOK_INTTYPE:   return new IntType(atoi(node->lexerInfo->substr(1).c_str()));
 			case TOK_FLOATTYPE: return new FloatType(FloatType::getType(*node->lexerInfo));
-			case ARRAYTYPE:  return new  ArrayType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
-			case VECTORTYPE: return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
-			case POINTERTYPE: return new PointerType(getType(node->at(0)));
-			case TOK_VOID: return new VoidType();
-			case TOK_STRUCTVAR: return new StructType(node->lexerInfo);
+			case ARRAYTYPE:     return new  ArrayType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
+			case VECTORTYPE:    return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
+			case POINTERTYPE:   return new PointerType(getType(node->at(0)));
+			case TOK_VOID:      return new VoidType();
+			case TOK_STRUCTVAR: return new StructType(node->lexerInfo, StructType::Form::Struct);
+			case TOK_CLASSVAR:  return new StructType(node->lexerInfo, StructType::Form::Class);
+			case TOK_UNIONVAR:  return new StructType(node->lexerInfo, StructType::Form::Union);
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}
