@@ -1,3 +1,4 @@
+#include <sstream>
 #include "StructNode.h"
 #include "StringSet.h"
 
@@ -7,6 +8,10 @@ namespace LL2W {
 	}
 
 	std::string StructNode::debugExtra() {
-		return " " + *name;
+		std::stringstream out;
+		if (type == StructType::Opaque) out << " opaque";
+		else if (type == StructType::Packed) out << " packed";
+
+		return out.str();
 	}
 }
