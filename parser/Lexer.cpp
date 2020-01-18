@@ -13,6 +13,22 @@ namespace LL2W {
 		Lexer::line += yytext;
 		Lexer::location.column += last_yylength;
 		Lexer::last_yylength = yyleng;
+
+		size_t newline_count = 0, i = 0, col = Lexer::location.column;
+		char ch = yytext[0];
+		while (ch != '\0') {
+			if (ch == '\n') {
+				++newline_count;
+				col = 0;
+			} else ++col;
+			ch = yytext[++i];
+		}
+
+		if (1 < newline_count) {
+			Lexer::last_yylength = col;
+			Lexer::line.clear();
+			Lexer::location.line += newline_count;
+		}
 	}
 
 	void Lexer::newline() {
