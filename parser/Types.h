@@ -65,7 +65,7 @@ namespace LL2W {
 		template <typename T>
 		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
 		~PointerType() { delete subtype; }
-		operator std::string() override { return std::string(*subtype) + " *"; }
+		operator std::string() override { return std::string(*subtype) + "*"; }
 		Type * copy() const override { return new PointerType(subtype->copy()); }
 	};
 

@@ -86,7 +86,6 @@ namespace LL2W {
 		}
 
 		if (addrspace_) {
-			addrspace_->debug();
 			addrspace = atoi(addrspace_->lexerInfo->c_str());
 			delete addrspace_;
 		}
@@ -110,6 +109,48 @@ namespace LL2W {
 			out << "\e[2m,\e[0;36m align\e[0m " << align;
 		if (addrspace != -1)
 			out << "\e[2m,\e[0;36m addrspace\e[0m(" << addrspace << ")";
+		return out.str();
+	}
+
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
+	                     ASTNode *align_, ASTNode *nontemporal_) {
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		value = getValue(value_);
+		delete value_;
+
+		ptrType = getType(ptr_type);
+		if (dynamic_cast<PointerType *>(ptrType) == nullptr)
+			yyerror("Destination in store instruction is not a valid pointer type");
+		delete ptr_type;
+
+		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		delete ptr_index;
+
+		if (align_) {
+			align = atoi(align_->lexerInfo->c_str());
+			delete align_;
+		}
+	}
+
+	StoreNode::~StoreNode() {
+		delete type;
+		delete value;
+		delete ptrType;
+	}
+
+	std::string StoreNode::debugExtra() {
+		std::stringstream out;
+		out << "\e[36mstore\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m "
+		    << std::string(*ptrType) << " \e[32m%" << ptrIndex << "\e[0m";
+		if (align != -1)
+			out << "\e[2m,\e[0;36m align \e[0m" << align;
 		return out.str();
 	}
 }

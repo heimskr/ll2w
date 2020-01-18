@@ -8,8 +8,8 @@ define i32* @hello() {
 	%bar = alloca inalloca i32, i32 666, addrspace(42)
 	%bar = alloca inalloca i32, addrspace(42)
 	%bar = alloca inalloca i32
+	store i32 0, i32* %3, align 4
 }
-
 /*
 declare i32 @printf(i8* nocapture readonly, ...) unnamed_addr readonly convergent
 declare private hidden dllimport fastcc zeroext signext dereferenceable_or_null(42) i32 @puts(i8* nocapture readonly, [3 x i64]) #5
@@ -43,4 +43,4 @@ target triple = "x86_64-apple-macosx10.12.0"
 !3 = !{!"llvm.loop.unroll.disable"}
 !4 = !{!0, !3, !2, !4, !1, !"four", !5, i32 1}
 !5 = distinct !{!5, !3}
-*/
+;*/

@@ -42,6 +42,17 @@ namespace LL2W {
 		~AllocaNode();
 		virtual std::string debugExtra() override;
 	};
+
+	struct StoreNode: public InstructionNode {
+		bool volatile_ = false;
+		Type *type, *ptrType;
+		Value *value;
+		int ptrIndex = -1, align = -1;
+		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
+		          ASTNode *align_, ASTNode *nontemporal_);
+		~StoreNode();
+		virtual std::string debugExtra() override;
+	};
 }
 
 #endif

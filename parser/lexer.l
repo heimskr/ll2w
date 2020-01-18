@@ -27,10 +27,13 @@ MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 INTTYPE				("i"{DIGIT}+)
 GVAR				("@"{DOTIDENT})
 GSTRING				("@"{STRING})
+PDECIMAL			("%"{DIGIT}+)
 PVAR				("%"{DOTIDENT})
 PSTRING				("%"{STRING})
 DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
+INTBANG				("!"{DIGIT}+)
+METABANG			("!"{DOTIDENT})
 FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
 FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
@@ -59,6 +62,7 @@ BOOL				("true"|"false")
 {UNIONVAR}					{ RTOKEN(UNIONVAR) }
 {CLASSVAR}					{ RTOKEN(CLASSVAR) }
 {STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
+{PDECIMAL}					{ RTOKEN(PDECIMAL) }
 {PVAR}						{ RTOKEN(PVAR) }
 {PSTRING}					{ RTOKEN(PSTRING) }
 {GVAR}						{ RTOKEN(GVAR) }
@@ -78,6 +82,10 @@ BOOL				("true"|"false")
 {FASTMATH}					{ RTOKEN(FASTMATH) }
 {BOOL}						{ RTOKEN(BOOL) }
 
+"!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
+"!nontemporal"				{ RTOKEN(NONTEMPORAL) }
+{INTBANG}					{ RTOKEN(INTBANG) }
+{METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }
 "declare"					{ RTOKEN(DECLARE) }
 "readonly"					{ RTOKEN(READONLY) }
@@ -117,6 +125,9 @@ BOOL				("true"|"false")
 "select"					{ RTOKEN(SELECT) }
 "alloca"					{ RTOKEN(ALLOCA) }
 "inalloca"					{ RTOKEN(INALLOCA) }
+"store"						{ RTOKEN(STORE) }
+"load"						{ RTOKEN(LOAD) }
+"volatile"					{ RTOKEN(VOLATILE) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }

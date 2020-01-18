@@ -22,6 +22,9 @@ void D(Args && ...args) {
 
 using namespace LL2W;
 using AN = LL2W::ASTNode;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 %}
 
 %debug
@@ -35,10 +38,10 @@ using AN = LL2W::ASTNode;
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0}, "");
 }
 
-%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
+%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METABANG
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL
 %token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH
-%token TOK_STRUCTVAR TOK_CLASSVAR TOK_UNIONVAR
+%token TOK_STRUCTVAR TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -112,10 +115,15 @@ using AN = LL2W::ASTNode;
 %token TOK_SELECT "select"
 %token TOK_ALLOCA "alloca"
 %token TOK_INALLOCA "inalloca"
+%token TOK_STORE "store"
+%token TOK_LOAD "load"
+%token TOK_VOLATILE "volatile"
+%token TOK_INVARIANT_GROUP "!invariant.group"
+%token TOK_NONTEMPORAL "!nontemporal"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
-%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR
+%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST
 
 %start start
 
@@ -167,16 +175,19 @@ target_type: "datalayout" | "triple";
 metadata_def: "!" dotident "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_RCURLY { D($1, $3, $5, $7); $$ = new MetadataDef($2, $4, $6); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
-             | metadata_listitem { $$ = (new AN(TOK_METADATA_LIST, ""))->adopt($1); }
+             | metadata_listitem { $$ = (new AN(METADATA_LIST, ""))->adopt($1); }
              | { $$ = nullptr; };
 
 metadata_listitem: "!" TOK_STRING      { D($1); $$ = $2; }
                  | "!" TOK_DECIMAL     { D($1); $$ = $2; }
+                 | metabang
                  | constant
                  | "null";
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; };
+
+metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; }
         | TOK_DOTIDENT;
@@ -221,11 +232,11 @@ initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
-           | gdef_extras "," align   { $$ = $1->adopt($3); D($2); }
+           | gdef_extras "," gdef_align   { $$ = $1->adopt($3); D($2); }
            | { $$ = new AN(GDEF_EXTRAS, ""); };
 section: TOK_SECTION TOK_STRING   { $$ = $1->adopt($2); };
 comdat:  TOK_COMDAT  "$" dotident { $$ = $1->adopt($3); D($2); };
-align:   TOK_ALIGN   TOK_DECIMAL  { $$ = $1->adopt($2); };
+gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Functions
 function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs
@@ -243,7 +254,7 @@ fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_
 _unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_GSTRING;
 _variable: variable | { $$ = nullptr; };
-variable: TOK_PVAR | TOK_PSTRING;
+variable: TOK_PVAR | TOK_PSTRING | TOK_PDECIMAL;
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
@@ -252,20 +263,31 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 
 // Instructions
-instruction: i_select | i_alloca;
+instruction: i_select | i_alloca | i_store;
 
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
 
-i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _alloca_align _alloca_addrspace
+i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
           { $$ = new AllocaNode($1, $4, $5, $6, $7, $8); D($2, $3); };
 _inalloca: "inalloca" | { $$ = nullptr; };
 _alloca_numelements: alloca_numelements | { $$ = nullptr; };
 alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); };
-_alloca_align: alloca_align | { $$ = nullptr; };
-alloca_align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
+_align: align | { $$ = nullptr; };
+align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: alloca_addrspace | { $$ = nullptr; };
 alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); };
+
+i_store: "store" _volatile type_any operand "," type_ptr TOK_PDECIMAL _align _nontemporal
+         { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9); D($1, $5); };
+_volatile:    TOK_VOLATILE | { $$ = nullptr; };
+_nontemporal: nontemporal  | { $$ = nullptr; };
+nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); };
+
+
+
+// i_store_atomic:
+
 
 
 // Constants
@@ -274,7 +296,7 @@ constant_right: operand | const_expr;
 _parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
+operand: TOK_PVAR | TOK_PDECIMAL | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
        | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
@@ -283,6 +305,7 @@ conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI 
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
 
 %%
+#pragma GCC diagnostic pop
 
 const char * LL2W::Parser::getName(int symbol) {
     return yytname[YYTRANSLATE(symbol)];
