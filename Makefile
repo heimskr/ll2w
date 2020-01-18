@@ -12,7 +12,9 @@ PARSEHDR	:= parser/yyparse.h
 FLEXSRC		:= parser/lexer.l
 BISONSRC	:= parser/parser.y
 
-.PHONY: all test clean
+CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+
+.PHONY: all test clean count countbf
 
 all: $(OUTPUT)
 
@@ -39,6 +41,12 @@ test: $(OUTPUT)
 
 clean:
 	rm -f $(OUTPUT) *.o parser/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
+
+count:
+	cloc . parser $(CLOC_OPTIONS)
+
+countbf:
+	cloc --by-file . parser $(CLOC_OPTIONS)
 
 DEPFILE  = .dep
 DEPTOKEN = "\# MAKEDEPENDS"
