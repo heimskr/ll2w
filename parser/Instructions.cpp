@@ -113,7 +113,7 @@ namespace LL2W {
 	}
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
-	                     ASTNode *align_, ASTNode *nontemporal_) {
+	                     ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group) {
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
@@ -137,6 +137,16 @@ namespace LL2W {
 			align = atoi(align_->lexerInfo->c_str());
 			delete align_;
 		}
+
+		if (nontemporal_) { // TOK_INTBANG "!42"
+			nontemporalIndex = atoi(nontemporal_->lexerInfo->substr(1).c_str());
+			delete nontemporal_;
+		}
+
+		if (invariant_group) { // Same as above
+			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			delete invariant_group;
+		}
 	}
 
 	StoreNode::~StoreNode() {
@@ -151,6 +161,10 @@ namespace LL2W {
 		    << std::string(*ptrType) << " \e[32m%" << ptrIndex << "\e[0m";
 		if (align != -1)
 			out << "\e[2m,\e[0;36m align \e[0m" << align;
+		if (nontemporalIndex != -1)
+			out << "\e[2m,\e[0;36m !nontemporal \e[0m" << nontemporalIndex;
+		if (invariantGroupIndex != -1)
+			out << "\e[2m,\e[0;36m !invariant.group \e[0m" << invariantGroupIndex;
 		return out.str();
 	}
 }

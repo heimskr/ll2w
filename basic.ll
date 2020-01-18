@@ -8,7 +8,7 @@ define i32* @hello() {
 	%bar = alloca inalloca i32, i32 666, addrspace(42)
 	%bar = alloca inalloca i32, addrspace(42)
 	%bar = alloca inalloca i32
-	store i32 0, i32* %3, align 4
+	store i32 0, i32* %3, align 4, !nontemporal !42, !invariant.group !20
 }
 /*
 declare i32 @printf(i8* nocapture readonly, ...) unnamed_addr readonly convergent

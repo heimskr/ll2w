@@ -47,9 +47,9 @@ namespace LL2W {
 		bool volatile_ = false;
 		Type *type, *ptrType;
 		Value *value;
-		int ptrIndex = -1, align = -1;
+		int ptrIndex = -1, align = -1, nontemporalIndex = -1, invariantGroupIndex = -1;
 		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
-		          ASTNode *align_, ASTNode *nontemporal_);
+		          ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group);
 		~StoreNode();
 		virtual std::string debugExtra() override;
 	};

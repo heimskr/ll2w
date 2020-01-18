@@ -278,11 +278,13 @@ align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: alloca_addrspace | { $$ = nullptr; };
 alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); };
 
-i_store: "store" _volatile type_any operand "," type_ptr TOK_PDECIMAL _align _nontemporal
-         { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9); D($1, $5); };
+i_store: "store" _volatile type_any operand "," type_ptr TOK_PDECIMAL _align _nontemporal _invariant_group
+         { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9, $10); D($1, $5); };
 _volatile:    TOK_VOLATILE | { $$ = nullptr; };
 _nontemporal: nontemporal  | { $$ = nullptr; };
 nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); };
+_invariant_group: invariant_group | { $$ = nullptr; };
+invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); };
 
 
 
