@@ -17,14 +17,21 @@ namespace LL2W {
 	};
 
 	struct SelectNode: public InstructionNode {
-		const std::string *leftVariable;
+		const std::string *result;
 		std::unordered_set<Fastmath> fastmath;
 		Type *conditionType, *firstType, *secondType;
 		Value *conditionValue, *firstValue, *secondValue;
 
-		SelectNode(ASTNode *left_variable, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
+		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);
 		virtual std::string debugExtra() override;
+	};
+
+	struct AllocaNode: public InstructionNode {
+		const std::string *result;
+		bool inalloca = false;
+
+		AllocaNode(ASTNode *result_, ASTNode *inalloca_);
 	};
 }
 

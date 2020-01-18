@@ -108,6 +108,8 @@ using AN = LL2W::ASTNode;
 %token TOK_DEFINE "define"
 
 %token TOK_SELECT "select"
+%token TOK_ALLOCA "alloca"
+%token TOK_INALLOCA "inalloca"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -246,23 +248,31 @@ function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STAT
 statement: label | instruction;
 label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
-// Instructions
-instruction: i_select;
-i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value { $$ = (new SelectNode($1, $4, $5, $6, $8, $9, $11, $12))->adopt({}); D($2, $3, $7, $10); };
 
-fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
+// Instructions
+instruction: i_select | i_alloca;
+
+i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
+          { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
+
+i_alloca: variable "=" "alloca" _inalloca
+          { $$ = new AllocaNode($1, $4); D($2, $3); };
+_inalloca: "inalloca" | { $$ = nullptr; };
 
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };
 constant_right: operand | const_expr;
 _parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
-parattr: TOK_PARATTR | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
+parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
        | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
+
+// Miscellaneous
+fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
 
 %%
 

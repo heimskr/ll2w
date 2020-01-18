@@ -35,7 +35,7 @@ FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
 FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
-PARATTR				("byval"|"inalloca"|"sret"|"nocapture")
+PARATTR				("byval"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"dereferenceable_or_null")
 STRUCTVAR			(("%struct."{DOTIDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
@@ -115,6 +115,8 @@ BOOL				("true"|"false")
 ":"							{ RTOKEN(COLON) }
 
 "select"					{ RTOKEN(SELECT) }
+"alloca"					{ RTOKEN(ALLOCA) }
+"inalloca"					{ RTOKEN(INALLOCA) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }

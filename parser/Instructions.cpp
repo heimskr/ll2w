@@ -4,11 +4,10 @@
 #include "Instructions.h"
 
 namespace LL2W {
-	SelectNode::SelectNode(ASTNode *left_variable, ASTNode *fastmath_, ASTNode *condition_type,
-	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2):
-	                       leftVariable(left_variable->lexerInfo) {
-		leftVariable = left_variable->lexerInfo;
-		delete left_variable;
+	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
+	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
+		result = result_->lexerInfo;
+		delete result_;
 
 		for (ASTNode *child: *fastmath_) {
 			const std::string &fmname = *child->lexerInfo;
@@ -42,12 +41,22 @@ namespace LL2W {
 	
 	std::string SelectNode::debugExtra() {
 		std::stringstream out;
-		out << "\e[32m" << *leftVariable << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
+		out << "\e[32m" << *result << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
 		for (Fastmath flag: fastmath)
 			out << " " << fastmath_map.at(flag);
 		out << " " << std::string(*conditionType) << " " << std::string(*conditionValue) << ", "
 		    << std::string(*firstType) << " " << std::string(*firstValue) << ", " << std::string(*secondType)
 		    << " " << std::string(*secondValue);
 		return out.str();
+	}
+
+	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_) {
+		result = result_->lexerInfo;
+		delete result_;
+
+		if (inalloca_) {
+			inalloca = true;
+			delete inalloca_;
+		}
 	}
 }
