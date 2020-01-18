@@ -6,6 +6,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 #include "Types.h"
+#include "StructNode.h"
 
 namespace LL2W {
 	IntType::operator std::string() {
@@ -81,6 +82,8 @@ namespace LL2W {
 		return new FunctionType(returnType->copy(), argument_types);
 	}
 
+	StructType::StructType(const StructNode *node): name(node->name), shape(node->shape), form(node->form) {}
+
 	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {
 			case FUNCTIONTYPE:  return new FunctionType(node);
@@ -90,9 +93,10 @@ namespace LL2W {
 			case VECTORTYPE:    return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
 			case POINTERTYPE:   return new PointerType(getType(node->at(0)));
 			case TOK_VOID:      return new VoidType();
-			case TOK_STRUCTVAR: return new StructType(node->lexerInfo, StructType::Form::Struct);
-			case TOK_CLASSVAR:  return new StructType(node->lexerInfo, StructType::Form::Class);
-			case TOK_UNIONVAR:  return new StructType(node->lexerInfo, StructType::Form::Union);
+			case TOK_STRUCTVAR: return new StructType(node->lexerInfo, StructForm::Struct);
+			case TOK_CLASSVAR:  return new StructType(node->lexerInfo, StructForm::Class);
+			case TOK_UNIONVAR:  return new StructType(node->lexerInfo, StructForm::Union);
+			case STRUCTDEF:     return new StructType(dynamic_cast<const StructNode *>(node));
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

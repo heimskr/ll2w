@@ -28,6 +28,8 @@ namespace LL2W {
 		noreturn, nonlazybind, sanitize_thread, thunk, sspstrong, sanitize_address, noinline, ssp, speculatable,
 		sanitize_hwaddress, readonly};
 	enum class Fastmath {Nnan, Ninf, Nsz, Arcp, Contract, Afn, Reassoc, Fast};
+	enum class StructForm {Struct, Class, Union};
+	enum class StructShape {Default, Opaque, Packed};
 
 	extern std::unordered_map<Linkage,  std::string> linkage_map;
 	extern std::unordered_map<CConv,    std::string> cconv_map;

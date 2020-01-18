@@ -4,8 +4,11 @@
 #include <string>
 #include <vector>
 
+#include "Enums.h"
+
 namespace LL2W {
 	class ASTNode;
+	struct StructNode;
 
 	struct Type {
 		virtual operator std::string() = 0;
@@ -84,10 +87,11 @@ namespace LL2W {
 	};
 
 	struct StructType: public Type {
-		enum class Form {Struct, Class, Union};
 		const std::string *name;
-		Form form = Form::Struct;
-		StructType(const std::string *name_, Form form_ = Form::Struct): name(name_), form(form_) {}
+		StructForm form = StructForm::Struct;
+		StructShape shape = StructShape::Default;
+		StructType(const std::string *name_, StructForm form_ = StructForm::Struct): name(name_), form(form_) {}
+		StructType(const StructNode *);
 		operator std::string() override { return *name; }
 		Type * copy() const override { return new StructType(name); }
 	};
