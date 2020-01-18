@@ -34,8 +34,9 @@ namespace LL2W {
 		Type *type;
 		Type *numelementsType = nullptr;
 		Value *numelementsValue = nullptr;
+		int align = -1;
 
-		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_);
+		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_);
 		~AllocaNode();
 		virtual std::string debugExtra() override;
 	};

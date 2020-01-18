@@ -60,7 +60,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_) {
+	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_) {
 		result = result_->lexerInfo;
 		delete result_;
 
@@ -78,6 +78,11 @@ namespace LL2W {
 			numelementsValue = getValue(numelements_->at(1));
 			delete numelements_;
 		}
+
+		if (align_) {
+			align = atoi(align_->lexerInfo->c_str());
+			delete align_;
+		}
 	}
 
 	AllocaNode::~AllocaNode() {
@@ -94,7 +99,8 @@ namespace LL2W {
 			out << " \e[38;5;202minalloca\e[0m";
 		if (numelementsType)
 			out << "\e[2m,\e[0m " << std::string(*numelementsType) << " " << std::string(*numelementsValue);
-
+		if (align != -1)
+			out << "\e[2m,\e[0;36m align\e[0m " << align;
 		return out.str();
 	}
 }
