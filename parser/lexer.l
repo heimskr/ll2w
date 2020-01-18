@@ -107,6 +107,8 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 "#"							{ RTOKEN(HASH) }
 ":"							{ RTOKEN(COLON) }
 
+"select"					{ RTOKEN(SELECT) }
+
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
 "sext"						{ RTOKEN(SEXT) }
