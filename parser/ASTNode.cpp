@@ -143,6 +143,14 @@ namespace LL2W {
 		}
 	}
 
+	decltype(ASTNode::children)::iterator ASTNode::begin() {
+		return children.begin();
+	}
+
+	decltype(ASTNode::children)::iterator ASTNode::end() {
+		return children.end();
+	}
+
 	std::string ASTNode::extractName() const {
 		if (symbol == TOK_PVAR || symbol == TOK_GVAR)
 			return lexerInfo->substr(1);

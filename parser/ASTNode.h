@@ -49,6 +49,9 @@ namespace LL2W {
 
 			static void destroy(std::initializer_list<ASTNode *>);
 
+			decltype(children)::iterator begin();
+			decltype(children)::iterator end();
+
 			std::string extractName() const;
 	};
 

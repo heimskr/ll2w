@@ -47,4 +47,8 @@ namespace LL2W {
 		{FnAttr::sspstrong, "sspstrong"}, {FnAttr::sanitize_address, "sanitize_address"},
 		{FnAttr::noinline, "noinline"}, {FnAttr::ssp, "ssp"}, {FnAttr::speculatable, "speculatable"},
 		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly, "readonly"}};
+
+	std::unordered_map<Fastmath, std::string> fastmath_map {
+		{Fastmath::Nnan, "nnan"}, {Fastmath::Ninf, "ninf"}, {Fastmath::Nsz, "nsz"}, {Fastmath::Reassoc, "reassoc"},
+		{Fastmath::Contract, "contract"}, {Fastmath::Afn, "afn"}, {Fastmath::Arcp, "arcp"}, {Fastmath::Fast, "fast"}};
 }

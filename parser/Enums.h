@@ -27,12 +27,14 @@ namespace LL2W {
 		optnone, optsize, readnone, naked, writeonly, argmemonly, returns_twice, safestack, inaccessiblememonly, cold,
 		noreturn, nonlazybind, sanitize_thread, thunk, sspstrong, sanitize_address, noinline, ssp, speculatable,
 		sanitize_hwaddress, readonly};
+	enum class Fastmath {Nnan, Ninf, Nsz, Arcp, Contract, Afn, Reassoc, Fast};
 
-	extern std::unordered_map<Linkage, std::string> linkage_map;
-	extern std::unordered_map<CConv,   std::string> cconv_map;
-	extern std::unordered_map<RetAttr, std::string> retattr_map;
-	extern std::unordered_map<ParAttr, std::string> parattr_map;
-	extern std::unordered_map<FnAttr,  std::string> fnattr_map;
+	extern std::unordered_map<Linkage,  std::string> linkage_map;
+	extern std::unordered_map<CConv,    std::string> cconv_map;
+	extern std::unordered_map<RetAttr,  std::string> retattr_map;
+	extern std::unordered_map<ParAttr,  std::string> parattr_map;
+	extern std::unordered_map<FnAttr,   std::string> fnattr_map;
+	extern std::unordered_map<Fastmath, std::string> fastmath_map;
 }
 
 #endif
