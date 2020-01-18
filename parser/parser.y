@@ -53,6 +53,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ELLIPSE "..."
 %token TOK_ASTERISK "*"
 %token TOK_HASH "#"
+%token TOK_COLON ":"
 
 // Conversion operations
 %token TOK_TRUNC "trunc"
@@ -94,9 +95,11 @@ using AN = LL2W::ASTNode;
 %token TOK_PATCHABLE_PROLOGUE "patchable-function=\"prologue-short-redirect\""
 %token TOK_READONLY "readonly"
 %token TOK_DECLARE "declare"
+%token TOK_DEFINE "define"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
 %token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
+%token FUNCTION_DEF STATEMENTS LABEL
 
 %start start
 
@@ -111,6 +114,7 @@ program: program source_filename { $1->adopt($2); }
        | program attributes      { $1->adopt($2); }
        | program struct_def      { $1->adopt($2); }
        | program declaration     { $1->adopt($2); }
+       | program function_def    { $1->adopt($2); }
        | { $$ = Parser::root; };
 
 declaration: "declare" function_header { $1->adopt($2); };
@@ -213,6 +217,10 @@ function_name: TOK_GVAR | TOK_GSTRING;
 _variable: variable | { $$ = nullptr; };
 variable: TOK_PVAR | TOK_PSTRING;
 
+function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); delete $3; delete $5; };
+function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
+statement: label;
+label: TOK_DOTIDENT ":" { $1->symbol = LABEL; delete $2; };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };

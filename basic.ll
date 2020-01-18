@@ -1,3 +1,8 @@
+define i32* @hello() {
+	foo:
+}
+
+/*
 declare i32 @printf(i8* nocapture readonly, ...) unnamed_addr readonly convergent
 declare private hidden dllimport fastcc zeroext signext dereferenceable_or_null(42) i32 @puts(i8* nocapture readonly, [3 x i64]) #5
 declare void @exit(i32) local_unnamed_addr #2
@@ -20,7 +25,6 @@ attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-ro
 source_filename = "foobar"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.12.0"
-/*
 
 !llvm.ident = !{!0, !0, !0}
 !llvm.module.flags = !{!1}

@@ -70,6 +70,7 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 {FNATTR_BASIC}				{ RTOKEN(FNATTR_BASIC) }
 {CCONV}						{ RTOKEN(CCONV) }
 
+"define"					{ RTOKEN(DEFINE) }
 "declare"					{ RTOKEN(DECLARE) }
 "readonly"					{ RTOKEN(READONLY) }
 "!"							{ RTOKEN(BANG)  }
@@ -104,6 +105,7 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 "..."						{ RTOKEN(ELLIPSE) }
 "*"							{ RTOKEN(ASTERISK) }
 "#"							{ RTOKEN(HASH) }
+":"							{ RTOKEN(COLON) }
 
 "trunc"						{ RTOKEN(TRUNC) }
 "zext"						{ RTOKEN(ZEXT) }
