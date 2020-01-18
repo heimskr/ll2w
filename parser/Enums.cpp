@@ -51,4 +51,9 @@ namespace LL2W {
 	std::unordered_map<Fastmath, std::string> fastmath_map {
 		{Fastmath::Nnan, "nnan"}, {Fastmath::Ninf, "ninf"}, {Fastmath::Nsz, "nsz"}, {Fastmath::Reassoc, "reassoc"},
 		{Fastmath::Contract, "contract"}, {Fastmath::Afn, "afn"}, {Fastmath::Arcp, "arcp"}, {Fastmath::Fast, "fast"}};
+
+	std::unordered_map<Ordering, std::string> ordering_map {
+		{Ordering::None, "none"}, {Ordering::Unordered, "unordered"}, {Ordering::Monotonic, "monotonic"},
+		{Ordering::Acquire, "acquire"}, {Ordering::Release, "release"}, {Ordering::AcqRel, "acqrel"},
+		{Ordering::SeqCst, "seqcst"}};
 }

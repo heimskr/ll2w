@@ -30,6 +30,7 @@ namespace LL2W {
 	enum class Fastmath {Nnan, Ninf, Nsz, Arcp, Contract, Afn, Reassoc, Fast};
 	enum class StructForm {Struct, Class, Union};
 	enum class StructShape {Default, Opaque, Packed};
+	enum class Ordering {None, Unordered, Monotonic, Acquire, Release, AcqRel, SeqCst};
 
 	extern std::unordered_map<Linkage,  std::string> linkage_map;
 	extern std::unordered_map<CConv,    std::string> cconv_map;
@@ -37,6 +38,7 @@ namespace LL2W {
 	extern std::unordered_map<ParAttr,  std::string> parattr_map;
 	extern std::unordered_map<FnAttr,   std::string> fnattr_map;
 	extern std::unordered_map<Fastmath, std::string> fastmath_map;
+	extern std::unordered_map<Ordering, std::string> ordering_map;
 }
 
 #endif

@@ -41,7 +41,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METABANG
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL
 %token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH
-%token TOK_STRUCTVAR TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG
+%token TOK_STRUCTVAR TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG TOK_ORDERING
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -120,6 +120,8 @@ using AN = LL2W::ASTNode;
 %token TOK_VOLATILE "volatile"
 %token TOK_INVARIANT_GROUP "!invariant.group"
 %token TOK_NONTEMPORAL "!nontemporal"
+%token TOK_SYNCSCOPE "syncscope"
+%token TOK_ATOMIC "atomic"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -263,7 +265,7 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 
 // Instructions
-instruction: i_select | i_alloca | i_store;
+instruction: i_select | i_alloca | i_store | i_store_atomic;
 
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -286,9 +288,10 @@ nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); };
 _invariant_group: invariant_group | { $$ = nullptr; };
 invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); };
 
-
-
-// i_store_atomic:
+i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PDECIMAL _syncscope TOK_ORDERING align _invariant_group
+                { $$ = new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12); D($1, $2, $6); };
+_syncscope: syncscope | { $$ = nullptr; };
+syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); };
 
 
 

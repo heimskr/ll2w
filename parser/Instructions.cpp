@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "Instructions.h"
+#include "StringSet.h"
 
 namespace LL2W {
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
@@ -114,6 +115,8 @@ namespace LL2W {
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 	                     ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group) {
+		atomic = false;
+
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
@@ -126,8 +129,6 @@ namespace LL2W {
 		delete value_;
 
 		ptrType = getType(ptr_type);
-		if (dynamic_cast<PointerType *>(ptrType) == nullptr)
-			yyerror("Destination in store instruction is not a valid pointer type");
 		delete ptr_type;
 
 		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
@@ -149,6 +150,50 @@ namespace LL2W {
 		}
 	}
 
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
+		                 ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+		atomic = true;
+
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		value = getValue(value_);
+		delete value_;
+
+		ptrType = getType(ptr_type);
+		delete ptr_type;
+
+		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		delete ptr_index;
+
+		if (syncscope_) {
+			syncscope = StringSet::intern(syncscope_->extractName());
+			delete syncscope_;
+		}
+
+		const std::string &oname = *ordering_->lexerInfo;
+		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
+			if (oname == pair.second) {
+				ordering = pair.first;
+				break;
+			}
+		}
+		delete ordering_;
+
+		align = atoi(align_->lexerInfo->c_str());
+		delete align_;
+
+		if (invariant_group) { // Same as above
+			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			delete invariant_group;
+		}
+	}
+
 	StoreNode::~StoreNode() {
 		delete type;
 		delete value;
@@ -157,8 +202,13 @@ namespace LL2W {
 
 	std::string StoreNode::debugExtra() {
 		std::stringstream out;
-		out << "\e[36mstore\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m "
-		    << std::string(*ptrType) << " \e[32m%" << ptrIndex << "\e[0m";
+		out << "\e[36mstore";
+		if (atomic)
+			out << " atomic";
+		out << "\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m " << std::string(*ptrType)
+		    << " \e[32m%" << ptrIndex << "\e[0m";
+		if (syncscope)
+			out << " \e[36msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (align != -1)
 			out << "\e[2m,\e[0;36m align \e[0m" << align;
 		if (nontemporalIndex != -1)

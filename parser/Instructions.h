@@ -44,12 +44,17 @@ namespace LL2W {
 	};
 
 	struct StoreNode: public InstructionNode {
-		bool volatile_ = false;
+		bool volatile_ = false, atomic = false;
 		Type *type, *ptrType;
 		Value *value;
 		int ptrIndex = -1, align = -1, nontemporalIndex = -1, invariantGroupIndex = -1;
+		const std::string *syncscope = nullptr;
+		Ordering ordering = Ordering::None;
+
 		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 		          ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group);
+		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
+		          ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~StoreNode();
 		virtual std::string debugExtra() override;
 	};
