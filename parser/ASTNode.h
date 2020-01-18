@@ -36,6 +36,7 @@ namespace LL2W {
 			ASTNode * operator[](size_t) const;
 			ASTNode * at(size_t) const;
 			size_t size() const;
+			bool empty() const;
 			ASTNode * adopt(ASTNode *);
 			ASTNode * adopt(std::initializer_list<ASTNode *>);
 			ASTNode * absorb(ASTNode *);
@@ -43,6 +44,8 @@ namespace LL2W {
 			ASTNode * copy() const;
 			/** Concatenates the lexerInfo fields of every element of the children vector. */
 			std::string concatenate() const;
+			bool isType() const;
+			bool isValue() const;
 			void debug(int indent = 0, bool is_last = false);
 			virtual std::string debugExtra();
 			virtual std::string style() const;
@@ -51,6 +54,8 @@ namespace LL2W {
 
 			decltype(children)::iterator begin();
 			decltype(children)::iterator end();
+			decltype(children)::const_iterator cbegin() const;
+			decltype(children)::const_iterator cend() const;
 
 			std::string extractName() const;
 	};

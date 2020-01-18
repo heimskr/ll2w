@@ -109,9 +109,9 @@ using AN = LL2W::ASTNode;
 
 %token TOK_SELECT "select"
 
-%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
-%token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
-%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR_LIST
+%token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
+%token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
+%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR
 
 %start start
 
@@ -176,19 +176,19 @@ dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; }
         | TOK_DOTIDENT;
 
 value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | "null";
-vector: "<" _vector_list ">" { $1->adopt($2); delete $3; };
+vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
-           | type_any value { $$ = (new AN(VECTOR_LIST, ""))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
+           | type_any value { $$ = (new AN(VECTOR, ""))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
-type_ptr: type_any "*" { $$ = (new AN(POINTER, "*"))->adopt($1); D($2); };
-type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $4, $3}); D($2, $5, $6); }
-             | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTION, ""))->adopt({$1, $3});     D($2, $4, $5); };
+type_ptr: type_any "*" { $$ = (new AN(POINTERTYPE, "*"))->adopt($1); D($2); };
+type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $4, $3}); D($2, $5, $6); }
+             | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $3});     D($2, $4, $5); };
 types: types "," type_any { $$ = $1->adopt($3); D($2); }
      | type_any           { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
 extra_ellipse: "," "..." { D($1); $$ = $2; } | { $$ = nullptr; };
@@ -244,7 +244,7 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 // Instructions
 instruction: i_select;
-i_select: variable "=" "select" fastmath_flags type_any value { $$ = (new SelectNode($1, $4, $5, $6))->adopt({}); D($2, $3); };
+i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value { $$ = (new SelectNode($1, $4, $5, $6, $8, $9, $11, $12))->adopt({}); D($2, $3, $7, $10); };
 
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
 

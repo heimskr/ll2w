@@ -32,12 +32,12 @@ namespace LL2W {
 		throw std::invalid_argument("Unknown float type: " + str);
 	}
 
-	FunctionType::FunctionType(ASTNode *node) {
+	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
 		if (node->children.size() == 3) {
 			ASTNode *list = node->at(2);
 			argumentTypes.reserve(list->children.size());
-			for (ASTNode *child: list->children)
+			for (ASTNode *child: *list)
 				argumentTypes.push_back(getType(child));
 		}
 
@@ -81,14 +81,14 @@ namespace LL2W {
 		return new FunctionType(returnType->copy(), argument_types);
 	}
 
-	Type * getType(ASTNode *node) {
+	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {
-			case FUNCTION: return new FunctionType(node);
+			case FUNCTIONTYPE: return new FunctionType(node);
 			case TOK_INTTYPE: return new IntType(atoi(node->lexerInfo->substr(1).c_str()));
 			case TOK_FLOATTYPE: return new FloatType(FloatType::getType(*node->lexerInfo));
 			case ARRAYTYPE:  return new  ArrayType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
 			case VECTORTYPE: return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
-			case POINTER: return new PointerType(getType(node->at(0)));
+			case POINTERTYPE: return new PointerType(getType(node->at(0)));
 			case TOK_VOID: return new VoidType();
 			case TOK_STRUCTVAR: return new StructType(node->lexerInfo);
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +

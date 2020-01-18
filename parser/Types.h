@@ -74,7 +74,7 @@ namespace LL2W {
 			Type *returnType;
 			std::vector<Type *> argumentTypes;
 			bool ellipse;
-			FunctionType(ASTNode *);
+			FunctionType(const ASTNode *);
 			FunctionType(Type *return_type, std::vector<Type *> &argument_types):
 				returnType(return_type), argumentTypes(std::move(argument_types)) {}
 			~FunctionType();
@@ -90,7 +90,7 @@ namespace LL2W {
 		Type * copy() const override { return new StructType(name); }
 	};
 
-	Type * getType(ASTNode *);
+	Type * getType(const ASTNode *);
 }
 
 #endif

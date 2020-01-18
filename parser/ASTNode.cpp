@@ -5,6 +5,7 @@
 #include "StringSet.h"
 #include "Parser.h"
 #include "Lexer.h"
+#include "Types.h"
 
 namespace LL2W {
 	Location::operator std::string() const {
@@ -48,6 +49,10 @@ namespace LL2W {
 
 	size_t ASTNode::size() const {
 		return children.size();
+	}
+
+	bool ASTNode::empty() const {
+		return children.empty();
 	}
 
 	ASTNode * ASTNode::adopt(ASTNode *child) {
@@ -106,10 +111,46 @@ namespace LL2W {
 	}
 
 	std::string ASTNode::concatenate() const {
-		std::string out;
+		if (symbol == VECTOR) {
+			std::stringstream out;
+			out << "\e[2m<\e[0m";
+			auto begin = cbegin();
+			for (auto iter = begin, end = cend(); iter != end; ++iter) {
+				const ASTNode &comma = **iter;
+				if (iter != begin)
+					out << "\e[2m,\e[0m ";
+				out << comma[0]->concatenate() << " " << comma[1]->concatenate();
+			}
+			out << "\e[2m>\e[0m";
+			return out.str();
+		} else if (symbol == TOK_LANGLE && size() == 1 && at(0)->symbol == VECTOR) {
+			return at(0)->concatenate();
+		} else if (symbol == TOK_COMMA && size() == 2 && at(0)->isType() && at(1)->isValue()) {
+			return at(0)->concatenate() + " " + at(1)->concatenate();
+		} else if (isType()) {
+			Type *type = getType(this);
+			return "\e[33m" + std::string(*type) + "\e[0m";
+			delete type;
+		} else if (isValue()) {
+			return "\e[1m" + *lexerInfo + "\e[0m";
+		} else if (empty()) {
+			return *lexerInfo;
+		}
+
+		std::stringstream out;
 		for (ASTNode *child: children)
-			out += *child->lexerInfo;
-		return out;
+			out << *child->lexerInfo;
+		return out.str();
+	}
+
+	bool ASTNode::isType() const {
+		return symbol == TOK_INTTYPE || symbol == TOK_FLOATTYPE || symbol == ARRAYTYPE || symbol == VECTORTYPE
+		    || symbol == POINTERTYPE || symbol == TOK_VOID || symbol == FUNCTIONTYPE || symbol == TOK_STRUCTVAR;
+	}
+
+	bool ASTNode::isValue() const {
+		return symbol == TOK_DECIMAL || symbol == TOK_FLOATING || symbol == TOK_BOOL || symbol == VECTOR
+		    || symbol == TOK_PVAR || symbol == TOK_PSTRING || symbol == TOK_GVAR || symbol == TOK_GSTRING;
 	}
 
 	void ASTNode::debug(int indent, bool is_last) {
@@ -149,6 +190,14 @@ namespace LL2W {
 
 	decltype(ASTNode::children)::iterator ASTNode::end() {
 		return children.end();
+	}
+
+	decltype(ASTNode::children)::const_iterator ASTNode::cbegin() const {
+		return children.cbegin();
+	}
+
+	decltype(ASTNode::children)::const_iterator ASTNode::cend() const {
+		return children.cend();
 	}
 
 	std::string ASTNode::extractName() const {
