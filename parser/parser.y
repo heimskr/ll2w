@@ -10,6 +10,7 @@
 #include "FunctionHeader.h"
 #include "FunctionArgs.h"
 #include "Instructions.h"
+#include "StructNode.h"
 
 template <typename ...Args>
 void D(Args && ...args) {
@@ -133,8 +134,8 @@ declaration: "declare" function_header { $1->adopt($2); };
 
 
 // Struct definitions
-struct_def: struct_def_left "opaque"      { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2);  D($1); }
-          | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->absorb($3); D($1); };
+struct_def: struct_def_left "opaque"      { $$ = new StructNode(StructNode::StructType::Opaque, $1, nullptr); D($2); }
+          | struct_def_left "{" types "}" { $$ = new StructNode(StructNode::StructType::Default, $1, $3); D($2, $4); };
 struct_def_left: csvar "=" "type" { $$ = $1; D($2, $3); };
 csvar: TOK_STRUCTVAR | TOK_CLASSVAR;
 
