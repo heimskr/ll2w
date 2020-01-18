@@ -82,7 +82,7 @@ namespace LL2W {
 		return new FunctionType(returnType->copy(), argument_types);
 	}
 
-	StructType::StructType(const StructNode *node): name(node->name), shape(node->shape), form(node->form) {}
+	StructType::StructType(const StructNode *node): name(node->name), form(node->form), shape(node->shape) {}
 
 	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {

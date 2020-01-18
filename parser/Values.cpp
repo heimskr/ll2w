@@ -4,7 +4,7 @@
 #include "Parser.h"
 #include "Types.h"
 #include "Values.h"
-#include "yyparse.h"
+#include "Lexer.h"
 
 namespace LL2W {
 	VectorValue::VectorValue(ASTNode *node) {

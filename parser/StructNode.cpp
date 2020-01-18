@@ -1,4 +1,6 @@
 #include <sstream>
+
+#include "Lexer.h"
 #include "StructNode.h"
 #include "StringSet.h"
 

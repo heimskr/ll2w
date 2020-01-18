@@ -10,7 +10,9 @@
 #define YYSTYPE_IS_DECLARED
 typedef LL2W::ASTNode * YYSTYPE;
 
+#ifndef NO_YYPARSE
 #include "yyparse.h"
+#endif
 
 #ifdef __APPLE__
 typedef size_t yysize;

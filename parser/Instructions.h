@@ -7,7 +7,7 @@
 #include "Enums.h"
 #include "Types.h"
 #include "Values.h"
-#include "yyparse.h"
+#include "Lexer.h"
 
 namespace LL2W {
 	struct InstructionNode: public ASTNode {
@@ -36,7 +36,8 @@ namespace LL2W {
 		Value *numelementsValue = nullptr;
 		int align = -1;
 
-		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_);
+		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
+		           ASTNode *addrspace_);
 		~AllocaNode();
 		virtual std::string debugExtra() override;
 	};

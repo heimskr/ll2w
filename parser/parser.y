@@ -3,6 +3,7 @@
 #include <cstdarg>
 #include <initializer_list>
 
+#define NO_YYPARSE
 #include "Lexer.h"
 #include "ASTNode.h"
 #include "Parser.h"
@@ -119,7 +120,7 @@ using AN = LL2W::ASTNode;
 
 %%
 
-start: program { $$ = $1 = nullptr; };
+start: program;
 
 program: program source_filename { $1->adopt($2); }
        | program target          { $1->adopt($2); }
@@ -255,13 +256,15 @@ instruction: i_select | i_alloca;
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
 
-i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _alloca_align
-          { $$ = new AllocaNode($1, $4, $5, $6, $7); D($2, $3); };
+i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _alloca_align _alloca_addrspace
+          { $$ = new AllocaNode($1, $4, $5, $6, $7, $8); D($2, $3); };
 _inalloca: "inalloca" | { $$ = nullptr; };
 _alloca_numelements: alloca_numelements | { $$ = nullptr; };
 alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); };
 _alloca_align: alloca_align | { $$ = nullptr; };
 alloca_align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
+_alloca_addrspace: alloca_addrspace | { $$ = nullptr; };
+alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); };
 
 
 // Constants

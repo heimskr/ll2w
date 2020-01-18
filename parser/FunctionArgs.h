@@ -5,8 +5,6 @@
 #include <vector>
 
 #include "ASTNode.h"
-#include "Enums.h"
-#include "Lexer.h"
 #include "Types.h"
 
 namespace LL2W {

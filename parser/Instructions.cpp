@@ -60,7 +60,8 @@ namespace LL2W {
 		return out.str();
 	}
 
-	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_) {
+	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
+	                       ASTNode *addrspace_) {
 		result = result_->lexerInfo;
 		delete result_;
 
@@ -82,6 +83,10 @@ namespace LL2W {
 		if (align_) {
 			align = atoi(align_->lexerInfo->c_str());
 			delete align_;
+		}
+
+		if (addrspace_) {
+			addrspace_->debug();
 		}
 	}
 

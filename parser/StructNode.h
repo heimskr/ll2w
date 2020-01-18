@@ -7,7 +7,6 @@
 #include "ASTNode.h"
 #include "Enums.h"
 #include "Types.h"
-#include "yyparse.h"
 
 namespace LL2W {
 	struct StructNode: public ASTNode {
