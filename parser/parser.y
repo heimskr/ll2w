@@ -244,7 +244,7 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 // Instructions
 instruction: i_select;
-i_select: variable "=" "select" fastmath_flags type_any value { $$ = (new SelectNode($1, $4))->adopt({$5, $6}); D($2, $3); };
+i_select: variable "=" "select" fastmath_flags type_any value { $$ = (new SelectNode($1, $4, $5, $6))->adopt({}); D($2, $3); };
 
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
 

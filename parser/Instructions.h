@@ -5,6 +5,7 @@
 
 #include "ASTNode.h"
 #include "Enums.h"
+#include "Types.h"
 #include "yyparse.h"
 
 namespace LL2W {
@@ -17,8 +18,10 @@ namespace LL2W {
 	struct SelectNode: public InstructionNode {
 		const std::string *leftVariable;
 		std::unordered_set<Fastmath> fastmath;
+		Type *conditionType;
+		ASTNode *conditionValue;
 
-		SelectNode(ASTNode *left_variable, ASTNode *fastmath_);
+		SelectNode(ASTNode *left_variable, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value);
 		virtual std::string debugExtra() override;
 	};
 }
