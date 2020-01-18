@@ -33,8 +33,8 @@ using AN = LL2W::ASTNode;
 }
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
-%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT
-%token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY
+%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL
+%token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH
 %token TOK_STRUCTVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
@@ -111,7 +111,7 @@ using AN = LL2W::ASTNode;
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTER TYPE_LIST FUNCTION GDEF_EXTRAS STRUCTDEF
 %token ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
-%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION
+%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR_LIST
 
 %start start
 
@@ -174,6 +174,12 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 
 dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; }
         | TOK_DOTIDENT;
+
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | "null";
+vector: "<" _vector_list ">" { $1->adopt($2); delete $3; };
+_vector_list: vector_list | { $$ = nullptr; };
+vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
+           | type_any value { $$ = (new AN(VECTOR_LIST, ""))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
 type_any: TOK_INTTYPE | TOK_FLOATTYPE | TOK_FLOAT | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR;
@@ -238,8 +244,9 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 // Instructions
 instruction: i_select;
-// i_select: variable "=" "select" { $$ = new SelectInstruction($1); };
-i_select: "select";
+i_select: variable "=" "select" fastmath_flags type_any value { $$ = (new SelectNode($1, $4))->adopt({$5, $6}); D($2, $3); };
+
+fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
 
 
 // Constants

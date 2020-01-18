@@ -1,5 +1,5 @@
 define i32* @hello() {
-	foo:
+	foo: %foo = select nnan ninf fast i1 true
 }
 
 /*

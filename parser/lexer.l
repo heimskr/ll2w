@@ -44,6 +44,8 @@ LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"exte
 VISIBILITY			("default"|"hidden"|"protected")
 FNATTR_BASIC		("alwaysinline"|"noredzone"|"convergent"|"norecurse"|"inlinehint"|"inaccessiblemem_or_argmemonly"|"sspreq"|"sanitize_memory"|"jumptable"|"minsize"|"nobuiltin"|"noduplicate"|"noimplicitfloat"|"builtin"|"uwtable"|"nounwind"|"optnone"|"optsize"|"readnone"|"naked"|"writeonly"|"argmemonly"|"returns_twice"|"safestack"|"inaccessiblememonly"|"cold"|"noreturn"|"nonlazybind"|"sanitize_thread"|"thunk"|"sspstrong"|"sanitize_address"|"noinline"|"ssp"|"speculatable"|"sanitize_hwaddress")
 CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"preserve_mostcc"|"x86_vectorcallcc"|"cc10"|"cc11"|"arm_apcscc"|"coldcc"|"webkit_jscc"|"cc64"|"cc65"|"cc66"|"ptx_device"|"x86_stdcallcc"|"cc67"|"cc68"|"cc69"|"cc70"|"cc1023"|"anyregcc"|"cc71"|"cc72"|"cc75"|"msp430_intrcc"|"ptx_kernel"|"cc76"|"cc77"|"cc78"|"spir_func"|"x86_64_win64cc"|"cc79"|"cc80"|"arm_aapcs_vfpcc"|"intel_ocl_bicc"|"x86_64_sysvcc"|"x86_fastcallcc"|"x86_thiscallcc"|"arm_aapcscc"|"spir_kernel")
+FASTMATH			("nnan"|"ninf"|"nsz"|"arcp"|"contract"|"afn"|"reassoc"|"fast")
+BOOL				("true"|"false")
 
 %%
 
@@ -69,6 +71,8 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 {VISIBILITY}				{ RTOKEN(VISIBILITY) }
 {FNATTR_BASIC}				{ RTOKEN(FNATTR_BASIC) }
 {CCONV}						{ RTOKEN(CCONV) }
+{FASTMATH}					{ RTOKEN(FASTMATH) }
+{BOOL}						{ RTOKEN(BOOL) }
 
 "define"					{ RTOKEN(DEFINE) }
 "declare"					{ RTOKEN(DECLARE) }
