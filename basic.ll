@@ -9,7 +9,6 @@ declare i32 @fclose(%struct.__sFILE* nocapture) local_unnamed_addr #1
 declare void @free(i8* nocapture %"foo", i8 nocapture %bar) local_unnamed_addr
 declare void @ellipse(...) local_unnamed_addr #1
 
-/*
 attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
 
 %struct.__sFILE = type { i8*, i32, i32, i16, i16, %struct.__sbuf, i32, i8*, i32 (i8*)*, i32 (i8*, i8*, i32)*, i64 (i8*, i64, i32)*, i32 (i8*, i8*, i32)*, %struct.__sbuf, %struct.__sFILEX*, i32, [3 x i8], [1 x i8], %struct.__sbuf, i32, i64 }
@@ -21,6 +20,7 @@ attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-ro
 source_filename = "foobar"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.12.0"
+/*
 
 !llvm.ident = !{!0, !0, !0}
 !llvm.module.flags = !{!1}
