@@ -57,5 +57,5 @@ namespace LL2W {
 }
 
 void yyerror(const char *message) {
-	std::cerr << "[Error at " << LL2W::Lexer::location << ": " << message << "]\n";
+	std::cerr << "\e[31mError at \e[1m" << LL2W::Lexer::location << "\e[22m: " << message << "\e[0m\n";
 }
