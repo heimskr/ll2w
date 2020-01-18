@@ -42,8 +42,9 @@ namespace LL2W {
 
 	Value * getValue(ASTNode *node) {
 		switch (node->symbol) {
-			case TOK_FLOATING: return new DoubleValue(node->lexerInfo);
-			case TOK_DECIMAL:  return new IntValue(node->lexerInfo);
+			case TOK_FLOATING: return new DoubleValue(node);
+			case TOK_DECIMAL:  return new IntValue(node);
+			case TOK_BOOL:     return new BoolValue(node);
 			case VECTOR:       return new VectorValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));

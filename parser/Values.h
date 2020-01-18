@@ -20,6 +20,7 @@ namespace LL2W {
 		DoubleValue(double value_): value(value_) {}
 		DoubleValue(const std::string &value_): DoubleValue(std::stod(value_)) {}
 		DoubleValue(const std::string *value_): DoubleValue(*value_) {}
+		DoubleValue(const ASTNode *node): DoubleValue(node->lexerInfo) {}
 		Value * copy() const override { return new DoubleValue(value); }
 		operator std::string() override { return std::to_string(value); }
 	};
@@ -29,6 +30,7 @@ namespace LL2W {
 		IntValue(int value_): value(value_) {}
 		IntValue(const std::string &value_): IntValue(atoi(value_.c_str())) {}
 		IntValue(const std::string *value_): IntValue(*value_) {}
+		IntValue(const ASTNode *node): IntValue(node->lexerInfo) {}
 		Value * copy() const override { return new IntValue(value); }
 		operator std::string() override { return std::to_string(value); }
 	};
@@ -43,6 +45,16 @@ namespace LL2W {
 			~VectorValue();
 			Value * copy() const override;
 			operator std::string() override;
+	};
+
+	struct BoolValue: public Value {
+		bool value;
+		BoolValue(bool value_): value(value_) {}
+		BoolValue(const std::string &value_): BoolValue(value_ == "true") {}
+		BoolValue(const std::string *value_): BoolValue(*value_) {}
+		BoolValue(const ASTNode *node): BoolValue(node->lexerInfo) {}
+		Value * copy() const override { return new BoolValue(value); }
+		operator std::string() override { return value? "true" : "false"; }
 	};
 
 	Value * getValue(ASTNode *);

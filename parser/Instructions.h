@@ -20,8 +20,7 @@ namespace LL2W {
 		const std::string *leftVariable;
 		std::unordered_set<Fastmath> fastmath;
 		Type *conditionType, *firstType, *secondType;
-		ASTNode *conditionValue;
-		Value *firstValue, *secondValue;
+		Value *conditionValue, *firstValue, *secondValue;
 
 		SelectNode(ASTNode *left_variable, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);

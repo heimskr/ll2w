@@ -6,7 +6,7 @@
 namespace LL2W {
 	SelectNode::SelectNode(ASTNode *left_variable, ASTNode *fastmath_, ASTNode *condition_type,
 	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2):
-	                       leftVariable(left_variable->lexerInfo), conditionValue(condition_value) {
+	                       leftVariable(left_variable->lexerInfo) {
 		leftVariable = left_variable->lexerInfo;
 		delete left_variable;
 
@@ -24,7 +24,8 @@ namespace LL2W {
 		conditionType = getType(condition_type);
 		delete condition_type;
 
-		conditionValue = condition_value;
+		conditionValue = getValue(condition_value);
+		delete condition_value;
 
 		firstType = getType(type1);
 		delete type1;
@@ -44,9 +45,9 @@ namespace LL2W {
 		out << "\e[32m" << *leftVariable << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
 		for (Fastmath flag: fastmath)
 			out << " " << fastmath_map.at(flag);
-		out << " \e[33m" << std::string(*conditionType) << " \e[0m" << conditionValue->concatenate() << ", \e[33m"
-		    << std::string(*firstType) << " \e[0m" << std::string(*firstValue) << ", \e[33m" << std::string(*secondType)
-		    << " \e[0m" << std::string(*secondValue);
+		out << " " << std::string(*conditionType) << " " << std::string(*conditionValue) << ", "
+		    << std::string(*firstType) << " " << std::string(*firstValue) << ", " << std::string(*secondType)
+		    << " " << std::string(*secondValue);
 		return out.str();
 	}
 }
