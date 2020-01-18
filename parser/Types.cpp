@@ -9,7 +9,7 @@
 
 namespace LL2W {
 	IntType::operator std::string() {
-		return "i" + std::to_string(width);
+		return "\e[33mi" + std::to_string(width) + "\e[0m";
 	}
 
 	FloatType::operator std::string() {

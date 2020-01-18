@@ -29,15 +29,14 @@ namespace LL2W {
 		firstType = getType(type1);
 		delete type1;
 
-		firstValue = val1;
+		firstValue = getValue(val1);
+		delete val1;
 
 		secondType = getType(type2);
 		delete type2;
 
-		secondValue = val2;
-
-		adopt(val1);
-		adopt(val2);
+		secondValue = getValue(val2);
+		delete val2;
 	}
 	
 	std::string SelectNode::debugExtra() {
@@ -45,9 +44,9 @@ namespace LL2W {
 		out << "\e[32m" << *leftVariable << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
 		for (Fastmath flag: fastmath)
 			out << " " << fastmath_map.at(flag);
-		out << " \e[33m" << std::string(*conditionType) << " \e[0m" << conditionValue->concatenate() << ", \e[33m";
-		out << std::string(*firstType) << " \e[0m" << firstValue->concatenate() << ", \e[33m";
-		out << std::string(*secondType) << " \e[0m" << secondValue->concatenate();
+		out << " \e[33m" << std::string(*conditionType) << " \e[0m" << conditionValue->concatenate() << ", \e[33m"
+		    << std::string(*firstType) << " \e[0m" << std::string(*firstValue) << ", \e[33m" << std::string(*secondType)
+		    << " \e[0m" << std::string(*secondValue);
 		return out.str();
 	}
 }
