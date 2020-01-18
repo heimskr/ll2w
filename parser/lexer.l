@@ -38,7 +38,8 @@ THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"inalloca"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"dereferenceable_or_null")
-STRUCTVAR			("%struct."{IDENT})
+STRUCTVAR			(("%struct."{IDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
+CLASSVAR			(("%class."{IDENT})|("%\"class."([^\\"\n]|\\[\\’"0nt])+\"))
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
 VISIBILITY			("default"|"hidden"|"protected")
@@ -54,6 +55,7 @@ BOOL				("true"|"false")
 [ \t]+						{ }
 \n							{ LL2W::Lexer::newline(); }
 
+{CLASSVAR}					{ RTOKEN(CLASSVAR) }
 {STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
 {PVAR}						{ RTOKEN(PVAR) }
 {PSTRING}					{ RTOKEN(PSTRING) }

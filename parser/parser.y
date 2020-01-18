@@ -35,7 +35,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METADATA_LIST
 %token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL
 %token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH
-%token TOK_STRUCTVAR
+%token TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -135,7 +135,8 @@ declaration: "declare" function_header { $1->adopt($2); };
 // Struct definitions
 struct_def: struct_def_left "opaque"      { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->adopt($2);  D($1); }
           | struct_def_left "{" types "}" { $$ = (new AN(STRUCTDEF, $1->lexerInfo))->absorb($3); D($1); };
-struct_def_left: TOK_STRUCTVAR "=" "type" { $$ = $1; D($2, $3); };
+struct_def_left: csvar "=" "type" { $$ = $1; D($2, $3); };
+csvar: TOK_STRUCTVAR | TOK_CLASSVAR;
 
 // Attributes
 attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); D($2, $4, $5, $7); };
@@ -182,7 +183,7 @@ vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})
            | type_any value { $$ = (new AN(VECTOR, ""))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR;
+type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | TOK_STRUCTVAR | TOK_CLASSVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOAT;
