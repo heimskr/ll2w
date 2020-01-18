@@ -45,6 +45,7 @@ namespace LL2W {
 			std::string concatenate() const;
 			void debug(int indent = 0, bool is_last = false);
 			virtual std::string debugExtra();
+			virtual std::string style() const;
 
 			static void destroy(std::initializer_list<ASTNode *>);
 

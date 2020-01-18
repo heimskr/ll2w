@@ -28,6 +28,7 @@ namespace LL2W {
 		~FunctionHeader() { delete returnType; }
 
 		std::string debugExtra() override;
+		virtual std::string style() const override { return "\e[38;5;202m"; }
 	};
 }
 

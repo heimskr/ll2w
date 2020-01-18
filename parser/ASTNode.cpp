@@ -122,7 +122,7 @@ namespace LL2W {
 			std::cerr << "\e[0m";
 		}
 
-		std::cerr << "\e[1m" << Parser::getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
+		std::cerr << style() << Parser::getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
 		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
 			child->debug(indent + 1, child == children.back());
@@ -130,6 +130,10 @@ namespace LL2W {
 
 	std::string ASTNode::debugExtra() {
 		return "";
+	}
+
+	std::string ASTNode::style() const {
+		return "\e[1m";
 	}
 
 	void ASTNode::destroy(std::initializer_list<ASTNode *> to_destroy) {
