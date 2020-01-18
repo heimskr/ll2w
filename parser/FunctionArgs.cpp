@@ -21,6 +21,7 @@ namespace LL2W {
 		for (ASTNode *child: node->children) {
 			if (child->symbol == TOK_PVAR || child->symbol == TOK_PSTRING) {
 				name = StringSet::intern(child->extractName());
+				originalName = child->lexerInfo;
 			} else if (child->symbol == PARATTR_LIST) {
 				for (ASTNode *parattr_node: child->children) {
 					const std::string &pname = *parattr_node->lexerInfo;

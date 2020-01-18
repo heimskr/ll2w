@@ -122,6 +122,8 @@ namespace LL2W {
 			out << std::string(*arg.type);
 			for (ParAttr parattr: arg.parattrs)
 				out << " " << parattr_map.at(parattr);
+			if (arg.originalName)
+				out << " " << *arg.originalName;
 		}
 		if (arguments->ellipse)
 			out << (arguments->arguments.empty()? "..." : ", ...");

@@ -19,6 +19,7 @@ namespace LL2W {
 			Type *type;
 			std::unordered_set<ParAttr> parattrs;
 			const std::string *name;
+			const std::string *originalName = nullptr;
 
 			FunctionArgument(ASTNode *);
 			~FunctionArgument() { delete type; }
