@@ -5,6 +5,9 @@
 #include "StringSet.h"
 
 namespace LL2W {
+
+// SelectNode
+
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
 	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
 		result = result_->lexerInfo;
@@ -41,7 +44,6 @@ namespace LL2W {
 	}
 
 	SelectNode::~SelectNode() {
-		delete result;
 		delete conditionType;
 		delete conditionValue;
 		delete firstType;
@@ -60,6 +62,8 @@ namespace LL2W {
 		    << " " << std::string(*secondValue);
 		return out.str();
 	}
+
+// AllocaNode
 
 	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 	                       ASTNode *addrspace_) {
@@ -93,7 +97,6 @@ namespace LL2W {
 	}
 
 	AllocaNode::~AllocaNode() {
-		delete result;
 		delete type;
 		if (numelementsType) delete numelementsType;
 		if (numelementsValue) delete numelementsValue;
@@ -101,7 +104,7 @@ namespace LL2W {
 
 	std::string AllocaNode::debugExtra() {
 		std::stringstream out;
-		out << "\e[32m" << *result << "\e[0;2m = \e[0;36malloca\e[0m";
+		out << "\e[32m" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
 		if (inalloca)
 			out << " \e[38;5;202minalloca\e[0m";
 		if (numelementsType)
@@ -112,6 +115,8 @@ namespace LL2W {
 			out << "\e[2m,\e[0;36m addrspace\e[0m(" << addrspace << ")";
 		return out.str();
 	}
+
+// StoreNode
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 	                     ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group) {
@@ -151,7 +156,7 @@ namespace LL2W {
 	}
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
-		                 ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+	                     ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
 
 		if (volatile__) {
@@ -188,7 +193,7 @@ namespace LL2W {
 		align = atoi(align_->lexerInfo->c_str());
 		delete align_;
 
-		if (invariant_group) { // Same as above
+		if (invariant_group) {
 			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
 			delete invariant_group;
 		}
@@ -202,13 +207,150 @@ namespace LL2W {
 
 	std::string StoreNode::debugExtra() {
 		std::stringstream out;
-		out << "\e[36mstore";
+		out << "\e[91mstore\e[0m";
 		if (atomic)
-			out << " atomic";
+			out << " \e[38;5;202matomic\e[0m";
+		if (volatile_)
+			out << " \e[38;5;202mvolatile\e[0m";
 		out << "\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m " << std::string(*ptrType)
 		    << " \e[32m%" << ptrIndex << "\e[0m";
 		if (syncscope)
 			out << " \e[36msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
+		if (align != -1)
+			out << "\e[2m,\e[0;36m align \e[0m" << align;
+		if (nontemporalIndex != -1)
+			out << "\e[2m,\e[0;36m !nontemporal \e[0m" << nontemporalIndex;
+		if (invariantGroupIndex != -1)
+			out << "\e[2m,\e[0;36m !invariant.group \e[0m" << invariantGroupIndex;
+		return out.str();
+	}
+
+// LoadNode
+
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
+	                   ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group,
+	                   ASTNode *nonnull_, ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null,
+	                   ASTNode *bang_align) {
+		atomic = false;
+
+		result = result_->lexerInfo;
+
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		ptrType = getType(ptr_type);
+		delete ptr_type;
+
+		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		delete ptr_index;
+
+		if (align_) {
+			align = atoi(align_->lexerInfo->c_str());
+			delete align_;
+		}
+
+		if (nontemporal_) {
+			nontemporalIndex = atoi(nontemporal_->lexerInfo->substr(1).c_str());
+			delete nontemporal_;
+		}
+
+		if (invariant_load) {
+			invariantLoadIndex = atoi(invariant_load->lexerInfo->substr(1).c_str());
+			delete invariant_load;
+		}
+
+		if (invariant_group) {
+			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			delete invariant_group;
+		}
+
+		if (nonnull_) {
+			nonnullIndex = atoi(nonnull_->lexerInfo->substr(1).c_str());
+			delete nonnull_;
+		}
+
+		if (dereferenceable_) {
+			dereferenceable = dereferenceable_->lexerInfo;
+			delete dereferenceable_;
+		}
+
+		if (dereferenceable_or_null) {
+			dereferenceableOrNull = dereferenceable_or_null->lexerInfo;
+			delete dereferenceable_or_null;
+		}
+
+		if (bang_align) {
+			bangAlign = bang_align->lexerInfo;
+			delete bang_align;
+		}
+	}
+
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
+	                   ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+		atomic = true;
+
+		result = result_->lexerInfo;
+
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		ptrType = getType(ptr_type);
+		delete ptr_type;
+
+		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		delete ptr_index;
+
+		if (syncscope_) {
+			syncscope = StringSet::intern(syncscope_->extractName());
+			delete syncscope_;
+		}
+
+		const std::string &oname = *ordering_->lexerInfo;
+		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
+			if (oname == pair.second) {
+				ordering = pair.first;
+				break;
+			}
+		}
+		delete ordering_;
+
+		align = atoi(align_->lexerInfo->c_str());
+		delete align_;
+
+		if (invariant_group) {
+			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			delete invariant_group;
+		}
+	}
+
+	LoadNode::~LoadNode() {
+		delete type;
+		delete ptrType;
+	}
+
+	std::string LoadNode::debugExtra() {
+		std::stringstream out;
+		out << "\e[32m" << *result << "\e[0;2m = \e[0;91mload\e[0m";
+		if (atomic)
+			out << " \e[38;5;202matomic\e[0m";
+		if (volatile_)
+			out << " \e[38;5;202mvolatile\e[0m";
+		out << "\e[0m " << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType)
+		    << " \e[32m%" << ptrIndex << "\e[0m";
+		if (syncscope)
+			out << " \e[36msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
+		if (ordering != Ordering::None)
+			out << " \e[38;5;202m" << ordering_map.at(ordering) << "\e[0m";
 		if (align != -1)
 			out << "\e[2m,\e[0;36m align \e[0m" << align;
 		if (nontemporalIndex != -1)

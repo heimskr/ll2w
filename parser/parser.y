@@ -119,7 +119,12 @@ using AN = LL2W::ASTNode;
 %token TOK_LOAD "load"
 %token TOK_VOLATILE "volatile"
 %token TOK_INVARIANT_GROUP "!invariant.group"
+%token TOK_INVARIANT_LOAD "!invariant.load"
 %token TOK_NONTEMPORAL "!nontemporal"
+%token TOK_NONNULL "!nonnull"
+%token TOK_DEREFERENCEABLE "!dereferenceable"
+%token TOK_DEREFERENCEABLE_OR_NULL "!dereferenceable_or_null"
+%token TOK_BANGALIGN "!align"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
 
@@ -265,7 +270,7 @@ label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
 
 
 // Instructions
-instruction: i_select | i_alloca | i_store | i_store_atomic;
+instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic;
 
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -273,27 +278,33 @@ i_select: variable "=" "select" fastmath_flags type_any value "," type_any value
 i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
           { $$ = new AllocaNode($1, $4, $5, $6, $7, $8); D($2, $3); };
 _inalloca: "inalloca" | { $$ = nullptr; };
-_alloca_numelements: alloca_numelements | { $$ = nullptr; };
-alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); };
+_alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
 _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
-_alloca_addrspace: alloca_addrspace | { $$ = nullptr; };
-alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); };
+_alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
 i_store: "store" _volatile type_any operand "," type_ptr TOK_PDECIMAL _align _nontemporal _invariant_group
          { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9, $10); D($1, $5); };
-_volatile:    TOK_VOLATILE | { $$ = nullptr; };
-_nontemporal: nontemporal  | { $$ = nullptr; };
-nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); };
-_invariant_group: invariant_group | { $$ = nullptr; };
-invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); };
+_volatile: TOK_VOLATILE | { $$ = nullptr; };
+_nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
+_invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
 i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PDECIMAL _syncscope TOK_ORDERING align _invariant_group
                 { $$ = new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12); D($1, $2, $6); };
-_syncscope: syncscope | { $$ = nullptr; };
-syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); };
+_syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
+i_load: variable "=" "load" _volatile type_any "," type_ptr TOK_PDECIMAL _align _nontemporal _invariant_load
+        _invariant_group _nonnull _dereferenceable _dereferenceable_or_null _bang_align
+        { $$ = new LoadNode($1, $4, $5, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16); D($2, $3, $6); };
+// TODO: what is the actual form of the arguments for these?
+_invariant_load:          "," "!invariant.load"          TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+_nonnull:                 "," "!nonnull"                 TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+_dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+_dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+_bang_align:              "," "!align"                   metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
+i_load_atomic: variable "=" "load" "atomic" _volatile type_any "," type_ptr TOK_PDECIMAL _syncscope TOK_ORDERING align _invariant_group
+               { $$ = new LoadNode($1, $5, $6, $8, $9, $10, $11, $12, $13); D($2, $3, $4, $7); };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };

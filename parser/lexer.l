@@ -85,7 +85,11 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 {ORDERING}					{ RTOKEN(ORDERING) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
+"!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }
 "!nontemporal"				{ RTOKEN(NONTEMPORAL) }
+"!nonnull"					{ RTOKEN(NONNULL) }
+"!dereferenceable"			{ RTOKEN(DEREFERENCEABLE) }
+"!align"					{ RTOKEN(BANGALIGN) }
 {INTBANG}					{ RTOKEN(INTBANG) }
 {METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }

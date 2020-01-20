@@ -79,7 +79,7 @@ void rendertest() {
 }
 
 void parsertest() {
-	LL2W::Parser::open("main.ll");
+	LL2W::Parser::open("basic.ll");
 	LL2W::Parser::parse();
 	LL2W::Parser::root->debug();
 	LL2W::Parser::done();
