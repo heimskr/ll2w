@@ -8,7 +8,7 @@
 
 namespace LL2W {
 	class ASTNode;
-	struct StructNode;
+	class StructNode;
 
 	struct Type {
 		virtual operator std::string() = 0;
