@@ -19,21 +19,20 @@
 LETTER				[A-Za-z_]
 DIGIT				[0-9]
 NUMBER				("-"?{DIGIT}+)
-IDENT				({LETTER}({LETTER}|{DIGIT}|_)*)
+IDENT				([-a-zA-Z$._][-a-zA-Z$._0-9]*)
 CHARCON				('([^\\'\n]|\\[\\'"0nt])')
 STRING				(\"([^\\"\n]|\\[\\’"0nt])*\")
 SGCOMMENT			(";"[^\n]*)
 MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 INTTYPE				("i"{DIGIT}+)
-GVAR				("@"{DOTIDENT})
+GVAR				("@"{IDENT})
 GSTRING				("@"{STRING})
 PDECIMAL			("%"{DIGIT}+)
-PVAR				("%"{DOTIDENT})
+PVAR				("%"{IDENT})
 PSTRING				("%"{STRING})
-DOTIDENT			(({DIGIT}+)|(({LETTER}|".")+({LETTER}|"."|{DIGIT})*))
 CSTRING				("c"{STRING})
 INTBANG				("!"{DIGIT}+)
-METABANG			("!"{DOTIDENT})
+METABANG			("!"{IDENT})
 FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
 FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
@@ -41,9 +40,9 @@ THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
 PARATTR				("byval"|"sret"|"nocapture")
 RETATTR				("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 DEREF				("dereferenceable"|"dereferenceable_or_null")
-STRUCTVAR			(("%struct."{DOTIDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
-CLASSVAR			(("%class."{DOTIDENT})|("%\"class."([^\\"\n]|\\[\\’"0nt])+\"))
-UNIONVAR			(("%union."{DOTIDENT})|("%\"union."([^\\"\n]|\\[\\’"0nt])+\"))
+STRUCTVAR			(("%struct."{IDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
+CLASSVAR			(("%class."{IDENT})|("%\"class."([^\\"\n]|\\[\\’"0nt])+\"))
+UNIONVAR			(("%union."{IDENT})|("%\"union."([^\\"\n]|\\[\\’"0nt])+\"))
 UNNAMED_ADDR_TYPE	("local_unnamed_addr"|"unnamed_addr")
 LINKAGE				("private"|"appending"|"available_externally"|"weak"|"linkonce"|"extern_weak"|"linkonce_odr"|"weak_odr"|"external"|"common"|"internal")
 VISIBILITY			("default"|"hidden"|"protected")
@@ -168,7 +167,7 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 "syncscope"					{ RTOKEN(SYNCSCOPE) }
 "atomic"					{ RTOKEN(ATOMIC) }
 
-{DOTIDENT}					{ RTOKEN(DOTIDENT) }
+{IDENT}						{ RTOKEN(IDENT) }
 
 .						{ LL2W::Lexer::badchar(*yytext); }
 %%

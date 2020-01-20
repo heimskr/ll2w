@@ -19,7 +19,7 @@ define i32* @hello() {
 declare private hidden dllimport fastcc zeroext signext dereferenceable_or_null(42) i32 @puts(i8* nocapture readonly, [3 x i64]) #5
 %struct.__sFILE = type { i8*, i32, i32, i16, i16, %struct.__sbuf, i32, i8*, i32 (i8*)*, i32 (i8*, i8*, i32)*, i64 (i8*, i64, i32)*, i32 (i8*, i8*, i32)*, %struct.__sbuf, %struct.__sFILEX*, i32, [3 x i8], [1 x i8], %struct.__sbuf, i32, i64 }
 %struct.opaque = type opaque
-/*
+
 attributes #5 = { noinline norecurse nounwind readonly ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
 declare i32 @printf(i8* nocapture readonly, ...) unnamed_addr readonly convergent
 declare void @exit(i32) local_unnamed_addr #2
@@ -47,4 +47,3 @@ declare void @ellipse(...) local_unnamed_addr #1
 !3 = !{!"llvm.loop.unroll.disable"}
 !4 = !{!0, !3, !2, !4, !1, !"four", !5, i32 1}
 !5 = distinct !{!5, !3}
-;*/

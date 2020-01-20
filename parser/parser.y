@@ -38,10 +38,10 @@ using AN = LL2W::ASTNode;
     LL2W::Parser::root = new LL2W::ASTNode(TOK_ROOT, {0, 0}, "");
 }
 
-%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_DOTIDENT TOK_METABANG
-%token TOK_PARATTR TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL
-%token TOK_RETATTR TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH
-%token TOK_STRUCTVAR TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG TOK_ORDERING
+%token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_METABANG TOK_PARATTR
+%token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR
+%token TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR
+%token TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG TOK_ORDERING
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -179,25 +179,20 @@ source_filename: "source_filename" "=" TOK_STRING { D($1, $2); $$ = new AN(TOK_S
 target: TOK_TARGET target_type "=" TOK_STRING { $$ = $1->adopt({$2, $4}); }
 target_type: "datalayout" | "triple";
 
-metadata_def: "!" dotident "=" metadata_distinct TOK_METADATA_OPEN metadata_list TOK_RCURLY { D($1, $3, $5, $7); $$ = new MetadataDef($2, $4, $6); };
+metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}" { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(METADATA_LIST, ""))->adopt($1); }
              | { $$ = nullptr; };
 
-metadata_listitem: "!" TOK_STRING      { D($1); $$ = $2; }
-                 | "!" TOK_DECIMAL     { D($1); $$ = $2; }
-                 | metabang
-                 | constant
-                 | "null";
+metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | "null";
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; };
 
 metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
-dotident: TOK_DECIMAL { $1->symbol = TOK_DOTIDENT; }
-        | TOK_DOTIDENT;
+ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
 value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | "null";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
@@ -242,7 +237,7 @@ gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," gdef_align   { $$ = $1->adopt($3); D($2); }
            | { $$ = new AN(GDEF_EXTRAS, ""); };
 section: TOK_SECTION TOK_STRING   { $$ = $1->adopt($2); };
-comdat:  TOK_COMDAT  "$" dotident { $$ = $1->adopt($3); D($2); };
+comdat:  TOK_COMDAT  "$" ident { $$ = $1->adopt($3); D($2); };
 gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 
 // Functions
@@ -266,7 +261,7 @@ variable: TOK_PVAR | TOK_PSTRING | TOK_PDECIMAL;
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
 statement: label | instruction;
-label: TOK_DOTIDENT ":" { $1->symbol = LABEL; D($2); };
+label: ident ":" { $1->symbol = LABEL; D($2); };
 
 
 // Instructions
