@@ -150,7 +150,7 @@ namespace LL2W {
 
 	bool ASTNode::isValue() const {
 		return symbol == TOK_DECIMAL || symbol == TOK_FLOATING || symbol == TOK_BOOL || symbol == VECTOR
-		    || symbol == TOK_PVAR || symbol == TOK_PSTRING || symbol == TOK_GVAR || symbol == TOK_GSTRING;
+		    || symbol == TOK_PVAR || symbol == TOK_GVAR;
 	}
 
 	void ASTNode::debug(int indent, bool is_last) {
@@ -202,9 +202,8 @@ namespace LL2W {
 
 	std::string ASTNode::extractName() const {
 		if (symbol == TOK_PVAR || symbol == TOK_GVAR)
-			return lexerInfo->substr(1);
-		else if (symbol == TOK_PSTRING || symbol == TOK_GSTRING || symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR ||
-		         symbol == TOK_UNIONVAR)
+			return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
+		else if (symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR || symbol == TOK_UNIONVAR)
 			return lexerInfo->substr(2, lexerInfo->size() - 3);
 		else if (symbol == TOK_STRING)
 			return lexerInfo->substr(1, lexerInfo->size() - 2);

@@ -20,16 +20,12 @@ LETTER				[A-Za-z_]
 DIGIT				[0-9]
 NUMBER				("-"?{DIGIT}+)
 IDENT				([-a-zA-Z$._][-a-zA-Z$._0-9]*)
-CHARCON				('([^\\'\n]|\\[\\'"0nt])')
-STRING				(\"([^\\"\n]|\\[\\’"0nt])*\")
+STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
 SGCOMMENT			(";"[^\n]*)
 MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 INTTYPE				("i"{DIGIT}+)
-GVAR				("@"{IDENT})
-GSTRING				("@"{STRING})
-PDECIMAL			("%"{DIGIT}+)
-PVAR				("%"{IDENT})
-PSTRING				("%"{STRING})
+GVAR				("@"({NUMBER}|{IDENT}|{STRING}))
+PVAR				("%"({NUMBER}|{IDENT}|{STRING}))
 CSTRING				("c"{STRING})
 INTBANG				("!"{DIGIT}+)
 METABANG			("!"{IDENT})
@@ -62,11 +58,8 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 {UNIONVAR}					{ RTOKEN(UNIONVAR) }
 {CLASSVAR}					{ RTOKEN(CLASSVAR) }
 {STRUCTVAR}					{ RTOKEN(STRUCTVAR) }
-{PDECIMAL}					{ RTOKEN(PDECIMAL) }
 {PVAR}						{ RTOKEN(PVAR) }
-{PSTRING}					{ RTOKEN(PSTRING) }
 {GVAR}						{ RTOKEN(GVAR) }
-{GSTRING}					{ RTOKEN(GSTRING) }
 {INTTYPE}					{ RTOKEN(INTTYPE)  }
 {FLOATTYPE}					{ RTOKEN(FLOATTYPE)  }
 {DLLPORT}					{ RTOKEN(DLLPORT) }

@@ -39,9 +39,9 @@ using AN = LL2W::ASTNode;
 }
 
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_METABANG TOK_PARATTR
-%token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_PSTRING TOK_GVAR TOK_GSTRING TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR
-%token TOK_DEREF TOK_UNNAMED_ADDR_TYPE TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR
-%token TOK_CLASSVAR TOK_UNIONVAR TOK_PDECIMAL TOK_INTBANG TOK_ORDERING
+%token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
+%token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
+%token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -254,9 +254,9 @@ _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; D($1); } | fnattr_list;
 fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST, ""); };
 _unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
-function_name: TOK_GVAR | TOK_GSTRING;
+function_name: TOK_GVAR;
 _variable: variable | { $$ = nullptr; };
-variable: TOK_PVAR | TOK_PSTRING | TOK_PDECIMAL;
+variable: TOK_PVAR;
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
@@ -278,17 +278,17 @@ _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
-i_store: "store" _volatile type_any operand "," type_ptr TOK_PDECIMAL _align _nontemporal _invariant_group
+i_store: "store" _volatile type_any operand "," type_ptr variable _align _nontemporal _invariant_group
          { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9, $10); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
 _nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
 _invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PDECIMAL _syncscope TOK_ORDERING align _invariant_group
+i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr variable _syncscope TOK_ORDERING align _invariant_group
                 { $$ = new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12); D($1, $2, $6); };
 _syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
-i_load: variable "=" "load" _volatile type_any "," type_ptr TOK_PDECIMAL _align _nontemporal _invariant_load
+i_load: variable "=" "load" _volatile type_any "," type_ptr variable _align _nontemporal _invariant_load
         _invariant_group _nonnull _dereferenceable _dereferenceable_or_null _bang_align
         { $$ = new LoadNode($1, $4, $5, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16); D($2, $3, $6); };
 // TODO: what is the actual form of the arguments for these?
@@ -298,7 +298,7 @@ _dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $3; 
 _dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 _bang_align:              "," "!align"                   metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_load_atomic: variable "=" "load" "atomic" _volatile type_any "," type_ptr TOK_PDECIMAL _syncscope TOK_ORDERING align _invariant_group
+i_load_atomic: variable "=" "load" "atomic" _volatile type_any "," type_ptr variable _syncscope TOK_ORDERING align _invariant_group
                { $$ = new LoadNode($1, $5, $6, $8, $9, $10, $11, $12, $13); D($2, $3, $4, $7); };
 
 // Constants
@@ -307,7 +307,7 @@ constant_right: operand | const_expr;
 _parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_PDECIMAL | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
+operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
 const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
        | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;

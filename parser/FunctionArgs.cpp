@@ -21,7 +21,7 @@ namespace LL2W {
 	FunctionArgument::FunctionArgument(ASTNode *node): type(getType(node)) {
 		// Each function argument node can have PARATTR_LIST and TOK_PVAR/TOK_PSTRING children at the end.
 		for (ASTNode *child: node->children) {
-			if (child->symbol == TOK_PVAR || child->symbol == TOK_PSTRING) {
+			if (child->symbol == TOK_PVAR) {
 				name = StringSet::intern(child->extractName());
 				originalName = child->lexerInfo;
 			} else if (child->symbol == PARATTR_LIST) {
