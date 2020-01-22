@@ -83,15 +83,12 @@ namespace LL2W {
 		return new FunctionType(returnType->copy(), argument_types);
 	}
 
-	StructType::StructType(const StructNode *node): name(node->name), form(node->form), shape(node->shape) {}
+	StructType::StructType(const StructNode *node_):
+		name(node_->name), form(node_->form), shape(node_->shape), node(node_) {}
 
 	StructType::operator std::string() {
-		if (*name == "[anon]") {
-			std::stringstream out;
-
-			return out.str();
-		}
-
+		if (*name == "[anon]" && node)
+			return node->typeStr();
 		if (name->at(1) == '"')
 			return "\e[32m%\e[33m" + name->substr(1) + "\e[0m";
 		return "\e[32m" + *name + "\e[0m";

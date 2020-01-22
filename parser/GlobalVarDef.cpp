@@ -65,8 +65,6 @@ namespace LL2W {
 			delete global_or_constant;
 		}
 
-
-
 		type = getType(type_);
 		initialValue = initial_value;
 	}
@@ -105,6 +103,8 @@ namespace LL2W {
 		out << (isConstant? " constant" : " global");
 		out << " \e[0;32m" << std::string(*type);
 		out << "\e[0m";
+		if (initialValue && initialValue->symbol == TOK_CSTRING)
+			out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
 		return out.str();
 	}
 }
