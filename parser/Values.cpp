@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 
 #include "ASTNode.h"
@@ -49,14 +50,59 @@ namespace LL2W {
 		name = node->lexerInfo->at(0) == '@'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 
+	GetelementptrValue::GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
+	                                       const std::vector<std::pair<int, long>> &decimals_):
+		ASTNode(TOK_GETELEMENTPTR, ""), inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_),
+		decimals(decimals_) {}
+
+	GetelementptrValue::GetelementptrValue(const ASTNode *inbounds_, const ASTNode *type_, const ASTNode *ptr_type,
+	                                       const ASTNode *variable_, const ASTNode *decimal_list):
+	                                       ASTNode(TOK_GETELEMENTPTR, "") {
+		if (inbounds_) {
+			inbounds = true;
+			delete inbounds_;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		ptrType = getType(ptr_type);
+		delete ptr_type;
+
+		variable = getValue(variable_);
+		delete variable_;
+
+		for (auto iter = decimal_list->cbegin(), end = decimal_list->cend(); iter != end; ++iter) {
+			const ASTNode *comma = *iter;
+			const ASTNode *inttype = comma->at(0);
+			const ASTNode *decimal = comma->at(1);
+			decimals.push_back({atoi(inttype->lexerInfo->substr(1).c_str()), atol(decimal->lexerInfo->c_str())});
+		}
+		delete decimal_list;
+	}
+
+	GetelementptrValue::GetelementptrValue(const ASTNode *node): ASTNode(TOK_GETELEMENTPTR, "") {
+		std::cout << "[[\n";
+		node->debug();
+		throw std::runtime_error("Unimplemented.");
+		std::cout << "]]\n";
+	}
+
+	GetelementptrValue::~GetelementptrValue() {
+		// delete type;
+		// delete ptrType;
+		// delete variable;
+	}
+
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
-			case TOK_FLOATING: return new DoubleValue(node);
-			case TOK_DECIMAL:  return new IntValue(node);
-			case TOK_BOOL:     return new BoolValue(node);
-			case VECTOR:       return new VectorValue(node);
-			case TOK_PVAR:     return new LocalValue(node);
-			case TOK_GVAR:     return new GlobalValue(node);
+			case TOK_FLOATING:      return new DoubleValue(node);
+			case TOK_DECIMAL:       return new IntValue(node);
+			case TOK_BOOL:          return new BoolValue(node);
+			case VECTOR:            return new VectorValue(node);
+			case TOK_PVAR:          return new LocalValue(node);
+			case TOK_GVAR:          return new GlobalValue(node);
+			case TOK_GETELEMENTPTR: return new GetelementptrValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

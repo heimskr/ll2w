@@ -12,7 +12,7 @@
 #include "FunctionArgs.h"
 #include "Instructions.h"
 #include "StructNode.h"
-#include "GetelementptrExpr.h"
+#include "Values.h"
 
 template <typename ...Args>
 void D(Args && ...args) {
@@ -306,11 +306,9 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace call_fnty function_name "(" _constants ")" attribute_list
+i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" attribute_list
         { $$ = new CallNode($1, $3, $5, $6, $7, $8, $9, $10, $12, $14); D($2, $4, $11, $13); };
 _tail: TOK_TAIL | { $$ = nullptr; };
-call_fnty: type_any "(" function_args ")" { $$ = (new AN(FNTYPE, ""))->adopt({$1, $3}); D($2, $4); }
-         | type_any                       { $$ = (new AN(FNTYPE, ""))->adopt($1); };
 function_name: TOK_GVAR | TOK_IDENT;
 _constants: constants | { $$ = new AN(CONSTANT_LIST, ""); };
 constants: constants "," constant { $1->adopt($3); D($2); }
@@ -326,7 +324,7 @@ operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_any "*" variable decimals ")"
-                  { $$ = new GetelementptrExpr($2, $4, $6, $8, $9); D($1, $3, $5, $7, $10); };
+                  { $$ = new GetelementptrValue($2, $4, $6, $8, $9); D($1, $3, $5, $7, $10); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
 decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST, ""); };
 

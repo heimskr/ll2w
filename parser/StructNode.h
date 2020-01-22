@@ -29,7 +29,7 @@ namespace LL2W {
 			StructNode(StructShape, ASTNode *types_);
 			~StructNode();
 
-			virtual std::string debugExtra() override;
+			virtual std::string debugExtra() const override;
 			virtual std::string style() const override { return "\e[33m"; }
 	};
 }

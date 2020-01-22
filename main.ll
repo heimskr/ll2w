@@ -231,7 +231,7 @@ define i32 @main(i32, i8**) #0 {
   br label %foo
 
 ; <label>:8:                                      ; preds = %2
-  %9 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0))
+  %9 = call ccc zeroext signext inreg dereferenceable(160) addrspace(42) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0))
 }/*
   %10 = load i8**, i8*** %5, align 8
   %11 = getelementptr inbounds i8*, i8** %10, i64 0

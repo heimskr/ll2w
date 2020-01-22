@@ -153,7 +153,7 @@ namespace LL2W {
 		    || symbol == TOK_PVAR || symbol == TOK_GVAR;
 	}
 
-	void ASTNode::debug(int indent, bool is_last) {
+	void ASTNode::debug(int indent, bool is_last) const {
 		for (int i = 0; i < indent; ++i) {
 			std::cerr << "\e[2m";
 			if (i == indent - 1)
@@ -169,7 +169,7 @@ namespace LL2W {
 			child->debug(indent + 1, child == children.back());
 	}
 
-	std::string ASTNode::debugExtra() {
+	std::string ASTNode::debugExtra() const {
 		return "";
 	}
 
@@ -220,7 +220,7 @@ namespace LL2W {
 		adopt(list);
 	}
 
-	std::string MetadataDef::debugExtra() {
+	std::string MetadataDef::debugExtra() const {
 		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
 	}
 }

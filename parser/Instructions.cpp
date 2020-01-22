@@ -52,7 +52,7 @@ namespace LL2W {
 		delete secondValue;
 	}
 
-	std::string SelectNode::debugExtra() {
+	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m" << *result << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
 		for (Fastmath flag: fastmath)
@@ -102,7 +102,7 @@ namespace LL2W {
 		if (numelementsValue) delete numelementsValue;
 	}
 
-	std::string AllocaNode::debugExtra() {
+	std::string AllocaNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
 		if (inalloca)
@@ -205,7 +205,7 @@ namespace LL2W {
 		delete ptrType;
 	}
 
-	std::string StoreNode::debugExtra() {
+	std::string StoreNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[91mstore\e[0m";
 		if (atomic)
@@ -338,7 +338,7 @@ namespace LL2W {
 		delete ptrType;
 	}
 
-	std::string LoadNode::debugExtra() {
+	std::string LoadNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m" << *result << "\e[0;2m = \e[0;91mload\e[0m";
 		if (atomic)
@@ -387,14 +387,14 @@ namespace LL2W {
 		delete value2;
 	}
 
-	std::string IcmpNode::debugExtra() {
+	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m" << *result << "\e[0;2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << std::string(*type)
 		    << " " << std::string(*value1) << ", " << std::string(*value2);
 		return out.str();
 	}
 
-	std::string BrUncondNode::debugExtra() {
+	std::string BrUncondNode::debugExtra() const {
 		return "\e[91mbr \e[0;32m" + *destination + "\e[0m";
 	}
 
@@ -414,8 +414,75 @@ namespace LL2W {
 		delete condition;
 	}
 
-	std::string BrCondNode::debugExtra() {
+	std::string BrCondNode::debugExtra() const {
 		return "\e[91mbr \e[33mi1\e[39m " + std::string(*condition) + ", label \e[32m" + *ifTrue + "\e[39m, label "
 			"\e[32m" + *ifFalse + "\e[39m";
+	}
+
+	CallNode::CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
+		               ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
+		               ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list) {
+		result = StringSet::intern(pvar->extractName());
+
+		if (_tail) {
+			tail = _tail->lexerInfo;
+			delete _tail;
+		}
+
+		for (ASTNode *child: *fastmath_flags) {
+			const std::string &fmname = *child->lexerInfo;
+			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
+				if (fmname == pair.second) {
+					fastmath.insert(pair.first);
+					break;
+				}
+			}
+		}
+		delete fastmath_flags;
+
+		if (_cconv) {
+			cconv = _cconv->lexerInfo;
+			delete _cconv;
+		}
+
+		for (ASTNode *child: *_retattrs) {
+			const std::string &raname = *child->lexerInfo;
+			if (raname == "dereferenceable") {
+				dereferenceable = atoi(child->at(0)->lexerInfo->c_str());
+			} else {
+				for (const std::pair<RetAttr, std::string> &pair: retattr_map) {
+					if (raname == pair.second) {
+						retattrs.insert(pair.first);
+						break;
+					}
+				}
+			}
+		}
+		delete _retattrs;
+
+		if (_addrspace) {
+			addrspace = atoi(_addrspace->at(0)->lexerInfo->c_str());
+			delete _addrspace;
+		}
+
+		returnType = getType(return_type);
+		delete return_type;
+
+		name = dynamic_cast<VariableValue *>(getValue(function_name));
+		delete function_name;
+		if (!name) {
+			if (_constants)
+				delete _constants;
+			delete attribute_list;
+			throw std::runtime_error("Function name isn't a global or local variable");
+		}
+
+		if (_constants) {
+			for (ASTNode *child: *_constants)
+				constants.emplace_back(child);
+			delete _constants;
+		}
+
+		adopt(attribute_list);
 	}
 }

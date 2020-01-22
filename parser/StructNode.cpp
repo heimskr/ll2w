@@ -35,7 +35,7 @@ namespace LL2W {
 		}
 	}
 
-	std::string StructNode::debugExtra() {
+	std::string StructNode::debugExtra() const {
 		std::stringstream out;
 		if (shape == StructShape::Opaque) {
 			out << " opaque";

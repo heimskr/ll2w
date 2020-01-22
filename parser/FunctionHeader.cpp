@@ -110,7 +110,7 @@ namespace LL2W {
 		}
 	}
 	
-	std::string FunctionHeader::debugExtra() {
+	std::string FunctionHeader::debugExtra() const {
 		std::stringstream out;
 		out << " \e[0;33m" << std::string(*returnType);
 		out << " \e[0;32m" << *name << "\e[36m";

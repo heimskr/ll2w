@@ -27,7 +27,7 @@ namespace LL2W {
 		               N function_args, N unnamed_addr, N fnattrs_);
 		~FunctionHeader() { delete returnType; }
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[38;5;202m"; }
 	};
 }

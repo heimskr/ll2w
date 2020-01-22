@@ -8,6 +8,7 @@
 #include "Types.h"
 #include "Values.h"
 #include "Lexer.h"
+#include "Constant.h"
 
 namespace LL2W {
 	struct InstructionNode: public ASTNode {
@@ -25,7 +26,7 @@ namespace LL2W {
 		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);
 		~SelectNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct AllocaNode: public InstructionNode {
@@ -40,7 +41,7 @@ namespace LL2W {
 		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 		           ASTNode *addrspace_);
 		~AllocaNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct StoreNode: public InstructionNode {
@@ -56,7 +57,7 @@ namespace LL2W {
 		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 		          ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~StoreNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct LoadNode: public InstructionNode {
@@ -75,7 +76,7 @@ namespace LL2W {
 		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
 		         ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~LoadNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct IcmpNode: public InstructionNode {
@@ -86,7 +87,7 @@ namespace LL2W {
 
 		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2);
 		~IcmpNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -94,7 +95,7 @@ namespace LL2W {
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
 		BrUncondNode(const std::string &destination_): BrUncondNode(&destination_) {}
 		BrUncondNode(const ASTNode *node): BrUncondNode(node->lexerInfo) { delete node; }
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct BrCondNode: public InstructionNode {
@@ -103,13 +104,22 @@ namespace LL2W {
 
 		BrCondNode(const ASTNode *type, const ASTNode *condition_, const ASTNode *if_true, const ASTNode *if_false);
 		~BrCondNode();
-		virtual std::string debugExtra() override;
+		virtual std::string debugExtra() const override;
 	};
 
 	struct CallNode: public InstructionNode {
-		const std::string *result;
+		const std::string *result, *cconv = nullptr, *tail = nullptr;
+		std::unordered_set<Fastmath> fastmath;
+		std::unordered_set<RetAttr> retattrs;
+		std::vector<Constant> constants;
+		int dereferenceable = -1, addrspace = -1;
 
-		// CallNode()
+		Type *returnType;
+		VariableValue *name;
+
+		CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
+		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *function_name, ASTNode *_constants,
+		         ASTNode *attribute_list);
 	};
 }
 

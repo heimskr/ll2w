@@ -46,8 +46,8 @@ namespace LL2W {
 			std::string concatenate() const;
 			bool isType() const;
 			bool isValue() const;
-			void debug(int indent = 0, bool is_last = false);
-			virtual std::string debugExtra();
+			void debug(int indent = 0, bool is_last = false) const;
+			virtual std::string debugExtra() const;
 			virtual std::string style() const;
 
 			static void destroy(std::initializer_list<ASTNode *>);
@@ -63,7 +63,7 @@ namespace LL2W {
 	struct MetadataDef: public ASTNode {
 		bool distinct;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 	};
 }
 

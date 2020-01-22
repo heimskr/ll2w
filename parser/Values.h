@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "ASTNode.h"
+
 namespace LL2W {
 	class ASTNode;
 
@@ -75,6 +77,27 @@ namespace LL2W {
 		GlobalValue(const ASTNode *node);
 		Value * copy() const override { return new GlobalValue(name); }
 		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
+	};
+
+	class GetelementptrValue: public Value, public ASTNode {
+		private:
+			GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
+			                   const std::vector<std::pair<int, long>> &decimals_);
+
+		public:
+			bool inbounds = false;
+			Type *type, *ptrType;
+			Value *variable;
+			std::vector<std::pair<int, long>> decimals {};
+
+			GetelementptrValue(const ASTNode *inbounds_, const ASTNode *type_, const ASTNode *ptr_type,
+			                   const ASTNode *variable_, const ASTNode *decimal_list);
+			GetelementptrValue(const ASTNode *node);
+			~GetelementptrValue();
+			Value * copy() const override {
+				return new GetelementptrValue(inbounds, type, ptrType, variable, decimals);
+			}
+			operator std::string() override { return "?getelementptr?"; }
 	};
 
 	Value * getValue(const ASTNode *);

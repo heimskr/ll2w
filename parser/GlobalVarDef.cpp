@@ -69,7 +69,7 @@ namespace LL2W {
 		initialValue = initial_value;
 	}
 
-	std::string GlobalVarDef::debugExtra() {
+	std::string GlobalVarDef::debugExtra() const {
 		std::stringstream out;
 		out << "\e[36m";
 

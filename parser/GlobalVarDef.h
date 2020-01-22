@@ -28,7 +28,7 @@ namespace LL2W {
 
 		~GlobalVarDef() { delete type; delete initialValue; }
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[32m"; }
 	};
 }
