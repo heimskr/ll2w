@@ -16,6 +16,8 @@
 %option noyywrap
 %option warn
 
+LABEL_COMMENT		("; <label>:")
+PREDS_COMMENT		("; preds = ")
 LETTER				[A-Za-z_]
 DIGIT				[0-9]
 NUMBER				("-"?{DIGIT}+)
@@ -48,11 +50,13 @@ FASTMATH			("nnan"|"ninf"|"nsz"|"arcp"|"contract"|"afn"|"reassoc"|"fast")
 BOOL				("true"|"false")
 ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 ICMP_COND			("eq"|"ne"|"ugt"|"uge"|"ult"|"ule"|"sgt"|"sge"|"slt"|"sle")
-LABEL_COMMENT		("; <label>:")
+TAIL				("tail"|"musttail"|"notail")
+CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"sitofp"|"ptrtoint"|"inttoptr"|"bitcast"|"addrspacecast")
 
 %%
 
 {LABEL_COMMENT}				{ RTOKEN(LABEL_COMMENT) }
+{PREDS_COMMENT}				{ RTOKEN(PREDS_COMMENT) }
 {SGCOMMENT}					{ }
 {MLCOMMENT}					{ }
 [ \t]+						{ }
@@ -79,6 +83,8 @@ LABEL_COMMENT		("; <label>:")
 {BOOL}						{ RTOKEN(BOOL) }
 {ORDERING}					{ RTOKEN(ORDERING) }
 {ICMP_COND}					{ RTOKEN(ICMP_COND) }
+{TAIL}						{ RTOKEN(TAIL) }
+{CONV_OP}					{ RTOKEN(CONV_OP) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }
@@ -131,20 +137,6 @@ LABEL_COMMENT		("; <label>:")
 "load"						{ RTOKEN(LOAD) }
 "volatile"					{ RTOKEN(VOLATILE) }
 
-"trunc"						{ RTOKEN(TRUNC) }
-"zext"						{ RTOKEN(ZEXT) }
-"sext"						{ RTOKEN(SEXT) }
-"fptrunc"					{ RTOKEN(FPTRUNC) }
-"fpext"						{ RTOKEN(FPEXT) }
-"fptoui"					{ RTOKEN(FPTOUI) }
-"fptosi"					{ RTOKEN(FPTOSI) }
-"uitofp"					{ RTOKEN(UITOFP) }
-"sitofp"					{ RTOKEN(SITOFP) }
-"ptrtoint"					{ RTOKEN(PTRTOINT) }
-"inttoptr"					{ RTOKEN(INTTOPTR) }
-"bitcast"					{ RTOKEN(BITCAST) }
-"addrspacecast"				{ RTOKEN(ADDRSPACECAST) }
-
 "thread_local"				{ RTOKEN(THREAD_LOCAL) }
 
 "addrspace"					{ RTOKEN(ADDRSPACE) }
@@ -166,6 +158,7 @@ LABEL_COMMENT		("; <label>:")
 "icmp"						{ RTOKEN(ICMP) }
 "br"						{ RTOKEN(BR) }
 "label"						{ RTOKEN(LABEL) }
+"call"						{ RTOKEN(CALL) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

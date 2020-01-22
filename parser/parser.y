@@ -41,7 +41,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_METABANG TOK_PARATTR
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
-%token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT
+%token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -69,21 +69,6 @@ using AN = LL2W::ASTNode;
 %token TOK_ASTERISK "*"
 %token TOK_HASH "#"
 %token TOK_COLON ":"
-
-// Conversion operations
-%token TOK_TRUNC "trunc"
-%token TOK_ZEXT "zext"
-%token TOK_SEXT "sext"
-%token TOK_FPTRUNC "fptrunc"
-%token TOK_FPEXT "fpext"
-%token TOK_FPTOUI "fptoui"
-%token TOK_FPTOSI "fptosi"
-%token TOK_UITOFP "uitofp"
-%token TOK_SITOFP "sitofp"
-%token TOK_PTRTOINT "ptrtoint"
-%token TOK_INTTOPTR "inttoptr"
-%token TOK_BITCAST "bitcast"
-%token TOK_ADDRSPACECAST "addrspacecast"
 
 %token TOK_TO "to"
 
@@ -130,10 +115,11 @@ using AN = LL2W::ASTNode;
 %token TOK_ICMP "icmp"
 %token TOK_BR "br"
 %token TOK_LABEL "label"
+%token TOK_CALL "call"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
-%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST
+%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST
 
 %start start
 
@@ -263,12 +249,17 @@ variable: TOK_PVAR;
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
-statement: label | instruction;
-label: ident ":" { $1->symbol = LABEL; D($2); };
+statement: label_statement | instruction | bb_header;
+label_statement: ident ":" { $1->symbol = LABEL; D($2); };
+bb_header: TOK_LABEL_COMMENT TOK_DECIMAL ":" TOK_PREDS_COMMENT preds_list;
+_preds_list: preds_list | { $$ = new AN(PREDS_LIST, ""); };
+preds_list: preds_list "," TOK_PVAR { $1->adopt($3); D($2); }
+          | TOK_PVAR { $$ = (new AN(PREDS_LIST, ""))->adopt($1); };
 
 
 // Instructions
-instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond;
+instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
+           | i_call;
 
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -312,6 +303,9 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
+i_call: variable "=" _tail "call";
+_tail: TOK_TAIL | { $$ = nullptr; };
+
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };
 constant_right: operand | const_expr;
@@ -319,9 +313,7 @@ _parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PAR
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
-const_expr: conv_op constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
-conv_op: TOK_TRUNC | TOK_ZEXT | TOK_SEXT | TOK_FPTRUNC | TOK_FPEXT | TOK_FPTOUI | TOK_FPTOSI | TOK_UITOFP | TOK_SITOFP
-       | TOK_PTRTOINT | TOK_INTTOPTR | TOK_BITCAST | TOK_ADDRSPACECAST;
+const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 
 // Miscellaneous
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
