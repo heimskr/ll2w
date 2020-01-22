@@ -57,13 +57,24 @@ namespace LL2W {
 		operator std::string() override { return value? "true" : "false"; }
 	};
 
-	struct RegisterValue: public Value {
+	struct VariableValue: public Value {};
+
+	struct LocalValue: public VariableValue {
 		const std::string *name;
-		RegisterValue(const std::string *name_): name(name_) {}
-		RegisterValue(const std::string &name_): RegisterValue(&name_) {}
-		RegisterValue(const ASTNode *node);
-		Value * copy() const override { return new RegisterValue(name); }
+		LocalValue(const std::string *name_): name(name_) {}
+		LocalValue(const std::string &name_): LocalValue(&name_) {}
+		LocalValue(const ASTNode *node);
+		Value * copy() const override { return new LocalValue(name); }
 		operator std::string() override { return "\e[32m%" + *name + "\e[39m"; }
+	};
+
+	struct GlobalValue: public VariableValue {
+		const std::string *name;
+		GlobalValue(const std::string *name_): name(name_) {}
+		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
+		GlobalValue(const ASTNode *node);
+		Value * copy() const override { return new GlobalValue(name); }
+		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
 	};
 
 	Value * getValue(const ASTNode *);

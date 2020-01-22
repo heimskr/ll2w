@@ -12,6 +12,7 @@
 #include "FunctionArgs.h"
 #include "Instructions.h"
 #include "StructNode.h"
+#include "GetelementptrExpr.h"
 
 template <typename ...Args>
 void D(Args && ...args) {
@@ -116,10 +117,13 @@ using AN = LL2W::ASTNode;
 %token TOK_BR "br"
 %token TOK_LABEL "label"
 %token TOK_CALL "call"
+%token TOK_GETELEMENTPTR "getelementptr"
+%token TOK_INBOUNDS "inbounds"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
-%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST
+%token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
+%token GETELEMENTPTR_EXPR DECIMAL_LIST
 
 %start start
 
@@ -243,9 +247,8 @@ _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; D($1); } | fnattr_list;
 fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST, ""); };
 _unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
-function_name: TOK_GVAR;
-_variable: variable | { $$ = nullptr; };
-variable: TOK_PVAR;
+_variable: TOK_PVAR | { $$ = nullptr; };
+variable: TOK_PVAR | TOK_GVAR;
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
@@ -261,10 +264,10 @@ preds_list: preds_list "," TOK_PVAR { $1->adopt($3); D($2); }
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call;
 
-i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
+i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
 
-i_alloca: variable "=" "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
+i_alloca: TOK_PVAR "=" "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
           { $$ = new AllocaNode($1, $4, $5, $6, $7, $8); D($2, $3); };
 _inalloca: "inalloca" | { $$ = nullptr; };
 _alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
@@ -272,17 +275,17 @@ _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
-i_store: "store" _volatile type_any operand "," type_ptr variable _align _nontemporal _invariant_group
+i_store: "store" _volatile type_any operand "," type_ptr TOK_PVAR _align _nontemporal _invariant_group
          { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9, $10); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
 _nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
 _invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr variable _syncscope TOK_ORDERING align _invariant_group
+i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PVAR _syncscope TOK_ORDERING align _invariant_group
                 { $$ = new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12); D($1, $2, $6); };
 _syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
-i_load: variable "=" "load" _volatile type_any "," type_ptr variable _align _nontemporal _invariant_load
+i_load: TOK_PVAR "=" "load" _volatile type_any "," type_ptr TOK_PVAR _align _nontemporal _invariant_load
         _invariant_group _nonnull _dereferenceable _dereferenceable_or_null _bang_align
         { $$ = new LoadNode($1, $4, $5, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16); D($2, $3, $6); };
 // TODO: what is the actual form of the arguments for these?
@@ -292,10 +295,10 @@ _dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $3; 
 _dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 _bang_align:              "," "!align"                   metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_load_atomic: variable "=" "load" "atomic" _volatile type_any "," type_ptr variable _syncscope TOK_ORDERING align _invariant_group
+i_load_atomic: TOK_PVAR "=" "load" "atomic" _volatile type_any "," type_ptr TOK_PVAR _syncscope TOK_ORDERING align _invariant_group
                { $$ = new LoadNode($1, $5, $6, $8, $9, $10, $11, $12, $13); D($2, $3, $4, $7); };
 
-i_icmp: variable "=" "icmp" TOK_ICMP_COND type_any operand "," operand
+i_icmp: TOK_PVAR "=" "icmp" TOK_ICMP_COND type_any operand "," operand
       { $$ = new IcmpNode($1, $4, $5, $6, $8); D($2, $3, $7); };
 
 i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
@@ -303,8 +306,14 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: variable "=" _tail "call";
+i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace call_fnty function_name "(" _constants ")" attribute_list;
 _tail: TOK_TAIL | { $$ = nullptr; };
+call_fnty: type_any "(" function_args ")" { $$ = (new AN(FNTYPE, ""))->adopt({$1, $3}); D($2, $4); }
+         | type_any                       { $$ = (new AN(FNTYPE, ""))->adopt($1); };
+function_name: TOK_GVAR | TOK_IDENT;
+_constants: constants | { $$ = new AN(CONSTANT_LIST, ""); };
+constants: constants "," constant { $1->adopt($3); D($2); }
+         | constant               { $$ = (new AN(CONSTANT_LIST, ""))->adopt($1); };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };
@@ -312,8 +321,13 @@ constant_right: operand | const_expr;
 _parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: variable | TOK_DECIMAL | TOK_GVAR | /* getelementptr_expr | */ "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
+
+getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_any "*" variable decimals ")"
+                  { $$ = new GetelementptrExpr($2, $4, $6, $8, $9); D($1, $3, $5, $7, $10); };
+_inbounds: TOK_INBOUNDS | { $$ = nullptr; };
+decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST, ""); };
 
 // Miscellaneous
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };

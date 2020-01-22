@@ -233,7 +233,7 @@ namespace LL2W {
 	                   ASTNode *bang_align) {
 		atomic = false;
 
-		result = result_->lexerInfo;
+		result = StringSet::intern(result_->extractName());
 
 		if (volatile__) {
 			volatile_ = true;
@@ -294,7 +294,7 @@ namespace LL2W {
 	                   ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
 
-		result = result_->lexerInfo;
+		result = StringSet::intern(result_->extractName());
 
 		if (volatile__) {
 			volatile_ = true;
@@ -361,7 +361,7 @@ namespace LL2W {
 	}
 
 	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
-		result = result_->lexerInfo;
+		result = StringSet::intern(result_->extractName());
 		delete result_;
 
 		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {

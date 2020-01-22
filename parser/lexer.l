@@ -159,6 +159,8 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "br"						{ RTOKEN(BR) }
 "label"						{ RTOKEN(LABEL) }
 "call"						{ RTOKEN(CALL) }
+"getelementptr"				{ RTOKEN(GETELEMENTPTR) }
+"inbounds"					{ RTOKEN(INBOUNDS) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

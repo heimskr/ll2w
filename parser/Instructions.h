@@ -105,6 +105,12 @@ namespace LL2W {
 		~BrCondNode();
 		virtual std::string debugExtra() override;
 	};
+
+	struct CallNode: public InstructionNode {
+		const std::string *result;
+
+		// CallNode()
+	};
 }
 
 #endif
