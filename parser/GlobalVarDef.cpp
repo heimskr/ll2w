@@ -65,6 +65,8 @@ namespace LL2W {
 			delete global_or_constant;
 		}
 
+
+
 		type = getType(type_);
 		initialValue = initial_value;
 	}
@@ -102,7 +104,6 @@ namespace LL2W {
 			out << " externally_initialized";
 		out << (isConstant? " constant" : " global");
 		out << " \e[0;32m" << std::string(*type);
-
 		out << "\e[0m";
 		return out.str();
 	}

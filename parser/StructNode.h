@@ -19,7 +19,6 @@ namespace LL2W {
 			StructForm form = StructForm::Struct;
 			std::vector<Type *> types;
 
-			StructNode(): ASTNode(STRUCTDEF, "") {}
 			StructNode(std::initializer_list<Type *>  types_, StructShape shape_):
 				ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
 			StructNode(const     std::vector<Type *> &types_, StructShape shape_):
@@ -29,8 +28,10 @@ namespace LL2W {
 			StructNode(StructShape, ASTNode *types_);
 			~StructNode();
 
+			std::string typeStr() const;
 			virtual std::string debugExtra() const override;
 			virtual std::string style() const override { return "\e[33m"; }
+			StructNode * copy() const;
 	};
 }
 

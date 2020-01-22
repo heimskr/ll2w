@@ -213,9 +213,9 @@ target triple = "x86_64-apple-macosx10.15.0"
 @.str.46 = private unnamed_addr constant [19 x i8] c"graph_unlinked.png\00", align 1
 @.str.47 = private unnamed_addr constant [9 x i8] c"basic.ll\00", align 1
 @_ZN4LL2W6Parser4rootE = external global %"class.LL2W::ASTNode"*, align 8
-@_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, align 8
 @_ZNSt3__15ctypeIcE2idE = external global %"class.std::__1::locale::id", align 8
 */
+@_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, section "foo", comdat($what), align 8
 ; Function Attrs: noinline norecurse optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
   %foo = alloca i32, i32 666

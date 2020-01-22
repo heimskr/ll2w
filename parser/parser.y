@@ -227,11 +227,11 @@ initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST); }
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
-           | gdef_extras "," gdef_align   { $$ = $1->adopt($3); D($2); }
+           | gdef_extras "," TOK_ALIGN TOK_DECIMAL   { $$ = $1->adopt($2->adopt($3)); D($2); }
            | { $$ = new AN(GDEF_EXTRAS); };
-section: TOK_SECTION TOK_STRING   { $$ = $1->adopt($2); };
-comdat:  TOK_COMDAT  "$" ident { $$ = $1->adopt($3); D($2); };
-gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
+section: TOK_SECTION TOK_STRING       { $$ = $1->adopt($2); };
+comdat:  TOK_COMDAT "(" TOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
+      |  TOK_COMDAT;
 
 // Functions
 function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs

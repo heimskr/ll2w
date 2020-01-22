@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
@@ -85,6 +86,12 @@ namespace LL2W {
 	StructType::StructType(const StructNode *node): name(node->name), form(node->form), shape(node->shape) {}
 
 	StructType::operator std::string() {
+		if (*name == "[anon]") {
+			std::stringstream out;
+
+			return out.str();
+		}
+
 		if (name->at(1) == '"')
 			return "\e[32m%\e[33m" + name->substr(1) + "\e[0m";
 		return "\e[32m" + *name + "\e[0m";
