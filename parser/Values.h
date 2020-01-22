@@ -61,7 +61,7 @@ namespace LL2W {
 		const std::string *name;
 		RegisterValue(const std::string *name_): name(name_) {}
 		RegisterValue(const std::string &name_): RegisterValue(&name_) {}
-		RegisterValue(const ASTNode *node): RegisterValue(node->lexerInfo) {}
+		RegisterValue(const ASTNode *node);
 		Value * copy() const override { return new RegisterValue(name); }
 		operator std::string() override { return "\e[32m%" + *name + "\e[39m"; }
 	};

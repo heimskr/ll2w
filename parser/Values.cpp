@@ -5,6 +5,7 @@
 #include "Types.h"
 #include "Values.h"
 #include "Lexer.h"
+#include "StringSet.h"
 
 namespace LL2W {
 	VectorValue::VectorValue(ASTNode *node) {
@@ -38,6 +39,10 @@ namespace LL2W {
 		}
 		out << "\e[2m>\e[0m";
 		return out.str();
+	}
+
+	RegisterValue::RegisterValue(const ASTNode *node) {
+		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 
 	Value * getValue(ASTNode *node) {
