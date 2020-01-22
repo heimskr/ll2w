@@ -14,6 +14,14 @@ namespace LL2W {
 		return "\e[33mi" + std::to_string(width) + "\e[0m";
 	}
 
+	ArrayType::operator std::string() {
+		return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
+	}
+
+	VectorType::operator std::string() {
+		return "\e[2m<\e[0m" + std::to_string(this->count) + " \e[2mx\e[0m " + std::string(*this->subtype) + "\e[2m>\e[0m";
+	}
+
 	FloatType::operator std::string() {
 		switch (type) {
 			case FloatType::Type::Half: return "half";
@@ -32,6 +40,10 @@ namespace LL2W {
 		else if (str == "x86_fp80") return FloatType::Type::x86_FP80;
 		else if (str == "ppc_fp128") return FloatType::Type::PPC_FP128;
 		throw std::invalid_argument("Unknown float type: " + str);
+	}
+
+	PointerType::operator std::string() {
+		return std::string(*subtype) + "\e[2m*\e[0m";
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {

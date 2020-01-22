@@ -36,17 +36,13 @@ namespace LL2W {
 		template <typename T>
 		ArrayType(int count_, const T &subtype_): count(count_), subtype(new T(subtype_)) {}
 		~ArrayType() { delete subtype; }
-		operator std::string() override {
-			return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
-		}
+		operator std::string() override;
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 	};
 
 	struct VectorType: public ArrayType {
 		using ArrayType::ArrayType;
-		operator std::string() override {
-			return "<" + std::to_string(this->count) + " x " + std::string(*this->subtype) + ">";
-		}
+		operator std::string() override;
 		Type * copy() const override { return new VectorType(count, subtype->copy()); }
 	};
 
@@ -65,7 +61,7 @@ namespace LL2W {
 		template <typename T>
 		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
 		~PointerType() { delete subtype; }
-		operator std::string() override { return std::string(*subtype) + "*"; }
+		operator std::string() override;
 		Type * copy() const override { return new PointerType(subtype->copy()); }
 	};
 
