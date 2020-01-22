@@ -95,9 +95,9 @@ namespace LL2W {
 			GetelementptrValue(const ASTNode *node);
 			~GetelementptrValue();
 			Value * copy() const override {
-				return new GetelementptrValue(inbounds, type, ptrType, variable, decimals);
+				return new GetelementptrValue(inbounds, type->copy(), ptrType->copy(), variable->copy(), decimals);
 			}
-			operator std::string() override { return "?getelementptr?"; }
+			operator std::string() override;
 	};
 
 	Value * getValue(const ASTNode *);

@@ -325,8 +325,8 @@ retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2,
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
 
-getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_any "*" variable decimals ")"
-                  { $$ = new GetelementptrValue($2, $4, $6, $8, $9); D($1, $3, $5, $7, $10); };
+getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimals ")"
+                  { $$ = new GetelementptrValue($2, $4, $6, $7, $8); D($1, $3, $5, $9); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
 decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST); };
 

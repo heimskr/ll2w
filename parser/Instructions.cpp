@@ -491,8 +491,10 @@ namespace LL2W {
 	CallNode::~CallNode() {
 		delete returnType;
 		delete name;
-		for (Constant *constant: constants)
+		for (Constant *constant: constants) {
+			std::cout << "Deleting " << constant << "\n";
 			delete constant;
+		}
 	}
 
 	std::string CallNode::debugExtra() const {

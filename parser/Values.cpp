@@ -94,6 +94,19 @@ namespace LL2W {
 		delete variable;
 	}
 
+	GetelementptrValue::operator std::string() {
+		std::stringstream out;
+		out << "\e[91mgetelementptr\e[0m";
+		if (inbounds)
+			out << " \e[91minbounds\e[0m";
+		out << " \e[2m(\e[0m" << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType) << " "
+		    << std::string(*variable);
+		for (const std::pair<int, long> &decimal: decimals)
+			out << "\e[2m,\e[0m \e[33mi" << decimal.first << " \e[32m" << decimal.second << "\e[0m";
+		out << "\e[2m)\e[0m";
+		return out.str();
+	}
+
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING:      return new DoubleValue(node);
