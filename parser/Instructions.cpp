@@ -479,7 +479,7 @@ namespace LL2W {
 
 		if (_constants) {
 			for (ASTNode *child: *_constants)
-				constants.emplace_back(child);
+				constants.push_back(new Constant(child));
 			delete _constants;
 		}
 
@@ -491,6 +491,8 @@ namespace LL2W {
 	CallNode::~CallNode() {
 		delete returnType;
 		delete name;
+		for (Constant *constant: constants)
+			delete constant;
 	}
 
 	std::string CallNode::debugExtra() const {
@@ -500,9 +502,26 @@ namespace LL2W {
 			out << " \e[0;34m" << *tail;
 		out << " \e[0;91mcall\e[0m";
 		for (Fastmath flag: fastmath)
-			out << " " << fastmath_map.at(flag);
+			out << " \e[34m" << fastmath_map.at(flag) << "\e[0m";
+		if (!fastmath.empty())
+			out << "\e[0;2m .\e[0m";
 		if (cconv)
-			out << " \e[34m" << *cconv << "\e[0m";
+			out << " \e[34m" << *cconv << "\e[0;2m .\e[0m";
+		for (RetAttr attr: retattrs)
+			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
+		if (dereferenceable != -1)
+			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
+		if (!retattrs.empty() || dereferenceable != -1)
+			out << " \e[0;2m.\e[0m";
+		if (addrspace != -1)
+			out << " \e[34maddrspace\e[0;2m(\e[0m" << addrspace << "\e[2m)\e[0m";
+		out << " " << std::string(*returnType) << " " << std::string(*name) << "\e[2m(\e[0m";
+		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
+			if (iter != begin)
+				out << "\e[2m,\e[0m ";
+			out << std::string(**iter);
+		}
+		out << "\e[2m)\e[0m";
 		return out.str();
 	}
 }

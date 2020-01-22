@@ -84,6 +84,12 @@ namespace LL2W {
 
 	StructType::StructType(const StructNode *node): name(node->name), form(node->form), shape(node->shape) {}
 
+	StructType::operator std::string() {
+		if (name->at(1) == '"')
+			return "\e[32m%\e[33m" + name->substr(1) + "\e[0m";
+		return "\e[32m" + *name + "\e[0m";;
+	}
+
 	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {
 			case FUNCTIONTYPE:  return new FunctionType(node);

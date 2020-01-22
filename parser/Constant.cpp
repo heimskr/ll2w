@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "ASTNode.h"
 #include "Constant.h"
@@ -9,10 +10,10 @@ namespace LL2W {
 		if (node->symbol != CONSTANT)
 			throw std::runtime_error("Constant::Constant: node doesn't have symbol CONSTANT");
 		type = getType(node->at(0));
-		
+
 		ASTNode *value_node = node->at(2);
 		if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
-			value = gep_value;
+			value = gep_value->copy();
 		} else {
 			value = getValue(value_node);
 		}
@@ -34,5 +35,16 @@ namespace LL2W {
 	Constant::~Constant() {
 		delete type;
 		delete value;
+	}
+
+	Constant::operator std::string() const {
+		std::stringstream out;
+		out << std::string(*type);
+		for (ParAttr attr: parattrs)
+			out << " " << parattr_map.at(attr);
+		if (dereferenceable != -1)
+			out << " \e[34mdereferenceable\e[0;2m(" << dereferenceable << "\e[2m)\e[0m";
+		out << " " << std::string(*value);
+		return out.str();
 	}
 }

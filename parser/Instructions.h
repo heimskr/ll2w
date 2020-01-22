@@ -111,7 +111,7 @@ namespace LL2W {
 		const std::string *result, *cconv = nullptr, *tail = nullptr;
 		std::unordered_set<Fastmath> fastmath;
 		std::unordered_set<RetAttr> retattrs;
-		std::vector<Constant> constants;
+		std::vector<Constant *> constants;
 		std::vector<int> attributeIndices;
 		int dereferenceable = -1, addrspace = -1;
 

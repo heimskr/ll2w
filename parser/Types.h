@@ -92,7 +92,7 @@ namespace LL2W {
 		StructShape shape = StructShape::Default;
 		StructType(const std::string *name_, StructForm form_ = StructForm::Struct): name(name_), form(form_) {}
 		StructType(const StructNode *);
-		operator std::string() override { return *name; }
+		operator std::string() override;
 		Type * copy() const override { return new StructType(name); }
 	};
 

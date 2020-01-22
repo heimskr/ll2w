@@ -15,8 +15,11 @@ namespace LL2W {
 		std::unordered_set<ParAttr> parattrs;
 		int dereferenceable = -1;
 
+		Constant() = delete;
+		Constant(const Constant &) = delete;
 		Constant(ASTNode *);
 		~Constant();
+		operator std::string() const;
 	};
 }
 
