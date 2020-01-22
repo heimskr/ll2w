@@ -47,9 +47,12 @@ CCONV				("ccc"|"cxx_fast_tlscc"|"fastcc"|"ghccc"|"swiftcc"|"preserve_allcc"|"pr
 FASTMATH			("nnan"|"ninf"|"nsz"|"arcp"|"contract"|"afn"|"reassoc"|"fast")
 BOOL				("true"|"false")
 ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
+ICMP_COND			("eq"|"ne"|"ugt"|"uge"|"ult"|"ule"|"sgt"|"sge"|"slt"|"sle")
+LABEL_COMMENT		("; <label>:")
 
 %%
 
+{LABEL_COMMENT}				{ RTOKEN(LABEL_COMMENT) }
 {SGCOMMENT}					{ }
 {MLCOMMENT}					{ }
 [ \t]+						{ }
@@ -75,6 +78,7 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 {FASTMATH}					{ RTOKEN(FASTMATH) }
 {BOOL}						{ RTOKEN(BOOL) }
 {ORDERING}					{ RTOKEN(ORDERING) }
+{ICMP_COND}					{ RTOKEN(ICMP_COND) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }
@@ -159,6 +163,9 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 "allocsize"					{ RTOKEN(ALLOCSIZE) }
 "syncscope"					{ RTOKEN(SYNCSCOPE) }
 "atomic"					{ RTOKEN(ATOMIC) }
+"icmp"						{ RTOKEN(ICMP) }
+"br"						{ RTOKEN(BR) }
+"label"						{ RTOKEN(LABEL) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

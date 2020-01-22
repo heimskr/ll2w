@@ -41,7 +41,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ROOT TOK_STRING TOK_PERCENTID TOK_INTTYPE TOK_DECIMAL TOK_FLOATING TOK_IDENT TOK_METABANG TOK_PARATTR
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
-%token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING
+%token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -127,6 +127,9 @@ using AN = LL2W::ASTNode;
 %token TOK_BANGALIGN "!align"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
+%token TOK_ICMP "icmp"
+%token TOK_BR "br"
+%token TOK_LABEL "label"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -265,7 +268,7 @@ label: ident ":" { $1->symbol = LABEL; D($2); };
 
 
 // Instructions
-instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic;
+instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond;
 
 i_select: variable "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -300,6 +303,14 @@ _bang_align:              "," "!align"                   metabang    { $$ = $3; 
 
 i_load_atomic: variable "=" "load" "atomic" _volatile type_any "," type_ptr variable _syncscope TOK_ORDERING align _invariant_group
                { $$ = new LoadNode($1, $5, $6, $8, $9, $10, $11, $12, $13); D($2, $3, $4, $7); };
+
+i_icmp: variable "=" "icmp" TOK_ICMP_COND type_any operand "," operand
+      { $$ = new IcmpNode($1, $4, $5, $6, $8); D($2, $3, $7); };
+
+i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
+
+i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
+label: "label" TOK_PVAR { $$ = $2; D($1); };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };

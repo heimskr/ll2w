@@ -31,6 +31,7 @@ namespace LL2W {
 	enum class StructForm {Struct, Class, Union};
 	enum class StructShape {Default, Opaque, Packed};
 	enum class Ordering {None, Unordered, Monotonic, Acquire, Release, AcqRel, SeqCst};
+	enum class IcmpCond {Eq, Ne, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle};
 
 	extern std::unordered_map<Linkage,  std::string> linkage_map;
 	extern std::unordered_map<CConv,    std::string> cconv_map;
@@ -39,6 +40,7 @@ namespace LL2W {
 	extern std::unordered_map<FnAttr,   std::string> fnattr_map;
 	extern std::unordered_map<Fastmath, std::string> fastmath_map;
 	extern std::unordered_map<Ordering, std::string> ordering_map;
+	extern std::unordered_map<IcmpCond, std::string> cond_map;
 }
 
 #endif

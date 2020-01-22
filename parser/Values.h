@@ -32,7 +32,7 @@ namespace LL2W {
 		IntValue(const std::string *value_): IntValue(*value_) {}
 		IntValue(const ASTNode *node): IntValue(node->lexerInfo) {}
 		Value * copy() const override { return new IntValue(value); }
-		operator std::string() override { return std::to_string(value); }
+		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
 	};
 
 	class VectorValue: public Value {
@@ -41,7 +41,7 @@ namespace LL2W {
 
 		public:
 			std::vector<std::pair<Type *, Value *>> values;
-			VectorValue(ASTNode *);
+			VectorValue(const ASTNode *);
 			~VectorValue();
 			Value * copy() const override;
 			operator std::string() override;
@@ -66,7 +66,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[32m%" + *name + "\e[39m"; }
 	};
 
-	Value * getValue(ASTNode *);
+	Value * getValue(const ASTNode *);
 }
 
 

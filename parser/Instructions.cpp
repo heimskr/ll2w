@@ -359,4 +359,63 @@ namespace LL2W {
 			out << "\e[2m,\e[0;36m !invariant.group \e[0m" << invariantGroupIndex;
 		return out.str();
 	}
+
+	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
+		result = result_->lexerInfo;
+		delete result_;
+
+		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {
+			if (*cond_->lexerInfo == pair.second) {
+				cond = pair.first;
+				break;
+			}
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		value1 = getValue(op1);
+		delete op1;
+
+		value2 = getValue(op2);
+		delete op2;
+	}
+
+	IcmpNode::~IcmpNode() {
+		delete type;
+		delete value1;
+		delete value2;
+	}
+
+	std::string IcmpNode::debugExtra() {
+		std::stringstream out;
+		out << "\e[32m" << *result << "\e[0;2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << std::string(*type)
+		    << " " << std::string(*value1) << ", " << std::string(*value2);
+		return out.str();
+	}
+
+	std::string BrUncondNode::debugExtra() {
+		return "\e[91mbr \e[0;32m" + *destination + "\e[0m";
+	}
+
+	BrCondNode::BrCondNode(const ASTNode *type, const ASTNode *condition_, const ASTNode *if_true,
+	                       const ASTNode *if_false) {
+		if (*type->lexerInfo != "i1")
+			yyerror("Expected i1 for br condition type");
+		condition = getValue(condition_);
+		delete condition_;
+		ifTrue = if_true->lexerInfo;
+		delete if_true;
+		ifFalse = if_false->lexerInfo;
+		delete if_false;
+	}
+
+	BrCondNode::~BrCondNode() {
+		delete condition;
+	}
+
+	std::string BrCondNode::debugExtra() {
+		return "\e[91mbr \e[33mi1\e[39m " + std::string(*condition) + ", label \e[32m" + *ifTrue + "\e[39m, label "
+			"\e[32m" + *ifFalse + "\e[39m";
+	}
 }

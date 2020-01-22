@@ -215,7 +215,7 @@ target triple = "x86_64-apple-macosx10.15.0"
 @_ZN4LL2W6Parser4rootE = external global %"class.LL2W::ASTNode"*, align 8
 @_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, align 8
 @_ZNSt3__15ctypeIcE2idE = external global %"class.std::__1::locale::id", align 8
-;*/
+*/
 ; Function Attrs: noinline norecurse optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
   %foo = alloca i32, i32 666
@@ -227,7 +227,9 @@ define i32 @main(i32, i8**) #0 {
   store i8** %1, i8*** %5, align 8
   %6 = load i32, i32* %4, align 4
   %7 = icmp ne i32 %6, 3
-  br i1 %7, label %8, label %15
+  br i4 %7, label %8, label %15
+  br label %foo
+}/*
 
 ; <label>:8:                                      ; preds = %2
   %9 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0))
@@ -5404,3 +5406,5 @@ attributes #10 = { builtin nounwind }
 !1 = !{i32 1, !"wchar_size", i32 4}
 !2 = !{i32 7, !"PIC Level", i32 2}
 !3 = !{!"clang version 8.0.1 (tags/RELEASE_801/final)"}
+
+;*/

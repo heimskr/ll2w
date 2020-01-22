@@ -8,9 +8,9 @@
 #include "StringSet.h"
 
 namespace LL2W {
-	VectorValue::VectorValue(ASTNode *node) {
-		for (ASTNode *comma: *node)
-			values.push_back({getType(comma->at(0)), getValue(comma->at(1))});
+	VectorValue::VectorValue(const ASTNode *node) {
+		for (auto iter = node->cbegin(); iter != node->cend(); ++iter)
+			values.push_back({getType((*iter)->at(0)), getValue((*iter)->at(1))});
 	}
 
 	VectorValue::~VectorValue() {
@@ -45,7 +45,7 @@ namespace LL2W {
 		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 
-	Value * getValue(ASTNode *node) {
+	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING: return new DoubleValue(node);
 			case TOK_DECIMAL:  return new IntValue(node);

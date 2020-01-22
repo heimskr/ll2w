@@ -77,6 +77,34 @@ namespace LL2W {
 		~LoadNode();
 		virtual std::string debugExtra() override;
 	};
+
+	struct IcmpNode: public InstructionNode {
+		const std::string *result;
+		IcmpCond cond;
+		Type *type;
+		Value *value1, *value2;
+
+		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2);
+		~IcmpNode();
+		virtual std::string debugExtra() override;
+	};
+
+	struct BrUncondNode: public InstructionNode {
+		const std::string *destination;
+		BrUncondNode(const std::string *destination_): destination(destination_) {}
+		BrUncondNode(const std::string &destination_): BrUncondNode(&destination_) {}
+		BrUncondNode(const ASTNode *node): BrUncondNode(node->lexerInfo) { delete node; }
+		virtual std::string debugExtra() override;
+	};
+
+	struct BrCondNode: public InstructionNode {
+		Value *condition;
+		const std::string *ifTrue, *ifFalse;
+
+		BrCondNode(const ASTNode *type, const ASTNode *condition_, const ASTNode *if_true, const ASTNode *if_false);
+		~BrCondNode();
+		virtual std::string debugExtra() override;
+	};
 }
 
 #endif

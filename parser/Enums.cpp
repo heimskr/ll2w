@@ -56,4 +56,9 @@ namespace LL2W {
 		{Ordering::None, "none"}, {Ordering::Unordered, "unordered"}, {Ordering::Monotonic, "monotonic"},
 		{Ordering::Acquire, "acquire"}, {Ordering::Release, "release"}, {Ordering::AcqRel, "acqrel"},
 		{Ordering::SeqCst, "seqcst"}};
+
+	std::unordered_map<IcmpCond, std::string> cond_map {
+		{IcmpCond::Eq, "eq"}, {IcmpCond::Ne, "ne"}, {IcmpCond::Ugt, "ugt"}, {IcmpCond::Uge, "uge"},
+		{IcmpCond::Ult, "ult"}, {IcmpCond::Ule, "ule"}, {IcmpCond::Sgt, "sgt"}, {IcmpCond::Sge, "sge"},
+		{IcmpCond::Slt, "slt"}, {IcmpCond::Sle, "sle"}};
 }
