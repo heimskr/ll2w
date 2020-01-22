@@ -43,7 +43,7 @@ namespace LL2W {
 	}
 
 	PointerType::operator std::string() {
-		return std::string(*subtype) + "\e[2m*\e[0m";
+		return std::string(*subtype) + "\e[1;2m*\e[0m";
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {
