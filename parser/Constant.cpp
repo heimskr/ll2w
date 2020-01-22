@@ -43,7 +43,7 @@ namespace LL2W {
 		for (ParAttr attr: parattrs)
 			out << " " << parattr_map.at(attr);
 		if (dereferenceable != -1)
-			out << " \e[34mdereferenceable\e[0;2m(" << dereferenceable << "\e[2m)\e[0m";
+			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
 		out << " " << std::string(*value);
 		return out.str();
 	}

@@ -82,10 +82,8 @@ namespace LL2W {
 	}
 
 	GetelementptrValue::GetelementptrValue(const ASTNode *node): ASTNode(TOK_GETELEMENTPTR, "") {
-		std::cout << "[[\n";
 		node->debug();
 		throw std::runtime_error("Unimplemented.");
-		std::cout << "]]\n";
 	}
 
 	GetelementptrValue::~GetelementptrValue() {
