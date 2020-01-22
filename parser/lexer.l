@@ -16,8 +16,11 @@
 %option noyywrap
 %option warn
 
-LABEL_COMMENT		("; <label>:")
-PREDS_COMMENT		("; preds = ")
+%x SGC
+%x PREDS
+%x LABEL1
+%x LABEL2
+
 LETTER				[A-Za-z_]
 DIGIT				[0-9]
 NUMBER				("-"?{DIGIT}+)
@@ -55,9 +58,24 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 
 %%
 
-{LABEL_COMMENT}				{ RTOKEN(LABEL_COMMENT) }
-{PREDS_COMMENT}				{ RTOKEN(PREDS_COMMENT) }
-{SGCOMMENT}					{ }
+<SGC>"<label>:"			{ BEGIN(LABEL1); RTOKEN(LABEL_COMMENT) }
+<LABEL1>[0-9]+				{ RTOKEN(DECIMAL) }
+<LABEL1>":"					{ BEGIN(LABEL2); }
+<LABEL1>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
+<LABEL1>[ \t]+				{ }
+<LABEL1>.					{ LL2W::Lexer::badchar(*yytext); }
+<LABEL2>"; preds ="			{ BEGIN(PREDS); RTOKEN(PREDS_COMMENT) }
+<LABEL2>[ \t]+				{ }
+<LABEL2>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
+<LABEL2>.					{ LL2W::Lexer::badchar(*yytext); }
+<SGC>\n						{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
+<SGC>.						{ }
+<PREDS>{PVAR}				{ RTOKEN(PVAR); }
+<PREDS>[ \t]+				{ }
+<PREDS>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
+<PREDS>.					{ LL2W::Lexer::badchar(*yytext); }
+
+";"							{ BEGIN(SGC); }
 {MLCOMMENT}					{ }
 [ \t]+						{ }
 \n							{ LL2W::Lexer::newline(); }
@@ -164,7 +182,8 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 
 {IDENT}						{ RTOKEN(IDENT) }
 
-.						{ LL2W::Lexer::badchar(*yytext); }
+.							{ LL2W::Lexer::badchar(*yytext); }
+
 %%
 
 #undef RTOKEN
