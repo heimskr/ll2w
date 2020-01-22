@@ -37,7 +37,7 @@ namespace LL2W {
 		ArrayType(int count_, const T &subtype_): count(count_), subtype(new T(subtype_)) {}
 		~ArrayType() { delete subtype; }
 		operator std::string() override {
-			return "[" + std::to_string(count) + " x " + std::string(*subtype) + "]";
+			return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
 		}
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 	};

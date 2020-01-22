@@ -101,8 +101,7 @@ namespace LL2W {
 		if (externallyInitialized)
 			out << " externally_initialized";
 		out << (isConstant? " constant" : " global");
-		out << " \e[0;32m" << std::string(*type);
-		out << "\e[0m";
+		out << "\e[0m " << std::string(*type);
 		if (initialValue && initialValue->symbol == TOK_CSTRING)
 			out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
 		return out.str();
