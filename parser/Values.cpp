@@ -89,9 +89,9 @@ namespace LL2W {
 	}
 
 	GetelementptrValue::~GetelementptrValue() {
-		// delete type;
-		// delete ptrType;
-		// delete variable;
+		delete type;
+		delete ptrType;
+		delete variable;
 	}
 
 	Value * getValue(const ASTNode *node) {

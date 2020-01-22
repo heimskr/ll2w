@@ -112,6 +112,7 @@ namespace LL2W {
 		std::unordered_set<Fastmath> fastmath;
 		std::unordered_set<RetAttr> retattrs;
 		std::vector<Constant> constants;
+		std::vector<int> attributeIndices;
 		int dereferenceable = -1, addrspace = -1;
 
 		Type *returnType;
@@ -120,6 +121,8 @@ namespace LL2W {
 		CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list);
+		~CallNode();
+		virtual std::string debugExtra() const override;
 	};
 }
 

@@ -154,7 +154,7 @@ csuvar: TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 // Attributes
 attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); D($2, $4, $5, $7); };
 attribute_list: attribute_list attribute { $$ = $1->adopt($2); }
-              | { $$ = new AN(ATTRIBUTE_LIST, ""); };
+              | { $$ = new AN(ATTRIBUTE_LIST); };
 attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }
          | TOK_STRING
          | fnattr;
@@ -175,7 +175,7 @@ target_type: "datalayout" | "triple";
 metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}" { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
-             | metadata_listitem { $$ = (new AN(METADATA_LIST, ""))->adopt($1); }
+             | metadata_listitem { $$ = (new AN(METADATA_LIST))->adopt($1); }
              | { $$ = nullptr; };
 
 metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | "null";
@@ -191,20 +191,20 @@ value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | "null";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
-           | type_any value { $$ = (new AN(VECTOR, ""))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
+           | type_any value { $$ = (new AN(VECTOR))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
 type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
-type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE, ""))->adopt({$2, $4}); D($1, $3, $5); };
+type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOATTYPE;
 type_ptr: type_any "*" { $$ = (new AN(POINTERTYPE, "*"))->adopt($1); D($2); };
-type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $4, $3}); D($2, $5, $6); }
-             | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE, ""))->adopt({$1, $3});     D($2, $4, $5); };
+type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $4, $3}); D($2, $5, $6); }
+             | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4, $5); };
 type_struct: "{" types "}"         { $$ = new StructNode(StructShape::Default, $2); D($1, $3);         }
            | "<" "{" types "}" ">" { $$ = new StructNode(StructShape::Packed,  $3); D($1, $2, $4, $5); };
 types: types "," type_any { $$ = $1->adopt($3); D($2); }
-     | type_any           { $$ = (new AN(TYPE_LIST, ""))->adopt($1); };
+     | type_any           { $$ = (new AN(TYPE_LIST))->adopt($1); };
 extra_ellipse: "," "..." { D($1); $$ = $2; } | { $$ = nullptr; };
 _ellipse: "..." | { $$ = nullptr; };
 
@@ -224,11 +224,11 @@ _initial_value: initial_value | { $$ = nullptr; };
 initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | "zeroinitializer" | "null"
              | "{" initial_value_list "}" { $$ = $2; D($1, $3); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
-                  | { $$ = new AN(INITIAL_VALUE_LIST, ""); }
+                  | { $$ = new AN(INITIAL_VALUE_LIST); }
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," gdef_align   { $$ = $1->adopt($3); D($2); }
-           | { $$ = new AN(GDEF_EXTRAS, ""); };
+           | { $$ = new AN(GDEF_EXTRAS); };
 section: TOK_SECTION TOK_STRING   { $$ = $1->adopt($2); };
 comdat:  TOK_COMDAT  "$" ident { $$ = $1->adopt($3); D($2); };
 gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
@@ -236,28 +236,28 @@ gdef_align: TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
 // Functions
 function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs
                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12); D($8, $10); };
-_retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST, ""); };
+_retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST); };
 function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); D($2, $3); }
              | function_types { $$ = new FunctionArgs($1, false); }
              | "..." { $$ = new FunctionArgs(nullptr, true); }
              | { $$ = new FunctionArgs(nullptr, false); };
-function_types: function_types "," function_type { $1->adopt($3); D($2); } | function_type { $$ = (new AN(FUNCTION_TYPE_LIST, ""))->adopt($1); };
+function_types: function_types "," function_type { $1->adopt($3); D($2); } | function_type { $$ = (new AN(FUNCTION_TYPE_LIST))->adopt($1); };
 function_type: type_any _parattr_list _variable { $$ = $1->adopt({$2, $3}); };
 _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; D($1); } | fnattr_list;
-fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST, ""); };
+fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST); };
 _unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
 _variable: TOK_PVAR | { $$ = nullptr; };
 variable: TOK_PVAR | TOK_GVAR;
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
-function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS, ""); };
+function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LABEL; D($2); };
 bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT _preds_list { $1->adopt({$2, $3, $4}); };
-_preds_list: preds_list | { $$ = new AN(PREDS_LIST, ""); };
+_preds_list: preds_list | { $$ = new AN(PREDS_LIST); };
 preds_list: preds_list "," TOK_PVAR { $1->adopt($3); D($2); }
-          | TOK_PVAR { $$ = (new AN(PREDS_LIST, ""))->adopt($1); };
+          | TOK_PVAR { $$ = (new AN(PREDS_LIST))->adopt($1); };
 
 
 // Instructions
@@ -306,18 +306,20 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" attribute_list
+i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
         { $$ = new CallNode($1, $3, $5, $6, $7, $8, $9, $10, $12, $14); D($2, $4, $11, $13); };
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;
-_constants: constants | { $$ = new AN(CONSTANT_LIST, ""); };
+_constants: constants | { $$ = new AN(CONSTANT_LIST); };
 constants: constants "," constant { $1->adopt($3); D($2); }
-         | constant               { $$ = (new AN(CONSTANT_LIST, ""))->adopt($1); };
+         | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
+call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
+
 
 // Constants
-constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT, ""))->adopt({$1, $2, $3}); };
+constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
 constant_right: operand | const_expr;
-_parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST, ""); };
+_parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
@@ -326,10 +328,10 @@ const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_any "*" variable decimals ")"
                   { $$ = new GetelementptrValue($2, $4, $6, $8, $9); D($1, $3, $5, $7, $10); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
-decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST, ""); };
+decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST); };
 
 // Miscellaneous
-fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS, "") };
+fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS) };
 
 %%
 #pragma GCC diagnostic pop

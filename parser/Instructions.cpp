@@ -10,7 +10,7 @@ namespace LL2W {
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
 	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
-		result = result_->lexerInfo;
+		result = StringSet::intern(result_->extractName());
 		delete result_;
 
 		for (ASTNode *child: *fastmath_) {
@@ -54,7 +54,7 @@ namespace LL2W {
 
 	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m" << *result << " \e[2m= \e[0;36mselect\e[0;38;5;202m";
+		out << "\e[32m%" << *result << " \e[2m= \e[0;91mselect\e[0;38;5;202m";
 		for (Fastmath flag: fastmath)
 			out << " " << fastmath_map.at(flag);
 		out << " " << std::string(*conditionType) << " " << std::string(*conditionValue) << "\e[2m,\e[0m "
@@ -67,7 +67,7 @@ namespace LL2W {
 
 	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 	                       ASTNode *addrspace_) {
-		result = result_->lexerInfo;
+		result = StringSet::intern(result_->extractName());
 		delete result_;
 
 		if (inalloca_) {
@@ -104,15 +104,15 @@ namespace LL2W {
 
 	std::string AllocaNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
 		if (inalloca)
 			out << " \e[38;5;202minalloca\e[0m";
 		if (numelementsType)
 			out << "\e[2m,\e[0m " << std::string(*numelementsType) << " " << std::string(*numelementsValue);
 		if (align != -1)
-			out << "\e[2m,\e[0;36m align\e[0m " << align;
+			out << "\e[2m,\e[0;34m align\e[0m " << align;
 		if (addrspace != -1)
-			out << "\e[2m,\e[0;36m addrspace\e[0m(" << addrspace << ")";
+			out << "\e[2m,\e[0;34m addrspace\e[0m(" << addrspace << ")";
 		return out.str();
 	}
 
@@ -215,13 +215,13 @@ namespace LL2W {
 		out << "\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m " << std::string(*ptrType)
 		    << " \e[32m%" << ptrIndex << "\e[0m";
 		if (syncscope)
-			out << " \e[36msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
+			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (align != -1)
-			out << "\e[2m,\e[0;36m align \e[0m" << align;
+			out << "\e[2m,\e[0;34m align \e[0m" << align;
 		if (nontemporalIndex != -1)
-			out << "\e[2m,\e[0;36m !nontemporal \e[0m" << nontemporalIndex;
+			out << "\e[2m,\e[0;34m !nontemporal \e[0m" << nontemporalIndex;
 		if (invariantGroupIndex != -1)
-			out << "\e[2m,\e[0;36m !invariant.group \e[0m" << invariantGroupIndex;
+			out << "\e[2m,\e[0;34m !invariant.group \e[0m" << invariantGroupIndex;
 		return out.str();
 	}
 
@@ -340,7 +340,7 @@ namespace LL2W {
 
 	std::string LoadNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m" << *result << "\e[0;2m = \e[0;91mload\e[0m";
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91mload\e[0m";
 		if (atomic)
 			out << " \e[38;5;202matomic\e[0m";
 		if (volatile_)
@@ -348,15 +348,15 @@ namespace LL2W {
 		out << "\e[0m " << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType)
 		    << " \e[32m%" << ptrIndex << "\e[0m";
 		if (syncscope)
-			out << " \e[36msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
+			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (ordering != Ordering::None)
 			out << " \e[38;5;202m" << ordering_map.at(ordering) << "\e[0m";
 		if (align != -1)
-			out << "\e[2m,\e[0;36m align \e[0m" << align;
+			out << "\e[2m,\e[0;34m align \e[0m" << align;
 		if (nontemporalIndex != -1)
-			out << "\e[2m,\e[0;36m !nontemporal \e[0m" << nontemporalIndex;
+			out << "\e[2m,\e[0;34m !nontemporal \e[0m" << nontemporalIndex;
 		if (invariantGroupIndex != -1)
-			out << "\e[2m,\e[0;36m !invariant.group \e[0m" << invariantGroupIndex;
+			out << "\e[2m,\e[0;34m !invariant.group \e[0m" << invariantGroupIndex;
 		return out.str();
 	}
 
@@ -389,7 +389,7 @@ namespace LL2W {
 
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m" << *result << "\e[0;2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << std::string(*type)
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << std::string(*type)
 		    << " " << std::string(*value1) << ", " << std::string(*value2);
 		return out.str();
 	}
@@ -483,6 +483,26 @@ namespace LL2W {
 			delete _constants;
 		}
 
-		adopt(attribute_list);
+		for (ASTNode *child: *attribute_list)
+			attributeIndices.push_back(atoi(child->lexerInfo->c_str()));
+		delete attribute_list;
+	}
+
+	CallNode::~CallNode() {
+		delete returnType;
+		delete name;
+	}
+
+	std::string CallNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m =";
+		if (tail)
+			out << " \e[0;34m" << *tail;
+		out << " \e[0;91mcall\e[0m";
+		for (Fastmath flag: fastmath)
+			out << " " << fastmath_map.at(flag);
+		if (cconv)
+			out << " \e[34m" << *cconv << "\e[0m";
+		return out.str();
 	}
 }

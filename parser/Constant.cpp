@@ -13,10 +13,8 @@ namespace LL2W {
 		ASTNode *value_node = node->at(2);
 		if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 			value = gep_value;
-			std::cout << "gep: " << value << "\n";
 		} else {
 			value = getValue(value_node);
-			std::cout << "From getValue: " << value << "\n";
 		}
 
 		for (ASTNode *child: *node->at(1)) {

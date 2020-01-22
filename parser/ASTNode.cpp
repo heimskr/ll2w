@@ -34,6 +34,8 @@ namespace LL2W {
 		lexerInfo = StringSet::intern(info);
 	}
 
+	ASTNode::ASTNode(int sym): ASTNode(sym, "") {}
+
 	ASTNode::~ASTNode() {
 		for (ASTNode *child: children)
 			delete child;
