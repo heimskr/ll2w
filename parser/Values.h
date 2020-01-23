@@ -100,6 +100,11 @@ namespace LL2W {
 			operator std::string() override;
 	};
 
+	struct VoidValue: public Value {
+		Value * copy() const override { return new VoidValue(); }
+		operator std::string() override { return "void"; }
+	};
+
 	Value * getValue(const ASTNode *);
 }
 
