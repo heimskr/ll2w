@@ -108,28 +108,47 @@ namespace LL2W {
 		virtual std::string debugExtra() const override;
 	};
 
-	struct CallNode: public InstructionNode {
-		const std::string *result = nullptr, *cconv = nullptr, *tail = nullptr;
+	class CallInvokeNode: public InstructionNode {
+		protected:
+			CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
+			               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
+			               ASTNode *attribute_list);
+
+		public:
+			const std::string *result = nullptr, *cconv = nullptr;
+			std::unordered_set<RetAttr> retattrs;
+			std::vector<Constant *> constants;
+			std::vector<int> attributeIndices;
+			int dereferenceable = -1, addrspace = -1;
+
+			// For functions with varargs (and optionally for non-varargs functions), the function argument types can be
+			// specified after the function return type.
+			bool argumentsExplicit = false;
+			std::vector<Type *> argumentTypes;
+			bool argumentEllipsis = false;
+
+			Type *returnType;
+			VariableValue *name;
+
+			~CallInvokeNode();
+	};
+
+	struct CallNode: public CallInvokeNode {
+		const std::string *tail = nullptr;
 		std::unordered_set<Fastmath> fastmath;
-		std::unordered_set<RetAttr> retattrs;
-		std::vector<Constant *> constants;
-		std::vector<int> attributeIndices;
-		int dereferenceable = -1, addrspace = -1;
 
-		// For functions with varargs (and optionally for non-varargs functions), the function argument types can be
-		// specified after the function return type.
-		bool argumentsExplicit = false;
-		std::vector<Type *> argumentTypes;
-		bool argumentEllipsis = false;
-
-		Type *returnType;
-		VariableValue *name;
-
-		CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
+		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list);
-		~CallNode();
 		virtual std::string debugExtra() const override;
+	};
+
+	struct InvokeNode: public CallInvokeNode {
+		const std::string *normalLabel, *exceptionLabel;
+
+		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
+		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
+		           ASTNode *normal_label, ASTNode *exception_label);
 	};
 
 	struct GetelementptrNode: public InstructionNode {

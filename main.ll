@@ -275,11 +275,11 @@ define void @_Z10parsertestv() #1 personality i8* bitcast (i32 (...)* @__gxx_per
 ; <label>:4:                                      ; preds = %0
   call void @_ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED1Ev(%"class.std::__1::basic_string"* %1) #8
   call void @_ZN4LL2W6Parser5parseEv()
-  %5 = load %"class.LL2W::ASTNode"*, %"class.LL2W::ASTNode"** @_ZN4LL2W6Parser4rootE, align 8
+;  %5 = load %"class.LL2W::ASTNode"*, %"class.LL2W::ASTNode"** @_ZN4LL2W6Parser4rootE, align 8
   call void @_ZN4LL2W7ASTNode5debugEib(%"class.LL2W::ASTNode"* %5, i32 0, i1 zeroext false)
   call void @_ZN4LL2W6Parser4doneEv()
   ret void
-
+/*
 ; <label>:6:                                      ; preds = %0
   %7 = landingpad { i8*, i32 }
           cleanup
@@ -296,6 +296,7 @@ define void @_Z10parsertestv() #1 personality i8* bitcast (i32 (...)* @__gxx_per
   %13 = insertvalue { i8*, i32 } undef, i8* %11, 0
   %14 = insertvalue { i8*, i32 } %13, i32 %12, 1
   resume { i8*, i32 } %14
+*/
 }/*
 
 ; Function Attrs: noinline optnone ssp uwtable

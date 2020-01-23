@@ -146,7 +146,7 @@ namespace LL2W {
 			case TOK_GVAR:          return new GlobalValue(node);
 			case TOK_GETELEMENTPTR: return new GetelementptrValue(node);
 			case TOK_VOID:          return new VoidValue();
-			case ANONYMOUS_STRUCT:  return new StructValue(node);
+			case STRUCT_VALUE:      return new StructValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

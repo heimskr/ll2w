@@ -419,29 +419,13 @@ namespace LL2W {
 			"\e[32m" + *ifFalse + "\e[39m";
 	}
 
-	CallNode::CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
-		               ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args,
-		               ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list) {
-		if (pvar) {
-			result = StringSet::intern(pvar->extractName());
-			delete pvar;
+	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
+	                               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
+	                               ASTNode *attribute_list) {
+		if (_result) {
+			result = StringSet::intern(_result->extractName());
+			delete _result;
 		}
-
-		if (_tail) {
-			tail = _tail->lexerInfo;
-			delete _tail;
-		}
-
-		for (ASTNode *child: *fastmath_flags) {
-			const std::string &fmname = *child->lexerInfo;
-			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
-				if (fmname == pair.second) {
-					fastmath.insert(pair.first);
-					break;
-				}
-			}
-		}
-		delete fastmath_flags;
 
 		if (_cconv) {
 			cconv = _cconv->lexerInfo;
@@ -511,13 +495,35 @@ namespace LL2W {
 		delete attribute_list;
 	}
 
-	CallNode::~CallNode() {
+	CallInvokeNode::~CallInvokeNode() {
 		delete returnType;
 		delete name;
 		for (Constant *constant: constants)
 			delete constant;
 		for (Type *type: argumentTypes)
 			delete type;
+	}
+
+	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
+	                   ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args,
+	                   ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list):
+	                   CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
+	                                  _constants, attribute_list) {
+		if (_tail) {
+			tail = _tail->lexerInfo;
+			delete _tail;
+		}
+
+		for (ASTNode *child: *fastmath_flags) {
+			const std::string &fmname = *child->lexerInfo;
+			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
+				if (fmname == pair.second) {
+					fastmath.insert(pair.first);
+					break;
+				}
+			}
+		}
+		delete fastmath_flags;
 	}
 
 	std::string CallNode::debugExtra() const {
@@ -561,6 +567,15 @@ namespace LL2W {
 		}
 		out << "\e[2m)\e[0m";
 		return out.str();
+	}
+
+	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
+	                       ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
+	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label):
+	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
+	                                      _constants, attribute_list) {
+		normal_label->debug();
+		exception_label->debug();
 	}
 
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,

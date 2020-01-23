@@ -184,6 +184,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "personality"				{ RTOKEN(PERSONALITY) }
 "to"						{ RTOKEN(TO) }
 "invoke"					{ RTOKEN(INVOKE) }
+"unwind"					{ RTOKEN(UNWIND) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

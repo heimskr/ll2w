@@ -123,6 +123,7 @@ using AN = LL2W::ASTNode;
 %token TOK_RET "ret"
 %token TOK_PERSONALITY "personality"
 %token TOK_INVOKE "invoke"
+%token TOK_UNWIND "unwind"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -319,9 +320,9 @@ label: "label" TOK_PVAR { $$ = $2; D($1); };
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
         { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14); D($3, $11, $13); };
 _result: TOK_PVAR "=" { D($2); } | { $$ = nullptr; };
-_args: { $$ = nullptr; }
-     | "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
-     | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
+_args: args | { $$ = nullptr; };
+args: "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
+    | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
 
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;
@@ -338,7 +339,9 @@ _inrange: TOK_INRANGE | { $$ = nullptr; };
 
 i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
 
-i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs  ;
+i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
+          /* TODO: operand bundles */ "to" label "unwind" label
+          { $$ = new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16); D($2, $9, $11, $13, $15); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
@@ -346,7 +349,7 @@ constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
