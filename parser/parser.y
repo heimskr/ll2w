@@ -201,7 +201,7 @@ value_pairs: value_pairs "," type_any value { $1->adopt($2->adopt({$3, $4})); }
            | type_any value { $$ = (new AN(VALUE_LIST))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
-type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
+type_any: type_nonvoid | TOK_VOID;
 type_nonvoid: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
