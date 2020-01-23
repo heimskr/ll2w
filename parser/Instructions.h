@@ -116,11 +116,17 @@ namespace LL2W {
 		std::vector<int> attributeIndices;
 		int dereferenceable = -1, addrspace = -1;
 
+		// For functions with varargs (and optionally for non-varargs functions), the function argument types can be
+		// specified after the function return type.
+		bool argumentsExplicit = false;
+		std::vector<Type *> argumentTypes;
+		bool argumentEllipsis = false;
+
 		Type *returnType;
 		VariableValue *name;
 
 		CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
-		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *function_name, ASTNode *_constants,
+		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list);
 		~CallNode();
 		virtual std::string debugExtra() const override;

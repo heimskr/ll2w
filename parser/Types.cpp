@@ -56,7 +56,7 @@ namespace LL2W {
 				argumentTypes.push_back(getType(child));
 		}
 
-		ellipse = node->at(1) != nullptr;
+		ellipsis = node->at(1) != nullptr;
 	}
 
 	FunctionType::~FunctionType() {
@@ -79,9 +79,9 @@ namespace LL2W {
 				out << std::string(*argumentTypes.at(i));
 			}
 
-			if (ellipse)
+			if (ellipsis)
 				out << ", ...";
-		} else if (ellipse) {
+		} else if (ellipsis) {
 			out << "...";
 		}
 

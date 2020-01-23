@@ -137,7 +137,7 @@ namespace LL2W {
 			if (arg.originalName)
 				out << " " << *arg.originalName;
 		}
-		if (arguments->ellipse)
+		if (arguments->ellipsis)
 			out << (arguments->arguments.empty()? "..." : ", ...");
 		out << ")\e[0;36m";
 		if (linkage != Linkage::Default)

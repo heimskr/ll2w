@@ -22,7 +22,7 @@ declare i32 @fprintf(%struct.__sFILE* nocapture, i8* nocapture readonly, ...) lo
 declare noalias i8* @calloc(i64, i64) local_unnamed_addr #1
 declare i32 @fclose(%struct.__sFILE* nocapture) local_unnamed_addr #1
 declare void @free(i8* nocapture %"foo", i8 nocapture %bar) local_unnamed_addr
-declare void @ellipse(...) local_unnamed_addr #1
+declare void @ellipsis(...) local_unnamed_addr #1
 
 
 %struct.opaque = type opaque

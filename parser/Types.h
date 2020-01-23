@@ -72,7 +72,7 @@ namespace LL2W {
 		public:
 			Type *returnType;
 			std::vector<Type *> argumentTypes;
-			bool ellipse;
+			bool ellipsis;
 			FunctionType(const ASTNode *);
 			FunctionType(Type *return_type, std::vector<Type *> &argument_types):
 				returnType(return_type), argumentTypes(std::move(argument_types)) {}

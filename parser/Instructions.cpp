@@ -420,7 +420,7 @@ namespace LL2W {
 	}
 
 	CallNode::CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
-		               ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
+		               ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args,
 		               ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list) {
 		if (pvar) {
 			result = StringSet::intern(pvar->extractName());
@@ -470,6 +470,15 @@ namespace LL2W {
 
 		returnType = getType(return_type);
 		delete return_type;
+
+		if (_args) {
+			argumentsExplicit = true;
+			_args->debug();
+			if (_args->size() == 2) { // Both a typelist and ellipsis are specified
+
+			}
+			delete _args;
+		}
 
 		name = dynamic_cast<VariableValue *>(getValue(function_name));
 		delete function_name;

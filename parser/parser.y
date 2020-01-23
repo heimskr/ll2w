@@ -66,7 +66,7 @@ using AN = LL2W::ASTNode;
 %token TOK_LANGLE "<"
 %token TOK_RANGLE ">"
 %token TOK_VOID "void"
-%token TOK_ELLIPSE "..."
+%token TOK_ELLIPSIS "..."
 %token TOK_ASTERISK "*"
 %token TOK_HASH "#"
 %token TOK_COLON ":"
@@ -208,14 +208,14 @@ type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOATTYPE;
 type_ptr: type_any "*" { $$ = (new AN(POINTERTYPE, "*"))->adopt($1); D($2); };
-type_function: type_any "(" types extra_ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $4, $3}); D($2, $5, $6); }
-             | type_any "("            _ellipse ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4, $5); };
+type_function: type_any "(" types extra_ellipsis ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $4, $3}); D($2, $5, $6); }
+             | type_any "("            _ellipsis ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4, $5); };
 type_struct: "{" types "}"         { $$ = new StructNode(StructShape::Default, $2); D($1, $3);         }
            | "<" "{" types "}" ">" { $$ = new StructNode(StructShape::Packed,  $3); D($1, $2, $4, $5); };
 types: types "," type_any { $$ = $1->adopt($3); D($2); }
      | type_any           { $$ = (new AN(TYPE_LIST))->adopt($1); };
-extra_ellipse: "," "..." { D($1); $$ = $2; } | { $$ = nullptr; };
-_ellipse: "..." | { $$ = nullptr; };
+extra_ellipsis: "," "..." { D($1); $$ = $2; } | { $$ = nullptr; };
+_ellipsis: "..." | { $$ = nullptr; };
 
 // Globals
 global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
@@ -315,9 +315,12 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
-        { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $11, $13); D($3, $10, $12); };
+i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
+        { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14); D($3, $11, $13); };
 _result: TOK_PVAR "=" { D($2); } | { $$ = nullptr; };
+_args: { $$ = nullptr; }
+     | "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
+     | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
 
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;

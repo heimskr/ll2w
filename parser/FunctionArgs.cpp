@@ -9,7 +9,7 @@ namespace LL2W {
 	FunctionArgument::FunctionArgument(Type *type_, const std::string &name_):
 		type(type_), name(StringSet::intern(name_)) {}
 
-	FunctionArgs::FunctionArgs(ASTNode *list, bool ellipse_): ASTNode(FUNCTION_ARGS, ""), ellipse(ellipse_) {
+	FunctionArgs::FunctionArgs(ASTNode *list, bool ellipsis_): ASTNode(FUNCTION_ARGS, ""), ellipsis(ellipsis_) {
 		if (list) {
 			arguments.reserve(list->size());
 			for (ASTNode *child: list->children)

@@ -143,7 +143,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "<"							{ RTOKEN(LANGLE) }
 ">"							{ RTOKEN(RANGLE) }
 "void"						{ RTOKEN(VOID) }
-"..."						{ RTOKEN(ELLIPSE) }
+"..."						{ RTOKEN(ELLIPSIS) }
 "*"							{ RTOKEN(ASTERISK) }
 "#"							{ RTOKEN(HASH) }
 ":"							{ RTOKEN(COLON) }
