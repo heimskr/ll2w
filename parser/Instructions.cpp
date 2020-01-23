@@ -581,6 +581,44 @@ namespace LL2W {
 		delete exception_label;
 	}
 
+	std::string InvokeNode::debugExtra() const {
+		std::stringstream out;
+		if (result)
+			out << "\e[32m%" << *result << "\e[0;2m = ";
+		out << "\e[0;91minvoke\e[0m";
+		if (cconv)
+			out << " \e[34m" << *cconv << "\e[0;2m .\e[0m";
+		for (RetAttr attr: retattrs)
+			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
+		if (dereferenceable != -1)
+			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
+		if (!retattrs.empty() || dereferenceable != -1)
+			out << " \e[0;2m.\e[0m";
+		if (addrspace != -1)
+			out << " \e[34maddrspace\e[0;2m(\e[0m" << addrspace << "\e[2m)\e[0m";
+		out << " " << std::string(*returnType);
+		if (argumentsExplicit) {
+			out << " \e[1;2m(\e[0m";
+			for (auto begin = argumentTypes.cbegin(), iter = begin, end = argumentTypes.cend(); iter != end; ++iter) {
+				if (iter != begin)
+					out << "\e[2m, \e[0m";
+				out << std::string(**iter);
+			}
+			if (argumentEllipsis)
+				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[0m";
+			out << "\e[1;2m)\e[0m";
+		}
+		out << " " << std::string(*name) << "\e[2m(\e[0m";
+		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
+			if (iter != begin)
+				out << "\e[2m,\e[0m ";
+			out << std::string(**iter);
+		}
+		out << "\e[2m)\e[0;91m to \e[34mlabel %" << *normalLabel << " \e[91munwind\e[34m label %" << *exceptionLabel
+		    << "\e[0m";
+		return out.str();
+	}
+
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
 	                                     ASTNode *ptrval, ASTNode *indices_) {
 		result = StringSet::intern(pvar->extractName());

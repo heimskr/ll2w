@@ -149,6 +149,7 @@ namespace LL2W {
 		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
 		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
 		           ASTNode *normal_label, ASTNode *exception_label);
+		virtual std::string debugExtra() const override;
 	};
 
 	struct GetelementptrNode: public InstructionNode {
