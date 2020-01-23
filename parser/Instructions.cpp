@@ -531,7 +531,7 @@ namespace LL2W {
 		if (result)
 			out << "\e[32m%" << *result << "\e[0;2m = ";
 		if (tail)
-			out << "\e[0;34m " << *tail;
+			out << "\e[0;34m" << *tail << " ";
 		out << "\e[0;91mcall\e[0m";
 		for (Fastmath flag: fastmath)
 			out << " \e[34m" << fastmath_map.at(flag) << "\e[0m";
