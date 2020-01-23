@@ -541,7 +541,19 @@ namespace LL2W {
 			out << " \e[0;2m.\e[0m";
 		if (addrspace != -1)
 			out << " \e[34maddrspace\e[0;2m(\e[0m" << addrspace << "\e[2m)\e[0m";
-		out << " " << std::string(*returnType) << " " << std::string(*name) << "\e[2m(\e[0m";
+		out << " " << std::string(*returnType);
+		if (argumentsExplicit) {
+			out << " \e[1;2m(\e[0m";
+			for (auto begin = argumentTypes.cbegin(), iter = begin, end = argumentTypes.cend(); iter != end; ++iter) {
+				if (iter != begin)
+					out << "\e[2m, \e[0m";
+				out << std::string(**iter);
+			}
+			if (argumentEllipsis)
+				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[0m";
+			out << "\e[1;2m)\e[0m";
+		}
+		out << " " << std::string(*name) << "\e[2m(\e[0m";
 		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
 			if (iter != begin)
 				out << "\e[2m,\e[0m ";
