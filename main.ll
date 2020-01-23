@@ -251,7 +251,7 @@ define i32 @main(i32, i8**) #0 {
 }
 
 ; Function Attrs: noinline optnone ssp uwtable
-define linkonce_odr dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160), i8*) #1 {
+define linkonce_odr dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160), i8*) #1 personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*) {
   %3 = alloca %"class.std::__1::basic_ostream"*, align 8
   %4 = alloca i8*, align 8
   store %"class.std::__1::basic_ostream"* %0, %"class.std::__1::basic_ostream"** %3, align 8
@@ -270,8 +270,7 @@ define void @_Z10parsertestv() #1 personality i8* bitcast (i32 (...)* @__gxx_per
   %2 = alloca i8*
   %3 = alloca i32
   call void @_ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEC1IDnEEPKc(%"class.std::__1::basic_string"* %1, i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.47, i32 0, i32 0))
-  invoke void @_ZN4LL2W6Parser4openERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE(%"class.std::__1::basic_string"* dereferenceable(24) %1)
-          to label %4 unwind label %6
+  invoke void @foobar(%class.cls* dereferenceable(24) %1) to label %4 unwind label %6
 
 ; <label>:4:                                      ; preds = %0
   call void @_ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED1Ev(%"class.std::__1::basic_string"* %1) #8

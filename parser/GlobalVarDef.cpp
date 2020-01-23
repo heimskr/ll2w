@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdlib>
 #include <sstream>
 
@@ -76,8 +77,12 @@ namespace LL2W {
 				if (str->empty() || str->front() != '$')
 					yyerror("Comdat expected to begin with \"$\"");
 				comdat = str;
-			} else
+			} else if (!extra) {
+				std::cout << "\e[91m!extra\e[0m\n";
+			} else {
+				std::cout << "[" << Parser::getName(extra->symbol) << "]\n";
 				extra->debug();
+			}
 		}
 	}
 

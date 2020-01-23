@@ -183,6 +183,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "ret"						{ RTOKEN(RET) }
 "personality"				{ RTOKEN(PERSONALITY) }
 "to"						{ RTOKEN(TO) }
+"invoke"					{ RTOKEN(INVOKE) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

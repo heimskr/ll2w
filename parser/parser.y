@@ -122,6 +122,7 @@ using AN = LL2W::ASTNode;
 %token TOK_INRANGE "inrange"
 %token TOK_RET "ret"
 %token TOK_PERSONALITY "personality"
+%token TOK_INVOKE "invoke"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -235,7 +236,7 @@ initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST); }
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
-           | gdef_extras "," TOK_ALIGN TOK_DECIMAL   { $$ = $1->adopt($2->adopt($3)); D($2); }
+           | gdef_extras "," TOK_ALIGN TOK_DECIMAL   { $$ = $1->adopt($3->adopt($4)); D($2); }
            | { $$ = new AN(GDEF_EXTRAS); };
 section: TOK_SECTION TOK_STRING       { $$ = $1->adopt($2); };
 comdat:  TOK_COMDAT "(" TOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
@@ -270,7 +271,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret;
+           | i_call | i_getelementptr | i_ret | i_invoke;
 
 i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -314,10 +315,9 @@ i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
 i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
-        { $$ = new CallNode($1, $3, $5, $6, $7, $8, $9, $10, $12, $14); D($2, $4, $11, $13); }
-      | _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
-        { $$ = new CallNode(nullptr, $1, $3, $4, $5, $6, $7, $8, $10, $12); D($2, $9, $11); };
+i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
+        { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $11, $13); D($3, $10, $12); };
+_result: TOK_PVAR "=" { D($2); } | { $$ = nullptr; };
 
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;
@@ -333,6 +333,8 @@ gep_indices: { $$ = new AN(INDEX_LIST); } | gep_indices "," _inrange type_any TO
 _inrange: TOK_INRANGE | { $$ = nullptr; };
 
 i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
+
+i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs  ;
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
