@@ -2,10 +2,10 @@
 
 namespace LL2W {
 	std::unordered_map<Linkage, std::string> linkage_map {
-		{Linkage::Private, "private"}, {Linkage::Appending, "appending"}, {Linkage::AvailableExternally,
-		"available_externally"}, { Linkage::Weak, "weak"}, {Linkage::Linkonce, "linkonce"}, {Linkage::ExternWeak,
-		"extern_weak"}, {Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::WeakOdr, "weak_odr"}, {Linkage::External,
-		"external"}, {Linkage::Common, "common"}, {Linkage::Internal, "internal"}};
+		{Linkage::Private,     "private"},      {Linkage::Appending,  "appending"},   {Linkage::Weak,    "weak"},
+		{Linkage::Linkonce,    "linkonce"},     {Linkage::ExternWeak, "extern_weak"}, {Linkage::WeakOdr, "weak_odr"},
+		{Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::External,   "external"},    {Linkage::Common,  "common"},
+		{Linkage::Internal,    "internal"},     {Linkage::AvailableExternally, "available_externally"}};
 
 	std::unordered_map<CConv, std::string> cconv_map {
 		{CConv::Default, "default"}, {CConv::ccc, "ccc"}, {CConv::cxx_fast_tlscc, "cxx_fast_tlscc"},
@@ -29,43 +29,49 @@ namespace LL2W {
 		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
 
 	std::unordered_map<ParAttr, std::string> parattr_map {
-		{ParAttr::Byval, "byval"}, {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret, "sret"},
+		{ParAttr::Byval, "byval"},         {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret, "sret"},
 		{ParAttr::Nocapture, "nocapture"}, {ParAttr::Readonly, "readonly"}};
 
 	std::unordered_map<FnAttr, std::string> fnattr_map {
-		{FnAttr::alwaysinline, "alwaysinline"}, {FnAttr::noredzone, "noredzone"}, {FnAttr::convergent, "convergent"},
-		{FnAttr::norecurse, "norecurse"}, {FnAttr::inlinehint, "inlinehint"},
-		{FnAttr::inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"}, {FnAttr::sspreq, "sspreq"},
-		{FnAttr::sanitize_memory, "sanitize_memory"}, {FnAttr::jumptable, "jumptable"}, {FnAttr::minsize, "minsize"},
-		{FnAttr::nobuiltin, "nobuiltin"}, {FnAttr::noduplicate, "noduplicate"},
-		{FnAttr::noimplicitfloat, "noimplicitfloat"}, {FnAttr::builtin, "builtin"}, {FnAttr::uwtable, "uwtable"},
-		{FnAttr::nounwind, "nounwind"}, {FnAttr::optnone, "optnone"}, {FnAttr::optsize, "optsize"},
-		{FnAttr::readnone, "readnone"}, {FnAttr::naked, "naked"}, {FnAttr::writeonly, "writeonly"},
-		{FnAttr::argmemonly, "argmemonly"}, {FnAttr::returns_twice, "returns_twice"}, {FnAttr::safestack, "safestack"},
-		{FnAttr::inaccessiblememonly, "inaccessiblememonly"}, {FnAttr::cold, "cold"}, {FnAttr::noreturn, "noreturn"},
-		{FnAttr::nonlazybind, "nonlazybind"}, {FnAttr::sanitize_thread, "sanitize_thread"}, {FnAttr::thunk, "thunk"},
-		{FnAttr::sspstrong, "sspstrong"}, {FnAttr::sanitize_address, "sanitize_address"},
-		{FnAttr::noinline, "noinline"}, {FnAttr::ssp, "ssp"}, {FnAttr::speculatable, "speculatable"},
-		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly, "readonly"}};
+		{FnAttr::alwaysinline,       "alwaysinline"},       {FnAttr::noredzone,           "noredzone"},
+		{FnAttr::convergent,         "convergent"},         {FnAttr::norecurse,           "norecurse"},
+		{FnAttr::inlinehint,         "inlinehint"},         {FnAttr::sspreq,              "sspreq"},
+		{FnAttr::sanitize_memory,    "sanitize_memory"},    {FnAttr::jumptable,           "jumptable"},
+		{FnAttr::minsize,            "minsize"},            {FnAttr::nobuiltin,           "nobuiltin"},
+		{FnAttr::noduplicate,        "noduplicate"},        {FnAttr::noimplicitfloat,     "noimplicitfloat"},
+		{FnAttr::builtin,            "builtin"},            {FnAttr::uwtable,             "uwtable"},
+		{FnAttr::nounwind,           "nounwind"},           {FnAttr::optnone,             "optnone"},
+		{FnAttr::optsize,            "optsize"},            {FnAttr::readnone,            "readnone"},
+		{FnAttr::naked,              "naked"},              {FnAttr::writeonly,           "writeonly"},
+		{FnAttr::argmemonly,         "argmemonly"},         {FnAttr::returns_twice,       "returns_twice"},
+		{FnAttr::safestack,          "safestack"},          {FnAttr::inaccessiblememonly, "inaccessiblememonly"},
+		{FnAttr::cold,               "cold"},               {FnAttr::noreturn,            "noreturn"},
+		{FnAttr::nonlazybind,        "nonlazybind"},        {FnAttr::sanitize_thread,     "sanitize_thread"},
+		{FnAttr::thunk,              "thunk"},              {FnAttr::sspstrong,           "sspstrong"},
+		{FnAttr::sanitize_address,   "sanitize_address"},   {FnAttr::noinline,            "noinline"},
+		{FnAttr::ssp,                "ssp"},                {FnAttr::speculatable,        "speculatable"},
+		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly,            "readonly"},
+		{FnAttr::inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"}};
 
 	std::unordered_map<Fastmath, std::string> fastmath_map {
-		{Fastmath::Nnan, "nnan"}, {Fastmath::Ninf, "ninf"}, {Fastmath::Nsz, "nsz"}, {Fastmath::Reassoc, "reassoc"},
-		{Fastmath::Contract, "contract"}, {Fastmath::Afn, "afn"}, {Fastmath::Arcp, "arcp"}, {Fastmath::Fast, "fast"}};
+		{Fastmath::Nnan,    "nnan"},    {Fastmath::Ninf,     "ninf"},     {Fastmath::Nsz, "nsz"},
+		{Fastmath::Reassoc, "reassoc"}, {Fastmath::Contract, "contract"}, {Fastmath::Afn, "afn"},
+		{Fastmath::Arcp,    "arcp"},    {Fastmath::Fast,     "fast"}};
 
 	std::unordered_map<Ordering, std::string> ordering_map {
-		{Ordering::None, "none"}, {Ordering::Unordered, "unordered"}, {Ordering::Monotonic, "monotonic"},
-		{Ordering::Acquire, "acquire"}, {Ordering::Release, "release"}, {Ordering::AcqRel, "acqrel"},
+		{Ordering::None,    "none"},    {Ordering::Unordered, "unordered"}, {Ordering::Monotonic, "monotonic"},
+		{Ordering::Acquire, "acquire"}, {Ordering::Release,   "release"},   {Ordering::AcqRel,    "acqrel"},
 		{Ordering::SeqCst, "seqcst"}};
 
 	std::unordered_map<IcmpCond, std::string> cond_map {
-		{IcmpCond::Eq, "eq"}, {IcmpCond::Ne, "ne"}, {IcmpCond::Ugt, "ugt"}, {IcmpCond::Uge, "uge"},
+		{IcmpCond::Eq,  "eq"},  {IcmpCond::Ne,  "ne"},  {IcmpCond::Ugt, "ugt"}, {IcmpCond::Uge, "uge"},
 		{IcmpCond::Ult, "ult"}, {IcmpCond::Ule, "ule"}, {IcmpCond::Sgt, "sgt"}, {IcmpCond::Sge, "sge"},
 		{IcmpCond::Slt, "slt"}, {IcmpCond::Sle, "sle"}};
 
 	std::unordered_map<Conversion, std::string> conversion_map {
-		{Conversion::Trunc, "trunc"}, {Conversion::Zext, "zext"}, {Conversion::Sext, "sext"},
-		{Conversion::Fptrunc, "fptrunc"}, {Conversion::Fpext, "fpext"}, {Conversion::Fptoui, "fptoui"},
-		{Conversion::Fptosi, "fptosi"}, {Conversion::Uitofp, "uitofp"}, {Conversion::Sitofp, "sitofp"},
-		{Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"}, {Conversion::Bitcast, "bitcast"},
-		{Conversion::Addrspacecast, "addrspacecast"}};
+		{Conversion::None,    "none"},    {Conversion::Trunc,    "trunc"},    {Conversion::Zext,     "zext"},
+		{Conversion::Sext,    "sext"},    {Conversion::Fptrunc,  "fptrunc"},  {Conversion::Fpext,    "fpext"},
+		{Conversion::Fptoui,  "fptoui"},  {Conversion::Fptosi,   "fptosi"},   {Conversion::Uitofp,   "uitofp"},
+		{Conversion::Sitofp,  "sitofp"},  {Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"},
+		{Conversion::Bitcast, "bitcast"}, {Conversion::Addrspacecast, "addrspacecast"}};
 }

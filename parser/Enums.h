@@ -33,7 +33,8 @@ namespace LL2W {
 	enum class Ordering {None, Unordered, Monotonic, Acquire, Release, AcqRel, SeqCst};
 	enum class IcmpCond {Eq, Ne, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle};
 	enum class Conversion {
-		Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast, Addrspacecast};
+		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
+		Addrspacecast};
 
 	extern std::unordered_map<Linkage,    std::string> linkage_map;
 	extern std::unordered_map<CConv,      std::string> cconv_map;

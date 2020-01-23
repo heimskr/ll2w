@@ -5,6 +5,7 @@
 
 #include "FunctionArgs.h"
 #include "GlobalVarDef.h"
+#include "Constant.h"
 
 namespace LL2W {
 	struct FunctionHeader: public ASTNode {
@@ -21,6 +22,7 @@ namespace LL2W {
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		std::unordered_set<FnAttr> fnattrs;
 		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
+		Constant *personality;
 		
 		using N = ASTNode *;
 		FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type, N function_name,
