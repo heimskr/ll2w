@@ -127,7 +127,7 @@ using AN = LL2W::ASTNode;
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST ANONYMOUS_STRUCT VALUE_LIST
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE
 
 %start start
 
@@ -182,7 +182,7 @@ metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(METADATA_LIST))->adopt($1); }
              | { $$ = nullptr; };
 
-metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | "null";
+metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | array | "null";
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; };
@@ -191,15 +191,16 @@ metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | "null";
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | "null";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
            | type_any value { $$ = (new AN(VECTOR))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
-struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = ANONYMOUS_STRUCT; D($3); };
+struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = STRUCT_VALUE; D($3); };
 _value_pairs: { $$ = nullptr; } | value_pairs;
 value_pairs: value_pairs "," type_any value { $1->adopt($2->adopt({$3, $4})); }
            | type_any value { $$ = (new AN(VALUE_LIST))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
+array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbol = ARRAY_VALUE; D($4); };
 
 // Types
 type_any: type_nonvoid | TOK_VOID;
