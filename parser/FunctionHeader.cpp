@@ -108,6 +108,18 @@ namespace LL2W {
 		} else {
 			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(Parser::getName(fnattrs_->symbol)));
 		}
+
+		if (personality_) {
+			personality = new Constant(personality_->at(0));
+			delete personality_;
+		}
+	}
+
+	FunctionHeader::~FunctionHeader() {
+		delete returnType;
+		delete arguments;
+		if (personality)
+			delete personality;
 	}
 	
 	std::string FunctionHeader::debugExtra() const {
@@ -156,6 +168,8 @@ namespace LL2W {
 			out << " " << fnattr_map.at(fnattr);
 		if (fnattrsIndex != -1)
 			out << " #" << fnattrsIndex;
+		if (personality)
+			out << " personality " << std::string(*personality);
 		out << "\e[0m";
 		return out.str();
 	}

@@ -14,6 +14,16 @@ namespace LL2W {
 		ASTNode *value_node = node->at(2);
 		if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 			value = gep_value->copy();
+		} else if (value_node->symbol == CONST_EXPR) {
+			for (const std::pair<Conversion, std::string> &pair: conversion_map) {
+				if (*value_node->lexerInfo == pair.second) {
+					conversion = pair.first;
+					break;
+				}
+			}
+			value = nullptr;
+			conversionSource = new Constant(value_node->at(0));
+			conversionType = getType(value_node->at(1));
 		} else {
 			value = getValue(value_node);
 		}
@@ -35,6 +45,10 @@ namespace LL2W {
 	Constant::~Constant() {
 		delete type;
 		delete value;
+		if (conversionSource)
+			delete conversionSource;
+		if (conversionType)
+			delete conversionType;
 	}
 
 	Constant::operator std::string() const {
@@ -44,7 +58,12 @@ namespace LL2W {
 			out << " " << parattr_map.at(attr);
 		if (dereferenceable != -1)
 			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
-		out << " " << std::string(*value);
+		if (value) {
+			out << " " << std::string(*value);
+		} else if (conversion != Conversion::None) {
+			out << " \e[91m" << conversion_map.at(conversion) << "\e[0m \e[2m(\e[0m" << std::string(*conversionSource)
+			    << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
+		}
 		return out.str();
 	}
 }

@@ -14,6 +14,9 @@ namespace LL2W {
 		Value *value;
 		std::unordered_set<ParAttr> parattrs;
 		int dereferenceable = -1;
+		Conversion conversion = Conversion::None;
+		Constant *conversionSource = nullptr;
+		Type *conversionType = nullptr;
 
 		Constant() = delete;
 		Constant(const Constant &) = delete;

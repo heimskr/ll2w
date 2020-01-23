@@ -250,7 +250,7 @@ function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); D($2,
              | "..." { $$ = new FunctionArgs(nullptr, true); }
              | { $$ = new FunctionArgs(nullptr, false); };
 function_types: function_types "," function_type { $1->adopt($3); D($2); } | function_type { $$ = (new AN(FUNCTION_TYPE_LIST))->adopt($1); };
-function_type: type_any _parattr_list _variable { $$ = $1->adopt({$2, $3}); };
+function_type: type_any parattr_list _variable { $$ = $1->adopt({$2, $3}); };
 _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; D($1); } | fnattr_list;
 fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST); };
@@ -335,9 +335,9 @@ _inrange: TOK_INRANGE | { $$ = nullptr; };
 i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
 
 // Constants
-constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
+constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
 constant_right: operand | const_expr;
-_parattr_list: _parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
+parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | getelementptr_expr | "null";
