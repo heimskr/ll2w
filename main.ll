@@ -234,12 +234,12 @@ define i32 @main(i32, i8**) #0 {
   %9 = tail call nnan reassoc ccc zeroext signext inreg dereferenceable(160) addrspace(42) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0)) #1 #2 #3
   %10 = load i8**, i8*** %5, align 8
   %11 = getelementptr inbounds i8*, i8** %10, i64 0, inrange i64 1
-}/*
   %12 = load i8*, i8** %11, align 8
   %13 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) %9, i8* %12)
   %14 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) %13, i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.1, i32 0, i32 0))
   store i32 1, i32* %3, align 4
   br label %16
+}/*
 
 ; <label>:15:                                     ; preds = %2
   call void @_Z10parsertestv()
