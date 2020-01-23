@@ -11,7 +11,7 @@
 
 namespace LL2W {
 	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
-	                               N function_name, N function_args, N unnamed_addr, N fnattrs_):
+	                               N function_name, N function_args, N unnamed_addr, N fnattrs_, N personality_):
 		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
 

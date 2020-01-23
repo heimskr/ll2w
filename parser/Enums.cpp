@@ -61,4 +61,11 @@ namespace LL2W {
 		{IcmpCond::Eq, "eq"}, {IcmpCond::Ne, "ne"}, {IcmpCond::Ugt, "ugt"}, {IcmpCond::Uge, "uge"},
 		{IcmpCond::Ult, "ult"}, {IcmpCond::Ule, "ule"}, {IcmpCond::Sgt, "sgt"}, {IcmpCond::Sge, "sge"},
 		{IcmpCond::Slt, "slt"}, {IcmpCond::Sle, "sle"}};
+
+	std::unordered_map<Conversion, std::string> conversion_map {
+		{Conversion::Trunc, "trunc"}, {Conversion::Zext, "zext"}, {Conversion::Sext, "sext"},
+		{Conversion::Fptrunc, "fptrunc"}, {Conversion::Fpext, "fpext"}, {Conversion::Fptoui, "fptoui"},
+		{Conversion::Fptosi, "fptosi"}, {Conversion::Uitofp, "uitofp"}, {Conversion::Sitofp, "sitofp"},
+		{Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"}, {Conversion::Bitcast, "bitcast"},
+		{Conversion::Addrspacecast, "addrspacecast"}};
 }

@@ -24,7 +24,7 @@ namespace LL2W {
 		
 		using N = ASTNode *;
 		FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type, N function_name,
-		               N function_args, N unnamed_addr, N fnattrs_);
+		               N function_args, N unnamed_addr, N fnattrs_, N personality_);
 		~FunctionHeader() { delete returnType; }
 
 		std::string debugExtra() const override;

@@ -181,6 +181,8 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "inbounds"					{ RTOKEN(INBOUNDS) }
 "inrange"					{ RTOKEN(INRANGE) }
 "ret"						{ RTOKEN(RET) }
+"personality"				{ RTOKEN(PERSONALITY) }
+"to"						{ RTOKEN(TO) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 
