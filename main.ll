@@ -247,6 +247,7 @@ define i32 @main(i32, i8**) #0 {
 ; <label>:16:                                     ; preds = %15, %8
   %17 = load i32, i32* %3, align 4
   ret i32 %17
+  ret { i32, i8 } { i32 4, i8 2 }
 }/*
 
 ; Function Attrs: noinline optnone ssp uwtable

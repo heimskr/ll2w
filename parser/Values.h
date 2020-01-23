@@ -10,6 +10,7 @@
 
 namespace LL2W {
 	class ASTNode;
+	struct Type;
 
 	struct Value {
 		virtual operator std::string() = 0;
@@ -74,7 +75,7 @@ namespace LL2W {
 		const std::string *name;
 		GlobalValue(const std::string *name_): name(name_) {}
 		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
-		GlobalValue(const ASTNode *node);
+		GlobalValue(const ASTNode *);
 		Value * copy() const override { return new GlobalValue(name); }
 		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
 	};
@@ -103,6 +104,18 @@ namespace LL2W {
 	struct VoidValue: public Value {
 		Value * copy() const override { return new VoidValue(); }
 		operator std::string() override { return "void"; }
+	};
+
+	class StructValue: public Value {
+		private:
+			StructValue(std::vector<std::pair<Type *, Value *>> &&values_): values(values_) {}
+
+		public:
+			std::vector<std::pair<Type *, Value *>> values;
+			StructValue(const ASTNode *);
+			~StructValue();
+			Value * copy() const override;
+			operator std::string() override;
 	};
 
 	Value * getValue(const ASTNode *);

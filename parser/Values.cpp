@@ -105,6 +105,37 @@ namespace LL2W {
 		return out.str();
 	}
 
+	StructValue::StructValue(const ASTNode *node) {
+		for (const ASTNode *comma: *node->at(0))
+			values.push_back({getType(comma->at(0)), getValue(comma->at(1))});
+	}
+
+	StructValue::~StructValue() {
+		for (const std::pair<Type *, Value *> &pair: values) {
+			delete pair.first;
+			delete pair.second;
+		}
+	}
+
+	Value * StructValue::copy() const {
+		std::vector<std::pair<Type *, Value *>> values_copy;
+		for (const std::pair<Type *, Value *> &pair: values)
+			values_copy.push_back({pair.first->copy(), pair.second->copy()});
+		return new StructValue(std::move(values_copy));
+	}
+
+	StructValue::operator std::string() {
+		std::stringstream out;
+		out << "\e[2m{\e[0m";
+		for (auto begin = values.cbegin(), iter = begin, end = values.cend(); iter != end; ++iter) {
+			if (iter != begin)
+				out << "\e[2m,\e[0m ";
+			out << std::string(*iter->first) << " " << std::string(*iter->second);
+		}
+		out << "\e[2m}\e[0m";
+		return out.str();
+	}
+
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING:      return new DoubleValue(node);
@@ -115,10 +146,9 @@ namespace LL2W {
 			case TOK_GVAR:          return new GlobalValue(node);
 			case TOK_GETELEMENTPTR: return new GetelementptrValue(node);
 			case TOK_VOID:          return new VoidValue();
+			case ANONYMOUS_STRUCT:  return new StructValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}
 	}
-
-
 }

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
@@ -98,7 +97,11 @@ namespace LL2W {
 	}
 
 	StructType::StructType(const StructNode *node_):
-		name(node_->name), form(node_->form), shape(node_->shape), node(node_) {}
+		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
+
+	StructType::~StructType() {
+		delete node;
+	}
 
 	StructType::operator std::string() {
 		if (*name == "[anon]" && node)
