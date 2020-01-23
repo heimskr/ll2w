@@ -180,6 +180,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "getelementptr"				{ RTOKEN(GETELEMENTPTR) }
 "inbounds"					{ RTOKEN(INBOUNDS) }
 "inrange"					{ RTOKEN(INRANGE) }
+"ret"						{ RTOKEN(RET) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

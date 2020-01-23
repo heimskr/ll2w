@@ -137,6 +137,16 @@ namespace LL2W {
 		~GetelementptrNode();
 		virtual std::string debugExtra() const override;
 	};
+
+	struct RetNode: public InstructionNode {
+		Type *type;
+		Value *value;
+
+		RetNode();
+		RetNode(ASTNode *type_, ASTNode *value_);
+		~RetNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

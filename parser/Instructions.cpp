@@ -578,4 +578,24 @@ namespace LL2W {
 		}
 		return out.str();
 	}
+
+	RetNode::RetNode(): type(new VoidType()), value(new VoidValue()) {}
+
+	RetNode::RetNode(ASTNode *type_, ASTNode *value_) {
+		type = getType(type_);
+		delete type_;
+
+		value = getValue(value_);
+		delete value_;
+	}
+
+	RetNode::~RetNode() {
+		delete type;
+		delete value;
+	}
+
+	std::string RetNode::debugExtra() const {
+		const std::string type_str = std::string(*type);
+		return "\e[91mret\e[0m " + (type_str != "void"? type_str + " " + std::string(*value) : type_str);
+	}
 }

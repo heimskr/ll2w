@@ -120,11 +120,12 @@ using AN = LL2W::ASTNode;
 %token TOK_GETELEMENTPTR "getelementptr"
 %token TOK_INBOUNDS "inbounds"
 %token TOK_INRANGE "inrange"
+%token TOK_RET "ret"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST ANONYMOUS_STRUCT VALUE_LIST
 
 %start start
 
@@ -188,14 +189,19 @@ metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | "null";
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | "null";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
            | type_any value { $$ = (new AN(VECTOR))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
+struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = ANONYMOUS_STRUCT; D($3); };
+_value_pairs: { $$ = nullptr; } | value_pairs;
+value_pairs: value_pairs "," type_any value { $1->adopt($2->adopt({$3, $4})); }
+           | type_any value { $$ = (new AN(VALUE_LIST))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 
 // Types
 type_any: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | TOK_VOID | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
+type_nonvoid: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOATTYPE;
@@ -262,7 +268,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr;
+           | i_call | i_getelementptr | i_ret;
 
 i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -323,6 +329,8 @@ i_getelementptr: TOK_PVAR "=" "getelementptr" _inbounds type_any "," type_ptr TO
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); } | gep_indices "," _inrange type_any TOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); };
 _inrange: TOK_INRANGE | { $$ = nullptr; };
+
+i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
