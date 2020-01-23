@@ -529,10 +529,10 @@ namespace LL2W {
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
 		if (result)
-			out << "\e[32m%" << *result << "\e[0;2m =";
+			out << "\e[32m%" << *result << "\e[0;2m = ";
 		if (tail)
-			out << " \e[0;34m" << *tail;
-		out << " \e[0;91mcall\e[0m";
+			out << "\e[0;34m " << *tail;
+		out << "\e[0;91mcall\e[0m";
 		for (Fastmath flag: fastmath)
 			out << " \e[34m" << fastmath_map.at(flag) << "\e[0m";
 		if (!fastmath.empty())
@@ -574,8 +574,11 @@ namespace LL2W {
 	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label):
 	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
 	                                      _constants, attribute_list) {
-		normal_label->debug();
-		exception_label->debug();
+		normalLabel = StringSet::intern(normal_label->extractName());
+		delete normal_label;
+
+		exceptionLabel = StringSet::intern(exception_label->extractName());
+		delete exception_label;
 	}
 
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
