@@ -255,10 +255,9 @@ function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUN
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LABEL; D($2); };
-bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT _preds_list { $1->adopt({$2, $3, $4}); };
-_preds_list: preds_list | { $$ = new AN(PREDS_LIST); };
-preds_list: preds_list "," TOK_PVAR { $1->adopt($3); D($2); }
-          | TOK_PVAR { $$ = (new AN(PREDS_LIST))->adopt($1); };
+bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list { $1->adopt({$2, $3, $4}); };
+preds_list: preds_list TOK_PVAR { $1->adopt($2); }
+          | { $$ = new AN(PREDS_LIST); };
 
 
 // Instructions
@@ -308,7 +307,10 @@ i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
 i_call: TOK_PVAR "=" _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
-        { $$ = new CallNode($1, $3, $5, $6, $7, $8, $9, $10, $12, $14); D($2, $4, $11, $13); };
+        { $$ = new CallNode($1, $3, $5, $6, $7, $8, $9, $10, $12, $14); D($2, $4, $11, $13); }
+      | _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any function_name "(" _constants ")" call_attrs
+        { $$ = new CallNode(nullptr, $1, $3, $4, $5, $6, $7, $8, $10, $12); D($2, $9, $11); };
+
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;
 _constants: constants | { $$ = new AN(CONSTANT_LIST); };

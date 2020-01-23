@@ -71,7 +71,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 <SGC>\n						{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
 <SGC>.						{ }
 <PREDS>{PVAR}				{ RTOKEN(PVAR); }
-<PREDS>[ \t]+				{ }
+<PREDS>[ \t,]+				{ }
 <PREDS>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
 <PREDS>.					{ LL2W::Lexer::badchar(*yytext); }
 

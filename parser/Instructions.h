@@ -109,7 +109,7 @@ namespace LL2W {
 	};
 
 	struct CallNode: public InstructionNode {
-		const std::string *result, *cconv = nullptr, *tail = nullptr;
+		const std::string *result = nullptr, *cconv = nullptr, *tail = nullptr;
 		std::unordered_set<Fastmath> fastmath;
 		std::unordered_set<RetAttr> retattrs;
 		std::vector<Constant *> constants;

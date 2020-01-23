@@ -422,7 +422,10 @@ namespace LL2W {
 	CallNode::CallNode(ASTNode *pvar, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
 		               ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
 		               ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list) {
-		result = StringSet::intern(pvar->extractName());
+		if (pvar) {
+			result = StringSet::intern(pvar->extractName());
+			delete pvar;
+		}
 
 		if (_tail) {
 			tail = _tail->lexerInfo;
@@ -499,7 +502,8 @@ namespace LL2W {
 
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m =";
+		if (result)
+			out << "\e[32m%" << *result << "\e[0;2m =";
 		if (tail)
 			out << " \e[0;34m" << *tail;
 		out << " \e[0;91mcall\e[0m";
@@ -547,7 +551,6 @@ namespace LL2W {
 		delete ptrval;
 
 		for (ASTNode *comma: *indices_) {
-			comma->debug();
 			indices.push_back({
 				atoi(comma->at(0)->lexerInfo->substr(1).c_str()),
 				atoi(comma->at(1)->lexerInfo->c_str()),

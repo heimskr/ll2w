@@ -239,7 +239,6 @@ define i32 @main(i32, i8**) #0 {
   %14 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) %13, i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.1, i32 0, i32 0))
   store i32 1, i32* %3, align 4
   br label %16
-}/*
 
 ; <label>:15:                                     ; preds = %2
   call void @_Z10parsertestv()
@@ -248,7 +247,7 @@ define i32 @main(i32, i8**) #0 {
 ; <label>:16:                                     ; preds = %15, %8
   %17 = load i32, i32* %3, align 4
   ret i32 %17
-}
+}/*
 
 ; Function Attrs: noinline optnone ssp uwtable
 define linkonce_odr dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160), i8*) #1 {
