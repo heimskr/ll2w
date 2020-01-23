@@ -20,6 +20,8 @@ namespace LL2W {
 		// It's assumed that GlobalVarDef is constructed in a parser action. Instead of deleting the initial_value node,
 		// we take ownership of it here. It'll be deleted once the GlobalVarDef object is destroyed.
 		ASTNode *initialValue;
+		const std::string *section = nullptr;
+		const std::string *comdat = nullptr;
 
 		using N = ASTNode *;
 		GlobalVarDef(N gvar, N linkage_, N visibility_, N dll_storage_class, N thread_local_, N unnamed_addr,

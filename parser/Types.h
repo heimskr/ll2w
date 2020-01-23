@@ -47,7 +47,7 @@ namespace LL2W {
 	};
 
 	struct FloatType: public Type {
-		enum class Type: int {Half, Double, FP128, x86_FP80, PPC_FP128};
+		enum class Type: int {Half, Float, Double, FP128, x86_FP80, PPC_FP128};
 		FloatType::Type type;
 		FloatType(FloatType::Type type_): type(type_) {}
 		operator std::string() override;

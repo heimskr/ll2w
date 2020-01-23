@@ -2,6 +2,7 @@
 #define PARSER_INSTRUCTIONS_H_
 
 #include <unordered_set>
+#include <tuple>
 
 #include "ASTNode.h"
 #include "Enums.h"
@@ -122,6 +123,18 @@ namespace LL2W {
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list);
 		~CallNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct GetelementptrNode: public InstructionNode {
+		const std::string *result, *ptrValue;
+		bool inbounds = false;
+		Type *type, *ptrType;
+		std::vector<std::tuple<int, int, bool>> indices;
+
+		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptrval,
+		                  ASTNode *indices_);
+		~GetelementptrNode();
 		virtual std::string debugExtra() const override;
 	};
 }

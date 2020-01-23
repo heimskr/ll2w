@@ -193,7 +193,6 @@ target triple = "x86_64-apple-macosx10.15.0"
 @.str.27 = private unnamed_addr constant [2 x i8] c"8\00", align 1
 @.str.28 = private unnamed_addr constant [2 x i8] c"9\00", align 1
 @.str.29 = private unnamed_addr constant [3 x i8] c"10\00", align 1
-*/
 @.str.30 = private unnamed_addr constant [3 x i8] c"11\00", align 1
 @.str.31 = private unnamed_addr constant [59 x i8] c"1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8\00", align 1
 @.str.32 = private unnamed_addr constant [16 x i8] c"graph_dj_in.png\00", align 1
@@ -215,6 +214,7 @@ target triple = "x86_64-apple-macosx10.15.0"
 @.str.47 = private unnamed_addr constant [9 x i8] c"basic.ll\00", align 1
 @_ZN4LL2W6Parser4rootE = external global %"class.LL2W::ASTNode"*, align 8
 @_ZNSt3__15ctypeIcE2idE = external global %"class.std::__1::locale::id", align 8
+*/
 @_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, section "foo", comdat($what), align 8
 ; Function Attrs: noinline norecurse optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
@@ -232,9 +232,9 @@ define i32 @main(i32, i8**) #0 {
 
 ; <label>:8:                                      ; preds = %2
   %9 = tail call nnan reassoc ccc zeroext signext inreg dereferenceable(160) addrspace(42) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0)) #1 #2 #3
-}/*
   %10 = load i8**, i8*** %5, align 8
-  %11 = getelementptr inbounds i8*, i8** %10, i64 0
+  %11 = getelementptr inbounds i8*, i8** %10, i64 0, inrange i64 1
+}/*
   %12 = load i8*, i8** %11, align 8
   %13 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) %9, i8* %12)
   %14 = call dereferenceable(160) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) %13, i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.1, i32 0, i32 0))

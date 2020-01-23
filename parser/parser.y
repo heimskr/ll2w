@@ -119,11 +119,12 @@ using AN = LL2W::ASTNode;
 %token TOK_CALL "call"
 %token TOK_GETELEMENTPTR "getelementptr"
 %token TOK_INBOUNDS "inbounds"
+%token TOK_INRANGE "inrange"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST
 
 %start start
 
@@ -262,7 +263,7 @@ preds_list: preds_list "," TOK_PVAR { $1->adopt($3); D($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call;
+           | i_call | i_getelementptr;
 
 i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -315,6 +316,11 @@ constants: constants "," constant { $1->adopt($3); D($2); }
          | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
 call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
 
+i_getelementptr: TOK_PVAR "=" "getelementptr" _inbounds type_any "," type_ptr TOK_PVAR gep_indices
+               { $$ = new GetelementptrNode($1, $4, $5, $7, $8, $9); D($2, $3, $6); };
+// TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
+gep_indices: { $$ = new AN(INDEX_LIST); } | gep_indices "," _inrange type_any TOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); };
+_inrange: TOK_INRANGE | { $$ = nullptr; };
 
 // Constants
 constant: type_any _parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };

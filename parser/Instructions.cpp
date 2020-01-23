@@ -526,4 +526,53 @@ namespace LL2W {
 		out << "\e[2m)\e[0m";
 		return out.str();
 	}
+
+	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
+	                                     ASTNode *ptrval, ASTNode *indices_) {
+		result = StringSet::intern(pvar->extractName());
+		delete pvar;
+
+		if (_inbounds) {
+			inbounds = true;
+			delete _inbounds;
+		}
+
+		type = getType(type_);
+		delete type_;
+
+		ptrType = getType(ptr_type);
+		delete ptr_type;
+
+		ptrValue = StringSet::intern(ptrval->extractName());
+		delete ptrval;
+
+		for (ASTNode *comma: *indices_) {
+			comma->debug();
+			indices.push_back({
+				atoi(comma->at(0)->lexerInfo->substr(1).c_str()),
+				atoi(comma->at(1)->lexerInfo->c_str()),
+				comma->size() == 3});
+		}
+		delete indices_;
+	}
+
+	GetelementptrNode::~GetelementptrNode() {
+		delete type;
+		delete ptrType;
+	}
+
+	std::string GetelementptrNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << " \e[0;2m= \e[0;91mgetelementptr\e[0m ";
+		if (inbounds)
+			out << "\e[34minbounds\e[0m ";
+		out << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType) << " \e[32m%" << *ptrValue << "\e[0m";
+		for (const std::tuple<int, int, bool> &index: indices) {
+			out << "\e[2m,\e[0m ";
+			if (std::get<2>(index))
+				out << "\e[34minrange\e[0m ";
+			out << "\e[33mi" << std::get<0>(index) << "\e[0m " << std::get<1>(index);
+		}
+		return out.str();
+	}
 }

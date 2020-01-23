@@ -67,6 +67,18 @@ namespace LL2W {
 
 		type = getType(type_);
 		initialValue = initial_value;
+
+		for (ASTNode *extra: *gdef_extras) {
+			if (extra->symbol == TOK_SECTION) {
+				section = extra->at(0)->lexerInfo;
+			} else if (extra->symbol == TOK_COMDAT) {
+				const std::string *str = extra->at(0)->lexerInfo;
+				if (str->empty() || str->front() != '$')
+					yyerror("Comdat expected to begin with \"$\"");
+				comdat = str;
+			} else
+				extra->debug();
+		}
 	}
 
 	std::string GlobalVarDef::debugExtra() const {
@@ -102,8 +114,10 @@ namespace LL2W {
 			out << " externally_initialized";
 		out << (isConstant? " constant" : " global");
 		out << "\e[0m " << std::string(*type);
-		if (initialValue && initialValue->symbol == TOK_CSTRING)
-			out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
+		if (initialValue) {
+			if (initialValue->symbol == TOK_CSTRING)
+				out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
+		}
 		return out.str();
 	}
 }

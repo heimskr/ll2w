@@ -25,6 +25,7 @@ namespace LL2W {
 	FloatType::operator std::string() {
 		switch (type) {
 			case FloatType::Type::Half: return "half";
+			case FloatType::Type::Float: return "float";
 			case FloatType::Type::Double: return "double";
 			case FloatType::Type::FP128: return "fp128";
 			case FloatType::Type::x86_FP80: return "x86_fp80";
@@ -35,6 +36,7 @@ namespace LL2W {
 
 	FloatType::Type FloatType::getType(const std::string &str) {
 		if (str == "half") return FloatType::Type::Half;
+		else if (str == "float") return FloatType::Type::Float;
 		else if (str == "double") return FloatType::Type::Double;
 		else if (str == "fp128") return FloatType::Type::FP128;
 		else if (str == "x86_fp80") return FloatType::Type::x86_FP80;
