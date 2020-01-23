@@ -10,7 +10,7 @@
 #include "GlobalVarDef.h"
 #include "FunctionHeader.h"
 #include "FunctionArgs.h"
-#include "Instructions.h"
+#include "Nodes.h"
 #include "StructNode.h"
 #include "Values.h"
 
@@ -124,11 +124,15 @@ using AN = LL2W::ASTNode;
 %token TOK_PERSONALITY "personality"
 %token TOK_INVOKE "invoke"
 %token TOK_UNWIND "unwind"
+%token TOK_CLEANUP "cleanup"
+%token TOK_CATCH "catch"
+%token TOK_LANDINGPAD "landingpad"
+%token TOK_FILTER "filter"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES
 
 %start start
 
@@ -273,7 +277,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret | i_invoke;
+           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad;
 
 i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -319,7 +323,8 @@ label: "label" TOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
         { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14); D($3, $11, $13); };
-_result: TOK_PVAR "=" { D($2); } | { $$ = nullptr; };
+_result: result | { $$ = nullptr; };
+result: TOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
 args: "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
     | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
@@ -331,8 +336,8 @@ constants: constants "," constant { $1->adopt($3); D($2); }
          | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
 call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
 
-i_getelementptr: TOK_PVAR "=" "getelementptr" _inbounds type_any "," type_ptr TOK_PVAR gep_indices
-               { $$ = new GetelementptrNode($1, $4, $5, $7, $8, $9); D($2, $3, $6); };
+i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr TOK_PVAR gep_indices
+               { $$ = new GetelementptrNode($1, $3, $4, $6, $7, $8); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); } | gep_indices "," _inrange type_any TOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); };
 _inrange: TOK_INRANGE | { $$ = nullptr; };
@@ -342,6 +347,14 @@ i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "vo
 i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
           /* TODO: operand bundles */ "to" label "unwind" label
           { $$ = new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16); D($2, $9, $11, $13, $15); };
+
+i_landingpad: result "landingpad" type_any clauses            { $$ = new LandingpadNode($1, $3, $4, false); D($2);     }
+            | result "landingpad" type_any "cleanup" _clauses { $$ = new LandingpadNode($1, $3, $5, true);  D($2, $4); };
+
+_clauses: clauses | { $$ = new AN(CLAUSES); };
+clauses: clauses clause { $1->adopt($2); } | clause { $$ = (new AN(CLAUSES))->adopt($1); };
+clause: "catch" type_any value { $1->adopt({$2, $3}); }
+      | "filter" array     { $1->adopt($2); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };

@@ -279,10 +279,10 @@ define void @_Z10parsertestv() #1 personality i8* bitcast (i32 (...)* @__gxx_per
   call void @_ZN4LL2W7ASTNode5debugEib(%"class.LL2W::ASTNode"* %5, i32 0, i1 zeroext false)
   call void @_ZN4LL2W6Parser4doneEv()
   ret void
-/*
 ; <label>:6:                                      ; preds = %0
   %7 = landingpad { i8*, i32 }
           cleanup
+/*
   %8 = extractvalue { i8*, i32 } %7, 0
   store i8* %8, i8** %2, align 8
   %9 = extractvalue { i8*, i32 } %7, 1

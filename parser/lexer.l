@@ -185,6 +185,10 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "to"						{ RTOKEN(TO) }
 "invoke"					{ RTOKEN(INVOKE) }
 "unwind"					{ RTOKEN(UNWIND) }
+"cleanup"					{ RTOKEN(CLEANUP) }
+"catch"						{ RTOKEN(CATCH) }
+"landingpad"				{ RTOKEN(LANDINGPAD) }
+"filter"					{ RTOKEN(FILTER) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

@@ -1,5 +1,5 @@
-#ifndef PARSER_INSTRUCTIONS_H_
-#define PARSER_INSTRUCTIONS_H_
+#ifndef PARSER_NODES_H_
+#define PARSER_NODES_H_
 
 #include <unordered_set>
 #include <tuple>
@@ -171,6 +171,24 @@ namespace LL2W {
 		RetNode();
 		RetNode(ASTNode *type_, ASTNode *value_);
 		~RetNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct LandingpadNode: public InstructionNode {
+		struct Clause {
+			enum class ClauseType {Catch, Filter};
+			ClauseType clauseType;
+			Type *type;
+			Value *value;
+			~Clause();
+		};
+
+		const std::string *result;
+		Type *type;
+		bool cleanup;
+
+		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_);
+		~LandingpadNode();
 		virtual std::string debugExtra() const override;
 	};
 }

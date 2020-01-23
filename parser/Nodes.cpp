@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "Instructions.h"
+#include "Nodes.h"
 #include "StringSet.h"
 
 namespace LL2W {
@@ -685,5 +685,24 @@ namespace LL2W {
 	std::string RetNode::debugExtra() const {
 		const std::string type_str = std::string(*type);
 		return "\e[91mret\e[0m " + (type_str != "void"? type_str + " " + std::string(*value) : type_str);
+	}
+
+	LandingpadNode::Clause::~Clause() {
+		delete type;
+		delete value;
+	}
+
+	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
+		
+		cleanup = cleanup_;
+
+	}
+
+	LandingpadNode::~LandingpadNode() {
+
+	}
+
+	std::string LandingpadNode::debugExtra() const {
+		return "?";
 	}
 }
