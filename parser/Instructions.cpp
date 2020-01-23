@@ -473,9 +473,20 @@ namespace LL2W {
 
 		if (_args) {
 			argumentsExplicit = true;
-			_args->debug();
-			if (_args->size() == 2) { // Both a typelist and ellipsis are specified
-
+			ASTNode *typelist = nullptr;
+			if (_args->size() == 2) { // Both a typelist and an ellipsis are specified.
+				argumentEllipsis = true;
+				typelist = _args->at(0);
+			} else if (_args->size() == 1) { // Either a typelist or an ellipsis is specified.
+				if (_args->at(0)->symbol == TOK_ELLIPSIS) {
+					argumentEllipsis = true;
+				} else {
+					typelist = _args->at(0);
+				}
+			}
+			if (typelist) {
+				for (ASTNode *typenode: *typelist)
+					argumentTypes.push_back(getType(typenode));
 			}
 			delete _args;
 		}
@@ -503,10 +514,10 @@ namespace LL2W {
 	CallNode::~CallNode() {
 		delete returnType;
 		delete name;
-		for (Constant *constant: constants) {
-			std::cout << "Deleting " << constant << "\n";
+		for (Constant *constant: constants)
 			delete constant;
-		}
+		for (Type *type: argumentTypes)
+			delete type;
 	}
 
 	std::string CallNode::debugExtra() const {
