@@ -215,7 +215,7 @@ namespace LL2W {
 	std::string ASTNode::extractName() const {
 		if (symbol == TOK_PVAR || symbol == TOK_GVAR)
 			return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
-		else if (symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR || symbol == TOK_UNIONVAR)
+		else if (symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR || symbol == TOK_UNIONVAR || symbol == TOK_CSTRING)
 			return lexerInfo->substr(2, lexerInfo->size() - 3);
 		else if (symbol == TOK_STRING)
 			return lexerInfo->substr(1, lexerInfo->size() - 2);

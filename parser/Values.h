@@ -137,11 +137,18 @@ namespace LL2W {
 			operator std::string() override;
 	};
 
+	struct CStringValue: public Value {
+		const std::string *value;
+		CStringValue(const std::string *value_): value(value_) {}
+		CStringValue(const ASTNode *);
+		Value * copy() const override { return new CStringValue(value); }
+		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
+	};
+
 	// TODO: ArrayValue
 
 	Value * getValue(const ASTNode *);
 	std::ostream & operator<<(std::ostream &, Value &);
 }
-
 
 #endif

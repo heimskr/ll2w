@@ -170,6 +170,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+	CStringValue::CStringValue(const ASTNode *node): CStringValue(StringSet::intern(node->extractName())) {}
+
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING:      return new DoubleValue(node);
@@ -183,6 +185,7 @@ namespace LL2W {
 			case STRUCT_VALUE:      return new StructValue(node);
 			case VALUE_LIST:        return new ArrayValue(node);
 			case TOK_NULL:          return new NullValue();
+			case TOK_CSTRING:       return new CStringValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

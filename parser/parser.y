@@ -228,8 +228,11 @@ _ellipsis: "..." | { $$ = nullptr; };
 
 // Globals
 global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
-           _externally_initialized global_or_constant type_or_constant gdef_extras
-           { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); };
+            _externally_initialized global_or_constant type_any gdef_extras
+            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); }
+          | TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
+            _externally_initialized global_or_constant constant gdef_extras
+            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); };
 
 _linkage: TOK_LINKAGE | { $$ = nullptr; };
 _visibility: TOK_VISIBILITY | { $$ = nullptr; };
@@ -238,12 +241,6 @@ _thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3)
 _addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); } | { $$ = nullptr; };
 _externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
-type_or_constant: type_any | constant;
-_initial_value: initial_value | { $$ = nullptr; };
-initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | array | "zeroinitializer" | "null"
-             | "{" initial_value_list "}" { $$ = $2; D($1, $3); };
-initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
-                  | { $$ = new AN(INITIAL_VALUE_LIST); }
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," TOK_ALIGN TOK_DECIMAL   { $$ = $1->adopt($3->adopt($4)); D($2); }
@@ -367,7 +364,7 @@ constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | getelementptr_expr | "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
