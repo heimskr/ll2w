@@ -107,44 +107,42 @@ namespace LL2W {
 	}
 
 	StructValue::StructValue(const ASTNode *node) {
-		for (const ASTNode *comma: *node->at(0))
-			values.push_back({getType(comma->at(0)), getValue(comma->at(1))});
+		for (const ASTNode *sub: *node->at(0))
+			constants.push_back(new Constant(sub));
 	}
 
 	StructValue::~StructValue() {
-		for (const std::pair<Type *, Value *> &pair: values) {
-			delete pair.first;
-			delete pair.second;
-		}
+		for (Constant *constant: constants)
+			delete constant;
 	}
 
 	Value * StructValue::copy() const {
-		std::vector<std::pair<Type *, Value *>> values_copy;
-		for (const std::pair<Type *, Value *> &pair: values)
-			values_copy.push_back({pair.first->copy(), pair.second->copy()});
-		return new StructValue(std::move(values_copy));
+		std::vector<Constant *> constants_copy;
+		for (const Constant *constant: constants)
+			constants_copy.push_back(constant->copy());
+		return new StructValue(std::move(constants_copy));
 	}
 
 	StructValue::operator std::string() {
 		std::stringstream out;
 		out << "\e[2m{\e[0m";
-		for (auto begin = values.cbegin(), iter = begin, end = values.cend(); iter != end; ++iter) {
+		for (auto begin = constants.cbegin(), iter = begin, end = constants.cend(); iter != end; ++iter) {
 			if (iter != begin)
 				out << "\e[2m,\e[0m ";
-			out << std::string(*iter->first) << " " << std::string(*iter->second);
+			out << std::string(**iter);
 		}
 		out << "\e[2m}\e[0m";
 		return out.str();
 	}
 
 	ArrayValue::ArrayValue(const ASTNode *node) {
-		for (const ASTNode *comma: *node) {
-			comma->debug();
+		for (const ASTNode *sub: *node)
+			constants.push_back(new Constant(sub));
+			// comma->debug();
 			// if (comma->size() == 1) // Presumably just a GVAR rather than a type + value
 				// constants.push_back({getType(comma->at(0)), getValue(comma->at(0))});
 			// else
 				// constants.push_back({getType(comma->at(0)), getValue(comma->at(1))});
-		}
 	}
 
 	ArrayValue::~ArrayValue() {
@@ -184,6 +182,7 @@ namespace LL2W {
 			case TOK_VOID:          return new VoidValue();
 			case STRUCT_VALUE:      return new StructValue(node);
 			case VALUE_LIST:        return new ArrayValue(node);
+			case TOK_NULL:          return new NullValue();
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

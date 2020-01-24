@@ -39,6 +39,12 @@ namespace LL2W {
 		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
 	};
 
+	struct NullValue: public IntValue {
+		NullValue(): IntValue(0) {}
+		Value * copy() const override { return new NullValue(); }
+		operator std::string() override { return "null"; }
+	};
+
 	class VectorValue: public Value {
 		private:
 			VectorValue(const std::vector<std::pair<Type *, Value *>> &values_): values(values_) {}
@@ -109,10 +115,10 @@ namespace LL2W {
 
 	class StructValue: public Value {
 		private:
-			StructValue(std::vector<std::pair<Type *, Value *>> &&values_): values(values_) {}
+			StructValue(std::vector<Constant *> &&constants_): constants(constants_) {}
 
 		public:
-			std::vector<std::pair<Type *, Value *>> values;
+			std::vector<Constant *> constants;
 			StructValue(const ASTNode *);
 			~StructValue();
 			Value * copy() const override;

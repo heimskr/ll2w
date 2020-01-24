@@ -11,7 +11,7 @@ namespace LL2W {
 		type(type_), value(value_), parattrs(parattrs_), dereferenceable(dereferenceable_), conversion(conversion_),
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
-	Constant::Constant(ASTNode *node) {
+	Constant::Constant(const ASTNode *node) {
 		if (node->symbol != CONSTANT)
 			throw std::runtime_error("Constant::Constant: node doesn't have symbol CONSTANT");
 

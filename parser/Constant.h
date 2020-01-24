@@ -24,7 +24,7 @@ namespace LL2W {
 
 			Constant() = delete;
 			Constant(const Constant &) = delete;
-			Constant(ASTNode *);
+			Constant(const ASTNode *);
 			~Constant();
 			Constant * copy() const;
 			operator std::string() const;

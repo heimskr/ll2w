@@ -206,7 +206,9 @@ _value_pairs: { $$ = nullptr; } | value_pairs;
 value_pairs: value_pairs "," value_pair { $1->adopt($3); D($2); }
            | value_pair { $$ = (new AN(VALUE_LIST))->adopt($1); };
 value_pair: constant;
-array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbol = ARRAY_VALUE; D($4); };
+full_array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbol = ARRAY_VALUE; D($4); };
+bare_array: "[" value_pairs "]" { $$ = $2; D($1, $3); };
+array: full_array;
 
 // Types
 type_any: type_nonvoid | TOK_VOID;
@@ -226,8 +228,8 @@ _ellipsis: "..." | { $$ = nullptr; };
 
 // Globals
 global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
-           _externally_initialized global_or_constant type_any _initial_value gdef_extras
-           { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
+           _externally_initialized global_or_constant constant gdef_extras
+           { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); };
 
 _linkage: TOK_LINKAGE | { $$ = nullptr; };
 _visibility: TOK_VISIBILITY | { $$ = nullptr; };
@@ -364,7 +366,7 @@ constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | getelementptr_expr | "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | getelementptr_expr | "null";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
