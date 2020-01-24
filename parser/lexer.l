@@ -191,6 +191,12 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "filter"					{ RTOKEN(FILTER) }
 "byval"						{ RTOKEN(BYVAL) }
 "writeonly"					{ RTOKEN(WRITEONLY) }
+"nuw"						{ RTOKEN(NUW) }
+"nsw"						{ RTOKEN(NSW) }
+"add"						{ RTOKEN(ADD) }
+"sub"						{ RTOKEN(SUB) }
+"mul"						{ RTOKEN(MUL) }
+"shl"						{ RTOKEN(SHL) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

@@ -219,23 +219,21 @@ namespace LL2W {
 
 // LoadNode
 
-	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
-	                   ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group,
-	                   ASTNode *nonnull_, ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null,
-	                   ASTNode *bang_align) {
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
+	                   ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group, ASTNode *nonnull_,
+	                   ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null, ASTNode *bang_align) {
 		atomic = false;
 		result = StringSet::intern(result_->extractName());
+		type = getType(type_);
+		constant = new Constant(constant_);
+
+		delete type_;
+		delete constant_;
+
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
 		}
-		type = getType(type_);
-		ptrType = getType(ptr_type);
-		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
-
-		delete type_;
-		delete ptr_type;
-		delete ptr_index;
 
 		if (align_) {
 			align = atoi(align_->lexerInfo->c_str());
@@ -278,45 +276,45 @@ namespace LL2W {
 		}
 	}
 
-	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
-	                   ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_,
+	                   ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
 		result = StringSet::intern(result_->extractName());
-		if (volatile__) {
-			volatile_ = true;
-			delete volatile__;
-		}
 		type = getType(type_);
-		ptrType = getType(ptr_type);
-		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
-		if (syncscope_) {
-			syncscope = StringSet::intern(syncscope_->extractName());
-			delete syncscope_;
-		}
-		const std::string &oname = *ordering_->lexerInfo;
+		constant = new Constant(constant_);
+		align = atoi(align_->lexerInfo->c_str());
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
-			if (oname == pair.second) {
+			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
 			}
 		}
-		align = atoi(align_->lexerInfo->c_str());
+
+		delete result_;
+		delete type_;
+		delete constant_;
+		delete align_;
+		delete ordering_;
+
+		if (syncscope_) {
+			syncscope = StringSet::intern(syncscope_->extractName());
+			delete syncscope_;
+		}
+
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
 		if (invariant_group) {
 			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
 			delete invariant_group;
 		}
-
-		delete result_;
-		delete type_;
-		delete ptr_type;
-		delete ptr_index;
-		delete ordering_;
-		delete align_;
 	}
 
 	LoadNode::~LoadNode() {
 		delete type;
-		delete ptrType;
+		delete constant;
 	}
 
 	std::string LoadNode::debugExtra() const {
@@ -326,8 +324,7 @@ namespace LL2W {
 			out << " \e[38;5;202matomic\e[0m";
 		if (volatile_)
 			out << " \e[38;5;202mvolatile\e[0m";
-		out << "\e[0m " << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType)
-		    << " \e[32m%" << ptrIndex << "\e[0m";
+		out << "\e[0m " << std::string(*type) << "\e[2m,\e[0m " << std::string(*constant);
 		if (syncscope)
 			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (ordering != Ordering::None)
@@ -744,6 +741,34 @@ namespace LL2W {
 		std::stringstream out;
 		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m "
 		    << std::string(*from) << " " << std::string(*value) << " \e[91mto\e[0m " << std::string(*to);
+		return out.str();
+	}
+
+	BasicMathNode::BasicMathNode(ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *v1, ASTNode *v2) {
+		lexerInfo = oper->lexerInfo;
+		symbol = oper->symbol;
+		nuw = nuw_;
+		nsw = nsw_;
+		type = getType(type_);
+		value1 = getValue(v1);
+		value2 = getValue(v2);
+
+		delete oper;
+		delete type_;
+		delete v1;
+		delete v2;
+	}
+
+	BasicMathNode::~BasicMathNode() {
+		delete type;
+		delete value1;
+		delete value2;
+	}
+
+	std::string BasicMathNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *lexerInfo << " " << std::string(*type) << " "
+		    << std::string(*value1) << "\e[2m,\e[0m " << std::string(*value2);
 		return out.str();
 	}
 }

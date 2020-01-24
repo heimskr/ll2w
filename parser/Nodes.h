@@ -64,17 +64,18 @@ namespace LL2W {
 	struct LoadNode: public InstructionNode {
 		const std::string *result;
 		bool volatile_ = false, atomic = false;
-		Type *type, *ptrType;
-		int ptrIndex = -1, align = -1, nontemporalIndex = -1, invariantLoadIndex = -1, invariantGroupIndex = -1,
+		Type *type;
+		Constant *constant;
+		int align = -1, nontemporalIndex = -1, invariantLoadIndex = -1, invariantGroupIndex = -1,
 		    nonnullIndex = -1;
 		const std::string *dereferenceable = nullptr, *dereferenceableOrNull = nullptr, *bangAlign = nullptr;
 		const std::string *syncscope = nullptr;
 		Ordering ordering = Ordering::None;
 
-		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
+		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
 		         ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group,
 		         ASTNode *nonnull_, ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null, ASTNode *bang_align);
-		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
+		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
 		         ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~LoadNode();
 		virtual std::string debugExtra() const override;
@@ -202,6 +203,16 @@ namespace LL2W {
 		Conversion conversionType;
 		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_);
 		~ConversionNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct BasicMathNode: public InstructionNode {
+		const std::string *result;
+		bool nuw = false, nsw = false;
+		Type *type;
+		Value *value1, *value2;
+		BasicMathNode(ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_, ASTNode *value2_);
+		~BasicMathNode();
 		virtual std::string debugExtra() const override;
 	};
 }
