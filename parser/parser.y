@@ -52,7 +52,7 @@ using AN = LL2W::ASTNode;
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
-%token TOK_DIV
+%token TOK_DIV TOK_REM
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -223,7 +223,7 @@ metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | "null" | "zeroinitializer";
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | getelementptr_expr | "null" | "zeroinitializer";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
@@ -317,7 +317,8 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 // Instructions
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div;
+           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
+           | i_rem;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -354,7 +355,7 @@ i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope
                { auto loc = $1->location; $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate(loc); D($2, $3, $6); };
 
 i_icmp: result "icmp" TOK_ICMP_COND type_any operand "," operand
-      { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7))->locate(loc); D($2, $6); };
+        { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7))->locate(loc); D($2, $6); };
 
 i_br_uncond: "br" "label" TOK_PVAR { $$ = (new BrUncondNode($3))->locate($1); D($1, $2); };
 
@@ -397,7 +398,7 @@ clause: "catch" type_any value { $1->adopt({$2, $3}); }
       | "filter" array     { $1->adopt($2); };
 
 i_convert: result TOK_CONV_OP type_any value "to" type_any
-         { auto loc = $1->location; $$ = (new ConversionNode($1, $2, $3, $4, $6))->locate(loc); D($5); };
+           { auto loc = $1->location; $$ = (new ConversionNode($1, $2, $3, $4, $6))->locate(loc); D($5); };
 
 addsubmulshl: "add" | "sub" | "mul" | "shl";
 i_basicmath: result addsubmulshl type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, false, $3, $4, $6))->locate(loc); D($5); }
@@ -412,9 +413,10 @@ phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = (new
 phi_pair: "[" value "," TOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
 i_div: result TOK_DIV type_any value "," value
-     { auto loc = $1->location; $$ = (new DivNode($1, $2, $3, $4, $6))->locate(loc); D($5); };
+       { $$ = new DivNode($1, $2, $3, $4, $6); D($5); };
 
-
+i_rem: result TOK_REM type_any value "," value
+       { $$ = new RemNode($1, $2, $3, $4, $6); D($5); };
 
 // Constants
 

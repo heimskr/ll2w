@@ -56,6 +56,7 @@ ICMP_COND			("eq"|"ne"|"ugt"|"uge"|"ult"|"ule"|"sgt"|"sge"|"slt"|"sle")
 TAIL				("tail"|"musttail"|"notail")
 CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"sitofp"|"ptrtoint"|"inttoptr"|"bitcast"|"addrspacecast")
 DIV					("sdiv"|"udiv")
+REM					("srem"|"urem")
 
 %%
 
@@ -105,6 +106,7 @@ DIV					("sdiv"|"udiv")
 {TAIL}						{ RTOKEN(TAIL) }
 {CONV_OP}					{ RTOKEN(CONV_OP) }
 {DIV}						{ RTOKEN(DIV) }
+{REM}						{ RTOKEN(REM) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }

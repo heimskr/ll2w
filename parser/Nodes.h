@@ -242,6 +242,19 @@ namespace LL2W {
 		~DivNode();
 		virtual std::string debugExtra() const override;
 	};
+
+	struct RemNode: public InstructionNode {
+		enum class RemType {Srem, Urem};
+
+		const std::string *result;
+		RemType remType;
+		Type *type;
+		Value *left, *right;
+
+		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		~RemNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

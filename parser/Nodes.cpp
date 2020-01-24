@@ -799,6 +799,7 @@ namespace LL2W {
 	}
 
 	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
+		locate(result_);
 		result = result_->extracted();
 		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
 		type = getType(type_);
@@ -821,6 +822,34 @@ namespace LL2W {
 	std::string DivNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << (divType == DivType::Sdiv? 's' : 'u') << "div\e[0m "
+		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
+		return out.str();
+	}
+
+	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
+		locate(result_);
+		result = result_->extracted();
+		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
+		type = getType(type_);
+		left = getValue(left_);
+		right = getValue(right_);
+
+		delete result_;
+		delete rem;
+		delete type_;
+		delete left_;
+		delete right_;
+	}
+
+	RemNode::~RemNode() {
+		delete type;
+		delete left;
+		delete right;
+	}
+
+	std::string RemNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << (remType == RemType::Srem? 's' : 'u') << "rem\e[0m "
 		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
 		return out.str();
 	}
