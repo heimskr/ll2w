@@ -29,8 +29,12 @@ namespace LL2W {
 		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
 
 	std::unordered_map<ParAttr, std::string> parattr_map {
-		{ParAttr::Byval, "byval"},         {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret, "sret"},
-		{ParAttr::Nocapture, "nocapture"}, {ParAttr::Readonly, "readonly"}};
+		{ParAttr::Byval,      "byval"},      {ParAttr::Inalloca, "inalloca"}, {ParAttr::Sret,      "sret"},
+		{ParAttr::Nocapture,  "nocapture"},  {ParAttr::Readonly, "readonly"}, {ParAttr::Swiftself, "swiftself"},
+		{ParAttr::Swifterror, "swifterror"}, {ParAttr::Immarg,   "immarg"},   {ParAttr::Nonnull,   "nonnull"},
+		{ParAttr::Returned,   "returned"},   {ParAttr::Nest,     "nest"},     {ParAttr::Nofree,    "nofree"},
+		{ParAttr::Zeroext,    "zeroext"},    {ParAttr::Signext,  "signext"},  {ParAttr::Inreg,     "inreg"},
+		{ParAttr::Noalias,    "noalias"}};
 
 	std::unordered_map<FnAttr, std::string> fnattr_map {
 		{FnAttr::alwaysinline,       "alwaysinline"},       {FnAttr::noredzone,           "noredzone"},

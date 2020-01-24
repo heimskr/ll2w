@@ -19,7 +19,9 @@ namespace LL2W {
 		cc79, cc80, arm_aapcs_vfpcc, intel_ocl_bicc, x86_64_sysvcc, x86_fastcallcc, x86_thiscallcc, arm_aapcscc,
 		spir_kernel};
 	enum class RetAttr {Zeroext, Signext, Inreg, Noalias, Nonnull};
-	enum class ParAttr {Byval, Inalloca, Sret, Nocapture, Readonly};
+	enum class ParAttr {
+		Byval, Inalloca, Sret, Nocapture, Readonly, Swiftself, Swifterror, Immarg, Nonnull, Returned, Nest, Nofree,
+		Zeroext, Signext, Inreg, Noalias};
 	enum class Deref {Default, Dereferenceable, DereferenceableOrNull};
 	enum class FnAttr {
 		alwaysinline, noredzone, convergent, norecurse, inlinehint, inaccessiblemem_or_argmemonly, sspreq,
