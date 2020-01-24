@@ -217,7 +217,7 @@ type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))
 type_vector: "<" TOK_DECIMAL "x" vector_type ">" { $$ = (new AN(VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: TOK_INTTYPE | type_ptr | TOK_FLOATTYPE;
 type_ptr: type_any "*" { $$ = (new AN(POINTERTYPE, "*"))->adopt($1); D($2); };
-type_function: type_any "(" types extra_ellipsis ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $4, $3}); D($2, $5, $6); }
+type_function: type_any "(" types extra_ellipsis ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $3, $4}); D($2, $5, $6); }
              | type_any "("            _ellipsis ")" "*" { $$ = (new AN(FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4, $5); };
 type_struct: "{" types "}"         { $$ = new StructNode(StructShape::Default, $2); D($1, $3);         }
            | "<" "{" types "}" ">" { $$ = new StructNode(StructShape::Packed,  $3); D($1, $2, $4, $5); };

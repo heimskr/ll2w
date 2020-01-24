@@ -156,6 +156,8 @@ namespace LL2W {
 	}
 
 	void ASTNode::debug(int indent, bool is_last) const {
+		if (indent == 0)
+			std::cerr << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 		for (int i = 0; i < indent; ++i) {
 			std::cerr << "\e[2m";
 			if (i == indent - 1)

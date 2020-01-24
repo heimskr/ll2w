@@ -49,14 +49,15 @@ namespace LL2W {
 
 	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
-		if (node->children.size() == 3) {
-			ASTNode *list = node->at(2);
+		if (node->children.size() == 3 || node->at(1)->symbol == TYPE_LIST) {
+			ASTNode *list = node->at(1);
 			argumentTypes.reserve(list->children.size());
 			for (ASTNode *child: *list)
 				argumentTypes.push_back(getType(child));
 		}
 
-		ellipsis = node->at(1) != nullptr;
+		node->debug();
+		ellipsis = node->size() == 3 || node->at(1)->symbol == TOK_ELLIPSIS;
 	}
 
 	FunctionType::~FunctionType() {
