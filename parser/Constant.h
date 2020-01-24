@@ -6,18 +6,18 @@
 #include "Enums.h"
 #include "Types.h"
 #include "Values.h"
+#include "ParAttrs.h"
 
 namespace LL2W {
 	class ASTNode;
 	class Constant {
 		private:
-			Constant(Type *, Value *, const std::unordered_set<ParAttr> &, int, Conversion, Constant *, Type *);
+			Constant(Type *, Value *, const ParAttrs &, Conversion, Constant *, Type *);
 
 		public:
 			Type *type;
 			Value *value;
-			std::unordered_set<ParAttr> parattrs;
-			int dereferenceable = -1;
+			ParAttrs parattrs;
 			Conversion conversion = Conversion::None;
 			Constant *conversionSource = nullptr;
 			Type *conversionType = nullptr;

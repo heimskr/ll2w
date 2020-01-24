@@ -128,6 +128,7 @@ using AN = LL2W::ASTNode;
 %token TOK_CATCH "catch"
 %token TOK_LANDINGPAD "landingpad"
 %token TOK_FILTER "filter"
+%token TOK_BYVAL "byval"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -196,7 +197,7 @@ metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | "null";
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | "null" | "zeroinitializer";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
@@ -362,9 +363,12 @@ constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt(
         | TOK_GVAR { $$ = (new AN(CONSTANT))->adopt($1); };
 constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
-parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
+parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr
+       | TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
+       | TOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
+       | TOK_BYVAL;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 

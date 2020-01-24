@@ -6,9 +6,9 @@
 #include "Lexer.h"
 
 namespace LL2W {
-	Constant::Constant(Type *type_, Value *value_, const std::unordered_set<ParAttr> &parattrs_, int dereferenceable_,
-	                   Conversion conversion_, Constant *conversion_source, Type *conversion_type):
-		type(type_), value(value_), parattrs(parattrs_), dereferenceable(dereferenceable_), conversion(conversion_),
+	Constant::Constant(Type *type_, Value *value_, const ParAttrs &parattrs_, Conversion conversion_,
+	                   Constant *conversion_source, Type *conversion_type):
+		type(type_), value(value_), parattrs(parattrs_), conversion(conversion_),
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
 	Constant::Constant(const ASTNode *node) {
@@ -39,18 +39,7 @@ namespace LL2W {
 				value = getValue(value_node);
 			}
 
-			for (ASTNode *child: *node->at(1)) {
-				if (child->symbol == TOK_DEREF) {
-					dereferenceable = atoi(child->at(0)->lexerInfo->c_str());
-				} else {
-					for (const std::pair<ParAttr, std::string> &pair: parattr_map) {
-						if (*child->lexerInfo == pair.second) {
-							parattrs.insert(pair.first);
-							break;
-						}
-					}
-				}
-			}
+			parattrs = {*node->at(1)};
 		}
 	}
 
@@ -64,17 +53,16 @@ namespace LL2W {
 	}
 
 	Constant * Constant::copy() const {
-		return new Constant(type->copy(), value->copy(), parattrs, dereferenceable, conversion,
+		return new Constant(type->copy(), value->copy(), parattrs, conversion,
 			conversionSource? conversionSource->copy() : nullptr, conversionType? conversionType->copy() : nullptr);
 	}
 
 	Constant::operator std::string() const {
 		std::stringstream out;
 		out << std::string(*type);
-		for (ParAttr attr: parattrs)
-			out << " " << parattr_map.at(attr);
-		if (dereferenceable != -1)
-			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
+		const std::string parattrs_str = parattrs;
+		if (!parattrs_str.empty())
+			out << " " << parattrs_str;
 		if (value) {
 			out << " " << std::string(*value);
 		} else if (conversion != Conversion::None) {

@@ -174,18 +174,19 @@ namespace LL2W {
 
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
-			case TOK_FLOATING:      return new DoubleValue(node);
-			case TOK_DECIMAL:       return new IntValue(node);
-			case TOK_BOOL:          return new BoolValue(node);
-			case VECTOR:            return new VectorValue(node);
-			case TOK_PVAR:          return new LocalValue(node);
-			case TOK_GVAR:          return new GlobalValue(node);
-			case TOK_GETELEMENTPTR: return new GetelementptrValue(node);
-			case TOK_VOID:          return new VoidValue();
-			case STRUCT_VALUE:      return new StructValue(node);
-			case VALUE_LIST:        return new ArrayValue(node);
-			case TOK_NULL:          return new NullValue();
-			case TOK_CSTRING:       return new CStringValue(node);
+			case TOK_FLOATING:        return new DoubleValue(node);
+			case TOK_DECIMAL:         return new IntValue(node);
+			case TOK_BOOL:            return new BoolValue(node);
+			case VECTOR:              return new VectorValue(node);
+			case TOK_PVAR:            return new LocalValue(node);
+			case TOK_GVAR:            return new GlobalValue(node);
+			case TOK_GETELEMENTPTR:   return new GetelementptrValue(node);
+			case TOK_VOID:            return new VoidValue();
+			case STRUCT_VALUE:        return new StructValue(node);
+			case VALUE_LIST:          return new ArrayValue(node);
+			case TOK_NULL:            return new NullValue();
+			case TOK_CSTRING:         return new CStringValue(node);
+			case TOK_ZEROINITIALIZER: return new ZeroinitializerValue();
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

@@ -145,6 +145,12 @@ namespace LL2W {
 		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
 	};
 
+	struct ZeroinitializerValue: public Value {
+		ZeroinitializerValue() {}
+		Value * copy() const override { return new ZeroinitializerValue(); }
+		operator std::string() override { return "zeroinitializer"; }
+	};
+
 	// TODO: ArrayValue
 
 	Value * getValue(const ASTNode *);
