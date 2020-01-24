@@ -47,6 +47,7 @@ namespace LL2W {
 			ASTNode * locate(const ASTNode *);
 			/** Copies the location from the first node in the list that isn't null. */
 			ASTNode * locate(std::initializer_list<const ASTNode *>);
+			ASTNode * locate(const Location &);
 			/** Concatenates the lexerInfo fields of every element of the children vector. */
 			std::string concatenate() const;
 			bool isType() const;

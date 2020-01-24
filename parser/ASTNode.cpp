@@ -128,6 +128,11 @@ namespace LL2W {
 		return this;
 	}
 
+	ASTNode * ASTNode::locate(const Location &loc) {
+		location = loc;
+		return this;
+	}
+
 	std::string ASTNode::concatenate() const {
 		if (symbol == VECTOR) {
 			std::stringstream out;
