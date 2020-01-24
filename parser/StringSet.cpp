@@ -9,8 +9,7 @@ namespace LL2W {
 	}
 
 	const std::string * StringSet::intern(const char *str) {
-		auto handle = set.insert(str);
-		return &*handle.first;
+		return intern(std::string(str));
 	}
 
 	const std::string * StringSet::intern(const std::string &str) {

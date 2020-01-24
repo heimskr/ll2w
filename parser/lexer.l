@@ -58,7 +58,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 
 %%
 
-<SGC>"<label>:"			{ BEGIN(LABEL1); RTOKEN(LABEL_COMMENT) }
+<SGC>"<label>:"				{ BEGIN(LABEL1); RTOKEN(LABEL_COMMENT) }
 <LABEL1>[0-9]+				{ RTOKEN(DECIMAL) }
 <LABEL1>":"					{ BEGIN(LABEL2); }
 <LABEL1>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }

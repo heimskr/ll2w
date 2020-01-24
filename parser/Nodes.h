@@ -194,6 +194,16 @@ namespace LL2W {
 		~LandingpadNode();
 		virtual std::string debugExtra() const override;
 	};
+
+	struct ConversionNode: public InstructionNode {
+		const std::string *result;
+		Type *from, *to;
+		Value *value;
+		Conversion conversionType;
+		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_);
+		~ConversionNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

@@ -121,23 +121,20 @@ namespace LL2W {
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 	                     ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group) {
 		atomic = false;
+		type = getType(type_);
+		value = getValue(value_);
+		ptrType = getType(ptr_type);
+		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+
+		delete type_;
+		delete value_;
+		delete ptr_type;
+		delete ptr_index;
 
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
 		}
-
-		type = getType(type_);
-		delete type_;
-
-		value = getValue(value_);
-		delete value_;
-
-		ptrType = getType(ptr_type);
-		delete ptr_type;
-
-		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
-		delete ptr_index;
 
 		if (align_) {
 			align = atoi(align_->lexerInfo->c_str());
@@ -158,29 +155,11 @@ namespace LL2W {
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
 	                     ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
-
-		if (volatile__) {
-			volatile_ = true;
-			delete volatile__;
-		}
-
 		type = getType(type_);
-		delete type_;
-
 		value = getValue(value_);
-		delete value_;
-
 		ptrType = getType(ptr_type);
-		delete ptr_type;
-
 		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
-		delete ptr_index;
-
-		if (syncscope_) {
-			syncscope = StringSet::intern(syncscope_->extractName());
-			delete syncscope_;
-		}
-
+		align = atoi(align_->lexerInfo->c_str());
 		const std::string &oname = *ordering_->lexerInfo;
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (oname == pair.second) {
@@ -188,10 +167,23 @@ namespace LL2W {
 				break;
 			}
 		}
-		delete ordering_;
 
-		align = atoi(align_->lexerInfo->c_str());
+		delete type_;
+		delete value_;
+		delete ptr_type;
+		delete ptr_index;
+		delete ordering_;
 		delete align_;
+
+		if (volatile__) {
+			volatile_ = true;
+			delete volatile__;
+		}
+
+		if (syncscope_) {
+			syncscope = StringSet::intern(syncscope_->extractName());
+			delete syncscope_;
+		}
 
 		if (invariant_group) {
 			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
@@ -232,21 +224,17 @@ namespace LL2W {
 	                   ASTNode *nonnull_, ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null,
 	                   ASTNode *bang_align) {
 		atomic = false;
-
 		result = StringSet::intern(result_->extractName());
-
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
 		}
-
 		type = getType(type_);
-		delete type_;
-
 		ptrType = getType(ptr_type);
-		delete ptr_type;
-
 		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+
+		delete type_;
+		delete ptr_type;
 		delete ptr_index;
 
 		if (align_) {
@@ -293,28 +281,18 @@ namespace LL2W {
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_index,
 	                   ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
-
 		result = StringSet::intern(result_->extractName());
-
 		if (volatile__) {
 			volatile_ = true;
 			delete volatile__;
 		}
-
 		type = getType(type_);
-		delete type_;
-
 		ptrType = getType(ptr_type);
-		delete ptr_type;
-
 		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
-		delete ptr_index;
-
 		if (syncscope_) {
 			syncscope = StringSet::intern(syncscope_->extractName());
 			delete syncscope_;
 		}
-
 		const std::string &oname = *ordering_->lexerInfo;
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (oname == pair.second) {
@@ -322,15 +300,18 @@ namespace LL2W {
 				break;
 			}
 		}
-		delete ordering_;
-
 		align = atoi(align_->lexerInfo->c_str());
-		delete align_;
-
 		if (invariant_group) {
 			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
 			delete invariant_group;
 		}
+
+		delete result_;
+		delete type_;
+		delete ptr_type;
+		delete ptr_index;
+		delete ordering_;
+		delete align_;
 	}
 
 	LoadNode::~LoadNode() {
@@ -362,7 +343,6 @@ namespace LL2W {
 
 	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
 		result = StringSet::intern(result_->extractName());
-		delete result_;
 
 		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {
 			if (*cond_->lexerInfo == pair.second) {
@@ -372,12 +352,13 @@ namespace LL2W {
 		}
 
 		type = getType(type_);
-		delete type_;
-
 		value1 = getValue(op1);
-		delete op1;
-
 		value2 = getValue(op2);
+
+		delete result_;
+		delete cond_;
+		delete type_;
+		delete op1;
 		delete op2;
 	}
 
@@ -403,10 +384,11 @@ namespace LL2W {
 		if (*type->lexerInfo != "i1")
 			yyerror("Expected i1 for br condition type");
 		condition = getValue(condition_);
-		delete condition_;
 		ifTrue = if_true->lexerInfo;
-		delete if_true;
 		ifFalse = if_false->lexerInfo;
+
+		delete condition_;
+		delete if_true;
 		delete if_false;
 	}
 
@@ -622,28 +604,24 @@ namespace LL2W {
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
 	                                     ASTNode *ptrval, ASTNode *indices_) {
 		result = StringSet::intern(pvar->extractName());
-		delete pvar;
-
 		if (_inbounds) {
 			inbounds = true;
 			delete _inbounds;
 		}
-
 		type = getType(type_);
-		delete type_;
-
 		ptrType = getType(ptr_type);
-		delete ptr_type;
-
 		ptrValue = StringSet::intern(ptrval->extractName());
-		delete ptrval;
-
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
 				atoi(comma->at(0)->lexerInfo->substr(1).c_str()),
 				atoi(comma->at(1)->lexerInfo->c_str()),
 				comma->size() == 3});
 		}
+
+		delete pvar;
+		delete type_;
+		delete ptr_type;
+		delete ptrval;
 		delete indices_;
 	}
 
@@ -671,9 +649,9 @@ namespace LL2W {
 
 	RetNode::RetNode(ASTNode *type_, ASTNode *value_) {
 		type = getType(type_);
-		delete type_;
-
 		value = getValue(value_);
+
+		delete type_;
 		delete value_;
 	}
 
@@ -710,17 +688,15 @@ namespace LL2W {
 
 	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
 		result = StringSet::intern(result_->extractName());
-		delete result_;
-
 		type = getType(type_);
-		delete type_;
-
 		for (ASTNode *clause: *clauses_) {
 			clauses.push_back(new Clause(clause));
 		}
-		delete clauses_;
-
 		cleanup = cleanup_;
+
+		delete result_;
+		delete type_;
+		delete clauses_;
 	}
 
 	LandingpadNode::~LandingpadNode() {
@@ -736,6 +712,38 @@ namespace LL2W {
 			out << " cleanup";
 		for (const Clause *clause: clauses)
 			out << " " << std::string(*clause);
+		return out.str();
+	}
+
+	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_) {
+		result = StringSet::intern(result_->extractName());
+		from = getType(from_);
+		value = getValue(value_);
+		to = getType(to_);
+		for (const std::pair<Conversion, std::string> &pair: conversion_map) {
+			if (*conv_op->lexerInfo == pair.second) {
+				conversionType = pair.first;
+				break;
+			}
+		}
+
+		delete result_;
+		delete conv_op;
+		delete from_;
+		delete value_;
+		delete to_;
+	}
+
+	ConversionNode::~ConversionNode() {
+		delete from;
+		delete to;
+		delete value;
+	}
+
+	std::string ConversionNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m "
+		    << std::string(*from) << " " << std::string(*value) << " \e[91mto\e[0m " << std::string(*to);
 		return out.str();
 	}
 }

@@ -169,12 +169,11 @@ attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }
          | TOK_STRING
          | fnattr;
 
-basic_fnattr: TOK_FNATTR_BASIC | TOK_READONLY { $1->symbol = TOK_FNATTR_BASIC; };
+basic_fnattr: TOK_FNATTR_BASIC | TOK_READONLY { $1->symbol = TOK_FNATTR_BASIC; } | TOK_PATCHABLE_PROLOGUE { $1->symbol = TOK_FNATTR_BASIC; };
 fnattr: basic_fnattr
       | "alignstack" "(" TOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     }
       | "allocsize"  "(" TOK_DECIMAL "," TOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); }
-      | "allocsize"  "(" TOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     }
-      | TOK_PATCHABLE_PROLOGUE;
+      | "allocsize"  "(" TOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     };
 
 //
 source_filename: "source_filename" "=" TOK_STRING { D($1, $2); $$ = new AN(TOK_SOURCE_FILENAME, $3->lexerInfo); }
@@ -279,7 +278,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad;
+           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert;
 
 i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
@@ -357,6 +356,8 @@ _clauses: clauses | { $$ = new AN(CLAUSES); };
 clauses: clauses clause { $1->adopt($2); } | clause { $$ = (new AN(CLAUSES))->adopt($1); };
 clause: "catch" type_any value { $1->adopt({$2, $3}); }
       | "filter" array     { $1->adopt($2); };
+
+i_convert: result TOK_CONV_OP type_any value "to" type_any { $$ = new ConversionNode($1, $2, $3, $4, $6); D($5); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }
