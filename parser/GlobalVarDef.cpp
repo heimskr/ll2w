@@ -80,8 +80,9 @@ namespace LL2W {
 			} else if (!extra) {
 				std::cout << "\e[91m!extra\e[0m\n";
 			} else {
-				std::cout << "[" << Parser::getName(extra->symbol) << "]\n";
-				extra->debug();
+				// TODO
+				// std::cout << "[" << Parser::getName(extra->symbol) << "]\n";
+				// extra->debug();
 			}
 		}
 	}

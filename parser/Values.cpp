@@ -136,6 +136,32 @@ namespace LL2W {
 		return out.str();
 	}
 
+	ArrayValue::ArrayValue(const ASTNode *node) {
+		for (const ASTNode *comma: *node) {
+			if (comma->size() == 1) // Presumably just a GVAR rather than a type + value
+				values.push_back(getValue(comma->at(0)));
+			else
+				values.push_back(getValue(comma->at(1)));
+		}
+	}
+
+	ArrayValue::~ArrayValue() {
+		for (Value *value: values)
+			delete value;
+	}
+
+	Value * ArrayValue::copy() const {
+		std::vector<Value *> values_copy;
+		values_copy.reserve(values.size());
+		for (Value *value: values)
+			values_copy.push_back(value->copy());
+		return new ArrayValue(values_copy);
+	}
+
+	ArrayValue::operator std::string() {
+		return "¿?";
+	}
+
 	Value * getValue(const ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING:      return new DoubleValue(node);
@@ -147,6 +173,7 @@ namespace LL2W {
 			case TOK_GETELEMENTPTR: return new GetelementptrValue(node);
 			case TOK_VOID:          return new VoidValue();
 			case STRUCT_VALUE:      return new StructValue(node);
+			case VALUE_LIST:        return new ArrayValue(node);
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

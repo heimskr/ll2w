@@ -180,12 +180,14 @@ namespace LL2W {
 			ClauseType clauseType;
 			Type *type;
 			Value *value;
+			Clause(ASTNode *);
 			~Clause();
 		};
 
 		const std::string *result;
 		Type *type;
 		bool cleanup;
+		std::vector<Clause> clauses;
 
 		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_);
 		~LandingpadNode();

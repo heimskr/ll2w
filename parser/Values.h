@@ -118,6 +118,20 @@ namespace LL2W {
 			operator std::string() override;
 	};
 
+	class ArrayValue: public Value {
+		private:
+			ArrayValue(const std::vector<Value *> &values_): values(values_) {}
+
+		public:
+			std::vector<Value *> values;
+			ArrayValue(const ASTNode *);
+			~ArrayValue();
+			Value * copy() const override;
+			operator std::string() override;
+	};
+
+	// TODO: ArrayValue
+
 	Value * getValue(const ASTNode *);
 }
 

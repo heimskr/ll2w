@@ -203,8 +203,10 @@ vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})
            | type_any value { $$ = (new AN(VECTOR))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
 struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = STRUCT_VALUE; D($3); };
 _value_pairs: { $$ = nullptr; } | value_pairs;
-value_pairs: value_pairs "," type_any value { $1->adopt($2->adopt({$3, $4})); }
-           | type_any value { $$ = (new AN(VALUE_LIST))->adopt((new AN(TOK_COMMA, ","))->adopt({$1, $2})); };
+value_pairs: value_pairs "," value_pair { $1->adopt($3); D($2); }
+           | value_pair { $$ = (new AN(VALUE_LIST))->adopt($1); };
+value_pair: type_any value { $$ = (new AN(TOK_COMMA, ","))->adopt({$1, $2}); }
+          | TOK_GVAR       { $$ = (new AN(TOK_COMMA, ","))->adopt($1); };
 array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbol = ARRAY_VALUE; D($4); };
 
 // Types

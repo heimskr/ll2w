@@ -687,19 +687,40 @@ namespace LL2W {
 		return "\e[91mret\e[0m " + (type_str != "void"? type_str + " " + std::string(*value) : type_str);
 	}
 
+	LandingpadNode::Clause::Clause(ASTNode *node) {
+		clauseType = node->symbol == TOK_CATCH? ClauseType::Catch : ClauseType::Filter;
+		// node->debug();
+		if (node->at(0)->symbol == ARRAY_VALUE) {
+			type = getType(node->at(0)->at(0));
+			value = getValue(node->at(0)->at(1));
+		} else {
+			type = getType(node->at(0));
+			value = getValue(node->at(1));
+		}
+	}
+
 	LandingpadNode::Clause::~Clause() {
 		delete type;
 		delete value;
 	}
 
 	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
-		
-		cleanup = cleanup_;
+		result = StringSet::intern(result_->extractName());
+		delete result_;
 
+		type = getType(type_);
+		delete type_;
+
+		for (ASTNode *clause: *clauses_) {
+			clauses.emplace_back(clause);
+		}
+		delete clauses_;
+
+		cleanup = cleanup_;
 	}
 
 	LandingpadNode::~LandingpadNode() {
-
+		delete type;
 	}
 
 	std::string LandingpadNode::debugExtra() const {
