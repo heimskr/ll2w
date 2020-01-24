@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Enums.h"
+#include "StringSet.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -101,7 +102,7 @@ namespace LL2W {
 	struct GlobalTemporaryType: public Type {
 		const std::string *globalName;
 		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}
-		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(node->lexerInfo) {}
+		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(StringSet::intern(node->extractName())) {}
 		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
 		Type * copy() const override { return new GlobalTemporaryType(globalName); }
 	};
