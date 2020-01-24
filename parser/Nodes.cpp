@@ -744,19 +744,22 @@ namespace LL2W {
 		return out.str();
 	}
 
-	BasicMathNode::BasicMathNode(ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *v1, ASTNode *v2) {
+	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_,
+	                             ASTNode *value2_) {
 		lexerInfo = oper->lexerInfo;
 		symbol = oper->symbol;
+		result = StringSet::intern(result_->extractName());
 		nuw = nuw_;
 		nsw = nsw_;
 		type = getType(type_);
-		value1 = getValue(v1);
-		value2 = getValue(v2);
+		value1 = getValue(value1_);
+		value2 = getValue(value2_);
 
+		delete result_;
 		delete oper;
 		delete type_;
-		delete v1;
-		delete v2;
+		delete value1_;
+		delete value2_;
 	}
 
 	BasicMathNode::~BasicMathNode() {

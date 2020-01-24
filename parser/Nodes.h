@@ -211,7 +211,8 @@ namespace LL2W {
 		bool nuw = false, nsw = false;
 		Type *type;
 		Value *value1, *value2;
-		BasicMathNode(ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_, ASTNode *value2_);
+		BasicMathNode(ASTNode *result_, ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_,
+		              ASTNode *value2_);
 		~BasicMathNode();
 		virtual std::string debugExtra() const override;
 	};

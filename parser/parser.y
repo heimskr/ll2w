@@ -370,11 +370,11 @@ clause: "catch" type_any value { $1->adopt({$2, $3}); }
 i_convert: result TOK_CONV_OP type_any value "to" type_any { $$ = new ConversionNode($1, $2, $3, $4, $6); D($5); };
 
 addsubmulshl: "add" | "sub" | "mul" | "shl";
-i_basicmath: addsubmulshl type_any value "," value { $$ = new BasicMathNode($1, false, false, $2, $3, $5); D($4); }
-           | addsubmulshl "nuw" type_any value "," value { $$ = new BasicMathNode($1, true, false, $3, $4, $6); D($2, $5); }
-           | addsubmulshl "nsw" type_any value "," value { $$ = new BasicMathNode($1, false, true, $3, $4, $6); D($2, $5); }
-           | addsubmulshl "nuw" "nsw" type_any value "," value { $$ = new BasicMathNode($1, true, true, $4, $5, $7); D($2, $4, $6); }
-           | addsubmulshl "nsw" "nuw" type_any value "," value { $$ = new BasicMathNode($1, true, true, $4, $5, $7); D($2, $4, $6); };
+i_basicmath: result addsubmulshl type_any value "," value { $$ = new BasicMathNode($1, $2, false, false, $3, $4, $6); D($5); }
+           | result addsubmulshl "nuw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, false, $4, $5, $7); D($3, $6); }
+           | result addsubmulshl "nsw" type_any value "," value { $$ = new BasicMathNode($1, $2, false, true, $4, $5, $7); D($3, $6); }
+           | result addsubmulshl "nuw" "nsw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, true, $5, $6, $8); D($3, $4, $6); }
+           | result addsubmulshl "nsw" "nuw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, true, $5, $6, $8); D($3, $4, $6); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }
