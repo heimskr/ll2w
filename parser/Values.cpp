@@ -53,37 +53,43 @@ namespace LL2W {
 
 	GetelementptrValue::GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
 	                                       const std::vector<std::pair<int, long>> &decimals_):
-		ASTNode(TOK_GETELEMENTPTR, ""), inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_),
-		decimals(decimals_) {}
+		inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_), decimals(decimals_) {}
 
 	GetelementptrValue::GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
-	                                       ASTNode *decimal_list): ASTNode(TOK_GETELEMENTPTR, "") {
-		if (inbounds_) {
-			inbounds = true;
-			delete inbounds_;
-		}
-
+	                                       ASTNode *decimal_list) {
 		type = getType(type_);
-		delete type_;
-
 		ptrType = getType(ptr_type);
-		delete ptr_type;
-
 		variable = getValue(variable_);
-		delete variable_;
-
 		for (auto iter = decimal_list->cbegin(), end = decimal_list->cend(); iter != end; ++iter) {
 			const ASTNode *comma = *iter;
 			const ASTNode *inttype = comma->at(0);
 			const ASTNode *decimal = comma->at(1);
 			decimals.push_back({atoi(inttype->lexerInfo->substr(1).c_str()), atol(decimal->lexerInfo->c_str())});
 		}
+
+		delete type_;
+		delete ptr_type;
+		delete variable_;
 		delete decimal_list;
+
+		if (inbounds_) {
+			inbounds = true;
+			delete inbounds_;
+		}
 	}
 
-	GetelementptrValue::GetelementptrValue(const ASTNode *node): ASTNode(TOK_GETELEMENTPTR, "") {
-		node->debug();
-		throw std::runtime_error("Unimplemented.");
+	GetelementptrValue::GetelementptrValue(ASTNode *node) {
+		inbounds = node->size() == 5;
+		type = getType(node->at(0));
+		ptrType = getType(node->at(1));
+		variable = getValue(node->at(2));
+
+		for (auto iter = node->at(3)->cbegin(), end = node->at(3)->cend(); iter != end; ++iter) {
+			const ASTNode *comma = *iter;
+			const ASTNode *inttype = comma->at(0);
+			const ASTNode *decimal = comma->at(1);
+			decimals.push_back({atoi(inttype->lexerInfo->substr(1).c_str()), atol(decimal->lexerInfo->c_str())});
+		}
 	}
 
 	GetelementptrValue::~GetelementptrValue() {
@@ -179,10 +185,7 @@ namespace LL2W {
 			case VECTOR:              return new VectorValue(node);
 			case TOK_PVAR:            return new LocalValue(node);
 			case TOK_GVAR:            return new GlobalValue(node);
-			case TOK_GETELEMENTPTR:
-				if (GetelementptrValue *value = dynamic_cast<GetelementptrValue *>(node))
-					return value;
-				return new GetelementptrValue(node);
+			case TOK_GETELEMENTPTR:   return new GetelementptrValue(node);
 			case TOK_VOID:            return new VoidValue();
 			case STRUCT_VALUE:        return new StructValue(node);
 			case VALUE_LIST:          return new ArrayValue(node);

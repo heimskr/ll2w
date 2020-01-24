@@ -395,7 +395,7 @@ const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimals ")"
-                  { $$ = new GetelementptrValue($2, $4, $6, $7, $8); D($1, $3, $5, $9); };
+                  { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
 decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST); };
 

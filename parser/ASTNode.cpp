@@ -204,6 +204,14 @@ namespace LL2W {
 		}
 	}
 
+	ASTNode * ASTNode::front() const {
+		return children.front();
+	}
+
+	ASTNode * ASTNode::back() const {
+		return children.back();
+	}
+
 	decltype(ASTNode::children)::iterator ASTNode::begin() {
 		return children.begin();
 	}

@@ -87,7 +87,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
 	};
 
-	class GetelementptrValue: public Value, public ASTNode {
+	class GetelementptrValue: public Value {
 		private:
 			GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
 			                   const std::vector<std::pair<int, long>> &decimals_);
@@ -100,7 +100,7 @@ namespace LL2W {
 
 			GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
 			                   ASTNode *decimal_list);
-			GetelementptrValue(const ASTNode *node);
+			GetelementptrValue(ASTNode *node);
 			~GetelementptrValue();
 			Value * copy() const override {
 				return new GetelementptrValue(inbounds, type->copy(), ptrType->copy(), variable->copy(), decimals);
