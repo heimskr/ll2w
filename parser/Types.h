@@ -94,6 +94,18 @@ namespace LL2W {
 		Type * copy() const override { return new StructType(name); }
 	};
 
+	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we
+	 *  have to defer its type resolution until everything is done parsing and use a temporary type in the meantime.
+	 *  After that, we need to traverse the AST and replace all the temporary types with the known type of the global
+	 *  variable. */
+	struct GlobalTemporaryType: public Type {
+		const std::string *globalName;
+		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}
+		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(node->lexerInfo) {}
+		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
+		Type * copy() const override { return new GlobalTemporaryType(globalName); }
+	};
+
 	Type * getType(const ASTNode *);
 	std::ostream & operator<<(std::ostream &os, Type &type);
 }

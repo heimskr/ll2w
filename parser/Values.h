@@ -11,6 +11,7 @@
 namespace LL2W {
 	class ASTNode;
 	struct Type;
+	class Constant;
 
 	struct Value {
 		virtual operator std::string() = 0;
@@ -120,10 +121,10 @@ namespace LL2W {
 
 	class ArrayValue: public Value {
 		private:
-			ArrayValue(const std::vector<std::pair<Type *, Value *>> &values_): values(values_) {}
+			ArrayValue(const std::vector<Constant *> &constants_): constants(constants_) {}
 
 		public:
-			std::vector<std::pair<Type *, Value *>> values;
+			std::vector<Constant *> constants;
 			ArrayValue(const ASTNode *);
 			~ArrayValue();
 			Value * copy() const override;

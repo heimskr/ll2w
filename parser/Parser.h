@@ -16,6 +16,7 @@ namespace LL2W {
 			static ASTNode *root;
 			Parser() = delete;
 			static void open(const std::string &filename);
+			static void debug(bool flex, bool bison);
 			static void parse();
 			static void done();
 

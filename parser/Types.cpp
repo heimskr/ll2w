@@ -124,6 +124,7 @@ namespace LL2W {
 			case TOK_CLASSVAR:  return new StructType(node->lexerInfo, StructForm::Class);
 			case TOK_UNIONVAR:  return new StructType(node->lexerInfo, StructForm::Union);
 			case STRUCTDEF:     return new StructType(dynamic_cast<const StructNode *>(node));
+			case TOK_GVAR:      return new GlobalTemporaryType(node);
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

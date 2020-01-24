@@ -12,8 +12,11 @@ namespace LL2W {
 	void Parser::open(const std::string &filename_) {
 		Parser::filename = filename_;
 		yyin = fopen(filename_.c_str(), "r");
-		yy_flex_debug = 0;
-		yydebug = 0;
+	}
+
+	void Parser::debug(bool flex, bool bison) {
+		yy_flex_debug = flex;
+		yydebug = bison;
 	}
 
 	void Parser::parse() {

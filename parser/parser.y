@@ -205,8 +205,7 @@ struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = STRUCT_VALUE; D($3); 
 _value_pairs: { $$ = nullptr; } | value_pairs;
 value_pairs: value_pairs "," value_pair { $1->adopt($3); D($2); }
            | value_pair { $$ = (new AN(VALUE_LIST))->adopt($1); };
-value_pair: type_any value { $$ = (new AN(TOK_COMMA, ","))->adopt({$1, $2}); }
-          | TOK_GVAR       { $$ = (new AN(TOK_COMMA, ","))->adopt($1); };
+value_pair: constant;
 array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbol = ARRAY_VALUE; D($4); };
 
 // Types
@@ -238,7 +237,7 @@ _addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); } |
 _externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
 _initial_value: initial_value | { $$ = nullptr; };
-initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | "zeroinitializer" | "null"
+initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | array | "zeroinitializer" | "null"
              | "{" initial_value_list "}" { $$ = $2; D($1, $3); };
 initial_value_list: initial_value_list initial_value { $$ = $1->adopt($2); }
                   | { $$ = new AN(INITIAL_VALUE_LIST); }
@@ -359,7 +358,8 @@ clause: "catch" type_any value { $1->adopt({$2, $3}); }
       | "filter" array     { $1->adopt($2); };
 
 // Constants
-constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); };
+constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }
+        | TOK_GVAR { $$ = (new AN(CONSTANT))->adopt($1); };
 constant_right: operand | const_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | { $$ = new AN(PARATTR_LIST); };
 parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr;
