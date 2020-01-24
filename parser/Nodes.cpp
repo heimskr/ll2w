@@ -118,18 +118,16 @@ namespace LL2W {
 
 // StoreNode
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
-	                     ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_group) {
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
+	                     ASTNode *nontemporal_, ASTNode *invariant_group) {
 		atomic = false;
 		type = getType(type_);
 		value = getValue(value_);
-		ptrType = getType(ptr_type);
-		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		constant = new Constant(constant_);
 
 		delete type_;
 		delete value_;
-		delete ptr_type;
-		delete ptr_index;
+		delete constant_;
 
 		if (volatile__) {
 			volatile_ = true;
@@ -152,17 +150,15 @@ namespace LL2W {
 		}
 	}
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *ptr_type, ASTNode *ptr_index,
-	                     ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
+	                     ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
 		type = getType(type_);
 		value = getValue(value_);
-		ptrType = getType(ptr_type);
-		ptrIndex = atoi(ptr_index->lexerInfo->substr(1).c_str());
+		constant = new Constant(constant_);
 		align = atoi(align_->lexerInfo->c_str());
-		const std::string &oname = *ordering_->lexerInfo;
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
-			if (oname == pair.second) {
+			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
 			}
@@ -170,8 +166,7 @@ namespace LL2W {
 
 		delete type_;
 		delete value_;
-		delete ptr_type;
-		delete ptr_index;
+		delete constant_;
 		delete ordering_;
 		delete align_;
 
@@ -194,7 +189,7 @@ namespace LL2W {
 	StoreNode::~StoreNode() {
 		delete type;
 		delete value;
-		delete ptrType;
+		delete constant;
 	}
 
 	std::string StoreNode::debugExtra() const {
@@ -204,8 +199,7 @@ namespace LL2W {
 			out << " \e[38;5;202matomic\e[0m";
 		if (volatile_)
 			out << " \e[38;5;202mvolatile\e[0m";
-		out << "\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m " << std::string(*ptrType)
-		    << " \e[32m%" << ptrIndex << "\e[0m";
+		out << "\e[0m " << std::string(*type) << " " << std::string(*value) << "\e[2m,\e[0m " << std::string(*constant);
 		if (syncscope)
 			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (align != -1)
@@ -744,10 +738,10 @@ namespace LL2W {
 		return out.str();
 	}
 
-	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_,
-	                             ASTNode *value2_) {
-		lexerInfo = oper->lexerInfo;
-		symbol = oper->symbol;
+	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_,
+	                             ASTNode *value1_, ASTNode *value2_) {
+		oper = oper_->lexerInfo;
+		operSymbol = oper_->symbol;
 		result = StringSet::intern(result_->extractName());
 		nuw = nuw_;
 		nsw = nsw_;
@@ -756,7 +750,7 @@ namespace LL2W {
 		value2 = getValue(value2_);
 
 		delete result_;
-		delete oper;
+		delete oper_;
 		delete type_;
 		delete value1_;
 		delete value2_;
@@ -770,7 +764,7 @@ namespace LL2W {
 
 	std::string BasicMathNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *lexerInfo << " " << std::string(*type) << " "
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *oper << " " << std::string(*type) << " "
 		    << std::string(*value1) << "\e[2m,\e[0m " << std::string(*value2);
 		return out.str();
 	}

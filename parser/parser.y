@@ -299,14 +299,14 @@ _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
-i_store: "store" _volatile type_any operand "," type_ptr TOK_PVAR _align _nontemporal _invariant_group
-         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $5); };
+i_store: "store" _volatile type_any operand "," constant _align _nontemporal _invariant_group
+         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8, $9))->locate($1); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
 _nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
 _invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PVAR _syncscope TOK_ORDERING align _invariant_group
-                { $$ = (new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12))->locate($1); D($1, $2, $6); };
+i_store_atomic: "store" "atomic" _volatile type_any operand "," constant _syncscope TOK_ORDERING align _invariant_group
+                { $$ = (new StoreNode($3, $4, $5, $7, $8, $9, $10, $11))->locate($1); D($1, $2, $6); };
 _syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
 i_load: result "load" _volatile type_any "," constant _align _nontemporal _invariant_load
