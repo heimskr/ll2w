@@ -197,6 +197,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 "sub"						{ RTOKEN(SUB) }
 "mul"						{ RTOKEN(MUL) }
 "shl"						{ RTOKEN(SHL) }
+"phi"						{ RTOKEN(PHI) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

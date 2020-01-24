@@ -105,7 +105,7 @@ namespace LL2W {
 		Value *condition;
 		const std::string *ifTrue, *ifFalse;
 
-		BrCondNode(const ASTNode *type, const ASTNode *condition_, const ASTNode *if_true, const ASTNode *if_false);
+		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false);
 		~BrCondNode();
 		virtual std::string debugExtra() const override;
 	};
@@ -217,6 +217,16 @@ namespace LL2W {
 		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_,
 		              ASTNode *value2_);
 		~BasicMathNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct PhiNode: public InstructionNode {
+		const std::string *result;
+		std::unordered_set<Fastmath> fastmath;
+		Type *type;
+		std::vector<std::pair<Value *, const std::string *>> pairs;
+		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_);
+		~PhiNode();
 		virtual std::string debugExtra() const override;
 	};
 }

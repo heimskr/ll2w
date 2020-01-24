@@ -56,9 +56,8 @@ namespace LL2W {
 		ASTNode(TOK_GETELEMENTPTR, ""), inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_),
 		decimals(decimals_) {}
 
-	GetelementptrValue::GetelementptrValue(const ASTNode *inbounds_, const ASTNode *type_, const ASTNode *ptr_type,
-	                                       const ASTNode *variable_, const ASTNode *decimal_list):
-	                                       ASTNode(TOK_GETELEMENTPTR, "") {
+	GetelementptrValue::GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
+	                                       ASTNode *decimal_list): ASTNode(TOK_GETELEMENTPTR, "") {
 		if (inbounds_) {
 			inbounds = true;
 			delete inbounds_;
@@ -172,7 +171,7 @@ namespace LL2W {
 
 	CStringValue::CStringValue(const ASTNode *node): CStringValue(StringSet::intern(node->extractName())) {}
 
-	Value * getValue(const ASTNode *node) {
+	Value * getValue(ASTNode *node) {
 		switch (node->symbol) {
 			case TOK_FLOATING:        return new DoubleValue(node);
 			case TOK_DECIMAL:         return new IntValue(node);
@@ -180,7 +179,10 @@ namespace LL2W {
 			case VECTOR:              return new VectorValue(node);
 			case TOK_PVAR:            return new LocalValue(node);
 			case TOK_GVAR:            return new GlobalValue(node);
-			case TOK_GETELEMENTPTR:   return new GetelementptrValue(node);
+			case TOK_GETELEMENTPTR:
+				if (GetelementptrValue *value = dynamic_cast<GetelementptrValue *>(node))
+					return value;
+				return new GetelementptrValue(node);
 			case TOK_VOID:            return new VoidValue();
 			case STRUCT_VALUE:        return new StructValue(node);
 			case VALUE_LIST:          return new ArrayValue(node);

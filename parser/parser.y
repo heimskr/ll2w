@@ -136,11 +136,12 @@ using AN = LL2W::ASTNode;
 %token TOK_SUB "sub"
 %token TOK_MUL "mul"
 %token TOK_SHL "shl"
+%token TOK_PHI "phi"
 
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF PHI_PAIR
 
 %start start
 
@@ -286,7 +287,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 // Instructions
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath;
+           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate($1); D($2, $6, $9); };
@@ -373,6 +374,10 @@ i_basicmath: result addsubmulshl type_any value "," value { $$ = (new BasicMathN
            | result addsubmulshl "nsw" type_any value "," value { $$ = (new BasicMathNode($1, $2, false, true, $4, $5, $7))->locate($1); D($3, $6); }
            | result addsubmulshl "nuw" "nsw" type_any value "," value { $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate($1); D($3, $4, $6); }
            | result addsubmulshl "nsw" "nuw" type_any value "," value { $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate($1); D($3, $4, $6); };
+
+i_phi: result "phi" fastmath_flags type_any phi_list { $$ = (new PhiNode($1, $3, $4, $5))->locate($1); D($2); };
+phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = (new AN(PHI_PAIR))->adopt($1); };
+phi_pair: "[" value "," TOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }

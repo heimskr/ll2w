@@ -65,6 +65,7 @@ namespace LL2W {
 			decltype(children)::const_iterator cend() const noexcept;
 
 			std::string extractName() const;
+			const std::string * extracted() const;
 	};
 
 	struct MetadataDef: public ASTNode {

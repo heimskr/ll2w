@@ -239,6 +239,10 @@ namespace LL2W {
 			std::string(Parser::getName(symbol)));
 	}
 
+	const std::string * ASTNode::extracted() const {
+		return StringSet::intern(extractName());
+	}
+
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
 		ASTNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		distinct = distinct_node != nullptr;

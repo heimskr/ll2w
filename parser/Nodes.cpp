@@ -370,8 +370,7 @@ namespace LL2W {
 		return "\e[91mbr\e[0;34m label \e[32m" + *destination + "\e[0m";
 	}
 
-	BrCondNode::BrCondNode(const ASTNode *type, const ASTNode *condition_, const ASTNode *if_true,
-	                       const ASTNode *if_false) {
+	BrCondNode::BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false) {
 		if (*type->lexerInfo != "i1")
 			yyerror("Expected i1 for br condition type");
 		condition = getValue(condition_);
@@ -767,5 +766,35 @@ namespace LL2W {
 		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *oper << " " << std::string(*type) << " "
 		    << std::string(*value1) << "\e[2m,\e[0m " << std::string(*value2);
 		return out.str();
+	}
+
+	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_) {
+		result = StringSet::intern(result_->extractName());
+		type = getType(type_);
+		for (ASTNode *child: *fastmath_) {
+			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
+				if (*child->lexerInfo == pair.second) {
+					fastmath.insert(pair.first);
+					break;
+				}
+			}
+		}
+		for (ASTNode *node: *pairs_)
+			pairs.push_back({getValue(node->at(0)), node->at(1)->extracted()});
+
+		delete result_;
+		delete type_;
+		delete fastmath_;
+		delete pairs_;
+	}
+
+	PhiNode::~PhiNode() {
+		delete type;
+		for (const std::pair<Value *, const std::string *> &pair: pairs)
+			delete pair.first;
+	}
+
+	std::string PhiNode::debugExtra() const {
+		return "??";
 	}
 }
