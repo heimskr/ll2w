@@ -55,8 +55,10 @@ namespace LL2W {
 
 			decltype(children)::iterator begin();
 			decltype(children)::iterator end();
-			decltype(children)::const_iterator cbegin() const;
-			decltype(children)::const_iterator cend() const;
+			decltype(children)::const_iterator begin() const;
+			decltype(children)::const_iterator end() const;
+			decltype(children)::const_iterator cbegin() const noexcept;
+			decltype(children)::const_iterator cend() const noexcept;
 
 			std::string extractName() const;
 	};

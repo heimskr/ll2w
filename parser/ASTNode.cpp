@@ -194,11 +194,19 @@ namespace LL2W {
 		return children.end();
 	}
 
-	decltype(ASTNode::children)::const_iterator ASTNode::cbegin() const {
+	decltype(ASTNode::children)::const_iterator ASTNode::begin() const {
+		return children.begin();
+	}
+
+	decltype(ASTNode::children)::const_iterator ASTNode::end() const {
+		return children.end();
+	}
+
+	decltype(ASTNode::children)::const_iterator ASTNode::cbegin() const noexcept {
 		return children.cbegin();
 	}
 
-	decltype(ASTNode::children)::const_iterator ASTNode::cend() const {
+	decltype(ASTNode::children)::const_iterator ASTNode::cend() const noexcept {
 		return children.cend();
 	}
 
