@@ -139,27 +139,39 @@ namespace LL2W {
 	ArrayValue::ArrayValue(const ASTNode *node) {
 		for (const ASTNode *comma: *node) {
 			if (comma->size() == 1) // Presumably just a GVAR rather than a type + value
-				values.push_back(getValue(comma->at(0)));
+				values.push_back({nullptr, getValue(comma->at(0))});
 			else
-				values.push_back(getValue(comma->at(1)));
+				values.push_back({getType(comma->at(0)), getValue(comma->at(1))});
 		}
 	}
 
 	ArrayValue::~ArrayValue() {
-		for (Value *value: values)
-			delete value;
+		for (const std::pair<Type *, Value *> &pair: values) {
+			delete pair.first;
+			delete pair.second;
+		}
 	}
 
 	Value * ArrayValue::copy() const {
-		std::vector<Value *> values_copy;
+		std::vector<std::pair<Type *, Value *>> values_copy;
 		values_copy.reserve(values.size());
-		for (Value *value: values)
-			values_copy.push_back(value->copy());
+		for (const std::pair<Type *, Value *> &pair: values)
+			values_copy.push_back({pair.first->copy(), pair.second->copy()});
 		return new ArrayValue(values_copy);
 	}
 
 	ArrayValue::operator std::string() {
-		return "¿?";
+		std::stringstream out;
+		out << "\e[2m[\e[0m";
+		for (auto begin = values.cbegin(), iter = begin, end = values.cend(); iter != end; ++iter) {
+			if (iter != begin)
+				out << "\e[2m,\e[0m ";
+			if (iter->first)
+				out << std::string(*iter->first) << " ";
+			out << std::string(*iter->second);
+		}
+		out << "\e[2m]\e[0m";
+		return out.str();
 	}
 
 	Value * getValue(const ASTNode *node) {

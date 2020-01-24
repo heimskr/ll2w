@@ -120,10 +120,10 @@ namespace LL2W {
 
 	class ArrayValue: public Value {
 		private:
-			ArrayValue(const std::vector<Value *> &values_): values(values_) {}
+			ArrayValue(const std::vector<std::pair<Type *, Value *>> &values_): values(values_) {}
 
 		public:
-			std::vector<Value *> values;
+			std::vector<std::pair<Type *, Value *>> values;
 			ArrayValue(const ASTNode *);
 			~ArrayValue();
 			Value * copy() const override;
