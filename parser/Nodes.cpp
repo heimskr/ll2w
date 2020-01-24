@@ -10,7 +10,7 @@ namespace LL2W {
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
 	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		delete result_;
 
 		for (ASTNode *child: *fastmath_) {
@@ -67,7 +67,7 @@ namespace LL2W {
 
 	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 	                       ASTNode *addrspace_) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		delete result_;
 
 		if (inalloca_) {
@@ -217,7 +217,7 @@ namespace LL2W {
 	                   ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group, ASTNode *nonnull_,
 	                   ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null, ASTNode *bang_align) {
 		atomic = false;
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		type = getType(type_);
 		constant = new Constant(constant_);
 
@@ -273,7 +273,7 @@ namespace LL2W {
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_,
 	                   ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
 		atomic = true;
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		type = getType(type_);
 		constant = new Constant(constant_);
 		align = atoi(align_->lexerInfo->c_str());
@@ -333,7 +333,7 @@ namespace LL2W {
 	}
 
 	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 
 		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {
 			if (*cond_->lexerInfo == pair.second) {
@@ -677,7 +677,7 @@ namespace LL2W {
 	}
 
 	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		type = getType(type_);
 		for (ASTNode *clause: *clauses_) {
 			clauses.push_back(new Clause(clause));
@@ -706,7 +706,7 @@ namespace LL2W {
 	}
 
 	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		from = getType(from_);
 		value = getValue(value_);
 		to = getType(to_);
@@ -738,38 +738,38 @@ namespace LL2W {
 	}
 
 	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_,
-	                             ASTNode *value1_, ASTNode *value2_) {
+	                             ASTNode *left_, ASTNode *right_) {
 		oper = oper_->lexerInfo;
 		operSymbol = oper_->symbol;
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		nuw = nuw_;
 		nsw = nsw_;
 		type = getType(type_);
-		value1 = getValue(value1_);
-		value2 = getValue(value2_);
+		left = getValue(left_);
+		right = getValue(right_);
 
 		delete result_;
 		delete oper_;
 		delete type_;
-		delete value1_;
-		delete value2_;
+		delete left_;
+		delete right_;
 	}
 
 	BasicMathNode::~BasicMathNode() {
 		delete type;
-		delete value1;
-		delete value2;
+		delete left;
+		delete right;
 	}
 
 	std::string BasicMathNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *oper << " " << std::string(*type) << " "
-		    << std::string(*value1) << "\e[2m,\e[0m " << std::string(*value2);
+		    << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
 		return out.str();
 	}
 
 	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_) {
-		result = StringSet::intern(result_->extractName());
+		result = result_->extracted();
 		type = getType(type_);
 		for (ASTNode *child: *fastmath_) {
 			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
@@ -796,5 +796,32 @@ namespace LL2W {
 
 	std::string PhiNode::debugExtra() const {
 		return "??";
+	}
+
+	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
+		result = result_->extracted();
+		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
+		type = getType(type_);
+		left = getValue(left_);
+		right = getValue(right_);
+
+		delete result_;
+		delete div;
+		delete type_;
+		delete left_;
+		delete right_;
+	}
+
+	DivNode::~DivNode() {
+		delete type;
+		delete left;
+		delete right;
+	}
+
+	std::string DivNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << (divType == DivType::Sdiv? 's' : 'u') << "div\e[0m "
+		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
+		return out.str();
 	}
 }

@@ -55,6 +55,7 @@ ORDERING			("unordered"|"monotonic"|"acquire"|"release"|"acq_rel"|"seq_cst")
 ICMP_COND			("eq"|"ne"|"ugt"|"uge"|"ult"|"ule"|"sgt"|"sge"|"slt"|"sle")
 TAIL				("tail"|"musttail"|"notail")
 CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"sitofp"|"ptrtoint"|"inttoptr"|"bitcast"|"addrspacecast")
+DIV					("sdiv"|"udiv")
 
 %%
 
@@ -103,6 +104,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 {ICMP_COND}					{ RTOKEN(ICMP_COND) }
 {TAIL}						{ RTOKEN(TAIL) }
 {CONV_OP}					{ RTOKEN(CONV_OP) }
+{DIV}						{ RTOKEN(DIV) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }

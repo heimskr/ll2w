@@ -213,9 +213,9 @@ namespace LL2W {
 		int operSymbol;
 		bool nuw = false, nsw = false;
 		Type *type;
-		Value *value1, *value2;
-		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *value1_,
-		              ASTNode *value2_);
+		Value *left, *right;
+		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_,
+		              ASTNode *right_);
 		~BasicMathNode();
 		virtual std::string debugExtra() const override;
 	};
@@ -227,6 +227,19 @@ namespace LL2W {
 		std::vector<std::pair<Value *, const std::string *>> pairs;
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_);
 		~PhiNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct DivNode: public InstructionNode {
+		enum class DivType {Sdiv, Udiv};
+
+		const std::string *result;
+		DivType divType;
+		Type *type;
+		Value *left, *right;
+
+		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		~DivNode();
 		virtual std::string debugExtra() const override;
 	};
 }

@@ -52,6 +52,7 @@ using AN = LL2W::ASTNode;
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
+%token TOK_DIV
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -171,14 +172,19 @@ program: program source_filename { $1->adopt($2); }
 declaration: "declare" function_header { $1->adopt($2); };
 
 
+
 // Struct definitions
+
 struct_def: struct_def_left "opaque"      { $$ = new StructNode(StructShape::Opaque, $1, nullptr); D($2); }
           | struct_def_left "{" types "}" { $$ = new StructNode(StructShape::Default, $1, $3); D($2, $4); }
           | struct_def_left "<" "{" types "}" ">" { $$ = new StructNode(StructShape::Packed, $1, $4); D($2, $3, $5, $6); };
 struct_def_left: csuvar "=" "type" { $$ = $1; D($2, $3); };
 csuvar: TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 
+
+
 // Attributes
+
 attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); D($2, $4, $5, $7); };
 attribute_list: attribute_list attribute { $$ = $1->adopt($2); }
               | { $$ = new AN(ATTRIBUTE_LIST); };
@@ -193,7 +199,10 @@ fnattr: basic_fnattr
       | "allocsize"  "(" TOK_DECIMAL "," TOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); }
       | "allocsize"  "(" TOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     };
 
-//
+
+
+// Miscellaneous
+
 source_filename: "source_filename" "=" TOK_STRING { D($1, $2); $$ = new AN(TOK_SOURCE_FILENAME, $3->lexerInfo); }
 
 target: TOK_TARGET target_type "=" TOK_STRING { $$ = $1->adopt({$2, $4}); }
@@ -228,7 +237,11 @@ full_array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbo
 bare_array: "[" value_pairs "]" { $$ = $2; D($1, $3); };
 array: full_array;
 
+fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS) };
+
+
 // Types
+
 type_any: type_nonvoid | TOK_VOID;
 type_nonvoid: TOK_INTTYPE | TOK_FLOATTYPE | type_array | type_vector | type_ptr | type_function | type_struct | TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 type_array:  "[" TOK_DECIMAL "x" type_any    "]" { $$ = (new AN(ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
@@ -244,7 +257,10 @@ types: types "," type_any { $$ = $1->adopt($3); D($2); }
 extra_ellipsis: "," "..." { D($1); $$ = $2; } | { $$ = nullptr; };
 _ellipsis: "..." | { $$ = nullptr; };
 
+
+
 // Globals
+
 global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
             _externally_initialized global_or_constant type_any gdef_extras
             { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); }
@@ -267,7 +283,10 @@ section: TOK_SECTION TOK_STRING       { $$ = $1->adopt($2); };
 comdat:  TOK_COMDAT "(" TOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
       |  TOK_COMDAT;
 
+
+
 // Functions
+
 function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs _personality
                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12, $13); D($8, $10); };
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST); };
@@ -294,9 +313,11 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(PREDS_LIST); };
 
 
+
 // Instructions
+
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
-           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi;
+           | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -390,7 +411,13 @@ i_phi: result "phi" fastmath_flags type_any phi_list
 phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = (new AN(PHI_PAIR))->adopt($1); };
 phi_pair: "[" value "," TOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
+i_div: result TOK_DIV type_any value "," value
+     { auto loc = $1->location; $$ = (new DivNode($1, $2, $3, $4, $6))->locate(loc); D($5); };
+
+
+
 // Constants
+
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }
         | TOK_GVAR { $$ = (new AN(CONSTANT))->adopt($1); };
 constant_right: operand | const_expr;
@@ -410,10 +437,8 @@ getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
 decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST); };
 
-// Miscellaneous
-fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS) };
-
 %%
+
 #pragma GCC diagnostic pop
 
 const char * LL2W::Parser::getName(int symbol) {
