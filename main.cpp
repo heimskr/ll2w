@@ -79,7 +79,7 @@ void rendertest() {
 }
 
 void parsertest() {
-	LL2W::Parser::open("SelectNode-vtable.ll");
+	LL2W::Parser::open("main.ll");
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	LL2W::Parser::root->debug();

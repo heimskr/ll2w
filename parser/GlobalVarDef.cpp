@@ -7,8 +7,8 @@
 namespace LL2W {
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 	                           ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
-	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *constant_,
-	                           ASTNode *gdef_extras): ASTNode(TOK_GVAR, gvar->lexerInfo) {
+	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *type_or_constant,
+	                           ASTNode *gdef_extras): ASTNode(GLOBAL_DEF, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
 			for (const std::pair<Linkage, std::string> &pair: linkage_map) {
@@ -66,8 +66,10 @@ namespace LL2W {
 			delete global_or_constant;
 		}
 
-		constant = new Constant(constant_);
-		delete constant_;
+		if (type_or_constant->symbol == CONSTANT)
+			constant = new Constant(type_or_constant);
+		else
+			type = getType(type_or_constant);
 
 		for (ASTNode *extra: *gdef_extras) {
 			if (extra->symbol == TOK_SECTION) {
@@ -85,6 +87,13 @@ namespace LL2W {
 				// extra->debug();
 			}
 		}
+	}
+
+	GlobalVarDef::~GlobalVarDef() {
+		if (constant)
+			delete constant;
+		if (type)
+			delete type;
 	}
 
 	std::string GlobalVarDef::debugExtra() const {
@@ -120,7 +129,10 @@ namespace LL2W {
 			out << " externally_initialized";
 		out << (isConstant? " constant" : " global");
 		// out << "\e[0m " << std::string(*type);
-		out << " " << std::string(*constant);
+		if (constant)
+			out << " " << std::string(*constant);
+		else
+			out << " " << std::string(*type);
 		// if (initialValue) {
 		// 	if (initialValue->symbol == TOK_CSTRING)
 		// 		out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";

@@ -56,7 +56,6 @@ namespace LL2W {
 				argumentTypes.push_back(getType(child));
 		}
 
-		node->debug();
 		ellipsis = node->size() == 3 || node->at(1)->symbol == TOK_ELLIPSIS;
 	}
 

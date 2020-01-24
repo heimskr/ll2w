@@ -132,7 +132,7 @@ using AN = LL2W::ASTNode;
 %token CONSTANT CONST_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
-%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES
+%token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF
 
 %start start
 
@@ -228,7 +228,7 @@ _ellipsis: "..." | { $$ = nullptr; };
 
 // Globals
 global_def: TOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
-           _externally_initialized global_or_constant constant gdef_extras
+           _externally_initialized global_or_constant type_or_constant gdef_extras
            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); };
 
 _linkage: TOK_LINKAGE | { $$ = nullptr; };
@@ -238,6 +238,7 @@ _thread_local: "thread_local" "(" TOK_THREAD_LOCAL_TYPE ")" { $$ = $1->adopt($3)
 _addrspace: "addrspace" "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); } | { $$ = nullptr; };
 _externally_initialized: TOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
+type_or_constant: type_any | constant;
 _initial_value: initial_value | { $$ = nullptr; };
 initial_value: TOK_CSTRING | TOK_FLOATING | TOK_DECIMAL | array | "zeroinitializer" | "null"
              | "{" initial_value_list "}" { $$ = $2; D($1, $3); };
