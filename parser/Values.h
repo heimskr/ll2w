@@ -133,6 +133,7 @@ namespace LL2W {
 	// TODO: ArrayValue
 
 	Value * getValue(const ASTNode *);
+	std::ostream & operator<<(std::ostream &, Value &);
 }
 
 

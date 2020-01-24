@@ -178,16 +178,17 @@ namespace LL2W {
 		struct Clause {
 			enum class ClauseType {Catch, Filter};
 			ClauseType clauseType;
-			Type *type;
-			Value *value;
+			Type *type = nullptr;
+			Value *value = nullptr;
 			Clause(ASTNode *);
 			~Clause();
+			operator std::string() const;
 		};
 
 		const std::string *result;
 		Type *type;
 		bool cleanup;
-		std::vector<Clause> clauses;
+		std::vector<Clause *> clauses;
 
 		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_);
 		~LandingpadNode();

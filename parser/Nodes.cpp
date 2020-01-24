@@ -689,7 +689,6 @@ namespace LL2W {
 
 	LandingpadNode::Clause::Clause(ASTNode *node) {
 		clauseType = node->symbol == TOK_CATCH? ClauseType::Catch : ClauseType::Filter;
-		// node->debug();
 		if (node->at(0)->symbol == ARRAY_VALUE) {
 			type = getType(node->at(0)->at(0));
 			value = getValue(node->at(0)->at(1));
@@ -704,6 +703,11 @@ namespace LL2W {
 		delete value;
 	}
 
+	LandingpadNode::Clause::operator std::string() const {
+		return (clauseType == ClauseType::Catch? "catch" : "filter") + (type? " " + std::string(*type) : "") + " " +
+			std::string(*value);
+	}
+
 	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
 		result = StringSet::intern(result_->extractName());
 		delete result_;
@@ -712,7 +716,7 @@ namespace LL2W {
 		delete type_;
 
 		for (ASTNode *clause: *clauses_) {
-			clauses.emplace_back(clause);
+			clauses.push_back(new Clause(clause));
 		}
 		delete clauses_;
 
@@ -721,9 +725,17 @@ namespace LL2W {
 
 	LandingpadNode::~LandingpadNode() {
 		delete type;
+		for (Clause *clause: clauses)
+			delete clause;
 	}
 
 	std::string LandingpadNode::debugExtra() const {
-		return "?";
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91mlandingpad\e[0m " << std::string(*type);
+		if (cleanup)
+			out << " cleanup";
+		for (const Clause *clause: clauses)
+			out << " " << std::string(*clause);
+		return out.str();
 	}
 }

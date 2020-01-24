@@ -95,6 +95,7 @@ namespace LL2W {
 	};
 
 	Type * getType(const ASTNode *);
+	std::ostream & operator<<(std::ostream &os, Type &type);
 }
 
 #endif

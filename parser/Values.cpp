@@ -190,4 +190,8 @@ namespace LL2W {
 			                                     std::string(Parser::getName(node->symbol)));
 		}
 	}
+
+	std::ostream & operator<<(std::ostream &os, Value &value) {
+		return os << std::string(value);
+	}
 }
