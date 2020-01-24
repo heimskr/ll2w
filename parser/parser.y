@@ -288,11 +288,11 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath;
 
-i_select: TOK_PVAR "=" "select" fastmath_flags type_any value "," type_any value "," type_any value
-          { $$ = new SelectNode($1, $4, $5, $6, $8, $9, $11, $12); D($2, $3, $7, $10); };
+i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
+          { $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate($1); D($2, $6, $9); };
 
-i_alloca: TOK_PVAR "=" "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
-          { $$ = new AllocaNode($1, $4, $5, $6, $7, $8); D($2, $3); };
+i_alloca: result "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
+          { $$ = (new AllocaNode($1, $3, $4, $5, $6, $7))->locate($1); D($2); };
 _inalloca: "inalloca" | { $$ = nullptr; };
 _alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
 _align: align | { $$ = nullptr; };
@@ -300,18 +300,18 @@ align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
 i_store: "store" _volatile type_any operand "," type_ptr TOK_PVAR _align _nontemporal _invariant_group
-         { $$ = new StoreNode($2, $3, $4, $6, $7, $8, $9, $10); D($1, $5); };
+         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
 _nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
 _invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
 i_store_atomic: "store" "atomic" _volatile type_any operand "," type_ptr TOK_PVAR _syncscope TOK_ORDERING align _invariant_group
-                { $$ = new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12); D($1, $2, $6); };
+                { $$ = (new StoreNode($3, $4, $5, $7, $8, $9, $10, $11, $12))->locate($1); D($1, $2, $6); };
 _syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
-i_load: TOK_PVAR "=" "load" _volatile type_any "," constant _align _nontemporal _invariant_load
+i_load: result "load" _volatile type_any "," constant _align _nontemporal _invariant_load
         _invariant_group _nonnull _dereferenceable _dereferenceable_or_null _bang_align
-        { $$ = new LoadNode($1, $4, $5, $7, $8, $9, $10, $11, $12, $13, $14, $15); D($2, $3, $6); };
+        { $$ = (new LoadNode($1, $3, $4, $6, $7, $8, $9, $10, $11, $12, $13, $14))->locate($1); D($2, $5); };
 // TODO: what is the actual form of the arguments for these?
 _invariant_load:          "," "!invariant.load"          TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 _nonnull:                 "," "!nonnull"                 TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
@@ -319,25 +319,24 @@ _dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $3; 
 _dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 _bang_align:              "," "!align"                   metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
 
-i_load_atomic: TOK_PVAR "=" "load" "atomic" _volatile type_any "," constant _syncscope TOK_ORDERING align _invariant_group
-               { $$ = new LoadNode($1, $5, $6, $8, $9, $10, $11, $12); D($2, $3, $4, $7); };
+i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope TOK_ORDERING align _invariant_group
+               { $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate($1); D($2, $3, $6); };
 
-i_icmp: TOK_PVAR "=" "icmp" TOK_ICMP_COND type_any operand "," operand
-      { $$ = new IcmpNode($1, $4, $5, $6, $8); D($2, $3, $7); };
+i_icmp: result "icmp" TOK_ICMP_COND type_any operand "," operand
+      { $$ = (new IcmpNode($1, $3, $4, $5, $7))->locate($1); D($2, $6); };
 
-i_br_uncond: "br" "label" TOK_PVAR { $$ = new BrUncondNode($3); D($1, $2); };
+i_br_uncond: "br" "label" TOK_PVAR { $$ = (new BrUncondNode($3))->locate($1); D($1, $2); };
 
-i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = new BrCondNode($2, $3, $5, $7); D($1, $4, $6); };
+i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = (new BrCondNode($2, $3, $5, $7))->locate($1); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
-        { $$ = new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14); D($3, $11, $13); };
+        { $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14))->locate({$1, $2, $3}); D($3, $11, $13); };
 _result: result | { $$ = nullptr; };
 result: TOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
 args: "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
     | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
-
 _tail: TOK_TAIL | { $$ = nullptr; };
 function_name: TOK_GVAR | TOK_IDENT;
 _constants: constants | { $$ = new AN(CONSTANT_LIST); };
@@ -346,35 +345,34 @@ constants: constants "," constant { $1->adopt($3); D($2); }
 call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
 
 i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr TOK_PVAR gep_indices
-               { $$ = new GetelementptrNode($1, $3, $4, $6, $7, $8); D($2, $5); };
+               { $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate($1); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); }
            | gep_indices "," _inrange type_any TOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); };
            | gep_indices "," _inrange type_any TOK_PVAR    { $1->adopt($2->adopt({$4, $5, $3})); };
 _inrange: TOK_INRANGE | { $$ = nullptr; };
 
-i_ret: "ret" type_nonvoid value { $$ = new RetNode($2, $3); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
+i_ret: "ret" type_nonvoid value { $$ = (new RetNode($2, $3))->locate($1); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
 
 i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
           /* TODO: operand bundles */ "to" label "unwind" label
-          { $$ = new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16); D($2, $9, $11, $13, $15); };
+          { $$ = (new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16))->locate({$1, $2}); D($2, $9, $11, $13, $15); };
 
-i_landingpad: result "landingpad" type_any clauses            { $$ = new LandingpadNode($1, $3, $4, false); D($2);     }
-            | result "landingpad" type_any "cleanup" _clauses { $$ = new LandingpadNode($1, $3, $5, true);  D($2, $4); };
-
+i_landingpad: result "landingpad" type_any clauses            { $$ = (new LandingpadNode($1, $3, $4, false))->locate($1); D($2);     }
+            | result "landingpad" type_any "cleanup" _clauses { $$ = (new LandingpadNode($1, $3, $5, true))->locate($1);  D($2, $4); };
 _clauses: clauses | { $$ = new AN(CLAUSES); };
 clauses: clauses clause { $1->adopt($2); } | clause { $$ = (new AN(CLAUSES))->adopt($1); };
 clause: "catch" type_any value { $1->adopt({$2, $3}); }
       | "filter" array     { $1->adopt($2); };
 
-i_convert: result TOK_CONV_OP type_any value "to" type_any { $$ = new ConversionNode($1, $2, $3, $4, $6); D($5); };
+i_convert: result TOK_CONV_OP type_any value "to" type_any { $$ = (new ConversionNode($1, $2, $3, $4, $6))->locate($1); D($5); };
 
 addsubmulshl: "add" | "sub" | "mul" | "shl";
-i_basicmath: result addsubmulshl type_any value "," value { $$ = new BasicMathNode($1, $2, false, false, $3, $4, $6); D($5); }
-           | result addsubmulshl "nuw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, false, $4, $5, $7); D($3, $6); }
-           | result addsubmulshl "nsw" type_any value "," value { $$ = new BasicMathNode($1, $2, false, true, $4, $5, $7); D($3, $6); }
-           | result addsubmulshl "nuw" "nsw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, true, $5, $6, $8); D($3, $4, $6); }
-           | result addsubmulshl "nsw" "nuw" type_any value "," value { $$ = new BasicMathNode($1, $2, true, true, $5, $6, $8); D($3, $4, $6); };
+i_basicmath: result addsubmulshl type_any value "," value { $$ = (new BasicMathNode($1, $2, false, false, $3, $4, $6))->locate($1); D($5); }
+           | result addsubmulshl "nuw" type_any value "," value { $$ = (new BasicMathNode($1, $2, true, false, $4, $5, $7))->locate($1); D($3, $6); }
+           | result addsubmulshl "nsw" type_any value "," value { $$ = (new BasicMathNode($1, $2, false, true, $4, $5, $7))->locate($1); D($3, $6); }
+           | result addsubmulshl "nuw" "nsw" type_any value "," value { $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate($1); D($3, $4, $6); }
+           | result addsubmulshl "nsw" "nuw" type_any value "," value { $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate($1); D($3, $4, $6); };
 
 // Constants
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2, $3}); }
