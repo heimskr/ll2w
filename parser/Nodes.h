@@ -267,6 +267,13 @@ namespace LL2W {
 		const char * typeName() const override;
 	};
 
+	struct ShrNode: public SimpleNode {
+		enum class ShrType {Lshr, Ashr};
+		ShrType shrType;
+		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		const char * typeName() const { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
+	};
+
 	struct SwitchNode: public InstructionNode {
 		Type *type;
 		Value *value;

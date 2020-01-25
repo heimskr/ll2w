@@ -58,6 +58,7 @@ CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"
 DIV					("sdiv"|"udiv")
 REM					("srem"|"urem")
 LOGIC				("and"|"or"|"xor")
+SHR					("lshr"|"ashr")
 
 %%
 
@@ -109,6 +110,7 @@ LOGIC				("and"|"or"|"xor")
 {DIV}						{ RTOKEN(DIV) }
 {REM}						{ RTOKEN(REM) }
 {LOGIC}						{ RTOKEN(LOGIC) }
+{SHR}						{ RTOKEN(SHR) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }

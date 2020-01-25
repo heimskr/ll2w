@@ -348,6 +348,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// IcmpNode
+
 	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
 		result = result_->extracted();
 
@@ -382,9 +384,13 @@ namespace LL2W {
 		return out.str();
 	}
 
+// BrUncondNode
+
 	std::string BrUncondNode::debugExtra() const {
 		return "\e[91mbr\e[0;34m label \e[32m" + *destination + "\e[0m";
 	}
+
+// BrCondNode
 
 	BrCondNode::BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false) {
 		if (*type->lexerInfo != "i1")
@@ -406,6 +412,8 @@ namespace LL2W {
 		return "\e[91mbr \e[33mi1\e[39m " + std::string(*condition) + ", label \e[32m" + *ifTrue + "\e[39m, label "
 			"\e[32m" + *ifFalse + "\e[39m";
 	}
+
+// CallInvokeNode
 
 	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 	                               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
@@ -492,6 +500,8 @@ namespace LL2W {
 			delete type;
 	}
 
+// CallNode
+
 	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
 	                   ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args,
 	                   ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list):
@@ -557,6 +567,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// InvokeNode
+
 	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 	                       ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label):
@@ -607,6 +619,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// GetelementptrNode
+
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
 	                                     ASTNode *ptrval, ASTNode *indices_) {
 		result = StringSet::intern(pvar->extractName());
@@ -651,6 +665,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// RetNode
+
 	RetNode::RetNode(): type(new VoidType()), value(new VoidValue()) {}
 
 	RetNode::RetNode(ASTNode *type_, ASTNode *value_) {
@@ -670,6 +686,8 @@ namespace LL2W {
 		const std::string type_str = std::string(*type);
 		return "\e[91mret\e[0m " + (type_str != "void"? type_str + " " + std::string(*value) : type_str);
 	}
+
+// LandingpadNode
 
 	LandingpadNode::Clause::Clause(ASTNode *node) {
 		clauseType = node->symbol == TOK_CATCH? ClauseType::Catch : ClauseType::Filter;
@@ -721,6 +739,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// ConversionNode
+
 	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_) {
 		result = result_->extracted();
 		from = getType(from_);
@@ -753,6 +773,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// BasicMathNode
+
 	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_,
 	                             ASTNode *left_, ASTNode *right_) {
 		oper = oper_->lexerInfo;
@@ -784,6 +806,8 @@ namespace LL2W {
 		return out.str();
 	}
 
+// PhiNode
+
 	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_) {
 		result = result_->extracted();
 		type = getType(type_);
@@ -814,6 +838,8 @@ namespace LL2W {
 		return "??";
 	}
 
+// SimpleNode
+
 	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
 		locate(result_);
 		result = result_->extracted();
@@ -840,15 +866,21 @@ namespace LL2W {
 		return out.str();
 	}
 
+// DivNode
+
 	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
 		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
 	}
 
+// RemNode
+
 	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
 		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
 	}
+
+// LogicNode
 
 	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
@@ -866,6 +898,15 @@ namespace LL2W {
 			default: throw std::runtime_error("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
 		}
 	}
+
+// ShrNode
+
+	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_):
+		SimpleNode(result_, type_, left_, right_) {
+		shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
+	}
+
+// SwitchNode
 
 	SwitchNode::SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_) {
 		type = getType(type_);
