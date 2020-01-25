@@ -129,10 +129,8 @@ namespace LL2W {
 			out << " \e[38;5;202minalloca\e[0m";
 		if (numelementsType)
 			out << "\e[2m,\e[0m " << std::string(*numelementsType) << " " << std::string(*numelementsValue);
-		if (align != -1)
-			out << "\e[2m,\e[0;34m align\e[0m " << align;
-		if (addrspace != -1)
-			out << "\e[2m,\e[0;34m addrspace\e[0m(" << addrspace << ")";
+		print(out, "\e[2m,\e[0;34m align\e[0m ", align);
+		print(out, "\e[2m,\e[0;34m addrspace\e[0m(", addrspace, ")");
 		return out.str();
 	}
 
@@ -521,23 +519,18 @@ namespace LL2W {
 
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
-		if (result)
-			out << "\e[32m%" << *result << "\e[0;2m = ";
-		if (tail)
-			out << "\e[0;34m" << *tail << " ";
+		print(out, "\e[32m%", result, "\e[0;2m = ");
+		print(out, "\e[0;34m", tail, " ");
 		out << "\e[0;91mcall\e[0m" << fastmath;
 		if (!fastmath.empty())
 			out << "\e[0;2m .\e[0m";
-		if (cconv)
-			out << " \e[34m" << *cconv << "\e[0;2m .\e[0m";
+		print(out, " \e[34m", cconv, "\e[0;2m .\e[0m");
 		for (RetAttr attr: retattrs)
 			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
-		if (dereferenceable != -1)
-			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
+		print(out, " \e[34mdereferenceable\e[0;2m(\e[0m", dereferenceable, "\e[2m)\e[0m");
 		if (!retattrs.empty() || dereferenceable != -1)
 			out << " \e[0;2m.\e[0m";
-		if (addrspace != -1)
-			out << " \e[34maddrspace\e[0;2m(\e[0m" << addrspace << "\e[2m)\e[0m";
+		print(out, " \e[34maddrspace\e[0;2m(\e[0m", addrspace, "\e[2m)\e[0m");
 		out << " " << std::string(*returnType);
 		if (argumentsExplicit) {
 			out << " \e[1;2m(\e[0m";

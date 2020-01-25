@@ -28,4 +28,14 @@ namespace LL2W {
 		print(os, flags);
 		return os;
 	}
+
+	void print(std::ostream &os, const char *left, const std::string *middle, const char *right) {
+		if (middle)
+			os << left << middle << right;
+	}
+
+	void print(std::ostream &os, const char *left, int n, const char *right) {
+		if (n != -1)
+			os << left << n << right;
+	}
 }
