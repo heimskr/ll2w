@@ -57,7 +57,7 @@ TAIL				("tail"|"musttail"|"notail")
 CONV_OP				("trunc"|"zext"|"sext"|"fptrunc"|"fpext"|"fptoui"|"fptosi"|"uitofp"|"sitofp"|"ptrtoint"|"inttoptr"|"bitcast"|"addrspacecast")
 DIV					("sdiv"|"udiv")
 REM					("srem"|"urem")
-LOGIC				("and"|"or")
+LOGIC				("and"|"or"|"xor")
 
 %%
 
