@@ -24,6 +24,14 @@ namespace LL2W {
 		virtual std::string style() const override { return "\e[36m"; }
 	};
 
+	struct HeaderNode: public ASTNode {
+		HeaderNode(ASTNode *node);
+		int label;
+		std::vector<int> preds;
+		virtual std::string style() const override { return "\e[32m"; }
+		virtual std::string debugExtra() const override;
+	};
+
 	struct SelectNode: public InstructionNode {
 		const std::string *result;
 		std::unordered_set<Fastmath> fastmath;

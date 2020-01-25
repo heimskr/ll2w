@@ -22,6 +22,26 @@ namespace LL2W {
 		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
 	}
 
+// HeaderNode
+
+	HeaderNode::HeaderNode(ASTNode *node): ASTNode(BLOCKHEADER, "") {
+		locate(node);
+		label = atoi(node->at(0)->lexerInfo->c_str());
+		preds.reserve(node->at(2)->size());
+		for (ASTNode *pred: *node->at(2))
+			preds.push_back(atoi(pred->lexerInfo->substr(1).c_str()));
+		delete node;
+	}
+
+	std::string HeaderNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[2;4m<label>:" << label << "; preds =";
+		for (int pred: preds)
+			out << " %" << pred;
+		out << "\e[0m";
+		return out.str();
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,

@@ -154,7 +154,7 @@ using AN = LL2W::ASTNode;
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
 %token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF PHI_PAIR
-%token SWITCH_LIST
+%token SWITCH_LIST BLOCKHEADER
 
 %start start
 
@@ -311,7 +311,7 @@ function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUN
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LABEL; D($2); };
-bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list { $1->adopt({$2, $3, $4}); };
+bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list { $$ = new HeaderNode($1->adopt({$2, $3, $4})); };
 preds_list: preds_list TOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(PREDS_LIST); };
 
