@@ -326,7 +326,7 @@ i_select: result "select" fastmath_flags type_any value "," type_any value "," t
 i_alloca: result "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
           { auto loc = $1->location; $$ = (new AllocaNode($1, $3, $4, $5, $6, $7))->locate(loc); D($2); };
 _inalloca: "inalloca" | { $$ = nullptr; };
-_alloca_numelements: "," type_any TOK_DECIMAL { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
+_alloca_numelements: "," type_any value { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
 _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
