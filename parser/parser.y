@@ -217,7 +217,7 @@ metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(METADATA_LIST))->adopt($1); }
              | { $$ = nullptr; };
 
-metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | array | "null";
+metadata_listitem: "!" TOK_STRING { D($1); $$ = $2; } | metabang | constant | "null";
 
 metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; };
