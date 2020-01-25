@@ -20,7 +20,7 @@ namespace LL2W {
 		for (auto begin = flags.cbegin(), iter = begin, end = flags.cend(); iter != end; ++iter) {
 			if (initial_space || iter != begin)
 				os << " ";
-			os << fastmath_map.at(*iter);
+			os << "\e[34m" << fastmath_map.at(*iter) << "\e[39m";
 		}
 	}
 

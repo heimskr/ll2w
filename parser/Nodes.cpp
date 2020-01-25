@@ -76,10 +76,8 @@ namespace LL2W {
 
 	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << " \e[2m= \e[0;91mselect\e[0;38;5;202m";
-		for (Fastmath flag: fastmath)
-			out << " " << fastmath_map.at(flag);
-		out << " " << std::string(*conditionType) << " " << std::string(*conditionValue) << "\e[2m,\e[0m "
+		out << "\e[32m%" << *result << " \e[2m= \e[0;91mselect\e[0;38;5;202m" << fastmath << " "
+		    << std::string(*conditionType) << " " << std::string(*conditionValue) << "\e[2m,\e[0m "
 		    << std::string(*firstType) << " " << std::string(*firstValue) << "\e[2m,\e[0m " << std::string(*secondType)
 		    << " " << std::string(*secondValue);
 		return out.str();
@@ -518,16 +516,7 @@ namespace LL2W {
 			delete _tail;
 		}
 
-		for (ASTNode *child: *fastmath_flags) {
-			const std::string &fmname = *child->lexerInfo;
-			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
-				if (fmname == pair.second) {
-					fastmath.insert(pair.first);
-					break;
-				}
-			}
-		}
-		delete fastmath_flags;
+		getFastmath(fastmath, fastmath_flags);
 	}
 
 	std::string CallNode::debugExtra() const {
@@ -536,9 +525,7 @@ namespace LL2W {
 			out << "\e[32m%" << *result << "\e[0;2m = ";
 		if (tail)
 			out << "\e[0;34m" << *tail << " ";
-		out << "\e[0;91mcall\e[0m";
-		for (Fastmath flag: fastmath)
-			out << " \e[34m" << fastmath_map.at(flag) << "\e[0m";
+		out << "\e[0;91mcall\e[0m" << fastmath;
 		if (!fastmath.empty())
 			out << "\e[0;2m .\e[0m";
 		if (cconv)
@@ -817,20 +804,12 @@ namespace LL2W {
 	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_) {
 		result = result_->extracted();
 		type = getType(type_);
-		for (ASTNode *child: *fastmath_) {
-			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
-				if (*child->lexerInfo == pair.second) {
-					fastmath.insert(pair.first);
-					break;
-				}
-			}
-		}
+		getFastmath(fastmath, fastmath_);
 		for (ASTNode *node: *pairs_)
 			pairs.push_back({getValue(node->at(0)), node->at(1)->extracted()});
 
 		delete result_;
 		delete type_;
-		delete fastmath_;
 		delete pairs_;
 	}
 
