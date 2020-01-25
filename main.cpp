@@ -79,7 +79,7 @@ void rendertest() {
 }
 
 void parsertest() {
-	LL2W::Parser::open("pathc.ll");
+	LL2W::Parser::open("util.ll");
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	LL2W::Parser::root->debug();
