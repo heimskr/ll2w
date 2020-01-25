@@ -282,6 +282,15 @@ namespace LL2W {
 		const char * typeName() const { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
 	};
 
+	struct FMathNode: public SimpleNode {
+		enum class FMathType {Fadd, Fsub, Fmul, Fdiv, Frem};
+		FMathType fmathType;
+		std::unordered_set<Fastmath> fastmath;
+		FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		const char * typeName() const override;
+		virtual std::string debugExtra() const override;
+	};
+
 	struct SwitchNode: public InstructionNode {
 		Type *type;
 		Value *value;

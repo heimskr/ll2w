@@ -34,7 +34,7 @@ PVAR				("%"({NUMBER}|{IDENT}|{STRING}))
 CSTRING				("c"{STRING})
 INTBANG				("!"{DIGIT}+)
 METABANG			("!"{IDENT})
-FLOATING			("-"?{DIGIT}+"."{DIGIT}+)
+FLOATING			("-"?[0-9]+"."[0-9]+("e+"[0-9]+)?)
 FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
@@ -59,6 +59,7 @@ DIV					("sdiv"|"udiv")
 REM					("srem"|"urem")
 LOGIC				("and"|"or"|"xor")
 SHR					("lshr"|"ashr")
+FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 
 %%
 
@@ -111,6 +112,7 @@ SHR					("lshr"|"ashr")
 {REM}						{ RTOKEN(REM) }
 {LOGIC}						{ RTOKEN(LOGIC) }
 {SHR}						{ RTOKEN(SHR) }
+{FMATH}						{ RTOKEN(FMATH) }
 
 "!invariant.group"			{ RTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ RTOKEN(INVARIANT_LOAD) }

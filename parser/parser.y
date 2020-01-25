@@ -52,7 +52,7 @@ using AN = LL2W::ASTNode;
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
-%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR
+%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR TOK_FMATH
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -321,7 +321,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | "unreachable";
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | "unreachable";
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -432,7 +432,8 @@ switch_pair: TOK_INTTYPE value "," label { $$ = $3->adopt({$1, $2, $4}); };
 i_shr: result TOK_SHR type_any value "," value
        { $$ = new ShrNode($1, $2, $3, $4, $6); D($5); };
 
-
+i_fmath: result TOK_FMATH fastmath_flags type_any value "," value
+         { $$ = new FMathNode($1, $2, $3, $4, $5, $7); D($6); };
 
 // Constants
 

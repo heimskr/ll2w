@@ -3,6 +3,7 @@
 
 #include "Nodes.h"
 #include "StringSet.h"
+#include "Util.h"
 
 namespace LL2W {
 
@@ -47,35 +48,20 @@ namespace LL2W {
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
 	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
 		result = result_->extracted();
-		delete result_;
-
-		for (ASTNode *child: *fastmath_) {
-			const std::string &fmname = *child->lexerInfo;
-			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
-				if (fmname == pair.second) {
-					fastmath.insert(pair.first);
-					break;
-				}
-			}
-		}
-		delete fastmath_;
-
+		getFastmath(fastmath, fastmath_);
 		conditionType = getType(condition_type);
-		delete condition_type;
-
 		conditionValue = getValue(condition_value);
-		delete condition_value;
-
 		firstType = getType(type1);
-		delete type1;
-
 		firstValue = getValue(val1);
-		delete val1;
-
 		secondType = getType(type2);
-		delete type2;
-
 		secondValue = getValue(val2);
+
+		delete result_;
+		delete condition_type;
+		delete condition_value;
+		delete type1;
+		delete val1;
+		delete type2;
 		delete val2;
 	}
 
@@ -907,7 +893,7 @@ namespace LL2W {
 		if (*logic->lexerInfo == "and") logicType = LogicType::And;
 		else if (*logic->lexerInfo == "or") logicType = LogicType::Or;
 		else if (*logic->lexerInfo == "xor") logicType = LogicType::Xor;
-		else throw std::runtime_error("Invalid LogicType: \"" + *logic->lexerInfo + "\"");
+		else throw std::invalid_argument("Invalid LogicType: \"" + *logic->lexerInfo + "\"");
 	}
 
 	const char * LogicNode::typeName() const {
@@ -915,7 +901,7 @@ namespace LL2W {
 			case LogicType::And: return "and";
 			case LogicType::Or:  return "or";
 			case LogicType::Xor: return "xor";
-			default: throw std::runtime_error("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
+			default: throw std::invalid_argument("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
 		}
 	}
 
@@ -924,6 +910,37 @@ namespace LL2W {
 	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
 		shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
+	}
+
+// FMathNode
+
+	FMathNode::FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_,
+	                     ASTNode *right_): SimpleNode(result_, type_, left_, right_) {
+		if (*fmath->lexerInfo == "fadd") fmathType = FMathType::Fadd;
+		else if (*fmath->lexerInfo == "fsub") fmathType = FMathType::Fsub;
+		else if (*fmath->lexerInfo == "fmul") fmathType = FMathType::Fmul;
+		else if (*fmath->lexerInfo == "fdiv") fmathType = FMathType::Fdiv;
+		else if (*fmath->lexerInfo == "frem") fmathType = FMathType::Frem;
+		else throw std::invalid_argument("Invalid FMathType: \"" + *fmath->lexerInfo + "\"");
+		getFastmath(fastmath, flags);
+	}
+
+	const char * FMathNode::typeName() const {
+		switch (fmathType) {
+			case FMathType::Fadd: return "fadd";
+			case FMathType::Fsub: return "fsub";
+			case FMathType::Fmul: return "fmul";
+			case FMathType::Fdiv: return "fdiv";
+			case FMathType::Frem: return "frem";
+			default: throw std::invalid_argument("Invalid FMathType: " + std::to_string(static_cast<int>(fmathType)));
+		}
+	}
+
+	std::string FMathNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[2m = \e[0;91m" << typeName() << fastmath << "\e[0m " << std::string(*type)
+		    << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
+		return out.str();
 	}
 
 // SwitchNode

@@ -20,13 +20,14 @@ namespace LL2W {
 	};
 
 	struct DoubleValue: public Value {
-		double value;
-		DoubleValue(double value_): value(value_) {}
-		DoubleValue(const std::string &value_): DoubleValue(std::stod(value_)) {}
-		DoubleValue(const std::string *value_): DoubleValue(*value_) {}
+		const double value;
+		const std::string *original;
+		DoubleValue(double value_): value(value_), original(StringSet::intern(std::to_string(value_))) {}
+		DoubleValue(const std::string &value_): value(std::stod(value_)), original(StringSet::intern(value_)) {}
+		DoubleValue(const std::string *value_): value(std::stod(*value_)), original(value_) {}
 		DoubleValue(const ASTNode *node): DoubleValue(node->lexerInfo) {}
 		Value * copy() const override { return new DoubleValue(value); }
-		operator std::string() override { return std::to_string(value); }
+		operator std::string() override { return *original; }
 	};
 
 	struct IntValue: public Value {

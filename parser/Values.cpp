@@ -143,11 +143,6 @@ namespace LL2W {
 	ArrayValue::ArrayValue(const ASTNode *node) {
 		for (const ASTNode *sub: *node)
 			constants.push_back(new Constant(sub));
-			// comma->debug();
-			// if (comma->size() == 1) // Presumably just a GVAR rather than a type + value
-				// constants.push_back({getType(comma->at(0)), getValue(comma->at(0))});
-			// else
-				// constants.push_back({getType(comma->at(0)), getValue(comma->at(1))});
 	}
 
 	ArrayValue::~ArrayValue() {
