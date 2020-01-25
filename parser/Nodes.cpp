@@ -127,6 +127,7 @@ namespace LL2W {
 		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
 		if (inalloca)
 			out << " \e[38;5;202minalloca\e[0m";
+		out << " " << std::string(*type);
 		if (numelementsType)
 			out << "\e[2m,\e[0m " << std::string(*numelementsType) << " " << std::string(*numelementsValue);
 		print(out, "\e[2m,\e[0;34m align\e[0m ", align);
