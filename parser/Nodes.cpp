@@ -798,59 +798,53 @@ namespace LL2W {
 		return "??";
 	}
 
-	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
+	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
 		locate(result_);
 		result = result_->extracted();
+		type = getType(type_);
+		left = getValue(left_);
+		right = getValue(right_);
+
+		delete result_;
+		delete type_;
+		delete left_;
+		delete right_;
+	}
+
+	SimpleNode::~SimpleNode() {
+		delete type;
+		delete left;
+		delete right;
+	}
+
+	std::string SimpleNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << typeName() << "\e[0m "
+		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
+		return out.str();
+	}
+
+	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_):
+		SimpleNode(result_, type_, left_, right_) {
 		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
-		type = getType(type_);
-		left = getValue(left_);
-		right = getValue(right_);
-
-		delete result_;
-		delete div;
-		delete type_;
-		delete left_;
-		delete right_;
 	}
 
-	DivNode::~DivNode() {
-		delete type;
-		delete left;
-		delete right;
-	}
-
-	std::string DivNode::debugExtra() const {
-		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << (divType == DivType::Sdiv? 's' : 'u') << "div\e[0m "
-		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
-		return out.str();
-	}
-
-	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
-		locate(result_);
-		result = result_->extracted();
+	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_):
+		SimpleNode(result_, type_, left_, right_) {
 		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
-		type = getType(type_);
-		left = getValue(left_);
-		right = getValue(right_);
-
-		delete result_;
-		delete rem;
-		delete type_;
-		delete left_;
-		delete right_;
 	}
 
-	RemNode::~RemNode() {
-		delete type;
-		delete left;
-		delete right;
+	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_):
+		SimpleNode(result_, type_, left_, right_) {
+		if (*logic->lexerInfo == "and") logicType = LogicType::And;
+		else logicType = LogicType::Or;
 	}
 
-	std::string RemNode::debugExtra() const {
-		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << (remType == RemType::Srem? 's' : 'u') << "rem\e[0m "
-		    << std::string(*type) << " " << std::string(*left) << "\e[2m,\e[0m " << std::string(*right);
-		return out.str();
+	const char * LogicNode::typeName() const {
+		switch (logicType) {
+			case LogicType::And: return "and";
+			case LogicType::Or:  return "or";
+			default: throw std::runtime_error("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
+		}
 	}
 }

@@ -230,30 +230,35 @@ namespace LL2W {
 		virtual std::string debugExtra() const override;
 	};
 
-	struct DivNode: public InstructionNode {
-		enum class DivType {Sdiv, Udiv};
-
+	struct SimpleNode: public InstructionNode {
 		const std::string *result;
-		DivType divType;
 		Type *type;
 		Value *left, *right;
-
-		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_);
-		~DivNode();
+		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		~SimpleNode();
+		virtual const char * typeName() const = 0;
 		virtual std::string debugExtra() const override;
 	};
 
-	struct RemNode: public InstructionNode {
+	struct DivNode: public SimpleNode {
+		enum class DivType {Sdiv, Udiv};
+		DivType divType;
+		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		virtual const char * typeName() const { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
+	};
+
+	struct RemNode: public SimpleNode {
 		enum class RemType {Srem, Urem};
-
-		const std::string *result;
 		RemType remType;
-		Type *type;
-		Value *left, *right;
-
 		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_);
-		~RemNode();
-		virtual std::string debugExtra() const override;
+		virtual const char * typeName() const { return remType == RemType::Srem? "srem" : "urem"; }
+	};
+
+	struct LogicNode: public SimpleNode {
+		enum class LogicType {And, Or};
+		LogicType logicType;
+		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		const char * typeName() const override;
 	};
 }
 
