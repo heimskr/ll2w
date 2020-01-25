@@ -22,7 +22,7 @@ namespace LL2W {
 		} else {
 			type = getType(node->at(0));
 
-			ASTNode *value_node = node->at(2);
+			ASTNode *value_node = node->at(1);
 			if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 				value = gep_value->copy();
 			} else if (value_node->symbol == CONST_EXPR) {
@@ -39,7 +39,8 @@ namespace LL2W {
 				value = getValue(value_node);
 			}
 
-			parattrs = {*node->at(1)};
+			if (2 < node->size())
+				parattrs = {*node->at(2)};
 		}
 	}
 
