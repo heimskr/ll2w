@@ -837,13 +837,16 @@ namespace LL2W {
 	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
 		if (*logic->lexerInfo == "and") logicType = LogicType::And;
-		else logicType = LogicType::Or;
+		else if (*logic->lexerInfo == "or") logicType = LogicType::Or;
+		else if (*logic->lexerInfo == "xor") logicType = LogicType::Xor;
+		else throw std::runtime_error("Invalid LogicType: \"" + *logic->lexerInfo + "\"");
 	}
 
 	const char * LogicNode::typeName() const {
 		switch (logicType) {
 			case LogicType::And: return "and";
 			case LogicType::Or:  return "or";
+			case LogicType::Xor: return "xor";
 			default: throw std::runtime_error("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
 		}
 	}

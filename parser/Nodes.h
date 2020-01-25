@@ -255,7 +255,7 @@ namespace LL2W {
 	};
 
 	struct LogicNode: public SimpleNode {
-		enum class LogicType {And, Or};
+		enum class LogicType {And, Or, Xor};
 		LogicType logicType;
 		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_);
 		const char * typeName() const override;
