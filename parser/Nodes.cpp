@@ -6,6 +6,22 @@
 
 namespace LL2W {
 
+// MetadataDef
+
+	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
+		ASTNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
+		locate(dotident_node);
+		distinct = distinct_node != nullptr;
+		if (distinct_node)
+			delete distinct_node;
+		adopt(dotident_node);
+		adopt(list);
+	}
+
+	std::string MetadataDef::debugExtra() const {
+		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,

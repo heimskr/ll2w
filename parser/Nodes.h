@@ -12,6 +12,12 @@
 #include "Constant.h"
 
 namespace LL2W {
+	struct MetadataDef: public ASTNode {
+		bool distinct;
+		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
+		std::string debugExtra() const override;
+	};
+
 	struct InstructionNode: public ASTNode {
 		InstructionNode(const std::string *str): ASTNode(INSTRUCTION, str) {}
 		InstructionNode(): ASTNode(INSTRUCTION, "") {}
