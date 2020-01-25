@@ -67,8 +67,10 @@ namespace LL2W {
 		return children.empty();
 	}
 
-	ASTNode * ASTNode::adopt(ASTNode *child) {
+	ASTNode * ASTNode::adopt(ASTNode *child, bool do_locate) {
 		if (child) {
+			if (do_locate)
+				locate(child);
 			children.push_back(child);
 			child->parent = this;
 		}

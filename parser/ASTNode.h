@@ -42,7 +42,7 @@ namespace LL2W {
 			ASTNode * at(size_t) const;
 			size_t size() const;
 			bool empty() const;
-			ASTNode * adopt(ASTNode *);
+			ASTNode * adopt(ASTNode *, bool do_locate = false);
 			ASTNode * adopt(std::initializer_list<ASTNode *>);
 			ASTNode * absorb(ASTNode *);
 			ASTNode * clear();

@@ -80,6 +80,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ASTERISK "*"
 %token TOK_HASH "#"
 %token TOK_COLON ":"
+%token TOK_NEWLINE
 
 %token TOK_TO "to"
 
@@ -311,7 +312,8 @@ function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUN
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LABEL; D($2); };
-bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list { $$ = new HeaderNode($1->adopt({$2, $3, $4})); };
+bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list TOK_NEWLINE
+         { $$ = new HeaderNode($1->adopt({$2, $3, $4})); D($5); };
 preds_list: preds_list TOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(PREDS_LIST); };
 

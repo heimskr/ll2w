@@ -77,7 +77,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 <SGC>.						{ }
 <PREDS>{PVAR}				{ RTOKEN(PVAR); }
 <PREDS>[ \t,]+				{ }
-<PREDS>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
+<PREDS>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); RTOKEN(NEWLINE) }
 <PREDS>.					{ LL2W::Lexer::badchar(*yytext); }
 
 ";"							{ BEGIN(SGC); }
