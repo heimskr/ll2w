@@ -373,7 +373,7 @@ _args: args | { $$ = nullptr; };
 args: "(" types extra_ellipsis ")" { $1->adopt({$2, $3}); D($4); }
     | "("            _ellipsis ")" { $1->adopt($2);       D($3); };
 _tail: TOK_TAIL | { $$ = nullptr; };
-function_name: TOK_GVAR | TOK_IDENT;
+function_name: TOK_GVAR | TOK_PVAR | TOK_IDENT;
 _constants: constants | { $$ = new AN(CONSTANT_LIST); };
 constants: constants "," constant { $1->adopt($3); D($2); }
          | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
