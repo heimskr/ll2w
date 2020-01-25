@@ -34,7 +34,17 @@ namespace LL2W {
 		lexerInfo = StringSet::intern(info);
 	}
 
+	ASTNode::ASTNode(int sym, const Location &loc): ASTNode(sym, loc, "") {}
+
 	ASTNode::ASTNode(int sym): ASTNode(sym, "") {}
+
+	ASTNode::ASTNode(int sym, ASTNode *node, const char *info): ASTNode(sym, node->location, info) {
+		adopt(node);
+	}
+
+	ASTNode::ASTNode(int sym, ASTNode *node, const std::string *info): ASTNode(sym, node->location, info) {
+		adopt(node);
+	}
 
 	ASTNode::~ASTNode() {
 		for (ASTNode *child: children)

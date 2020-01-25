@@ -31,7 +31,11 @@ namespace LL2W {
 			ASTNode(int sym, const Location &loc, const std::string *info);
 			ASTNode(int sym, const char *info);
 			ASTNode(int sym, const std::string *info);
+			ASTNode(int sym, const Location &loc);
 			ASTNode(int sym);
+			/** Constructs an ASTNode that adopts another node and copies its location. */
+			ASTNode(int sym, ASTNode *, const char *info = "");
+			ASTNode(int sym, ASTNode *, const std::string *info);
 			virtual ~ASTNode();
 
 			ASTNode * operator[](size_t) const;
