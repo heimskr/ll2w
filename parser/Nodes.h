@@ -260,6 +260,17 @@ namespace LL2W {
 		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_);
 		const char * typeName() const override;
 	};
+
+	struct SwitchNode: public InstructionNode {
+		Type *type;
+		Value *value;
+		const std::string *label;
+		std::vector<std::tuple<Type *, Value *, const std::string *>> table;
+
+		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_);
+		~SwitchNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

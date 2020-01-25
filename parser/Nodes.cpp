@@ -850,4 +850,36 @@ namespace LL2W {
 			default: throw std::runtime_error("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
 		}
 	}
+
+	SwitchNode::SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_) {
+		type = getType(type_);
+		value = getValue(value_);
+		label = label_->extracted();
+		table.reserve(table_->size());
+		for (ASTNode *comma: *table_)
+			table.push_back({getType(comma->at(0)), getValue(comma->at(1)), comma->at(2)->extracted()});
+	}
+
+	SwitchNode::~SwitchNode() {
+		delete type;
+		delete value;
+		for (std::tuple<Type *, Value *, const std::string *> &tuple: table) {
+			delete std::get<0>(tuple);
+			delete std::get<1>(tuple);
+		}
+	}
+
+	std::string SwitchNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[91mswitch\e[0m " << *type << " " << *value << "\e[2m,\e[0;34m label %" << *label << " \e[0;2m[\e[0m";
+		for (auto begin = table.cbegin(), iter = begin, end = table.cend(); iter != end; ++iter) {
+			if (iter != begin)
+				out << " ";
+			const std::tuple<Type *, Value *, const std::string *> &tuple = *iter;
+			out << *std::get<0>(tuple) << " " << *std::get<1>(tuple) << ", \e[34mlabel %" << *std::get<2>(tuple)
+			    << "\e[0m";
+		}
+		out << "\e[2m]\e[0m";
+		return out.str();
+	}
 }

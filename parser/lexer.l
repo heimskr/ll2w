@@ -204,6 +204,8 @@ LOGIC				("and"|"or"|"xor")
 "mul"						{ RTOKEN(MUL) }
 "shl"						{ RTOKEN(SHL) }
 "phi"						{ RTOKEN(PHI) }
+"switch"					{ RTOKEN(SWITCH) }
+"unreachable"				{ RTOKEN(UNREACHABLE) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 
