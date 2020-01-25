@@ -379,7 +379,7 @@ constants: constants "," constant { $1->adopt($3); D($2); }
          | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
 call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
 
-i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr TOK_PVAR gep_indices
+i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable gep_indices
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); }
