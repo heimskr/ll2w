@@ -139,6 +139,7 @@ using AN = LL2W::ASTNode;
 %token TOK_CATCH "catch"
 %token TOK_LANDINGPAD "landingpad"
 %token TOK_EXTRACTVALUE "extractvalue"
+%token TOK_INSERTVALUE "insertvalue"
 %token TOK_FILTER "filter"
 %token TOK_BYVAL "byval"
 %token TOK_WRITEONLY "writeonly"
@@ -325,7 +326,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | "unreachable";
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | "unreachable";
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -443,6 +444,10 @@ i_extractvalue: result "extractvalue" type_any value decimals
                 { $$ = new ExtractValueNode($1, $3, $4, $5); };
 decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2) }
         | { $$ = new AN(DECIMAL_LIST); }
+
+i_insertvalue: result "insertvalue" type_any value "," type_any value decimals
+               { $$ = new InsertValueNode($1, $3, $4, $6, $7, $8); D($2, $5); };
+
 
 
 // Constants

@@ -304,11 +304,22 @@ namespace LL2W {
 
 	struct ExtractValueNode: public InstructionNode {
 		const std::string *result;
-		Type *type;
-		Value *value;
+		Type *aggregateType;
+		Value *aggregateValue;
 		std::vector<int> decimals;
-		ExtractValueNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *decimals_);
+		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_);
 		~ExtractValueNode();
+		virtual std::string debugExtra() const override;
+	};
+
+	struct InsertValueNode: public InstructionNode {
+		const std::string *result;
+		Type *aggregateType, *type;
+		Value *aggregateValue, *value;
+		std::vector<int> decimals;
+		InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_,
+		                ASTNode *value_, ASTNode *decimals_);
+		~InsertValueNode();
 		virtual std::string debugExtra() const override;
 	};
 }

@@ -199,6 +199,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "catch"						{ RTOKEN(CATCH) }
 "landingpad"				{ RTOKEN(LANDINGPAD) }
 "extractvalue"				{ RTOKEN(EXTRACTVALUE) }
+"insertvalue"				{ RTOKEN(INSERTVALUE) }
 "filter"					{ RTOKEN(FILTER) }
 "byval"						{ RTOKEN(BYVAL) }
 "writeonly"					{ RTOKEN(WRITEONLY) }

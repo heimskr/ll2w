@@ -950,28 +950,66 @@ namespace LL2W {
 		return out.str();
 	}
 
-	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *decimals_) {
+// ExtractValueNode
+
+	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
+	                                   ASTNode *decimals_) {
 		result = result_->extracted();
+		aggregateType = getType(aggregate_type);
+		aggregateValue = getValue(aggregate_value);
+		for (ASTNode *decimal: *decimals_)
+			decimals.push_back(decimal->atoi());
+
+		delete result_;
+		delete aggregate_type;
+		delete aggregate_value;
+		delete decimals_;
+	}
+
+	ExtractValueNode::~ExtractValueNode() {
+		delete aggregateType;
+		delete aggregateValue;
+	}
+
+	std::string ExtractValueNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[34m%" << *result << " \e[0;2m= \e[0;91mextractvalue\e[0m " << std::string(*aggregateType) << " "
+		    << std::string(*aggregateValue);
+		for (int decimal: decimals)
+			out << "\e[2m,\e[0m " << decimal;
+		return out.str();
+	}
+
+// InsertValueNode
+
+	InsertValueNode::InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
+	                                 ASTNode *type_, ASTNode *value_, ASTNode *decimals_) {
+		result = result_->extracted();
+		aggregateType = getType(aggregate_type);
+		aggregateValue = getValue(aggregate_value);
 		type = getType(type_);
 		value = getValue(value_);
 		for (ASTNode *decimal: *decimals_)
 			decimals.push_back(decimal->atoi());
 
-		delete result_;
+		delete aggregate_type;
+		delete aggregate_value;
 		delete type_;
 		delete value_;
 		delete decimals_;
 	}
 
-	ExtractValueNode::~ExtractValueNode() {
+	InsertValueNode::~InsertValueNode() {
+		delete aggregateType;
+		delete aggregateValue;
 		delete type;
 		delete value;
 	}
 
-	std::string ExtractValueNode::debugExtra() const {
+	std::string InsertValueNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[34m%" << *result << " \e[0;2m= \e[0;91mextractvalue\e[0m " << std::string(*type) << " "
-		    << std::string(*value);
+		out << "\e[91insertvalue\e[0m " << std::string(*aggregateType) << " " << std::string(*aggregateValue)
+		    << "\e[2m,\e[0m " << std::string(*type) << " " << std::string(*value);
 		for (int decimal: decimals)
 			out << "\e[2m,\e[0m " << decimal;
 		return out.str();
