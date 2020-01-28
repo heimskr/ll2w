@@ -64,7 +64,7 @@ namespace LL2W {
 					if (*str == "dereferenceable") new_deref = Deref::Dereferenceable;
 					else if (*str == "dereferenceable_or_null") new_deref = Deref::DereferenceableOrNull;
 					else throw std::runtime_error("Unrecognized deref: " + *str);
-					int bytes = atoi(retattr->at(0)->lexerInfo->c_str());
+					int bytes = retattr->at(0)->atoi();
 					if (deref == Deref::DereferenceableOrNull && new_deref == Deref::Dereferenceable) {
 						// If dereferenceable_or_null(x) -> dereferenceable(y), set bytes to max(x, y).
 						if (dereferenceableBytes < bytes)
@@ -93,7 +93,7 @@ namespace LL2W {
 		}
 
 		if (fnattrs_->symbol == TOK_DECIMAL) {
-			fnattrsIndex = atoi(fnattrs_->lexerInfo->c_str());
+			fnattrsIndex = fnattrs_->atoi();
 		} else if (fnattrs_->symbol == FNATTR_LIST) {
 			for (ASTNode *fnattr: fnattrs_->children) {
 				const std::string &fnattr_name = *fnattr->lexerInfo;

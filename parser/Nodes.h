@@ -301,6 +301,16 @@ namespace LL2W {
 		~SwitchNode();
 		virtual std::string debugExtra() const override;
 	};
+
+	struct ExtractValueNode: public InstructionNode {
+		const std::string *result;
+		Type *type;
+		Value *value;
+		std::vector<int> decimals;
+		ExtractValueNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *decimals_);
+		~ExtractValueNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

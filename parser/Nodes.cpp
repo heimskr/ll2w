@@ -27,10 +27,10 @@ namespace LL2W {
 
 	HeaderNode::HeaderNode(ASTNode *node): ASTNode(BLOCKHEADER, "") {
 		locate(node);
-		label = atoi(node->at(0)->lexerInfo->c_str());
+		label = node->at(0)->atoi();
 		preds.reserve(node->at(2)->size());
 		for (ASTNode *pred: *node->at(2))
-			preds.push_back(atoi(pred->lexerInfo->substr(1).c_str()));
+			preds.push_back(pred->atoi(1));
 		delete node;
 	}
 
@@ -106,12 +106,12 @@ namespace LL2W {
 		}
 
 		if (align_) {
-			align = atoi(align_->lexerInfo->c_str());
+			align = align_->atoi();
 			delete align_;
 		}
 
 		if (addrspace_) {
-			addrspace = atoi(addrspace_->lexerInfo->c_str());
+			addrspace = addrspace_->atoi();
 			delete addrspace_;
 		}
 	}
@@ -154,17 +154,17 @@ namespace LL2W {
 		}
 
 		if (align_) {
-			align = atoi(align_->lexerInfo->c_str());
+			align = align_->atoi();
 			delete align_;
 		}
 
 		if (nontemporal_) { // TOK_INTBANG "!42"
-			nontemporalIndex = atoi(nontemporal_->lexerInfo->substr(1).c_str());
+			nontemporalIndex = nontemporal_->atoi(1);
 			delete nontemporal_;
 		}
 
 		if (invariant_group) { // Same as above
-			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			invariantGroupIndex = invariant_group->atoi(1);
 			delete invariant_group;
 		}
 	}
@@ -175,7 +175,7 @@ namespace LL2W {
 		type = getType(type_);
 		value = getValue(value_);
 		constant = new Constant(constant_);
-		align = atoi(align_->lexerInfo->c_str());
+		align = align_->atoi();
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
@@ -200,7 +200,7 @@ namespace LL2W {
 		}
 
 		if (invariant_group) {
-			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			invariantGroupIndex = invariant_group->atoi(1);
 			delete invariant_group;
 		}
 	}
@@ -249,27 +249,27 @@ namespace LL2W {
 		}
 
 		if (align_) {
-			align = atoi(align_->lexerInfo->c_str());
+			align = align_->atoi();
 			delete align_;
 		}
 
 		if (nontemporal_) {
-			nontemporalIndex = atoi(nontemporal_->lexerInfo->substr(1).c_str());
+			nontemporalIndex = nontemporal_->atoi(1);
 			delete nontemporal_;
 		}
 
 		if (invariant_load) {
-			invariantLoadIndex = atoi(invariant_load->lexerInfo->substr(1).c_str());
+			invariantLoadIndex = invariant_load->atoi(1);
 			delete invariant_load;
 		}
 
 		if (invariant_group) {
-			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			invariantGroupIndex = invariant_group->atoi(1);
 			delete invariant_group;
 		}
 
 		if (nonnull_) {
-			nonnullIndex = atoi(nonnull_->lexerInfo->substr(1).c_str());
+			nonnullIndex = nonnull_->atoi(1);
 			delete nonnull_;
 		}
 
@@ -295,7 +295,7 @@ namespace LL2W {
 		result = result_->extracted();
 		type = getType(type_);
 		constant = new Constant(constant_);
-		align = atoi(align_->lexerInfo->c_str());
+		align = align_->atoi();
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
@@ -320,7 +320,7 @@ namespace LL2W {
 		}
 
 		if (invariant_group) {
-			invariantGroupIndex = atoi(invariant_group->lexerInfo->substr(1).c_str());
+			invariantGroupIndex = invariant_group->atoi(1);
 			delete invariant_group;
 		}
 	}
@@ -434,7 +434,7 @@ namespace LL2W {
 		for (ASTNode *child: *_retattrs) {
 			const std::string &raname = *child->lexerInfo;
 			if (raname == "dereferenceable") {
-				dereferenceable = atoi(child->at(0)->lexerInfo->c_str());
+				dereferenceable = child->at(0)->atoi();
 			} else {
 				for (const std::pair<RetAttr, std::string> &pair: retattr_map) {
 					if (raname == pair.second) {
@@ -447,7 +447,7 @@ namespace LL2W {
 		delete _retattrs;
 
 		if (_addrspace) {
-			addrspace = atoi(_addrspace->at(0)->lexerInfo->c_str());
+			addrspace = _addrspace->at(0)->atoi();
 			delete _addrspace;
 		}
 
@@ -490,7 +490,7 @@ namespace LL2W {
 		}
 
 		for (ASTNode *child: *attribute_list)
-			attributeIndices.push_back(atoi(child->lexerInfo->c_str()));
+			attributeIndices.push_back(child->atoi());
 		delete attribute_list;
 	}
 
@@ -620,8 +620,8 @@ namespace LL2W {
 		ptrValue = StringSet::intern(ptrval->extractName());
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
-				atoi(comma->at(0)->lexerInfo->substr(1).c_str()),
-				atoi(comma->at(1)->lexerInfo->c_str()),
+				comma->at(0)->atoi(1),
+				comma->at(1)->atoi(),
 				comma->size() == 3});
 		}
 
@@ -947,6 +947,33 @@ namespace LL2W {
 			    << "\e[0m";
 		}
 		out << "\e[2m]\e[0m";
+		return out.str();
+	}
+
+	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *decimals_) {
+		result = result_->extracted();
+		type = getType(type_);
+		value = getValue(value_);
+		for (ASTNode *decimal: *decimals_)
+			decimals.push_back(decimal->atoi());
+
+		delete result_;
+		delete type_;
+		delete value_;
+		delete decimals_;
+	}
+
+	ExtractValueNode::~ExtractValueNode() {
+		delete type;
+		delete value;
+	}
+
+	std::string ExtractValueNode::debugExtra() const {
+		std::stringstream out;
+		out << "\e[34m%" << *result << " \e[0;2m= \e[0;91mextractvalue\e[0m " << std::string(*type) << " "
+		    << std::string(*value);
+		for (int decimal: decimals)
+			out << "\e[2m,\e[0m " << decimal;
 		return out.str();
 	}
 }

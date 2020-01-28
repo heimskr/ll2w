@@ -198,6 +198,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "cleanup"					{ RTOKEN(CLEANUP) }
 "catch"						{ RTOKEN(CATCH) }
 "landingpad"				{ RTOKEN(LANDINGPAD) }
+"extractvalue"				{ RTOKEN(EXTRACTVALUE) }
 "filter"					{ RTOKEN(FILTER) }
 "byval"						{ RTOKEN(BYVAL) }
 "writeonly"					{ RTOKEN(WRITEONLY) }

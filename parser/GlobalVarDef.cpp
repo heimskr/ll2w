@@ -52,7 +52,7 @@ namespace LL2W {
 		}
 
 		if (addrspace_) {
-			addrspace = atoi(addrspace_->children.front()->lexerInfo->c_str());
+			addrspace = addrspace_->children.front()->atoi();
 			delete addrspace_;
 		}
 

@@ -54,6 +54,8 @@ namespace LL2W {
 			ASTNode * locate(const Location &);
 			/** Concatenates the lexerInfo fields of every element of the children vector. */
 			std::string concatenate() const;
+			int atoi() const;
+			int atoi(int offset) const;
 			bool isType() const;
 			bool isValue() const;
 			void debug(int indent = 0, bool is_last = false) const;

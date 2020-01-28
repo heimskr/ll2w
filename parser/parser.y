@@ -138,6 +138,7 @@ using AN = LL2W::ASTNode;
 %token TOK_CLEANUP "cleanup"
 %token TOK_CATCH "catch"
 %token TOK_LANDINGPAD "landingpad"
+%token TOK_EXTRACTVALUE "extractvalue"
 %token TOK_FILTER "filter"
 %token TOK_BYVAL "byval"
 %token TOK_WRITEONLY "writeonly"
@@ -155,7 +156,7 @@ using AN = LL2W::ASTNode;
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
 %token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF PHI_PAIR
-%token SWITCH_LIST BLOCKHEADER
+%token SWITCH_LIST BLOCKHEADER DECIMAL_PAIR_LIST
 
 %start start
 
@@ -324,7 +325,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | i_fmath | "unreachable";
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | "unreachable";
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -438,6 +439,12 @@ i_shr: result TOK_SHR type_any value "," value
 i_fmath: result TOK_FMATH fastmath_flags type_any value "," value
          { $$ = new FMathNode($1, $2, $3, $4, $5, $7); D($6); };
 
+i_extractvalue: result "extractvalue" type_any value decimals
+                { $$ = new ExtractValueNode($1, $3, $4, $5); };
+decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2) }
+        | { $$ = new AN(DECIMAL_LIST); }
+
+
 // Constants
 
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $3, $2}); }
@@ -455,10 +462,10 @@ operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | 
 const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
-getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimals ")"
+getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimal_pairs ")"
                   { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
-decimals: decimals "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_LIST); };
+decimal_pairs: decimal_pairs "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_PAIR_LIST); };
 
 %%
 

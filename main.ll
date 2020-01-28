@@ -297,7 +297,7 @@ define void @_Z10parsertestv() #1 personality i8* bitcast (i32 (...)* @__gxx_per
   %14 = insertvalue { i8*, i32 } %13, i32 %12, 1
   resume { i8*, i32 } %14
 */
-}/*
+}
 
 ; Function Attrs: noinline optnone ssp uwtable
 define void @_Z6lttestv() #1 personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*) {

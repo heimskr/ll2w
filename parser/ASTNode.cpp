@@ -178,6 +178,14 @@ namespace LL2W {
 		return out.str();
 	}
 
+	int ASTNode::atoi() const {
+		return ::atoi(lexerInfo->c_str());
+	}
+
+	int ASTNode::atoi(int offset) const {
+		return ::atoi(lexerInfo->substr(offset).c_str());
+	}
+
 	bool ASTNode::isType() const {
 		return symbol == TOK_INTTYPE || symbol == TOK_FLOATTYPE || symbol == ARRAYTYPE || symbol == VECTORTYPE
 		    || symbol == POINTERTYPE || symbol == TOK_VOID || symbol == FUNCTIONTYPE || symbol == TOK_STRUCTVAR;
