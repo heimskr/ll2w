@@ -322,6 +322,14 @@ namespace LL2W {
 		~InsertValueNode();
 		virtual std::string debugExtra() const override;
 	};
+
+	struct ResumeNode: public InstructionNode {
+		Type *type;
+		Value *value;
+		ResumeNode(ASTNode *type_, ASTNode *value_);
+		~ResumeNode();
+		virtual std::string debugExtra() const override;
+	};
 }
 
 #endif

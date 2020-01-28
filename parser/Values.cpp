@@ -187,6 +187,7 @@ namespace LL2W {
 			case TOK_NULL:            return new NullValue();
 			case TOK_CSTRING:         return new CStringValue(node);
 			case TOK_ZEROINITIALIZER: return new ZeroinitializerValue();
+			case TOK_UNDEF:           return new UndefValue();
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

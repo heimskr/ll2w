@@ -1008,10 +1008,26 @@ namespace LL2W {
 
 	std::string InsertValueNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[91insertvalue\e[0m " << std::string(*aggregateType) << " " << std::string(*aggregateValue)
+		out << "\e[91minsertvalue\e[0m " << std::string(*aggregateType) << " " << std::string(*aggregateValue)
 		    << "\e[2m,\e[0m " << std::string(*type) << " " << std::string(*value);
 		for (int decimal: decimals)
 			out << "\e[2m,\e[0m " << decimal;
 		return out.str();
+	}
+
+// ResumeNode
+
+	ResumeNode::ResumeNode(ASTNode *type_, ASTNode *value_) {
+		type = getType(type_);
+		value = getValue(value_);
+	}
+
+	ResumeNode::~ResumeNode() {
+		delete type;
+		delete value;
+	}
+
+	std::string ResumeNode::debugExtra() const {
+		return "\e[91mresume\e[0m " + std::string(*type) + " " + std::string(*value);
 	}
 }

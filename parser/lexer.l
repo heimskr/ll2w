@@ -157,6 +157,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "*"							{ RTOKEN(ASTERISK) }
 "#"							{ RTOKEN(HASH) }
 ":"							{ RTOKEN(COLON) }
+"undef"						{ RTOKEN(UNDEF) }
 
 "select"					{ RTOKEN(SELECT) }
 "alloca"					{ RTOKEN(ALLOCA) }
@@ -200,6 +201,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "landingpad"				{ RTOKEN(LANDINGPAD) }
 "extractvalue"				{ RTOKEN(EXTRACTVALUE) }
 "insertvalue"				{ RTOKEN(INSERTVALUE) }
+"resume"					{ RTOKEN(RESUME) }
 "filter"					{ RTOKEN(FILTER) }
 "byval"						{ RTOKEN(BYVAL) }
 "writeonly"					{ RTOKEN(WRITEONLY) }

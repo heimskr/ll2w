@@ -80,6 +80,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ASTERISK "*"
 %token TOK_HASH "#"
 %token TOK_COLON ":"
+%token TOK_UNDEF "undef"
 %token TOK_NEWLINE
 
 %token TOK_TO "to"
@@ -140,6 +141,7 @@ using AN = LL2W::ASTNode;
 %token TOK_LANDINGPAD "landingpad"
 %token TOK_EXTRACTVALUE "extractvalue"
 %token TOK_INSERTVALUE "insertvalue"
+%token TOK_RESUME "resume"
 %token TOK_FILTER "filter"
 %token TOK_BYVAL "byval"
 %token TOK_WRITEONLY "writeonly"
@@ -229,7 +231,7 @@ metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
 ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | getelementptr_expr | "null" | "zeroinitializer";
+value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | getelementptr_expr | "null" | "zeroinitializer" | "undef";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
@@ -244,6 +246,7 @@ bare_array: "[" value_pairs "]" { $$ = $2; D($1, $3); };
 array: full_array;
 
 fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS) };
+
 
 
 // Types
@@ -326,7 +329,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | "unreachable";
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | "unreachable";
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -416,7 +419,7 @@ i_basicmath: result addsubmulshl type_any value "," value { auto loc = $1->locat
            | result addsubmulshl "nsw" "nuw" type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate(loc); D($3, $4, $6); };
 
 i_phi: result "phi" fastmath_flags type_any phi_list
-     { auto loc = $1->location; $$ = (new PhiNode($1, $3, $4, $5))->locate(loc); D($2); };
+       { auto loc = $1->location; $$ = (new PhiNode($1, $3, $4, $5))->locate(loc); D($2); };
 phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = new AN(PHI_PAIR, $1); };
 phi_pair: "[" value "," TOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
@@ -448,29 +451,35 @@ decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2) }
 i_insertvalue: result "insertvalue" type_any value "," type_any value decimals
                { $$ = new InsertValueNode($1, $3, $4, $6, $7, $8); D($2, $5); };
 
+i_resume: "resume" type_any value
+          { $$ = new ResumeNode($2, $3); D($1); };
+
 
 
 // Constants
 
 constant: type_any parattr_list constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $3, $2}); }
-        | type_any constant_right { $$ = (new AN(CONSTANT))->adopt({$1, $2}); }
-        | TOK_GVAR { $$ = (new AN(CONSTANT))->adopt($1); };
+        | type_any constant_right              { $$ = (new AN(CONSTANT))->adopt({$1, $2}); }
+        | TOK_GVAR                             { $$ = (new AN(CONSTANT))->adopt($1); };
 constant_right: operand | const_expr;
-parattr_list: parattr_list parattr { $$ = $1->adopt($2); } | parattr { $$ = (new AN(PARATTR_LIST))->adopt($1, true); };
-parattr: TOK_PARATTR | TOK_INALLOCA { $1->symbol = TOK_PARATTR; } | TOK_READONLY { $1->symbol = TOK_PARATTR; } | retattr
-       | TOK_ALIGN TOK_DECIMAL { $$ = $1->adopt($2); };
+parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
+            | parattr              { $$ = (new AN(PARATTR_LIST))->adopt($1, true); };
+parattr: TOK_PARATTR
+       | TOK_INALLOCA { $1->symbol = TOK_PARATTR; }
+       | TOK_READONLY               { $1->symbol = TOK_PARATTR; }
+       | TOK_ALIGN TOK_DECIMAL      { $$ = $1->adopt($2); };
        | TOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
-       | TOK_BYVAL
-       | TOK_WRITEONLY;
+       | retattr | TOK_BYVAL | TOK_WRITEONLY;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
-const_expr: TOK_CONV_OP constant TOK_TO type_any { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
+const_expr: TOK_CONV_OP constant TOK_TO type_any         { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
           | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONST_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimal_pairs ")"
-                  { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
+                    { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: TOK_INBOUNDS | { $$ = nullptr; };
-decimal_pairs: decimal_pairs "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); } | { $$ = new AN(DECIMAL_PAIR_LIST); };
+decimal_pairs: decimal_pairs "," TOK_INTTYPE TOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); }
+             | { $$ = new AN(DECIMAL_PAIR_LIST); };
 
 %%
 

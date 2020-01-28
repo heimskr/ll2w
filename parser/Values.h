@@ -152,6 +152,12 @@ namespace LL2W {
 		operator std::string() override { return "zeroinitializer"; }
 	};
 
+	struct UndefValue: public Value {
+		UndefValue() {}
+		Value * copy() const override { return new UndefValue(); }
+		operator std::string() override { return "undef"; }
+	};
+
 	// TODO: ArrayValue
 
 	Value * getValue(ASTNode *);
