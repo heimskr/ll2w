@@ -29,6 +29,8 @@ namespace LL2W {
 			Constant * copy() const;
 			operator std::string() const;
 	};
+
+	std::ostream & operator<<(std::ostream &, const Constant &);
 }
 
 #endif

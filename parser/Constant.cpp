@@ -25,7 +25,7 @@ namespace LL2W {
 			ASTNode *value_node = node->at(1);
 			if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 				value = gep_value->copy();
-			} else if (value_node->symbol == CONST_EXPR) {
+			} else if (value_node->symbol == CONVERSION_EXPR) {
 				for (const std::pair<Conversion, std::string> &pair: conversion_map) {
 					if (*value_node->lexerInfo == pair.second) {
 						conversion = pair.first;
@@ -71,5 +71,9 @@ namespace LL2W {
 			    << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
 		}
 		return out.str();
+	}
+
+	std::ostream & operator<<(std::ostream &os, const Constant &constant) {
+		return os << std::string(constant);
 	}
 }
