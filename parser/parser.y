@@ -296,8 +296,8 @@ comdat:  TOK_COMDAT "(" TOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
 
 // Functions
 
-function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs _personality
-                { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12, $13); D($8, $10); };
+function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs _header_align _personality
+                { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12, $13, $14); D($8, $10); };
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST); };
 function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); D($2, $3); }
              | function_types { $$ = new FunctionArgs($1, false); }
@@ -309,6 +309,7 @@ function_type: type_any parattr_list _variable { $$ = $1->adopt({$2, $3}); };
 _cconv: TOK_CCONV | { $$ = nullptr; };
 _fnattrs: "#" TOK_DECIMAL { $$ = $2; D($1); } | fnattr_list;
 fnattr_list: fnattr_list basic_fnattr { $1->adopt($2); } | { $$ = new AN(FNATTR_LIST); };
+_header_align: "align" TOK_DECIMAL { $1->adopt($2); } | { $$ = nullptr; };
 _unnamed_addr: TOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
 _variable: TOK_PVAR | { $$ = nullptr; };
 variable: TOK_PVAR | TOK_GVAR;

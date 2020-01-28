@@ -21,12 +21,13 @@ namespace LL2W {
 		FunctionArgs *arguments;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		std::unordered_set<FnAttr> fnattrs;
+		int align = -1;
 		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
 		Constant *personality = nullptr;
 		
 		using N = ASTNode *;
-		FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type, N function_name,
-		               N function_args, N unnamed_addr, N fnattrs_, N _personality);
+		FunctionHeader(N _linkage, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type, N function_name,
+		               N function_args, N unnamed_addr, N _fnattrs, N _align, N _personality);
 		~FunctionHeader();
 
 		std::string debugExtra() const override;

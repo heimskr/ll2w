@@ -10,47 +10,48 @@
 // TODO: reduce duplication of GlobalVarDef code
 
 namespace LL2W {
-	FunctionHeader::FunctionHeader(N linkage_, N visibility_, N dll_storage_class, N cconv_, N retattrs_, N type,
-	                               N function_name, N function_args, N unnamed_addr, N fnattrs_, N personality_):
+	FunctionHeader::FunctionHeader(N _linkage, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
+	                               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _align,
+	                               N _personality):
 		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
 
-		if (linkage_) {
-			const std::string &link = *linkage_->lexerInfo;
+		if (_linkage) {
+			const std::string &link = *_linkage->lexerInfo;
 			for (const std::pair<Linkage, std::string> &pair: linkage_map) {
 				if (link == pair.second) {
 					linkage = pair.first;
 					break;
 				}
 			}
-			delete linkage_;
+			delete _linkage;
 		}
 
-		if (visibility_) {
-			visibility = *visibility_->lexerInfo == "hidden"? Visibility::Hidden :
-				(*visibility_->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
-			delete visibility_;
+		if (_visibility) {
+			visibility = *_visibility->lexerInfo == "hidden"? Visibility::Hidden :
+				(*_visibility->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
+			delete _visibility;
 		}
 
-		if (dll_storage_class) {
-			dllStorageClass = *dll_storage_class->lexerInfo == "dllimport"?
+		if (_dll_storage_class) {
+			dllStorageClass = *_dll_storage_class->lexerInfo == "dllimport"?
 				DllStorageClass::Import : DllStorageClass::Export;
-			delete dll_storage_class;
+			delete _dll_storage_class;
 		}
 
-		if (cconv_) {
-			const std::string &cc = *cconv_->lexerInfo;
+		if (_cconv) {
+			const std::string &cc = *_cconv->lexerInfo;
 			for (const std::pair<CConv, std::string> &pair: cconv_map) {
 				if (cc == pair.second) {
 					cconv = pair.first;
 					break;
 				}
 			}
-			delete cconv_;
+			delete _cconv;
 		}
 
-		if (retattrs_) {
-			for (ASTNode *retattr: retattrs_->children) {
+		if (_retattrs) {
+			for (ASTNode *retattr: *_retattrs) {
 				const std::string *str = retattr->lexerInfo;
 				if (retattr->symbol == TOK_RETATTR) {
 					if (*str == "zeroext") retattrs.insert(RetAttr::Zeroext);
@@ -76,7 +77,7 @@ namespace LL2W {
 					}
 				}
 			}
-			delete retattrs_;
+			delete _retattrs;
 		}
 
 		returnType = getType(type);
@@ -92,10 +93,10 @@ namespace LL2W {
 			delete unnamed_addr;
 		}
 
-		if (fnattrs_->symbol == TOK_DECIMAL) {
-			fnattrsIndex = fnattrs_->atoi();
-		} else if (fnattrs_->symbol == FNATTR_LIST) {
-			for (ASTNode *fnattr: fnattrs_->children) {
+		if (_fnattrs->symbol == TOK_DECIMAL) {
+			fnattrsIndex = _fnattrs->atoi();
+		} else if (_fnattrs->symbol == FNATTR_LIST) {
+			for (ASTNode *fnattr: _fnattrs->children) {
 				const std::string &fnattr_name = *fnattr->lexerInfo;
 				for (const std::pair<FnAttr, std::string> &pair: fnattr_map) {
 					if (fnattr_name == pair.second) {
@@ -104,14 +105,19 @@ namespace LL2W {
 					}
 				}
 			}
-			delete fnattrs_;
+			delete _fnattrs;
 		} else {
-			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(Parser::getName(fnattrs_->symbol)));
+			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(Parser::getName(_fnattrs->symbol)));
 		}
 
-		if (personality_) {
-			personality = new Constant(personality_->at(0));
-			delete personality_;
+		if (_align) {
+			align = _align->atoi();
+			delete _align;
+		}
+
+		if (_personality) {
+			personality = new Constant(_personality->at(0));
+			delete _personality;
 		}
 	}
 
