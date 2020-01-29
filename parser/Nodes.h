@@ -18,18 +18,27 @@ namespace LL2W {
 		std::string debugExtra() const override;
 	};
 
+	struct HeaderNode: public ASTNode {
+		int label;
+		std::vector<int> preds;
+		HeaderNode(ASTNode *node);
+		virtual std::string style() const override { return "\e[32m"; }
+		virtual std::string debugExtra() const override;
+	};
+
+	struct AttributesNode: public ASTNode {
+		int index;
+		std::unordered_set<FnAttr> basicAttributes;
+		std::unordered_map<const std::string *, const std::string *> stringAttributes;
+		AttributesNode(ASTNode *);
+		virtual std::string style() const override { return "\e[31m"; }
+		virtual std::string debugExtra() const override;
+	};
+
 	struct InstructionNode: public ASTNode {
 		InstructionNode(const std::string *str): ASTNode(INSTRUCTION, str) {}
 		InstructionNode(): ASTNode(INSTRUCTION, "") {}
 		virtual std::string style() const override { return "\e[36m"; }
-	};
-
-	struct HeaderNode: public ASTNode {
-		HeaderNode(ASTNode *node);
-		int label;
-		std::vector<int> preds;
-		virtual std::string style() const override { return "\e[32m"; }
-		virtual std::string debugExtra() const override;
 	};
 
 	struct SelectNode: public InstructionNode {

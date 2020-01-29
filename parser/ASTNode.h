@@ -58,6 +58,7 @@ namespace LL2W {
 			int atoi(int offset) const;
 			bool isType() const;
 			bool isValue() const;
+			const char * getName() const;
 			void debug(int indent = 0, bool is_last = false) const;
 			virtual std::string debugExtra() const;
 			virtual std::string style() const;

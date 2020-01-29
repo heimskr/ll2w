@@ -193,7 +193,8 @@ csuvar: TOK_STRUCTVAR | TOK_CLASSVAR | TOK_UNIONVAR;
 
 // Attributes
 
-attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}" { $$ = $1->adopt({$3, $6}); D($2, $4, $5, $7); };
+attributes: "attributes" "#" TOK_DECIMAL "=" "{" attribute_list "}"
+            { $$ = new AttributesNode($1->adopt({$3, $6})); D($2, $4, $5, $7); };
 attribute_list: attribute_list attribute { $$ = $1->adopt($2); }
               | { $$ = new AN(ATTRIBUTE_LIST); };
 attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }

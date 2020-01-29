@@ -43,6 +43,44 @@ namespace LL2W {
 		return out.str();
 	}
 
+// AttributesNode
+
+	AttributesNode::AttributesNode(ASTNode *node): ASTNode(TOK_ATTRIBUTES, "") {
+		index = node->at(0)->atoi();
+		for (ASTNode *child: *node->at(1)) {
+			if (child->symbol == TOK_FNATTR_BASIC) {
+				for (const std::pair<FnAttr, std::string> &pair: fnattr_map) {
+					if (*child->lexerInfo == pair.second) {
+						basicAttributes.insert(pair.first);
+						break;
+					}
+				}
+			} else if (child->symbol == TOK_STRING) {
+				stringAttributes.insert({child->extracted(), StringSet::intern("")});
+			} else if (child->symbol == TOK_EQUALS) {
+				stringAttributes.insert({child->at(0)->extracted(), child->at(1)->extracted()});
+			} else {
+				throw std::runtime_error("Invalid child of ATTRIBUTE_LIST: " + std::string(child->getName()));
+			}
+		}
+		delete node;
+	}
+
+	std::string AttributesNode::debugExtra() const {
+		std::stringstream out;
+		out << "attributes #\e[92m" << index << "\e[0m \e[2m= { \e[0m";
+		for (FnAttr attr: basicAttributes)
+			out << "\e[34m" << fnattr_map.at(attr) << "\e[0m ";
+		for (const std::pair<const std::string *, const std::string *> &pair: stringAttributes) {
+			out << "\e[93m\"" << *pair.first << "\"\e[0m";
+			if (!pair.second->empty())
+				out << "\e[2m=\e[0;93m\"" << *pair.second << "\"\e[0m";
+			out << " ";
+		}
+		out << "\e[2m}\e[0m";
+		return out.str();
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,

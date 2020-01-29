@@ -196,6 +196,10 @@ namespace LL2W {
 		    || symbol == TOK_PVAR || symbol == TOK_GVAR;
 	}
 
+	const char * ASTNode::getName() const {
+		return Parser::getName(symbol);
+	}
+
 	void ASTNode::debug(int indent, bool is_last) const {
 		if (indent == 0)
 			std::cerr << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
