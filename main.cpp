@@ -3,9 +3,9 @@
 
 #include <unistd.h>
 
-#include "Graph.h"
-#include "DTree.h"
-#include "DJGraph.h"
+#include "graph/Graph.h"
+#include "graph/DTree.h"
+#include "graph/DJGraph.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
 
@@ -79,7 +79,7 @@ void rendertest() {
 }
 
 void parsertest() {
-	LL2W::Parser::open("reverse.ll");
+	LL2W::Parser::open("ll/reverse.ll");
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	LL2W::Parser::root->debug();
