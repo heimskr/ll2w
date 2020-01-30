@@ -25,5 +25,6 @@ namespace LL2W {
 
 	void Parser::done() {
 		yylex_destroy();
+		delete root;
 	}
 }
