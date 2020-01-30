@@ -8,6 +8,7 @@
 #include "graph/DJGraph.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
+#include "compiler/Program.h"
 
 void lttest();
 void djtest();
@@ -82,6 +83,7 @@ void parsertest() {
 	LL2W::Parser::open("ll/reverse.ll");
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
-	LL2W::Parser::root->debug();
+	// LL2W::Parser::root->debug();
+	LL2W::Program prog(*LL2W::Parser::root);
 	LL2W::Parser::done();
 }
