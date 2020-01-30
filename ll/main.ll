@@ -218,7 +218,7 @@ target triple = "x86_64-apple-macosx10.15.0"
 @_ZTVN4LL2W7DJGraphE = external unnamed_addr constant { [3 x i8*] }, section "foo", comdat($what), align 8
 ; Function Attrs: noinline norecurse optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
-  %foo = alloca i32, i32 666
+  ;%foo = alloca i32, i32 666
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
   %5 = alloca i8**, align 8
@@ -228,7 +228,7 @@ define i32 @main(i32, i8**) #0 {
   %6 = load i32, i32* %4, align 4
   %7 = icmp ne i32 %6, 3
   br i1 %7, label %8, label %15
-  br label %foo
+  ;br label %foo
 
 ; <label>:8:                                      ; preds = %2
   %9 = tail call nnan reassoc ccc zeroext signext inreg dereferenceable(160) addrspace(42) %"class.std::__1::basic_ostream"* @_ZNSt3__1lsINS_11char_traitsIcEEEERNS_13basic_ostreamIcT_EES6_PKc(%"class.std::__1::basic_ostream"* dereferenceable(160) @_ZNSt3__14cerrE, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str, i32 0, i32 0)) #1 #2 #3

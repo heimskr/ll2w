@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 
@@ -49,6 +50,15 @@ namespace LL2W {
 	ASTNode::~ASTNode() {
 		for (ASTNode *child: children)
 			delete child;
+	}
+
+	long ASTNode::parseLong(const std::string &str) {
+		const char *c_str = str.c_str();
+		char *end;
+		long parsed = strtol(c_str, &end, 10);
+		if (c_str + str.length() != end)
+			throw std::invalid_argument("Not an integer: \"" + str + "\"");
+		return parsed;
 	}
 
 	ASTNode * ASTNode::operator[](size_t index) const {
@@ -179,11 +189,13 @@ namespace LL2W {
 	}
 
 	int ASTNode::atoi() const {
-		return ::atoi(lexerInfo->c_str());
+		if (symbol == TOK_PVAR)
+			return atoi(1);
+		return parseLong(*lexerInfo);
 	}
 
 	int ASTNode::atoi(int offset) const {
-		return ::atoi(lexerInfo->substr(offset).c_str());
+		return parseLong(lexerInfo->substr(offset));
 	}
 
 	bool ASTNode::isType() const {

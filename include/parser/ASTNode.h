@@ -19,6 +19,7 @@ namespace LL2W {
 	class ASTNode {
 		private:
 			ASTNode() {}
+			static long parseLong(const std::string &);
 
 		public:
 			int symbol;
