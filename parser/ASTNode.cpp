@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <iostream>
 #include <sstream>
 
@@ -7,6 +6,7 @@
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
 #include "parser/Types.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Location::operator std::string() const {
@@ -50,15 +50,6 @@ namespace LL2W {
 	ASTNode::~ASTNode() {
 		for (ASTNode *child: children)
 			delete child;
-	}
-
-	long ASTNode::parseLong(const std::string &str) {
-		const char *c_str = str.c_str();
-		char *end;
-		long parsed = strtol(c_str, &end, 10);
-		if (c_str + str.length() != end)
-			throw std::invalid_argument("Not an integer: \"" + str + "\"");
-		return parsed;
 	}
 
 	ASTNode * ASTNode::operator[](size_t index) const {
