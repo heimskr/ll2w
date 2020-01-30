@@ -12,32 +12,46 @@
 #include "Constant.h"
 
 namespace LL2W {
-	struct MetadataDef: public ASTNode {
+	enum class NodeType {
+		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
+		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
+		Switch, ExtractValue, InsertValue, Resume
+	};
+
+	struct BaseNode: public ASTNode {
+		using ASTNode::ASTNode;
+		virtual NodeType nodeType() const = 0;
+	};
+
+	struct MetadataDef: public BaseNode {
 		bool distinct;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
 		std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Metadata; }
 	};
 
-	struct HeaderNode: public ASTNode {
+	struct HeaderNode: public BaseNode {
 		int label;
 		std::vector<int> preds;
 		HeaderNode(ASTNode *node);
 		virtual std::string style() const override { return "\e[32m"; }
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Header; }
 	};
 
-	struct AttributesNode: public ASTNode {
+	struct AttributesNode: public BaseNode {
 		int index;
 		std::unordered_set<FnAttr> basicAttributes;
 		std::unordered_map<const std::string *, const std::string *> stringAttributes;
 		AttributesNode(ASTNode *);
 		virtual std::string style() const override { return "\e[31m"; }
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Attributes; }
 	};
 
-	struct InstructionNode: public ASTNode {
-		InstructionNode(const std::string *str): ASTNode(INSTRUCTION, str) {}
-		InstructionNode(): ASTNode(INSTRUCTION, "") {}
+	struct InstructionNode: public BaseNode {
+		InstructionNode(const std::string *str): BaseNode(INSTRUCTION, str) {}
+		InstructionNode(): BaseNode(INSTRUCTION, "") {}
 		virtual std::string style() const override { return "\e[36m"; }
 	};
 
@@ -51,6 +65,7 @@ namespace LL2W {
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);
 		~SelectNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Select; }
 	};
 
 	struct AllocaNode: public InstructionNode {
@@ -66,6 +81,7 @@ namespace LL2W {
 		           ASTNode *addrspace_);
 		~AllocaNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Alloca; }
 	};
 
 	struct StoreNode: public InstructionNode {
@@ -83,6 +99,7 @@ namespace LL2W {
 		          ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~StoreNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Store; }
 	};
 
 	struct LoadNode: public InstructionNode {
@@ -103,6 +120,7 @@ namespace LL2W {
 		         ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 		~LoadNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Load; }
 	};
 
 	struct IcmpNode: public InstructionNode {
@@ -114,6 +132,7 @@ namespace LL2W {
 		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2);
 		~IcmpNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Icmp; }
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -122,6 +141,7 @@ namespace LL2W {
 		BrUncondNode(const std::string &destination_): BrUncondNode(&destination_) {}
 		BrUncondNode(const ASTNode *node): BrUncondNode(node->lexerInfo) { delete node; }
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::BrUncond; }
 	};
 
 	struct BrCondNode: public InstructionNode {
@@ -131,6 +151,7 @@ namespace LL2W {
 		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false);
 		~BrCondNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::BrCond; }
 	};
 
 	class CallInvokeNode: public InstructionNode {
@@ -166,6 +187,7 @@ namespace LL2W {
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list);
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Call; }
 	};
 
 	struct InvokeNode: public CallInvokeNode {
@@ -175,6 +197,7 @@ namespace LL2W {
 		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
 		           ASTNode *normal_label, ASTNode *exception_label);
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Invoke; }
 	};
 
 	struct GetelementptrNode: public InstructionNode {
@@ -187,6 +210,7 @@ namespace LL2W {
 		                  ASTNode *indices_);
 		~GetelementptrNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Getelementptr; }
 	};
 
 	struct RetNode: public InstructionNode {
@@ -197,6 +221,7 @@ namespace LL2W {
 		RetNode(ASTNode *type_, ASTNode *value_);
 		~RetNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Ret; }
 	};
 
 	struct LandingpadNode: public InstructionNode {
@@ -218,6 +243,7 @@ namespace LL2W {
 		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_);
 		~LandingpadNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Landingpad; }
 	};
 
 	struct ConversionNode: public InstructionNode {
@@ -228,6 +254,7 @@ namespace LL2W {
 		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_);
 		~ConversionNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Conversion; }
 	};
 
 	struct BasicMathNode: public InstructionNode {
@@ -241,6 +268,7 @@ namespace LL2W {
 		              ASTNode *right_);
 		~BasicMathNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::BasicMath; }
 	};
 
 	struct PhiNode: public InstructionNode {
@@ -251,6 +279,7 @@ namespace LL2W {
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_);
 		~PhiNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Phi; }
 	};
 
 	struct SimpleNode: public InstructionNode {
@@ -267,14 +296,16 @@ namespace LL2W {
 		enum class DivType {Sdiv, Udiv};
 		DivType divType;
 		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_);
-		virtual const char * typeName() const { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
+		virtual const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
+		virtual NodeType nodeType() const override { return NodeType::Div; }
 	};
 
 	struct RemNode: public SimpleNode {
 		enum class RemType {Srem, Urem};
 		RemType remType;
 		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_);
-		virtual const char * typeName() const { return remType == RemType::Srem? "srem" : "urem"; }
+		virtual const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
+		virtual NodeType nodeType() const override { return NodeType::Rem; }
 	};
 
 	struct LogicNode: public SimpleNode {
@@ -282,13 +313,15 @@ namespace LL2W {
 		LogicType logicType;
 		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_);
 		const char * typeName() const override;
+		virtual NodeType nodeType() const override { return NodeType::Logic; }
 	};
 
 	struct ShrNode: public SimpleNode {
 		enum class ShrType {Lshr, Ashr};
 		ShrType shrType;
 		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_);
-		const char * typeName() const { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
+		const char * typeName() const override { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
+		virtual NodeType nodeType() const override { return NodeType::Shr; }
 	};
 
 	struct FMathNode: public SimpleNode {
@@ -298,6 +331,7 @@ namespace LL2W {
 		FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_);
 		const char * typeName() const override;
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::FMath; }
 	};
 
 	struct SwitchNode: public InstructionNode {
@@ -309,6 +343,7 @@ namespace LL2W {
 		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_);
 		~SwitchNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Switch; }
 	};
 
 	struct ExtractValueNode: public InstructionNode {
@@ -319,6 +354,7 @@ namespace LL2W {
 		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_);
 		~ExtractValueNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::ExtractValue; }
 	};
 
 	struct InsertValueNode: public InstructionNode {
@@ -330,6 +366,7 @@ namespace LL2W {
 		                ASTNode *value_, ASTNode *decimals_);
 		~InsertValueNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::InsertValue; }
 	};
 
 	struct ResumeNode: public InstructionNode {
@@ -338,6 +375,7 @@ namespace LL2W {
 		ResumeNode(ASTNode *type_, ASTNode *value_);
 		~ResumeNode();
 		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Resume; }
 	};
 }
 

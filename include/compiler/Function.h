@@ -14,6 +14,8 @@ namespace LL2W {
 			std::list<BasicBlock> blocks;
 
 			Function(const ASTNode &);
+
+			void debug() const;
 	};
 }
 

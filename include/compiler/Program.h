@@ -14,6 +14,7 @@ namespace LL2W {
 			std::unordered_map<std::string, Function> functions;
 
 			Program(const ASTNode &);
+			void debug() const;
 	};
 }
 

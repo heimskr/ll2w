@@ -10,7 +10,7 @@ namespace LL2W {
 // MetadataDef
 
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
-		ASTNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
+		BaseNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		locate(dotident_node);
 		distinct = distinct_node != nullptr;
 		if (distinct_node)
@@ -25,7 +25,7 @@ namespace LL2W {
 
 // HeaderNode
 
-	HeaderNode::HeaderNode(ASTNode *node): ASTNode(BLOCKHEADER, "") {
+	HeaderNode::HeaderNode(ASTNode *node): BaseNode(BLOCKHEADER, "") {
 		locate(node);
 		label = node->at(0)->atoi();
 		preds.reserve(node->at(2)->size());
@@ -45,7 +45,7 @@ namespace LL2W {
 
 // AttributesNode
 
-	AttributesNode::AttributesNode(ASTNode *node): ASTNode(TOK_ATTRIBUTES, "") {
+	AttributesNode::AttributesNode(ASTNode *node): BaseNode(TOK_ATTRIBUTES, "") {
 		index = node->at(0)->atoi();
 		for (ASTNode *child: *node->at(1)) {
 			if (child->symbol == TOK_FNATTR_BASIC) {
