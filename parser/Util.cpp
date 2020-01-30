@@ -31,7 +31,7 @@ namespace LL2W {
 
 	void print(std::ostream &os, const char *left, const std::string *middle, const char *right) {
 		if (middle)
-			os << left << middle << right;
+			os << left << *middle << right;
 	}
 
 	void print(std::ostream &os, const char *left, int n, const char *right) {
