@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "FunctionArgs.h"
-#include "StringSet.h"
-#include "Enums.h"
-#include "Lexer.h"
+#include "parser/FunctionArgs.h"
+#include "parser/StringSet.h"
+#include "parser/Enums.h"
+#include "parser/Lexer.h"
 
 namespace LL2W {
 	FunctionArgument::FunctionArgument(Type *type_, const std::string &name_):

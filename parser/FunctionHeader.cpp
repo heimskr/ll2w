@@ -2,10 +2,10 @@
 #include <iostream>
 #include <sstream>
 
-#include "FunctionHeader.h"
-#include "Parser.h"
-#include "StringSet.h"
-#include "Types.h"
+#include "parser/FunctionHeader.h"
+#include "parser/Parser.h"
+#include "parser/StringSet.h"
+#include "parser/Types.h"
 
 // TODO: reduce duplication of GlobalVarDef code
 

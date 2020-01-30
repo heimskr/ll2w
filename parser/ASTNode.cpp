@@ -1,11 +1,11 @@
 #include <iostream>
 #include <sstream>
 
-#include "ASTNode.h"
-#include "StringSet.h"
-#include "Parser.h"
-#include "Lexer.h"
-#include "Types.h"
+#include "parser/ASTNode.h"
+#include "parser/StringSet.h"
+#include "parser/Parser.h"
+#include "parser/Lexer.h"
+#include "parser/Types.h"
 
 namespace LL2W {
 	Location::operator std::string() const {

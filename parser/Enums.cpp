@@ -1,4 +1,4 @@
-#include "Enums.h"
+#include "parser/Enums.h"
 
 namespace LL2W {
 	std::unordered_map<Linkage, std::string> linkage_map {

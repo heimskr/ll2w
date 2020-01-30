@@ -1,5 +1,5 @@
-#include "ASTNode.h"
-#include "Util.h"
+#include "parser/ASTNode.h"
+#include "parser/Util.h"
 
 namespace LL2W {
 	void getFastmath(std::unordered_set<Fastmath> &flags, ASTNode *node, bool destroy) {

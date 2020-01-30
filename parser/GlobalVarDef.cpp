@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <sstream>
 
-#include "GlobalVarDef.h"
+#include "parser/GlobalVarDef.h"
 
 namespace LL2W {
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,

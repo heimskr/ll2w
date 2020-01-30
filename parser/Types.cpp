@@ -2,11 +2,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "ASTNode.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "Types.h"
-#include "StructNode.h"
+#include "parser/ASTNode.h"
+#include "parser/Lexer.h"
+#include "parser/Parser.h"
+#include "parser/Types.h"
+#include "parser/StructNode.h"
 
 namespace LL2W {
 	IntType::operator std::string() {

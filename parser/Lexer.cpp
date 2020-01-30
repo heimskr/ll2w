@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "Lexer.h"
+#include "parser/Lexer.h"
 
 namespace LL2W {
 	yysize Lexer::last_yylength = 0;

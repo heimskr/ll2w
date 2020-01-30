@@ -1,9 +1,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "ASTNode.h"
-#include "Constant.h"
-#include "Lexer.h"
+#include "parser/ASTNode.h"
+#include "parser/Constant.h"
+#include "parser/Lexer.h"
 
 namespace LL2W {
 	Constant::Constant(Type *type_, Value *value_, const ParAttrs &parattrs_, Conversion conversion_,

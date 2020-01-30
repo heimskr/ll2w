@@ -1,13 +1,13 @@
 #include <iostream>
 #include <sstream>
 
-#include "ASTNode.h"
-#include "Parser.h"
-#include "Types.h"
-#include "Values.h"
-#include "Lexer.h"
-#include "StringSet.h"
-#include "Constant.h"
+#include "parser/ASTNode.h"
+#include "parser/Parser.h"
+#include "parser/Types.h"
+#include "parser/Values.h"
+#include "parser/Lexer.h"
+#include "parser/StringSet.h"
+#include "parser/Constant.h"
 
 namespace LL2W {
 	VectorValue::VectorValue(const ASTNode *node) {

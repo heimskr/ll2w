@@ -1,9 +1,9 @@
 #include <sstream>
 
-#include "ASTNode.h"
-#include "ParAttrs.h"
-#include "Types.h"
-#include "Lexer.h"
+#include "parser/ASTNode.h"
+#include "parser/ParAttrs.h"
+#include "parser/Types.h"
+#include "parser/Lexer.h"
 
 namespace LL2W {
 	ParAttrs::ParAttrs() {}

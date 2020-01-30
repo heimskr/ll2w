@@ -1,9 +1,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "Nodes.h"
-#include "StringSet.h"
-#include "Util.h"
+#include "parser/Nodes.h"
+#include "parser/StringSet.h"
+#include "parser/Util.h"
 
 namespace LL2W {
 

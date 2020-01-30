@@ -1,9 +1,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "Parser.h"
-#include "Lexer.h"
-#include "StringSet.h"
+#include "parser/Parser.h"
+#include "parser/Lexer.h"
+#include "parser/StringSet.h"
 
 namespace LL2W {
 	std::string Parser::filename = "";

@@ -1,5 +1,5 @@
 %{
-#include "Lexer.h"
+#include "parser/Lexer.h"
 #define YY_USER_ACTION { LL2W::Lexer::advance(); }
 #define RTOKEN(x) return LL2W::Lexer::token(TOK_##x);
 

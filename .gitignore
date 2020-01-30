@@ -37,6 +37,9 @@ ll2w
 *.png
 .DS_Store
 .vscode
+include/parser/yyparse*
+include/parser/yylex*
+include/yyparse.h
 parser/yyparse*
 parser/yylex*
 

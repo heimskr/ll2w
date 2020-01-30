@@ -4,15 +4,15 @@
 #include <initializer_list>
 
 #define NO_YYPARSE
-#include "Lexer.h"
-#include "ASTNode.h"
-#include "Parser.h"
-#include "GlobalVarDef.h"
-#include "FunctionHeader.h"
-#include "FunctionArgs.h"
-#include "Nodes.h"
-#include "StructNode.h"
-#include "Values.h"
+#include "parser/Lexer.h"
+#include "parser/ASTNode.h"
+#include "parser/Parser.h"
+#include "parser/GlobalVarDef.h"
+#include "parser/FunctionHeader.h"
+#include "parser/FunctionArgs.h"
+#include "parser/Nodes.h"
+#include "parser/StructNode.h"
+#include "parser/Values.h"
 
 template <typename ...Args>
 void D(Args && ...args) {

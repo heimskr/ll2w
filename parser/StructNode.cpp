@@ -1,9 +1,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "Lexer.h"
-#include "StructNode.h"
-#include "StringSet.h"
+#include "parser/Lexer.h"
+#include "parser/StructNode.h"
+#include "parser/StringSet.h"
 
 namespace LL2W {
 	StructNode::StructNode(StructShape shape_, ASTNode *left, ASTNode *types_):

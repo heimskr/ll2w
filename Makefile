@@ -1,5 +1,5 @@
 COMPILER	?= clang++
-CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra
+CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra -Iinclude
 OUTPUT		?= ll2w
 MAIN		:= main
 SOURCES		:= $(shell find *.cpp **/*.cpp)
@@ -8,7 +8,7 @@ OBJECTS		:= $(SOURCES:.cpp=.o) parser/yylex.o parser/yyparse.o
 LEXFLAGS	:= -Wno-sign-compare -Wno-register
 LEXCPP		:= parser/yylex.cpp
 PARSECPP	:= parser/yyparse.cpp
-PARSEHDR	:= parser/yyparse.h
+PARSEHDR	:= include/yyparse.h
 FLEXSRC		:= parser/lexer.l
 BISONSRC	:= parser/parser.y
 
