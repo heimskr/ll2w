@@ -7,10 +7,9 @@ namespace LL2W {
 		for (const ASTNode *node: root) {
 			switch (node->symbol) {
 				case FUNCTION_DEF:
-					// functions.insert({*node->lexerInfo, 
-					functions.emplace(*node->lexerInfo, std::move(Function(*node)));
+					functions.emplace(*node->lexerInfo, Function(*node));
 					break;
-				default: ;
+				default: node->debug();
 			}
 		}
 	}	

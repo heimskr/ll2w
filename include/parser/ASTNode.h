@@ -59,7 +59,7 @@ namespace LL2W {
 			bool isType() const;
 			bool isValue() const;
 			const char * getName() const;
-			void debug(int indent = 0, bool is_last = false) const;
+			void debug(int indent = 0, bool is_last = false, bool suppress_line = false) const;
 			virtual std::string debugExtra() const;
 			virtual std::string style() const;
 

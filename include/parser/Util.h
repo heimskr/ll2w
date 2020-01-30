@@ -18,6 +18,17 @@ namespace LL2W {
 	void print(std::ostream &, const char *, const std::string *, const char * = "");
 	/** Prints two strings and an int if the int isn't -1. */
 	void print(std::ostream &, const char *, int, const char * = "");
+
+	template <typename Cont>
+	bool equalTypes(const Cont &one, const Cont &two) {
+		if (one.size() != two.size())
+			return false;
+		for (size_t i = 0, size = one.size(); i < size; ++size) {
+			if (*one[i] != *two[i])
+				return false;
+		}
+		return true;
+	}
 }
 
 #endif

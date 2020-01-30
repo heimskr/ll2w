@@ -7,7 +7,7 @@
 
 namespace LL2W {
 	class ASTNode;
-	struct Type;
+	class Type;
 
 	/** Represents a set of parameter attributes. */
 	struct ParAttrs {

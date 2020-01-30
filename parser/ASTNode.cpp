@@ -200,8 +200,8 @@ namespace LL2W {
 		return Parser::getName(symbol);
 	}
 
-	void ASTNode::debug(int indent, bool is_last) const {
-		if (indent == 0)
+	void ASTNode::debug(int indent, bool is_last, bool suppress_line) const {
+		if (indent == 0 && !suppress_line)
 			std::cerr << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 		for (int i = 0; i < indent; ++i) {
 			std::cerr << "\e[2m";

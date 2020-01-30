@@ -8,9 +8,10 @@
 namespace LL2W {
 	class BasicBlock {
 		public:
-			int index;
+			int label;
 			std::vector<int> preds;
 			std::vector<const InstructionNode *> instructions;
+
 			BasicBlock(int, const std::vector<int> &, const std::vector<const InstructionNode *> &);
 	};
 }
