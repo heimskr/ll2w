@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 
 #include "parser/ASTNode.h"
@@ -34,8 +35,12 @@ namespace LL2W {
 				std::cout << " %" << *iter;
 			}
 			std::cout << "\e[0m\n";
-			for (const std::shared_ptr<Instruction> &instruction: block.instructions)
-				std::cout << "    " << instruction->node->debugExtra() << "\n";
+			for (const std::shared_ptr<Instruction> &instruction: block.instructions) {
+				int read, written;
+				std::tie(read, written) = instruction->extract();
+				std::cout << "       " << instruction->node->debugExtra() << "\e[G\e[2m" << std::setw(2) << read
+				          << " " << std::setw(2) << written << "\e[0m\n";
+			}
 		}
 	}
 }

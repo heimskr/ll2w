@@ -29,11 +29,11 @@ namespace LL2W {
 				return {0, 1};
 			}
 
-			default:
-				std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
-				          << static_cast<int>(node->nodeType());
+			default:;
+				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
+				//           << static_cast<int>(node->nodeType());
 		}
 
-		return {0, 0};
+		return {-1, -1};
 	}
 }
