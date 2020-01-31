@@ -13,18 +13,23 @@
 void lttest();
 void djtest();
 void rendertest();
-void parsertest();
+void parsertest(const std::string &);
 
 int main(int argc, char **argv) {
-	if (argc != 3) {
-		std::cerr << "Usage: " << argv[0] << " <input> <output>\n";
-		return 1;
-	}
+	// if (argc != 3) {
+	// 	std::cerr << "Usage: " << argv[0] << " <input> <output>\n";
+	// 	return 1;
+	// }
 
 	// lttest();
 	// djtest();
 	// rendertest();
-	parsertest();
+
+	if (1 < argc) {
+		parsertest(argv[1]);
+	} else {
+		parsertest("ll/reverse.ll");
+	}
 }
 
 void lttest() {
@@ -79,8 +84,8 @@ void rendertest() {
 	graph.renderTo("graph_unlinked.png");
 }
 
-void parsertest() {
-	LL2W::Parser::open("ll/reverse.ll");
+void parsertest(const std::string &filename) {
+	LL2W::Parser::open(filename);
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	// LL2W::Parser::root->debug();

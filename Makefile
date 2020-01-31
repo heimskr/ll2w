@@ -37,7 +37,7 @@ $(PARSECPP:.cpp=.o): $(PARSECPP)
 	$(COMPILER) $(CFLAGS) -c $< -o $@
 
 test: $(OUTPUT)
-	./$< syntax.ll syntax.wasm
+	./$<
 
 clean:
 	rm -f $(OUTPUT) *.o parser/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
