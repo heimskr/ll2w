@@ -29,6 +29,18 @@ namespace LL2W {
 				return {0, 1};
 			}
 
+			case NodeType::Store: {
+				const StoreNode *store = dynamic_cast<const StoreNode *>(node);
+				int readCount = 0;
+				for (const Value *value: {store->value, store->constant->value}) {
+					if (const LocalValue *local_value = dynamic_cast<const LocalValue *>(value)) {
+						readCount++;
+						read.push_back(parseLong(local_value->name));
+					}
+				}
+				return {readCount, 0};
+			}
+
 			default:;
 				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
 				//           << static_cast<int>(node->nodeType());
