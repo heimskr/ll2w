@@ -111,7 +111,7 @@ namespace LL2W {
 		}
 
 		if (_align) {
-			align = _align->atoi();
+			align = _align->at(0)->atoi();
 			delete _align;
 		}
 
