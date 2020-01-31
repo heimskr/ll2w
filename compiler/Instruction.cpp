@@ -58,6 +58,17 @@ namespace LL2W {
 				break;
 			}
 
+			case NodeType::BrUncond: {
+				// Unconditional branches don't read anything; their PVARs represent labels, not registers.
+				break;
+			}
+
+			case NodeType::BrCond: {
+				CAST(BrCondNode);
+				IFLV(cast->condition);
+				break;
+			}
+
 			default:
 				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
 				//           << static_cast<int>(node->nodeType());
