@@ -24,6 +24,9 @@ namespace LL2W {
 				instructions.push_back(std::make_shared<Instruction>(instruction));
 			}
 		}
+
+		if (!instructions.empty())
+			blocks.emplace_back(label, preds, instructions);
 	}
 
 	void Function::debug() const {
