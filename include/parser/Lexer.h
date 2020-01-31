@@ -32,9 +32,9 @@ namespace LL2W {
 		static Location location;
 		static std::string line;
 		static yysize last_yylength;
-		static std::vector<std::string> filenames;
 		static std::unordered_map<int, std::string> lines;
 		static bool failed;
+		static std::vector<std::pair<std::string, Location>> errors;
 
 		static const std::string * filename(int fileno);
 		static void advance();
@@ -47,6 +47,7 @@ namespace LL2W {
 int yylex();
 int yylex_destroy();
 int yyparse();
-void yyerror(const char *message);
+void yyerror(const char *);
+void yyerror(const std::string &, const LL2W::Location & = LL2W::Lexer::location);
 
 #endif

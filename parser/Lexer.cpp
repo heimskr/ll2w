@@ -8,6 +8,7 @@ namespace LL2W {
 	Location Lexer::location = {0, 1};
 	std::unordered_map<int, std::string> Lexer::lines;
 	bool Lexer::failed = false;
+	std::vector<std::pair<std::string, Location>> Lexer::errors;
 
 	void Lexer::advance() {
 		Lexer::line += yytext;
@@ -57,9 +58,10 @@ namespace LL2W {
 }
 
 void yyerror(const char *message) {
-	std::cerr << "\e[31mError at \e[1m" << LL2W::Lexer::location << "\e[22m: " << message << "\e[0m\n";
+	yyerror(std::string(message));
 }
 
-void yyerror(const char *message, const LL2W::Location &location) {
+void yyerror(const std::string &message, const LL2W::Location &location) {
 	std::cerr << "\e[31mError at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
+	LL2W::Lexer::errors.push_back({message, location});
 }
