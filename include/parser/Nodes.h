@@ -216,7 +216,7 @@ namespace LL2W {
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader {
 		bool inbounds = false;
 		Type *type = nullptr, *ptrType = nullptr;
-		Value *ptrValue = nullptr;
+		LocalValue *ptrValue = nullptr;
 		std::vector<std::tuple<int, int, bool>> indices;
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,

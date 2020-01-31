@@ -688,7 +688,13 @@ namespace LL2W {
 					ptr_value->location);
 			}
 		}
-		ptrValue = getValue(ptr_value);
+		Value *value = getValue(ptr_value);
+		if ((ptrValue = dynamic_cast<LocalValue *>(value)));
+		else {
+			yyerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
+			delete value;
+		}
+
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
 				comma->at(0)->atoi(1),

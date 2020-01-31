@@ -82,7 +82,7 @@ namespace LL2W {
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
 				write(cast->result);
-				read.push_back(parseLong(cast->ptrValue));
+				read.push_back(parseLong(cast->ptrValue->name));
 				break;
 			}
 
