@@ -156,8 +156,6 @@ namespace LL2W {
 			}
 
 			default:
-				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
-				//           << static_cast<int>(node->nodeType());
 				return {-1, -1};
 		}
 

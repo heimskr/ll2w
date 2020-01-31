@@ -22,6 +22,7 @@ namespace LL2W {
 				preds = header->preds;
 			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
 				instructions.push_back(std::make_shared<Instruction>(instruction));
+				instructions.back()->extract();
 			}
 		}
 

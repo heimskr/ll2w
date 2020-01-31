@@ -4,6 +4,7 @@
 #include "parser/Nodes.h"
 #include "parser/StringSet.h"
 #include "parser/Util.h"
+#include "util/Util.h"
 
 namespace LL2W {
 
@@ -540,6 +541,16 @@ namespace LL2W {
 			delete type;
 	}
 
+	std::vector<Value *> CallInvokeNode::allValues() const {
+		std::vector<Value *> out;
+		out.reserve(constants.size() + 1);
+		for (const Constant *constant: constants)
+			out.push_back(constant->value);
+		if (LocalValue *local = dynamic_cast<LocalValue *>(name))
+			out.push_back(local);
+		return out;
+	}
+
 // CallNode
 
 	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
@@ -646,7 +657,7 @@ namespace LL2W {
 // GetelementptrNode
 
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
-	                                     ASTNode *ptrval, ASTNode *indices_) {
+	                                     ASTNode *ptr_value, ASTNode *indices_) {
 		result = StringSet::intern(pvar->extractName());
 		if (_inbounds) {
 			inbounds = true;
@@ -654,7 +665,17 @@ namespace LL2W {
 		}
 		type = getType(type_);
 		ptrType = getType(ptr_type);
-		ptrValue = StringSet::intern(ptrval->extractName());
+		if (ptr_value->symbol != TOK_PVAR) {
+			yyerror("Invalid pointer symbol in getelementptr instruction: " +
+				std::string(Parser::getName(ptr_value->symbol)), ptr_value->location);
+		} else {
+			const std::string extracted = ptr_value->extractName();
+			if (!isNumeric(extracted)) {
+				yyerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
+					ptr_value->location);
+			}
+		}
+		ptrValue = getValue(ptr_value);
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
 				comma->at(0)->atoi(1),
@@ -665,7 +686,7 @@ namespace LL2W {
 		delete pvar;
 		delete type_;
 		delete ptr_type;
-		delete ptrval;
+		delete ptr_value;
 		delete indices_;
 	}
 
@@ -679,7 +700,7 @@ namespace LL2W {
 		out << "\e[32m%" << *result << " \e[0;2m= \e[0;91mgetelementptr\e[0m ";
 		if (inbounds)
 			out << "\e[34minbounds\e[0m ";
-		out << *type << "\e[2m,\e[0m " << *ptrType << " \e[32m%" << *ptrValue << "\e[0m";
+		out << *type << "\e[2m,\e[0m " << *ptrType << " " << *ptrValue << "\e[0m";
 		for (const std::tuple<int, int, bool> &index: indices) {
 			out << "\e[2m,\e[0m ";
 			if (std::get<2>(index))
@@ -761,6 +782,14 @@ namespace LL2W {
 		for (const Clause *clause: clauses)
 			out << " " << std::string(*clause);
 		return out.str();
+	}
+
+	std::vector<Value *> LandingpadNode::allValues() const {
+		std::vector<Value *> out;
+		out.reserve(clauses.size());
+		for (const Clause *clause: clauses)
+			out.push_back(clause->value);
+		return out;
 	}
 
 // ConversionNode
