@@ -57,6 +57,7 @@ namespace LL2W {
 
 	struct Reader {
 		virtual std::vector<Value *> allValues() const = 0;
+		std::vector<LocalValue *> allLocals() const;
 	};
 
 	struct Writer {

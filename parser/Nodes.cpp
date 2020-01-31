@@ -82,6 +82,19 @@ namespace LL2W {
 		return out.str();
 	}
 
+// Reader
+
+	std::vector<LocalValue *> Reader::allLocals() const {
+		std::vector<Value *> values = allValues();
+		std::vector<LocalValue *> out;
+		out.reserve(values.size());
+		for (Value *value: values) {
+			if (LocalValue *local_value = dynamic_cast<LocalValue *>(value))
+				out.push_back(local_value);
+		}
+		return out;
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
