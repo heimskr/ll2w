@@ -5,6 +5,7 @@
 
 #define IFLV(x) if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value)
 #define FORV(x...) for (const Value *value: {x})
+#define CAST(t) const t *cast = dynamic_cast<const t *>(node)
 
 namespace LL2W {
 	std::pair<char, char> Instruction::extract() {
@@ -21,47 +22,46 @@ namespace LL2W {
 
 		switch (node->nodeType()) {
 			case NodeType::Select: {
-				const SelectNode *select = dynamic_cast<const SelectNode *>(node);
-				FORV(select->firstValue, select->secondValue) {
+				CAST(SelectNode);
+				write(cast->result);
+				FORV(cast->firstValue, cast->secondValue)
 					IFLV(value);
-				}
-				written.push_back(parseLong(select->result));
 				break;
 			}
 
 			case NodeType::Alloca: {
-				const AllocaNode *alloca = dynamic_cast<const AllocaNode *>(node);
-				write(alloca->result);
-				IFLV(alloca->numelementsValue);
+				CAST(AllocaNode);
+				write(cast->result);
+				IFLV(cast->numelementsValue);
 				break;
 			}
 
 			case NodeType::Store: {
-				const StoreNode *store = dynamic_cast<const StoreNode *>(node);
-				FORV(store->value, store->constant->value)
+				CAST(StoreNode);
+				FORV(cast->value, cast->constant->value)
 					IFLV(value);
 				break;
 			}
 
 			case NodeType::Load: {
-				const LoadNode *load = dynamic_cast<const LoadNode *>(node);
-				write(load->result);
-				IFLV(load->constant->value);
+				CAST(LoadNode);
+				write(cast->result);
+				IFLV(cast->constant->value);
 				break;
 			}
 
 			case NodeType::Icmp: {
-				const IcmpNode *icmp = dynamic_cast<const IcmpNode *>(node);
-				write(icmp->result);
-				FORV(icmp->value1, icmp->value2)
+				CAST(IcmpNode);
+				write(cast->result);
+				FORV(cast->value1, cast->value2)
 					IFLV(value);
 				break;
 			}
 
 			default:
-				return {-1, -1};
 				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
 				//           << static_cast<int>(node->nodeType());
+				return {-1, -1};
 		}
 
 		return {read.size(), written.size()};
