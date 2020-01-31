@@ -17,7 +17,8 @@ namespace LL2W {
 		};
 
 		auto write = [&](const std::string *str) {
-			written.push_back(parseLong(str));
+			if (str)
+				written.push_back(parseLong(str));
 		};
 
 		switch (node->nodeType()) {
@@ -66,6 +67,22 @@ namespace LL2W {
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
 				IFLV(cast->condition);
+				break;
+			}
+
+			case NodeType::Call:
+			case NodeType::Invoke: {
+				CAST(CallInvokeNode);
+				write(cast->result);
+				for (const Constant *constant: cast->constants)
+					IFLV(constant->value);
+				break;
+			}
+
+			case NodeType::Getelementptr: {
+				CAST(GetelementptrNode);
+				write(cast->result);
+				read.push_back(parseLong(cast->ptrValue));
 				break;
 			}
 

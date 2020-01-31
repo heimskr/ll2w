@@ -41,7 +41,7 @@ namespace LL2W {
 			for (const std::shared_ptr<Instruction> &instruction: block.instructions) {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
-				std::cout << "       " << instruction->node->debugExtra() << "\e[G\e[2m" << std::setw(2) << read
+				std::cout << "\e[s       " << instruction->node->debugExtra() << "\e[u\e[2m" << std::setw(2) << read
 				          << " " << std::setw(2) << written << "\e[0m\n";
 			}
 		}
