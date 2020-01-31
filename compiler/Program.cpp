@@ -14,6 +14,10 @@ namespace LL2W {
 				// default: node->debug();
 			}
 		}
+
+		// for (const std::pair<std::string, Function> &pair: functions) {
+
+		// }
 	}	
 
 	void Program::debug() const {

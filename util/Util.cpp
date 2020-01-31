@@ -19,5 +19,21 @@ namespace LL2W {
 	long parseLong(const char *str) {
 		return parseLong(std::string(str));
 	}
+
+	bool isNumeric(const std::string &str) {
+		for (char c: str) {
+			if (c < '0' || '9' < c)
+				return false;
+		}
+		return true;
+	}
+
+	bool isNumeric(const std::string *str) {
+		return isNumeric(*str);
+	}
+
+	bool isNumeric(const char *str) {
+		return isNumeric(std::string(str));
+	}
 }
 	
