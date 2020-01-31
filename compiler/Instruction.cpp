@@ -86,6 +86,75 @@ namespace LL2W {
 				break;
 			}
 
+			case NodeType::Ret: {
+				CAST(RetNode);
+				IFLV(cast->value);
+				break;
+			}
+
+			case NodeType::Landingpad: {
+				CAST(LandingpadNode);
+				for (const LandingpadNode::Clause *clause: cast->clauses)
+					IFLV(clause->value);
+				break;
+			}
+
+			case NodeType::Conversion: {
+				CAST(ConversionNode);
+				write(cast->result);
+				IFLV(cast->value);
+				break;
+			}
+
+			case NodeType::BasicMath: {
+				CAST(BasicMathNode);
+				write(cast->result);
+				IFLV(cast->left);
+				IFLV(cast->right);
+				break;
+			}
+
+			case NodeType::Phi: {
+				CAST(PhiNode);
+				write(cast->result);
+				for (const std::pair<Value *, const std::string *> &pair: cast->pairs)
+					IFLV(pair.first);
+				break;
+			}
+
+			case NodeType::Div:
+			case NodeType::Rem:
+			case NodeType::Logic:
+			case NodeType::Shr:
+			case NodeType::FMath: {
+				CAST(SimpleNode);
+				write(cast->result);
+				IFLV(cast->left);
+				IFLV(cast->right);
+				break;
+			}
+
+			case NodeType::ExtractValue: {
+				CAST(ExtractValueNode);
+				write(cast->result);
+				IFLV(cast->aggregateValue);
+				break;
+			}
+
+			case NodeType::InsertValue: {
+				CAST(InsertValueNode);
+				write(cast->result);
+				IFLV(cast->aggregateValue);
+				IFLV(cast->value);
+				break;
+			}
+
+			case NodeType::Resume: {
+				CAST(ResumeNode);
+				IFLV(cast->value);
+				break;
+			}
+
 			default:
 				// std::cout << "\e[2m[\e[0;33m!\e[0;2m]\e[0m Unknown instruction type: "
 				//           << static_cast<int>(node->nodeType());
@@ -98,3 +167,4 @@ namespace LL2W {
 
 #undef IFLV
 #undef FORV
+#undef CAST
