@@ -9,7 +9,10 @@ namespace LL2W {
 	class DJGraph: public Graph {
 		private:
 			Node::Map jMap;
-			bool isJEdge(Node *, Node *) const;
+			bool isJEdge(const Node &, const Node &) const;
+			std::unordered_set<Node *> allInNodes(const Node &) const;
+			int level(const Node &, const Node &start) const;
+			Node * parent(const Node &, const Node &start) const;
 
 		public:
 			std::vector<std::pair<Node &, Node &>> jEdges;
