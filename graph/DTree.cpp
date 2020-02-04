@@ -86,7 +86,7 @@ namespace LL2W {
 		graph.cloneTo(*this);
 		unlink();
 		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
-			link((*this)[i].label(), (*this)[doms.at(i)].label());
+			link((*this)[doms.at(i)].label(), (*this)[i].label());
 	}
 
 	std::unordered_map<Node *, Node *> DTree::immediateDominators() const {
@@ -107,15 +107,15 @@ namespace LL2W {
 		// For each node, add its parent to the set, and its parent's parent, and so on.
 		for (Node *node: nodes()) {
 			out_map[node] = {};
-			if (node->out().empty())
+			if (node->in().empty())
 				continue;
-			Node *parent = *node->out().begin();
+			Node *parent = *node->in().begin();
 			for (;;) {
 				out_map[node].insert(parent);
 				// Stop when we've reached the root. The node will have either no parents or only itself as its parent.
-				if (parent->out().empty() || *parent->out().begin() == parent)
+				if (parent->in().empty() || *parent->in().begin() == parent)
 					break;
-				parent = *parent->out().begin();
+				parent = *parent->in().begin();
 			}
 		}
 

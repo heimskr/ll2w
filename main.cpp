@@ -13,6 +13,7 @@
 void lttest();
 void djtest();
 void rendertest();
+void mergetest();
 void parsertest(const std::string &);
 
 int main(int argc, char **argv) {
@@ -28,7 +29,8 @@ int main(int argc, char **argv) {
 	if (1 < argc) {
 		parsertest(argv[1]);
 	} else {
-		parsertest("ll/reverse.ll");
+		// parsertest("ll/reverse.ll");
+		mergetest();
 	}
 }
 
@@ -82,6 +84,24 @@ void rendertest() {
 	graph.unlink("two", "three");
 	graph.unlink("three", "three");
 	graph.renderTo("graph_unlinked.png");
+}
+
+void mergetest() {
+	LL2W::Graph graph254 {24};
+	graph254.addEdges("0:1 0:2 2:3 3:4 3:5 3:23 3:8 5:6 5:7 8:9 8:10 8:14 14:15 14:16 10:11 11:12 12:13 16:22 16:17 17:21 17:18 18:19 18:20");
+	graph254.addEdges("4:5 23:5 23:8 6:7 7:5 7:8 9:10 15:16 13:1 22:10 21:22 19:20 20:18 20:21");
+	LL2W::DJGraph dj254(graph254, *graph254.nodes().front());
+	graph254.renderTo("graph_254.png", "LR");
+	usleep(100000);
+	dj254.renderTo("graph_254dj.png", "LR");
+
+	Node::Map merge = dj254.mergeSets(*dj254.nodes().front(), **std::next(dj254.nodes().begin(), 1));
+	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: merge) {
+		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
+		for (Node *node: pair.second)
+			std::cout << " " << node->label();
+		std::cout << "\e[0m\n";
+	}
 }
 
 void parsertest(const std::string &filename) {
