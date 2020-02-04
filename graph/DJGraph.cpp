@@ -12,16 +12,6 @@ namespace LL2W {
 		DTree dt(graph, start);
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
-
-		// std::cerr << "Strict dominators:\n";
-		// for (const std::pair<std::string, std::unordered_set<std::string>> &pair: std::map<std::string, std::unordered_set<std::string>>(doms.begin(), doms.end())) {
-		// 	std::cerr << pair.first << ":";
-		// 	for (const std::string &str: pair.second)
-		// 		std::cerr << " " << str;
-		// 	std::cerr << "\n";
-		// }
-		// std::cerr << "\n";
-
 		for (const auto [src, dest]: graph.allEdges()) {
 			if (doms.at(dest.label()).count(src.label()) != 0)
 				continue;
@@ -116,11 +106,6 @@ namespace LL2W {
 		Node::Map visited;
 		std::unordered_map<Node *, MergeSet> merge;
 
-		std::cerr << "jEdges:\n";
-		for (const std::pair<Node &, Node &> &pair: jEdges)
-			std::cerr << pair.first.label() << " -> " << pair.second.label() << "\n";
-		std::cerr << "/////\n";
-
 		std::function<void(Node *)> ensure = [&](Node *node) {
 			if (merge.count(node) == 0)
 				merge.insert({node, MergeSet(node)});
@@ -130,24 +115,16 @@ namespace LL2W {
 		do {
 			pass_required = false;
 			for (Node *node: level_order) {
-				std::cerr << "id: " << node->label() << "; allIn[";
 				std::unordered_set<Node *> unvisited_j_edges;
 				for (Node *in_node: allInNodes(*node)) {
-					std::cerr << " " << in_node->label();
-					if (isJEdge(*in_node, *node) && node != &exit && visited[in_node].count(node) == 0) {
-						// std::cerr << " " << in_node->label();
-						std::cerr << ".";
+					if (isJEdge(*in_node, *node) && node != &exit && visited[in_node].count(node) == 0)
 						unvisited_j_edges.insert(in_node);
-					}
 				}
-				std::cerr << " ]\n";
 
 				for (Node *in_node: unvisited_j_edges) {
-					std::cerr << "e: " << in_node->label() << "\n";
 					visited[in_node].insert(node);
 					Node *l = nullptr;
 					Node *tmp = in_node;
-					std::cerr << "level(" << tmp->label() << ") = " << level(*tmp, start) << ", level(" << node->label() << ") = " << level(*node, start) << "\n";
 					while (level(*tmp, start) >= level(*node, start)) {
 						ensure(tmp);
 						ensure(node);
@@ -165,7 +142,6 @@ namespace LL2W {
 						const bool is_j_edge = isJEdge(*e, *orig_l);
 						const bool is_visited = 0 < visited[in_node].count(orig_l);
 						bool not_super_or_eq = false; // If b contains any value not in a, then a ⊉ b.
-						std::cerr << "e_: " << e->label() << "\n";
 						ensure(e);
 						MergeSet &e_merge = merge.at(e);
 
@@ -216,7 +192,6 @@ namespace LL2W {
 	}
 
 	void MergeSet::flatten(Node::Set &out, std::unordered_set<MergeSet *> &processed) {
-		std::cerr << node->label() << "->flatten()\n";
 		for (Node *subnode: nodes)
 			out.insert(subnode);
 		for (MergeSet *other: references) {
