@@ -22,6 +22,15 @@ namespace LL2W {
 		}
 	}
 
+	bool DJGraph::isJEdge(Node *from, Node *to) const {
+		for (const std::pair<Node &, Node &> &j_edge: jEdges) {
+			if (&j_edge.first == from && &j_edge.second == to)
+				return true;
+		}
+
+		return false;
+	}
+
 	std::string DJGraph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes()) {
@@ -69,9 +78,16 @@ namespace LL2W {
 		return out.str();
 	}
 
-	Node::Map DJGraph::mergeSets(Node &/* start */, Node &/* exit */) {
-		// std::vector<Node *> level_order = BFS(start);
-		// Node::Map visited;
+	Node::Map DJGraph::mergeSets(Node &start, Node &/* exit */) {
+		std::vector<Node *> level_order = BFS(start);
+		Node::Map visited;
+
+		// Because this is a DJ graph, we're allowed to assume that a
+		// given node (other than the start) has only one inward edge.
+		std::function<Node *(Node *)> parent = [&](Node *node) -> Node * {
+			return node == &start? nullptr : *node->in().begin();
+		};
+
 		return {};
 	}
 }

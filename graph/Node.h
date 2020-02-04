@@ -78,10 +78,10 @@ namespace LL2W {
 			int index();
 
 			/** Returns a const set of the node's outward edges. */
-			const std::set<Node *, Node_less> out() const;
+			const std::set<Node *, Node_less> & out() const;
 
 			/** Returns a const set of the node's inward edges. */
-			const std::set<Node *, Node_less> in() const;
+			const std::set<Node *, Node_less> & in() const;
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);

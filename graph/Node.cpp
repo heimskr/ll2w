@@ -78,11 +78,11 @@ namespace LL2W {
 		throw std::runtime_error("Node not found in parent graph");
 	}
 
-	const std::set<Node *, Node::Node_less> Node::out() const {
+	const std::set<Node *, Node::Node_less> & Node::out() const {
 		return out_;
 	}
 
-	const std::set<Node *, Node::Node_less> Node::in() const {
+	const std::set<Node *, Node::Node_less> & Node::in() const {
 		return in_;
 	}
 
