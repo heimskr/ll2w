@@ -124,33 +124,71 @@ namespace LL2W {
 
 				for (Node *in_node: unvisited_j_edges) {
 					visited[in_node].insert(node);
-					Node *l_node = nullptr;
+					Node *l = nullptr;
 					Node *tmp = in_node;
 					while (level(*tmp, start) >= level(*node, start)) {
 						ensure(tmp);
 						ensure(node);
 						merge.at(tmp).insert(merge.at(node));
 						merge.at(tmp).insert(node);
-						l_node = tmp;
+						l = tmp;
 						tmp = parent(*tmp, start);
+					}
+
+					if (!l)
+						throw std::runtime_error("l is null");
+
+					Node *orig_l = l;
+					for (Node *e: l->in()) {
+						const bool is_j_edge = isJEdge(*e, *orig_l);
+						const bool is_visited = 0 < visited[in_node].count(orig_l);
+						bool not_super_or_eq = false; // If b contains any value not in a, then a ⊉ b.
+						MergeSet &e_merge = merge.at(e);
+
+						// Check whether orig_l contains any node not contained by e.
+						for (Node *lsub: merge.at(orig_l).nodes) {
+							if (e_merge.nodes.count(lsub) == 0) {
+								not_super_or_eq = true;
+								break;
+							}
+						}
+
+						if (!not_super_or_eq) {
+							// If orig_l doesn't contain any nodes not contained by e, check the merge sets too.
+							for (MergeSet *set: merge.at(orig_l).references) {
+								if (e_merge.references.count(set) == 0) {
+									not_super_or_eq = true;
+									break;
+								}
+							}
+						}
+
+						if (is_j_edge && is_visited && not_super_or_eq)
+							pass_required = true;
 					}
 				}
 			}
 		} while (pass_required);
 
-		return {};
+		Node::Map out;
+		for (std::pair<Node * const, MergeSet> &pair: merge) {
+			Node::Set flattened = pair.second.flatten();
+			out.insert({pair.first, {flattened.begin(), flattened.end()}});
+		}
+
+		return out;
 	}
 
 	void MergeSet::insert(MergeSet &other) {
-		references.push_back(&other);
+		references.insert(&other);
 	}
 
 	void MergeSet::insert(MergeSet *other) {
-		references.push_back(other);
+		references.insert(other);
 	}
 
 	void MergeSet::insert(Node *node) {
-		nodes.push_back(node);
+		nodes.insert(node);
 	}
 
 	void MergeSet::flatten(Node::Set &out, std::unordered_set<MergeSet *> &processed) {

@@ -27,8 +27,8 @@ namespace LL2W {
 
 	struct MergeSet {
 		Node *node;
-		std::vector<Node *> nodes;
-		std::vector<MergeSet *> references;
+		std::unordered_set<Node *> nodes;
+		std::unordered_set<MergeSet *> references;
 		MergeSet(Node *node_): node(node_) {};
 
 		void insert(MergeSet &);
