@@ -162,7 +162,3 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 }
-
-#undef IFLV
-#undef FORV
-#undef CAST

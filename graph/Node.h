@@ -28,6 +28,9 @@ namespace LL2W {
 
 		public:
 			using Map = std::unordered_map<Node *, std::unordered_set<Node *>>;
+
+			void *data = nullptr;
+
 			Node() = delete;
 			Node(Node &&) = delete;
 			Node(const Node &) = delete;
@@ -36,6 +39,11 @@ namespace LL2W {
 
 			/** Creates a node with a parent graph and a given label. */
 			Node(Graph *, const std::string &);
+
+			template <typename T>
+			T * get() const {
+				return static_cast<T *>(data);
+			}
 
 			/** Returns a const reference to the node's label. */
 			const std::string & label() const;
