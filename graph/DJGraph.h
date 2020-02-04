@@ -22,7 +22,20 @@ namespace LL2W {
 
 			virtual std::string toDot(const std::string &direction = "TB") override;
 
-			Node::Map mergeSets(Node &start, Node &exit);
+			Node::Map mergeSets(Node &start, const Node &exit);
+	};
+
+	struct MergeSet {
+		Node *node;
+		std::vector<Node *> nodes;
+		std::vector<MergeSet *> references;
+		MergeSet(Node *node_): node(node_) {};
+
+		void insert(MergeSet &);
+		void insert(MergeSet *);
+		void insert(Node *);
+		void flatten(Node::Set &out, std::unordered_set<MergeSet *> &processed);
+		Node::Set flatten();
 	};
 }
 

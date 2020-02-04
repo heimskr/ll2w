@@ -102,9 +102,72 @@ namespace LL2W {
 		return out.str();
 	}
 
-	Node::Map DJGraph::mergeSets(Node &start, Node &/* exit */) {
+	Node::Map DJGraph::mergeSets(Node &start, const Node &exit) {
 		std::vector<Node *> level_order = BFS(start);
 		Node::Map visited;
+		std::unordered_map<Node *, MergeSet> merge;
+
+		std::function<void(Node *)> ensure = [&](Node *node) {
+			if (merge.count(node) == 0)
+				merge.insert({node, MergeSet(node)});
+		};
+
+		bool pass_required;
+		do {
+			pass_required = false;
+			for (Node *node: level_order) {
+				std::unordered_set<Node *> unvisited_j_edges;
+				for (Node *in_node: allInNodes(*node)) {
+					if (isJEdge(*in_node, *node) && node != &exit && visited[in_node].count(node) == 0)
+						unvisited_j_edges.insert(in_node);
+				}
+
+				for (Node *in_node: unvisited_j_edges) {
+					visited[in_node].insert(node);
+					Node *l_node = nullptr;
+					Node *tmp = in_node;
+					while (level(*tmp, start) >= level(*node, start)) {
+						ensure(tmp);
+						ensure(node);
+						merge.at(tmp).insert(merge.at(node));
+						merge.at(tmp).insert(node);
+						l_node = tmp;
+						tmp = parent(*tmp, start);
+					}
+				}
+			}
+		} while (pass_required);
+
 		return {};
+	}
+
+	void MergeSet::insert(MergeSet &other) {
+		references.push_back(&other);
+	}
+
+	void MergeSet::insert(MergeSet *other) {
+		references.push_back(other);
+	}
+
+	void MergeSet::insert(Node *node) {
+		nodes.push_back(node);
+	}
+
+	void MergeSet::flatten(Node::Set &out, std::unordered_set<MergeSet *> &processed) {
+		for (Node *node: nodes)
+			out.insert(node);
+		for (MergeSet *other: references) {
+			if (other != this && processed.count(other) == 0) {
+				processed.insert(other);
+				other->flatten(out, processed);
+			}
+		}
+	}
+
+	Node::Set MergeSet::flatten() {
+		Node::Set out;
+		std::unordered_set<MergeSet *> processed;
+		flatten(out, processed);
+		return out;
 	}
 }

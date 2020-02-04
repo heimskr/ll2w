@@ -28,6 +28,7 @@ namespace LL2W {
 
 		public:
 			using Map = std::unordered_map<Node *, std::unordered_set<Node *>>;
+			using Set = std::set<Node *, Node_less>;
 
 			void *data = nullptr;
 
@@ -78,10 +79,10 @@ namespace LL2W {
 			int index();
 
 			/** Returns a const set of the node's outward edges. */
-			const std::set<Node *, Node_less> & out() const;
+			const Set & out() const;
 
 			/** Returns a const set of the node's inward edges. */
-			const std::set<Node *, Node_less> & in() const;
+			const Set & in() const;
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);
