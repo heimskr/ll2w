@@ -115,7 +115,7 @@ void mergetest2() {
 	usleep(100000);
 	dj11.renderTo("graph_11dj.png", "TB");
 
-	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), **std::next(dj11.nodes().begin(), 1));
+	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), graph["11"]);
 	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: std::map<Node *, std::unordered_set<Node *>>(merge.begin(), merge.end())) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
 		for (Node *node: std::set<Node *, Node::Node_less>(pair.second.begin(), pair.second.end()))
