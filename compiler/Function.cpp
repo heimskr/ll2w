@@ -31,6 +31,10 @@ namespace LL2W {
 			blocks.emplace_back(label, preds, instructions);
 	}
 
+	// Graph & Function::makeCFG {
+
+	// }
+
 	void Function::debug() const {
 		for (const BasicBlock &block: blocks) {
 			std::cout << "\e[4m; <label>:" << block.label << ": preds = ";

@@ -13,7 +13,6 @@ namespace LL2W {
 					break;
 				case TOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();
-					std::cout << "[" << sourceFilename << "]\n";
 					break;
 				// default: node->debug();
 			}
