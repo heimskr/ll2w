@@ -1,5 +1,5 @@
-#include "DFSResult.h"
-#include "Graph.h"
+#include "graph/DFSResult.h"
+#include "graph/Graph.h"
 
 namespace LL2W {
 	DFSResult::DFSResult(Graph *graph_,

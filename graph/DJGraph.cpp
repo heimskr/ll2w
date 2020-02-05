@@ -3,8 +3,8 @@
 #include <set>
 #include <sstream>
 
-#include "DJGraph.h"
-#include "DTree.h"
+#include "graph/DJGraph.h"
+#include "graph/DTree.h"
 
 namespace LL2W {
 	DJGraph::DJGraph(Graph &graph, const std::string &label): DJGraph(graph, graph[label]) {}

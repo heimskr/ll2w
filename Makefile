@@ -40,7 +40,7 @@ test: $(OUTPUT)
 	./$<
 
 clean:
-	rm -f $(OUTPUT) *.o parser/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
+	rm -f $(OUTPUT) *.o **/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
 
 count:
 	cloc . parser $(CLOC_OPTIONS)

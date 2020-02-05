@@ -1,8 +1,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "Graph.h"
-#include "Node.h"
+#include "graph/Graph.h"
+#include "graph/Node.h"
 
 namespace LL2W {
 	Node::Node(Graph *parent_, const std::string &label__): parent(parent_), label_(label__) {}

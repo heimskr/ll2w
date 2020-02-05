@@ -1,7 +1,7 @@
 #include <iostream>
 #include <unordered_set>
 
-#include "DTree.h"
+#include "graph/DTree.h"
 
 namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
