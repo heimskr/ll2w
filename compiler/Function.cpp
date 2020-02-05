@@ -31,9 +31,33 @@ namespace LL2W {
 			blocks.emplace_back(label, preds, instructions);
 	}
 
-	// Graph & Function::makeCFG {
+	Graph & Function::makeCFG() {
+		cfg.clear();
+		extractVariables();
+		for (BasicBlock &block: blocks) {
+			std::string label = std::to_string(block.label);
+			block.extract();
+			cfg += label;
+			Node &node = cfg[label];
+			node.data = &block;
+		}
+		return cfg;
+	}
 
-	// }
+	void Function::extractVariables() {
+		for (BasicBlock &block: blocks) {
+			for (int read_var: block.read)
+				getVariable(read_var).uses.insert(&block);
+			for (int written_var: block.written)
+				getVariable(written_var).definition = &block;
+		}
+	}
+
+	Variable & Function::getVariable(int label) {
+		if (variableStore.count(label) == 0)
+			variableStore.insert({label, Variable(label, {}, {})});
+		return variableStore.at(label);
+	}
 
 	void Function::debug() const {
 		for (const BasicBlock &block: blocks) {

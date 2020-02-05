@@ -28,6 +28,9 @@ namespace LL2W {
 
 			~Graph();
 
+			/** Clears the graph and frees up all node resources. */
+			void clear();
+
 			/** Returns whether the graph contains a node with a given label. */
 			bool hasLabel(const std::string &) const;
 
@@ -96,7 +99,6 @@ namespace LL2W {
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
 			std::vector<std::pair<Node &, Node &>> allEdges() const;
-
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			virtual std::string toDot(const std::string &direction = "TB");
 

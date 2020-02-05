@@ -8,10 +8,10 @@ namespace LL2W {
 
 	struct Variable {
 		int id;
-		std::list<Node *> uses;
-		Node *definition;
+		std::unordered_set<BasicBlock *> uses;
+		BasicBlock *definition;
 
-		Variable(int id_, const std::list<Node *> &uses_ = {}, Node *definition_ = nullptr):
+		Variable(int id_, const std::unordered_set<BasicBlock *> &uses_ = {}, BasicBlock *definition_ = nullptr):
 			id(id_), uses(uses_), definition(definition_) {}
 	};
 }

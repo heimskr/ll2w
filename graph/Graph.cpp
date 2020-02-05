@@ -23,8 +23,17 @@ namespace LL2W {
 	}
 
 	Graph::~Graph() {
+		// We could just call clear(), but all we need to do is delete the pointers.
+		// The compiler-generated part of the destructor will handle the rest.
 		for (Node *node: nodes_)
 			delete node;
+	}
+
+	void Graph::clear() {
+		labelMap.clear();
+		for (Node *node: nodes_)
+			delete node;
+		nodes_.clear();
 	}
 
 	bool Graph::hasLabel(const std::string &label) const {

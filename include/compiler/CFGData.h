@@ -9,6 +9,7 @@ namespace LL2W {
 	/** Used as the data field of a node in a CFG. */
 	struct CFGData {
 		std::unordered_set<Variable *> uses, definitions;
+		CFGData() {}
 	};
 }
 
