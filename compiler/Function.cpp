@@ -7,7 +7,7 @@
 
 namespace LL2W {
 	Function::Function(const ASTNode &node) {
-		int label = 1;
+		int label = dynamic_cast<const FunctionHeader *>(node[0])->arguments->arguments.size();
 		std::vector<int> preds {};
 		std::vector<std::shared_ptr<Instruction>> instructions;
 		instructions.reserve(32); // Seems like a reasonable estimate for the number of instructions in a larger block.
