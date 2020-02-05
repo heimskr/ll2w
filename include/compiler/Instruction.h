@@ -18,7 +18,7 @@ namespace LL2W {
 
 			/** Examines the instruction node to determine which virtual registers are read/written. Returns a pair of
 			 *  the number of registers read and the number of registers written. */
-			std::pair<char, char> extract();
+			std::pair<char, char> extract(bool force = false);
 	};
 }
 

@@ -8,8 +8,8 @@
 #define CAST(t) const t *cast = dynamic_cast<const t *>(node)
 
 namespace LL2W {
-	std::pair<char, char> Instruction::extract() {
-		if (extracted)
+	std::pair<char, char> Instruction::extract(bool force) {
+		if (extracted && !force)
 			return {read.size(), written.size()};
 
 		read.clear();
