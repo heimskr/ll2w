@@ -102,6 +102,7 @@ namespace LL2W {
 	}
 
 	Node::Map DJGraph::mergeSets(Node &start, const Node &exit) {
+		std::cerr << "start: " << start.label() << "\n";
 		std::vector<Node *> level_order = BFS(start);
 		Node::Map visited;
 		std::unordered_map<Node *, MergeSet> merge;
@@ -172,6 +173,13 @@ namespace LL2W {
 
 		Node::Map out;
 		for (std::pair<Node * const, MergeSet> &pair: merge) {
+			std::cerr << pair.first->label() << ":";
+			for (MergeSet *referenced: pair.second.references)
+				std::cerr << " M(" << referenced->node->label() << ")";
+			std::cerr << "\n  ";
+			for (Node *n: pair.second.nodes)
+				std::cerr << " " << n->label();
+			std::cerr << "\n";
 			Node::Set flattened = pair.second.flatten();
 			out.insert({pair.first, {flattened.begin(), flattened.end()}});
 		}

@@ -13,11 +13,12 @@ namespace LL2W {
 	class Node {
 		friend class Graph;
 
-		struct Node_less {
-			bool operator()(Node *left, Node *right) const {
-				return left->index() < right->index();
-			}
-		};
+		public:
+			struct Node_less {
+				bool operator()(Node *left, Node *right) const {
+					return left->index() < right->index();
+				}
+			};
 
 		private:
 			Graph *parent;

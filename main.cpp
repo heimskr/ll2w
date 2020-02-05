@@ -1,4 +1,5 @@
 #include <iostream>
+#include <map>
 #include <string>
 
 #include <unistd.h>
@@ -14,6 +15,7 @@ void lttest();
 void djtest();
 void rendertest();
 void mergetest();
+void mergetest2();
 void parsertest(const std::string &);
 
 int main(int argc, char **argv) {
@@ -30,7 +32,7 @@ int main(int argc, char **argv) {
 		parsertest(argv[1]);
 	} else {
 		// parsertest("ll/reverse.ll");
-		mergetest();
+		mergetest2();
 	}
 }
 
@@ -99,6 +101,24 @@ void mergetest() {
 	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: merge) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
 		for (Node *node: pair.second)
+			std::cout << " " << node->label();
+		std::cout << "\e[0m\n";
+	}
+}
+
+void mergetest2() {
+	LL2W::Graph graph {12};
+	graph -= "0";
+	graph.addEdges("1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8");
+	LL2W::DJGraph dj11(graph, *graph.nodes().front());
+	graph.renderTo("graph_11.png", "TB");
+	usleep(100000);
+	dj11.renderTo("graph_11dj.png", "TB");
+
+	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), **std::next(dj11.nodes().begin(), 1));
+	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: std::map<Node *, std::unordered_set<Node *>>(merge.begin(), merge.end())) {
+		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
+		for (Node *node: std::set<Node *, Node::Node_less>(pair.second.begin(), pair.second.end()))
 			std::cout << " " << node->label();
 		std::cout << "\e[0m\n";
 	}
