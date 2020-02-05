@@ -12,6 +12,7 @@ namespace LL2W {
 		public:
 			/** A list of all basic blocks in the order they appear. */
 			std::list<BasicBlock> blocks;
+			FunctionArgs *arguments = nullptr;
 
 			Function(const ASTNode &);
 

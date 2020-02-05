@@ -12,6 +12,7 @@ namespace LL2W {
 	class Program {
 		public:
 			std::unordered_map<std::string, Function> functions;
+			std::string sourceFilename;
 
 			Program(const ASTNode &);
 			void debug() const;

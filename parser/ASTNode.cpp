@@ -273,7 +273,7 @@ namespace LL2W {
 			return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
 		else if (symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR || symbol == TOK_UNIONVAR || symbol == TOK_CSTRING)
 			return lexerInfo->substr(2, lexerInfo->size() - 3);
-		else if (symbol == TOK_STRING)
+		else if (symbol == TOK_STRING || symbol == TOK_SOURCE_FILENAME)
 			return lexerInfo->substr(1, lexerInfo->size() - 2);
 		throw std::runtime_error("extractName() was called on an inappropriate symbol: " +
 			std::string(Parser::getName(symbol)));

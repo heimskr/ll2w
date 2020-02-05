@@ -16,7 +16,7 @@ namespace LL2W {
 		public:
 			Type *type;
 			std::unordered_set<ParAttr> parattrs;
-			const std::string *name;
+			const std::string *name = nullptr;
 			const std::string *originalName = nullptr;
 
 			FunctionArgument(ASTNode *);
