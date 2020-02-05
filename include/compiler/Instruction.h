@@ -7,6 +7,9 @@
 
 namespace LL2W {
 	class Instruction {
+		private:
+			bool extracted = false;
+
 		public:
 			std::vector<int> read, written;
 			const InstructionNode *node;

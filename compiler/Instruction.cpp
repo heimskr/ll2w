@@ -9,8 +9,12 @@
 
 namespace LL2W {
 	std::pair<char, char> Instruction::extract() {
+		if (extracted)
+			return {read.size(), written.size()};
+
 		read.clear();
 		written.clear();
+		extracted = true;
 
 		auto readname = [&](const LocalValue *lv) {
 			read.push_back(parseLong(lv->name));
