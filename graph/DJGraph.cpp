@@ -115,6 +115,7 @@ namespace LL2W {
 		do {
 			pass_required = false;
 			for (Node *node: level_order) {
+				ensure(node);
 				std::unordered_set<Node *> unvisited_j_edges;
 				for (Node *in_node: allInNodes(*node)) {
 					if (isJEdge(*in_node, *node) && node != &exit && visited[in_node].count(node) == 0)
