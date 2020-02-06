@@ -332,7 +332,7 @@ preds_list: preds_list TOK_PVAR { $1->adopt($2); }
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | "unreachable";
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
@@ -457,7 +457,8 @@ i_insertvalue: result "insertvalue" type_any value "," type_any value decimals
 i_resume: "resume" type_any value
           { $$ = new ResumeNode($2, $3); D($1); };
 
-
+i_unreachable: "unreachable"
+               { $$ = new UnreachableNode(); D($1); };
 
 // Constants
 

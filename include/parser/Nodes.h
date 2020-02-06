@@ -15,7 +15,7 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
 		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
-		Switch, ExtractValue, InsertValue, Resume
+		Switch, ExtractValue, InsertValue, Resume, Unreachable
 	};
 
 	struct BaseNode: public ASTNode {
@@ -393,6 +393,12 @@ namespace LL2W {
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Resume; }
 		virtual std::vector<Value *> allValues() const override { return {value}; }
+	};
+
+	struct UnreachableNode: public InstructionNode {
+		UnreachableNode() {}
+		virtual std::string debugExtra() const override { return "\e[91munreachable\e[39m"; }
+		virtual NodeType nodeType() const override { return NodeType::Unreachable; }
 	};
 }
 
