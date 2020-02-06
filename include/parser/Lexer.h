@@ -2,6 +2,7 @@
 #define PARSER_LEXER_H_
 
 #include <unordered_map>
+#include <vector>
 
 #include <stdio.h>
 

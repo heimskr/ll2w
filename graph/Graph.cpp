@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -298,11 +299,17 @@ namespace LL2W {
 
 	void Graph::renderTo(const std::string &png_path, const std::string &direction) {
 		std::ofstream out;
-		out.open("/tmp/ll2w_graph.dot");
+		std::string path = "/tmp/ll2w_graph_";
+		for (char ch: png_path) {
+			if (std::isdigit(ch) || std::isalpha(ch) || ch == '_')
+				path += ch;
+		}
+		path += ".dot";
+		out.open(path);
 		out << toDot(direction);
 		out.close();
 		if (fork() == 0)
-			execlp("dot", "dot", "-Tpng", "/tmp/ll2w_graph.dot", "-o", png_path.c_str(), nullptr);
+			execlp("dot", "dot", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
 	}
 
 	decltype(Graph::labelMap)::iterator Graph::begin() {

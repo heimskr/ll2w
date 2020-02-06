@@ -2,8 +2,6 @@
 #include <map>
 #include <string>
 
-#include <unistd.h>
-
 #include "graph/Graph.h"
 #include "graph/DTree.h"
 #include "graph/DJGraph.h"
@@ -40,9 +38,7 @@ void lttest() {
 	LL2W::Graph lt_input {"R", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"};
 	lt_input.addEdges("A:D B:A B:D B:E C:F C:G D:L E:H F:I G:I G:J H:E H:K I:K J:I K:I K:R L:H R:A R:B R:C");
 	lt_input.renderTo("graph_lt_in.png");
-	usleep(100000);
 	LL2W::DTree(lt_input, lt_input[0]).renderTo("graph_lt_out.png", "BT");
-	usleep(100000);
 }
 
 void djtest() {
@@ -53,12 +49,9 @@ void djtest() {
 	graph.addEdges("1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8");
 
 	graph.renderTo("graph_dj_in.png");
-	usleep(100000);
 	LL2W::DJGraph dj(graph, graph[0]);
 	LL2W::DTree(graph, graph[0]).renderTo("graph_dj_dt.png", "BT");
-	usleep(100000);
 	dj.renderTo("graph_dj_out.png", "BT");
-	usleep(100000);
 	for (const auto [src, dest]: dj.jEdges)
 		std::cout << src << " <-> " << dest << "\n";
 }
@@ -72,14 +65,11 @@ void rendertest() {
 	LL2W::DFSResult result = complex.DFS("1");
 	std::cout << result;
 	complex.renderTo("graph_complex.png");
-	usleep(100000);
 
 	graph.renderTo("graph_1234.png");
-	usleep(100000);
 
 	graph -= "four";
 	graph.renderTo("graph_123.png");
-	usleep(100000);
 
 	graph.unlink("one", "two");
 	graph.unlink("one", "three");
@@ -94,7 +84,6 @@ void mergetest() {
 	graph254.addEdges("4:5 23:5 23:8 6:7 7:5 7:8 9:10 15:16 13:1 22:10 21:22 19:20 20:18 20:21");
 	LL2W::DJGraph dj254(graph254, *graph254.nodes().front());
 	graph254.renderTo("graph_254.png", "LR");
-	usleep(100000);
 	dj254.renderTo("graph_254dj.png", "LR");
 
 	Node::Map merge = dj254.mergeSets(*dj254.nodes().front(), **std::next(dj254.nodes().begin(), 1));
@@ -112,7 +101,6 @@ void mergetest2() {
 	graph.addEdges("1:2 2:3 2:11 3:4 3:8 4:5 5:6 6:5 6:7 7:2 8:9 9:6 9:10 10:8");
 	LL2W::DJGraph dj11(graph, *graph.nodes().front());
 	graph.renderTo("graph_11.png", "TB");
-	usleep(100000);
 	dj11.renderTo("graph_11dj.png", "TB");
 
 	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), graph["11"]);

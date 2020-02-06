@@ -26,7 +26,7 @@ namespace LL2W {
 			/** Constructs a graph with nodes with given labels. */
 			Graph(std::initializer_list<std::string>);
 
-			~Graph();
+			virtual ~Graph();
 
 			/** Clears the graph and frees up all node resources. */
 			void clear();

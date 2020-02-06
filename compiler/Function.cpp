@@ -79,6 +79,7 @@ namespace LL2W {
 				cfg.link(label, "exit");
 		}
 
+		// djGraph = DJGraph(cfg, cfg[0]);
 		return cfg;
 	}
 
@@ -140,8 +141,6 @@ namespace LL2W {
 		}
 		std::cout << "}\n\n";
 		makeCFG();
-		std::cout << cfg.toDot() << "\n";
-		cfg.renderTo("graph_fn_" + *name + ".png");
-		usleep(10000);
+		cfg.renderTo("graph_" + *name + ".png");
 	}
 }
