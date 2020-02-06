@@ -51,7 +51,7 @@ namespace LL2W {
 		}
 	}
 
-	Graph & Function::makeCFG() {
+	CFG & Function::makeCFG() {
 		if (!extracted)
 			extract();
 

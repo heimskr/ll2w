@@ -696,7 +696,6 @@ namespace LL2W {
 		}
 
 		for (ASTNode *comma: *indices_) {
-			comma->debug();
 			indices.push_back({
 				comma->at(0)->atoi(1),
 				comma->at(1)->atoi(),

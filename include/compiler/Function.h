@@ -4,8 +4,8 @@
 #include <list>
 #include <map>
 
-#include "graph/Graph.h"
 #include "compiler/BasicBlock.h"
+#include "compiler/CFG.h"
 #include "compiler/Variable.h"
 
 namespace LL2W {
@@ -26,11 +26,11 @@ namespace LL2W {
 			std::list<BasicBlock> blocks;
 
 			FunctionArgs *arguments = nullptr;
-			Graph cfg;
+			CFG cfg;
 
 			Function(const ASTNode &);
 
-			Graph & makeCFG();
+			CFG & makeCFG();
 			void extract();
 			Variable & getVariable(int label);
 			void debug() const;
