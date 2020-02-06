@@ -89,8 +89,6 @@ namespace LL2W {
 				cfg.link(label, "exit");
 		}
 
-		cfg.color(Graph::ColoringAlgorithm::Bad);
-
 		dTree.emplace(cfg, cfg[0]);
 		dTree->name = "DTree";
 		djGraph.emplace(cfg, cfg[0]);

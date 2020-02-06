@@ -105,7 +105,8 @@ namespace LL2W {
 			/** Returns a list of nodes in level (breadth-first) order. */
 			std::vector<Node *> BFS(const std::string &);
 
-			/** Colors all the nodes in the graph according to a given coloring algorithm. */
+			/** Colors all the nodes in the graph according to a given coloring algorithm.
+			 *  Assumes all edges are bidirectional. */
 			void color(ColoringAlgorithm, int max_colors = -1);
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
