@@ -17,7 +17,10 @@ namespace LL2W {
 			std::unordered_map<std::string, Node *> labelMap;
 
 		public:
+			enum class ColoringAlgorithm {Bad, Greedy};
+
 			std::string name = "Graph";
+			std::vector<std::string> colors = {"red", "orange", "yellow", "green", "blue", "purple"};
 
 			/** Constructs a graph with no nodes. */
 			Graph();
@@ -101,6 +104,9 @@ namespace LL2W {
 			std::vector<Node *> BFS(Node &);
 			/** Returns a list of nodes in level (breadth-first) order. */
 			std::vector<Node *> BFS(const std::string &);
+
+			/** Colors all the nodes in the graph according to a given coloring algorithm. */
+			void color(ColoringAlgorithm, int max_colors = -1);
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
 			std::vector<std::pair<Node &, Node &>> allEdges() const;

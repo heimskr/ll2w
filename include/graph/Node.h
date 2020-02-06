@@ -35,6 +35,7 @@ namespace LL2W {
 			using Map = std::map<Node *, Set, Node_less>;
 
 			std::any data;
+			int color = -1;
 
 			Node() = delete;
 			Node(Node &&) = delete;

@@ -248,6 +248,20 @@ namespace LL2W {
 		return BFS((*this)[start_label]);
 	}
 
+	void Graph::color(Graph::ColoringAlgorithm algo, int max_colors) {
+		if (algo == Graph::ColoringAlgorithm::Bad) {
+			if (max_colors != -1 && max_colors < nodes_.size())
+				throw std::runtime_error("Unable to color graph: not enough colors");
+			int color = -1;
+			for (Node *node: nodes_)
+				node->color = ++color;
+		} else if (algo == Graph::ColoringAlgorithm::Greedy) {
+			throw std::runtime_error("Greedy coloring algorithm is unimplemented");
+		} else {
+			throw std::invalid_argument("Unknown graph coloring algorithm: " + std::to_string(static_cast<int>(algo)));
+		}
+	}
+
 	std::vector<std::pair<Node &, Node &>> Graph::allEdges() const {
 		std::vector<std::pair<Node &, Node &>> out;
 		for (Node *node: nodes_) {
@@ -268,7 +282,7 @@ namespace LL2W {
 		std::ostringstream out;
 		out << "digraph rendered_graph {\n";
 		out << "graph [fontname = \"helvetica\"];\n";
-		out << "node [fontname = \"helvetica\"];\n";
+		out << "node [fontname = \"helvetica\", style = \"filled\"];\n";
 		out << "edge [fontname = \"helvetica\", arrowhead=open, arrowsize=0.666];\n";
 		out << "\trankdir=" << direction << ";\n";
 		if (!reflexives.empty()) {
@@ -290,6 +304,11 @@ namespace LL2W {
 		if (any_added)
 			out << ";";
 		out << "\n";
+
+		for (Node *node: nodes_) {
+			if (0 <= node->color && node->color < colors.size())
+				out << "\t" << node->label() << " [fillcolor=" << colors.at(node->color) << "];\n";
+		}
 
 		for (const Node *node: nodes_) {
 			for (const Node *neighbor: node->out()) {
