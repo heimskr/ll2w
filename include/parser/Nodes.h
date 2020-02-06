@@ -217,7 +217,8 @@ namespace LL2W {
 		bool inbounds = false;
 		Type *type = nullptr, *ptrType = nullptr;
 		LocalValue *ptrValue = nullptr;
-		std::vector<std::tuple<int, int, bool>> indices;
+		// width, value/index, has minrange, is pvar
+		std::vector<std::tuple<int, int, bool, bool>> indices;
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,
 		                  ASTNode *indices_);

@@ -696,10 +696,12 @@ namespace LL2W {
 		}
 
 		for (ASTNode *comma: *indices_) {
+			comma->debug();
 			indices.push_back({
 				comma->at(0)->atoi(1),
 				comma->at(1)->atoi(),
-				comma->size() == 3});
+				comma->size() == 3,
+				comma->at(1)->symbol == TOK_PVAR});
 		}
 
 		delete pvar;
@@ -720,11 +722,14 @@ namespace LL2W {
 		if (inbounds)
 			out << "\e[34minbounds\e[0m ";
 		out << *type << "\e[2m,\e[0m " << *ptrType << " " << *ptrValue << "\e[0m";
-		for (const std::tuple<int, int, bool> &index: indices) {
+		for (auto [width, value, minrange, pvar]: indices) {
 			out << "\e[2m,\e[0m ";
-			if (std::get<2>(index))
+			if (minrange)
 				out << "\e[34minrange\e[0m ";
-			out << "\e[33mi" << std::get<0>(index) << "\e[0m " << std::get<1>(index);
+			out << "\e[33mi" << width << "\e[0m ";
+			if (pvar)
+				out << "\e[32m%";
+			out << value;
 		}
 		return out.str();
 	}
