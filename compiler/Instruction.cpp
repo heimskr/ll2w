@@ -87,6 +87,10 @@ namespace LL2W {
 				CAST(GetelementptrNode);
 				write(cast->result);
 				read.push_back(parseLong(cast->ptrValue->name));
+				for (auto [width, value, minrange, pvar]: cast->indices) {
+					if (pvar)
+						read.push_back(value);
+				}
 				break;
 			}
 

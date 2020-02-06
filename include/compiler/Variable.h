@@ -2,7 +2,6 @@
 #define COMPILER_VARIABLE_H_
 
 #include <set>
-#include <vector>
 
 namespace LL2W {
 	class Node;
