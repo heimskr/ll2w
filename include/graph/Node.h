@@ -44,8 +44,8 @@ namespace LL2W {
 			Node(Graph *, const std::string &);
 
 			template <typename T>
-			T * get() const {
-				return static_cast<T *>(data);
+			T get() const {
+				return std::any_cast<T>(data);
 			}
 
 			/** Returns a const reference to the node's label. */
