@@ -102,6 +102,7 @@ namespace LL2W {
 				std::cout << "\e[s    " << instruction->node->debugExtra() << "\e[u\e[2m" << read << " " << written
 				          << "\e[0m\n";
 			}
+			std::cout << "\n";
 		}
 		std::cout << "    \e[2m; Variables:\e[0m\n";
 		for (const std::pair<int, Variable> &pair: variableStore) {
