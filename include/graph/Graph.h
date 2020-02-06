@@ -17,6 +17,8 @@ namespace LL2W {
 			std::unordered_map<std::string, Node *> labelMap;
 
 		public:
+			std::string name = "Graph";
+
 			/** Constructs a graph with no nodes. */
 			Graph();
 

@@ -67,6 +67,7 @@ namespace LL2W {
 
 	CFG & Function::makeCFG() {
 		cfg.clear();
+		cfg.name = "CFG";
 
 		// First pass: add all the nodes.
 		for (BasicBlock &block: blocks) {
@@ -88,7 +89,10 @@ namespace LL2W {
 				cfg.link(label, "exit");
 		}
 
+		dTree.emplace(cfg, cfg[0]);
+		dTree->name = "DTree";
 		djGraph.emplace(cfg, cfg[0]);
+		djGraph->name = "DJ Graph";
 		djGraph->renderTo("graph_dj.png");
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
@@ -117,6 +121,7 @@ namespace LL2W {
 			block.extract();
 		extractVariables();
 		makeCFG();
+		computeLiveness();
 		extracted = true;
 	}
 
@@ -130,6 +135,19 @@ namespace LL2W {
 		return blocks.front();
 	}
 
+	void Function::computeLiveness() {
+		if (livenessComputed)
+			return;
+
+		livenessComputed = true;
+		for (std::pair<const int, Variable> &pair: variableStore) {
+			for (BasicBlock &block: blocks) {
+				isLiveIn(block, pair.second);
+				isLiveOut(block, pair.second);
+			}
+		}
+	}
+
 	bool Function::isLiveIn(BasicBlock &block, Variable &var) {
 		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
 		Node::Set m_r = mergeSets.at(block.node);
@@ -141,10 +159,12 @@ namespace LL2W {
 			// while t≠def(var) do
 			while (t != var.definition) {
 				// if t ∩ M^r(block) then
-				if (m_r.count(t->node) > 0)
+				if (m_r.count(t->node) > 0) {
+					block.liveIn.insert(&var);
 					return true;
+				}
 				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
-				t = (*djGraph)[*t->node].parent()->get<BasicBlock *>();
+				t = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
 			}
 		}
 
@@ -163,10 +183,12 @@ namespace LL2W {
 			// while t≠def(a) do
 			while (t != var.definition) {
 				// if t ∩ Ms(n) then
-				if (0 < succMergeSets.at(block.node).count(t->node))
+				if (0 < succMergeSets.at(block.node).count(t->node)) {
+					block.liveOut.insert(&var);
 					return true;
+				}
 				// t = dom-parent(t);
-				t = (*djGraph)[*t->node].parent()->get<BasicBlock *>();
+				t = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
 			}
 		}
 
@@ -201,11 +223,23 @@ namespace LL2W {
 			std::cout << "\n";
 		}
 		std::cout << "    \e[2m; Variables:\e[0m\n";
-		for (const std::pair<int, Variable> &pair: variableStore) {
+		for (std::pair<const int, Variable> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
 			          << std::setw(2) << pair.second.definition->label << "  \e[0;2muses =";
 			for (const BasicBlock *use: pair.second.uses)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
+			std::cout << "\e[0m\n";
+			std::cout << "    \e[2m;      \e[32min  =\e[1m";
+			for (const BasicBlock &block: blocks) {
+				if (0 < block.liveIn.count(&pair.second))
+					std::cout << " %" << block.label;
+			}
+			std::cout << "\e[0m\n";
+			std::cout << "    \e[2m;      \e[31mout =\e[1m";
+			for (const BasicBlock &block: blocks) {
+				if (0 < block.liveOut.count(&pair.second))
+					std::cout << " %" << block.label;
+			}
 			std::cout << "\e[0m\n";
 		}
 		std::cout << "}\n\n";

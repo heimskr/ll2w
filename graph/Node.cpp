@@ -87,8 +87,11 @@ namespace LL2W {
 	}
 
 	Node * Node::parent() const {
-		if (in_.size() != 1)
+		if (in_.size() != 1) {
+			std::cout << owner->name << " ["; for (Node *node: in_) std::cout << " " << node->label(); std::cout << " ]\n";
+			owner->renderTo("graph_err.png");
 			throw std::runtime_error("Cannot find parent of node with " + std::to_string(in_.size()) + " inward edges");
+		}
 		return *in_.begin();
 	}
 

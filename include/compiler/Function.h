@@ -9,6 +9,7 @@
 #include "compiler/CFG.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
+#include "graph/DTree.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -17,8 +18,9 @@ namespace LL2W {
 		private:
 			std::map<int, Variable> variableStore;
 			const ASTNode *astnode;
-			bool extracted = false;
+			bool extracted = false, livenessComputed = false;
 			std::optional<DJGraph> djGraph;
+			std::optional<DTree> dTree;
 			Node::Map mergeSets;
 			Node::Map succMergeSets;
 
@@ -42,6 +44,7 @@ namespace LL2W {
 			void extract();
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
+			void computeLiveness();
 			bool isLiveIn(BasicBlock &, Variable &);
 			bool isLiveOut(BasicBlock &, Variable &);
 			void debug();
