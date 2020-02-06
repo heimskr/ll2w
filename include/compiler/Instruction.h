@@ -16,6 +16,8 @@ namespace LL2W {
 
 			Instruction(const InstructionNode *node_): node(node_) {}
 
+			bool isTerminal() const;
+
 			/** Examines the instruction node to determine which virtual registers are read/written. Returns a pair of
 			 *  the number of registers read and the number of registers written. */
 			std::pair<char, char> extract(bool force = false);

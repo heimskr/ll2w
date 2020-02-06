@@ -28,9 +28,8 @@ namespace LL2W {
 			pair.second.extract();
 	}
 
-	void Program::debug() const {
-		for (const std::pair<std::string, Function> &pair: functions) {
+	void Program::debug() {
+		for (std::pair<const std::string, Function> &pair: functions)
 			pair.second.debug();
-		}
 	}
 }

@@ -7,6 +7,7 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
 #include "compiler/Variable.h"
+#include "graph/DJGraph.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -18,6 +19,8 @@ namespace LL2W {
 			void extractBlocks();
 			void extractVariables();
 			bool extracted = false;
+			// DJGraph djGraph;
+			// Node::Map mergeSets;
 
 		public:
 			const std::string *name;
@@ -34,7 +37,7 @@ namespace LL2W {
 			void extract();
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
-			void debug() const;
+			void debug();
 	};
 }
 

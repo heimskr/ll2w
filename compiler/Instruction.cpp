@@ -8,6 +8,11 @@
 #define CAST(t) const t *cast = dynamic_cast<const t *>(node)
 
 namespace LL2W {
+	bool Instruction::isTerminal() const {
+		const NodeType type = node->nodeType();
+		return type == NodeType::Ret || type == NodeType::Unreachable;
+	}
+
 	std::pair<char, char> Instruction::extract(bool force) {
 		if (extracted && !force)
 			return {read.size(), written.size()};

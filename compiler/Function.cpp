@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <unistd.h>
 
 #include "parser/ASTNode.h"
 #include "compiler/Function.h"
@@ -67,11 +68,15 @@ namespace LL2W {
 			node.data = &block;
 		}
 
+		cfg += "exit";
+
 		// Second pass: connect all the nodes.
 		for (BasicBlock &block: blocks) {
 			const std::string label = std::to_string(block.label);
 			for (int pred: block.preds)
 				cfg.link(std::to_string(pred), label);
+			if (block.instructions.back()->isTerminal())
+				cfg.link(label, "exit");
 		}
 
 		return cfg;
@@ -98,7 +103,7 @@ namespace LL2W {
 		return blocks.front();
 	}
 
-	void Function::debug() const {
+	void Function::debug() {
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		std::vector<FunctionArgument> &args = arguments->arguments;
 		for (auto begin = args.begin(), iter = begin, end = args.end(); iter != end; ++iter) {
@@ -134,5 +139,9 @@ namespace LL2W {
 			std::cout << "\e[0m\n";
 		}
 		std::cout << "}\n\n";
+		makeCFG();
+		std::cout << cfg.toDot() << "\n";
+		cfg.renderTo("graph_fn_" + *name + ".png");
+		usleep(10000);
 	}
 }
