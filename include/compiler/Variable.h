@@ -5,6 +5,7 @@
 
 namespace LL2W {
 	class Node;
+	class BasicBlock;
 
 	struct Variable {
 		int id;
