@@ -153,6 +153,28 @@ namespace LL2W {
 		return false;
 	}
 
+	bool Function::isLiveOut(BasicBlock &block, Variable &var) {
+		// if def(a)=n
+		if (var.definition == &block) {
+			// return uses(a)\def(a)≠∅;
+			return !(var.uses.empty() || (var.uses.size() == 1 && 0 < var.uses.count(var.definition)));
+		}
+
+		// for t ∈ uses(a) do // Iterate over all the uses of a
+		for (BasicBlock *t: var.uses) {
+			// while t≠def(a) do
+			while (t != var.definition) {
+				// if t ∩ Ms(n) then
+				if (0 < succMergeSets.at(block.node).count(t->node))
+					return true;
+				// t = dom-parent(t);
+				t = (*djGraph)[*t->node].parent()->get<BasicBlock *>();
+			}
+		}
+
+		return false;
+	}
+
 	void Function::debug() {
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		std::vector<FunctionArgument> &args = arguments->arguments;

@@ -43,6 +43,7 @@ namespace LL2W {
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
 			bool isLiveIn(BasicBlock &, Variable &);
+			bool isLiveOut(BasicBlock &, Variable &);
 			void debug();
 	};
 }
