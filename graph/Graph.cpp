@@ -65,6 +65,10 @@ namespace LL2W {
 		return *iter->second;
 	}
 
+	Node & Graph::operator[](const Node &node) const {
+		return (*this)[node.label()];
+	}
+
 	Graph & Graph::operator+=(const std::string &label) {
 		if (hasLabel(label))
 			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");

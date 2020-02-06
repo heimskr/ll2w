@@ -11,6 +11,7 @@
 namespace LL2W {
 	class Instruction;
 	struct Variable;
+	class Node;
 
 	class BasicBlock {
 		private:
@@ -22,6 +23,7 @@ namespace LL2W {
 			std::vector<std::shared_ptr<Instruction>> instructions;
 			std::set<int> read, written;
 			std::unordered_set<Variable *> liveIn, liveOut;
+			Node *node;
 
 			BasicBlock(int, const std::vector<int> &, const std::vector<std::shared_ptr<Instruction>> &);
 

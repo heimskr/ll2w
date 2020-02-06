@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <optional>
 
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
@@ -19,8 +20,8 @@ namespace LL2W {
 			void extractBlocks();
 			void extractVariables();
 			bool extracted = false;
-			// DJGraph djGraph;
-			// Node::Map mergeSets;
+			std::optional<DJGraph> djGraph;
+			Node::Map mergeSets;
 
 		public:
 			const std::string *name;
@@ -37,6 +38,7 @@ namespace LL2W {
 			void extract();
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
+			bool isLiveIn(BasicBlock &, Variable &);
 			void debug();
 	};
 }

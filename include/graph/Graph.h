@@ -44,6 +44,9 @@ namespace LL2W {
 			Node & operator[](size_t) const;
 			/** Returns the node with a given label. Throws an exception if no such node exists. */
 			Node & operator[](const std::string &) const;
+			/** Returns the node that has the same label as a given node from another graph. Throws an exception if no
+			 *  such node exists. */
+			Node & operator[](const Node &) const;
 
 			/** Adds a node with a given label. */
 			Graph & operator+=(const std::string &);

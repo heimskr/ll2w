@@ -5,14 +5,14 @@
 #include "graph/Node.h"
 
 namespace LL2W {
-	Node::Node(Graph *parent_, const std::string &label__): parent(parent_), label_(label__) {}
+	Node::Node(Graph *owner_, const std::string &label__): owner(owner_), label_(label__) {}
 
 	const std::string & Node::label() const {
 		return label_;
 	}
 
 	Node & Node::rename(const std::string &new_label) {
-		return parent->rename(this, new_label);
+		return owner->rename(this, new_label);
 	}
 
 	bool Node::reflexive() const {
@@ -69,7 +69,7 @@ namespace LL2W {
 		if (index_ != -1)
 			return index_;
 
-		for (const Node *node: parent->nodes()) {
+		for (const Node *node: owner->nodes()) {
 			++index_;
 			if (node == this)
 				return index_;
@@ -84,6 +84,12 @@ namespace LL2W {
 
 	const Node::Set & Node::in() const {
 		return in_;
+	}
+
+	Node * Node::parent() const {
+		if (in_.size() != 1)
+			throw std::runtime_error("Cannot find parent of node with " + std::to_string(in_.size()) + " inward edges");
+		return *in_.begin();
 	}
 
 	Node & Node::operator+=(Node &neighbor) {

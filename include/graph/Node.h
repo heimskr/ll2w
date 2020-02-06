@@ -22,7 +22,7 @@ namespace LL2W {
 			};
 
 		private:
-			Graph *parent;
+			Graph *owner;
 			std::string label_;
 			std::set<Node *, Node_less> out_;
 			std::set<Node *, Node_less> in_;
@@ -85,6 +85,10 @@ namespace LL2W {
 
 			/** Returns a const set of the node's inward edges. */
 			const Set & in() const;
+
+			/** If the node has only one inward edge, this function returns the other node. Otherwise, it throws an
+			 *  exception. */
+			Node * parent() const;
 
 			/** Adds a neighbor. */
 			Node & operator+=(Node &);

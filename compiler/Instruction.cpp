@@ -168,6 +168,10 @@ namespace LL2W {
 				break;
 			}
 
+			case NodeType::Unreachable: {
+				break;
+			}
+
 			default:
 				return {-1, -1};
 		}

@@ -66,6 +66,7 @@ namespace LL2W {
 			cfg += label;
 			Node &node = cfg[label];
 			node.data = &block;
+			block.node = &node;
 		}
 
 		cfg += "exit";
@@ -79,7 +80,9 @@ namespace LL2W {
 				cfg.link(label, "exit");
 		}
 
-		// djGraph = DJGraph(cfg, cfg[0]);
+		djGraph.emplace(cfg, cfg[0]);
+		djGraph->renderTo("graph_dj.png");
+		mergeSets = djGraph->mergeSets(cfg[0], cfg["exit"]);
 		return cfg;
 	}
 
@@ -102,6 +105,27 @@ namespace LL2W {
 
 	BasicBlock & Function::getEntry() {
 		return blocks.front();
+	}
+
+	bool Function::isLiveIn(BasicBlock &block, Variable &var) {
+		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
+		std::unordered_set<Node *> m_r = mergeSets.at(block.node);
+		m_r.insert(block.node);
+
+		// Iterate over all the uses of var
+		// for t ∈ uses(var) do
+		for (BasicBlock *t: var.uses) {
+			// while t≠def(var) do
+			while (t != var.definition) {
+				// if t ∩ M^r(block) then
+				if (m_r.count(t->node) > 0)
+					return true;
+				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
+				t = (*djGraph)[*t->node].parent()->get<BasicBlock *>();
+			}
+		}
+
+		return false;
 	}
 
 	void Function::debug() {
