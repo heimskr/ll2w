@@ -84,6 +84,10 @@ namespace LL2W {
 		return variableStore.at(label);
 	}
 
+	BasicBlock & Function::getEntry() {
+		return blocks.front();
+	}
+
 	void Function::debug() const {
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		std::vector<FunctionArgument> &args = arguments->arguments;

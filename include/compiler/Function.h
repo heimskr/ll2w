@@ -33,6 +33,7 @@ namespace LL2W {
 			CFG & makeCFG();
 			void extract();
 			Variable & getVariable(int label);
+			BasicBlock & getEntry();
 			void debug() const;
 	};
 }
