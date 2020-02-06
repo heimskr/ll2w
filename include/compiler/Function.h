@@ -6,7 +6,6 @@
 
 #include "graph/Graph.h"
 #include "compiler/BasicBlock.h"
-#include "compiler/CFGData.h"
 #include "compiler/Variable.h"
 
 namespace LL2W {
