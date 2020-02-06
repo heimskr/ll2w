@@ -2,6 +2,7 @@
 #define COMPILER_BASICBLOCK_H_
 
 #include <memory>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -19,7 +20,7 @@ namespace LL2W {
 			int label;
 			std::vector<int> preds;
 			std::vector<std::shared_ptr<Instruction>> instructions;
-			std::unordered_set<int> read, written;
+			std::set<int> read, written;
 			std::unordered_set<Variable *> liveIn, liveOut;
 
 			BasicBlock(int, const std::vector<int> &, const std::vector<std::shared_ptr<Instruction>> &);

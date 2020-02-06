@@ -46,8 +46,10 @@ namespace LL2W {
 
 		for (std::pair<const int, Variable> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
-			if (!pair.second.definition)
+			if (!pair.second.definition) {
 				pair.second.definition = &blocks.front();
+				blocks.front().written.insert(pair.first);
+			}
 		}
 	}
 
