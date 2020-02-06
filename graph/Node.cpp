@@ -86,12 +86,18 @@ namespace LL2W {
 		return in_;
 	}
 
-	Node * Node::parent() const {
-		if (in_.size() != 1) {
-			std::cout << owner->name << " ["; for (Node *node: in_) std::cout << " " << node->label(); std::cout << " ]\n";
-			owner->renderTo("graph_err.png");
-			throw std::runtime_error("Cannot find parent of node with " + std::to_string(in_.size()) + " inward edges");
+	size_t Node::degree() const {
+		size_t deg = 0;
+		for (Node *neighbor: out_) {
+			if (in_.count(neighbor) == 1)
+				++deg;
 		}
+		return deg;
+	}
+
+	Node * Node::parent() const {
+		if (in_.size() != 1)
+			throw std::runtime_error("Cannot find parent of node with " + std::to_string(in_.size()) + " inward edges");
 		return *in_.begin();
 	}
 

@@ -89,6 +89,9 @@ namespace LL2W {
 			/** Returns a const set of the node's inward edges. */
 			const Set & in() const;
 
+			/** Returns the number of bidirectional edges connected to this node. */
+			size_t degree() const;
+
 			/** If the node has only one inward edge, this function returns the other node. Otherwise, it throws an
 			 *  exception. */
 			Node * parent() const;

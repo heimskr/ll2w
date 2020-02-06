@@ -250,7 +250,7 @@ namespace LL2W {
 
 	void Graph::color(Graph::ColoringAlgorithm algo, int max_colors) {
 		if (algo == Graph::ColoringAlgorithm::Bad) {
-			if (max_colors != -1 && max_colors < nodes_.size())
+			if (max_colors != -1 && max_colors < static_cast<int>(nodes_.size()))
 				throw std::runtime_error("Unable to color graph: not enough colors");
 			int color = -1;
 			for (Node *node: nodes_)
@@ -306,7 +306,7 @@ namespace LL2W {
 		out << "\n";
 
 		for (Node *node: nodes_) {
-			if (0 <= node->color && node->color < colors.size())
+			if (0 <= node->color && static_cast<size_t>(node->color) < colors.size())
 				out << "\t" << node->label() << " [fillcolor=" << colors.at(node->color) << "];\n";
 		}
 
