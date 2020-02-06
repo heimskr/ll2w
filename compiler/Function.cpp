@@ -58,12 +58,22 @@ namespace LL2W {
 			extract();
 
 		cfg.clear();
+
+		// First pass: add all the nodes.
 		for (BasicBlock &block: blocks) {
-			std::string label = std::to_string(block.label);
+			const std::string label = std::to_string(block.label);
 			cfg += label;
 			Node &node = cfg[label];
 			node.data = &block;
 		}
+
+		// Second pass: connect all the nodes.
+		for (BasicBlock &block: blocks) {
+			const std::string label = std::to_string(block.label);
+			for (int pred: block.preds)
+				cfg.link(std::to_string(pred), label);
+		}
+
 		return cfg;
 	}
 
