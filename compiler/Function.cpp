@@ -9,12 +9,16 @@ namespace LL2W {
 	Function::Function(const ASTNode &node) {
 		name = node.lexerInfo;
 		arguments = dynamic_cast<FunctionHeader *>(node[0])->arguments;
+		astnode = &node;
+	}
+
+	void Function::extractBlocks() {
 		int label = arguments->arguments.size();
 		std::vector<int> preds {};
 		std::vector<std::shared_ptr<Instruction>> instructions;
 		instructions.reserve(32); // Seems like a reasonable estimate for the number of instructions in a larger block.
 
-		for (const ASTNode *child: *node.at(1)) {
+		for (const ASTNode *child: *astnode->at(1)) {
 			if (child->symbol == BLOCKHEADER) {
 				blocks.emplace_back(label, preds, instructions);
 				preds.clear();
@@ -65,6 +69,7 @@ namespace LL2W {
 		if (extracted)
 			return;
 
+		extractBlocks();
 		for (BasicBlock &block: blocks)
 			block.extract();
 		extractVariables();

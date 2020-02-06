@@ -14,6 +14,8 @@ namespace LL2W {
 	class Function {
 		private:
 			std::map<int, Variable> variableStore;
+			const ASTNode *astnode;
+			void extractBlocks();
 			void extractVariables();
 			bool extracted = false;
 
