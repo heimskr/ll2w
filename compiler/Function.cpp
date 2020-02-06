@@ -54,6 +54,29 @@ namespace LL2W {
 		}
 	}
 
+	Node::USet Function::computeSuccMergeSet(BasicBlock &block) {
+		Node *node = block.node;
+		Node::USet &ms = succMergeSets[node];
+		for (Node *succ: node->out()) {
+			ms.insert(succ);
+			for (Node *m: mergeSets.at(succ))
+				ms.insert(m);
+			if (succMergeSets.count(node) == 0)
+				computeSuccMergeSet(*node->get<BasicBlock *>());
+		}
+
+		return ms;
+		// Input: GraphNode n, bool Visited[] array.
+		// Output: Ms(n), ∀n ∈ DJ−Graph. Ms(n)=∅;
+		// Visited(n) = true;
+		// for w ∈ succ(n) do
+		//   Ms(n) = Ms(n) ∪ Mr(w);
+		//   if Visited(w) = false then
+		//     ComputeSuccMergeSetsInDJGraph(w)
+		//   end
+		// end
+	}
+
 	CFG & Function::makeCFG() {
 		if (!extracted)
 			extract();
@@ -86,6 +109,10 @@ namespace LL2W {
 		return cfg;
 	}
 
+	void Function::computeSuccMergeSets() {
+		computeSuccMergeSet(getEntry());
+	}
+
 	void Function::extract() {
 		if (extracted)
 			return;
@@ -94,6 +121,7 @@ namespace LL2W {
 		for (BasicBlock &block: blocks)
 			block.extract();
 		extractVariables();
+		computeSuccMergeSets();
 		extracted = true;
 	}
 

@@ -29,7 +29,8 @@ namespace LL2W {
 			int index_ = -1;
 
 		public:
-			using Map = std::unordered_map<Node *, std::unordered_set<Node *>>;
+			using USet = std::unordered_set<Node *>;
+			using Map = std::unordered_map<Node *, USet>;
 			using Set = std::set<Node *, Node_less>;
 
 			std::any data;

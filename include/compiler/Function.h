@@ -17,11 +17,14 @@ namespace LL2W {
 		private:
 			std::map<int, Variable> variableStore;
 			const ASTNode *astnode;
-			void extractBlocks();
-			void extractVariables();
 			bool extracted = false;
 			std::optional<DJGraph> djGraph;
 			Node::Map mergeSets;
+			Node::Map succMergeSets;
+
+			void extractBlocks();
+			void extractVariables();
+			Node::USet computeSuccMergeSet(BasicBlock &);
 
 		public:
 			const std::string *name;
@@ -35,6 +38,7 @@ namespace LL2W {
 			Function(const ASTNode &);
 
 			CFG & makeCFG();
+			void computeSuccMergeSets();
 			void extract();
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
