@@ -1,6 +1,7 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+#include <any>
 #include <ostream>
 #include <set>
 #include <string>
@@ -31,7 +32,7 @@ namespace LL2W {
 			using Map = std::unordered_map<Node *, std::unordered_set<Node *>>;
 			using Set = std::set<Node *, Node_less>;
 
-			void *data = nullptr;
+			std::any data;
 
 			Node() = delete;
 			Node(Node &&) = delete;
