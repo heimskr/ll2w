@@ -66,9 +66,6 @@ namespace LL2W {
 	}
 
 	CFG & Function::makeCFG() {
-		if (!extracted)
-			extract();
-
 		cfg.clear();
 
 		// First pass: add all the nodes.
@@ -119,6 +116,7 @@ namespace LL2W {
 		for (BasicBlock &block: blocks)
 			block.extract();
 		extractVariables();
+		makeCFG();
 		extracted = true;
 	}
 
@@ -211,7 +209,6 @@ namespace LL2W {
 			std::cout << "\e[0m\n";
 		}
 		std::cout << "}\n\n";
-		makeCFG();
 		cfg.renderTo("graph_" + *name + ".png");
 	}
 }
