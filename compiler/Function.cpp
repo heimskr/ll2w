@@ -54,8 +54,8 @@ namespace LL2W {
 		}
 	}
 
-	Node::USet Function::computeSuccMergeSet(Node *node) {
-		Node::USet &ms = succMergeSets[node];
+	void Function::computeSuccMergeSet(Node *node) {
+		auto &ms = succMergeSets[node];
 		for (Node *succ: node->out()) {
 			ms.insert(succ);
 			for (Node *m: mergeSets.at(succ))
@@ -63,17 +63,6 @@ namespace LL2W {
 			if (succMergeSets.count(succ) == 0)
 				computeSuccMergeSet(succ);
 		}
-
-		return ms;
-		// Input: GraphNode n, bool Visited[] array.
-		// Output: Ms(n), ∀n ∈ DJ−Graph. Ms(n)=∅;
-		// Visited(n) = true;
-		// for w ∈ succ(n) do
-		//   Ms(n) = Ms(n) ∪ Mr(w);
-		//   if Visited(w) = false then
-		//     ComputeSuccMergeSetsInDJGraph(w)
-		//   end
-		// end
 	}
 
 	CFG & Function::makeCFG() {
@@ -106,6 +95,15 @@ namespace LL2W {
 		djGraph->renderTo("graph_dj.png");
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
+		for (const Node::Map &map: {mergeSets, succMergeSets}) {
+			std::cout << "--------------------------------\n";
+			for (const std::pair<Node *, Node::Set> &pair: map) {
+				std::cout << pair.first->label() << ":";
+				for (Node *node: pair.second)
+					std::cout << " " << node->label();
+				std::cout << "\n";
+			}
+		}
 		return cfg;
 	}
 
@@ -136,7 +134,7 @@ namespace LL2W {
 
 	bool Function::isLiveIn(BasicBlock &block, Variable &var) {
 		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
-		std::unordered_set<Node *> m_r = mergeSets.at(block.node);
+		Node::Set m_r = mergeSets.at(block.node);
 		m_r.insert(block.node);
 
 		// Iterate over all the uses of var

@@ -2,6 +2,7 @@
 #define NODE_H_
 
 #include <any>
+#include <map>
 #include <ostream>
 #include <set>
 #include <string>
@@ -30,8 +31,8 @@ namespace LL2W {
 
 		public:
 			using USet = std::unordered_set<Node *>;
-			using Map = std::unordered_map<Node *, USet>;
 			using Set = std::set<Node *, Node_less>;
+			using Map = std::map<Node *, Set, Node_less>;
 
 			std::any data;
 

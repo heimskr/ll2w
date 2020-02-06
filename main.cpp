@@ -87,7 +87,7 @@ void mergetest() {
 	dj254.renderTo("graph_254dj.png", "LR");
 
 	Node::Map merge = dj254.mergeSets(*dj254.nodes().front(), **std::next(dj254.nodes().begin(), 1));
-	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: merge) {
+	for (const std::pair<Node *, Node::Set> &pair: merge) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
 		for (Node *node: pair.second)
 			std::cout << " " << node->label();
@@ -104,7 +104,7 @@ void mergetest2() {
 	dj11.renderTo("graph_11dj.png", "TB");
 
 	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), graph["11"]);
-	for (const std::pair<Node *, std::unordered_set<Node *>> &pair: std::map<Node *, std::unordered_set<Node *>>(merge.begin(), merge.end())) {
+	for (const std::pair<Node *, Node::Set> &pair: std::map<Node *, Node::Set>(merge.begin(), merge.end())) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
 		for (Node *node: std::set<Node *, Node::Node_less>(pair.second.begin(), pair.second.end()))
 			std::cout << " " << node->label();

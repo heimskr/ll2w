@@ -24,7 +24,7 @@ namespace LL2W {
 
 			void extractBlocks();
 			void extractVariables();
-			Node::USet computeSuccMergeSet(Node *);
+			void computeSuccMergeSet(Node *);
 
 		public:
 			const std::string *name;
