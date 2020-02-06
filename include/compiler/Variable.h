@@ -11,7 +11,7 @@ namespace LL2W {
 		std::unordered_set<BasicBlock *> uses;
 		BasicBlock *definition;
 
-		Variable(int id_, const std::unordered_set<BasicBlock *> &uses_ = {}, BasicBlock *definition_ = nullptr):
+		Variable(int id_, BasicBlock *definition_ = nullptr, const std::unordered_set<BasicBlock *> &uses_ = {}):
 			id(id_), uses(uses_), definition(definition_) {}
 	};
 }

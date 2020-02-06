@@ -21,22 +21,16 @@ namespace LL2W {
 		// for (const std::pair<std::string, Function> &pair: functions) {
 
 		// }
-	}	
+	}
+
+	void Program::extract() {
+		for (std::pair<const std::string, Function> &pair: functions)
+			pair.second.extract();
+	}
 
 	void Program::debug() const {
 		for (const std::pair<std::string, Function> &pair: functions) {
-			std::cout << "\e[1m" << pair.first << "\e[0m(";
-			std::vector<FunctionArgument> &args = pair.second.arguments->arguments;
-			for (auto begin = args.begin(), iter = begin, end = args.end(); iter != end; ++iter) {
-				if (iter != begin)
-					std::cout << "\e[2m,\e[0m ";
-				std::cout << *iter->type;
-				if (iter->name)
-					std::cout << " " << *iter->name;
-			}
-			std::cout << ") {\n";
 			pair.second.debug();
-			std::cout << "}\n\n";
 		}
 	}
 }

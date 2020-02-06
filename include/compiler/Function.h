@@ -2,6 +2,7 @@
 #define COMPILER_FUNCTION_H_
 
 #include <list>
+#include <map>
 
 #include "graph/Graph.h"
 #include "compiler/BasicBlock.h"
@@ -13,18 +14,23 @@ namespace LL2W {
 
 	class Function {
 		private:
-			std::unordered_map<int, Variable> variableStore;
+			std::map<int, Variable> variableStore;
+			void extractVariables();
+			bool extracted = false;
 
 		public:
+			const std::string *name;
+
 			/** A list of all basic blocks in the order they appear. */
 			std::list<BasicBlock> blocks;
+
 			FunctionArgs *arguments = nullptr;
 			Graph cfg;
 
 			Function(const ASTNode &);
 
 			Graph & makeCFG();
-			void extractVariables();
+			void extract();
 			Variable & getVariable(int label);
 			void debug() const;
 	};

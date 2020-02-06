@@ -15,6 +15,8 @@ namespace LL2W {
 			std::string sourceFilename;
 
 			Program(const ASTNode &);
+
+			void extract();
 			void debug() const;
 	};
 }
