@@ -1,6 +1,7 @@
 #ifndef COMPILER_VARIABLE_H_
 #define COMPILER_VARIABLE_H_
 
+#include <set>
 #include <vector>
 
 namespace LL2W {
@@ -8,10 +9,10 @@ namespace LL2W {
 
 	struct Variable {
 		int id;
-		std::unordered_set<BasicBlock *> uses;
+		std::set<BasicBlock *> uses;
 		BasicBlock *definition;
 
-		Variable(int id_, BasicBlock *definition_ = nullptr, const std::unordered_set<BasicBlock *> &uses_ = {}):
+		Variable(int id_, BasicBlock *definition_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
 			id(id_), uses(uses_), definition(definition_) {}
 	};
 }
