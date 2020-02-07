@@ -44,6 +44,21 @@ namespace LL2W {
 			delete byvalType;
 	}
 
+	ParAttrs & ParAttrs::operator=(const ParAttrs &other) {
+		if (byvalType) {
+			delete byvalType;
+			byvalType = nullptr;
+		}
+
+		attributes = other.attributes;
+		if (other.byvalType)
+			byvalType = other.byvalType->copy();
+		align = other.align;
+		dereferenceable = other.dereferenceable;
+		orNull = other.orNull;
+		return *this;
+	}
+
 	ParAttrs::operator std::string() const {
 		std::stringstream out;
 		std::string str = out.str();

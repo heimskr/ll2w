@@ -248,6 +248,30 @@ namespace LL2W {
 		return BFS((*this)[start_label]);
 	}
 
+	std::vector<Node *> Graph::postOrder(Node &start) const {
+		std::vector<Node *> out;
+		out.reserve(size());
+		std::unordered_set<Node *> visited;
+
+		std::function<void(Node *)> visit = [&](Node *node) {
+			visited.insert(node);
+			out.push_back(node);
+			for (Node *successor: node->out()) {
+				if (visited.count(successor) == 0)
+					visit(successor);
+			}
+		};
+
+		visit(&start);
+		return out;
+	}
+
+	std::vector<Node *> Graph::reversePostOrder(Node &start) const {
+		std::vector<Node *> post = postOrder(start);
+		std::reverse(post.begin(), post.end());
+		return post;
+	}
+
 	void Graph::color(Graph::ColoringAlgorithm algo, int max_colors) {
 		if (algo == Graph::ColoringAlgorithm::Bad) {
 			if (max_colors != -1 && max_colors < static_cast<int>(nodes_.size()))

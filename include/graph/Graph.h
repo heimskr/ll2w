@@ -105,6 +105,11 @@ namespace LL2W {
 			/** Returns a list of nodes in level (breadth-first) order. */
 			std::vector<Node *> BFS(const std::string &);
 
+			/** Returns a postorder list of nodes. */
+			std::vector<Node *> postOrder(Node &) const;
+			/** Returns a reverse-postorder list of nodes. */
+			std::vector<Node *> reversePostOrder(Node &) const;
+
 			/** Colors all the nodes in the graph according to a given coloring algorithm.
 			 *  Assumes all edges are bidirectional. */
 			void color(ColoringAlgorithm, int max_colors = -1);

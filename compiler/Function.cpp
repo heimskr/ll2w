@@ -102,18 +102,6 @@ namespace LL2W {
 		computeSuccMergeSet(&djGraph.value()[*getEntry().node]);
 	}
 
-	void Function::debugMergeSets() const {
-		for (const Node::Map &map: {mergeSets, succMergeSets}) {
-			std::cout << "--------------------------------\n";
-			for (const std::pair<Node *, Node::Set> &pair: map) {
-				std::cout << pair.first->label() << ":";
-				for (Node *node: pair.second)
-					std::cout << " " << node->label();
-				std::cout << "\n";
-			}
-		}
-	}
-
 	void Function::extract() {
 		if (extracted)
 			return;
@@ -252,5 +240,17 @@ namespace LL2W {
 		}
 		std::cout << "}\n\n";
 		cfg.renderTo("graph_" + *name + ".png");
+	}
+
+	void Function::debugMergeSets() const {
+		for (const Node::Map &map: {mergeSets, succMergeSets}) {
+			std::cout << "--------------------------------\n";
+			for (const std::pair<Node *, Node::Set> &pair: map) {
+				std::cout << pair.first->label() << ":";
+				for (Node *node: pair.second)
+					std::cout << " " << node->label();
+				std::cout << "\n";
+			}
+		}
 	}
 }

@@ -21,6 +21,8 @@ namespace LL2W {
 		ParAttrs(const ParAttrs &);
 		~ParAttrs();
 
+		ParAttrs & operator=(const ParAttrs &);
+
 		operator std::string() const;
 	};
 }
