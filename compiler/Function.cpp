@@ -65,6 +65,10 @@ namespace LL2W {
 		}
 	}
 
+	int Function::arity() const {
+		return arguments? arguments->arguments.size() : 0;
+	}
+
 	CFG & Function::makeCFG() {
 		cfg.clear();
 		cfg.name = "CFG";
