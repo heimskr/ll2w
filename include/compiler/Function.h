@@ -48,6 +48,7 @@ namespace LL2W {
 			bool isLiveIn(BasicBlock &, Variable &);
 			bool isLiveOut(BasicBlock &, Variable &);
 			void debug();
+			void debugMergeSets() const;
 	};
 }
 

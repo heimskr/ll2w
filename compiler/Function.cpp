@@ -95,6 +95,14 @@ namespace LL2W {
 		djGraph->name = "DJ Graph";
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
+		return cfg;
+	}
+
+	void Function::computeSuccMergeSets() {
+		computeSuccMergeSet(&djGraph.value()[*getEntry().node]);
+	}
+
+	void Function::debugMergeSets() const {
 		for (const Node::Map &map: {mergeSets, succMergeSets}) {
 			std::cout << "--------------------------------\n";
 			for (const std::pair<Node *, Node::Set> &pair: map) {
@@ -104,11 +112,6 @@ namespace LL2W {
 				std::cout << "\n";
 			}
 		}
-		return cfg;
-	}
-
-	void Function::computeSuccMergeSets() {
-		computeSuccMergeSet(&djGraph.value()[*getEntry().node]);
 	}
 
 	void Function::extract() {
