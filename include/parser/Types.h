@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "Enums.h"
-#include "StringSet.h"
+#include "parser/Enums.h"
+#include "parser/StringSet.h"
+#include "compiler/WhyInfo.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -21,6 +22,7 @@ namespace LL2W {
 			virtual operator std::string() = 0;
 			virtual ~Type() {}
 			virtual Type * copy() const = 0;
+			virtual int width() const = 0;
 	};
 
 	struct VoidType: public Type {
@@ -28,14 +30,16 @@ namespace LL2W {
 		VoidType() {}
 		virtual operator std::string() override { return "void"; }
 		Type * copy() const override { return new VoidType(); }
+		int width() const override { return 0; }
 	};
 
 	struct IntType: public Type {
 		TypeType typeType() const override { return TypeType::Int; }
-		int width;
-		IntType(int width_): width(width_) {}
+		int intWidth;
+		IntType(int width_): intWidth(width_) {}
 		operator std::string() override;
-		Type * copy() const override { return new IntType(width); }
+		Type * copy() const override { return new IntType(intWidth); }
+		int width() const override { return intWidth; }
 	};
 
 	struct ArrayType: public Type {
@@ -48,6 +52,7 @@ namespace LL2W {
 		~ArrayType() { delete subtype; }
 		operator std::string() override;
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
+		int width() const override { return count * subtype->width(); }
 	};
 
 	struct VectorType: public ArrayType {
@@ -65,6 +70,7 @@ namespace LL2W {
 		operator std::string() override;
 		LL2W::Type * copy() const override { return new FloatType(type); }
 		static Type getType(const std::string &);
+		int width() const override;
 	};
 
 	struct PointerType: public Type {
@@ -76,6 +82,7 @@ namespace LL2W {
 		~PointerType() { delete subtype; }
 		operator std::string() override;
 		Type * copy() const override { return new PointerType(subtype->copy()); }
+		int width() const override { return WhyInfo::pointerWidth; }
 	};
 
 	class FunctionType: public Type {
@@ -94,6 +101,7 @@ namespace LL2W {
 			void uncache() { cached.clear(); }
 			operator std::string() override;
 			Type * copy() const override;
+			int width() const override { return WhyInfo::pointerWidth; }
 	};
 
 	struct StructType: public Type {
@@ -107,6 +115,7 @@ namespace LL2W {
 		~StructType();
 		operator std::string() override;
 		Type * copy() const override { return new StructType(name); }
+		int width() const override;
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we
@@ -120,6 +129,7 @@ namespace LL2W {
 		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(StringSet::intern(node->extractName())) {}
 		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
 		Type * copy() const override { return new GlobalTemporaryType(globalName); }
+		int width() const override { throw std::runtime_error("Calling GlobalTemporaryType::width() is invalid"); }
 	};
 
 	Type * getType(const ASTNode *);

@@ -10,7 +10,7 @@
 
 namespace LL2W {
 	IntType::operator std::string() {
-		return "\e[33mi" + std::to_string(width) + "\e[0m";
+		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}
 
 	ArrayType::operator std::string() {
@@ -41,6 +41,15 @@ namespace LL2W {
 		else if (str == "x86_fp80") return FloatType::Type::x86_FP80;
 		else if (str == "ppc_fp128") return FloatType::Type::PPC_FP128;
 		throw std::invalid_argument("Unknown float type: " + str);
+	}
+
+	int FloatType::width() const {
+		switch (type) {
+			case FloatType::Type::Half:   return WhyInfo::halfFloatWidth;
+			case FloatType::Type::Float:  return WhyInfo::floatWidth;
+			case FloatType::Type::Double: return WhyInfo::doubleWidth;
+			default: return WhyInfo::doubleWidth;
+		}
 	}
 
 	PointerType::operator std::string() {
@@ -109,6 +118,13 @@ namespace LL2W {
 		if (name->at(1) == '"')
 			return "\e[32m%\e[33m" + name->substr(1) + "\e[0m";
 		return "\e[32m" + *name + "\e[0m";
+	}
+
+	int StructType::width() const {
+		int out = 0;
+		for (const Type *type: node->types)
+			out += type->width();
+		return out;
 	}
 
 	Type * getType(const ASTNode *node) {
