@@ -41,6 +41,8 @@ namespace LL2W {
 
 	struct AttributesNode: public BaseNode {
 		int index;
+		int allocsizeSize = -1;
+		int allocsizeCount = -1;
 		std::unordered_set<FnAttr> basicAttributes;
 		std::unordered_map<const std::string *, const std::string *> stringAttributes;
 		AttributesNode(ASTNode *);

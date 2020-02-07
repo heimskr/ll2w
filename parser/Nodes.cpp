@@ -60,7 +60,12 @@ namespace LL2W {
 				stringAttributes.insert({child->extracted(), StringSet::intern("")});
 			} else if (child->symbol == TOK_EQUALS) {
 				stringAttributes.insert({child->at(0)->extracted(), child->at(1)->extracted()});
+			} else if (child->symbol == TOK_ALLOCSIZE) {
+				allocsizeSize = child->at(0)->atoi();
+				if (1 < child->size())
+					allocsizeCount = child->at(1)->atoi();
 			} else {
+				node->at(1)->debug();
 				throw std::runtime_error("Invalid child of ATTRIBUTE_LIST: " + std::string(child->getName()));
 			}
 		}
