@@ -93,7 +93,6 @@ namespace LL2W {
 		dTree->name = "DTree";
 		djGraph.emplace(cfg, cfg[0]);
 		djGraph->name = "DJ Graph";
-		djGraph->renderTo("graph_dj.png");
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
 		for (const Node::Map &map: {mergeSets, succMergeSets}) {
@@ -164,7 +163,10 @@ namespace LL2W {
 					return true;
 				}
 				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
-				t = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				BasicBlock *t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				if (t_new == t)
+					break;
+				t = t_new;
 			}
 		}
 
@@ -188,7 +190,10 @@ namespace LL2W {
 					return true;
 				}
 				// t = dom-parent(t);
-				t = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				BasicBlock *t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				if (t_new == t)
+					break;
+				t = t_new;
 			}
 		}
 
