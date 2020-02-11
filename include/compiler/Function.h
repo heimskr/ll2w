@@ -40,6 +40,7 @@ namespace LL2W {
 			Function(const ASTNode &);
 
 			int arity() const;
+			bool variadic() const;
 			CFG & makeCFG();
 			void computeSuccMergeSets();
 			void extract();

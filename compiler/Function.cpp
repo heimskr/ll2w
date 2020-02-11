@@ -69,6 +69,10 @@ namespace LL2W {
 		return arguments? arguments->arguments.size() : 0;
 	}
 
+	bool Function::variadic() const {
+		return arguments? arguments->ellipsis : false;
+	}
+
 	CFG & Function::makeCFG() {
 		cfg.clear();
 		cfg.name = "CFG";
