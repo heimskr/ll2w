@@ -211,10 +211,10 @@ namespace LL2W {
 		}
 		std::cout << ") {\n";
 		for (const BasicBlock &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block.label << "\e[0;2;4m: preds = ";
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block.label << "\e[0;2;4m: preds =";
 			for (auto begin = block.preds.begin(), iter = begin, end = block.preds.end(); iter != end; ++iter) {
 				if (iter != begin)
-					std::cout << ", ";
+					std::cout << ",";
 				std::cout << " %" << *iter;
 			}
 			std::cout << "\e[0m\n";
