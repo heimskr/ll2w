@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <unistd.h>
@@ -113,7 +115,28 @@ namespace LL2W {
 		djGraph->name = "DJ Graph";
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
+		walkCFG(100, 42, 1000);
 		return cfg;
+	}
+
+	void Function::walkCFG(size_t walks, unsigned int seed, size_t inner_limit) {
+		srand(seed == 0? time(NULL) : seed);
+		for (size_t walk = 0; walk < walks; ++walk) {
+			Node *node = &cfg[0];
+			Node *end = &cfg["exit"];
+			size_t count = 0;
+			while (node != end && ++count <= inner_limit) {
+				++node->get<BasicBlock *>()->estimatedExecutions;
+				size_t out_count = node->out().size();
+				if (out_count == 0) {
+					break;
+				} else if (out_count == 1) {
+					node = *node->out().begin();
+				} else {
+					node = *std::next(node->out().begin(), rand() % out_count);
+				}
+			}
+		}
 	}
 
 	void Function::computeSuccMergeSets() {
@@ -263,6 +286,7 @@ namespace LL2W {
 		}
 		std::cout << "}\n\n";
 		cfg.renderTo("graph_" + *name + ".png");
+		dTree->renderTo("graph_D_" + *name + ".png");
 	}
 
 	void Function::debugMergeSets() const {

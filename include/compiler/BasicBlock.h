@@ -26,6 +26,7 @@ namespace LL2W {
 			Node *node;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
+			int estimatedExecutions = 0;
 
 			BasicBlock(int, const std::vector<int> &, const std::vector<std::shared_ptr<Instruction>> &);
 

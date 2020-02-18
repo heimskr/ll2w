@@ -49,6 +49,8 @@ namespace LL2W {
 			int arity() const;
 			bool variadic() const;
 			CFG & makeCFG();
+			/** Randomly walks through the CFG and counts executions of each basic block. */
+			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 			void computeSuccMergeSets();
 			void extract();
 			Variable & getVariable(int label);

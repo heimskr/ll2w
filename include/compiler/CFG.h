@@ -5,6 +5,7 @@
 
 namespace LL2W {
 	struct CFG: public Graph {
+		/** Node data: pointer to BasicBlock */
 	};
 }
 
