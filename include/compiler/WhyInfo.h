@@ -5,7 +5,9 @@ namespace LL2W {
 	/** Contains constants pertaining to the Why.js architecture. */
 	struct WhyInfo {
 		static int wordSize; // in bytes
-		static int savedCount, temporaryCount, assemblerCount;
+		static int savedOffset, temporaryOffset, argumentOffset, assemblerOffset;
+		static int savedCount,  temporaryCount,  argumentCount,  assemblerCount;
+		static int stackPointerOffset, framePointerOffset, returnAddressOffset;
 		static int halfFloatWidth, floatWidth, doubleWidth, pointerWidth; // in bytes
 	};
 }
