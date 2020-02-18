@@ -6,11 +6,14 @@
 #include "parser/Nodes.h"
 
 namespace LL2W {
+	class BasicBlock;
+
 	class Instruction {
 		private:
 			bool extracted = false;
 
 		public:
+			BasicBlock *parent = nullptr;
 			std::vector<int> read, written;
 			const InstructionNode *node;
 			/** The order of the instruction within the entire function in its linearized representation. */
