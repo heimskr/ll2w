@@ -22,6 +22,8 @@ namespace LL2W {
 	}
 
 	bool ArrayType::operator==(const Type &other) const {
+		if (other.typeType() != TypeType::Array)
+			return false;
 		if (const ArrayType *otherArray = dynamic_cast<const ArrayType *>(&other))
 			return count == otherArray->count && *otherArray->subtype == *subtype;
 		return false;
@@ -29,6 +31,14 @@ namespace LL2W {
 
 	VectorType::operator std::string() {
 		return "\e[2m<\e[0m" + std::to_string(this->count) + " \e[2mx\e[0m " + std::string(*this->subtype) + "\e[2m>\e[0m";
+	}
+
+	bool VectorType::operator==(const Type &other) const {
+		if (other.typeType() != TypeType::Vector)
+			return false;
+		if (const VectorType *otherVector = dynamic_cast<const VectorType *>(&other))
+			return count == otherVector->count && *otherVector->subtype == *subtype;
+		return false;
 	}
 
 	FloatType::operator std::string() {
@@ -62,8 +72,16 @@ namespace LL2W {
 		}
 	}
 
+	bool FloatType::operator==(const LL2W::Type &other) const {
+		return other.typeType() == TypeType::Float && dynamic_cast<const FloatType &>(other).type == type;
+	}
+
 	PointerType::operator std::string() {
 		return std::string(*subtype) + "\e[1;2m*\e[0m";
+	}
+
+	bool PointerType::operator==(const Type &other) const {
+		return other.typeType() == TypeType::Pointer && *dynamic_cast<const PointerType &>(other).subtype == *subtype;
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {
@@ -115,6 +133,36 @@ namespace LL2W {
 		return new FunctionType(returnType->copy(), argument_types);
 	}
 
+	bool FunctionType::operator==(const Type &other) const {
+		if (other.typeType() != TypeType::Function)
+			return false;
+		const FunctionType &otherFunction = dynamic_cast<const FunctionType &>(other);
+		if (ellipsis != otherFunction.ellipsis || argumentTypes.size() != otherFunction.argumentTypes.size())
+			return false;
+		if (*returnType != *otherFunction.returnType)
+			return false;
+		for (size_t i = 0, size = argumentTypes.size(); i < size; ++i) {
+			if (*argumentTypes[i] != *otherFunction.argumentTypes[i])
+				return false;
+		}
+		return true;
+	}
+
+	bool FunctionType::operator!=(const Type &other) const {
+		if (other.typeType() != TypeType::Function)
+			return true;
+		const FunctionType &otherFunction = dynamic_cast<const FunctionType &>(other);
+		if (ellipsis != otherFunction.ellipsis || argumentTypes.size() != otherFunction.argumentTypes.size())
+			return true;
+		if (*returnType != *otherFunction.returnType)
+			return true;
+		for (size_t i = 0, size = argumentTypes.size(); i < size; ++i) {
+			if (*argumentTypes[i] != *otherFunction.argumentTypes[i])
+				return true;
+		}
+		return false;
+	}
+
 	StructType::StructType(const StructNode *node_):
 		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
 
@@ -141,6 +189,13 @@ namespace LL2W {
 		// TODO!: Implement.
 		node->debug();
 		throw std::runtime_error("StructType::extractType is unimplemented.");
+	}
+
+	bool StructType::operator==(const Type &other) const {
+		if (other.type != TypeType::Struct)
+			return false;
+		node->debug();
+		throw std::runtime_error("StructType::operator== is unimplemented.");
 	}
 
 	Type * getType(const ASTNode *node) {

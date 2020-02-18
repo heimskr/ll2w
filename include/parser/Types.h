@@ -23,6 +23,7 @@ namespace LL2W {
 			virtual Type * copy() const = 0;
 			virtual int width() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
+			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 	};
 
 	struct VoidType: public Type {
@@ -59,7 +60,7 @@ namespace LL2W {
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
 		Type * extractType(const std::vector<int> &) const override { return subtype->copy(); }
-		bool operator==(const Type &other) const override;
+		bool operator==(const Type &) const override;
 	};
 
 	struct VectorType: public ArrayType {
@@ -67,6 +68,7 @@ namespace LL2W {
 		using ArrayType::ArrayType;
 		operator std::string() override;
 		Type * copy() const override { return new VectorType(count, subtype->copy()); }
+		bool operator==(const Type &) const override;
 	};
 
 	struct FloatType: public Type {
@@ -78,6 +80,7 @@ namespace LL2W {
 		LL2W::Type * copy() const override { return new FloatType(type); }
 		static Type getType(const std::string &);
 		int width() const override;
+		bool operator==(const LL2W::Type &) const override;
 	};
 
 	struct PointerType: public Type {
@@ -90,6 +93,7 @@ namespace LL2W {
 		operator std::string() override;
 		Type * copy() const override { return new PointerType(subtype->copy()); }
 		int width() const override { return WhyInfo::pointerWidth; }
+		bool operator==(const Type &) const override;
 	};
 
 	class FunctionType: public Type {
@@ -109,6 +113,8 @@ namespace LL2W {
 			operator std::string() override;
 			Type * copy() const override;
 			int width() const override { return WhyInfo::pointerWidth; }
+			bool operator==(const Type &) const override;
+			bool operator!=(const Type &) const override;
 	};
 
 	struct StructType: public AggregateType {
@@ -124,6 +130,7 @@ namespace LL2W {
 		Type * copy() const override { return new StructType(name); }
 		int width() const override;
 		Type * extractType(const std::vector<int> &indices) const override;
+		bool operator==(const Type &) const override;
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we
