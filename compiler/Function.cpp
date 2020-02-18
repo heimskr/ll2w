@@ -18,23 +18,29 @@ namespace LL2W {
 		std::vector<int> preds {};
 		std::vector<std::shared_ptr<Instruction>> instructions;
 		instructions.reserve(32); // Seems like a reasonable estimate for the number of instructions in a larger block.
+		int offset = 0;
+		int instructionIndex = 0;
 
 		for (const ASTNode *child: *astnode->at(1)) {
 			if (child->symbol == BLOCKHEADER) {
 				blocks.emplace_back(label, preds, instructions);
+				blocks.back().offset = offset;
+				offset += instructions.size();
 				preds.clear();
 				instructions.clear();
 				const HeaderNode *header = dynamic_cast<const HeaderNode *>(child);
 				label = header->label;
 				preds = header->preds;
 			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
-				instructions.push_back(std::make_shared<Instruction>(instruction));
+				instructions.push_back(std::make_shared<Instruction>(instruction, instructionIndex++));
 				instructions.back()->extract();
 			}
 		}
 
-		if (!instructions.empty())
+		if (!instructions.empty()) {
 			blocks.emplace_back(label, preds, instructions);
+			blocks.back().offset = offset;
+		}
 	}
 
 	void Function::extractVariables() {
@@ -215,7 +221,8 @@ namespace LL2W {
 		}
 		std::cout << ") {\n";
 		for (const BasicBlock &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block.label << "\e[0;2;4m: preds =";
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block.label << "\e[0;2;4m @ " << block.offset <<
+			             ": preds =";
 			for (auto begin = block.preds.begin(), iter = begin, end = block.preds.end(); iter != end; ++iter) {
 				if (iter != begin)
 					std::cout << ",";

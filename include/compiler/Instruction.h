@@ -13,8 +13,10 @@ namespace LL2W {
 		public:
 			std::vector<int> read, written;
 			const InstructionNode *node;
+			/** The order of the instruction within the entire function in its linearized representation. */
+			int index;
 
-			Instruction(const InstructionNode *node_): node(node_) {}
+			Instruction(const InstructionNode *node_, int index_): node(node_), index(index_) {}
 
 			bool isTerminal() const;
 

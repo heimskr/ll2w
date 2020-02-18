@@ -24,10 +24,14 @@ namespace LL2W {
 			std::set<int> read, written;
 			std::unordered_set<Variable *> liveIn, liveOut;
 			Node *node;
+			/** The total number of instructions in all basic blocks preceding this one. */
+			int offset = -1;
 
 			BasicBlock(int, const std::vector<int> &, const std::vector<std::shared_ptr<Instruction>> &);
 
 			std::pair<char, char> extract(bool force = false);
+
+			size_t size() const { return instructions.size(); }
 	};
 }
 
