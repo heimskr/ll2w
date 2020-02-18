@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 #include "compiler/ExtractionResult.h"
 
@@ -18,7 +18,7 @@ namespace LL2W {
 
 		public:
 			BasicBlock *parent = nullptr;
-			std::vector<std::shared_ptr<Variable>> read, written;
+			std::unordered_set<std::shared_ptr<Variable>> read, written;
 			/** The order of the instruction within the entire function in its linearized representation. */
 			int index;
 

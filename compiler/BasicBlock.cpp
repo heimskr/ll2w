@@ -1,5 +1,6 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"
+#include "compiler/Variable.h"
 
 namespace LL2W {
 	BasicBlock::BasicBlock(int label_, const std::vector<int> &preds_,

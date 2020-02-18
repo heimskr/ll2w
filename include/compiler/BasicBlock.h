@@ -1,8 +1,10 @@
 #ifndef COMPILER_BASICBLOCK_H_
 #define COMPILER_BASICBLOCK_H_
 
+#include <map>
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -13,10 +15,13 @@ namespace LL2W {
 	class Variable;
 	class Node;
 	class Function;
+	class LLVMInstruction;
+	class Type;
 
 	class BasicBlock {
 		private:
 			bool extracted = false;
+			std::map<int, std::shared_ptr<Variable>> variableStore;
 
 		public:
 			int label;

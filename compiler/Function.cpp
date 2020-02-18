@@ -30,8 +30,8 @@ namespace LL2W {
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = &block;
 				instruction->extract();
-				for (std::vector<VariablePtr> variables: {instruction->read, instruction->written}) {
-					for (VariablePtr &vptr: variables)
+				for (const std::unordered_set<VariablePtr> &variables: {instruction->read, instruction->written}) {
+					for (VariablePtr vptr: variables)
 						variableStore.insert({vptr->id, vptr});
 				}
 			}
@@ -183,6 +183,15 @@ namespace LL2W {
 
 	VariablePtr Function::getVariable(int label) {
 		return variableStore.at(label);
+	}
+
+	VariablePtr Function::getVariable(int label, const Type *type, BasicBlock *definer) {
+		if (variableStore.count(label) == 0)
+			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr, definer)});
+		VariablePtr out = variableStore.at(label);
+		if (definer)
+			out->definingBlock = definer;
+		return out;
 	}
 
 	BasicBlock & Function::getEntry() {

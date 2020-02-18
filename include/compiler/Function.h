@@ -58,6 +58,7 @@ namespace LL2W {
 			void computeSuccMergeSets();
 			void extract();
 			std::shared_ptr<Variable> getVariable(int label);
+			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlock * = nullptr);
 			BasicBlock & getEntry();
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();

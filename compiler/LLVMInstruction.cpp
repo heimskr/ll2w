@@ -30,7 +30,7 @@ namespace LL2W {
 			int id = parseLong(lv->name);
 			if (read_ids.count(id) == 0) {
 				std::cout << "[R] " << debugExtra() << "\n";
-				read.push_back(std::make_shared<Variable>(id, type? type->copy() : nullptr));
+				read.insert(parent->parent->getVariable(id, type));
 				std::cout << "\n";
 				read_ids.insert(id);
 			}
@@ -41,7 +41,7 @@ namespace LL2W {
 				int id = parseLong(str);
 				if (written_ids.count(id) == 0) {
 					std::cout << "[W] " << debugExtra() << "\n";
-					written.push_back(std::make_shared<Variable>(id, type? type->copy() : nullptr));
+					written.insert(parent->parent->getVariable(id, type, parent));
 					std::cout << "\n";
 					written_ids.insert(id);
 				}
@@ -113,14 +113,14 @@ namespace LL2W {
 				write(cast->result, cast->type);
 				int id = parseLong(cast->ptrValue->name);
 				if (read_ids.count(id) == 0) {
-					read.push_back(std::make_shared<Variable>(id, cast->ptrType->copy()));
+					read.insert(parent->parent->getVariable(id, cast->ptrType));
 					read_ids.insert(id);
 				}
 				for (auto [width, value, minrange, pvar]: cast->indices) {
-					// Because we're assuming that these variables have already been defined, we can get them from the
-					// Function that contains this Instruction.
+					// Because we're assuming that these variables have already been defined earlier in the function,
+					// we can get them from the Function that contains this Instruction.
 					if (pvar)
-						read.push_back(parent->parent->getVariable(value));
+						read.insert(parent->parent->getVariable(value));
 				}
 				break;
 			}
