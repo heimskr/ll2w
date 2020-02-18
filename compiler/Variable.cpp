@@ -30,4 +30,8 @@ namespace LL2W {
 			return INT_MAX;
 		return weight();
 	}
+
+	bool Variable::operator==(const Variable &other) const {
+		return id == other.id && *type == *other.type;
+	}
 }

@@ -22,6 +22,7 @@ namespace LL2W {
 			virtual ~Type() {}
 			virtual Type * copy() const = 0;
 			virtual int width() const = 0;
+			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 	};
 
 	struct VoidType: public Type {
@@ -39,6 +40,7 @@ namespace LL2W {
 		operator std::string() override;
 		Type * copy() const override { return new IntType(intWidth); }
 		int width() const override { return intWidth; }
+		bool operator==(const Type &other) const override;
 	};
 
 	struct AggregateType: public Type {
@@ -57,6 +59,7 @@ namespace LL2W {
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
 		Type * extractType(const std::vector<int> &) const override { return subtype->copy(); }
+		bool operator==(const Type &other) const override;
 	};
 
 	struct VectorType: public ArrayType {

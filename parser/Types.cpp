@@ -13,8 +13,18 @@ namespace LL2W {
 		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}
 
+	bool IntType::operator==(const Type &other) const {
+		return other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth;
+	}
+
 	ArrayType::operator std::string() {
 		return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
+	}
+
+	bool ArrayType::operator==(const Type &other) const {
+		if (const ArrayType *otherArray = dynamic_cast<const ArrayType *>(&other))
+			return count == otherArray->count && *otherArray->subtype == *subtype;
+		return false;
 	}
 
 	VectorType::operator std::string() {

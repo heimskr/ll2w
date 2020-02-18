@@ -36,6 +36,8 @@ namespace LL2W {
 
 			/** Calculates the variable's spill cost. */
 			int spillCost() const;
+
+			bool operator==(const Variable &) const;
 	};
 
 	using VariablePtr = std::shared_ptr<Variable>;
