@@ -4,14 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "parser/ASTNode.h"
 #include "parser/Enums.h"
 #include "parser/StringSet.h"
 #include "compiler/WhyInfo.h"
 
 namespace LL2W {
-	class ASTNode;
 	class StructNode;
-
 
 	class Type {
 		protected:
@@ -42,7 +41,11 @@ namespace LL2W {
 		int width() const override { return intWidth; }
 	};
 
-	struct ArrayType: public Type {
+	struct AggregateType: public Type {
+		virtual Type * extractType(const std::vector<int> &indices) const = 0;
+	};
+
+	struct ArrayType: public AggregateType {
 		TypeType typeType() const override { return TypeType::Array; }
 		int count;
 		Type *subtype;
@@ -53,6 +56,7 @@ namespace LL2W {
 		operator std::string() override;
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
+		Type * extractType(const std::vector<int> &) const override { return subtype->copy(); }
 	};
 
 	struct VectorType: public ArrayType {
@@ -104,7 +108,7 @@ namespace LL2W {
 			int width() const override { return WhyInfo::pointerWidth; }
 	};
 
-	struct StructType: public Type {
+	struct StructType: public AggregateType {
 		TypeType typeType() const override { return TypeType::Struct; }
 		const std::string *name;
 		StructForm form = StructForm::Struct;
@@ -116,6 +120,7 @@ namespace LL2W {
 		operator std::string() override;
 		Type * copy() const override { return new StructType(name); }
 		int width() const override;
+		Type * extractType(const std::vector<int> &indices) const override;
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we

@@ -3,6 +3,14 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
+	Variable::Variable(int id_, Type *type_, BasicBlock *definingBlock_, const std::set<BasicBlock *> &uses_):
+		id(id_), type(type_), definingBlock(definingBlock_), usingBlocks(uses_) {}
+
+	Variable::~Variable() {
+		if (type)
+			delete type;
+	}
+
 	int Variable::weight() const {
 		int sum = 0;
 		for (BasicBlock *use: usingBlocks)

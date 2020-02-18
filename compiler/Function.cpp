@@ -24,10 +24,23 @@ namespace LL2W {
 		int offset = 0;
 		int instructionIndex = 0;
 
+		std::function<void(BasicBlock &)> finishBlock = [&](BasicBlock &block) {
+			block.offset = offset;
+			block.parent = this;
+			for (std::shared_ptr<Instruction> &instruction: instructions) {
+				instruction->parent = &block;
+				instruction->extract();
+				for (std::vector<VariablePtr> variables: {instruction->read, instruction->written}) {
+					for (VariablePtr &vptr: variables)
+						variableStore.insert({vptr->id, vptr});
+				}
+			}
+		};
+
 		for (const ASTNode *child: *astnode->at(1)) {
 			if (child->symbol == BLOCKHEADER) {
 				blocks.emplace_back(label, preds, instructions);
-				blocks.back().offset = offset;
+				finishBlock(blocks.back());
 				offset += instructions.size();
 				preds.clear();
 				instructions.clear();
@@ -36,37 +49,35 @@ namespace LL2W {
 				preds = header->preds;
 			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
 				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, instructionIndex++));
-				instructions.back()->extract();
 				linearInstructions.push_back(instructions.back());
 			}
 		}
 
 		if (!instructions.empty()) {
 			blocks.emplace_back(label, preds, instructions);
-			blocks.back().offset = offset;
+			finishBlock(blocks.back());
 		}
 	}
 
 	void Function::extractVariables() {
 		for (BasicBlock &block: blocks) {
-			for (int read_var: block.read)
-				getVariable(read_var).usingBlocks.insert(&block);
-			for (int written_var: block.written)
-				getVariable(written_var).definingBlock = &block;
+			for (VariablePtr read_var: block.read)
+				read_var->usingBlocks.insert(&block);
+			for (VariablePtr written_var: block.written)
+				written_var->definingBlock = &block;
 			for (std::shared_ptr<Instruction> &instruction: block.instructions) {
-				for (int read_var_index: instruction->read) {
-					Variable &read_var = getVariable(read_var_index);
-					read_var.lastUse = instruction.get();
-					read_var.uses.insert(instruction.get());
+				for (VariablePtr read_var: instruction->read) {
+					read_var->lastUse = instruction.get();
+					read_var->uses.insert(instruction.get());
 				}
 			}
 		}
 
-		for (std::pair<const int, Variable> &pair: variableStore) {
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
-			if (!pair.second.definingBlock) {
-				pair.second.definingBlock = &blocks.front();
-				blocks.front().written.insert(pair.first);
+			if (!pair.second->definingBlock) {
+				pair.second->definingBlock = &blocks.front();
+				blocks.front().written.insert(pair.second);
 			}
 		}
 	}
@@ -167,9 +178,7 @@ namespace LL2W {
 		extracted = true;
 	}
 
-	Variable & Function::getVariable(int label) {
-		if (variableStore.count(label) == 0)
-			variableStore.insert({label, Variable(label, nullptr, {})});
+	VariablePtr Function::getVariable(int label) {
 		return variableStore.at(label);
 	}
 
@@ -186,7 +195,7 @@ namespace LL2W {
 			return;
 
 		livenessComputed = true;
-		for (std::pair<const int, Variable> &pair: variableStore) {
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			for (BasicBlock &block: blocks) {
 				isLiveIn(block, pair.second);
 				isLiveOut(block, pair.second);
@@ -194,19 +203,19 @@ namespace LL2W {
 		}
 	}
 
-	bool Function::isLiveIn(BasicBlock &block, Variable &var) {
+	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
 		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
 		Node::Set m_r = mergeSets.at(block.node);
 		m_r.insert(block.node);
 
 		// Iterate over all the uses of var
 		// for t ∈ uses(var) do
-		for (BasicBlock *t: var.usingBlocks) {
+		for (BasicBlock *t: var->usingBlocks) {
 			// while t≠def(var) do
-			while (t != var.definingBlock) {
+			while (t != var->definingBlock) {
 				// if t ∩ M^r(block) then
 				if (m_r.count(t->node) > 0) {
-					block.liveIn.insert(&var);
+					block.liveIn.insert(var);
 					return true;
 				}
 				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
@@ -220,21 +229,21 @@ namespace LL2W {
 		return false;
 	}
 
-	bool Function::isLiveOut(BasicBlock &block, Variable &var) {
+	bool Function::isLiveOut(BasicBlock &block, VariablePtr var) {
 		// if def(a)=n
-		if (var.definingBlock == &block) {
+		if (var->definingBlock == &block) {
 			// return uses(a)\def(a)≠∅;
-			return !(var.usingBlocks.empty() ||
-				(var.usingBlocks.size() == 1 && 0 < var.usingBlocks.count(var.definingBlock)));
+			return !(var->usingBlocks.empty() ||
+				(var->usingBlocks.size() == 1 && 0 < var->usingBlocks.count(var->definingBlock)));
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
-		for (BasicBlock *t: var.usingBlocks) {
+		for (BasicBlock *t: var->usingBlocks) {
 			// while t≠def(a) do
-			while (t != var.definingBlock) {
+			while (t != var->definingBlock) {
 				// if t ∩ Ms(n) then
 				if (0 < succMergeSets.at(block.node).count(t->node)) {
-					block.liveOut.insert(&var);
+					block.liveOut.insert(var);
 					return true;
 				}
 				// t = dom-parent(t);
@@ -277,22 +286,22 @@ namespace LL2W {
 			std::cout << "\n";
 		}
 		std::cout << "    \e[2m; Variables:\e[0m\n";
-		for (std::pair<const int, Variable> &pair: variableStore) {
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
-			          << std::setw(2) << pair.second.definingBlock->label << "  \e[0;2muses =";
-			for (const BasicBlock *use: pair.second.usingBlocks)
+			          << std::setw(2) << pair.second->definingBlock->label << "  \e[0;2muses =";
+			for (const BasicBlock *use: pair.second->usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
-			int spill_cost = pair.second.spillCost();
+			int spill_cost = pair.second->spillCost();
 			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlock &block: blocks) {
-				if (0 < block.liveIn.count(&pair.second))
+				if (0 < block.liveIn.count(pair.second))
 					std::cout << " %" << block.label;
 			}
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[31mout =\e[1m";
 			for (const BasicBlock &block: blocks) {
-				if (0 < block.liveOut.count(&pair.second))
+				if (0 < block.liveOut.count(pair.second))
 					std::cout << " %" << block.label;
 			}
 			std::cout << "\e[0m\n";

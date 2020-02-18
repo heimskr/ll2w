@@ -4,7 +4,6 @@
 #include "compiler/Instruction.h"
 
 namespace LL2W {
-	class BasicBlock;
 	struct InstructionNode;
 
 	class LLVMInstruction: public Instruction {
@@ -14,9 +13,7 @@ namespace LL2W {
 			LLVMInstruction(const InstructionNode *node_, int index_): Instruction(index_), node(node_) {}
 
 			bool isTerminal() const override;
-
-			std::pair<char, char> extract(bool force = false) override;
-
+			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;
 	};
 }

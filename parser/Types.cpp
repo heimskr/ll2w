@@ -127,6 +127,12 @@ namespace LL2W {
 		return out;
 	}
 
+	Type * StructType::extractType(const std::vector<int> &indices) const {
+		// TODO!: Implement.
+		node->debug();
+		throw std::runtime_error("StructType::extractType is unimplemented.");
+	}
+
 	Type * getType(const ASTNode *node) {
 		switch (node->symbol) {
 			case FUNCTIONTYPE:  return new FunctionType(node);

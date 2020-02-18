@@ -365,7 +365,7 @@ namespace LL2W {
 	};
 
 	struct ExtractValueNode: public InstructionNode, public Writer, public Reader {
-		Type *aggregateType;
+		AggregateType *aggregateType;
 		Value *aggregateValue;
 		std::vector<int> decimals;
 		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_);

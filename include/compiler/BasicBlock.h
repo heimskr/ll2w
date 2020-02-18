@@ -10,8 +10,9 @@
 
 namespace LL2W {
 	class Instruction;
-	struct Variable;
+	class Variable;
 	class Node;
+	class Function;
 
 	class BasicBlock {
 		private:
@@ -21,9 +22,10 @@ namespace LL2W {
 			int label;
 			std::vector<int> preds;
 			std::vector<std::shared_ptr<Instruction>> instructions;
-			std::set<int> read, written;
-			std::unordered_set<Variable *> liveIn, liveOut;
+			std::set<std::shared_ptr<Variable>> read, written;
+			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
 			Node *node;
+			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
 			int estimatedExecutions = 0;

@@ -1,10 +1,12 @@
 #include <iostream>
 
+#include "compiler/Function.h"
 #include "compiler/LLVMInstruction.h"
+#include "compiler/Variable.h"
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
-#define IFLV(x) if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value)
+#define IFLV(x, t) if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value, (t))
 #define FORV(x...) for (const Value *value: {x})
 #define CAST(t) const t *cast = dynamic_cast<const t *>(node)
 
@@ -14,7 +16,7 @@ namespace LL2W {
 		return type == NodeType::Ret || type == NodeType::Unreachable;
 	}
 
-	std::pair<char, char> LLVMInstruction::extract(bool force) {
+	ExtractionResult LLVMInstruction::extract(bool force) {
 		if (extracted && !force)
 			return {read.size(), written.size()};
 
@@ -22,50 +24,50 @@ namespace LL2W {
 		written.clear();
 		extracted = true;
 
-		auto readname = [&](const LocalValue *lv) {
-			read.push_back(parseLong(lv->name));
+		auto readname = [&](const LocalValue *lv, const Type *type) {
+			read.push_back(std::make_shared<Variable>(parseLong(lv->name), type? type->copy() : nullptr));
 		};
 
-		auto write = [&](const std::string *str) {
+		auto write = [&](const std::string *str, const Type *type) {
 			if (str)
-				written.push_back(parseLong(str));
+				written.push_back(std::make_shared<Variable>(parseLong(str), type? type->copy() : nullptr));
 		};
 
 		switch (node->nodeType()) {
 			case NodeType::Select: {
 				CAST(SelectNode);
-				write(cast->result);
-				FORV(cast->firstValue, cast->secondValue)
-					IFLV(value);
+				write(cast->result, cast->firstType);
+				IFLV(cast->firstValue, cast->firstType);
+				IFLV(cast->secondValue, cast->secondType);
 				break;
 			}
 
 			case NodeType::Alloca: {
 				CAST(AllocaNode);
-				write(cast->result);
-				IFLV(cast->numelementsValue);
+				write(cast->result, cast->type);
+				IFLV(cast->numelementsValue, cast->numelementsType);
 				break;
 			}
 
 			case NodeType::Store: {
 				CAST(StoreNode);
-				FORV(cast->value, cast->constant->value)
-					IFLV(value);
+				IFLV(cast->value, cast->type);
+				IFLV(cast->constant->value, cast->constant->type);
 				break;
 			}
 
 			case NodeType::Load: {
 				CAST(LoadNode);
-				write(cast->result);
-				IFLV(cast->constant->value);
+				write(cast->result, cast->type);
+				IFLV(cast->constant->value, cast->constant->type);
 				break;
 			}
 
 			case NodeType::Icmp: {
 				CAST(IcmpNode);
-				write(cast->result);
+				write(cast->result, cast->type);
 				FORV(cast->value1, cast->value2)
-					IFLV(value);
+					IFLV(value, cast->type);
 				break;
 			}
 
@@ -76,63 +78,65 @@ namespace LL2W {
 
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
-				IFLV(cast->condition);
+				IFLV(cast->condition, new IntType(1));
 				break;
 			}
 
 			case NodeType::Call:
 			case NodeType::Invoke: {
 				CAST(CallInvokeNode);
-				write(cast->result);
+				write(cast->result, cast->returnType);
 				for (const Constant *constant: cast->constants)
-					IFLV(constant->value);
+					IFLV(constant->value, constant->type);
 				break;
 			}
 
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
-				write(cast->result);
-				read.push_back(parseLong(cast->ptrValue->name));
+				write(cast->result, cast->type);
+				read.push_back(std::make_shared<Variable>(parseLong(cast->ptrValue->name), cast->ptrType));
 				for (auto [width, value, minrange, pvar]: cast->indices) {
+					// Because we're assuming that these variables have already been defined, we can get them from the
+					// Function that contains this Instruction.
 					if (pvar)
-						read.push_back(value);
+						read.push_back(parent->parent->getVariable(value));
 				}
 				break;
 			}
 
 			case NodeType::Ret: {
 				CAST(RetNode);
-				IFLV(cast->value);
+				IFLV(cast->value, cast->type);
 				break;
 			}
 
 			case NodeType::Landingpad: {
 				CAST(LandingpadNode);
 				for (const LandingpadNode::Clause *clause: cast->clauses)
-					IFLV(clause->value);
+					IFLV(clause->value, clause->type);
 				break;
 			}
 
 			case NodeType::Conversion: {
 				CAST(ConversionNode);
-				write(cast->result);
-				IFLV(cast->value);
+				write(cast->result, cast->to);
+				IFLV(cast->value, cast->from);
 				break;
 			}
 
 			case NodeType::BasicMath: {
 				CAST(BasicMathNode);
-				write(cast->result);
-				IFLV(cast->left);
-				IFLV(cast->right);
+				write(cast->result, cast->type);
+				FORV(cast->left, cast->right)
+					IFLV(value, cast->type);
 				break;
 			}
 
 			case NodeType::Phi: {
 				CAST(PhiNode);
-				write(cast->result);
+				write(cast->result, cast->type);
 				for (const std::pair<Value *, const std::string *> &pair: cast->pairs)
-					IFLV(pair.first);
+					IFLV(pair.first, cast->type);
 				break;
 			}
 
@@ -142,30 +146,30 @@ namespace LL2W {
 			case NodeType::Shr:
 			case NodeType::FMath: {
 				CAST(SimpleNode);
-				write(cast->result);
-				IFLV(cast->left);
-				IFLV(cast->right);
+				write(cast->result, cast->type);
+				FORV(cast->left, cast->right)
+					IFLV(value, cast->type);
 				break;
 			}
 
 			case NodeType::ExtractValue: {
 				CAST(ExtractValueNode);
-				write(cast->result);
-				IFLV(cast->aggregateValue);
+				write(cast->result, cast->aggregateType->extractType(cast->decimals));
+				IFLV(cast->aggregateValue, cast->aggregateType);
 				break;
 			}
 
 			case NodeType::InsertValue: {
 				CAST(InsertValueNode);
-				write(cast->result);
-				IFLV(cast->aggregateValue);
-				IFLV(cast->value);
+				write(cast->result, cast->aggregateType);
+				IFLV(cast->aggregateValue, cast->aggregateType);
+				IFLV(cast->value, cast->type);
 				break;
 			}
 
 			case NodeType::Resume: {
 				CAST(ResumeNode);
-				IFLV(cast->value);
+				IFLV(cast->value, cast->type);
 				break;
 			}
 

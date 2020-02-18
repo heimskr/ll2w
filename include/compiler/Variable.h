@@ -1,30 +1,44 @@
 #ifndef COMPILER_VARIABLE_H_
 #define COMPILER_VARIABLE_H_
 
+#include <memory>
 #include <set>
+
+#include "parser/Types.h"
 
 namespace LL2W {
 	class Node;
 	class BasicBlock;
 	class Instruction;
 
-	struct Variable {
-		int id;
-		std::set<BasicBlock *> usingBlocks;
-		std::set<Instruction *> uses;
-		BasicBlock *definingBlock;
-		Instruction *definition = nullptr, *lastUse = nullptr;
+	class Variable {
+		private:
+			std::list<Instruction *> useOrder;
 
-		Variable(int id_, BasicBlock *definingBlock_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
-			id(id_), usingBlocks(uses_), definingBlock(definingBlock_) {}
+		public:
+			int id;
+			Type *type = nullptr;
+			BasicBlock *definingBlock;
+			Instruction *definition = nullptr, *lastUse = nullptr;
+			std::set<BasicBlock *> usingBlocks;
+			std::set<Instruction *> uses;
 
+			Variable *spilledFrom = nullptr; // Tentative.
+			std::list<Variable *> spilledTo; // Also tentative.
 
-		/** Calculates the sum of each use's estimated execution count. */
-		int weight() const;
+			Variable(int id_, Type *type_ = nullptr, BasicBlock *definingBlock_ = nullptr,
+				const std::set<BasicBlock *> &uses_ = {});
 
-		/** Calculates the variable's spill cost. */
-		int spillCost() const;
+			~Variable();
+
+			/** Calculates the sum of each use's estimated execution count. */
+			int weight() const;
+
+			/** Calculates the variable's spill cost. */
+			int spillCost() const;
 	};
+
+	using VariablePtr = std::shared_ptr<Variable>;
 }
 
 #endif

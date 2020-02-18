@@ -18,9 +18,9 @@ namespace LL2W {
 
 		for (std::shared_ptr<Instruction> &instruction: instructions) {
 			instruction->extract();
-			for (int read_var: instruction->read)
+			for (auto read_var: instruction->read)
 				read.insert(read_var);
-			for (int written_var: instruction->written)
+			for (auto written_var: instruction->written)
 				written.insert(written_var);
 		}
 

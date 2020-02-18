@@ -1053,7 +1053,13 @@ namespace LL2W {
 	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
 	                                   ASTNode *decimals_) {
 		result = result_->extracted();
-		aggregateType = getType(aggregate_type);
+		Type *uncasted = getType(aggregate_type);
+		aggregateType = dynamic_cast<AggregateType *>(uncasted);
+		if (!aggregateType) {
+			delete uncasted;
+			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: "
+				+ std::string(*uncasted));
+		}
 		aggregateValue = getValue(aggregate_value);
 		for (ASTNode *decimal: *decimals_)
 			decimals.push_back(decimal->atoi());

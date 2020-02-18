@@ -23,7 +23,7 @@ namespace LL2W {
 
 	class Function {
 		private:
-			std::map<int, Variable> variableStore;
+			std::map<int, VariablePtr> variableStore;
 			std::unordered_map<const BasicBlock *, Node *> bbMap;
 			const ASTNode *astnode;
 			bool extracted = false, livenessComputed = false;
@@ -44,7 +44,7 @@ namespace LL2W {
 			/** A list of all basic blocks in the order they appear. */
 			std::list<BasicBlock> blocks;
 			/** A vector of all instructions in the order they appear in the source code. */
-			std::vector<std::shared_ptr<Instruction>> linearInstructions;
+			std::list<std::shared_ptr<Instruction>> linearInstructions;
 			FunctionArgs *arguments = nullptr;
 			CFG cfg;
 
@@ -57,12 +57,12 @@ namespace LL2W {
 			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 			void computeSuccMergeSets();
 			void extract();
-			Variable & getVariable(int label);
+			std::shared_ptr<Variable> getVariable(int label);
 			BasicBlock & getEntry();
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();
-			bool isLiveIn(BasicBlock &, Variable &);
-			bool isLiveOut(BasicBlock &, Variable &);
+			bool isLiveIn(BasicBlock &, VariablePtr);
+			bool isLiveOut(BasicBlock &, VariablePtr);
 			void debug();
 			void debugMergeSets() const;
 	};
