@@ -24,17 +24,20 @@ namespace LL2W {
 	class Function {
 		private:
 			std::map<int, Variable> variableStore;
+			std::unordered_map<const BasicBlock *, Node *> bbMap;
 			const ASTNode *astnode;
 			bool extracted = false, livenessComputed = false;
 			std::optional<DJGraph> djGraph;
 			std::optional<DTree> dTree;
 			Node::Map mergeSets;
 			Node::Map succMergeSets;
+			int walkCount = 0;
 
 			void extractBlocks();
 			void extractVariables();
 			void computeSuccMergeSet(Node *);
-			int walkCount = 0;
+
+			Node & operator[](const BasicBlock &) const;
 
 		public:
 			const std::string *name;

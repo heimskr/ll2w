@@ -77,6 +77,10 @@ namespace LL2W {
 		}
 	}
 
+	Node & Function::operator[](const BasicBlock &bb) const {
+		return *bbMap.at(&bb);
+	}
+
 	int Function::arity() const {
 		return arguments? arguments->arguments.size() : 0;
 	}
@@ -96,6 +100,7 @@ namespace LL2W {
 			Node &node = cfg[label];
 			node.data = &block;
 			block.node = &node;
+			bbMap.insert({&block, &node});
 		}
 
 		cfg += "exit";

@@ -16,6 +16,10 @@ namespace LL2W {
 
 		Variable(int id_, BasicBlock *definingBlock_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
 			id(id_), uses(uses_), definingBlock(definingBlock_) {}
+
+
+		/** Calculates the sum of each use's estimated execution count. */
+		int weight() const;
 	};
 }
 
