@@ -42,13 +42,17 @@ namespace LL2W {
 			for (int read_var: block.read)
 				getVariable(read_var).uses.insert(&block);
 			for (int written_var: block.written)
-				getVariable(written_var).definition = &block;
+				getVariable(written_var).definingBlock = &block;
+			for (std::shared_ptr<Instruction> &instruction: block.instructions) {
+				for (int read_var: instruction->read)
+					getVariable(read_var).lastUse = instruction.get();
+			}
 		}
 
 		for (std::pair<const int, Variable> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
-			if (!pair.second.definition) {
-				pair.second.definition = &blocks.front();
+			if (!pair.second.definingBlock) {
+				pair.second.definingBlock = &blocks.front();
 				blocks.front().written.insert(pair.first);
 			}
 		}
@@ -155,7 +159,7 @@ namespace LL2W {
 		// for t ∈ uses(var) do
 		for (BasicBlock *t: var.uses) {
 			// while t≠def(var) do
-			while (t != var.definition) {
+			while (t != var.definingBlock) {
 				// if t ∩ M^r(block) then
 				if (m_r.count(t->node) > 0) {
 					block.liveIn.insert(&var);
@@ -174,15 +178,15 @@ namespace LL2W {
 
 	bool Function::isLiveOut(BasicBlock &block, Variable &var) {
 		// if def(a)=n
-		if (var.definition == &block) {
+		if (var.definingBlock == &block) {
 			// return uses(a)\def(a)≠∅;
-			return !(var.uses.empty() || (var.uses.size() == 1 && 0 < var.uses.count(var.definition)));
+			return !(var.uses.empty() || (var.uses.size() == 1 && 0 < var.uses.count(var.definingBlock)));
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
 		for (BasicBlock *t: var.uses) {
 			// while t≠def(a) do
-			while (t != var.definition) {
+			while (t != var.definingBlock) {
 				// if t ∩ Ms(n) then
 				if (0 < succMergeSets.at(block.node).count(t->node)) {
 					block.liveOut.insert(&var);
@@ -229,7 +233,7 @@ namespace LL2W {
 		std::cout << "    \e[2m; Variables:\e[0m\n";
 		for (std::pair<const int, Variable> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
-			          << std::setw(2) << pair.second.definition->label << "  \e[0;2muses =";
+			          << std::setw(2) << pair.second.definingBlock->label << "  \e[0;2muses =";
 			for (const BasicBlock *use: pair.second.uses)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			std::cout << "\e[0m\n";

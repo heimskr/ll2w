@@ -6,14 +6,16 @@
 namespace LL2W {
 	class Node;
 	class BasicBlock;
+	class Instruction;
 
 	struct Variable {
 		int id;
 		std::set<BasicBlock *> uses;
-		BasicBlock *definition;
+		BasicBlock *definingBlock;
+		Instruction *definition = nullptr, *lastUse = nullptr;
 
-		Variable(int id_, BasicBlock *definition_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
-			id(id_), uses(uses_), definition(definition_) {}
+		Variable(int id_, BasicBlock *definingBlock_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
+			id(id_), uses(uses_), definingBlock(definingBlock_) {}
 	};
 }
 
