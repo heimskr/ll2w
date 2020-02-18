@@ -11,9 +11,12 @@ namespace LL2W {
 	}
 
 	int Variable::spillCost() const {
+		// If a variable is never used, it has a negative spill cost.
+		if (uses.empty())
+			return -1;
 		// If a variable has only one use and that use is right after its definition, it has an (effectively) infinite
 		// spill cost.
-		if (uses.size() == 1 && (*uses.begin())->index == definition->index + 1)
+		if (definition && uses.size() == 1 && (*uses.begin())->index == definition->index + 1)
 			return INT_MAX;
 		return weight();
 	}
