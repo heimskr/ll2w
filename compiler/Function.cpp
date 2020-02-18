@@ -94,13 +94,20 @@ namespace LL2W {
 	}
 
 	void Function::relinearize() {
-
+		linearInstructions.clear();
+		int index = -1;
+		for (BasicBlockPtr &block: blocks) {
+			for (InstructionPtr &instruction: block->instructions) {
+				instruction->index = ++index;
+				linearInstructions.push_back(instruction);
+			}
+		}
 	}
 
 	void Function::assignIndices() {
-		int i = -1;
-		for (std::shared_ptr<Instruction> &instruction: linearInstructions)
-			instruction->index = ++i;
+		int index = -1;
+		for (InstructionPtr &instruction: linearInstructions)
+			instruction->index = ++index;
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {

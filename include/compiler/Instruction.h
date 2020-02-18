@@ -37,6 +37,8 @@ namespace LL2W {
 
 			virtual std::string debugExtra() { return ""; }
 	};
+
+	using InstructionPtr = std::shared_ptr<Instruction>;
 }
 
 #endif

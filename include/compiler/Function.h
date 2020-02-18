@@ -36,7 +36,11 @@ namespace LL2W {
 			void extractBlocks();
 			void extractVariables();
 			void computeSuccMergeSet(Node *);
+			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
+			 *  instructions. */
 			void relinearize();
+			/** Renumbers all instructions based on the order they appear in each BasicBlock's vector of
+			 *  instructions. */
 			void assignIndices();
 
 			Node & operator[](const BasicBlock &) const;
