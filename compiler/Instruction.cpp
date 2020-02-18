@@ -178,4 +178,12 @@ namespace LL2W {
 
 		return {read.size(), written.size()};
 	}
+
+	bool Instruction::operator<(const Instruction &other) const {
+		return index < other.index;
+	}
+
+	bool Instruction::operator>(const Instruction &other) const {
+		return index > other.index;
+	}
 }
