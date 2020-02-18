@@ -21,6 +21,9 @@ namespace LL2W {
 
 		/** Calculates the sum of each use's estimated execution count. */
 		int weight() const;
+
+		/** Calculates the variable's spill cost. */
+		int spillCost() const;
 	};
 }
 
