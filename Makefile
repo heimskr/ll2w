@@ -14,7 +14,7 @@ BISONSRC	:= parser/parser.y
 
 CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 
-.PHONY: all test clean count countbf
+.PHONY: all clean count countbf declutter test
 
 all: $(OUTPUT)
 
@@ -41,6 +41,9 @@ test: $(OUTPUT)
 
 clean:
 	rm -f $(OUTPUT) *.o **/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
+
+declutter:
+	rm -f graph_*.png
 
 count:
 	cloc . parser $(CLOC_OPTIONS)
