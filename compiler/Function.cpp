@@ -7,6 +7,7 @@
 #include "parser/ASTNode.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
+#include "compiler/LLVMInstruction.h"
 
 namespace LL2W {
 	Function::Function(const ASTNode &node) {
@@ -34,7 +35,7 @@ namespace LL2W {
 				label = header->label;
 				preds = header->preds;
 			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
-				instructions.push_back(std::make_shared<Instruction>(instruction, instructionIndex++));
+				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, instructionIndex++));
 				instructions.back()->extract();
 				linearInstructions.push_back(instructions.back());
 			}
@@ -270,7 +271,7 @@ namespace LL2W {
 			for (const std::shared_ptr<Instruction> &instruction: block.instructions) {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
-				std::cout << "\e[s    " << instruction->node->debugExtra() << "\e[u\e[2m" << read << " " << written
+				std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
 				          << "\e[0m\n";
 			}
 			std::cout << "\n";
