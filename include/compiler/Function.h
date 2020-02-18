@@ -41,10 +41,10 @@ namespace LL2W {
 
 		public:
 			const std::string *name;
-
 			/** A list of all basic blocks in the order they appear. */
 			std::list<BasicBlock> blocks;
-
+			/** A vector of all instructions in the order they appear in the source code. */
+			std::vector<std::shared_ptr<Instruction>> linearInstructions;
 			FunctionArgs *arguments = nullptr;
 			CFG cfg;
 

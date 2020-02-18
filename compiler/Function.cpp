@@ -36,6 +36,7 @@ namespace LL2W {
 			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
 				instructions.push_back(std::make_shared<Instruction>(instruction, instructionIndex++));
 				instructions.back()->extract();
+				linearInstructions.push_back(instructions.back());
 			}
 		}
 
