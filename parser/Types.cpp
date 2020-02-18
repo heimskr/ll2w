@@ -192,7 +192,7 @@ namespace LL2W {
 	}
 
 	bool StructType::operator==(const Type &other) const {
-		if (other.type != TypeType::Struct)
+		if (other.typeType() != TypeType::Struct)
 			return false;
 		node->debug();
 		throw std::runtime_error("StructType::operator== is unimplemented.");
