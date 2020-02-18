@@ -49,12 +49,15 @@ namespace LL2W {
 	void Function::extractVariables() {
 		for (BasicBlock &block: blocks) {
 			for (int read_var: block.read)
-				getVariable(read_var).uses.insert(&block);
+				getVariable(read_var).usingBlocks.insert(&block);
 			for (int written_var: block.written)
 				getVariable(written_var).definingBlock = &block;
 			for (std::shared_ptr<Instruction> &instruction: block.instructions) {
-				for (int read_var: instruction->read)
-					getVariable(read_var).lastUse = instruction.get();
+				for (int read_var_index: instruction->read) {
+					Variable &read_var = getVariable(read_var_index);
+					read_var.lastUse = instruction.get();
+					read_var.uses.insert(instruction.get());
+				}
 			}
 		}
 
@@ -197,7 +200,7 @@ namespace LL2W {
 
 		// Iterate over all the uses of var
 		// for t ∈ uses(var) do
-		for (BasicBlock *t: var.uses) {
+		for (BasicBlock *t: var.usingBlocks) {
 			// while t≠def(var) do
 			while (t != var.definingBlock) {
 				// if t ∩ M^r(block) then
@@ -220,11 +223,12 @@ namespace LL2W {
 		// if def(a)=n
 		if (var.definingBlock == &block) {
 			// return uses(a)\def(a)≠∅;
-			return !(var.uses.empty() || (var.uses.size() == 1 && 0 < var.uses.count(var.definingBlock)));
+			return !(var.usingBlocks.empty() ||
+				(var.usingBlocks.size() == 1 && 0 < var.usingBlocks.count(var.definingBlock)));
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
-		for (BasicBlock *t: var.uses) {
+		for (BasicBlock *t: var.usingBlocks) {
 			// while t≠def(a) do
 			while (t != var.definingBlock) {
 				// if t ∩ Ms(n) then
@@ -275,7 +279,7 @@ namespace LL2W {
 		for (std::pair<const int, Variable> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
 			          << std::setw(2) << pair.second.definingBlock->label << "  \e[0;2muses =";
-			for (const BasicBlock *use: pair.second.uses)
+			for (const BasicBlock *use: pair.second.usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";

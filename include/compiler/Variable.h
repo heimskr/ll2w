@@ -10,12 +10,13 @@ namespace LL2W {
 
 	struct Variable {
 		int id;
-		std::set<BasicBlock *> uses;
+		std::set<BasicBlock *> usingBlocks;
+		std::set<Instruction *> uses;
 		BasicBlock *definingBlock;
 		Instruction *definition = nullptr, *lastUse = nullptr;
 
 		Variable(int id_, BasicBlock *definingBlock_ = nullptr, const std::set<BasicBlock *> &uses_ = {}):
-			id(id_), uses(uses_), definingBlock(definingBlock_) {}
+			id(id_), usingBlocks(uses_), definingBlock(definingBlock_) {}
 
 
 		/** Calculates the sum of each use's estimated execution count. */

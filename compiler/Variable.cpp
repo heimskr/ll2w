@@ -4,7 +4,7 @@
 namespace LL2W {
 	int Variable::weight() const {
 		int sum = 0;
-		for (BasicBlock *use: uses)
+		for (BasicBlock *use: usingBlocks)
 			sum += use->estimatedExecutions;
 		return sum;
 	}
