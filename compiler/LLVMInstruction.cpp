@@ -24,13 +24,28 @@ namespace LL2W {
 		written.clear();
 		extracted = true;
 
+		std::unordered_set<int> read_ids, written_ids;
+
 		auto readname = [&](const LocalValue *lv, const Type *type) {
-			read.push_back(std::make_shared<Variable>(parseLong(lv->name), type? type->copy() : nullptr));
+			int id = parseLong(lv->name);
+			if (read_ids.count(id) == 0) {
+				std::cout << "[R] " << debugExtra() << "\n";
+				read.push_back(std::make_shared<Variable>(id, type? type->copy() : nullptr));
+				std::cout << "\n";
+				read_ids.insert(id);
+			}
 		};
 
 		auto write = [&](const std::string *str, const Type *type) {
-			if (str)
-				written.push_back(std::make_shared<Variable>(parseLong(str), type? type->copy() : nullptr));
+			if (str) {
+				int id = parseLong(str);
+				if (written_ids.count(id) == 0) {
+					std::cout << "[W] " << debugExtra() << "\n";
+					written.push_back(std::make_shared<Variable>(id, type? type->copy() : nullptr));
+					std::cout << "\n";
+					written_ids.insert(id);
+				}
+			}
 		};
 
 		switch (node->nodeType()) {
@@ -44,7 +59,9 @@ namespace LL2W {
 
 			case NodeType::Alloca: {
 				CAST(AllocaNode);
-				write(cast->result, cast->type);
+				PointerType *ptr = new PointerType(cast->type->copy());
+				write(cast->result, ptr);
+				delete ptr;
 				IFLV(cast->numelementsValue, cast->numelementsType);
 				break;
 			}
@@ -94,7 +111,11 @@ namespace LL2W {
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
 				write(cast->result, cast->type);
-				read.push_back(std::make_shared<Variable>(parseLong(cast->ptrValue->name), cast->ptrType));
+				int id = parseLong(cast->ptrValue->name);
+				if (read_ids.count(id) == 0) {
+					read.push_back(std::make_shared<Variable>(id, cast->ptrType->copy()));
+					read_ids.insert(id);
+				}
 				for (auto [width, value, minrange, pvar]: cast->indices) {
 					// Because we're assuming that these variables have already been defined, we can get them from the
 					// Function that contains this Instruction.

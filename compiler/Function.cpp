@@ -60,9 +60,12 @@ namespace LL2W {
 	}
 
 	void Function::extractVariables() {
+		std::cout << "\e[1;4m" << *name << "\e[0m\n";
 		for (BasicBlock &block: blocks) {
-			for (VariablePtr read_var: block.read)
+			for (VariablePtr read_var: block.read) {
+				std::cout << "\e[2m" << read_var.get() << "\e[0m " << block.label << ": " << std::string(*read_var->type) << " %" << read_var->id << "\n";
 				read_var->usingBlocks.insert(&block);
+			}
 			for (VariablePtr written_var: block.written)
 				written_var->definingBlock = &block;
 			for (std::shared_ptr<Instruction> &instruction: block.instructions) {
@@ -292,7 +295,7 @@ namespace LL2W {
 			for (const BasicBlock *use: pair.second->usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
-			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m\n";
+			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m " << pair.second.get() << "\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlock &block: blocks) {
 				if (0 < block.liveIn.count(pair.second))
