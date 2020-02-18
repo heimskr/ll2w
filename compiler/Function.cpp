@@ -143,6 +143,10 @@ namespace LL2W {
 		return blocks.front();
 	}
 
+	CallingConvention Function::getCallingConvention() const {
+		return variadic()? CallingConvention::StackOnly : CallingConvention::Reg16;
+	}
+
 	void Function::computeLiveness() {
 		if (livenessComputed)
 			return;

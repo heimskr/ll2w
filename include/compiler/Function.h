@@ -14,6 +14,13 @@
 namespace LL2W {
 	class ASTNode;
 
+	/**
+	 * StackOnly: all parameters are pushed to the stack, right-to-left. Used for variadic functions.
+	 * Reg16: The first sixteen arguments are put in registers $a0 through $af, left-to-right. The rest are pushed to
+	 *        the stack right-to-left.
+	 */
+	enum class CallingConvention {StackOnly, Reg16};
+
 	class Function {
 		private:
 			std::map<int, Variable> variableStore;
@@ -46,6 +53,7 @@ namespace LL2W {
 			void extract();
 			Variable & getVariable(int label);
 			BasicBlock & getEntry();
+			CallingConvention getCallingConvention() const;
 			void computeLiveness();
 			bool isLiveIn(BasicBlock &, Variable &);
 			bool isLiveOut(BasicBlock &, Variable &);
