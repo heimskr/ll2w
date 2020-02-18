@@ -281,7 +281,8 @@ namespace LL2W {
 			          << std::setw(2) << pair.second.definingBlock->label << "  \e[0;2muses =";
 			for (const BasicBlock *use: pair.second.usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
-			std::cout << "\e[0m\n";
+			int spill_cost = pair.second.spillCost();
+			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlock &block: blocks) {
 				if (0 < block.liveIn.count(&pair.second))
