@@ -18,16 +18,16 @@ namespace LL2W {
 		public:
 			int id;
 			Type *type = nullptr;
-			BasicBlock *definingBlock;
+			std::shared_ptr<BasicBlock> definingBlock;
 			Instruction *definition = nullptr, *lastUse = nullptr;
-			std::set<BasicBlock *> usingBlocks;
+			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
 			std::set<Instruction *> uses;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(int id_, Type *type_ = nullptr, BasicBlock *definingBlock_ = nullptr,
-				const std::set<BasicBlock *> &uses_ = {});
+			Variable(int id_, Type *type_ = nullptr, std::shared_ptr<BasicBlock> definingBlock_ = nullptr,
+				const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
 
 			~Variable();
 

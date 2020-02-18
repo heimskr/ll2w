@@ -36,14 +36,16 @@ namespace LL2W {
 			void extractBlocks();
 			void extractVariables();
 			void computeSuccMergeSet(Node *);
+			void relinearize();
+			void assignIndices();
 
 			Node & operator[](const BasicBlock &) const;
 
 		public:
 			const std::string *name;
 			/** A list of all basic blocks in the order they appear. */
-			std::list<BasicBlock> blocks;
-			/** A vector of all instructions in the order they appear in the source code. */
+			std::list<std::shared_ptr<BasicBlock>> blocks;
+			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
 			FunctionArgs *arguments = nullptr;
 			CFG cfg;
@@ -58,8 +60,8 @@ namespace LL2W {
 			void computeSuccMergeSets();
 			void extract();
 			std::shared_ptr<Variable> getVariable(int label);
-			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlock * = nullptr);
-			BasicBlock & getEntry();
+			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
+			BasicBlockPtr getEntry();
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();
 			bool isLiveIn(BasicBlock &, VariablePtr);

@@ -17,7 +17,7 @@ namespace LL2W {
 			Instruction(int index_): index(index_) {}
 
 		public:
-			BasicBlock *parent = nullptr;
+			std::weak_ptr<BasicBlock> parent;
 			std::unordered_set<std::shared_ptr<Variable>> read, written;
 			/** The order of the instruction within the entire function in its linearized representation. */
 			int index;

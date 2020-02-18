@@ -27,12 +27,12 @@ namespace LL2W {
 		std::unordered_set<int> read_ids, written_ids;
 
 		auto readname = [&](const LocalValue *lv, const Type *type) {
-			read.insert(parent->parent->getVariable(parseLong(lv->name), type));
+			read.insert(parent.lock()->parent->getVariable(parseLong(lv->name), type));
 		};
 
 		auto write = [&](const std::string *str, const Type *type) {
 			if (str)
-				written.insert(parent->parent->getVariable(parseLong(str), type, parent));
+				written.insert(parent.lock()->parent->getVariable(parseLong(str), type, parent.lock()));
 		};
 
 		switch (node->nodeType()) {
@@ -100,14 +100,14 @@ namespace LL2W {
 				write(cast->result, cast->type);
 				int id = parseLong(cast->ptrValue->name);
 				if (read_ids.count(id) == 0) {
-					read.insert(parent->parent->getVariable(id, cast->ptrType));
+					read.insert(parent.lock()->parent->getVariable(id, cast->ptrType));
 					read_ids.insert(id);
 				}
 				for (auto [width, value, minrange, pvar]: cast->indices) {
 					// Because we're assuming that these variables have already been defined earlier in the function,
 					// we can get them from the Function that contains this Instruction.
 					if (pvar)
-						read.insert(parent->parent->getVariable(value));
+						read.insert(parent.lock()->parent->getVariable(value));
 				}
 				break;
 			}

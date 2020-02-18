@@ -5,8 +5,8 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
-	Variable::Variable(int id_, Type *type_, BasicBlock *definingBlock_, const std::set<BasicBlock *> &uses_):
-		id(id_), type(type_), definingBlock(definingBlock_), usingBlocks(uses_) {}
+	Variable::Variable(int id_, Type *type_, BasicBlockPtr defining_block, const std::set<BasicBlockPtr> &using_blocks):
+		id(id_), type(type_), definingBlock(defining_block), usingBlocks(using_blocks) {}
 
 	Variable::~Variable() {
 		if (type)
@@ -15,7 +15,7 @@ namespace LL2W {
 
 	int Variable::weight() const {
 		int sum = 0;
-		for (BasicBlock *use: usingBlocks)
+		for (BasicBlockPtr use: usingBlocks)
 			sum += use->estimatedExecutions;
 		return sum;
 	}

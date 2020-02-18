@@ -40,6 +40,8 @@ namespace LL2W {
 
 			size_t size() const { return instructions.size(); }
 	};
+
+	using BasicBlockPtr = std::shared_ptr<BasicBlock>;
 }
 
 #endif

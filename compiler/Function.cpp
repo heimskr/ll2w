@@ -24,11 +24,11 @@ namespace LL2W {
 		int offset = 0;
 		int instructionIndex = 0;
 
-		std::function<void(BasicBlock &)> finishBlock = [&](BasicBlock &block) {
-			block.offset = offset;
-			block.parent = this;
+		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
+			block->offset = offset;
+			block->parent = this;
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
-				instruction->parent = &block;
+				instruction->parent = block;
 				instruction->extract();
 				for (const std::unordered_set<VariablePtr> &variables: {instruction->read, instruction->written}) {
 					for (VariablePtr vptr: variables)
@@ -39,7 +39,7 @@ namespace LL2W {
 
 		for (const ASTNode *child: *astnode->at(1)) {
 			if (child->symbol == BLOCKHEADER) {
-				blocks.emplace_back(label, preds, instructions);
+				blocks.push_back(std::make_shared<BasicBlock>(label, preds, instructions));
 				finishBlock(blocks.back());
 				offset += instructions.size();
 				preds.clear();
@@ -54,18 +54,18 @@ namespace LL2W {
 		}
 
 		if (!instructions.empty()) {
-			blocks.emplace_back(label, preds, instructions);
+			blocks.push_back(std::make_shared<BasicBlock>(label, preds, instructions));
 			finishBlock(blocks.back());
 		}
 	}
 
 	void Function::extractVariables() {
-		for (BasicBlock &block: blocks) {
-			for (VariablePtr read_var: block.read)
-				read_var->usingBlocks.insert(&block);
-			for (VariablePtr written_var: block.written)
-				written_var->definingBlock = &block;
-			for (std::shared_ptr<Instruction> &instruction: block.instructions) {
+		for (BasicBlockPtr &block: blocks) {
+			for (VariablePtr read_var: block->read)
+				read_var->usingBlocks.insert(block);
+			for (VariablePtr written_var: block->written)
+				written_var->definingBlock = block;
+			for (std::shared_ptr<Instruction> &instruction: block->instructions) {
 				for (VariablePtr read_var: instruction->read) {
 					read_var->lastUse = instruction.get();
 					read_var->uses.insert(instruction.get());
@@ -76,8 +76,8 @@ namespace LL2W {
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
 			if (!pair.second->definingBlock) {
-				pair.second->definingBlock = &blocks.front();
-				blocks.front().written.insert(pair.second);
+				pair.second->definingBlock = blocks.front();
+				blocks.front()->written.insert(pair.second);
 			}
 		}
 	}
@@ -91,6 +91,16 @@ namespace LL2W {
 			if (succMergeSets.count(succ) == 0)
 				computeSuccMergeSet(succ);
 		}
+	}
+
+	void Function::relinearize() {
+
+	}
+
+	void Function::assignIndices() {
+		int i = -1;
+		for (std::shared_ptr<Instruction> &instruction: linearInstructions)
+			instruction->index = ++i;
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -110,23 +120,23 @@ namespace LL2W {
 		cfg.name = "CFG";
 
 		// First pass: add all the nodes.
-		for (BasicBlock &block: blocks) {
-			const std::string label = std::to_string(block.label);
+		for (BasicBlockPtr &block: blocks) {
+			const std::string label = std::to_string(block->label);
 			cfg += label;
 			Node &node = cfg[label];
-			node.data = &block;
-			block.node = &node;
-			bbMap.insert({&block, &node});
+			node.data = block;
+			block->node = &node;
+			bbMap.insert({block.get(), &node});
 		}
 
 		cfg += "exit";
 
 		// Second pass: connect all the nodes.
-		for (BasicBlock &block: blocks) {
-			const std::string label = std::to_string(block.label);
-			for (int pred: block.preds)
+		for (BasicBlockPtr &block: blocks) {
+			const std::string label = std::to_string(block->label);
+			for (int pred: block->preds)
 				cfg.link(std::to_string(pred), label);
-			if (block.instructions.back()->isTerminal())
+			if (block->instructions.back()->isTerminal())
 				cfg.link(label, "exit");
 		}
 
@@ -149,7 +159,7 @@ namespace LL2W {
 			// End the walk once we reach the exit or until we've reached the maximum number of moves allowed per walk.
 			while (node != end && ++count <= inner_limit) {
 				// Increase the estimated execution count of the node we just walked to.
-				++node->get<BasicBlock *>()->estimatedExecutions;
+				++node->get<BasicBlockPtr>()->estimatedExecutions;
 				// Check the number of outward edges.
 				size_t out_count = node->out().size();
 				if (out_count == 0) {
@@ -169,7 +179,7 @@ namespace LL2W {
 	}
 
 	void Function::computeSuccMergeSets() {
-		computeSuccMergeSet(&djGraph.value()[*getEntry().node]);
+		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
 	}
 
 	void Function::extract() {
@@ -177,8 +187,8 @@ namespace LL2W {
 			return;
 
 		extractBlocks();
-		for (BasicBlock &block: blocks)
-			block.extract();
+		for (BasicBlockPtr &block: blocks)
+			block->extract();
 		extractVariables();
 		makeCFG();
 		computeLiveness();
@@ -189,7 +199,7 @@ namespace LL2W {
 		return variableStore.at(label);
 	}
 
-	VariablePtr Function::getVariable(int label, const Type *type, BasicBlock *definer) {
+	VariablePtr Function::getVariable(int label, const Type *type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
 			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr, definer)});
 		VariablePtr out = variableStore.at(label);
@@ -198,7 +208,7 @@ namespace LL2W {
 		return out;
 	}
 
-	BasicBlock & Function::getEntry() {
+	BasicBlockPtr Function::getEntry() {
 		return blocks.front();
 	}
 
@@ -212,9 +222,9 @@ namespace LL2W {
 
 		livenessComputed = true;
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			for (BasicBlock &block: blocks) {
-				isLiveIn(block, pair.second);
-				isLiveOut(block, pair.second);
+			for (BasicBlockPtr &block: blocks) {
+				isLiveIn(*block, pair.second);
+				isLiveOut(*block, pair.second);
 			}
 		}
 	}
@@ -226,7 +236,7 @@ namespace LL2W {
 
 		// Iterate over all the uses of var
 		// for t ∈ uses(var) do
-		for (BasicBlock *t: var->usingBlocks) {
+		for (BasicBlockPtr t: var->usingBlocks) {
 			// while t≠def(var) do
 			while (t != var->definingBlock) {
 				// if t ∩ M^r(block) then
@@ -235,7 +245,7 @@ namespace LL2W {
 					return true;
 				}
 				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
-				BasicBlock *t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				BasicBlockPtr t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlockPtr>();
 				if (t_new == t)
 					break;
 				t = t_new;
@@ -247,14 +257,14 @@ namespace LL2W {
 
 	bool Function::isLiveOut(BasicBlock &block, VariablePtr var) {
 		// if def(a)=n
-		if (var->definingBlock == &block) {
+		if (var->definingBlock.get() == &block) {
 			// return uses(a)\def(a)≠∅;
 			return !(var->usingBlocks.empty() ||
 				(var->usingBlocks.size() == 1 && 0 < var->usingBlocks.count(var->definingBlock)));
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
-		for (BasicBlock *t: var->usingBlocks) {
+		for (BasicBlockPtr t: var->usingBlocks) {
 			// while t≠def(a) do
 			while (t != var->definingBlock) {
 				// if t ∩ Ms(n) then
@@ -263,7 +273,7 @@ namespace LL2W {
 					return true;
 				}
 				// t = dom-parent(t);
-				BasicBlock *t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlock *>();
+				BasicBlockPtr t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlockPtr>();
 				if (t_new == t)
 					break;
 				t = t_new;
@@ -284,16 +294,16 @@ namespace LL2W {
 				std::cout << " " << *iter->name;
 		}
 		std::cout << ") {\n";
-		for (const BasicBlock &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block.label << "\e[0;2;4m @ " << block.offset <<
+		for (const BasicBlockPtr &block: blocks) {
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset <<
 			             ": preds =";
-			for (auto begin = block.preds.begin(), iter = begin, end = block.preds.end(); iter != end; ++iter) {
+			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
 					std::cout << ",";
 				std::cout << " %" << *iter;
 			}
 			std::cout << "\e[0m\n";
-			for (const std::shared_ptr<Instruction> &instruction: block.instructions) {
+			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
 				std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
@@ -305,27 +315,27 @@ namespace LL2W {
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
 			          << std::setw(2) << pair.second->definingBlock->label << "  \e[0;2muses =";
-			for (const BasicBlock *use: pair.second->usingBlocks)
+			for (const BasicBlockPtr &use: pair.second->usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
 			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
-			for (const BasicBlock &block: blocks) {
-				if (0 < block.liveIn.count(pair.second))
-					std::cout << " %" << block.label;
+			for (const BasicBlockPtr &block: blocks) {
+				if (0 < block->liveIn.count(pair.second))
+					std::cout << " %" << block->label;
 			}
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[31mout =\e[1m";
-			for (const BasicBlock &block: blocks) {
-				if (0 < block.liveOut.count(pair.second))
-					std::cout << " %" << block.label;
+			for (const BasicBlockPtr &block: blocks) {
+				if (0 < block->liveOut.count(pair.second))
+					std::cout << " %" << block->label;
 			}
 			std::cout << "\e[0m\n";
 		}
 		std::cout << "}\n\n";
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
-				BasicBlock *bb = node->get<BasicBlock *>();
+				BasicBlockPtr bb = node->get<BasicBlockPtr>();
 				if (bb)
 					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
 			}
