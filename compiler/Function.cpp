@@ -115,7 +115,7 @@ namespace LL2W {
 		djGraph->name = "DJ Graph";
 		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
 		computeSuccMergeSets();
-		walkCFG(100, 42, 1000);
+		walkCFG(1000, 0, 1000);
 		return cfg;
 	}
 
@@ -137,6 +137,7 @@ namespace LL2W {
 				}
 			}
 		}
+		walkCount += walks;
 	}
 
 	void Function::computeSuccMergeSets() {
@@ -285,6 +286,13 @@ namespace LL2W {
 			std::cout << "\e[0m\n";
 		}
 		std::cout << "}\n\n";
+		for (Node *node: cfg.nodes()) {
+			if (node->data.has_value()) {
+				BasicBlock *bb = node->get<BasicBlock *>();
+				if (bb)
+					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
+			}
+		}
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
 	}

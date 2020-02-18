@@ -34,6 +34,7 @@ namespace LL2W {
 			void extractBlocks();
 			void extractVariables();
 			void computeSuccMergeSet(Node *);
+			int walkCount = 0;
 
 		public:
 			const std::string *name;
