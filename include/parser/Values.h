@@ -158,8 +158,6 @@ namespace LL2W {
 		operator std::string() override { return "undef"; }
 	};
 
-	// TODO: ArrayValue
-
 	Value * getValue(ASTNode *);
 	std::ostream & operator<<(std::ostream &, Value &);
 }

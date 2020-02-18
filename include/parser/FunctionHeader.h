@@ -16,7 +16,7 @@ namespace LL2W {
 		CConv cconv = CConv::Default;
 		Deref deref = Deref::Default;
 		std::unordered_set<RetAttr> retattrs;
-		int dereferenceableBytes = -1; // TODO: separate values for dereferenceable and dereferenceable_or_null?
+		int dereferenceableBytes = -1;
 		Type *returnType;
 		FunctionArgs *arguments;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
