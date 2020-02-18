@@ -21,7 +21,6 @@ namespace LL2W {
 	class BasicBlock {
 		private:
 			bool extracted = false;
-			std::map<int, std::shared_ptr<Variable>> variableStore;
 
 		public:
 			int label;

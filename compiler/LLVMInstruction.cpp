@@ -27,25 +27,12 @@ namespace LL2W {
 		std::unordered_set<int> read_ids, written_ids;
 
 		auto readname = [&](const LocalValue *lv, const Type *type) {
-			int id = parseLong(lv->name);
-			if (read_ids.count(id) == 0) {
-				std::cout << "[R] " << debugExtra() << "\n";
-				read.insert(parent->parent->getVariable(id, type));
-				std::cout << "\n";
-				read_ids.insert(id);
-			}
+			read.insert(parent->parent->getVariable(parseLong(lv->name), type));
 		};
 
 		auto write = [&](const std::string *str, const Type *type) {
-			if (str) {
-				int id = parseLong(str);
-				if (written_ids.count(id) == 0) {
-					std::cout << "[W] " << debugExtra() << "\n";
-					written.insert(parent->parent->getVariable(id, type, parent));
-					std::cout << "\n";
-					written_ids.insert(id);
-				}
-			}
+			if (str)
+				written.insert(parent->parent->getVariable(parseLong(str), type, parent));
 		};
 
 		switch (node->nodeType()) {
