@@ -42,6 +42,8 @@ namespace LL2W {
 			/** Renumbers all instructions based on the order they appear in each BasicBlock's vector of
 			 *  instructions. */
 			void assignIndices();
+			/** Merges arguments of phi instructions into single variables. */
+			void coalescePhi();
 
 			Node & operator[](const BasicBlock &) const;
 
@@ -63,8 +65,10 @@ namespace LL2W {
 			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 			void computeSuccMergeSets();
 			void extract();
-			std::shared_ptr<Variable> getVariable(int label);
+			std::shared_ptr<Variable> getVariable(int);
+			std::shared_ptr<Variable> getVariable(const std::string &);
 			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
+			std::shared_ptr<Variable> getVariable(const std::string &, const Type *, BasicBlockPtr = nullptr);
 			BasicBlockPtr getEntry();
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();

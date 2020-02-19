@@ -8,6 +8,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Function::Function(const ASTNode &node) {
@@ -19,8 +20,7 @@ namespace LL2W {
 	void Function::extractBlocks() {
 		int label = arguments->arguments.size();
 		std::vector<int> preds {};
-		std::vector<std::shared_ptr<Instruction>> instructions;
-		instructions.reserve(32); // Seems like a reasonable estimate for the number of instructions in a larger block.
+		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
 		int instructionIndex = 0;
 
@@ -110,6 +110,43 @@ namespace LL2W {
 			instruction->index = ++index;
 	}
 
+	void Function::coalescePhi() {
+		std::unordered_set<InstructionPtr> to_remove;
+		bool any_changed = false;
+		for (InstructionPtr &instruction: linearInstructions) {
+			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
+				continue;
+			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
+			bool should_remove = true;
+			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
+				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
+				if (!local) {
+					std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
+					should_remove = false;
+				} else {
+					VariablePtr to_rename = getVariable(*local->name);
+					variableStore.erase(to_rename->id);
+					to_rename->id = target->id;
+					if (to_rename->type)
+						delete to_rename->type;
+					to_rename->type = target->type? target->type->copy() : nullptr;
+				}
+			}
+			to_remove.insert(instruction);
+			auto &block_instructions = instruction->parent.lock()->instructions;
+			if (should_remove) {
+				block_instructions.remove(instruction);
+			} else {
+				any_changed = true;
+			}
+		}
+
+		if (any_changed)
+			relinearize();
+	}
+
 	Node & Function::operator[](const BasicBlock &bb) const {
 		return *bbMap.at(&bb);
 	}
@@ -194,6 +231,7 @@ namespace LL2W {
 			return;
 
 		extractBlocks();
+		coalescePhi();
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		extractVariables();
@@ -206,6 +244,10 @@ namespace LL2W {
 		return variableStore.at(label);
 	}
 
+	VariablePtr Function::getVariable(const std::string &label) {
+		return getVariable(parseLong(label));
+	}
+
 	VariablePtr Function::getVariable(int label, const Type *type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
 			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr, definer)});
@@ -213,6 +255,10 @@ namespace LL2W {
 		if (definer)
 			out->definingBlock = definer;
 		return out;
+	}
+
+	VariablePtr Function::getVariable(const std::string &label, const Type *type, BasicBlockPtr definer) {
+		return getVariable(parseLong(label), type, definer);
 	}
 
 	BasicBlockPtr Function::getEntry() {

@@ -1,6 +1,7 @@
 #ifndef COMPILER_BASICBLOCK_H_
 #define COMPILER_BASICBLOCK_H_
 
+#include <list>
 #include <map>
 #include <memory>
 #include <set>
@@ -25,7 +26,7 @@ namespace LL2W {
 		public:
 			int label;
 			std::vector<int> preds;
-			std::vector<std::shared_ptr<Instruction>> instructions;
+			std::list<std::shared_ptr<Instruction>> instructions;
 			std::set<std::shared_ptr<Variable>> read, written;
 			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
 			Node *node;
@@ -34,7 +35,7 @@ namespace LL2W {
 			int offset = -1;
 			int estimatedExecutions = 0;
 
-			BasicBlock(int, const std::vector<int> &, const std::vector<std::shared_ptr<Instruction>> &);
+			BasicBlock(int, const std::vector<int> &, const std::list<std::shared_ptr<Instruction>> &);
 
 			std::pair<char, char> extract(bool force = false);
 

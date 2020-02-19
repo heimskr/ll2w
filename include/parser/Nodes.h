@@ -290,6 +290,8 @@ namespace LL2W {
 	};
 
 	struct PhiNode: public InstructionNode, public Writer {
+		/** Whether all operands are local variables. */
+		bool pure = true;
 		std::unordered_set<Fastmath> fastmath;
 		Type *type;
 		std::vector<std::pair<Value *, const std::string *>> pairs;

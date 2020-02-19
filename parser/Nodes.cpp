@@ -893,8 +893,12 @@ namespace LL2W {
 		result = result_->extracted();
 		type = getType(type_);
 		getFastmath(fastmath, fastmath_);
-		for (ASTNode *node: *pairs_)
-			pairs.push_back({getValue(node->at(0)), node->at(1)->extracted()});
+		for (ASTNode *node: *pairs_) {
+			Value *value = getValue(node->at(0));
+			pairs.push_back({value, node->at(1)->extracted()});
+			if (value->valueType() != ValueType::Local)
+				pure = false;
+		}
 
 		delete result_;
 		delete type_;
