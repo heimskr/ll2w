@@ -292,8 +292,35 @@ namespace LL2W {
 		extracted = true;
 	}
 
+	std::list<Interval> Function::sortedIntervals() {
+		std::list<Interval> intervals;
+		for (std::pair<const int, VariablePtr> &pair: variableStore)
+			intervals.push_back(*pair.second);
+		intervals.sort([&](const Interval &left, const Interval &right) {
+			return left.firstDefinition->label < right.firstDefinition->label;
+		});
+		return intervals;
+	}
+
 	void Function::linearScan() {
-		
+		std::list<Interval> active, intervals = sortedIntervals();
+		std::set<int> pool = WhyInfo::makeRegisterPool();
+		for (Interval &interval: intervals) {
+			expireOldIntervals(interval);
+			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
+				spillAtInterval(interval);
+			} else {
+				pool.erase(interval.reg = *pool.begin());
+			}
+		}
+	}
+
+	void Function::expireOldIntervals(Interval &interval) {
+
+	}
+
+	void Function::spillAtInterval(Interval &interval) {
+
 	}
 
 	VariablePtr Function::getVariable(int label) {

@@ -5,7 +5,7 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
-	Interval::Interval(Variable &var) {
+	Interval::Interval(Variable &var): variable(&var) {
 		firstDefinition = *std::min_element(var.definingBlocks.begin(), var.definingBlocks.end(),
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;

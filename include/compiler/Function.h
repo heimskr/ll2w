@@ -47,7 +47,9 @@ namespace LL2W {
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
 
+			std::list<Interval> sortedIntervals();
 			void expireOldIntervals(Interval &);
+			void spillAtInterval(Interval &);
 
 			Node & operator[](const BasicBlock &) const;
 
