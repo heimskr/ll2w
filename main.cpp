@@ -86,10 +86,10 @@ void mergetest() {
 	graph254.renderTo("graph_254.png", "LR");
 	dj254.renderTo("graph_254dj.png", "LR");
 
-	Node::Map merge = dj254.mergeSets(*dj254.nodes().front(), **std::next(dj254.nodes().begin(), 1));
-	for (const std::pair<Node *, Node::Set> &pair: merge) {
+	LL2W::Node::Map merge = dj254.mergeSets(*dj254.nodes().front(), **std::next(dj254.nodes().begin(), 1));
+	for (const std::pair<LL2W::Node *, LL2W::Node::Set> &pair: merge) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
-		for (Node *node: pair.second)
+		for (LL2W::Node *node: pair.second)
 			std::cout << " " << node->label();
 		std::cout << "\e[0m\n";
 	}
@@ -103,10 +103,11 @@ void mergetest2() {
 	graph.renderTo("graph_11.png", "TB");
 	dj11.renderTo("graph_11dj.png", "TB");
 
-	Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), graph["11"]);
-	for (const std::pair<Node *, Node::Set> &pair: std::map<Node *, Node::Set>(merge.begin(), merge.end())) {
+	LL2W::Node::Map merge = dj11.mergeSets(*dj11.nodes().front(), graph["11"]);
+	for (const std::pair<LL2W::Node *, LL2W::Node::Set> &pair:
+	           std::map<LL2W::Node *, LL2W::Node::Set>(merge.begin(), merge.end())) {
 		std::cout << "\e[32m" << pair.first->label() << "\e[0m:\e[33m";
-		for (Node *node: std::set<Node *, Node::Node_less>(pair.second.begin(), pair.second.end()))
+		for (LL2W::Node *node: std::set<LL2W::Node *, LL2W::Node::Node_less>(pair.second.begin(), pair.second.end()))
 			std::cout << " " << node->label();
 		std::cout << "\e[0m\n";
 	}
