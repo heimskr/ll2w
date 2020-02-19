@@ -40,6 +40,9 @@ namespace LL2W {
 			std::pair<char, char> extract(bool force = false);
 
 			size_t size() const { return instructions.size(); }
+
+			bool isLiveIn(std::shared_ptr<Variable>) const;
+			bool isLiveOut(std::shared_ptr<Variable>) const;
 	};
 
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;
