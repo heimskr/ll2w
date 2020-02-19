@@ -238,12 +238,12 @@ namespace LL2W {
 			return;
 
 		extractBlocks();
-		coalescePhi();
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		extractVariables();
 		makeCFG();
 		computeLiveness();
+		coalescePhi();
 		extracted = true;
 	}
 
@@ -392,13 +392,13 @@ namespace LL2W {
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
-				if (0 < block->liveIn.count(pair.second))
+				if (block->isLiveIn(pair.second))
 					std::cout << " %" << block->label;
 			}
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[31mout =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
-				if (0 < block->liveOut.count(pair.second))
+				if (block->isLiveOut(pair.second))
 					std::cout << " %" << block->label;
 			}
 			std::cout << "\e[0m\n";
