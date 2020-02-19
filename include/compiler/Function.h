@@ -64,6 +64,7 @@ namespace LL2W {
 			/** Randomly walks through the CFG and counts executions of each basic block. */
 			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 			void computeSuccMergeSets();
+			void fillLocalValues();
 			void extract();
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);

@@ -94,8 +94,8 @@ namespace LL2W {
 		std::vector<LocalValue *> out;
 		out.reserve(values.size());
 		for (Value *value: values) {
-			if (LocalValue *local_value = dynamic_cast<LocalValue *>(value))
-				out.push_back(local_value);
+			if (value->valueType() == ValueType::Local)
+				out.push_back(dynamic_cast<LocalValue *>(value));
 		}
 		return out;
 	}

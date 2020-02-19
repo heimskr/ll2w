@@ -12,6 +12,7 @@ namespace LL2W {
 	class ASTNode;
 	class Type;
 	class Constant;
+	class Variable;
 
 	enum class ValueType {
 		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
@@ -83,6 +84,7 @@ namespace LL2W {
 
 	struct LocalValue: public VariableValue {
 		const std::string *name;
+		Variable *variable = nullptr;
 		LocalValue(const std::string *name_): name(name_) {}
 		LocalValue(const std::string &name_): LocalValue(&name_) {}
 		LocalValue(const ASTNode *node);

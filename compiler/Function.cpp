@@ -233,6 +233,23 @@ namespace LL2W {
 		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
 	}
 
+	void Function::fillLocalValues() {
+		for (InstructionPtr &instruction: linearInstructions) {
+			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm)
+				continue;
+
+			InstructionNode *node = llvm->node;
+			if (Reader *reader = dynamic_cast<Reader *>(node)) {
+				for (LocalValue *value: reader->allLocals())
+					value->variable = getVariable(*value->name);
+			}
+
+			if (Writer *writer = dynamic_cast<Writer *>(node))
+				writer->variable = getVariable(*writer->result);
+		}
+	}
+
 	void Function::extract() {
 		if (extracted)
 			return;

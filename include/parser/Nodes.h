@@ -64,6 +64,7 @@ namespace LL2W {
 
 	struct Writer {
 		const std::string *result = nullptr;
+		Variable *variable = nullptr;
 	};
 
 	struct SelectNode: public InstructionNode, public Reader, public Writer {
