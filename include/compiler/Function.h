@@ -7,6 +7,7 @@
 
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
+#include "compiler/Interval.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
 #include "graph/DTree.h"
@@ -46,6 +47,8 @@ namespace LL2W {
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
 
+			void expireOldIntervals(Interval &);
+
 			Node & operator[](const BasicBlock &) const;
 
 		public:
@@ -68,6 +71,7 @@ namespace LL2W {
 			void fillLocalValues();
 			void updateInstructionNodes();
 			void extract();
+			void linearScan();
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);
 			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);

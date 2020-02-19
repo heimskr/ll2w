@@ -292,6 +292,10 @@ namespace LL2W {
 		extracted = true;
 	}
 
+	void Function::linearScan() {
+		
+	}
+
 	VariablePtr Function::getVariable(int label) {
 		return variableStore.at(label);
 	}
