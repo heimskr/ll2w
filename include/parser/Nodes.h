@@ -1,8 +1,9 @@
 #ifndef PARSER_NODES_H_
 #define PARSER_NODES_H_
 
-#include <unordered_set>
+#include <memory>
 #include <tuple>
+#include <unordered_set>
 
 #include "ASTNode.h"
 #include "Enums.h"
@@ -64,7 +65,7 @@ namespace LL2W {
 
 	struct Writer {
 		const std::string *result = nullptr;
-		Variable *variable = nullptr;
+		std::shared_ptr<Variable> variable = nullptr;
 	};
 
 	struct SelectNode: public InstructionNode, public Reader, public Writer {

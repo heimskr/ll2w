@@ -37,7 +37,7 @@ namespace LL2W {
 			}
 		};
 
-		for (const ASTNode *child: *astnode->at(1)) {
+		for (ASTNode *child: *astnode->at(1)) {
 			if (child->symbol == BLOCKHEADER) {
 				blocks.push_back(std::make_shared<BasicBlock>(label, preds, instructions));
 				finishBlock(blocks.back());
@@ -47,7 +47,7 @@ namespace LL2W {
 				const HeaderNode *header = dynamic_cast<const HeaderNode *>(child);
 				label = header->label;
 				preds = header->preds;
-			} else if (const InstructionNode *instruction = dynamic_cast<const InstructionNode *>(child)) {
+			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
 				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, instructionIndex++));
 				linearInstructions.push_back(instructions.back());
 			}

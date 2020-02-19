@@ -2,6 +2,7 @@
 #define PARSER_VALUES_H_
 
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -84,7 +85,7 @@ namespace LL2W {
 
 	struct LocalValue: public VariableValue {
 		const std::string *name;
-		Variable *variable = nullptr;
+		std::shared_ptr<Variable> variable = nullptr;
 		LocalValue(const std::string *name_): name(name_) {}
 		LocalValue(const std::string &name_): LocalValue(&name_) {}
 		LocalValue(const ASTNode *node);

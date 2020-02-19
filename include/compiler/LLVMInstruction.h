@@ -8,9 +8,9 @@ namespace LL2W {
 
 	class LLVMInstruction: public Instruction {
 		public:
-			const InstructionNode *node;
+			InstructionNode *node;
 
-			LLVMInstruction(const InstructionNode *node_, int index_): Instruction(index_), node(node_) {}
+			LLVMInstruction(InstructionNode *node_, int index_): Instruction(index_), node(node_) {}
 
 			bool isTerminal() const override;
 			ExtractionResult extract(bool force = false) override;
