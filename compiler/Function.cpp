@@ -289,6 +289,7 @@ namespace LL2W {
 		fillLocalValues();
 		coalescePhi();
 		updateInstructionNodes();
+		linearScan();
 		extracted = true;
 	}
 
@@ -306,6 +307,25 @@ namespace LL2W {
 		std::list<Interval> intervals = sortedIntervals();
 		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
+		std::map<Interval *, int> locations;
+		int stackOffset = 0; // in bytes
+
+		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
+			int endpoint = interval.endpoint();
+			for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
+				if (endpoint < (*iter)->endpoint()) {
+					active.insert(iter, &interval);
+					return;
+				}
+			}
+			active.push_back(&interval);
+		};
+
+		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
+			locations.insert({&interval, stackOffset});
+			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() : 8;
+		};
+
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
 			for (auto iter = active.begin(); iter != active.end();) {
 				Interval &jnterval = **iter;
@@ -317,7 +337,15 @@ namespace LL2W {
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
-
+			Interval &spill = *active.back();
+			if (interval.endpoint() < spill.endpoint()) {
+				interval.reg = spill.reg;
+				addLocation(spill);
+				active.remove(&spill);
+				addToActive(interval);
+			} else {
+				addLocation(interval);
+			}
 		};
 
 		for (Interval &interval: intervals) {
@@ -326,15 +354,16 @@ namespace LL2W {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.reg = *pool.begin());
-				int endpoint = interval.endpoint();
-				for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
-					if (endpoint < (*iter)->endpoint()) {
-						active.insert(iter, &interval);
-						break;
-					}
-				}
+				addToActive(interval);
 			}
 		}
+
+		std::cout << "\e[1;4m" << *name << "\e[0m\n";
+		for (Interval &interval: intervals) {
+			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
+			          << ", %" << interval.endpoint() << "]; reg = " << interval.reg << "\n";
+		}
+		std::cout << "\n";
 	}
 
 
