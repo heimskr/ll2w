@@ -64,7 +64,7 @@ namespace LL2W {
 			for (VariablePtr read_var: block->read)
 				read_var->usingBlocks.insert(block);
 			for (VariablePtr written_var: block->written)
-				written_var->definingBlock = block;
+				written_var->definingBlocks.insert(block);
 			for (std::shared_ptr<Instruction> &instruction: block->instructions) {
 				for (VariablePtr read_var: instruction->read) {
 					read_var->lastUse = instruction.get();
@@ -75,8 +75,8 @@ namespace LL2W {
 
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
-			if (!pair.second->definingBlock) {
-				pair.second->definingBlock = blocks.front();
+			if (pair.second->definingBlocks.empty()) {
+				pair.second->definingBlocks.insert(blocks.front());
 				blocks.front()->written.insert(pair.second);
 			}
 		}
@@ -121,6 +121,7 @@ namespace LL2W {
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
+			BasicBlockPtr phi_definer = target->onlyDefinition();
 			bool should_remove = true;
 			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
 				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
@@ -136,17 +137,15 @@ namespace LL2W {
 					// temporary.
 					VariablePtr to_rename = getVariable(*local->name);
 					variableStore.erase(to_rename->id);
-					to_rename->id = target->id;
-					if (to_rename->type)
-						delete to_rename->type;
-					to_rename->type = target->type? target->type->copy() : nullptr;
+					to_rename->makeAliasOf(*target);
 				}
 			}
 			// If all the operands are pvars, we can remove the phi function entirely once the temporaries have been
 			// merged.
-			if (should_remove)
+			if (should_remove) {
 				instruction->parent.lock()->instructions.remove(instruction);
-			else
+				target->removeDefiner(phi_definer);
+			} else
 				any_changed = true;
 		}
 
@@ -258,10 +257,10 @@ namespace LL2W {
 
 	VariablePtr Function::getVariable(int label, const Type *type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
-			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr, definer)});
+			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
 		VariablePtr out = variableStore.at(label);
 		if (definer)
-			out->definingBlock = definer;
+			out->addDefiner(definer);
 		return out;
 	}
 
@@ -299,7 +298,8 @@ namespace LL2W {
 		// for t ∈ uses(var) do
 		for (BasicBlockPtr t: var->usingBlocks) {
 			// while t≠def(var) do
-			while (t != var->definingBlock) {
+			// TODO: is this valid, or is the algorithm not valid after phi coalescing?
+			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ M^r(block) then
 				if (m_r.count(t->node) > 0) {
 					block.liveIn.insert(var);
@@ -318,16 +318,21 @@ namespace LL2W {
 
 	bool Function::isLiveOut(BasicBlock &block, VariablePtr var) {
 		// if def(a)=n
-		if (var->definingBlock.get() == &block) {
-			// return uses(a)\def(a)≠∅;
-			return !(var->usingBlocks.empty() ||
-				(var->usingBlocks.size() == 1 && 0 < var->usingBlocks.count(var->definingBlock)));
+
+		for (BasicBlockPtr defining_block: var->definingBlocks) {
+			if (defining_block.get() == &block) {
+				// return uses(a)\def(a)≠∅;
+				std::set<BasicBlockPtr> set = var->usingBlocks;
+				for (BasicBlockPtr bb: var->definingBlocks)
+					set.erase(bb);
+				return !set.empty();
+			}
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
 		for (BasicBlockPtr t: var->usingBlocks) {
 			// while t≠def(a) do
-			while (t != var->definingBlock) {
+			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ Ms(n) then
 				if (0 < succMergeSets.at(block.node).count(t->node)) {
 					block.liveOut.insert(var);
@@ -374,12 +379,17 @@ namespace LL2W {
 		}
 		std::cout << "    \e[2m; Variables:\e[0m\n";
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  def = \e[1m%"
-			          << std::setw(2) << pair.second->definingBlock->label << "  \e[0;2muses =";
+			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs =";
+			for (const BasicBlockPtr &def: pair.second->definingBlocks)
+				std::cout << " \e[1;2m%" << std::setw(2) << def->label << "\e[0m";
+			std::cout << "  \e[0;2muses =";
 			for (const BasicBlockPtr &use: pair.second->usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
-			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) << "\e[0m\n";
+			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost));
+			if (pair.second->definingBlocks.size() > 1)
+				std::cout << " (multiple defs)";
+			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (0 < block->liveIn.count(pair.second))

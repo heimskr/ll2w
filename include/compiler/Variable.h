@@ -14,20 +14,23 @@ namespace LL2W {
 	class Variable {
 		private:
 			std::list<Instruction *> useOrder;
+			std::unordered_set<Variable *> aliases;
+			Variable *parent = nullptr;
 
 		public:
 			int id;
 			Type *type = nullptr;
-			std::shared_ptr<BasicBlock> definingBlock;
-			Instruction *definition = nullptr, *lastUse = nullptr;
+			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
+			Instruction *lastUse = nullptr;
 			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
-			std::set<Instruction *> uses;
+			std::set<Instruction *> definitions, uses;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(int id_, Type *type_ = nullptr, std::shared_ptr<BasicBlock> definingBlock_ = nullptr,
-				const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
+			Variable(int id_, Type *type_ = nullptr,
+			         const std::set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
+			         const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
 
 			~Variable();
 
@@ -36,6 +39,22 @@ namespace LL2W {
 
 			/** Calculates the variable's spill cost. */
 			int spillCost() const;
+
+			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
+			void makeAliasOf(Variable &);
+
+			void addDefiner(std::shared_ptr<BasicBlock>);
+			void removeDefiner(std::shared_ptr<BasicBlock>);
+
+			std::shared_ptr<BasicBlock> onlyDefinition() const;
+
+			void setID(int);
+			void setType(Type *);
+			void setDefiningBlocks(const std::set<std::shared_ptr<BasicBlock>> &);
+			void setDefinitions(const std::set<Instruction *> &);
+			void setUses(const std::set<Instruction *> &);
+			void setUsingBlocks(const std::set<std::shared_ptr<BasicBlock>> &);
+			void setLastUse(Instruction *);
 
 			bool operator==(const Variable &) const;
 	};
