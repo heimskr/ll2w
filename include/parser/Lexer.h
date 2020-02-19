@@ -12,7 +12,7 @@
 typedef LL2W::ASTNode * YYSTYPE;
 
 #ifndef NO_YYPARSE
-#include "yyparse.h"
+#include "include/yyparse.h"
 #endif
 
 #ifdef __APPLE__

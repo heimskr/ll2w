@@ -1,4 +1,4 @@
-#include <iostream>
+#include <climits>
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"

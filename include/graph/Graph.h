@@ -7,8 +7,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "DFSResult.h"
-#include "Node.h"
+#include "graph/DFSResult.h"
+#include "graph/Node.h"
 
 namespace LL2W {
 	class Graph {
