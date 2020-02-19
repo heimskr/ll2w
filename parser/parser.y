@@ -247,7 +247,7 @@ full_array: type_array "[" value_pairs "]" { $$ = $2->adopt({$1, $3}); $$->symbo
 bare_array: "[" value_pairs "]" { $$ = $2; D($1, $3); };
 array: full_array;
 
-fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS) };
+fastmath_flags: fastmath_flags TOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(FASTMATH_FLAGS); };
 
 
 
