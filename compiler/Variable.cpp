@@ -116,4 +116,5 @@ namespace LL2W {
 	VARSETTER(Uses, const std::set<Instruction *> &, new_uses, uses)
 	VARSETTER(UsingBlocks, const std::set<std::shared_ptr<BasicBlock>> &, blocks, usingBlocks)
 	VARSETTER(LastUse, Instruction *, use, lastUse);
+	VARSETTER(Register, int, new_reg, reg);
 }

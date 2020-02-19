@@ -24,6 +24,7 @@ namespace LL2W {
 			Instruction *lastUse = nullptr;
 			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
 			std::set<Instruction *> definitions, uses;
+			int reg = -1;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
@@ -55,6 +56,7 @@ namespace LL2W {
 			void setUses(const std::set<Instruction *> &);
 			void setUsingBlocks(const std::set<std::shared_ptr<BasicBlock>> &);
 			void setLastUse(Instruction *);
+			void setRegister(int);
 
 			bool operator==(const Variable &) const;
 	};
