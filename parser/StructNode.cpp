@@ -6,6 +6,12 @@
 #include "parser/StringSet.h"
 
 namespace LL2W {
+	StructNode::StructNode(std::initializer_list<Type *>  types_, StructShape shape_):
+		ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
+
+	StructNode::StructNode(const std::vector<Type *> &types_, StructShape shape_):
+		ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
+
 	StructNode::StructNode(StructShape shape_, ASTNode *left, ASTNode *types_):
 	                      ASTNode(STRUCTDEF, left->lexerInfo), shape(shape_) {
 		name = StringSet::intern(left->extractName());

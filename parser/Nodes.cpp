@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "parser/Lexer.h"
 #include "parser/Nodes.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
@@ -87,6 +88,11 @@ namespace LL2W {
 		out << "\e[2m}\e[0m";
 		return out.str();
 	}
+
+// InstructionNode
+
+	InstructionNode::InstructionNode(const std::string *str): BaseNode(INSTRUCTION, str) {}
+	InstructionNode::InstructionNode(): BaseNode(INSTRUCTION, "") {}
 
 // Reader
 

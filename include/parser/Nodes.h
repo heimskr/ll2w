@@ -53,8 +53,8 @@ namespace LL2W {
 	};
 
 	struct InstructionNode: public BaseNode {
-		InstructionNode(const std::string *str): BaseNode(INSTRUCTION, str) {}
-		InstructionNode(): BaseNode(INSTRUCTION, "") {}
+		InstructionNode(const std::string *str);
+		InstructionNode();
 		virtual std::string style() const override { return "\e[36m"; }
 	};
 
