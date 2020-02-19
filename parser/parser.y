@@ -448,7 +448,7 @@ i_fmath: result TOK_FMATH fastmath_flags type_any value "," value
 
 i_extractvalue: result "extractvalue" type_any value decimals
                 { $$ = new ExtractValueNode($1, $3, $4, $5); };
-decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2) }
+decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2); }
         | { $$ = new AN(DECIMAL_LIST); }
 
 i_insertvalue: result "insertvalue" type_any value "," type_any value decimals
