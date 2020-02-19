@@ -1,3 +1,4 @@
+#include <climits>
 #include <cstdlib>
 #include <ctime>
 #include <iomanip>
@@ -250,6 +251,27 @@ namespace LL2W {
 		}
 	}
 
+	void Function::updateInstructionNodes() {
+		for (InstructionPtr &instruction: linearInstructions) {
+			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm)
+				continue;
+
+			InstructionNode *node = llvm->node;
+			if (Reader *reader = dynamic_cast<Reader *>(node)) {
+				for (LocalValue *value: reader->allLocals()) {
+					if (value->variable)
+						value->name = StringSet::intern(std::to_string(value->variable->id));
+				}
+			}
+
+			if (Writer *writer = dynamic_cast<Writer *>(node)) {
+				if (writer->variable)
+					writer->result = StringSet::intern(std::to_string(writer->variable->id));
+			}
+		}
+	}
+
 	void Function::extract() {
 		if (extracted)
 			return;
@@ -260,7 +282,9 @@ namespace LL2W {
 		extractVariables();
 		makeCFG();
 		computeLiveness();
+		fillLocalValues();
 		coalescePhi();
+		updateInstructionNodes();
 		extracted = true;
 	}
 

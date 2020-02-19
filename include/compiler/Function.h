@@ -13,6 +13,7 @@
 
 namespace LL2W {
 	class ASTNode;
+	struct FunctionArgs;
 
 	/**
 	 * StackOnly: all parameters are pushed to the stack, right-to-left. Used for variadic functions.
@@ -65,6 +66,7 @@ namespace LL2W {
 			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 			void computeSuccMergeSets();
 			void fillLocalValues();
+			void updateInstructionNodes();
 			void extract();
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);
