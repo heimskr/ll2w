@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include "parser/ASTNode.h"
+#include "parser/FunctionArgs.h"
+#include "parser/FunctionHeader.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
