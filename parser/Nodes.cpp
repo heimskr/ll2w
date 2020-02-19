@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "parser/Nodes.h"
+#include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "parser/Util.h"
 #include "util/Util.h"
