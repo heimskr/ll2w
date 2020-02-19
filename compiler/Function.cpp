@@ -303,7 +303,8 @@ namespace LL2W {
 	}
 
 	void Function::linearScan() {
-		std::list<Interval> active, intervals = sortedIntervals();
+		std::list<Interval> intervals = sortedIntervals();
+		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
 
@@ -319,6 +320,13 @@ namespace LL2W {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.reg = *pool.begin());
+				int endpoint = interval.lastUse->label;
+				for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
+					if (endpoint < (*iter)->lastUse->label) {
+						active.insert(iter, &interval);
+						break;
+					}
+				}
 			}
 		}
 	}
