@@ -248,8 +248,10 @@ namespace LL2W {
 					value->variable = getVariable(*value->name);
 			}
 
-			if (Writer *writer = dynamic_cast<Writer *>(node))
-				writer->variable = getVariable(*writer->result);
+			if (Writer *writer = dynamic_cast<Writer *>(node)) {
+				if (writer->result)
+					writer->variable = getVariable(*writer->result);
+			}
 		}
 	}
 
