@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-#include "ASTNode.h"
+#include "parser/ASTNode.h"
 
 #define YYSTYPE_IS_DECLARED
 typedef LL2W::ASTNode * YYSTYPE;

@@ -5,12 +5,12 @@
 #include <tuple>
 #include <unordered_set>
 
-#include "ASTNode.h"
-#include "Enums.h"
-#include "Types.h"
-#include "Values.h"
-#include "Lexer.h"
-#include "Constant.h"
+#include "parser/ASTNode.h"
+#include "parser/Enums.h"
+#include "parser/Types.h"
+#include "parser/Values.h"
+#include "parser/Lexer.h"
+#include "parser/Constant.h"
 
 namespace LL2W {
 	enum class NodeType {
