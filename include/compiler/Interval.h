@@ -13,6 +13,8 @@ namespace LL2W {
 		int reg = -1;
 
 		Interval(Variable &);
+		int startpoint() const;
+		int endpoint() const;
 	};
 }
 

@@ -307,7 +307,13 @@ namespace LL2W {
 		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
-
+			for (auto iter = active.begin(); iter != active.end();) {
+				Interval &jnterval = **iter;
+				if (interval.startpoint() <= jnterval.endpoint())
+					return;
+				pool.insert(jnterval.reg);
+				iter = active.erase(iter);
+			}
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
@@ -320,9 +326,9 @@ namespace LL2W {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.reg = *pool.begin());
-				int endpoint = interval.lastUse->label;
+				int endpoint = interval.endpoint();
 				for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
-					if (endpoint < (*iter)->lastUse->label) {
+					if (endpoint < (*iter)->endpoint()) {
 						active.insert(iter, &interval);
 						break;
 					}

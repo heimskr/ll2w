@@ -15,4 +15,12 @@ namespace LL2W {
 				return left->label < right->label;
 			});
 	}
+
+	int Interval::startpoint() const {
+		return firstDefinition->label;
+	}
+
+	int Interval::endpoint() const {
+		return lastUse->label;
+	}
 }
