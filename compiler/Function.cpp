@@ -111,21 +111,29 @@ namespace LL2W {
 	}
 
 	void Function::coalescePhi() {
-		std::unordered_set<InstructionPtr> to_remove;
 		bool any_changed = false;
+		// Scan through each instruction in order.
 		for (InstructionPtr &instruction: linearInstructions) {
+			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
 			bool should_remove = true;
 			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
 				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
 				if (!local) {
+					// In rare occasions, one or more operands of a phi instruction can be constants like "true".
+					// In these cases, we can't eliminate the phi instruction by merging alone. It'll have to be removed
+					// later in a step that involves inserting instructions in the penultimate slot of the predicate
+					// labels for which the phi function parameters specify a constant.
 					std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
 					should_remove = false;
 				} else {
+					// Remove the old temporary from the variable store, then copy the name and type of the target
+					// temporary.
 					VariablePtr to_rename = getVariable(*local->name);
 					variableStore.erase(to_rename->id);
 					to_rename->id = target->id;
@@ -134,15 +142,15 @@ namespace LL2W {
 					to_rename->type = target->type? target->type->copy() : nullptr;
 				}
 			}
-			to_remove.insert(instruction);
-			auto &block_instructions = instruction->parent.lock()->instructions;
-			if (should_remove) {
-				block_instructions.remove(instruction);
-			} else {
+			// If all the operands are pvars, we can remove the phi function entirely once the temporaries have been
+			// merged.
+			if (should_remove)
+				instruction->parent.lock()->instructions.remove(instruction);
+			else
 				any_changed = true;
-			}
 		}
 
+		// If any instructions have been removed from the basic blocks, we have to relinearize the code.
 		if (any_changed)
 			relinearize();
 	}
