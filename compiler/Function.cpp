@@ -305,6 +305,14 @@ namespace LL2W {
 	void Function::linearScan() {
 		std::list<Interval> active, intervals = sortedIntervals();
 		std::set<int> pool = WhyInfo::makeRegisterPool();
+		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
+
+		};
+
+		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
+
+		};
+
 		for (Interval &interval: intervals) {
 			expireOldIntervals(interval);
 			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
@@ -315,13 +323,6 @@ namespace LL2W {
 		}
 	}
 
-	void Function::expireOldIntervals(Interval &interval) {
-
-	}
-
-	void Function::spillAtInterval(Interval &interval) {
-
-	}
 
 	VariablePtr Function::getVariable(int label) {
 		return variableStore.at(label);

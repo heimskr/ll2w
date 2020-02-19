@@ -48,8 +48,6 @@ namespace LL2W {
 			void coalescePhi();
 
 			std::list<Interval> sortedIntervals();
-			void expireOldIntervals(Interval &);
-			void spillAtInterval(Interval &);
 
 			Node & operator[](const BasicBlock &) const;
 
