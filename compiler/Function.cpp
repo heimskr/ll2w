@@ -303,6 +303,16 @@ namespace LL2W {
 		return intervals;
 	}
 
+	void Function::precolorArguments(std::list<Interval> &intervals) {
+		if (getCallingConvention() == CallingConvention::Reg16) {
+			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, arity());
+			for (Interval &interval: intervals) {
+				if (interval.variable->id < max)
+					interval.reg = ++reg;
+			}
+		}
+	}
+
 	void Function::linearScan() {
 		std::list<Interval> intervals = sortedIntervals();
 		std::list<Interval *> active;
@@ -348,7 +358,11 @@ namespace LL2W {
 			}
 		};
 
+		precolorArguments(intervals);
+
 		for (Interval &interval: intervals) {
+			if (WhyInfo::isSpecialPurpose(interval.reg))
+				continue;
 			expireOldIntervals(interval);
 			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
 				spillAtInterval(interval);
@@ -358,7 +372,7 @@ namespace LL2W {
 			}
 		}
 
-		std::cout << "\e[1;4m" << *name << "\e[0m\n";
+		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = " << interval.reg << "\n";

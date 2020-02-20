@@ -71,6 +71,7 @@ namespace LL2W {
 			void fillLocalValues();
 			void updateInstructionNodes();
 			void extract();
+			void precolorArguments(std::list<Interval> &);
 			void linearScan();
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);
