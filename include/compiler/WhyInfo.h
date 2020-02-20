@@ -14,6 +14,7 @@ namespace LL2W {
 		static int halfFloatWidth, floatWidth, doubleWidth, pointerWidth; // in bytes
 
 		static std::set<int> makeRegisterPool();
+		static bool isSpecialPurpose(int);
 	};
 }
 

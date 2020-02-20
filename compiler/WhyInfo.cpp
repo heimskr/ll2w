@@ -37,4 +37,8 @@ namespace LL2W {
 			out.insert(i);
 		return out;
 	}
+
+	bool WhyInfo::isSpecialPurpose(int reg) {
+		return 0 <= reg && reg < 128 && (reg < temporaryOffset || savedOffset + savedCount <= reg);
+	}
 }
