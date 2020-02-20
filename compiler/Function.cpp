@@ -296,7 +296,7 @@ namespace LL2W {
 	std::list<Interval> Function::sortedIntervals() {
 		std::list<Interval> intervals;
 		for (std::pair<const int, VariablePtr> &pair: variableStore)
-			intervals.push_back(*pair.second);
+			intervals.emplace_back(pair.second);
 		intervals.sort([&](const Interval &left, const Interval &right) {
 			return left.firstDefinition->label < right.firstDefinition->label;
 		});
@@ -334,6 +334,7 @@ namespace LL2W {
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			locations.insert({&interval, stackOffset});
 			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
+			spills.push_back(interval.variable);
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {

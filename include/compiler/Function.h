@@ -34,6 +34,7 @@ namespace LL2W {
 			Node::Map mergeSets;
 			Node::Map succMergeSets;
 			int walkCount = 0;
+			std::list<VariablePtr> spills;
 
 			void extractBlocks();
 			void extractVariables();
