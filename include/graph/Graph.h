@@ -116,6 +116,7 @@ namespace LL2W {
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
 			std::vector<std::pair<Node &, Node &>> allEdges() const;
+
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			virtual std::string toDot(const std::string &direction = "TB");
 

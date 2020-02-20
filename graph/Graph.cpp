@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 #include "graph/Graph.h"
-#include "graph/DTree.h"
 
 namespace LL2W {
 	Graph::Graph() {}

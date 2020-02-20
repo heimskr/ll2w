@@ -85,9 +85,73 @@ namespace LL2W {
 		doms[start.index()] = 0;
 
 		graph.cloneTo(*this);
+		startNode = &(*this)[start];
 		unlink();
 		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
 			link((*this)[doms.at(i)].label(), (*this)[i].label());
+	}
+
+	void DTree::findLevels() {
+		levels.clear();
+		std::function<void(Node *, int)> dfs = [&](Node *node, const int level) {
+			levels.insert({node, level});
+			for (Node *successor: *node) {
+				if (successor != node)
+					dfs(successor, level + 1);
+			}
+		};
+
+		dfs(startNode, 0);
+	}
+
+	std::string DTree::commonDominator(std::vector<Node *> nodes) {
+		// To find the common dominator of a set of nodes, assign each node a level in the DTree. Find the smallest
+		// level of all the nodes. Until all nodes are at that level, keep moving upward from each node that isn't
+		// already at that level. Once all nodes are at the same level, check whether they're all the same node. If not,
+		// move all nodes up another level. once all nodes are the same, that node is the common dominator.
+
+		if (levels.empty())
+			findLevels();
+
+		int max = nodes.size();
+		for (int i = 0; i < max; ++i)
+			nodes[i] = &(*this)[*nodes[i]];
+
+		int smallest_level = levels[*std::min_element(nodes.begin(), nodes.end(), [&](Node *left, Node *right) {
+			return levels[left] < levels[right];
+		})];
+
+		std::function<void()> move_nodes_up = [&]() {
+			for (int i = 0; i < max; ++i) {
+				while (smallest_level < levels[nodes[i]])
+					nodes[i] = nodes[i]->parent();
+			}
+		};
+
+		std::function<bool()> all_nodes_equal = [&]() {
+			Node *first = nodes[0];
+			for (int i = 1; i < max; ++i) {
+				if (nodes[i] != first)
+					return false;
+			}
+			return true;
+		};
+
+		move_nodes_up();
+		while (!all_nodes_equal()) {
+			--smallest_level;
+			move_nodes_up();
+		}
+
+		return nodes[0]->label();
+	}
+
+	std::string DTree::commonDominator(const std::vector<std::string> &labels) {
+		std::vector<Node *> nodes;
+		nodes.reserve(labels.size());
+		for (const std::string &label: labels)
+			nodes.push_back(&(*this)[label]);
+		return commonDominator(nodes);
 	}
 
 	std::unordered_map<Node *, Node *> DTree::immediateDominators() const {
