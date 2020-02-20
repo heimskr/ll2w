@@ -323,7 +323,7 @@ namespace LL2W {
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			locations.insert({&interval, stackOffset});
-			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() : 8;
+			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -362,6 +362,11 @@ namespace LL2W {
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = " << interval.reg << "\n";
+		}
+		if (!locations.empty())
+			std::cout << "Spills:\n";
+		for (const std::pair<const Interval *, int> &pair: locations) {
+			std::cout << "    %" << pair.first->variable->id << ": " << pair.second << "\n";
 		}
 		std::cout << "\n";
 	}
@@ -531,6 +536,7 @@ namespace LL2W {
 					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
 			}
 		}
+
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
 	}
