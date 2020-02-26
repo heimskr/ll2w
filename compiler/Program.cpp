@@ -9,7 +9,7 @@ namespace LL2W {
 		for (const ASTNode *node: root) {
 			switch (node->symbol) {
 				case FUNCTION_DEF:
-					functions.emplace(*node->lexerInfo, Function(*node));
+					functions.emplace(*node->lexerInfo, Function(*this, *node));
 					break;
 				case TOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();

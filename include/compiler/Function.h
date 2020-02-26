@@ -8,6 +8,7 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
 #include "compiler/Interval.h"
+#include "compiler/StackLocation.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
 #include "graph/DTree.h"
@@ -15,6 +16,7 @@
 namespace LL2W {
 	class ASTNode;
 	struct FunctionArgs;
+	class Program;
 
 	/**
 	 * StackOnly: all parameters are pushed to the stack, right-to-left. Used for variadic functions.
@@ -25,6 +27,7 @@ namespace LL2W {
 
 	class Function {
 		private:
+			Program *parent = nullptr;
 			std::map<int, VariablePtr> variableStore;
 			std::unordered_map<const BasicBlock *, Node *> bbMap;
 			const ASTNode *astnode;
@@ -34,7 +37,7 @@ namespace LL2W {
 			Node::Map mergeSets;
 			Node::Map succMergeSets;
 			int walkCount = 0;
-			std::list<VariablePtr> spills;
+			std::map<int, StackLocation> stack;
 
 			void extractBlocks();
 			void extractVariables();
@@ -42,11 +45,11 @@ namespace LL2W {
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
 			void relinearize();
-			/** Renumbers all instructions based on the order they appear in each BasicBlock's vector of
-			 *  instructions. */
+			/** Renumbers all instructions based on the order they appear in each BasicBlock's instructions vector. */
 			void assignIndices();
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
+			int nextStackOffset() const;
 
 			std::list<Interval> sortedIntervals();
 
@@ -61,7 +64,7 @@ namespace LL2W {
 			FunctionArgs *arguments = nullptr;
 			CFG cfg;
 
-			Function(const ASTNode &);
+			Function(Program &, const ASTNode &);
 
 			int arity() const;
 			bool variadic() const;

@@ -14,7 +14,8 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	Function::Function(const ASTNode &node) {
+	Function::Function(Program &program, const ASTNode &node) {
+		parent = &program;
 		name = node.lexerInfo;
 		arguments = dynamic_cast<FunctionHeader *>(node[0])->arguments;
 		astnode = &node;
@@ -155,6 +156,10 @@ namespace LL2W {
 		// If any instructions have been removed from the basic blocks, we have to relinearize the code.
 		if (any_changed)
 			relinearize();
+	}
+
+	int Function::nextStackOffset() const {
+		return stack.empty()? 0 : (stack.end()->second.offset + stack.end()->second.width);
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -334,7 +339,7 @@ namespace LL2W {
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			locations.insert({&interval, stackOffset});
 			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
-			spills.push_back(interval.variable);
+			stack.insert({nextStackOffset(), interval.variable});
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -378,10 +383,13 @@ namespace LL2W {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = " << interval.reg << "\n";
 		}
-		if (!locations.empty())
-			std::cout << "Spills:\n";
-		for (const std::pair<const Interval *, int> &pair: locations) {
-			std::cout << "    %" << pair.first->variable->id << ": " << pair.second << "\n";
+
+		if (!stack.empty()) {
+			std::cout << "Stack:\n";
+			// for (const std::pair<const Interval *, int> &pair: locations)
+			// 	std::cout << "    %" << pair.first->variable->id << ": " << pair.second << "\n";
+			for (const std::pair<const int, StackLocation> &pair: stack)
+				std::cout << "    " << pair.first << ": " << pair.second.getName() << "\n";
 		}
 		std::cout << "\n";
 	}
