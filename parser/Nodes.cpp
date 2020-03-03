@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "compiler/Variable.h"
 #include "parser/Lexer.h"
 #include "parser/Nodes.h"
 #include "parser/Parser.h"
@@ -107,6 +108,12 @@ namespace LL2W {
 		return out;
 	}
 
+// Writer
+
+	std::string Writer::getResult() const {
+		return "\e[32m" + (variable? std::string(*variable) : "%" + *result) + "\e[0m";
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
@@ -140,7 +147,7 @@ namespace LL2W {
 
 	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << " \e[2m= \e[0;91mselect\e[0;38;5;202m" << fastmath << " " << *conditionType
+		out << "\e[32m" << getResult() << " \e[2m= \e[0;91mselect\e[0;38;5;202m" << fastmath << " " << *conditionType
 		    << " " << *conditionValue << "\e[2m,\e[0m " << *firstType << " " << *firstValue << "\e[2m,\e[0m "
 		    << *secondType << " " << *secondValue;
 		return out.str();
@@ -187,7 +194,7 @@ namespace LL2W {
 
 	std::string AllocaNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91malloca\e[0m";
+		out << getResult() << "\e[2m = \e[0;91malloca\e[0m";
 		if (inalloca)
 			out << " \e[38;5;202minalloca\e[0m";
 		out << " " << *type;
@@ -395,7 +402,7 @@ namespace LL2W {
 
 	std::string LoadNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91mload\e[0m";
+		out << getResult() << "\e[2m = \e[0;91mload\e[0m";
 		if (atomic)
 			out << " \e[38;5;202matomic\e[0m";
 		if (volatile_)
@@ -445,7 +452,7 @@ namespace LL2W {
 
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *type << " "
+		out << getResult() << "\e[2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *type << " "
 		    << *value1 << ", " << *value2;
 		return out.str();
 	}
@@ -593,7 +600,8 @@ namespace LL2W {
 
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
-		print(out, "\e[32m%", result, "\e[0;2m = ");
+		if (result)
+			out << getResult() << "\e[2m = ";
 		print(out, "\e[0;34m", tail, " ");
 		out << "\e[0;91mcall\e[0m" << fastmath;
 		if (!fastmath.empty())
@@ -644,10 +652,9 @@ namespace LL2W {
 	std::string InvokeNode::debugExtra() const {
 		std::stringstream out;
 		if (result)
-			out << "\e[32m%" << *result << "\e[0;2m = ";
+			out << getResult() << "\e[2m = ";
 		out << "\e[0;91minvoke\e[0m";
-		if (cconv)
-			out << " \e[34m" << *cconv << "\e[0;2m .\e[0m";
+		print(out, " \e[34m", cconv, "\e[0;2m .\e[0m");
 		for (RetAttr attr: retattrs)
 			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
 		if (dereferenceable != -1)
@@ -729,7 +736,7 @@ namespace LL2W {
 
 	std::string GetelementptrNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << " \e[0;2m= \e[0;91mgetelementptr\e[0m ";
+		out << getResult() << " \e[2m= \e[0;91mgetelementptr\e[0m ";
 		if (inbounds)
 			out << "\e[34minbounds\e[0m ";
 		out << *type << "\e[2m,\e[0m " << *ptrType << " " << *ptrValue << "\e[0m";
@@ -811,7 +818,7 @@ namespace LL2W {
 
 	std::string LandingpadNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91mlandingpad\e[0m " << *type;
+		out << getResult() << "\e[2m = \e[0;91mlandingpad\e[0m " << *type;
 		if (cleanup)
 			out << " cleanup";
 		for (const Clause *clause: clauses)
@@ -856,7 +863,7 @@ namespace LL2W {
 
 	std::string ConversionNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m " << *from
+		out << getResult() << "\e[2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m " << *from
 		    << " " << *value << " \e[91mto\e[0m " << *to;
 		return out.str();
 	}
@@ -889,7 +896,7 @@ namespace LL2W {
 
 	std::string BasicMathNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << *oper << " " << *type << " " << *left << "\e[2m,\e[0m "
+		out << getResult() << "\e[2m = \e[0;91m" << *oper << " " << *type << " " << *left << "\e[2m,\e[0m "
 		    << *right;
 		return out.str();
 	}
@@ -920,7 +927,7 @@ namespace LL2W {
 
 	std::string PhiNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[34m%" << *result << " \e[0;2m= \e[0;91mphi\e[0m" << fastmath << " " << *type;
+		out << getResult() << " \e[0;2m= \e[0;91mphi\e[0m" << fastmath << " " << *type;
 		for (const std::pair<Value *, const std::string *> &pair: pairs)
 			out << " \e[2m[\e[0m" << *pair.first << "\e[2m,\e[0;32m %" << *pair.second << "\e[0;2m]\e[0m";
 		return out.str();
@@ -949,7 +956,7 @@ namespace LL2W {
 
 	std::string SimpleNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[32m%" << *result << "\e[0;2m = \e[0;91m" << typeName() << "\e[0m " << *type << " " << *left
+		out << getResult() << "\e[2m = \e[0;91m" << typeName() << "\e[0m " << *type << " " << *left
 		    << "\e[2m,\e[0m " << *right;
 		return out.str();
 	}

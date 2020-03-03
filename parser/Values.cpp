@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "compiler/Variable.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
 #include "parser/Types.h"
@@ -45,6 +46,10 @@ namespace LL2W {
 
 	LocalValue::LocalValue(const ASTNode *node) {
 		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
+	}
+
+	LocalValue::operator std::string() {
+		return "\e[32m" + (variable? std::string(*variable) : "%" + *name) + "\e[39m";
 	}
 
 	GlobalValue::GlobalValue(const ASTNode *node) {

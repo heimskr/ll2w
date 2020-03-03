@@ -15,6 +15,8 @@ namespace LL2W {
 		Interval(std::shared_ptr<Variable>);
 		int startpoint() const;
 		int endpoint() const;
+
+		int setReg(int);
 	};
 }
 

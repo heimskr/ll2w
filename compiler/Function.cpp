@@ -313,7 +313,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, arity());
 			for (Interval &interval: intervals) {
 				if (interval.variable->id < max)
-					interval.reg = ++reg;
+					interval.variable->reg = interval.reg = ++reg;
 			}
 		}
 	}
@@ -355,7 +355,7 @@ namespace LL2W {
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
 			Interval &spill = *active.back();
 			if (interval.endpoint() < spill.endpoint()) {
-				interval.reg = spill.reg;
+				interval.setReg(spill.reg);
 				addLocation(spill);
 				active.remove(&spill);
 				addToActive(interval);
@@ -373,7 +373,7 @@ namespace LL2W {
 			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
 				spillAtInterval(interval);
 			} else {
-				pool.erase(interval.reg = *pool.begin());
+				pool.erase(interval.setReg(*pool.begin()));
 				addToActive(interval);
 			}
 		}
@@ -381,13 +381,12 @@ namespace LL2W {
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
-			          << ", %" << interval.endpoint() << "]; reg = " << interval.reg << "\n";
+			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
+			          << interval.reg << ")\n";
 		}
 
 		if (!stack.empty()) {
 			std::cout << "Stack:\n";
-			// for (const std::pair<const Interval *, int> &pair: locations)
-			// 	std::cout << "    %" << pair.first->variable->id << ": " << pair.second << "\n";
 			for (const std::pair<const int, StackLocation> &pair: stack)
 				std::cout << "    " << pair.first << ": " << pair.second.getName() << "\n";
 		}

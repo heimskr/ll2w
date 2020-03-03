@@ -23,4 +23,10 @@ namespace LL2W {
 	int Interval::endpoint() const {
 		return lastUse->label;
 	}
+
+	int Interval::setReg(int new_reg) {
+		if (variable)
+			variable->reg = new_reg;
+		return reg = new_reg;
+	}
 }

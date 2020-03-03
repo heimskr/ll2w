@@ -91,7 +91,7 @@ namespace LL2W {
 		LocalValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Local; }
 		Value * copy() const override { return new LocalValue(name); }
-		operator std::string() override { return "\e[32m%" + *name + "\e[39m"; }
+		operator std::string() override;
 	};
 
 	struct GlobalValue: public VariableValue {

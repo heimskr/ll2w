@@ -13,6 +13,8 @@
 #include "parser/Constant.h"
 
 namespace LL2W {
+	class Variable;
+
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
 		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
@@ -66,6 +68,7 @@ namespace LL2W {
 	struct Writer {
 		const std::string *result = nullptr;
 		std::shared_ptr<Variable> variable = nullptr;
+		std::string getResult() const;
 	};
 
 	struct SelectNode: public InstructionNode, public Reader, public Writer {
@@ -138,7 +141,6 @@ namespace LL2W {
 	};
 
 	struct IcmpNode: public InstructionNode, public Writer, public Reader {
-		const std::string *result;
 		IcmpCond cond;
 		Type *type;
 		Value *value1, *value2;
