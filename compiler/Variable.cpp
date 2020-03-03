@@ -36,6 +36,10 @@ namespace LL2W {
 		return id == other.id && *type == *other.type;
 	}
 
+	Variable::operator std::string() const {
+		return reg == -1? "%" + std::to_string(id) : "$" + WhyInfo::registerName(reg);
+	}
+
 	void Variable::makeAliasOf(Variable &new_parent) {
 		if (type && !parent)
 			delete type;

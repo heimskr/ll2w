@@ -1,34 +1,7 @@
 #include "compiler/WhyInfo.h"
+#include "util/Util.h"
 
 namespace LL2W {
-	int WhyInfo::wordSize = 8;
-
-	int WhyInfo::savedOffset = 62;
-	int WhyInfo::savedCount  = 23;
-
-	int WhyInfo::temporaryOffset = 39;
-	int WhyInfo::temporaryCount  = 23;
-
-	int WhyInfo::assemblerOffset = 102;
-	int WhyInfo::assemblerCount  = 16;
-
-	int WhyInfo::returnValuesOffset = 7;
-	int WhyInfo::returnValuesCount  = 16;
-
-	int WhyInfo::argumentOffset = 23;
-	int WhyInfo::argumentCount  = 16;
-
-	int WhyInfo::generalPurposeRegisters = WhyInfo::temporaryCount + WhyInfo::savedCount;
-
-	int WhyInfo::stackPointerOffset  = 2;
-	int WhyInfo::framePointerOffset  = 3;
-	int WhyInfo::returnAddressOffset = 4;
-
-	int WhyInfo::halfFloatWidth = 4;
-	int WhyInfo::floatWidth = 8;
-	int WhyInfo::doubleWidth = 8;
-	int WhyInfo::pointerWidth = 8;
-
 	std::set<int> WhyInfo::makeRegisterPool() {
 		std::set<int> out;
 		for (int i = temporaryOffset, max = temporaryOffset + temporaryCount; i < max; ++i)
@@ -40,5 +13,37 @@ namespace LL2W {
 
 	bool WhyInfo::isSpecialPurpose(int reg) {
 		return 0 <= reg && reg < 128 && (reg < temporaryOffset || savedOffset + savedCount <= reg);
+	}
+
+	std::string WhyInfo::registerName(int reg) {
+		switch (reg) {
+			case              zeroOffset: return "0";
+			case globalAreaPointerOffset: return "g";
+			case      stackPointerOffset: return "sp";
+			case      framePointerOffset: return "fp";
+			case     returnAddressOffset: return "rt";
+			case                loOffset: return "lo";
+			case                hiOffset: return "hi";
+			case            statusOffset: return "st";
+		}
+
+
+		static std::initializer_list<std::tuple<const int, const int, char>> list {
+			{returnValueOffset, returnValueCount, 'r'},
+			{argumentOffset,    argumentCount,    'a'},
+			{temporaryOffset,   temporaryCount,   't'},
+			{savedOffset,       savedCount,       's'},
+			{kernelOffset,      kernelCount,      'k'},
+			{assemblerOffset,   assemblerCount,   'm'},
+			{floatingOffset,    floatingCount,    'f'},
+			{exceptionOffset,   exceptionCount,   'e'},
+		};
+
+		for (auto [offset, count, prefix]: list) {
+			if (offset <= reg && reg < offset + count)
+				return prefix + hex(reg - offset);
+		}
+
+		return "[" + std::to_string(reg) + "?]";
 	}
 }

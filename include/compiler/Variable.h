@@ -58,6 +58,7 @@ namespace LL2W {
 			void setLastUse(Instruction *);
 			void setRegister(int);
 
+			operator std::string() const;
 			bool operator==(const Variable &) const;
 	};
 

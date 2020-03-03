@@ -10,6 +10,6 @@ namespace LL2W {
 	}
 
 	std::string StackLocation::getName() const {
-		return variable? "%" + std::to_string(variable->id) : "[" + std::string(*type) + "]";
+		return *variable;
 	}
 }
