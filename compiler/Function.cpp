@@ -159,7 +159,13 @@ namespace LL2W {
 	}
 
 	int Function::nextStackOffset() const {
-		return stack.empty()? 0 : (stack.end()->second.offset + stack.end()->second.width);
+		if (stack.empty())
+			return 0;
+
+		auto iter = stack.end();
+		--iter;
+		const int width = iter->second.width;
+		return iter->second.offset + (0 < width? width : 1);
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -318,12 +324,13 @@ namespace LL2W {
 		}
 	}
 
-	void Function::linearScan() {
+	int Function::linearScan() {
 		std::list<Interval> intervals = sortedIntervals();
 		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
 		std::map<Interval *, int> locations;
 		int stackOffset = 0; // in bytes
+		int spillCount = 0;
 
 		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
 			int endpoint = interval.endpoint();
@@ -338,8 +345,10 @@ namespace LL2W {
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			locations.insert({&interval, stackOffset});
-			stackOffset += interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
-			stack.insert({nextStackOffset(), interval.variable});
+			const int to_add = interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
+			stackOffset += to_add;
+			const int next_offset = nextStackOffset();
+			stack.emplace(next_offset, StackLocation(interval.variable, next_offset, to_add));
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -354,6 +363,7 @@ namespace LL2W {
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
 			Interval &spill = *active.back();
+			++spillCount;
 			if (interval.endpoint() < spill.endpoint()) {
 				interval.setReg(spill.reg);
 				addLocation(spill);
@@ -378,7 +388,7 @@ namespace LL2W {
 			}
 		}
 
-		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m\n";
+		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spillCount << "]\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
@@ -386,11 +396,13 @@ namespace LL2W {
 		}
 
 		if (!stack.empty()) {
-			std::cout << "Stack:\n";
+			std::cout << "Stack (" << stack.size() << "):\n";
 			for (const std::pair<const int, StackLocation> &pair: stack)
 				std::cout << "    " << pair.first << ": " << pair.second.getName() << "\n";
 		}
 		std::cout << "\n";
+
+		return spillCount;
 	}
 
 

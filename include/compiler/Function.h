@@ -76,7 +76,8 @@ namespace LL2W {
 			void updateInstructionNodes();
 			void extract();
 			void precolorArguments(std::list<Interval> &);
-			void linearScan();
+			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
+			int linearScan();
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);
 			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
