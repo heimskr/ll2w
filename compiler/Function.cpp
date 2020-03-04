@@ -14,6 +14,10 @@
 #include "util/Util.h"
 #include "instruction/SetInstruction.h"
 
+// #define DEBUG_INTERVALS
+#define DEBUG_INSTRUCTIONS
+// #define DEBUG_VARS
+
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
 		parent = &program;
@@ -440,6 +444,7 @@ namespace LL2W {
 			}
 		}
 
+#ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spillCount << "]\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
@@ -453,6 +458,7 @@ namespace LL2W {
 				std::cout << "    " << pair.first << ": " << pair.second.getName() << "\n";
 		}
 		std::cout << "\n";
+#endif
 
 		return spillCount;
 	}
@@ -572,6 +578,7 @@ namespace LL2W {
 	}
 
 	void Function::debug() {
+#if defined(DEBUG_INSTRUCTIONS) || defined(DEBUG_VARS)
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		std::vector<FunctionArgument> &args = arguments->arguments;
 		for (auto begin = args.begin(), iter = begin, end = args.end(); iter != end; ++iter) {
@@ -582,6 +589,8 @@ namespace LL2W {
 				std::cout << " " << *iter->name;
 		}
 		std::cout << ") {\n";
+#endif
+#ifdef DEBUG_INSTRUCTIONS
 		for (const BasicBlockPtr &block: blocks) {
 			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset <<
 			             ": preds =";
@@ -599,6 +608,8 @@ namespace LL2W {
 			}
 			std::cout << "\n";
 		}
+#endif
+#ifdef DEBUG_VARS
 		std::cout << "    \e[2m; Variables:\e[0m\n";
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs =";
@@ -625,7 +636,10 @@ namespace LL2W {
 			}
 			std::cout << "\e[0m\n";
 		}
+#endif
+#if defined(DEBUG_INSTRUCTIONS) || defined(DEBUG_VARS)
 		std::cout << "}\n\n";
+#endif
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
 				BasicBlockPtr bb = node->get<BasicBlockPtr>();
