@@ -118,7 +118,8 @@ namespace LL2W {
 	}
 
 	void Function::coalescePhi() {
-		bool any_changed = false;
+		std::list<InstructionPtr> to_remove;
+
 		// Scan through each instruction in order.
 		for (InstructionPtr &instruction: linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
@@ -136,8 +137,8 @@ namespace LL2W {
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
 					// instructions in the penultimate slots of the predicate labels for which the phi function
 					// parameters specify a constant.
-					const BoolValue *boolval = dynamic_cast<BoolValue *>(pair.first);
-					if (boolval) {
+					if (pair.first->valueType() == ValueType::Bool) {
+						const BoolValue *boolval = dynamic_cast<BoolValue *>(pair.first);
 						BasicBlockPtr block = bbMap.at(pair.second);
 						IntType *type = new IntType(32);
 						VariablePtr new_var = newVariable(type, block);
@@ -146,7 +147,6 @@ namespace LL2W {
 						block->insertBeforeTerminal(std::make_shared<SetInstruction>(new_var,
 							boolval->value? 1 : 0, -1));
 						new_var->makeAliasOf(*target);
-						any_changed = true;
 					} else {
 						std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
 					}
@@ -159,13 +159,12 @@ namespace LL2W {
 				}
 			}
 
-			instruction->parent.lock()->instructions.remove(instruction);
+			to_remove.push_back(instruction);
 			target->removeDefiner(phi_definer);
 		}
 
-		// If any instructions have been removed from the basic blocks, we have to relinearize the code.
-		if (any_changed)
-			relinearize();
+		for (InstructionPtr &ptr: to_remove)
+			remove(ptr);
 	}
 
 	int Function::nextStackOffset() const {
@@ -188,6 +187,9 @@ namespace LL2W {
 
 		for (; bbLabels.count(label) == 1; ++label);
 		return getVariable(label, type, definer);
+	}
+
+	void Function::removeUselessBranches() {
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -323,6 +325,7 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 		linearScan();
+		removeUselessBranches();
 		extracted = true;
 	}
 
@@ -432,6 +435,17 @@ namespace LL2W {
 		return spillCount;
 	}
 
+	void Function::remove(InstructionPtr instruction) {
+		instruction->parent.lock()->instructions.remove(instruction);
+		auto found = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
+		auto iter = found;
+		if (found != linearInstructions.end()) {
+			linearInstructions.erase(found);
+			++iter;
+			for (auto end = linearInstructions.end(); iter != end; ++iter)
+				--(*iter)->index;
+		}
+	}
 
 	VariablePtr Function::getVariable(int label) {
 		return variableStore.at(label);

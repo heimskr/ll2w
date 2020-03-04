@@ -53,6 +53,7 @@ namespace LL2W {
 			void coalescePhi();
 			int nextStackOffset() const;
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
+			void removeUselessBranches();
 
 			std::list<Interval> sortedIntervals();
 
@@ -82,6 +83,7 @@ namespace LL2W {
 			void precolorArguments(std::list<Interval> &);
 			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
 			int linearScan();
+			void remove(std::shared_ptr<Instruction>);
 			std::shared_ptr<Variable> getVariable(int);
 			std::shared_ptr<Variable> getVariable(const std::string &);
 			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
