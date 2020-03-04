@@ -190,6 +190,28 @@ namespace LL2W {
 	}
 
 	void Function::removeUselessBranches() {
+		std::list<InstructionPtr> to_remove;
+		for (auto iter = blocks.begin(), end = blocks.end(); iter != end; ++iter) {
+			BasicBlockPtr &block = *iter;
+			if (block->instructions.empty())
+				continue;
+			InstructionPtr &back = block->instructions.back();
+			if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
+				if (llback->node->nodeType() == NodeType::BrUncond) {
+					const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node);
+					auto next = iter;
+					++next;
+					if (next != end) {
+						const int destination = std::atoi(branch->destination->substr(1).c_str());
+						if ((*next)->label == destination)
+							to_remove.push_back(back);
+					}
+				}
+			}
+		}
+
+		for (InstructionPtr &ptr: to_remove)
+			remove(ptr);
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
