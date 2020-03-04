@@ -319,7 +319,7 @@ namespace LL2W {
 
 	void Function::uncolorAll() {
 		for (std::pair<const int, VariablePtr> &pair: variableStore)
-			pair.second->reg = -1;
+			pair.second->setRegister(-1);
 	}
 
 	std::list<Interval> Function::sortedIntervals() {
@@ -337,7 +337,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, arity());
 			for (Interval &interval: intervals) {
 				if (interval.variable->id < max)
-					interval.variable->reg = interval.reg = ++reg;
+					interval.setRegister(++reg);
 			}
 		}
 	}
@@ -383,7 +383,7 @@ namespace LL2W {
 			Interval &spill = *active.back();
 			++spillCount;
 			if (interval.endpoint() < spill.endpoint()) {
-				interval.setReg(spill.reg);
+				interval.setRegister(spill.reg);
 				addLocation(spill);
 				active.remove(&spill);
 				addToActive(interval);
@@ -401,7 +401,7 @@ namespace LL2W {
 			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
 				spillAtInterval(interval);
 			} else {
-				pool.erase(interval.setReg(*pool.begin()));
+				pool.erase(interval.setRegister(*pool.begin()));
 				addToActive(interval);
 			}
 		}

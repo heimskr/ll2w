@@ -16,7 +16,7 @@ namespace LL2W {
 		int startpoint() const;
 		int endpoint() const;
 
-		int setReg(int);
+		int setRegister(int);
 	};
 }
 

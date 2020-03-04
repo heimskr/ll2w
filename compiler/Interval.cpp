@@ -24,9 +24,9 @@ namespace LL2W {
 		return lastUse->label;
 	}
 
-	int Interval::setReg(int new_reg) {
+	int Interval::setRegister(int new_reg) {
 		if (variable)
-			variable->reg = new_reg;
+			variable->setRegister(new_reg);
 		return reg = new_reg;
 	}
 }
