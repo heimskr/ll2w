@@ -22,6 +22,7 @@ namespace LL2W {
 	class BasicBlock {
 		private:
 			bool extracted = false;
+			void extract(Instruction &);
 
 		public:
 			int label;

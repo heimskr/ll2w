@@ -7,6 +7,14 @@ namespace LL2W {
 	                       const std::list<std::shared_ptr<Instruction>> &instructions_):
 		label(label_), preds(preds_), instructions(instructions_) {}
 
+	void BasicBlock::extract(Instruction &instruction) {
+		instruction.extract();
+		for (auto read_var: instruction.read)
+			read.insert(read_var);
+		for (auto written_var: instruction.written)
+			written.insert(written_var);
+	}
+
 	std::pair<char, char> BasicBlock::extract(bool force) {
 		if (extracted && !force)
 			return {read.size(), written.size()};
@@ -14,13 +22,8 @@ namespace LL2W {
 		read.clear();
 		written.clear();
 
-		for (std::shared_ptr<Instruction> &instruction: instructions) {
-			instruction->extract();
-			for (auto read_var: instruction->read)
-				read.insert(read_var);
-			for (auto written_var: instruction->written)
-				written.insert(written_var);
-		}
+		for (std::shared_ptr<Instruction> &instruction: instructions)
+			extract(*instruction);
 
 		return {read.size(), written.size()};
 	}
