@@ -31,6 +31,7 @@ namespace LL2W {
 		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
 			block->offset = offset;
 			block->parent = this;
+			bbLabels.insert(block->label);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
@@ -168,6 +169,18 @@ namespace LL2W {
 		return iter->second.offset + (0 < width? width : 1);
 	}
 
+	VariablePtr Function::newVariable(Type *type, std::shared_ptr<BasicBlock> definer) {
+		int label = 0;
+		if (!variableStore.empty()) {
+			auto iter = variableStore.end();
+			--iter;
+			label = iter->first + 1;
+		}
+
+		for (; bbLabels.count(label) == 1; ++label);
+		return getVariable(label, type, definer);
+	}
+
 	Node & Function::operator[](const BasicBlock &bb) const {
 		return *bbMap.at(&bb);
 	}
@@ -296,12 +309,17 @@ namespace LL2W {
 			block->extract();
 		extractVariables();
 		makeCFG();
-		computeLiveness();
 		fillLocalValues();
+		computeLiveness();
 		coalescePhi();
 		updateInstructionNodes();
 		linearScan();
 		extracted = true;
+	}
+
+	void Function::uncolorAll() {
+		for (std::pair<const int, VariablePtr> &pair: variableStore)
+			pair.second->reg = -1;
 	}
 
 	std::list<Interval> Function::sortedIntervals() {

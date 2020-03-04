@@ -29,6 +29,7 @@ namespace LL2W {
 		private:
 			Program *parent = nullptr;
 			std::map<int, VariablePtr> variableStore;
+			std::unordered_set<int> bbLabels;
 			std::unordered_map<const BasicBlock *, Node *> bbMap;
 			const ASTNode *astnode;
 			bool extracted = false, livenessComputed = false;
@@ -50,6 +51,7 @@ namespace LL2W {
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
 			int nextStackOffset() const;
+			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 
 			std::list<Interval> sortedIntervals();
 
@@ -75,6 +77,7 @@ namespace LL2W {
 			void fillLocalValues();
 			void updateInstructionNodes();
 			void extract();
+			void uncolorAll();
 			void precolorArguments(std::list<Interval> &);
 			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
 			int linearScan();
