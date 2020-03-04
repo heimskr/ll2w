@@ -28,6 +28,17 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
+	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
+		if (instructions.empty()) {
+			instructions.push_back(instruction);
+		} else {
+			auto iter = instructions.end();
+			instructions.insert(--iter, instruction);
+		}
+
+		extract(*instruction);
+	}
+
 	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {
 		if (0 < liveIn.count(var))
 			return true;

@@ -30,7 +30,8 @@ namespace LL2W {
 			Program *parent = nullptr;
 			std::map<int, VariablePtr> variableStore;
 			std::unordered_set<int> bbLabels;
-			std::unordered_map<const BasicBlock *, Node *> bbMap;
+			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
+			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
 			const ASTNode *astnode;
 			bool extracted = false, livenessComputed = false;
 			std::optional<DJGraph> djGraph;

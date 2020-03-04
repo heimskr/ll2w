@@ -12,6 +12,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "util/Util.h"
+#include "instruction/SetInstruction.h"
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -32,6 +33,7 @@ namespace LL2W {
 			block->offset = offset;
 			block->parent = this;
 			bbLabels.insert(block->label);
+			bbMap.emplace(StringSet::intern(std::to_string(block->label)), block);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
@@ -127,16 +129,27 @@ namespace LL2W {
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
 			BasicBlockPtr phi_definer = target->onlyDefinition();
-			bool should_remove = true;
 			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
 				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
 				if (!local) {
 					// In rare occasions, one or more operands of a phi instruction can be constants like "true".
-					// In these cases, we can't eliminate the phi instruction by merging alone. It'll have to be removed
-					// later in a step that involves inserting instructions in the penultimate slot of the predicate
-					// labels for which the phi function parameters specify a constant.
-					std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
-					should_remove = false;
+					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
+					// instructions in the penultimate slots of the predicate labels for which the phi function
+					// parameters specify a constant.
+					const BoolValue *boolval = dynamic_cast<BoolValue *>(pair.first);
+					if (boolval) {
+						BasicBlockPtr block = bbMap.at(pair.second);
+						IntType *type = new IntType(32);
+						VariablePtr new_var = newVariable(type, block);
+						delete type;
+
+						block->insertBeforeTerminal(std::make_shared<SetInstruction>(new_var,
+							boolval->value? 1 : 0, -1));
+						new_var->makeAliasOf(*target);
+						any_changed = true;
+					} else {
+						std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
+					}
 				} else {
 					// Remove the old temporary from the variable store, then copy the name and type of the target
 					// temporary.
@@ -145,13 +158,9 @@ namespace LL2W {
 					to_rename->makeAliasOf(*target);
 				}
 			}
-			// If all the operands are pvars, we can remove the phi function entirely once the temporaries have been
-			// merged.
-			if (should_remove) {
-				instruction->parent.lock()->instructions.remove(instruction);
-				target->removeDefiner(phi_definer);
-			} else
-				any_changed = true;
+
+			instruction->parent.lock()->instructions.remove(instruction);
+			target->removeDefiner(phi_definer);
 		}
 
 		// If any instructions have been removed from the basic blocks, we have to relinearize the code.
@@ -182,7 +191,7 @@ namespace LL2W {
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
-		return *bbMap.at(&bb);
+		return *bbNodeMap.at(&bb);
 	}
 
 	int Function::arity() const {
@@ -204,7 +213,7 @@ namespace LL2W {
 			Node &node = cfg[label];
 			node.data = block;
 			block->node = &node;
-			bbMap.insert({block.get(), &node});
+			bbNodeMap.insert({block.get(), &node});
 		}
 
 		cfg += "exit";
@@ -310,8 +319,8 @@ namespace LL2W {
 		extractVariables();
 		makeCFG();
 		fillLocalValues();
-		computeLiveness();
 		coalescePhi();
+		computeLiveness();
 		updateInstructionNodes();
 		linearScan();
 		extracted = true;
