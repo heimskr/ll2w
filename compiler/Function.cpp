@@ -171,16 +171,6 @@ namespace LL2W {
 			remove(ptr);
 	}
 
-	int Function::nextStackOffset() const {
-		if (stack.empty())
-			return 0;
-
-		auto iter = stack.end();
-		--iter;
-		const int width = iter->second.width;
-		return iter->second.offset + (0 < width? width : 1);
-	}
-
 	VariablePtr Function::newVariable(Type *type, std::shared_ptr<BasicBlock> definer) {
 		int label = 0;
 		if (!variableStore.empty()) {
@@ -380,13 +370,18 @@ namespace LL2W {
 		}
 	}
 
+	StackLocation & Function::addToStack(VariablePtr variable) {
+		const int to_add = variable && variable->type? variable->type->width() / 8 : 8;
+		StackLocation &added = stack.emplace(stackSize, StackLocation(variable, stackSize, to_add)).first->second;
+		stackSize += to_add;
+		return added;
+	}
+
 	int Function::linearScan() {
 		std::list<Interval> intervals = sortedIntervals();
 		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
-		std::map<Interval *, int> locations;
-		int stackOffset = 0; // in bytes
-		int spillCount = 0;
+		int spill_count = 0;
 
 		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
 			int endpoint = interval.endpoint();
@@ -400,11 +395,7 @@ namespace LL2W {
 		};
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
-			locations.insert({&interval, stackOffset});
-			const int to_add = interval.variable && interval.variable->type? interval.variable->type->width() / 8 : 8;
-			stackOffset += to_add;
-			const int next_offset = nextStackOffset();
-			stack.emplace(next_offset, StackLocation(interval.variable, next_offset, to_add));
+			addToStack(interval.variable);
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -419,7 +410,7 @@ namespace LL2W {
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
 			Interval &spill = *active.back();
-			++spillCount;
+			++spill_count;
 			if (interval.endpoint() < spill.endpoint()) {
 				interval.setRegister(spill.reg);
 				addLocation(spill);
@@ -445,7 +436,7 @@ namespace LL2W {
 		}
 
 #ifdef DEBUG_INTERVALS
-		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spillCount << "]\n";
+		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
@@ -460,7 +451,7 @@ namespace LL2W {
 		std::cout << "\n";
 #endif
 
-		return spillCount;
+		return spill_count;
 	}
 
 	void Function::remove(InstructionPtr instruction) {

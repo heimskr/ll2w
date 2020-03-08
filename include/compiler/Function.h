@@ -40,6 +40,7 @@ namespace LL2W {
 			Node::Map succMergeSets;
 			int walkCount = 0;
 			std::map<int, StackLocation> stack;
+			int stackSize = 0;
 
 			void extractBlocks();
 			void extractVariables();
@@ -51,7 +52,6 @@ namespace LL2W {
 			void assignIndices();
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
-			int nextStackOffset() const;
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			void removeUselessBranches();
 
@@ -81,6 +81,7 @@ namespace LL2W {
 			void extract();
 			void uncolorAll();
 			void precolorArguments(std::list<Interval> &);
+			StackLocation & addToStack(std::shared_ptr<Variable>);
 			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
 			int linearScan();
 			void remove(std::shared_ptr<Instruction>);
