@@ -40,6 +40,7 @@ namespace LL2W {
 			Node::Map succMergeSets;
 			int walkCount = 0;
 			std::map<int, StackLocation> stack;
+			std::map<std::shared_ptr<Variable>, StackLocation *> variableLocations;
 			int stackSize = 0;
 
 			void extractBlocks();
@@ -53,6 +54,8 @@ namespace LL2W {
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
+			void spill(std::shared_ptr<Variable>);
+			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction);
 			void removeUselessBranches();
 
 			std::list<Interval> sortedIntervals();

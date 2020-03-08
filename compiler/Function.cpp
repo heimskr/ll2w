@@ -183,6 +183,40 @@ namespace LL2W {
 		return getVariable(label, type, definer);
 	}
 
+	void Function::spill(VariablePtr variable) {
+		// Create a new variable of the same type as the variable to be spilled and assign it a stack location. Right
+		// after the definition of the variable to be spilled, store its value onto the stack in the proper location.
+		// For each use of the original variable, replace the original variable with a new variable, and right before
+		// the use insert a definition for the variable by loading it from the stack.
+		BasicBlockPtr block = variable->onlyDefinition();
+		VariablePtr stack_variable = newVariable(variable->type, block);
+	}
+
+	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction) {
+		BasicBlockPtr block = base->parent.lock();
+		new_instruction->index = base->index + 1;
+		std::list<InstructionPtr>::iterator iter;
+		if (base == linearInstructions.back()) {
+			linearInstructions.push_back(new_instruction);
+			block->instructions.push_back(new_instruction);
+		} else {
+			if (base == block->instructions.back()) {
+				block->instructions.push_back(new_instruction);
+			} else {
+				iter = std::find(block->instructions.begin(), block->instructions.end(), base);
+				++iter;
+				block->instructions.insert(iter, new_instruction);
+			}
+
+			iter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
+			++iter;
+			linearInstructions.insert(iter, new_instruction);
+
+			for (auto end = linearInstructions.end(); iter != end; ++iter)
+				++(*iter)->index;
+		}
+	}
+
 	void Function::removeUselessBranches() {
 		std::list<InstructionPtr> to_remove;
 		for (auto iter = blocks.begin(), end = blocks.end(); iter != end; ++iter) {
@@ -374,6 +408,7 @@ namespace LL2W {
 		const int to_add = variable && variable->type? variable->type->width() / 8 : 8;
 		StackLocation &added = stack.emplace(stackSize, StackLocation(variable, stackSize, to_add)).first->second;
 		stackSize += to_add;
+		variableLocations.emplace(variable, &added);
 		return added;
 	}
 
