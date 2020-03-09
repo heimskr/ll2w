@@ -1654,5 +1654,6 @@ define i32 @fat_newfile(i32, i8*, i32, i32, %struct.times_t*, %struct.dir_t**, i
 
 ; <label>:1022:                                   ; preds = %1018, %908, %855, %806, %746, %700, %657, %509, %461, %360, %189, %132, %95
   ; %1023 = load i32, i32* %11, align 4
+  %1023 = and i32 %57, 0
   ret i32 %57 ; Originally %1023; changed to test spilling.
 }

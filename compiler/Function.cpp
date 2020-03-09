@@ -17,7 +17,8 @@
 #include "instruction/StackStoreInstruction.h"
 
 // #define DEBUG_INTERVALS
-#define DEBUG_INSTRUCTIONS
+#define DEBUG_BLOCKS
+// #define DEBUG_LINEAR
 // #define DEBUG_VARS
 // #define DEBUG_RENDER
 
@@ -201,8 +202,11 @@ namespace LL2W {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
-				std::cerr << "  " << (instruction->replaceRead(variable, new_var)? "Replaced" : "Didn't replace") << " in " << instruction->debugExtra() << "\n";
+				std::cerr << "  " << (instruction->replaceRead(variable, new_var)? "Replaced" : "Didn't replace")
+				          << " in " << instruction->debugExtra() << "\n";
 				instruction->read.erase(variable);
+				insertBefore(instruction, std::make_shared<StackLoadInstruction>(new_var,
+					*variableLocations.at(variable), -1));
 			}
 		}
 
@@ -241,8 +245,8 @@ namespace LL2W {
 		BasicBlockPtr block = base->parent.lock();
 		if (reindex)
 			new_instruction->index = base->index + 1;
-		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), new_instruction);
-		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), new_instruction);
+		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
+		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		linearInstructions.insert(linearIter, new_instruction);
 		block->instructions.insert(blockIter, new_instruction);
 		if (reindex) {
@@ -410,12 +414,16 @@ namespace LL2W {
 			block->extract();
 		extractVariables();
 		makeCFG();
+		removeUselessBranches();
 		fillLocalValues();
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
 		linearScan();
-		removeUselessBranches();
+
+		// extractVariables();
+		// computeLiveness();
+		// linearScan();
 		extracted = true;
 	}
 
@@ -646,7 +654,7 @@ namespace LL2W {
 	}
 
 	void Function::debug() {
-#if defined(DEBUG_INSTRUCTIONS) || defined(DEBUG_VARS)
+#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		std::vector<FunctionArgument> &args = arguments->arguments;
 		for (auto begin = args.begin(), iter = begin, end = args.end(); iter != end; ++iter) {
@@ -658,7 +666,7 @@ namespace LL2W {
 		}
 		std::cout << ") {\n";
 #endif
-#ifdef DEBUG_INSTRUCTIONS
+#ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
 			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset <<
 			             ": preds =";
@@ -675,6 +683,13 @@ namespace LL2W {
 				          << "\e[0m\n";
 			}
 			std::cout << "\n";
+		}
+#endif
+#ifdef DEBUG_LINEAR
+		for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
+			int read, written;
+			std::tie(read, written) = instruction->extract();
+			std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
 		}
 #endif
 #ifdef DEBUG_VARS
@@ -705,7 +720,7 @@ namespace LL2W {
 			std::cout << "\e[0m\n";
 		}
 #endif
-#if defined(DEBUG_INSTRUCTIONS) || defined(DEBUG_VARS)
+#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << "}\n\n";
 #endif
 		for (Node *node: cfg.nodes()) {

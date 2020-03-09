@@ -11,6 +11,11 @@
 #define CAST(t) const t *cast = dynamic_cast<const t *>(node)
 
 namespace LL2W {
+	LLVMInstruction::~LLVMInstruction() {
+		if (ownsNode)
+			delete node;
+	}
+
 	bool LLVMInstruction::isTerminal() const {
 		const NodeType type = node->nodeType();
 		return type == NodeType::Ret || type == NodeType::Unreachable;
