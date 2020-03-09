@@ -17,6 +17,7 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_INSTRUCTIONS
 // #define DEBUG_VARS
+// #define DEBUG_RENDER
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -674,8 +675,10 @@ namespace LL2W {
 			}
 		}
 
+#ifdef DEBUG_RENDER
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
+#endif
 	}
 
 	void Function::debugMergeSets() const {
