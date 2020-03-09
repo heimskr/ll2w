@@ -612,8 +612,7 @@ namespace LL2W {
 			if (WhyInfo::isSpecialPurpose(interval.reg))
 				continue;
 			expireOldIntervals(interval);
-			// One free register is needed for spilling.
-			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters) - 1) {
+			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.setRegister(*pool.begin()));
