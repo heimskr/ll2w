@@ -300,6 +300,15 @@ namespace LL2W {
 			instruction->index = ++i;
 	}
 
+	void Function::splitBlocks() {
+		// Liveness analysis appears to work on the level of basic blocks, rather than instructions. This means that
+		// variables can't die until the end of a basic block. If there are more definitions in a basic block than there
+		// are physical registers, register allocation is therefore impossible. A workaround is to ensure that no basic
+		// block has too many definitions by splitting them at the point where the number of definitions is equal to the
+		// number of physical registers. The terminator of the original block is moved to the end of the added block and
+		// replaced with a branch to the added block.
+	}
+
 	Node & Function::operator[](const BasicBlock &bb) const {
 		return *bbNodeMap.at(&bb);
 	}
@@ -423,6 +432,7 @@ namespace LL2W {
 		if (extracted)
 			return;
 
+		splitBlocks();
 		extractBlocks();
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
@@ -433,13 +443,15 @@ namespace LL2W {
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
-		linearScan();
 
-		for (BasicBlockPtr &block: blocks)
-			block->extract();
-		extractVariables();
-		computeLiveness();
-		linearScan();
+		if (0 < linearScan()) {
+			for (BasicBlockPtr &block: blocks)
+				block->extract();
+			extractVariables();
+			computeLiveness();
+			linearScan();
+		}
+
 		extracted = true;
 	}
 

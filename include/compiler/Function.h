@@ -61,6 +61,7 @@ namespace LL2W {
 				bool reindex = true);
 			void removeUselessBranches();
 			void reindexInstructions();
+			void splitBlocks();
 
 			std::list<Interval> sortedIntervals();
 
