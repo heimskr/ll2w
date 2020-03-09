@@ -56,6 +56,7 @@ namespace LL2W {
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			void spill(std::shared_ptr<Variable>);
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction);
+			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction);
 			void removeUselessBranches();
 
 			std::list<Interval> sortedIntervals();

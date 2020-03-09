@@ -224,6 +224,17 @@ namespace LL2W {
 		}
 	}
 
+	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction) {
+		BasicBlockPtr block = base->parent.lock();
+		new_instruction->index = base->index + 1;
+		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), new_instruction);
+		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), new_instruction);
+		linearInstructions.insert(linearIter, new_instruction);
+		block->instructions.insert(blockIter, new_instruction);
+		for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
+			++(*linearIter)->index;
+	}
+
 	void Function::removeUselessBranches() {
 		std::list<InstructionPtr> to_remove;
 		for (auto iter = blocks.begin(), end = blocks.end(); iter != end; ++iter) {
