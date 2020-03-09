@@ -15,6 +15,7 @@ namespace LL2W {
 			StackLoadInstruction(std::shared_ptr<Variable> result_, const StackLocation &location_, int index_):
 				IntermediateInstruction(index_), result(result_), location(location_) {}
 
+			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;
 	};
 }
