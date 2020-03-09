@@ -60,6 +60,7 @@ namespace LL2W {
 			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
 			void removeUselessBranches();
+			void reindexInstructions();
 
 			std::list<Interval> sortedIntervals();
 

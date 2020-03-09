@@ -197,6 +197,11 @@ namespace LL2W {
 		BasicBlockPtr block = variable->onlyDefiner();
 		InstructionPtr definition = variable->onlyDefinition();
 		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
+		for (InstructionPtr instruction: linearInstructions) {
+
+		}
+
+		reindexInstructions();
 	}
 
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
@@ -264,6 +269,12 @@ namespace LL2W {
 
 		for (InstructionPtr &ptr: to_remove)
 			remove(ptr);
+	}
+
+	void Function::reindexInstructions() {
+		int i = -1;
+		for (InstructionPtr &instruction: linearInstructions)
+			instruction->index = ++i;
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
