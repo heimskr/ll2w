@@ -199,9 +199,10 @@ namespace LL2W {
 		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
 	}
 
-	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction) {
+	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
-		new_instruction->index = base->index + 1;
+		if (reindex)
+			new_instruction->index = base->index + 1;
 		std::list<InstructionPtr>::iterator iter;
 		if (base == linearInstructions.back()) {
 			linearInstructions.push_back(new_instruction);
@@ -219,20 +220,25 @@ namespace LL2W {
 			++iter;
 			linearInstructions.insert(iter, new_instruction);
 
-			for (auto end = linearInstructions.end(); iter != end; ++iter)
-				++(*iter)->index;
+			if (reindex) {
+				for (auto end = linearInstructions.end(); iter != end; ++iter)
+					++(*iter)->index;
+			}
 		}
 	}
 
-	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction) {
+	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
-		new_instruction->index = base->index + 1;
+		if (reindex)
+			new_instruction->index = base->index + 1;
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), new_instruction);
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), new_instruction);
 		linearInstructions.insert(linearIter, new_instruction);
 		block->instructions.insert(blockIter, new_instruction);
-		for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
-			++(*linearIter)->index;
+		if (reindex) {
+			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
+				++(*linearIter)->index;
+		}
 	}
 
 	void Function::removeUselessBranches() {
