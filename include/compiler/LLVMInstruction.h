@@ -15,6 +15,8 @@ namespace LL2W {
 			bool isTerminal() const override;
 			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;
+
+			bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override;
 	};
 }
 

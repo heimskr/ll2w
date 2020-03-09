@@ -108,6 +108,13 @@ namespace LL2W {
 		return out;
 	}
 
+	void Reader::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		for (LocalValue *value: allLocals()) {
+			if (value->variable->id == to_replace->id)
+				value->variable = new_var;
+		}
+	}
+
 // Writer
 
 	std::string Writer::getResult() const {

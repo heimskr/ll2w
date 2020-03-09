@@ -38,7 +38,7 @@ namespace LL2W {
 	}
 
 	bool Variable::operator==(const Variable &other) const {
-		return id == other.id && *type == *other.type;
+		return id == other.id && (type == other.type || *type == *other.type);
 	}
 
 	Variable::operator std::string() const {

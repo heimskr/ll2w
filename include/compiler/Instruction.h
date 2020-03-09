@@ -36,6 +36,10 @@ namespace LL2W {
 			bool operator>(const Instruction &) const;
 
 			virtual std::string debugExtra() { return ""; }
+
+			virtual bool replaceRead(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
+				return false;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

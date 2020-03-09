@@ -195,4 +195,13 @@ namespace LL2W {
 	std::string LLVMInstruction::debugExtra() {
 		return node->debugExtra();
 	}
+
+	bool LLVMInstruction::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		if (Reader *reader = dynamic_cast<Reader *>(node)) {
+			reader->replaceRead(to_replace, new_var);
+			return true;
+		}
+
+		return false;
+	}
 }

@@ -18,7 +18,7 @@
 
 // #define DEBUG_INTERVALS
 #define DEBUG_INSTRUCTIONS
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 
 namespace LL2W {
@@ -197,8 +197,13 @@ namespace LL2W {
 		BasicBlockPtr block = variable->onlyDefiner();
 		InstructionPtr definition = variable->onlyDefinition();
 		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
-		for (InstructionPtr instruction: linearInstructions) {
-
+		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
+			InstructionPtr &instruction = *iter;
+			if (instruction->read.count(variable) != 0) {
+				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
+				std::cerr << "  " << (instruction->replaceRead(variable, new_var)? "Replaced" : "Didn't replace") << " in " << instruction->debugExtra() << "\n";
+				instruction->read.erase(variable);
+			}
 		}
 
 		reindexInstructions();
@@ -498,7 +503,8 @@ namespace LL2W {
 			if (WhyInfo::isSpecialPurpose(interval.reg))
 				continue;
 			expireOldIntervals(interval);
-			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
+			// One free register is needed for spilling.
+			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters) - 1) {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.setRegister(*pool.begin()));

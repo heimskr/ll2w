@@ -63,6 +63,7 @@ namespace LL2W {
 	struct Reader {
 		virtual std::vector<Value *> allValues() const = 0;
 		std::vector<LocalValue *> allLocals() const;
+		void replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var);
 	};
 
 	struct Writer {
