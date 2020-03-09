@@ -653,7 +653,7 @@ namespace LL2W {
 			for (const BasicBlockPtr &use: pair.second->usingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
-			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost));
+			std::cout << "\e[2m  cost = " << (spill_cost == INT_MAX? "\e[1m∞\e[0;2m" : std::to_string(spill_cost));
 			if (pair.second->definingBlocks.size() > 1)
 				std::cout << " (multiple defs)";
 			std::cout << "\e[0m\n";
