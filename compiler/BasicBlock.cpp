@@ -28,6 +28,12 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
+	void BasicBlock::unextract() {
+		read.clear();
+		written.clear();
+		extracted = false;
+	}
+
 	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
 		if (instructions.empty()) {
 			instructions.push_back(instruction);

@@ -39,12 +39,15 @@ namespace LL2W {
 			BasicBlock(int, const std::vector<int> &, const std::list<std::shared_ptr<Instruction>> &);
 
 			std::pair<char, char> extract(bool force = false);
+			void unextract();
 
 			size_t size() const { return instructions.size(); }
 
 			/** Inserts an instruction right before the basic block's terminal instruction.
 			 *  This function assumes that every basic block has exactly one terminal instruction. */
 			void insertBeforeTerminal(std::shared_ptr<Instruction>);
+
+			int countDefinitions();
 
 			bool isLiveIn(std::shared_ptr<Variable>) const;
 			bool isLiveOut(std::shared_ptr<Variable>) const;

@@ -156,7 +156,7 @@ namespace LL2W {
 	struct BrUncondNode: public InstructionNode {
 		const std::string *destination;
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
-		BrUncondNode(const std::string &destination_): BrUncondNode(&destination_) {}
+		BrUncondNode(const std::string &destination_): BrUncondNode(StringSet::intern(destination_)) {}
 		BrUncondNode(const ASTNode *node): BrUncondNode(node->lexerInfo) { delete node; }
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::BrUncond; }

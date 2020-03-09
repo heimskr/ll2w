@@ -53,6 +53,7 @@ namespace LL2W {
 			void assignIndices();
 			/** Merges arguments of phi instructions into single variables. */
 			void coalescePhi();
+			int newLabel() const;
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			void spill(std::shared_ptr<Variable>);
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
@@ -62,6 +63,7 @@ namespace LL2W {
 			void removeUselessBranches();
 			void reindexInstructions();
 			void splitBlocks();
+			void splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
 
 			std::list<Interval> sortedIntervals();
 

@@ -178,7 +178,7 @@ namespace LL2W {
 			remove(ptr);
 	}
 
-	VariablePtr Function::newVariable(Type *type, std::shared_ptr<BasicBlock> definer) {
+	int Function::newLabel() const {
 		int label = 0;
 		if (!variableStore.empty()) {
 			auto iter = variableStore.end();
@@ -187,7 +187,11 @@ namespace LL2W {
 		}
 
 		for (; bbLabels.count(label) == 1; ++label);
-		return getVariable(label, type, definer);
+		return label;
+	}
+
+	VariablePtr Function::newVariable(Type *type, std::shared_ptr<BasicBlock> definer) {
+		return getVariable(newLabel(), type, definer);
 	}
 
 	void Function::spill(VariablePtr variable) {
@@ -307,6 +311,65 @@ namespace LL2W {
 		// block has too many definitions by splitting them at the point where the number of definitions is equal to the
 		// number of physical registers. The terminator of the original block is moved to the end of the added block and
 		// replaced with a branch to the added block.
+		bool any_changed;
+		for (;;) {
+			any_changed = false;
+			for (BasicBlockPtr &block: blocks) {
+				int defs = 0;
+				std::shared_ptr<Instruction> prev_instruction;
+				for (InstructionPtr &instruction: block->instructions) {
+					if (WhyInfo::generalPurposeRegisters < defs + instruction->written.size()) {
+						splitBlock(block, prev_instruction);
+						any_changed = true;
+						goto next;
+					}
+
+					prev_instruction = instruction;
+					defs += instruction->written.size();
+				}
+			}
+
+			next:
+			if (!any_changed)
+				break;
+		}
+	}
+
+	void Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
+		const int label = newLabel();
+		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
+		          << " & " << label << "\n";
+		BasicBlockPtr newBlock = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
+			std::list<InstructionPtr>());
+
+		auto end = block->instructions.end();
+		auto iter = std::find(block->instructions.begin(), end, instruction);
+		for (++iter; iter != end; ++iter) {
+			newBlock->instructions.push_back(*iter);
+			block->instructions.erase(iter);
+		}
+
+		// Replace the old label with the new label in the preds of all basic blocks.
+		for (BasicBlockPtr &possible_successor: blocks) {
+			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->label);
+			if (predIter != possible_successor->preds.end())
+				*predIter = label;
+		}
+
+		// Insert the new block after the original block.
+		auto blockIter = std::find(blocks.begin(), blocks.end(), block);
+		++blockIter;
+		blocks.insert(blockIter, newBlock);
+
+		// Add an unconditional branch from the original block to the new block.
+		BrUncondNode *node = new BrUncondNode(std::to_string(label));
+		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
+		block->instructions.push_back(branch);
+		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
+		++iter;
+		linearInstructions.insert(iter, branch);
+
+		reindexInstructions();
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -432,10 +495,10 @@ namespace LL2W {
 		if (extracted)
 			return;
 
-		splitBlocks();
 		extractBlocks();
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
+		splitBlocks();
 		extractVariables();
 		makeCFG();
 		removeUselessBranches();
