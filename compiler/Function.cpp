@@ -14,10 +14,11 @@
 #include "util/Util.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
+#include "instruction/StackStoreInstruction.h"
 
 // #define DEBUG_INTERVALS
 #define DEBUG_INSTRUCTIONS
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 
 namespace LL2W {
@@ -83,6 +84,8 @@ namespace LL2W {
 					read_var->lastUse = instruction;
 					read_var->uses.insert(instruction);
 				}
+				for (VariablePtr written_var: instruction->written)
+					written_var->definitions.insert(instruction);
 			}
 		}
 
@@ -167,6 +170,7 @@ namespace LL2W {
 
 			to_remove.push_back(instruction);
 			target->removeDefiner(phi_definer);
+			target->removeDefinition(instruction);
 		}
 
 		for (InstructionPtr &ptr: to_remove)
@@ -190,9 +194,12 @@ namespace LL2W {
 		// after the definition of the variable to be spilled, store its value onto the stack in the proper location.
 		// For each use of the original variable, replace the original variable with a new variable, and right before
 		// the use insert a definition for the variable by loading it from the stack.
+		std::cerr << "Trying to spill " << *variable << " (definitions: " << variable->definitions.size() << ")\n";
 		BasicBlockPtr block = variable->onlyDefiner();
 		VariablePtr stack_variable = newVariable(variable->type, block);
 		InstructionPtr definition = variable->onlyDefinition();
+		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(stack_variable),
+			stack_variable));
 	}
 
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction) {
@@ -409,7 +416,7 @@ namespace LL2W {
 
 	StackLocation & Function::addToStack(VariablePtr variable) {
 		const int to_add = variable && variable->type? variable->type->width() / 8 : 8;
-		StackLocation &added = stack.emplace(stackSize, StackLocation(variable, stackSize, to_add)).first->second;
+		StackLocation &added = stack.emplace(stackSize, StackLocation(this, variable, stackSize, to_add)).first->second;
 		stackSize += to_add;
 		variableLocations.emplace(variable, &added);
 		return added;
@@ -434,6 +441,7 @@ namespace LL2W {
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			addToStack(interval.variable);
+			// spill(interval.variable);
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {

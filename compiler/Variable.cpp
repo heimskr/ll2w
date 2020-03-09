@@ -1,3 +1,4 @@
+#include <iostream>
 #include <climits>
 
 #include "compiler/BasicBlock.h"
@@ -25,12 +26,14 @@ namespace LL2W {
 		// If a variable is never used, it has a negative spill cost.
 		if (uses.empty())
 			return -1;
+
 		// If a variable has only one use and that use is right after its one definition, it has an (effectively)
 		// infinite spill cost.
-		auto luses = uses.begin()->lock();
-		auto ldefs = definitions.begin()->lock();
-		if (definitions.size() == 1 && uses.size() == 1 && luses->index == ldefs->index + 1)
-			return INT_MAX;
+		if (definitions.size() == 1 && uses.size() == 1) {
+			if (uses.begin()->lock()->index == definitions.begin()->lock()->index + 1)
+				return INT_MAX;
+		}
+
 		return weight();
 	}
 
@@ -84,6 +87,16 @@ namespace LL2W {
 		}
 	}
 
+	void Variable::removeDefinition(std::shared_ptr<Instruction> instruction) {
+		if (parent) {
+			parent->removeDefinition(instruction);
+		} else {
+			definitions.erase(instruction);
+			for (Variable *alias: aliases)
+				alias->definitions.erase(instruction);
+		}
+	}
+
 	std::shared_ptr<BasicBlock> Variable::onlyDefiner() const {
 		if (definingBlocks.size() != 1) {
 			throw std::runtime_error("Variable has " + std::string(definingBlocks.empty()? "no" : "multiple") +
@@ -132,4 +145,8 @@ namespace LL2W {
 	VARSETTER(UsingBlocks, const decltype(Variable::usingBlocks) &, blocks, usingBlocks)
 	VARSETTER(LastUse, decltype(Variable::lastUse), use, lastUse);
 	VARSETTER(Register, int, new_reg, reg);
+
+	std::ostream & operator<<(std::ostream &os, const LL2W::Variable &var) {
+		return os << std::string(var);
+	}
 }

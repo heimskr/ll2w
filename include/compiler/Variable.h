@@ -2,6 +2,7 @@
 #define COMPILER_VARIABLE_H_
 
 #include <memory>
+#include <ostream>
 #include <set>
 
 #include "parser/Types.h"
@@ -47,6 +48,7 @@ namespace LL2W {
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
+			void removeDefinition(std::shared_ptr<Instruction>);
 
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
@@ -64,7 +66,10 @@ namespace LL2W {
 			bool operator==(const Variable &) const;
 	};
 
+	std::ostream & operator<<(std::ostream &, const LL2W::Variable &);
+
 	using VariablePtr = std::shared_ptr<Variable>;
 }
+
 
 #endif
