@@ -5,6 +5,7 @@
 #include <set>
 
 #include "parser/Types.h"
+#include "util/WeakCompare.h"
 
 namespace LL2W {
 	class Node;
@@ -21,9 +22,9 @@ namespace LL2W {
 			int id;
 			Type *type = nullptr;
 			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
-			Instruction *lastUse = nullptr;
+			std::weak_ptr<Instruction> lastUse;
 			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
-			std::set<Instruction *> definitions, uses;
+			std::set<std::weak_ptr<Instruction>, WeakCompare<Instruction>> definitions, uses;
 			int reg = -1;
 
 			Variable *spilledFrom = nullptr; // Tentative.
@@ -47,15 +48,16 @@ namespace LL2W {
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
 
-			std::shared_ptr<BasicBlock> onlyDefinition() const;
+			std::shared_ptr<BasicBlock> onlyDefiner() const;
+			std::shared_ptr<Instruction> onlyDefinition() const;
 
 			void setID(int);
 			void setType(Type *);
-			void setDefiningBlocks(const std::set<std::shared_ptr<BasicBlock>> &);
-			void setDefinitions(const std::set<Instruction *> &);
-			void setUses(const std::set<Instruction *> &);
-			void setUsingBlocks(const std::set<std::shared_ptr<BasicBlock>> &);
-			void setLastUse(Instruction *);
+			void setDefiningBlocks(const decltype(definingBlocks) &);
+			void setDefinitions(const decltype(definitions) &);
+			void setUses(const decltype(uses) &);
+			void setUsingBlocks(const decltype(usingBlocks) &);
+			void setLastUse(decltype(lastUse));
 			void setRegister(int);
 
 			operator std::string() const;

@@ -27,7 +27,9 @@ namespace LL2W {
 			return -1;
 		// If a variable has only one use and that use is right after its one definition, it has an (effectively)
 		// infinite spill cost.
-		if (definitions.size() == 1 && uses.size() == 1 && (*uses.begin())->index == (*definitions.begin())->index + 1)
+		auto luses = uses.begin()->lock();
+		auto ldefs = definitions.begin()->lock();
+		if (definitions.size() == 1 && uses.size() == 1 && luses->index == ldefs->index + 1)
 			return INT_MAX;
 		return weight();
 	}
@@ -82,13 +84,22 @@ namespace LL2W {
 		}
 	}
 
-	std::shared_ptr<BasicBlock> Variable::onlyDefinition() const {
+	std::shared_ptr<BasicBlock> Variable::onlyDefiner() const {
 		if (definingBlocks.size() != 1) {
 			throw std::runtime_error("Variable has " + std::string(definingBlocks.empty()? "no" : "multiple") +
 				" defining blocks");
 		}
 
 		return *definingBlocks.begin();
+	}
+
+	std::shared_ptr<Instruction> Variable::onlyDefinition() const {
+		if (definitions.size() != 1) {
+			throw std::runtime_error("Variable has " + std::string(definitions.empty()? "no" : "multiple") +
+				" definitions");
+		}
+
+		return definitions.begin()->lock();
 	}
 
 	void Variable::setType(Type *new_type) {
@@ -115,10 +126,10 @@ namespace LL2W {
 	}
 
 	VARSETTER(ID, int, new_id, id)
-	VARSETTER(DefiningBlocks, const std::set<std::shared_ptr<BasicBlock>> &, block, definingBlocks)
-	VARSETTER(Definitions, const std::set<Instruction *> &, defs, definitions)
-	VARSETTER(Uses, const std::set<Instruction *> &, new_uses, uses)
-	VARSETTER(UsingBlocks, const std::set<std::shared_ptr<BasicBlock>> &, blocks, usingBlocks)
-	VARSETTER(LastUse, Instruction *, use, lastUse);
+	VARSETTER(DefiningBlocks, const decltype(Variable::definingBlocks) &, block, definingBlocks)
+	VARSETTER(Definitions, const decltype(Variable::definitions) &, defs, definitions)
+	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)
+	VARSETTER(UsingBlocks, const decltype(Variable::usingBlocks) &, blocks, usingBlocks)
+	VARSETTER(LastUse, decltype(Variable::lastUse), use, lastUse);
 	VARSETTER(Register, int, new_reg, reg);
 }

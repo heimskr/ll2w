@@ -79,8 +79,8 @@ namespace LL2W {
 				written_var->definingBlocks.insert(block);
 			for (std::shared_ptr<Instruction> &instruction: block->instructions) {
 				for (VariablePtr read_var: instruction->read) {
-					read_var->lastUse = instruction.get();
-					read_var->uses.insert(instruction.get());
+					read_var->lastUse = instruction;
+					read_var->uses.insert(instruction);
 				}
 			}
 		}
@@ -134,7 +134,7 @@ namespace LL2W {
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
-			BasicBlockPtr phi_definer = target->onlyDefinition();
+			BasicBlockPtr phi_definer = target->onlyDefiner();
 			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
 				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
 				if (!local) {
@@ -189,8 +189,9 @@ namespace LL2W {
 		// after the definition of the variable to be spilled, store its value onto the stack in the proper location.
 		// For each use of the original variable, replace the original variable with a new variable, and right before
 		// the use insert a definition for the variable by loading it from the stack.
-		BasicBlockPtr block = variable->onlyDefinition();
+		BasicBlockPtr block = variable->onlyDefiner();
 		VariablePtr stack_variable = newVariable(variable->type, block);
+		InstructionPtr definition = variable->onlyDefinition();
 	}
 
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction) {
