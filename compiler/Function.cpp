@@ -13,6 +13,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "util/Util.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/StackLoadInstruction.h"
 
 // #define DEBUG_INTERVALS
 #define DEBUG_INSTRUCTIONS

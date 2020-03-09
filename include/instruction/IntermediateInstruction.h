@@ -1,10 +1,11 @@
-#ifndef COMPILER_WHYINSTRUCTION_H_
-#define COMPILER_WHYINSTRUCTION_H_
+#ifndef COMPILER_INTERMEDIATEINSTRUCTION_H_
+#define COMPILER_INTERMEDIATEINSTRUCTION_H_
 
 #include "compiler/Instruction.h"
 
 namespace LL2W {
-	class WhyInstruction: public Instruction {
+	/** Represents an instruction created during one compiler pass and replaced during a later compiler pass. */
+	class IntermediateInstruction: public Instruction {
 		protected:
 			using Instruction::Instruction;
 

@@ -12,7 +12,7 @@ namespace LL2W {
 		enum class Type {Spill, Alloca};
 		
 		int offset = 0, width = -1, align = -1;
-		std::unique_ptr<LL2W::Type> type;
+		std::shared_ptr<LL2W::Type> type;
 		std::shared_ptr<Variable> variable;
 
 		StackLocation(std::shared_ptr<Variable> variable_, int offset_ = 0, int width_ = -1, int align_ = -1);
