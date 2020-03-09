@@ -341,10 +341,17 @@ namespace LL2W {
 		          << " & " << label << "\n";
 		BasicBlockPtr newBlock = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
 			std::list<InstructionPtr>());
+		bbLabels.insert(label);
 
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
 		for (++iter; iter != end; ++iter) {
+			for (const VariablePtr &var: (*iter)->written) {
+				var->removeDefiner(block);
+				var->addDefiner(newBlock);
+			}
+
+			(*iter)->parent = newBlock;
 			newBlock->instructions.push_back(*iter);
 			block->instructions.erase(iter);
 		}
@@ -368,6 +375,9 @@ namespace LL2W {
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
 		++iter;
 		linearInstructions.insert(iter, branch);
+
+		block->extract(true);
+		newBlock->extract();
 
 		reindexInstructions();
 	}
