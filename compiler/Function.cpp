@@ -19,7 +19,7 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 
 namespace LL2W {
@@ -215,9 +215,16 @@ namespace LL2W {
 
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
+		if (!block) {
+			std::cerr << "\e[31;1m!\e[0m " << base->debugExtra() << "\n";
+			throw std::runtime_error("Couldn't lock instruction's parent block");
+		}
+
 		if (reindex)
 			new_instruction->index = base->index + 1;
+		new_instruction->parent = base->parent;
 		std::list<InstructionPtr>::iterator iter;
+
 		if (base == linearInstructions.back()) {
 			linearInstructions.push_back(new_instruction);
 			block->instructions.push_back(new_instruction);
@@ -243,8 +250,15 @@ namespace LL2W {
 
 	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
+		if (!block) {
+			std::cerr << "\e[31;1m!\e[0m " << base->debugExtra() << "\n";
+			throw std::runtime_error("Couldn't lock instruction's parent block");
+		}
+
 		if (reindex)
 			new_instruction->index = base->index + 1;
+		new_instruction->parent = base->parent;
+
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		linearInstructions.insert(linearIter, new_instruction);
@@ -421,9 +435,11 @@ namespace LL2W {
 		updateInstructionNodes();
 		linearScan();
 
-		// extractVariables();
-		// computeLiveness();
-		// linearScan();
+		for (BasicBlockPtr &block: blocks)
+			block->extract();
+		extractVariables();
+		computeLiveness();
+		linearScan();
 		extracted = true;
 	}
 
@@ -695,7 +711,8 @@ namespace LL2W {
 #ifdef DEBUG_VARS
 		std::cout << "    \e[2m; Variables:\e[0m\n";
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs =";
+			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
+			          << pair.second->definitions.size() << ") =";
 			for (const BasicBlockPtr &def: pair.second->definingBlocks)
 				std::cout << " \e[1;2m%" << std::setw(2) << def->label << "\e[0m";
 			std::cout << "  \e[0;2muses =";
