@@ -15,16 +15,7 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
-
-// #define DEBUG_INTERVALS
-#define DEBUG_BLOCKS
-// #define DEBUG_LINEAR
-// #define DEBUG_VARS
-// #define DEBUG_RENDER
-// #define DEBUG_SPILL
-// #define DEBUG_SPLIT
-// #define DEBUG_LINEAR_SCAN
-#define DEBUG_READ_WRITTEN
+#include "options.h"
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {

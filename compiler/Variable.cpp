@@ -49,6 +49,7 @@ namespace LL2W {
 			out << "\e[32m%" << id << "\e[39m";
 		else
 			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << std::to_string(id) << "\e[39;22m";
+#ifdef VARIABLE_EXTRA
 		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
 		if (!alias_set.empty()) {
 			out << "\e[2m[";
@@ -59,6 +60,7 @@ namespace LL2W {
 			}
 			out << "]\e[0m";
 		}
+#endif
 		return out.str();
 	}
 
