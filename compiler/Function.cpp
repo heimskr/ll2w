@@ -318,7 +318,7 @@ namespace LL2W {
 				int defs = 0;
 				std::shared_ptr<Instruction> prev_instruction;
 				for (InstructionPtr &instruction: block->instructions) {
-					if (WhyInfo::generalPurposeRegisters < defs + instruction->written.size()) {
+					if (WhyInfo::allocatableRegisters < defs + instruction->written.size()) {
 						splitBlock(block, prev_instruction);
 						any_changed = true;
 						goto next;
@@ -612,7 +612,7 @@ namespace LL2W {
 			if (WhyInfo::isSpecialPurpose(interval.reg))
 				continue;
 			expireOldIntervals(interval);
-			if (active.size() == static_cast<size_t>(WhyInfo::generalPurposeRegisters)) {
+			if (active.size() == static_cast<size_t>(WhyInfo::allocatableRegisters)) {
 				spillAtInterval(interval);
 			} else {
 				pool.erase(interval.setRegister(*pool.begin()));
