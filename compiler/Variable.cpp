@@ -55,7 +55,7 @@ namespace LL2W {
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
 				if (iter != begin)
 					out << ",";
-				out << (*iter)->id << "x" << (*iter)->definitions.size();
+				out << (*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
 			}
 			out << "]\e[0m";
 		}
@@ -75,6 +75,10 @@ namespace LL2W {
 			new_parent.definingBlocks.insert(def);
 		for (const std::shared_ptr<BasicBlock> &use: usingBlocks)
 			new_parent.usingBlocks.insert(use);
+		for (const std::weak_ptr<Instruction> &def: definitions)
+			new_parent.definitions.insert(def.lock());
+		for (const std::weak_ptr<Instruction> &use: uses)
+			new_parent.uses.insert(use.lock());
 		id = new_parent.id;
 		type = new_parent.type;
 		lastUse = new_parent.lastUse;
