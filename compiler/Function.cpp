@@ -369,7 +369,7 @@ namespace LL2W {
 		blocks.insert(blockIter, newBlock);
 
 		// Add an unconditional branch from the original block to the new block.
-		BrUncondNode *node = new BrUncondNode(std::to_string(label));
+		BrUncondNode *node = new BrUncondNode(std::to_string(label)); // Prepending with "%" causes a strange bug.
 		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
 		block->instructions.push_back(branch);
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
