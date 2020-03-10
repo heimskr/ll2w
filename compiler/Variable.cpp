@@ -44,7 +44,7 @@ namespace LL2W {
 	Variable::operator std::string() const {
 		if (reg == -1)
 			return "\e[32m%" + std::to_string(id) + "\e[39m";
-		return "\e[92m$" + WhyInfo::registerName(reg) + "\e[39;2m:\e[32m" + std::to_string(id) + "\e[2m";
+		return "\e[92m$" + WhyInfo::registerName(reg) + "\e[39;2m:\e[32m" + std::to_string(id) + "\e[39;22m";
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {
