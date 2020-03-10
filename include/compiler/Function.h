@@ -103,6 +103,7 @@ namespace LL2W {
 			BasicBlockPtr getEntry();
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();
+			void resetLiveness();
 			bool isLiveIn(BasicBlock &, VariablePtr);
 			bool isLiveOut(BasicBlock &, VariablePtr);
 			void debug();

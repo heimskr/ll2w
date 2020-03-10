@@ -16,10 +16,10 @@
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 
-// #define DEBUG_INTERVALS
+#define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 
 namespace LL2W {
@@ -287,7 +287,6 @@ namespace LL2W {
 					++next;
 					if (next != end) {
 						const int destination = std::atoi(branch->destination->substr(1).c_str());
-						std::cerr << (*next)->label << " vs. " << destination << ": " << back->debugExtra() << "\n";
 						if ((*next)->label == destination)
 							to_remove.push_back(back);
 					}
@@ -531,6 +530,7 @@ namespace LL2W {
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
 			extractVariables();
+			resetLiveness();
 			computeLiveness();
 			linearScan();
 		}
@@ -701,6 +701,15 @@ namespace LL2W {
 				isLiveOut(*block, pair.second);
 			}
 		}
+	}
+
+	void Function::resetLiveness() {
+		for (BasicBlockPtr &block: blocks) {
+			block->liveIn.clear();
+			block->liveOut.clear();
+		}
+
+		livenessComputed = false;
 	}
 
 	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
