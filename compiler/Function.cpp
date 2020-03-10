@@ -208,7 +208,8 @@ namespace LL2W {
 		return getVariable(newLabel(), type, definer);
 	}
 
-	void Function::spill(VariablePtr variable) {
+	bool Function::spill(VariablePtr variable) {
+		bool out = false;
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
 		// before the use insert a definition for the variable by loading it from the stack.
@@ -233,6 +234,7 @@ namespace LL2W {
 
 		if (should_insert) {
 			insertAfter(definition, store);
+			out = true;
 #ifdef DEBUG_SPILL
 		std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
 #endif
@@ -252,6 +254,7 @@ namespace LL2W {
 					instruction->read.erase(variable);
 					auto load = std::make_shared<StackLoadInstruction>(new_var, *variableLocations.at(variable), -1);
 					insertBefore(instruction, load);
+					out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
 				          << load->debugExtra() << "\n";
@@ -269,6 +272,7 @@ namespace LL2W {
 #endif
 
 		reindexInstructions();
+		return out;
 	}
 
 	InstructionPtr Function::after(InstructionPtr instruction) {
@@ -668,7 +672,8 @@ namespace LL2W {
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			addToStack(interval.variable);
-			spill(interval.variable);
+			if (spill(interval.variable))
+				++spill_count;
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -691,6 +696,7 @@ namespace LL2W {
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
+			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable; std::cerr << "\n";
 			auto iter = active.end(), prebegin = active.begin();
 			--prebegin;
 			for (--iter; iter != prebegin && !maySpill(**iter); --iter);
@@ -698,7 +704,6 @@ namespace LL2W {
 				std::cerr << "iter == prebegin. This is not good.\n";
 			Interval &spill = iter == prebegin? *active.back() : **iter;
 			std::cerr << "Chose spill: " << *spill.variable << "\n";
-			++spill_count;
 			if (interval.endpoint() < spill.endpoint() || !maySpill(interval)) {
 				interval.setRegister(spill.reg);
 				addLocation(spill);

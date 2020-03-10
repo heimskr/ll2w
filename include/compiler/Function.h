@@ -55,7 +55,7 @@ namespace LL2W {
 			void coalescePhi();
 			int newLabel() const;
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
-			void spill(std::shared_ptr<Variable>);
+			bool spill(std::shared_ptr<Variable>);
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
