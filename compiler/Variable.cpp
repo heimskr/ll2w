@@ -1,5 +1,5 @@
-#include <iostream>
 #include <climits>
+#include <sstream>
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"
@@ -42,9 +42,23 @@ namespace LL2W {
 	}
 
 	Variable::operator std::string() const {
+		std::stringstream out;
+		const std::string base;
 		if (reg == -1)
-			return "\e[32m%" + std::to_string(id) + "\e[39m";
-		return "\e[92m$" + WhyInfo::registerName(reg) + "\e[39;2m:\e[32m" + std::to_string(id) + "\e[39;22m";
+			out << "\e[32m%" << id << "\e[39m";
+		else
+			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << std::to_string(id) << "\e[39;22m";
+		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
+		if (!alias_set.empty()) {
+			out << "\e[2m[";
+			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
+				if (iter != begin)
+					out << ",";
+				out << (*iter)->id;
+			}
+			out << "]\e[0m";
+		}
+		return out.str();
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {

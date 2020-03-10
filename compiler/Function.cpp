@@ -77,7 +77,17 @@ namespace LL2W {
 		}
 	}
 
-	void Function::extractVariables() {
+	void Function::extractVariables(bool reset) {
+		if (reset) {
+			for (const std::pair<int, VariablePtr> &pair: variableStore) {
+				pair.second->setUsingBlocks({});
+				pair.second->setDefiningBlocks({});
+				pair.second->setDefinitions({});
+				pair.second->setUses({});
+				pair.second->setLastUse({});
+			}
+		}
+
 		for (BasicBlockPtr &block: blocks) {
 			for (VariablePtr read_var: block->read)
 				read_var->usingBlocks.insert(block);
@@ -204,25 +214,30 @@ namespace LL2W {
 		BasicBlockPtr block = variable->onlyDefiner();
 		InstructionPtr definition = variable->onlyDefinition();
 #ifdef DEBUG_SPILL
-		std::cerr << "  Trying to spill " << *variable << " (definition: " << variable->definitions.size() << ")\n";
-		std::cerr << "    Inserting a stack store after definition: " << definition->debugExtra() << "\n";
+		std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << ")\n";
 #endif
-		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
+		auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
+		insertAfter(definition, store);
+#ifdef DEBUG_SPILL
+		std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
+#endif
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
 				bool replaced = instruction->replaceRead(variable, new_var);
 #ifdef DEBUG_SPILL
+				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
 				          << " in " << instruction->debugExtra() << "\n";
 #endif
 				if (replaced) {
 					instruction->read.erase(variable);
-					insertBefore(instruction, std::make_shared<StackLoadInstruction>(new_var,
-						*variableLocations.at(variable), -1));
+					auto load = std::make_shared<StackLoadInstruction>(new_var, *variableLocations.at(variable), -1);
+					insertBefore(instruction, load);
 #ifdef DEBUG_SPILL
-				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << "\n";
+				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
+				          << load->debugExtra() << "\n";
 #endif
 				}
 			}
@@ -549,7 +564,7 @@ namespace LL2W {
 			std::cerr << "Spills in first scan: \e[1m" << spilled << "\e[0m\n\n";
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
-			extractVariables();
+			extractVariables(true);
 			resetRegisters();
 			resetLiveness();
 			computeLiveness();

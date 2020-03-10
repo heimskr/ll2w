@@ -44,7 +44,7 @@ namespace LL2W {
 			int stackSize = 0;
 
 			void extractBlocks();
-			void extractVariables();
+			void extractVariables(bool reset = false);
 			void computeSuccMergeSet(Node *);
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
