@@ -10,7 +10,7 @@ namespace LL2W {
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
-		lastUse = *std::max_element(var->definingBlocks.begin(), var->definingBlocks.end(),
+		lastUse = *std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
