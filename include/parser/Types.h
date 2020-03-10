@@ -23,7 +23,8 @@ namespace LL2W {
 			virtual operator std::string() = 0;
 			virtual ~Type() {}
 			virtual Type * copy() const = 0;
-			virtual int width() const = 0; // in bytes
+			/** Returns the width of the type in bytes. */
+			virtual int width() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 	};

@@ -616,7 +616,6 @@ namespace LL2W {
 				block->extract();
 			extractVariables(true);
 			makeCFG();
-			setBlockNodes();
 			resetRegisters();
 			resetLiveness();
 			computeLiveness();
@@ -628,11 +627,6 @@ namespace LL2W {
 #endif
 
 		extracted = true;
-	}
-
-	void Function::uncolorAll() {
-		for (std::pair<const int, VariablePtr> &pair: variableStore)
-			pair.second->setRegister(-1);
 	}
 
 	std::list<Interval> Function::sortedIntervals() {
@@ -851,11 +845,6 @@ namespace LL2W {
 		}
 
 		livenessComputed = false;
-	}
-
-	void Function::setBlockNodes() {
-		for (BasicBlockPtr &block: blocks)
-			block->node = &cfg[std::to_string(block->label)];
 	}
 
 	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
