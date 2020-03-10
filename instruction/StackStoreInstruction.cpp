@@ -13,6 +13,6 @@ namespace LL2W {
 	}
 
 	std::string StackStoreInstruction::debugExtra() {
-		return "\e[1m[store " + std::string(*variable) + " @ " + std::to_string(location.offset) + "]\e[0m";
+		return "\e[1m[store " + std::string(*variable) + "\e[0;1m @ " + std::to_string(location.offset) + "]\e[0m";
 	}
 }

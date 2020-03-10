@@ -1,3 +1,4 @@
+#include <iostream>
 #include <algorithm>
 
 #include "compiler/BasicBlock.h"
@@ -10,10 +11,12 @@ namespace LL2W {
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
-		lastUse = *std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
+		auto lastUseIter = std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
+		// Some variables have no uses. For these variables, we consider the defining block to be the last user.
+		lastUse = lastUseIter == var->usingBlocks.end()? firstDefinition : *lastUseIter;
 	}
 
 	int Interval::startpoint() const {
