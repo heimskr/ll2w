@@ -497,6 +497,7 @@ namespace LL2W {
 	}
 
 	void Function::computeSuccMergeSets() {
+		succMergeSets.clear();
 		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
 	}
 
