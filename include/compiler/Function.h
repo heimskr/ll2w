@@ -104,6 +104,7 @@ namespace LL2W {
 			CallingConvention getCallingConvention() const;
 			void computeLiveness();
 			void resetLiveness();
+			void setBlockNodes();
 			bool isLiveIn(BasicBlock &, VariablePtr);
 			bool isLiveOut(BasicBlock &, VariablePtr);
 			void debug();

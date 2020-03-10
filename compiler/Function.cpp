@@ -22,7 +22,7 @@
 #define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
-// #define DEBUG_SPLIT
+#define DEBUG_SPLIT
 #define DEBUG_LINEAR_SCAN
 
 namespace LL2W {
@@ -344,6 +344,7 @@ namespace LL2W {
 		// number of physical registers. The terminator of the original block is moved to the end of the added block and
 		// replaced with a branch to the added block.
 		bool any_changed;
+		int split_count = 0;
 		for (;;) {
 			any_changed = false;
 			for (BasicBlockPtr &block: blocks) {
@@ -353,6 +354,7 @@ namespace LL2W {
 					if (WhyInfo::allocatableRegisters < defs + instruction->written.size()) {
 						splitBlock(block, prev_instruction);
 						any_changed = true;
+						++split_count;
 						goto next;
 					}
 
@@ -373,20 +375,21 @@ namespace LL2W {
 		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
 		          << " & " << label << "\n";
 #endif
-		BasicBlockPtr newBlock = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
+		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
 			std::list<InstructionPtr>());
 		bbLabels.insert(label);
+		bbMap.emplace(StringSet::intern(std::to_string(label)), new_block);
 
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
 		for (++iter; iter != end; ++iter) {
 			for (const VariablePtr &var: (*iter)->written) {
 				var->removeDefiner(block);
-				var->addDefiner(newBlock);
+				var->addDefiner(new_block);
 			}
 
-			(*iter)->parent = newBlock;
-			newBlock->instructions.push_back(*iter);
+			(*iter)->parent = new_block;
+			new_block->instructions.push_back(*iter);
 			block->instructions.erase(iter);
 		}
 
@@ -400,7 +403,7 @@ namespace LL2W {
 		// Insert the new block after the original block.
 		auto blockIter = std::find(blocks.begin(), blocks.end(), block);
 		++blockIter;
-		blocks.insert(blockIter, newBlock);
+		blocks.insert(blockIter, new_block);
 
 		// Add an unconditional branch from the original block to the new block.
 		BrUncondNode *node = new BrUncondNode("%" + std::to_string(label));
@@ -412,7 +415,7 @@ namespace LL2W {
 		linearInstructions.insert(iter, branch);
 
 		block->extract(true);
-		newBlock->extract();
+		new_block->extract();
 
 		reindexInstructions();
 	}
@@ -439,6 +442,7 @@ namespace LL2W {
 			cfg += label;
 			Node &node = cfg[label];
 			node.data = block;
+			std::cerr << "[block(" << label << ") := " << &node << "]\n";
 			block->node = &node;
 			bbNodeMap.insert({block.get(), &node});
 		}
@@ -560,17 +564,22 @@ namespace LL2W {
 		updateInstructionNodes();
 
 		int spilled = linearScan();
-		if (0 < spilled) {
-			std::cerr << "Spills in first scan: \e[1m" << spilled << "\e[0m\n\n";
+		int scans = 0;
+		while (0 < spilled) {
+			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+			splitBlocks();
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
 			extractVariables(true);
+			makeCFG();
+			setBlockNodes();
 			resetRegisters();
 			resetLiveness();
 			computeLiveness();
 			spilled = linearScan();
-			std::cerr << "Spills in second scan: \e[1m" << spilled << "\e[0m\n\n";
 		}
+
+		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m\n\n";
 
 		extracted = true;
 	}
@@ -755,6 +764,17 @@ namespace LL2W {
 		livenessComputed = false;
 	}
 
+	void Function::setBlockNodes() {
+		std::cerr << "Setting block nodes.\n";
+		for (BasicBlockPtr &block: blocks) {
+			std::cerr << "\e[2m-\e[0m " << block->node << " \e[2m->\e[0m ";
+			block->node = &cfg[std::to_string(block->label)];
+			std::cerr << block->node << "\n";
+
+		}
+		std::cerr << "\n";
+	}
+
 	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
 		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
 		Node::Set m_r = mergeSets.at(block.node);
@@ -800,10 +820,23 @@ namespace LL2W {
 			// while t≠def(a) do
 			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ Ms(n) then
-				if (0 < succMergeSets.at(block.node).count(t->node)) {
-					block.liveOut.insert(var);
-					return true;
+				try {
+					if (0 < succMergeSets.at(block.node).count(t->node)) {
+						block.liveOut.insert(var);
+						return true;
+					}
+				} catch (std::out_of_range &err) {
+					std::cerr << "Couldn't find " << block.node << " in succMergeSets. Here are the contents of succMergeSets:\n";
+					for (std::pair<Node * const, Node::Set> &pair: succMergeSets) {
+						std::cerr << "\e[2m-\e[0m " << pair.first << " (" << pair.first->label() << ") \e[2m->\e[0m";
+						for (Node *n: pair.second)
+							std::cerr << " " << n;
+						std::cerr << "\n";
+					}
+
+					throw;
 				}
+
 				// t = dom-parent(t);
 				BasicBlockPtr t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlockPtr>();
 				if (t_new == t)
