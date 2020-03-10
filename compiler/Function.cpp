@@ -239,6 +239,11 @@ namespace LL2W {
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
 				          << load->debugExtra() << "\n";
 #endif
+				} else {
+#ifdef DEBUG_SPILL
+				std::cerr << "      Removing variable " << *new_var << "\n";
+#endif
+					variableStore.erase(new_var->id);
 				}
 			}
 		}
