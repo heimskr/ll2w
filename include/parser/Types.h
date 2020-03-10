@@ -2,6 +2,7 @@
 #define PARSER_TYPES_H_
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "parser/ASTNode.h"
@@ -21,7 +22,7 @@ namespace LL2W {
 			virtual operator std::string() = 0;
 			virtual ~Type() {}
 			virtual Type * copy() const = 0;
-			virtual int width() const = 0;
+			virtual int width() const = 0; // in bytes
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 	};
@@ -118,6 +119,7 @@ namespace LL2W {
 	};
 
 	struct StructType: public AggregateType {
+		static std::unordered_map<const std::string *, std::shared_ptr<StructType>> knownStructs;
 		TypeType typeType() const override { return TypeType::Struct; }
 		const std::string *name;
 		StructForm form = StructForm::Struct;

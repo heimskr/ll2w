@@ -163,6 +163,8 @@ namespace LL2W {
 		return false;
 	}
 
+	std::unordered_map<const std::string *, std::shared_ptr<StructType>> StructType::knownStructs = {};
+
 	StructType::StructType(const StructNode *node_):
 		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
 
@@ -180,6 +182,11 @@ namespace LL2W {
 
 	int StructType::width() const {
 		int out = 0;
+		if (!node) {
+			// This is likely a named struct rather than a literal struct.
+			return StructType::knownStructs.at(name)->width();
+		}
+
 		for (const Type *type: node->types)
 			out += type->width();
 		return out;

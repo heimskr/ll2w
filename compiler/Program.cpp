@@ -6,6 +6,14 @@
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
+		// Look for all struct definitions.
+		for (const ASTNode *node: root) {
+			if (node->symbol == STRUCTDEF) {
+				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
+				StructType::knownStructs.emplace(struct_node->name, std::make_shared<StructType>(struct_node));
+			}
+		}
+
 		for (const ASTNode *node: root) {
 			switch (node->symbol) {
 				case FUNCTION_DEF:
