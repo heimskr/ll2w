@@ -30,7 +30,7 @@ namespace LL2W {
 		constexpr static int halfFloatWidth = 4, floatWidth = 8, doubleWidth = 8, pointerWidth = 8; // in bytes
 
 		constexpr static int generalPurposeRegisters = temporaryCount + savedCount;
-		constexpr static int allocatableRegisters = generalPurposeRegisters;
+		constexpr static int allocatableRegisters = generalPurposeRegisters*0+10;
 
 		static std::set<int> makeRegisterPool();
 		static bool isSpecialPurpose(int);

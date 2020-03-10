@@ -467,8 +467,7 @@ namespace LL2W {
 // BrUncondNode
 
 	std::string BrUncondNode::debugExtra() const {
-		return "\e[91mbr\e[0;34m label \e[32m" + std::string((*destination)[0] != '%'? "%" : "") + *destination +
-			"\e[0m";
+		return "\e[91mbr\e[0;34m label \e[32m" + *destination + "\e[0m";
 	}
 
 // BrCondNode

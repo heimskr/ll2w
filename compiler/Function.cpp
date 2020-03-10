@@ -19,7 +19,7 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 
 namespace LL2W {
@@ -287,6 +287,7 @@ namespace LL2W {
 					++next;
 					if (next != end) {
 						const int destination = std::atoi(branch->destination->substr(1).c_str());
+						std::cerr << (*next)->label << " vs. " << destination << ": " << back->debugExtra() << "\n";
 						if ((*next)->label == destination)
 							to_remove.push_back(back);
 					}
@@ -369,8 +370,9 @@ namespace LL2W {
 		blocks.insert(blockIter, newBlock);
 
 		// Add an unconditional branch from the original block to the new block.
-		BrUncondNode *node = new BrUncondNode(std::to_string(label)); // Prepending with "%" causes a strange bug.
+		BrUncondNode *node = new BrUncondNode("%" + std::to_string(label));
 		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
+		branch->parent = block;
 		block->instructions.push_back(branch);
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
 		++iter;
@@ -501,6 +503,11 @@ namespace LL2W {
 		}
 	}
 
+	void Function::resetRegisters() {
+		for (const std::pair<int, VariablePtr> &pair: variableStore)
+			pair.second->setRegister(-1);
+	}
+
 	void Function::extract() {
 		if (extracted)
 			return;
@@ -509,6 +516,8 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		splitBlocks();
+		for (BasicBlockPtr &block: blocks)
+			block->extract(true);
 		extractVariables();
 		makeCFG();
 		removeUselessBranches();
@@ -518,6 +527,7 @@ namespace LL2W {
 		updateInstructionNodes();
 
 		if (0 < linearScan()) {
+			resetRegisters();
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
 			extractVariables();

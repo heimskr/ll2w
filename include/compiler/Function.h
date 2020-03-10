@@ -88,6 +88,7 @@ namespace LL2W {
 			void computeSuccMergeSets();
 			void fillLocalValues();
 			void updateInstructionNodes();
+			void resetRegisters();
 			void extract();
 			void uncolorAll();
 			void precolorArguments(std::list<Interval> &);
