@@ -15,4 +15,8 @@ namespace LL2W {
 	std::string StackStoreInstruction::debugExtra() {
 		return "\e[1m[store " + std::string(*variable) + "\e[0;1m to " + std::to_string(location.offset) + "]\e[0m";
 	}
+
+	bool StackStoreInstruction::operator==(const StackStoreInstruction &other) const {
+		return location == other.location && variable == other.variable;
+	}
 }

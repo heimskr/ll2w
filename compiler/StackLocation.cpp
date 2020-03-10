@@ -16,4 +16,9 @@ namespace LL2W {
 	std::string StackLocation::getName() const {
 		return *variable;
 	}
+
+	bool StackLocation::operator==(const StackLocation &other) const {
+		return function == other.function && offset == other.offset && width == other.width && align == other.align &&
+			type == other.type && variable == other.variable;
+	}
 }

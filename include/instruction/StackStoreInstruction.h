@@ -17,6 +17,8 @@ namespace LL2W {
 
 			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;
+
+			bool operator==(const StackStoreInstruction &) const;
 	};
 }
 

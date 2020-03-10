@@ -23,6 +23,8 @@ namespace LL2W {
 
 		LL2W::Type * getType() const;
 		std::string getName() const;
+
+		bool operator==(const StackLocation &) const;
 	};
 }
 

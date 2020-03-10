@@ -40,6 +40,8 @@ namespace LL2W {
 			virtual bool replaceRead(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
 				return false;
 			}
+
+			virtual bool maySpill() const { return true; }
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

@@ -217,10 +217,26 @@ namespace LL2W {
 		std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << ")\n";
 #endif
 		auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
-		insertAfter(definition, store);
+		auto next = after(definition);
+		bool should_insert = true;
+
+		if (next) {
+			std::shared_ptr<StackStoreInstruction> other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
+			if (other_store && *other_store == *store) {
+				should_insert = false;
+#ifdef DEBUG_SPILL
+				std::cerr << "    A stack store already exists: " << next->debugExtra() << "\n";
+#endif
+			}
+		}
+
+		if (should_insert) {
+			insertAfter(definition, store);
 #ifdef DEBUG_SPILL
 		std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
 #endif
+		}
+
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
@@ -252,6 +268,12 @@ namespace LL2W {
 #endif
 
 		reindexInstructions();
+	}
+
+	InstructionPtr Function::after(InstructionPtr instruction) {
+		auto iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
+		++iter;
+		return iter == linearInstructions.end()? nullptr : *iter;
 	}
 
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
@@ -658,8 +680,20 @@ namespace LL2W {
 			}
 		};
 
+		std::function<bool(Interval &)> maySpill = [&](Interval &interval) {
+			VariablePtr variable = interval.variable;
+			std::cerr << "[maySpill(" << *variable << "): " << (variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill()? "true" : "false") << "]";
+			if (variable->definitions.size() == 1)
+				std::cerr << " \e[2m//\e[0m " << variable->onlyDefinition()->debugExtra();
+			std::cerr << "\n";
+			return variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill();
+		};
+
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
-			Interval &spill = *active.back();
+			auto iter = active.end(), prebegin = active.begin();
+			--prebegin;
+			for (--iter; iter != prebegin && !maySpill(**iter); --iter);
+			Interval &spill = **iter;
 			++spill_count;
 			if (interval.endpoint() < spill.endpoint()) {
 				interval.setRegister(spill.reg);
@@ -686,6 +720,7 @@ namespace LL2W {
 		}
 #ifdef DEBUG_LINEAR_SCAN
 		std::cerr << "\e[2m}\e[0m\n\n";
+		// debug();
 #endif
 #ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";
