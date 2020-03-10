@@ -11,12 +11,12 @@ namespace LL2W {
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
-		auto lastUseIter = std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
+		auto last_use_iter = std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
 			[&](const std::shared_ptr<BasicBlock> &left, const std::shared_ptr<BasicBlock> &right) {
 				return left->label < right->label;
 			});
 		// Some variables have no uses. For these variables, we consider the defining block to be the last user.
-		lastUse = lastUseIter == var->usingBlocks.end()? firstDefinition : *lastUseIter;
+		lastUse = last_use_iter == var->usingBlocks.end()? firstDefinition : *last_use_iter;
 	}
 
 	int Interval::startpoint() const {
