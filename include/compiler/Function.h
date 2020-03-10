@@ -25,6 +25,10 @@ namespace LL2W {
 	 */
 	enum class CallingConvention {StackOnly, Reg16};
 
+	/**
+	 * Represents a function and contains code for converting functions from LLVM's intermediate representation into
+	 * Why.js bytecode.
+	 */
 	class Function {
 		private:
 			Program *parent = nullptr;
@@ -45,39 +49,54 @@ namespace LL2W {
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();
+
 			/** Copies use/definition information from the BasicBlocks into the Variables. */
 			void extractVariables(bool reset = false);
+
 			/** Computes a given node's merge set. */
 			void computeSuccMergeSet(Node *);
+
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
 			void relinearize();
+
 			/** Renumbers all instructions based on the order they appear in each BasicBlock's instructions vector. */
 			void assignIndices();
+
 			/** Merges arguments of ϕ-instructions into single variables. */
 			void coalescePhi();
+
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
 			int newLabel() const;
+
 			/** Produces a new variable with an as yet unused label. */
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			bool spill(std::shared_ptr<Variable>);
+
 			/** Returns the instruction following a given instruction. */
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
+
 			/** Inserts one instruction after another. */
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
+
 			/** Inserts one instruction before another. */
 			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
+
 			/** Removes branch instructions that redundantly jump to the next instruction. */
 			void removeUselessBranches();
+
 			/** Reassigns indices to all instructions. */
 			void reindexInstructions();
+
 			/** Splits basic blocks such that no basic block contains more definitions than the number of physical
 			 *  registers. */
 			void splitBlocks();
+
 			/** Splits a basic block after a given instruction. */
 			void splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
+
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
@@ -86,65 +105,97 @@ namespace LL2W {
 
 		public:
 			const std::string *name;
+
 			/** A list of all basic blocks in the order they appear. */
 			std::list<std::shared_ptr<BasicBlock>> blocks;
+
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
+
 			FunctionArgs *arguments = nullptr;
+
 			CFG cfg;
 
 			Function(Program &, const ASTNode &);
 
+			/** Returns the number of arguments the function takes. */
 			int arity() const;
+
+			/** Returns whether the function is variadic (i.e., whether it takes a variable number of arguments). */
 			bool variadic() const;
+
+			/** Forms the function's control-flow graph from the basic blocks. */
 			CFG & makeCFG();
+
 			/** Randomly walks through the CFG and counts executions of each basic block. */
 			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
+
 			/** Computes the merge sets for all nodes in the CFG. */
 			void computeSuccMergeSets();
+
 			/** Sets the variable fields of all local values in all instructions. */
 			void fillLocalValues();
+
 			/** Sets the pvar names in all instructions to those of the connected variables. */
 			void updateInstructionNodes();
+
 			/** Removes the register assignments for all variables. */
 			void resetRegisters();
+
 			/** Performs a full set of compiler passes on the function. */
 			void extract();
+
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
+
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>);
+
 			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
 			int linearScan();
+
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
+
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			std::shared_ptr<Variable> getVariable(int);
+
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			std::shared_ptr<Variable> getVariable(const std::string &);
+
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
 			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
+
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
 			std::shared_ptr<Variable> getVariable(const std::string &, const Type *, BasicBlockPtr = nullptr);
+
 			/** Returns a pointer to the entry block. */
 			BasicBlockPtr getEntry();
+
 			/** Returns the calling convention of the function. It's chosen based on the number of arguments and whether
 			 *  the function is variadic. */
 			CallingConvention getCallingConvention() const;
+
 			/** Performs liveness analysis on all variables. */
 			void computeLiveness();
+
 			/** Resets the liveness data for all variables. */
 			void resetLiveness();
+
 			/** Determines whether a variable is live-in at a given basic block. */
 			bool isLiveIn(BasicBlock &, VariablePtr);
+
 			/** Determines whether a variable is live-out at a given basic block. */
 			bool isLiveOut(BasicBlock &, VariablePtr);
+
 			/** Prints debug information about the function. */
 			void debug();
+
 			/** Prints debug information about the merge sets. */
 			void debugMergeSets() const;
+
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
 	};
