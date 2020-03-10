@@ -522,11 +522,8 @@ namespace LL2W {
 	}
 
 	void Function::resetRegisters() {
-		for (const std::pair<int, VariablePtr> &pair: variableStore) {
-			std::cerr << "Reset: " << *pair.second << ": " << pair.second->reg << " -> ";
+		for (const std::pair<int, VariablePtr> &pair: variableStore)
 			pair.second->setRegister(-1);
-			std::cerr << pair.second->reg << ": " << *pair.second << "\n";
-		}
 	}
 
 	void Function::extract() {
