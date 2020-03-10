@@ -19,7 +19,7 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 #define DEBUG_SPLIT
@@ -172,6 +172,7 @@ namespace LL2W {
 						delete type;
 
 						auto new_instr = std::make_shared<SetInstruction>(new_var, boolval->value? 1 : 0, -1);
+						new_instr->parent = block;
 						if (block->instructions.empty()) {
 							block->insertBeforeTerminal(new_instr);
 							should_relinearize = true;
@@ -225,31 +226,35 @@ namespace LL2W {
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
 		// before the use insert a definition for the variable by loading it from the stack.
-		BasicBlockPtr block = variable->onlyDefiner();
-		InstructionPtr definition = variable->onlyDefinition();
-#ifdef DEBUG_SPILL
-		std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << ")\n";
-#endif
-		auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
-		auto next = after(definition);
-		bool should_insert = true;
+		if (variable->definitions.empty())
+			throw std::runtime_error("Cannot spill variable: no definitions");
 
-		if (next) {
-			std::shared_ptr<StackStoreInstruction> other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
-			if (other_store && *other_store == *store) {
-				should_insert = false;
+		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
+			InstructionPtr definition = weak_definition.lock();
 #ifdef DEBUG_SPILL
-				std::cerr << "    A stack store already exists: " << next->debugExtra() << "\n";
+			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << ")\n";
+#endif
+			auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
+			auto next = after(definition);
+			bool should_insert = true;
+
+			if (next) {
+				std::shared_ptr<StackStoreInstruction> other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
+				if (other_store && *other_store == *store) {
+					should_insert = false;
+#ifdef DEBUG_SPILL
+					std::cerr << "    A stack store already exists: " << next->debugExtra() << "\n";
+#endif
+				}
+			}
+
+			if (should_insert) {
+				insertAfter(definition, store);
+				out = true;
+#ifdef DEBUG_SPILL
+			std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
 #endif
 			}
-		}
-
-		if (should_insert) {
-			insertAfter(definition, store);
-			out = true;
-#ifdef DEBUG_SPILL
-		std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
-#endif
 		}
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
