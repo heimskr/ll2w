@@ -90,23 +90,23 @@ namespace LL2W {
 
 		for (BasicBlockPtr &block: blocks) {
 			for (VariablePtr read_var: block->read)
-				read_var->usingBlocks.insert(block);
+				read_var->addUsingBlock(block);
 			for (VariablePtr written_var: block->written)
-				written_var->definingBlocks.insert(block);
+				written_var->addDefiner(block);
 			for (std::shared_ptr<Instruction> &instruction: block->instructions) {
 				for (VariablePtr read_var: instruction->read) {
-					read_var->lastUse = instruction;
-					read_var->uses.insert(instruction);
+					read_var->setLastUse(instruction);
+					read_var->addUse(instruction);
 				}
 				for (VariablePtr written_var: instruction->written)
-					written_var->definitions.insert(instruction);
+					written_var->addDefinition(instruction);
 			}
 		}
 
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
 			if (pair.second->definingBlocks.empty()) {
-				pair.second->definingBlocks.insert(blocks.front());
+				pair.second->addDefiner(blocks.front());
 				blocks.front()->written.insert(pair.second);
 			}
 		}

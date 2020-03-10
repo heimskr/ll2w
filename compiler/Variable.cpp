@@ -1,3 +1,4 @@
+#include <iostream>
 #include <climits>
 #include <sstream>
 
@@ -54,7 +55,7 @@ namespace LL2W {
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
 				if (iter != begin)
 					out << ",";
-				out << (*iter)->id;
+				out << (*iter)->id << "x" << (*iter)->definitions.size();
 			}
 			out << "]\e[0m";
 		}
@@ -103,6 +104,36 @@ namespace LL2W {
 		}
 	}
 
+	void Variable::addUsingBlock(std::shared_ptr<BasicBlock> block) {
+		if (parent) {
+			parent->addUsingBlock(block);
+		} else {
+			usingBlocks.insert(block);
+			for (Variable *alias: aliases)
+				alias->usingBlocks.insert(block);
+		}
+	}
+
+	void Variable::removeUsingBlock(std::shared_ptr<BasicBlock> block) {
+		if (parent) {
+			parent->removeUsingBlock(block);
+		} else {
+			usingBlocks.erase(block);
+			for (Variable *alias: aliases)
+				alias->usingBlocks.erase(block);
+		}
+	}
+
+	void Variable::addDefinition(std::shared_ptr<Instruction> instruction) {
+		if (parent) {
+			parent->addDefinition(instruction);
+		} else {
+			definitions.insert(instruction);
+			for (Variable *alias: aliases)
+				alias->definitions.insert(instruction);
+		}
+	}
+
 	void Variable::removeDefinition(std::shared_ptr<Instruction> instruction) {
 		if (parent) {
 			parent->removeDefinition(instruction);
@@ -110,6 +141,26 @@ namespace LL2W {
 			definitions.erase(instruction);
 			for (Variable *alias: aliases)
 				alias->definitions.erase(instruction);
+		}
+	}
+
+	void Variable::addUse(std::shared_ptr<Instruction> instruction) {
+		if (parent) {
+			parent->addUse(instruction);
+		} else {
+			uses.insert(instruction);
+			for (Variable *alias: aliases)
+				alias->uses.insert(instruction);
+		}
+	}
+
+	void Variable::removeUse(std::shared_ptr<Instruction> instruction) {
+		if (parent) {
+			parent->removeUse(instruction);
+		} else {
+			uses.erase(instruction);
+			for (Variable *alias: aliases)
+				alias->uses.erase(instruction);
 		}
 	}
 
@@ -124,6 +175,7 @@ namespace LL2W {
 
 	std::shared_ptr<Instruction> Variable::onlyDefinition() const {
 		if (definitions.size() != 1) {
+			std::cerr << "[Bad variable: " << *this << "]\n";
 			throw std::runtime_error("Variable has " + std::string(definitions.empty()? "no" : "multiple") +
 				" definitions");
 		}

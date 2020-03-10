@@ -48,10 +48,16 @@ namespace LL2W {
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
+			void addUsingBlock(std::shared_ptr<BasicBlock>);
+			void removeUsingBlock(std::shared_ptr<BasicBlock>);
+			void addDefinition(std::shared_ptr<Instruction>);
 			void removeDefinition(std::shared_ptr<Instruction>);
+			void addUse(std::shared_ptr<Instruction>);
+			void removeUse(std::shared_ptr<Instruction>);
 
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
+
 
 			void setID(int);
 			void setType(Type *);
