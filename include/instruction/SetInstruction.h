@@ -12,6 +12,7 @@ namespace LL2W {
 			SetInstruction(std::shared_ptr<Variable> rd_, int imm_, int index_):
 				WhyInstruction(index_), rd(rd_), imm(imm_) {}
 			
+			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;
 	};
 }

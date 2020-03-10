@@ -1,3 +1,16 @@
+%struct.pcache_t = type { [1024 x %struct.pathc_t], %struct.superblock_t, i32*, i64, %struct.dir_t, i32, %struct._opaque_pthread_mutex_t }
+%struct.pathc_t = type { i8, [1025 x i8], %struct.dir_t, %struct.fdc_t*, i64, i64, %struct._opaque_pthread_mutex_t* }
+%struct.fdc_t = type { i8, i64, %struct.pathc_t* }
+%struct.superblock_t = type { i32, i32, i32, i32, i32 }
+%struct.dir_t = type { %union.fname_u, %struct.times_t, i32, i32, i32, i32 }
+%union.fname_u = type { [6 x i32] }
+%struct.times_t = type { i64, i64, i64 }
+%struct._opaque_pthread_mutex_t = type { i64, [56 x i8] }
+%struct.__sFILE = type { i8*, i32, i32, i16, i16, %struct.__sbuf, i32, i8*, i32 (i8*)*, i32 (i8*, i8*, i32)*, i64 (i8*, i64, i32)*, i32 (i8*, i8*, i32)*, %struct.__sbuf, %struct.__sFILEX*, i32, [3 x i8], [1 x i8], %struct.__sbuf, i32, i64 }
+%struct.__sFILEX = type opaque
+%struct.__sbuf = type { i8*, i32 }
+%union.superblock_u = type { %struct.superblock_t }
+
 define i32 @fat_resize(i32, %struct.dir_t*, i64, i64) #0 {
   %5 = alloca i32, align 4
   %6 = alloca i32, align 4

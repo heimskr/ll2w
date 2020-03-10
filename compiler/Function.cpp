@@ -19,12 +19,12 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 #define DEBUG_SPLIT
 #define DEBUG_LINEAR_SCAN
-// #define DEBUG_READ_WRITTEN
+#define DEBUG_READ_WRITTEN
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -143,6 +143,7 @@ namespace LL2W {
 
 	void Function::coalescePhi() {
 		std::list<InstructionPtr> to_remove;
+		bool should_relinearize = false;
 
 		// Scan through each instruction in order.
 		for (InstructionPtr &instruction: linearInstructions) {
@@ -154,8 +155,10 @@ namespace LL2W {
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
 			BasicBlockPtr phi_definer = target->onlyDefiner();
+
 			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
-				const LocalValue *local = dynamic_cast<LocalValue *>(pair.first);
+				const LocalValue *local =
+					pair.first->valueType() == ValueType::Local? dynamic_cast<LocalValue *>(pair.first) : nullptr;
 				if (!local) {
 					// In rare occasions, one or more operands of a phi instruction can be constants like "true".
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
@@ -168,9 +171,15 @@ namespace LL2W {
 						VariablePtr new_var = newVariable(type, block);
 						delete type;
 
-						block->insertBeforeTerminal(std::make_shared<SetInstruction>(new_var,
-							boolval->value? 1 : 0, -1));
+						auto new_instr = std::make_shared<SetInstruction>(new_var, boolval->value? 1 : 0, -1);
+						if (block->instructions.empty()) {
+							block->insertBeforeTerminal(new_instr);
+							should_relinearize = true;
+						} else {
+							insertBefore(block->instructions.back(), new_instr);
+						}
 						new_var->makeAliasOf(*target);
+						new_var->addDefinition(new_instr);
 					} else {
 						std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
 					}
@@ -190,6 +199,9 @@ namespace LL2W {
 
 		for (InstructionPtr &ptr: to_remove)
 			remove(ptr);
+
+		if (should_relinearize)
+			relinearize();
 	}
 
 	int Function::newLabel() const {
@@ -595,8 +607,11 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 
+		debug();
+
 		int spilled = linearScan();
 		int scans = 0;
+
 		while (0 < spilled) {
 			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
 			splitBlocks();
@@ -611,7 +626,7 @@ namespace LL2W {
 			spilled = linearScan();
 		}
 
-		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m\n\n";
+		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished " << *name << ".\n\n";
 
 		extracted = true;
 	}

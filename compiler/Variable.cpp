@@ -176,6 +176,8 @@ namespace LL2W {
 	std::shared_ptr<Instruction> Variable::onlyDefinition() const {
 		if (definitions.size() != 1) {
 			std::cerr << "[Bad variable: " << *this << "]\n";
+			for (auto weak: definitions)
+				std::cerr << "\e[31;2m-\e[0m " << weak.lock()->debugExtra() << "\n";
 			throw std::runtime_error("Variable has " + std::string(definitions.empty()? "no" : "multiple") +
 				" definitions");
 		}
