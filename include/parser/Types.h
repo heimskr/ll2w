@@ -1,6 +1,7 @@
 #ifndef PARSER_TYPES_H_
 #define PARSER_TYPES_H_
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>

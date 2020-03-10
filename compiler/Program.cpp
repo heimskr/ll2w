@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "parser/ASTNode.h"
+#include "parser/StructNode.h"
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"
 
