@@ -836,10 +836,19 @@ namespace LL2W {
 			return;
 
 		livenessComputed = true;
-		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			for (BasicBlockPtr &block: blocks) {
-				isLiveIn(*block, pair.second);
-				isLiveOut(*block, pair.second);
+		for (BasicBlockPtr &block: blocks) {
+			std::unordered_set<Variable *> pool {};
+			for (const VariablePtr &variable: block->read) {
+				isLiveIn(*block, variable);
+				isLiveOut(*block, variable);
+				pool.insert(variable.get());
+			}
+
+			for (const VariablePtr &variable: block->written) {
+				if (pool.count(variable.get()) == 0) {
+					isLiveIn(*block, variable);
+					isLiveOut(*block, variable);
+				}
 			}
 		}
 	}
