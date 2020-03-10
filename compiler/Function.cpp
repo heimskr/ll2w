@@ -21,9 +21,9 @@
 // #define DEBUG_LINEAR
 // #define DEBUG_VARS
 // #define DEBUG_RENDER
-#define DEBUG_SPILL
-#define DEBUG_SPLIT
-#define DEBUG_LINEAR_SCAN
+// #define DEBUG_SPILL
+// #define DEBUG_SPLIT
+// #define DEBUG_LINEAR_SCAN
 #define DEBUG_READ_WRITTEN
 
 namespace LL2W {
@@ -611,13 +611,15 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 
-		debug();
-
 		int spilled = linearScan();
+#ifdef DEBUG_SPILL
 		int scans = 0;
+#endif
 
 		while (0 < spilled) {
+#ifdef DEBUG_SPILL
 			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+#endif
 			splitBlocks();
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
@@ -630,7 +632,9 @@ namespace LL2W {
 			spilled = linearScan();
 		}
 
-		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished " << *name << ".\n\n";
+#ifdef DEBUG_SPILL
+		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
+#endif
 
 		extracted = true;
 	}
@@ -711,32 +715,42 @@ namespace LL2W {
 
 		std::function<bool(Interval &)> maySpill = [&](Interval &interval) {
 			VariablePtr variable = interval.variable;
+#ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "[maySpill(" << *variable << "): " << (variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill()? "true" : "false") << "]";
 			if (variable->definitions.size() == 1)
 				std::cerr << " \e[2m//\e[0m " << variable->onlyDefinition()->debugExtra();
 			std::cerr << "\n";
+#endif
 			return variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill();
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
+#ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable; std::cerr << "\n";
+#endif
 			auto iter = active.end(), prebegin = active.begin();
 			--prebegin;
 			for (--iter; iter != prebegin && !maySpill(**iter); --iter);
+#ifdef DEBUG_LINEAR_SCAN
 			if (iter == prebegin)
 				std::cerr << "iter == prebegin. This is not good.\n";
+#endif
 			Interval &spill = iter == prebegin? *active.back() : **iter;
+#ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Chose spill: " << *spill.variable << "\n";
+#endif
 			if (interval.endpoint() < spill.endpoint() || !maySpill(interval)) {
 				interval.setRegister(spill.reg);
 				addLocation(spill);
 				active.remove(&spill);
 				addToActive(interval);
 			} else {
+#ifdef DEBUG_LINEAR_SCAN
 				std::cerr << "Spilling " << *interval.variable << " instead.";
 				if (interval.variable->definitions.size() == 1)
 					std::cerr << " \e[2m//\e[0m " << interval.variable->onlyDefinition()->debugExtra();
 				std::cerr << "\n";
+#endif
 				addLocation(interval);
 			}
 		};
@@ -756,7 +770,6 @@ namespace LL2W {
 		}
 #ifdef DEBUG_LINEAR_SCAN
 		std::cerr << "\e[2m}\e[0m\n\n";
-		debug();
 #endif
 #ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";

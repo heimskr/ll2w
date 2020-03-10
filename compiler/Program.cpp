@@ -10,7 +10,6 @@ namespace LL2W {
 		for (const ASTNode *node: root) {
 			if (node->symbol == STRUCTDEF) {
 				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
-				std::cerr << "[\"" << *struct_node->name << "\"]\n";
 				StructType::knownStructs.emplace(*struct_node->name, std::make_shared<StructType>(struct_node));
 			}
 		}
