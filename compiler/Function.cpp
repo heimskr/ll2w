@@ -442,7 +442,6 @@ namespace LL2W {
 			cfg += label;
 			Node &node = cfg[label];
 			node.data = block;
-			std::cerr << "[block(" << label << ") := " << &node << "]\n";
 			block->node = &node;
 			bbNodeMap.insert({block.get(), &node});
 		}
@@ -454,7 +453,7 @@ namespace LL2W {
 			const std::string label = std::to_string(block->label);
 			for (int pred: block->preds)
 				cfg.link(std::to_string(pred), label);
-			if (block->instructions.back()->isTerminal())
+			if (!block->instructions.empty() && block->instructions.back()->isTerminal())
 				cfg.link(label, "exit");
 		}
 
@@ -766,14 +765,8 @@ namespace LL2W {
 	}
 
 	void Function::setBlockNodes() {
-		std::cerr << "Setting block nodes.\n";
-		for (BasicBlockPtr &block: blocks) {
-			std::cerr << "\e[2m-\e[0m " << block->node << " \e[2m->\e[0m ";
+		for (BasicBlockPtr &block: blocks)
 			block->node = &cfg[std::to_string(block->label)];
-			std::cerr << block->node << "\n";
-
-		}
-		std::cerr << "\n";
 	}
 
 	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
@@ -821,21 +814,9 @@ namespace LL2W {
 			// while t≠def(a) do
 			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ Ms(n) then
-				try {
-					if (0 < succMergeSets.at(block.node).count(t->node)) {
-						block.liveOut.insert(var);
-						return true;
-					}
-				} catch (std::out_of_range &err) {
-					std::cerr << "Couldn't find " << block.node << " in succMergeSets. Here are the contents of succMergeSets:\n";
-					for (std::pair<Node * const, Node::Set> &pair: succMergeSets) {
-						std::cerr << "\e[2m-\e[0m " << pair.first << " (" << pair.first->label() << ") \e[2m->\e[0m";
-						for (Node *n: pair.second)
-							std::cerr << " " << n;
-						std::cerr << "\n";
-					}
-
-					throw;
+				if (0 < succMergeSets.at(block.node).count(t->node)) {
+					block.liveOut.insert(var);
+					return true;
 				}
 
 				// t = dom-parent(t);
