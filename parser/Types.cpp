@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
@@ -163,7 +164,7 @@ namespace LL2W {
 		return false;
 	}
 
-	std::unordered_map<const std::string *, std::shared_ptr<StructType>> StructType::knownStructs = {};
+	std::unordered_map<std::string, std::shared_ptr<StructType>> StructType::knownStructs = {};
 
 	StructType::StructType(const StructNode *node_):
 		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
@@ -184,7 +185,10 @@ namespace LL2W {
 		int out = 0;
 		if (!node) {
 			// This is likely a named struct rather than a literal struct.
-			return StructType::knownStructs.at(name)->width();
+			std::string bare_name = name->at(0) == '%'? name->substr(1) : *name;
+			if (bare_name.at(0) == '"')
+				bare_name = bare_name.substr(1, bare_name.size() - 2);
+			return knownStructs.at(bare_name)->width();
 		}
 
 		for (const Type *type: node->types)

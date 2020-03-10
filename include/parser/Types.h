@@ -119,7 +119,7 @@ namespace LL2W {
 	};
 
 	struct StructType: public AggregateType {
-		static std::unordered_map<const std::string *, std::shared_ptr<StructType>> knownStructs;
+		static std::unordered_map<std::string, std::shared_ptr<StructType>> knownStructs;
 		TypeType typeType() const override { return TypeType::Struct; }
 		const std::string *name;
 		StructForm form = StructForm::Struct;
