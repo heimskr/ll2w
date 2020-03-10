@@ -784,10 +784,10 @@ namespace LL2W {
 	void Function::remove(InstructionPtr instruction) {
 		instruction->parent.lock()->instructions.remove(instruction);
 		auto found = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
-		auto iter = found;
 		if (found != linearInstructions.end()) {
-			linearInstructions.erase(found);
+			auto iter = found;
 			++iter;
+			linearInstructions.erase(found);
 			for (auto end = linearInstructions.end(); iter != end; ++iter)
 				--(*iter)->index;
 		}
