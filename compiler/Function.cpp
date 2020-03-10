@@ -167,11 +167,8 @@ namespace LL2W {
 					if (pair.first->valueType() == ValueType::Bool) {
 						const BoolValue *boolval = dynamic_cast<BoolValue *>(pair.first);
 						BasicBlockPtr block = bbMap.at(pair.second);
-						IntType *type = new IntType(32);
-						VariablePtr new_var = newVariable(type, block);
-						delete type;
 
-						auto new_instr = std::make_shared<SetInstruction>(new_var, boolval->value? 1 : 0, -1);
+						auto new_instr = std::make_shared<SetInstruction>(target, boolval->value? 1 : 0, -1);
 						new_instr->parent = block;
 						if (block->instructions.empty()) {
 							block->insertBeforeTerminal(new_instr);
@@ -179,8 +176,8 @@ namespace LL2W {
 						} else {
 							insertBefore(block->instructions.back(), new_instr);
 						}
-						new_var->makeAliasOf(*target);
-						new_var->addDefinition(new_instr);
+						target->addDefinition(new_instr);
+						target->addDefiner(block);
 					} else {
 						std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
 					}
@@ -232,14 +229,16 @@ namespace LL2W {
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
 #ifdef DEBUG_SPILL
-			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << ")\n";
+			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
+			          << definition->index << ")\n";
 #endif
 			auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
 			auto next = after(definition);
 			bool should_insert = true;
 
 			if (next) {
-				std::shared_ptr<StackStoreInstruction> other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
+				std::shared_ptr<StackStoreInstruction> other_store =
+					std::dynamic_pointer_cast<StackStoreInstruction>(next);
 				if (other_store && *other_store == *store) {
 					should_insert = false;
 #ifdef DEBUG_SPILL
@@ -662,6 +661,9 @@ namespace LL2W {
 	}
 
 	StackLocation & Function::addToStack(VariablePtr variable) {
+		if (variableLocations.count(variable) == 1)
+			return *variableLocations.at(variable);
+
 		const int to_add = variable && variable->type? variable->type->width() / 8 : 8;
 		StackLocation &added = stack.emplace(stackSize, StackLocation(this, variable, stackSize, to_add)).first->second;
 		stackSize += to_add;
@@ -672,6 +674,7 @@ namespace LL2W {
 	int Function::linearScan() {
 #ifdef DEBUG_LINEAR_SCAN
 		std::cerr << "\e[2mScanning \e[0;1m" << *name << "\e[0;2m {\e[0m\n";
+		debugStack();
 #endif
 
 		std::list<Interval> intervals = sortedIntervals();
@@ -1002,5 +1005,11 @@ namespace LL2W {
 				std::cout << "\n";
 			}
 		}
+	}
+
+	void Function::debugStack() const {
+		for (const std::pair<int, StackLocation> &pair: stack)
+			std::cout << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
+		std::cout << "\n";
 	}
 }
