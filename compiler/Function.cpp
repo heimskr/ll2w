@@ -421,7 +421,7 @@ namespace LL2W {
 
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
-		for (++iter; iter != end; ++iter) {
+		for (++iter; iter != end;) {
 			for (const VariablePtr &var: (*iter)->written) {
 				var->removeDefiner(block);
 				var->addDefiner(new_block);
@@ -429,7 +429,7 @@ namespace LL2W {
 
 			(*iter)->parent = new_block;
 			new_block->instructions.push_back(*iter);
-			block->instructions.erase(iter);
+			block->instructions.erase(iter++);
 		}
 
 		// Replace the old label with the new label in the preds of all basic blocks.
