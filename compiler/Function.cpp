@@ -16,11 +16,13 @@
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 
-#define DEBUG_INTERVALS
+// #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
 // #define DEBUG_RENDER
+#define DEBUG_SPILL
+// #define DEBUG_SPLIT
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -198,7 +200,9 @@ namespace LL2W {
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
 		// before the use insert a definition for the variable by loading it from the stack.
+#ifdef DEBUG_SPILL
 		std::cerr << "Trying to spill " << *variable << " (definitions: " << variable->definitions.size() << ")\n";
+#endif
 		BasicBlockPtr block = variable->onlyDefiner();
 		InstructionPtr definition = variable->onlyDefinition();
 		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
@@ -206,8 +210,10 @@ namespace LL2W {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
+#ifdef DEBUG_SPILL
 				std::cerr << "  " << (instruction->replaceRead(variable, new_var)? "Replaced" : "Didn't replace")
 				          << " in " << instruction->debugExtra() << "\n";
+#endif
 				instruction->read.erase(variable);
 				insertBefore(instruction, std::make_shared<StackLoadInstruction>(new_var,
 					*variableLocations.at(variable), -1));
@@ -337,8 +343,10 @@ namespace LL2W {
 
 	void Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
 		const int label = newLabel();
+#ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
 		          << " & " << label << "\n";
+#endif
 		BasicBlockPtr newBlock = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
 			std::list<InstructionPtr>());
 		bbLabels.insert(label);
