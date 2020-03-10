@@ -16,7 +16,7 @@ namespace LL2W {
 
 			Program(const ASTNode &);
 
-			void extract();
+			void compile();
 			void debug();
 	};
 }

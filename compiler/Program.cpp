@@ -32,9 +32,9 @@ namespace LL2W {
 		// }
 	}
 
-	void Program::extract() {
+	void Program::compile() {
 		for (std::pair<const std::string, Function> &pair: functions)
-			pair.second.extract();
+			pair.second.compile();
 	}
 
 	void Program::debug() {

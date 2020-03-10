@@ -32,19 +32,57 @@ namespace LL2W {
 	class Function {
 		private:
 			Program *parent = nullptr;
+
+			/** A pointer to an AST node that contains data about the function's arguments. */
+			FunctionArgs *arguments = nullptr;
+
+			/** The control-flow graph computed by makeCFG. */
+			CFG cfg;
+
+			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<int, VariablePtr> variableStore;
+
+			/** A set of the numeric labels of all the function's basic blocks. */
 			std::unordered_set<int> bbLabels;
+
+			/** Maps basic blocks to their corresponding CFG nodes. */
 			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
+
+			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
+			 *  for the function's basic blocks. */
 			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
+
+			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;
-			bool extracted = false, livenessComputed = false;
-			std::optional<DJGraph> djGraph;
+
+			/** Whether the function has been compiled yet. */
+			bool compiled = false;
+
+			/** Whether liveness analysis has been performed on the function's variables yet. */
+			bool livenessComputed = false;
+
+			/** The dominator tree computed from the control-flow graph. */
 			std::optional<DTree> dTree;
+
+			/** The dominator tree computed from the control-flow graph with J-edges included. */
+			std::optional<DJGraph> djGraph;
+
+			/** Maps nodes to their merge sets. */
 			Node::Map mergeSets;
+
+			/** Maps nodes to their successor merge sets. */
 			Node::Map succMergeSets;
+
+			/** The number of random walks that have been performed on the control flow graph. */
 			int walkCount = 0;
+
+			/** Maps offsets to stack location information. */
 			std::map<int, StackLocation> stack;
+
+			/** Maps variables to their stack locations. */
 			std::map<std::shared_ptr<Variable>, StackLocation *> variableLocations;
+
+			/** The number of bytes reserved on the stack for variables and spills. */
 			int stackSize = 0;
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
@@ -104,6 +142,7 @@ namespace LL2W {
 			Node & operator[](const BasicBlock &) const;
 
 		public:
+			/** A pointer to an interned string containing the name of the function. */
 			const std::string *name;
 
 			/** A list of all basic blocks in the order they appear. */
@@ -111,10 +150,6 @@ namespace LL2W {
 
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
-
-			FunctionArgs *arguments = nullptr;
-
-			CFG cfg;
 
 			Function(Program &, const ASTNode &);
 
@@ -143,7 +178,7 @@ namespace LL2W {
 			void resetRegisters();
 
 			/** Performs a full set of compiler passes on the function. */
-			void extract();
+			void compile();
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);

@@ -118,7 +118,7 @@ void parsertest(const std::string &filename) {
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	LL2W::Program prog(*LL2W::Parser::root);
-	prog.extract();
+	prog.compile();
 	prog.debug();
 	LL2W::Parser::done();
 }

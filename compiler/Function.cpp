@@ -530,6 +530,7 @@ namespace LL2W {
 				}
 			}
 		}
+
 		// Increase the random walk counter once we're done doing all the walks.
 		walkCount += walks;
 	}
@@ -584,8 +585,8 @@ namespace LL2W {
 			pair.second->setRegister(-1);
 	}
 
-	void Function::extract() {
-		if (extracted)
+	void Function::compile() {
+		if (compiled)
 			return;
 
 		extractBlocks();
@@ -626,7 +627,7 @@ namespace LL2W {
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
 #endif
 
-		extracted = true;
+		compiled = true;
 	}
 
 	std::list<Interval> Function::sortedIntervals() {
