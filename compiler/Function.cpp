@@ -19,11 +19,12 @@
 // #define DEBUG_INTERVALS
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 #define DEBUG_SPLIT
 #define DEBUG_LINEAR_SCAN
+// #define DEBUG_READ_WRITTEN
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -693,14 +694,21 @@ namespace LL2W {
 			auto iter = active.end(), prebegin = active.begin();
 			--prebegin;
 			for (--iter; iter != prebegin && !maySpill(**iter); --iter);
-			Interval &spill = **iter;
+			if (iter == prebegin)
+				std::cerr << "iter == prebegin. This is not good.\n";
+			Interval &spill = iter == prebegin? *active.back() : **iter;
+			std::cerr << "Chose spill: " << *spill.variable << "\n";
 			++spill_count;
-			if (interval.endpoint() < spill.endpoint()) {
+			if (interval.endpoint() < spill.endpoint() || !maySpill(interval)) {
 				interval.setRegister(spill.reg);
 				addLocation(spill);
 				active.remove(&spill);
 				addToActive(interval);
 			} else {
+				std::cerr << "Spilling " << *interval.variable << " instead.";
+				if (interval.variable->definitions.size() == 1)
+					std::cerr << " \e[2m//\e[0m " << interval.variable->onlyDefinition()->debugExtra();
+				std::cerr << "\n";
 				addLocation(interval);
 			}
 		};
@@ -720,7 +728,7 @@ namespace LL2W {
 		}
 #ifdef DEBUG_LINEAR_SCAN
 		std::cerr << "\e[2m}\e[0m\n\n";
-		// debug();
+		debug();
 #endif
 #ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";
@@ -894,10 +902,14 @@ namespace LL2W {
 			}
 			std::cout << "\e[0m\n";
 			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
+#ifdef DEBUG_READ_WRITTEN
 				int read, written;
 				std::tie(read, written) = instruction->extract();
 				std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
 				          << "\e[0m\n";
+#else
+				std::cout << "    " << instruction->debugExtra() << "\n";
+#endif
 			}
 			std::cout << "\n";
 		}
@@ -941,6 +953,7 @@ namespace LL2W {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << "}\n\n";
 #endif
+#ifdef DEBUG_RENDER
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
 				BasicBlockPtr bb = node->get<BasicBlockPtr>();
@@ -949,7 +962,6 @@ namespace LL2W {
 			}
 		}
 
-#ifdef DEBUG_RENDER
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
 #endif
