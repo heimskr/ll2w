@@ -23,6 +23,7 @@
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 // #define DEBUG_SPLIT
+#define DEBUG_LINEAR_SCAN
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -200,25 +201,35 @@ namespace LL2W {
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
 		// before the use insert a definition for the variable by loading it from the stack.
-#ifdef DEBUG_SPILL
-		std::cerr << "Trying to spill " << *variable << " (definitions: " << variable->definitions.size() << ")\n";
-#endif
 		BasicBlockPtr block = variable->onlyDefiner();
 		InstructionPtr definition = variable->onlyDefinition();
+#ifdef DEBUG_SPILL
+		std::cerr << "  Trying to spill " << *variable << " (definition: " << variable->definitions.size() << ")\n";
+		std::cerr << "    Inserting a stack store after definition: " << definition->debugExtra() << "\n";
+#endif
 		insertAfter(definition, std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable));
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
+				bool replaced = instruction->replaceRead(variable, new_var);
 #ifdef DEBUG_SPILL
-				std::cerr << "  " << (instruction->replaceRead(variable, new_var)? "Replaced" : "Didn't replace")
+				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
 				          << " in " << instruction->debugExtra() << "\n";
 #endif
-				instruction->read.erase(variable);
-				insertBefore(instruction, std::make_shared<StackLoadInstruction>(new_var,
-					*variableLocations.at(variable), -1));
+				if (replaced) {
+					instruction->read.erase(variable);
+					insertBefore(instruction, std::make_shared<StackLoadInstruction>(new_var,
+						*variableLocations.at(variable), -1));
+#ifdef DEBUG_SPILL
+				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << "\n";
+#endif
+				}
 			}
 		}
+#ifdef DEBUG_SPILL
+		std::cerr << "\n";
+#endif
 
 		reindexInstructions();
 	}
@@ -511,8 +522,11 @@ namespace LL2W {
 	}
 
 	void Function::resetRegisters() {
-		for (const std::pair<int, VariablePtr> &pair: variableStore)
+		for (const std::pair<int, VariablePtr> &pair: variableStore) {
+			std::cerr << "Reset: " << *pair.second << ": " << pair.second->reg << " -> ";
 			pair.second->setRegister(-1);
+			std::cerr << pair.second->reg << ": " << *pair.second << "\n";
+		}
 	}
 
 	void Function::extract() {
@@ -533,14 +547,17 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 
-		if (0 < linearScan()) {
-			resetRegisters();
+		int spilled = linearScan();
+		if (0 < spilled) {
+			std::cerr << "Spills in first scan: \e[1m" << spilled << "\e[0m\n\n";
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
 			extractVariables();
+			resetRegisters();
 			resetLiveness();
 			computeLiveness();
-			linearScan();
+			spilled = linearScan();
+			std::cerr << "Spills in second scan: \e[1m" << spilled << "\e[0m\n\n";
 		}
 
 		extracted = true;
@@ -580,6 +597,10 @@ namespace LL2W {
 	}
 
 	int Function::linearScan() {
+#ifdef DEBUG_LINEAR_SCAN
+		std::cerr << "\e[2mScanning \e[0;1m" << *name << "\e[0;2m {\e[0m\n";
+#endif
+
 		std::list<Interval> intervals = sortedIntervals();
 		std::list<Interval *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
@@ -637,7 +658,9 @@ namespace LL2W {
 				addToActive(interval);
 			}
 		}
-
+#ifdef DEBUG_LINEAR_SCAN
+		std::cerr << "\e[2m}\e[0m\n\n";
+#endif
 #ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";
 		for (Interval &interval: intervals) {

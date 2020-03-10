@@ -754,7 +754,7 @@ namespace LL2W {
 			out << "\e[33mi" << width << "\e[0m ";
 			if (pvar)
 				out << "\e[32m%";
-			out << value;
+			out << value << "\e[0m";
 		}
 		return out.str();
 	}
