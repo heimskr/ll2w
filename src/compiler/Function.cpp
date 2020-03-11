@@ -499,6 +499,14 @@ namespace LL2W {
 		return new_block;
 	}
 
+	void Function::mergeAllBlocks() {
+
+	}
+
+	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
+
+	}
+
 	Node & Function::operator[](const BasicBlock &bb) const {
 		return *bbNodeMap.at(&bb);
 	}

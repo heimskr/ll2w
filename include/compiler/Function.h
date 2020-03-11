@@ -146,6 +146,12 @@ namespace LL2W {
 			/** Splits a basic block after a given instruction. */
 			std::shared_ptr<BasicBlock> splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
 
+			/** Merges each terminal-free basic block with the basic block following it. */
+			void mergeAllBlocks();
+
+			/** Merges two basic blocks. */
+			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);
+
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
