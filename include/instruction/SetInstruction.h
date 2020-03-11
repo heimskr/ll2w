@@ -1,19 +1,12 @@
 #ifndef INSTRUCTION_SETINSTRUCTION_H_
 #define INSTRUCTION_SETINSTRUCTION_H_
 
-#include "instruction/WhyInstruction.h"
+#include "instruction/IType.h"
 
 namespace LL2W {
-	class SetInstruction: public WhyInstruction {
-		public:
-			std::shared_ptr<Variable> rd;
-			int imm;
-
-			SetInstruction(std::shared_ptr<Variable> rd_, int imm_, int index_):
-				WhyInstruction(index_), rd(rd_), imm(imm_) {}
-			
-			ExtractionResult extract(bool force = false) override;
-			std::string debugExtra() override;
+	struct SetInstruction: public IType<int> {
+		SetInstruction(std::shared_ptr<Variable> rd_, int imm_, int index_): IType(nullptr, imm_, rd_, index_) {}
+		std::string debugExtra() override;
 	};
 }
 
