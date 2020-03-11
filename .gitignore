@@ -40,6 +40,6 @@ ll2w
 include/parser/yyparse*
 include/parser/yylex*
 include/yyparse.h
-parser/yyparse*
-parser/yylex*
+src/parser/yyparse*
+src/parser/yylex*
 

@@ -2,15 +2,15 @@ COMPILER	?= clang++
 CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra -Iinclude
 OUTPUT		?= ll2w
 MAIN		:= main
-SOURCES		:= $(shell find *.cpp **/*.cpp)
-OBJECTS		:= $(SOURCES:.cpp=.o) parser/yylex.o parser/yyparse.o
+SOURCES		:= $(shell find src/**/*.cpp)
+OBJECTS		:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
 
 LEXFLAGS	:= -Wno-sign-compare -Wno-register
-LEXCPP		:= parser/yylex.cpp
-PARSECPP	:= parser/yyparse.cpp
+LEXCPP		:= src/parser/yylex.cpp
+PARSECPP	:= src/parser/yyparse.cpp
 PARSEHDR	:= include/yyparse.h
-FLEXSRC		:= parser/lexer.l
-BISONSRC	:= parser/parser.y
+FLEXSRC		:= src/parser/lexer.l
+BISONSRC	:= src/parser/parser.y
 
 CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 
@@ -18,7 +18,7 @@ CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 
 all: $(OUTPUT)
 
-$(OUTPUT): $(MAIN).o $(OBJECTS)
+$(OUTPUT): src/$(MAIN).o $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 $(LEXCPP): $(FLEXSRC) $(PARSEHDR)
@@ -30,7 +30,7 @@ $(PARSECPP) $(PARSEHDR): $(BISONSRC)
 $(LEXCPP:.cpp=.o): $(LEXCPP)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
-$(PARSECPP:.cpp=.o): $(PARSECPP)
+$(PARSECPP:.cpp=.o): $(PARSECPP) $(PARSEHDR)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
 %.o: %.cpp
@@ -40,7 +40,7 @@ test: $(OUTPUT)
 	./$<
 
 clean:
-	rm -f $(OUTPUT) *.o **/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) parser/yyparse.output $(LEXCPP) $(PARSECPP)
+	rm -f $(OUTPUT) src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP)
 
 declutter:
 	rm -f graph_*.png

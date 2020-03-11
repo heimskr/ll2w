@@ -16,7 +16,10 @@ namespace LL2W {
 
 			Program(const ASTNode &);
 
+			/** Compiles all the functions in the program. */
 			void compile();
+
+			/** Prints debug information for all the functions in the program. */
 			void debug();
 	};
 }
