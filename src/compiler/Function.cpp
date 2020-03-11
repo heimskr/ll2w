@@ -466,6 +466,7 @@ namespace LL2W {
 #endif
 		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
 			std::list<InstructionPtr>());
+		new_block->parent = this;
 		bbLabels.insert(label);
 		bbMap.emplace(StringSet::intern(std::to_string(label)), new_block);
 
@@ -754,7 +755,7 @@ namespace LL2W {
 		}
 
 		updateArgumentLoads(stackSize - initial_stack_size);
-		mergeAllBlocks();
+		// mergeAllBlocks();
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
@@ -767,7 +768,7 @@ namespace LL2W {
 		std::list<Interval> intervals;
 
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			if (pair.second->reg == -1)
+			if (!WhyInfo::isSpecialPurpose(pair.second->reg))
 				intervals.emplace_back(pair.second);
 		}
 
@@ -972,9 +973,9 @@ namespace LL2W {
 #ifdef DEBUG_INTERVALS
 		std::cout << "\e[1;4m" << *name << "(" << getArity() << ")\e[0m [spills: " << spill_count << "]\n";
 		for (Interval &interval: intervals) {
-			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
-			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
-			          << interval.reg << ")\n";
+			std::cout << "    Interval for variable %" << interval.variable->id << ": [%"
+			          << interval.firstDefinition->label << ", %" << interval.lastUse->label << "]; reg = $"
+			          << WhyInfo::registerName(interval.reg) << " (" << interval.reg << ")\n";
 		}
 #endif
 #ifdef DEBUG_STACK
@@ -1138,8 +1139,8 @@ namespace LL2W {
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset <<
-			             ": preds =";
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset << "/"
+			          << block->index << ": preds =";
 			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
 					std::cout << ",";
@@ -1210,6 +1211,16 @@ namespace LL2W {
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
 #endif
+		resetLiveness();
+		computeLiveness();
+		auto intervals = sortedIntervals();
+
+		std::cout << "\e[1;4m" << *name << "(" << getArity() << ")\e[0m: " << intervals.size() << "\n";
+		for (Interval &interval: intervals) {
+			std::cout << "    Interval for variable %" << interval.variable->id << ": [%"
+			          << interval.firstDefinition->label << ", %" << interval.lastUse->label << "]; reg = $"
+			          << WhyInfo::registerName(interval.variable->reg) << " (" << interval.variable->reg << ")\n";
+		}
 	}
 
 	void Function::debugMergeSets() const {
