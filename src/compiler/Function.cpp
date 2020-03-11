@@ -213,8 +213,11 @@ namespace LL2W {
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
 		// before the use insert a definition for the variable by loading it from the stack.
-		if (variable->definitions.empty())
+		if (variable->definitions.empty()) {
+			debug();
+			std::cerr << *variable << "\n";
 			throw std::runtime_error("Cannot spill variable: no definitions");
+		}
 
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
@@ -611,9 +614,16 @@ namespace LL2W {
 		}
 	}
 
-	void Function::resetRegisters() {
-		for (const std::pair<int, VariablePtr> &pair: variableStore)
-			pair.second->setRegister(-1);
+	void Function::resetRegisters(bool respectful) {
+		if (!respectful) {
+			for (const std::pair<int, VariablePtr> &pair: variableStore)
+				pair.second->setRegister(-1);
+		} else {
+			for (const std::pair<int, VariablePtr> &pair: variableStore) {
+				if (!WhyInfo::isSpecialPurpose(pair.second->reg))
+					pair.second->setRegister(-1);
+			}
+		}
 	}
 
 	void Function::compile() {

@@ -9,8 +9,8 @@
 // #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_LINEAR_SCAN
-// #define DEBUG_READ_WRITTEN
+#define DEBUG_READ_WRITTEN
 
-// #define VARIABLE_EXTRA
+#define VARIABLE_EXTRA
 
 #endif

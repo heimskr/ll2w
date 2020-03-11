@@ -191,8 +191,9 @@ namespace LL2W {
 			/** Sets the pvar names in all instructions to those of the connected variables. */
 			void updateInstructionNodes();
 
-			/** Removes the register assignments for all variables. */
-			void resetRegisters();
+			/** Removes the register assignments for all variables. If its argument is true, it won't reset variables
+			 *  that have been assigned special registers. */
+			void resetRegisters(bool respectful = true);
 
 			/** Performs a full set of compiler passes on the function. */
 			void compile();
