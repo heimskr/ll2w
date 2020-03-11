@@ -425,7 +425,7 @@ namespace LL2W {
 				for (InstructionPtr &instruction: block->instructions) {
 					int regular_written_count = 0;
 					for (const VariablePtr &variable: instruction->written) {
-						if (variable->reg != -1 && !WhyInfo::isSpecialPurpose(variable->reg))
+						if (!WhyInfo::isSpecialPurpose(variable->reg))
 							++regular_written_count;
 					}
 
