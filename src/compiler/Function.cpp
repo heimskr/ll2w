@@ -1049,7 +1049,6 @@ namespace LL2W {
 
 	void Function::debug() {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cout << "\e[47m\e[2K\e[0m\n";
 		std::cout << "\e[1m" << *name << "\e[0m(";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
@@ -1121,7 +1120,6 @@ namespace LL2W {
 #endif
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << "}\n\n";
-		std::cout << "\e[47m\e[2K\e[0m\n";
 #endif
 #ifdef DEBUG_RENDER
 		for (Node *node: cfg.nodes()) {
