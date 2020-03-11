@@ -743,7 +743,7 @@ namespace LL2W {
 				for (const std::pair<int, StackLocation> &pair: stack)
 					to_skip += pair.second.width;
 				for (int arg2 = WhyInfo::argumentCount; arg2 < arg; ++arg2)
-					to_skip += arguments->at(arg2 - WhyInfo::argumentCount).type->width();
+					to_skip += arguments->at(arg2 - WhyInfo::argumentCount).type->width() / 8;
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
 				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var, arg_var->type->width() / 8);
