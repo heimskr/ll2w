@@ -112,8 +112,11 @@ namespace LL2W {
 			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			bool spill(std::shared_ptr<Variable>);
 
-			/** Returns the instruction following a given instruction. */
+			/** Returns a pointer to the instruction following a given instruction. */
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
+
+			/** Returns a pointer to the basic block following a given basic block. */
+			std::shared_ptr<BasicBlock> after(std::shared_ptr<BasicBlock>);
 
 			/** Inserts one instruction after another. */
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
@@ -123,7 +126,11 @@ namespace LL2W {
 			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
 
-			/** Removes branch instructions that redundantly jump to the next instruction. */
+			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
+			 *  if such a branch instruction exists. */
+			void removeUselessBranch(std::shared_ptr<BasicBlock>);
+
+			/** Removes all branch instructions that redundantly jump to the immediately following blocks. */
 			void removeUselessBranches();
 
 			/** Reassigns indices to all instructions. */
@@ -134,7 +141,7 @@ namespace LL2W {
 			void splitBlocks();
 
 			/** Splits a basic block after a given instruction. */
-			void splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
+			std::shared_ptr<BasicBlock> splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
 
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();

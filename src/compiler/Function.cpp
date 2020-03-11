@@ -285,6 +285,12 @@ namespace LL2W {
 		return iter == linearInstructions.end()? nullptr : *iter;
 	}
 
+	BasicBlockPtr Function::after(BasicBlockPtr block) {
+		auto iter = std::find(blocks.begin(), blocks.end(), block);
+		++iter;
+		return iter == blocks.end()? nullptr : *iter;
+	}
+
 	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
@@ -338,6 +344,25 @@ namespace LL2W {
 		if (reindex) {
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
 				++(*linearIter)->index;
+		}
+	}
+
+	void Function::removeUselessBranch(BasicBlockPtr block) {
+		if (block->instructions.empty())
+			return;
+
+		InstructionPtr &back = block->instructions.back();
+
+		if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
+			if (llback->node->nodeType() == NodeType::BrUncond) {
+				const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node);
+				BasicBlockPtr next = after(block);
+				if (next) {
+					const int destination = std::atoi(branch->destination->substr(1).c_str());
+					if (next->label == destination)
+						remove(back);
+				}
+			}
 		}
 	}
 
@@ -405,7 +430,7 @@ namespace LL2W {
 		}
 	}
 
-	void Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
+	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
 		const int label = newLabel();
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
@@ -454,6 +479,7 @@ namespace LL2W {
 		new_block->extract();
 
 		reindexInstructions();
+		return new_block;
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {
@@ -675,6 +701,7 @@ namespace LL2W {
 				return;
 
 			BasicBlockPtr entry = getEntry();
+			std::shared_ptr<LoadRInstruction> first_load;
 			for (int arg = arity - 1; WhyInfo::argumentCount <= arg; --arg) {
 				VariablePtr arg_var = getVariable(arg, arguments->at(arg - WhyInfo::argumentCount).type, entry);
 				VariablePtr temp_var = makeAssemblerVariable(0, entry);
@@ -691,12 +718,16 @@ namespace LL2W {
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
 				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var);
+				if (!first_load)
+					first_load = load;
 
 				insertBefore(entry->instructions.front(), add, false);
 				insertAfter(add, load, false);
 			}
 
 			reindexInstructions();
+			splitBlock(entry, first_load);
+			removeUselessBranch(entry);
 		} else {
 			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
 		}
