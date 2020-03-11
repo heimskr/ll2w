@@ -24,7 +24,7 @@ namespace LL2W {
 			int symbol;
 			Location location;
 			const std::string *lexerInfo;
-			ASTNode *parent;
+			ASTNode *parent = nullptr;
 			std::list<ASTNode *> children;
 
 			ASTNode(int sym, const Location &loc, const char *info);

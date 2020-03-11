@@ -14,6 +14,9 @@
 #include "parser/StructNode.h"
 #include "parser/Values.h"
 
+// Disable PVS-Studio warnings about branches that do the same thing.
+//-V::1037
+
 template <typename ...Args>
 void D(Args && ...args) {
 	(void) std::initializer_list<int> {
@@ -394,8 +397,8 @@ i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); }
-           | gep_indices "," _inrange type_any TOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); };
-           | gep_indices "," _inrange type_any TOK_PVAR    { $1->adopt($2->adopt({$4, $5, $3})); };
+           | gep_indices "," _inrange type_any gep_index { $1->adopt($2->adopt({$4, $5, $3})); };
+gep_index: TOK_DECIMAL | TOK_PVAR;
 _inrange: TOK_INRANGE | { $$ = nullptr; };
 
 i_ret: "ret" type_nonvoid value { $$ = (new RetNode($2, $3))->locate($1); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
@@ -469,11 +472,11 @@ constant_right: operand | conversion_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
             | parattr              { $$ = (new AN(PARATTR_LIST))->adopt($1, true); };
 parattr: TOK_PARATTR
-       | TOK_INALLOCA { $1->symbol = TOK_PARATTR; }
-       | TOK_READONLY               { $1->symbol = TOK_PARATTR; }
+       | parattr_simple             { $1->symbol = TOK_PARATTR; }
        | TOK_ALIGN TOK_DECIMAL      { $$ = $1->adopt($2); };
        | TOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
        | retattr | TOK_BYVAL | TOK_WRITEONLY;
+parattr_simple: TOK_INALLOCA | TOK_READONLY;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
 conversion_expr: TOK_CONV_OP constant TOK_TO type_any         { $$ = (new AN(CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }

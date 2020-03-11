@@ -14,7 +14,7 @@ namespace LL2W {
 			void addTypes(ASTNode *);
 
 		public:
-			const std::string *name;
+			const std::string *name = nullptr;
 			StructShape shape = StructShape::Default;
 			StructForm form = StructForm::Struct;
 			std::vector<Type *> types;

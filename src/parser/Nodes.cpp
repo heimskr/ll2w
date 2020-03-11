@@ -1081,9 +1081,9 @@ namespace LL2W {
 		Type *uncasted = getType(aggregate_type);
 		aggregateType = dynamic_cast<AggregateType *>(uncasted);
 		if (!aggregateType) {
+			std::string uncasted_str = *uncasted;
 			delete uncasted;
-			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: "
-				+ std::string(*uncasted));
+			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: " + uncasted_str);
 		}
 		aggregateValue = getValue(aggregate_value);
 		for (ASTNode *decimal: *decimals_)

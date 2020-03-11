@@ -3,6 +3,9 @@
 #define YY_USER_ACTION { LL2W::Lexer::advance(); }
 #define RTOKEN(x) return LL2W::Lexer::token(TOK_##x);
 
+// Disable PVS-Studio warnings about branches that do the same thing.
+//-V::1037
+
 // PARATTR and FNATTR_BASIC both include "readonly", which has to be treated specially.
 
 %}

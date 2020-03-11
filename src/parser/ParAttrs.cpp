@@ -45,6 +45,9 @@ namespace LL2W {
 	}
 
 	ParAttrs & ParAttrs::operator=(const ParAttrs &other) {
+		if (this == &other)
+			return *this;
+
 		if (byvalType) {
 			delete byvalType;
 			byvalType = nullptr;

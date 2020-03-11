@@ -11,6 +11,8 @@ namespace LL2W {
 		for (const ASTNode *node: root) {
 			if (node->symbol == STRUCTDEF) {
 				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
+				if (!struct_node)
+					throw std::runtime_error("struct_node is null in Program::Program");
 				StructType::knownStructs.emplace(*struct_node->name, std::make_shared<StructType>(struct_node));
 			}
 		}

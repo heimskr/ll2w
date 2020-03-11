@@ -6,9 +6,10 @@
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
-#define IFLV(x, t) if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value, (t))
+#define IFLV(x, t) do { \
+	if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value, (t)); } while (0)
 #define FORV(x...) for (const Value *value: {x})
-#define CAST(t) const t *cast = dynamic_cast<const t *>(node)
+#define CAST(t) const t *cast = dynamic_cast<const t *>(node); if (!cast) break
 
 namespace LL2W {
 	LLVMInstruction::~LLVMInstruction() {
@@ -28,8 +29,6 @@ namespace LL2W {
 		read.clear();
 		written.clear();
 		extracted = true;
-
-		std::unordered_set<int> read_ids, written_ids;
 
 		auto readname = [&](const LocalValue *lv, const Type *type) {
 			read.insert(parent.lock()->parent->getVariable(parseLong(lv->name), type));
@@ -104,10 +103,7 @@ namespace LL2W {
 				CAST(GetelementptrNode);
 				write(cast->result, cast->type);
 				int id = parseLong(cast->ptrValue->name);
-				if (read_ids.count(id) == 0) {
-					read.insert(parent.lock()->parent->getVariable(id, cast->ptrType));
-					read_ids.insert(id);
-				}
+				read.insert(parent.lock()->parent->getVariable(id, cast->ptrType));
 				for (auto [width, value, minrange, pvar]: cast->indices) {
 					// Because we're assuming that these variables have already been defined earlier in the function,
 					// we can get them from the Function that contains this Instruction.
