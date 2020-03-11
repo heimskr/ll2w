@@ -1,5 +1,5 @@
-#ifndef INSTRUCTION_SET_H_
-#define INSTRUCTION_SET_H_
+#ifndef INSTRUCTION_SETINSTRUCTION_H_
+#define INSTRUCTION_SETINSTRUCTION_H_
 
 #include "instruction/WhyInstruction.h"
 
