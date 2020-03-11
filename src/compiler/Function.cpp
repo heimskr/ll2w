@@ -646,7 +646,6 @@ namespace LL2W {
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		makeCFG();
-		removeUselessBranches();
 		fillLocalValues();
 		coalescePhi();
 		computeLiveness();
@@ -677,6 +676,7 @@ namespace LL2W {
 			spilled = linearScan();
 		}
 
+		removeUselessBranches();
 		updateArgumentLoads(stackSize - initial_stack_size);
 
 #ifdef DEBUG_SPILL
