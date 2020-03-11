@@ -21,12 +21,13 @@ namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
 		parent = &program;
 		name = node.lexerInfo;
-		arguments = dynamic_cast<FunctionHeader *>(node[0])->arguments;
+		argumentsNode = dynamic_cast<FunctionHeader *>(node[0])->arguments;
+		arguments = &argumentsNode->arguments;
 		astnode = &node;
 	}
 
 	void Function::extractBlocks() {
-		int label = arguments->arguments.size();
+		int label = arguments->size();
 		std::vector<int> preds {};
 		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
@@ -463,12 +464,12 @@ namespace LL2W {
 		return *bbNodeMap.at(&bb);
 	}
 
-	int Function::arity() const {
-		return arguments? arguments->arguments.size() : 0;
+	int Function::getArity() const {
+		return arguments? arguments->size() : 0;
 	}
 
-	bool Function::variadic() const {
-		return arguments? arguments->ellipsis : false;
+	bool Function::isVariadic() const {
+		return argumentsNode? argumentsNode->ellipsis : false;
 	}
 
 	CFG & Function::makeCFG() {
@@ -602,6 +603,7 @@ namespace LL2W {
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
+		loadArguments();
 
 		int spilled = linearScan();
 #ifdef DEBUG_SPILL
@@ -640,13 +642,42 @@ namespace LL2W {
 		return intervals;
 	}
 
+	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr block) {
+		if (WhyInfo::assemblerCount <= index)
+			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
+		IntType *i64 = new IntType(64);
+		VariablePtr new_var = newVariable(i64, block);
+		delete i64;
+		new_var->setRegister(WhyInfo::assemblerOffset + index);
+		return new_var;
+	}
+
 	void Function::precolorArguments(std::list<Interval> &intervals) {
 		if (getCallingConvention() == CallingConvention::Reg16) {
-			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, arity());
+			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (Interval &interval: intervals) {
 				if (interval.variable->id < max)
 					interval.setRegister(++reg);
 			}
+		}
+	}
+
+	void Function::loadArguments() {
+		CallingConvention cconv = getCallingConvention();
+		if (cconv == CallingConvention::StackOnly) {
+			throw std::runtime_error("loadArguments is unimplemented for StackOnly functions.");
+		} else if (cconv == CallingConvention::Reg16) {
+			const int arity = getArity();
+			if (arity <= WhyInfo::argumentCount)
+				return;
+
+			BasicBlockPtr entry = getEntry();
+			for (int arg = arity - 1; WhyInfo::argumentCount < arg; --arg) {
+				VariablePtr arg_var = getVariable(arg, arguments->at(arg - WhyInfo::argumentCount).type, entry);
+				// insertBefore(entry->instructions.front(), std::make_shared<StackLoadInstruction>(arg_var, ));
+			}
+		} else {
+			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
 		}
 	}
 
@@ -758,7 +789,7 @@ namespace LL2W {
 		std::cerr << "\e[2m}\e[0m\n\n";
 #endif
 #ifdef DEBUG_INTERVALS
-		std::cout << "\e[1;4m" << *name << "(" << arity() << ")\e[0m [spills: " << spill_count << "]\n";
+		std::cout << "\e[1;4m" << *name << "(" << getArity() << ")\e[0m [spills: " << spill_count << "]\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%" << interval.startpoint()
 			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
@@ -814,7 +845,7 @@ namespace LL2W {
 	}
 
 	CallingConvention Function::getCallingConvention() const {
-		return variadic()? CallingConvention::StackOnly : CallingConvention::Reg16;
+		return isVariadic()? CallingConvention::StackOnly : CallingConvention::Reg16;
 	}
 
 	void Function::computeLiveness() {
@@ -912,8 +943,7 @@ namespace LL2W {
 	void Function::debug() {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << "\e[1m" << *name << "\e[0m(";
-		std::vector<FunctionArgument> &args = arguments->arguments;
-		for (auto begin = args.begin(), iter = begin, end = args.end(); iter != end; ++iter) {
+		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
 				std::cout << "\e[2m,\e[0m ";
 			std::cout << *iter->type;

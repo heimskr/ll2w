@@ -12,6 +12,7 @@
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
 #include "graph/DTree.h"
+#include "parser/FunctionArgs.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -34,7 +35,10 @@ namespace LL2W {
 			Program *parent = nullptr;
 
 			/** A pointer to an AST node that contains data about the function's arguments. */
-			FunctionArgs *arguments = nullptr;
+			FunctionArgs *argumentsNode = nullptr;
+
+			/** A pointer to a list of all function arguments. */
+			std::vector<FunctionArgument> *arguments = nullptr;
 
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
@@ -138,6 +142,9 @@ namespace LL2W {
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
+			/** Creates a precolored variable corresponding to a given $mx (assembler-reserved) register. */
+			VariablePtr makeAssemblerVariable(unsigned char, std::shared_ptr<BasicBlock>);
+
 			/** Returns a given basic block's CFG node. */
 			Node & operator[](const BasicBlock &) const;
 
@@ -154,10 +161,10 @@ namespace LL2W {
 			Function(Program &, const ASTNode &);
 
 			/** Returns the number of arguments the function takes. */
-			int arity() const;
+			int getArity() const;
 
 			/** Returns whether the function is variadic (i.e., whether it takes a variable number of arguments). */
-			bool variadic() const;
+			bool isVariadic() const;
 
 			/** Forms the function's control-flow graph from the basic blocks. */
 			CFG & makeCFG();
@@ -182,6 +189,9 @@ namespace LL2W {
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
+
+			/** Inserts instructions to load arguments from the stack as necessary. */
+			void loadArguments();
 
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>);
