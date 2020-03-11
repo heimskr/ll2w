@@ -102,9 +102,6 @@ namespace LL2W {
 			 *  instructions. */
 			void relinearize();
 
-			/** Renumbers all instructions based on the order they appear in each BasicBlock's instructions vector. */
-			void assignIndices();
-
 			/** Merges arguments of ϕ-instructions into single variables. */
 			void coalescePhi();
 

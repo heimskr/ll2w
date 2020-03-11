@@ -127,12 +127,6 @@ namespace LL2W {
 		}
 	}
 
-	void Function::assignIndices() {
-		int index = -1;
-		for (InstructionPtr &instruction: linearInstructions)
-			instruction->index = ++index;
-	}
-
 	void Function::coalescePhi() {
 		std::list<InstructionPtr> to_remove;
 		bool should_relinearize = false;
@@ -371,9 +365,9 @@ namespace LL2W {
 	}
 
 	void Function::reindexInstructions() {
-		int i = -1;
+		int index = -1;
 		for (InstructionPtr &instruction: linearInstructions)
-			instruction->index = ++i;
+			instruction->index = ++index;
 	}
 
 	void Function::splitBlocks() {
@@ -733,7 +727,9 @@ namespace LL2W {
 		std::function<bool(Interval &)> maySpill = [&](Interval &interval) {
 			VariablePtr variable = interval.variable;
 #ifdef DEBUG_LINEAR_SCAN
-			std::cerr << "[maySpill(" << *variable << "): " << (variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill()? "true" : "false") << "]";
+			std::cerr << "[maySpill(" << *variable << "): "
+			          << (variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill()? "true" : "false")
+			          << "]";
 			if (variable->definitions.size() == 1)
 				std::cerr << " \e[2m//\e[0m " << variable->onlyDefinition()->debugExtra();
 			std::cerr << "\n";
