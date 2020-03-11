@@ -754,7 +754,6 @@ namespace LL2W {
 		}
 
 		updateArgumentLoads(stackSize - initial_stack_size);
-		removeUselessBranches();
 		mergeAllBlocks();
 
 #ifdef DEBUG_SPILL
