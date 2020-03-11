@@ -525,8 +525,6 @@ namespace LL2W {
 	}
 
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
-		std::cout << "Merging some blocks (" << before->label << " and " << after->label << ")\n";
-
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (BasicBlockPtr &block: blocks) {
 			for (int &pred: block->preds) {
@@ -556,7 +554,6 @@ namespace LL2W {
 				if (branch->ifFalse == after_p_label)
 					branch->ifFalse = before_p_label;
 			} else if (SwitchNode *sw = CompilerUtil::switchCast(instruction)) {
-				std::cout << "[" << *sw->label << "]\n";
 				if (sw->label == after_label)
 					sw->label = before_label;
 				for (std::tuple<Type *, Value *, const std::string *> &tuple: sw->table) {
@@ -748,10 +745,7 @@ namespace LL2W {
 
 		updateArgumentLoads(stackSize - initial_stack_size);
 		removeUselessBranches();
-		debug();
-		std::cout << "\e[47m\e[2K\e[0m\n";
 		mergeAllBlocks();
-		std::cout << "\e[47m\e[2K\e[0m\n";
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
