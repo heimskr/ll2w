@@ -8,6 +8,7 @@ namespace LL2W {
 	/** Contains constants pertaining to the Why.js architecture. */
 	struct WhyInfo {
 		constexpr static int wordSize = 8; // in bytes
+		constexpr static int totalRegisters = 128;
 
 		constexpr static int returnValueOffset = 7, returnValueCount = 16;
 		constexpr static int    argumentOffset = 23,   argumentCount = 16;

@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 	if (1 < argc) {
 		parsertest(argv[1]);
 	} else {
-		parsertest("ll/fat_resize.ll");
+		parsertest("ll/manyargs.ll");
 		// mergetest2();
 	}
 }

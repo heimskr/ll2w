@@ -15,6 +15,8 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
+#include "instruction/AddIInstruction.h"
+#include "instruction/LoadRInstruction.h"
 #include "options.h"
 
 namespace LL2W {
@@ -146,7 +148,7 @@ namespace LL2W {
 				const LocalValue *local =
 					pair.first->valueType() == ValueType::Local? dynamic_cast<LocalValue *>(pair.first) : nullptr;
 				if (!local) {
-					// In rare occasions, one or more operands of a phi instruction can be constants like "true".
+					// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
 					// instructions in the penultimate slots of the predicate labels for which the phi function
 					// parameters specify a constant.
@@ -636,14 +638,21 @@ namespace LL2W {
 		return intervals;
 	}
 
-	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr block) {
-		if (WhyInfo::assemblerCount <= index)
-			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
+	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {
+		if (WhyInfo::totalRegisters <= index)
+			throw std::invalid_argument("Index too high: " + std::to_string(index));
 		IntType *i64 = new IntType(64);
 		VariablePtr new_var = newVariable(i64, block);
 		delete i64;
-		new_var->setRegister(WhyInfo::assemblerOffset + index);
+		new_var->setRegister(index);
 		return new_var;
+
+	}
+
+	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr block) {
+		if (WhyInfo::assemblerCount <= index)
+			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
+		return makePrecoloredVariable(WhyInfo::assemblerOffset + index, block);
 	}
 
 	void Function::precolorArguments(std::list<Interval> &intervals) {
@@ -659,16 +668,32 @@ namespace LL2W {
 	void Function::loadArguments() {
 		CallingConvention cconv = getCallingConvention();
 		if (cconv == CallingConvention::StackOnly) {
-			throw std::runtime_error("loadArguments is unimplemented for StackOnly functions.");
+			throw std::runtime_error("loadArguments is currently unimplemented for StackOnly functions.");
 		} else if (cconv == CallingConvention::Reg16) {
 			const int arity = getArity();
 			if (arity <= WhyInfo::argumentCount)
 				return;
 
 			BasicBlockPtr entry = getEntry();
-			for (int arg = arity - 1; WhyInfo::argumentCount < arg; --arg) {
+			for (int arg = arity - 1; WhyInfo::argumentCount <= arg; --arg) {
 				VariablePtr arg_var = getVariable(arg, arguments->at(arg - WhyInfo::argumentCount).type, entry);
-				// insertBefore(entry->instructions.front(), std::make_shared<StackLoadInstruction>(arg_var, ));
+				VariablePtr temp_var = makeAssemblerVariable(0, entry);
+				VariablePtr sp = makePrecoloredVariable(WhyInfo::stackPointerOffset, entry);
+
+				// The stack frame looks like [ $rt | $fp | argN-1 | ... | arg16 | var1 | var2 | ... ].
+				// The stack pointer will be pointing right after the stack frame. We need to skip over the local
+				// variables and the arguments after this one.
+				int to_skip = 0;
+				for (const std::pair<int, StackLocation> &pair: stack)
+					to_skip += pair.second.width;
+				for (int arg2 = WhyInfo::argumentCount; arg2 < arg; ++arg2)
+					to_skip += arguments->at(arg2 - WhyInfo::argumentCount).type->width();
+
+				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
+				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var);
+
+				insertBefore(entry->instructions.front(), add);
+				insertAfter(add, load);
 			}
 		} else {
 			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));

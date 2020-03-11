@@ -139,6 +139,9 @@ namespace LL2W {
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
+			/** Creates a precolored variable corresponding to any register. */
+			VariablePtr makePrecoloredVariable(unsigned char, std::shared_ptr<BasicBlock>);
+
 			/** Creates a precolored variable corresponding to a given $mx (assembler-reserved) register. */
 			VariablePtr makeAssemblerVariable(unsigned char, std::shared_ptr<BasicBlock>);
 
