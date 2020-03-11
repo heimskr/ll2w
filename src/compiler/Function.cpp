@@ -656,11 +656,16 @@ namespace LL2W {
 
 	std::list<Interval> Function::sortedIntervals() {
 		std::list<Interval> intervals;
-		for (std::pair<const int, VariablePtr> &pair: variableStore)
-			intervals.emplace_back(pair.second);
+
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
+			if (pair.second->reg == -1)
+				intervals.emplace_back(pair.second);
+		}
+
 		intervals.sort([&](const Interval &left, const Interval &right) {
 			return left.firstDefinition->label < right.firstDefinition->label;
 		});
+
 		return intervals;
 	}
 
