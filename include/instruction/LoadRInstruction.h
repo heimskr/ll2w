@@ -9,8 +9,7 @@ namespace LL2W {
 		int size;
 
 		LoadRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, std::shared_ptr<Variable> rd_,
-		int size_ = 8, int index_ = -1):
-			RType(rs_, rt_, rd_, index_), size(size_) {}
+			int size_ = 8, int index_ = -1);
 
 		std::string debugExtra() override;
 	};
