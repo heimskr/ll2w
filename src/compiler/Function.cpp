@@ -500,11 +500,50 @@ namespace LL2W {
 	}
 
 	void Function::mergeAllBlocks() {
+		bool any_changed = false;
+		do {
+			auto pre_end = blocks.end();
+			--pre_end;
+			for (auto iter = blocks.begin(); iter != pre_end; ++iter) {
+				BasicBlockPtr &block = *iter;
 
+				if (block->instructions.empty()) {
+					mergeBlocks(block, *(++iter));
+					any_changed = true;
+					break;
+				}
+
+				InstructionPtr &terminal = block->instructions.back();
+				// if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
+			}
+		} while (any_changed);
 	}
 
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
+		// The after-block will be absorbed into the before-block.
+		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
+		for (BasicBlockPtr &block: blocks) {
+			for (int &pred: block->preds) {
+				if (pred == after->label)
+					pred = before->label;
+			}
+		}
 
+		// Move all instructions from the after-block to the before-block.
+		for (InstructionPtr &instruction: after->instructions)
+			before->instructions.push_back(instruction);
+		after->instructions.clear();
+
+		for (InstructionPtr &instruction: linearInstructions) {
+			if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
+				if (llvm->node->nodeType() == NodeType::BrUncond) {
+					BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llvm);
+					std::cout << "[" << *branch->destination << "]\n";
+				}
+			}
+		}
+
+		blocks.remove(after);
 	}
 
 	Node & Function::operator[](const BasicBlock &bb) const {

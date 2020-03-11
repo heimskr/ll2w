@@ -149,7 +149,8 @@ namespace LL2W {
 			/** Merges each terminal-free basic block with the basic block following it. */
 			void mergeAllBlocks();
 
-			/** Merges two basic blocks. */
+			/** Merges two basic blocks. The caller of this function is responsible for recreating the CFG and
+			 *  reindexing all blocks. */
 			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);
 
 			/** Returns a list of intervals sorted by start point in ascending order. */
