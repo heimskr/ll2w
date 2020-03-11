@@ -1,16 +1,19 @@
-COMPILER	?= clang++
-CFLAGS		:= -std=c++2a -O0 -g -Wall -Wextra -Iinclude
-OUTPUT		?= ll2w
-MAIN		:= main
-SOURCES		:= $(shell find src/**/*.cpp)
-OBJECTS		:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
+COMPILER		?= clang++
+OPTIMIZATION	?= -O0 -g
+STANDARD		?= c++2a
+WARNINGS		?= -Wall -Wextra
+CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
+OUTPUT			?= ll2w
+MAIN			:= main
+SOURCES			:= $(shell find src/**/*.cpp)
+OBJECTS			:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
 
-LEXFLAGS	:= -Wno-sign-compare -Wno-register
-LEXCPP		:= src/parser/yylex.cpp
-PARSECPP	:= src/parser/yyparse.cpp
-PARSEHDR	:= include/yyparse.h
-FLEXSRC		:= src/parser/lexer.l
-BISONSRC	:= src/parser/parser.y
+LEXFLAGS		:= -Wno-sign-compare -Wno-register
+LEXCPP			:= src/parser/yylex.cpp
+PARSECPP		:= src/parser/yyparse.cpp
+PARSEHDR		:= include/yyparse.h
+FLEXSRC			:= src/parser/lexer.l
+BISONSRC		:= src/parser/parser.y
 
 CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 
