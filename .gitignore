@@ -42,3 +42,7 @@ include/parser/yylex*
 include/yyparse.h
 src/parser/yyparse*
 src/parser/yylex*
+
+PVS-Studio.log
+report.tasks
+strace_out

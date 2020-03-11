@@ -24,7 +24,10 @@ namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
 		parent = &program;
 		name = node.lexerInfo;
-		argumentsNode = dynamic_cast<FunctionHeader *>(node[0])->arguments;
+		FunctionHeader *header = dynamic_cast<FunctionHeader *>(node[0]);
+		if (!header)
+			throw std::runtime_error("header is null in Function::Function");
+		argumentsNode = header->arguments;
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
 	}
@@ -60,6 +63,8 @@ namespace LL2W {
 				preds.clear();
 				instructions.clear();
 				const HeaderNode *header = dynamic_cast<const HeaderNode *>(child);
+				if (!header)
+					throw std::runtime_error("header is null in Function::extractBlocks");
 				label = header->label;
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
@@ -143,6 +148,9 @@ namespace LL2W {
 			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			if (!phi_node)
+				throw std::runtime_error("phi_node is null in Function::coalescePhi");
+
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
 			BasicBlockPtr phi_definer = target->onlyDefiner();
@@ -361,13 +369,14 @@ namespace LL2W {
 
 		if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
 			if (llback->node->nodeType() == NodeType::BrUncond) {
-				const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node);
-				BasicBlockPtr next = after(block);
-				if (next) {
-					const int destination = std::atoi(branch->destination->substr(1).c_str());
-					if (next->label == destination)
-						remove(back);
-				}
+				if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
+					BasicBlockPtr next = after(block);
+					if (next) {
+						const int destination = std::atoi(branch->destination->substr(1).c_str());
+						if (next->label == destination)
+							remove(back);
+					}
+				} else throw std::runtime_error("branch is null in Function::removeUselessBranch");
 			}
 		}
 	}
@@ -381,14 +390,15 @@ namespace LL2W {
 			InstructionPtr &back = block->instructions.back();
 			if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
 				if (llback->node->nodeType() == NodeType::BrUncond) {
-					const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node);
-					auto next = iter;
-					++next;
-					if (next != end) {
-						const int destination = std::atoi(branch->destination->substr(1).c_str());
-						if ((*next)->label == destination)
-							to_remove.push_back(back);
-					}
+					if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
+						auto next = iter;
+						++next;
+						if (next != end) {
+							const int destination = std::atoi(branch->destination->substr(1).c_str());
+							if ((*next)->label == destination)
+								to_remove.push_back(back);
+						}
+					} else throw std::runtime_error("branch is null in Function::removeUselessBranches");
 				}
 			}
 		}

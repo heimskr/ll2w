@@ -110,8 +110,8 @@ namespace LL2W {
 			std::vector<Type *> argumentTypes;
 			bool ellipsis;
 			FunctionType(const ASTNode *);
-			FunctionType(Type *return_type, std::vector<Type *> &argument_types):
-				returnType(return_type), argumentTypes(std::move(argument_types)) {}
+			FunctionType(Type *return_type, std::vector<Type *> &argument_types, bool ellipsis_ = false):
+				returnType(return_type), argumentTypes(std::move(argument_types)), ellipsis(ellipsis_) {}
 			~FunctionType();
 			void uncache() { cached.clear(); }
 			operator std::string() override;

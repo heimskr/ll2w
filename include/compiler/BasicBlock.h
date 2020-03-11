@@ -31,7 +31,7 @@ namespace LL2W {
 			std::list<std::shared_ptr<Instruction>> instructions;
 			std::set<std::shared_ptr<Variable>> read, written;
 			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
-			Node *node;
+			Node *node = nullptr;
 			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
