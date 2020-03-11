@@ -4,13 +4,19 @@
 #include <memory>
 
 namespace LL2W {
+	class Instruction;
 	struct BrUncondNode;
 	struct BrCondNode;
-	class Instruction;
+	struct RetNode;
+	struct UnreachableNode;
 
 	namespace CompilerUtil {
-		BrUncondNode * brUncondCast(std::shared_ptr<Instruction>);
-		BrCondNode * brCondCast(std::shared_ptr<Instruction>);
+		bool isTerminator(std::shared_ptr<Instruction>);
+
+		   BrUncondNode *    brUncondCast(std::shared_ptr<Instruction>);
+		     BrCondNode *      brCondCast(std::shared_ptr<Instruction>);
+		        RetNode *         retCast(std::shared_ptr<Instruction>);
+		UnreachableNode * unreachableCast(std::shared_ptr<Instruction>);
 	}
 }
 

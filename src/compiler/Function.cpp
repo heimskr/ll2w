@@ -12,6 +12,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "util/Util.h"
+#include "util/CompilerUtil.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
@@ -507,14 +508,11 @@ namespace LL2W {
 			for (auto iter = blocks.begin(); iter != pre_end; ++iter) {
 				BasicBlockPtr &block = *iter;
 
-				if (block->instructions.empty()) {
+				if (block->instructions.empty() || !CompilerUtil::isTerminator(block->instructions.back())) {
 					mergeBlocks(block, *(++iter));
 					any_changed = true;
 					break;
 				}
-
-				InstructionPtr &terminal = block->instructions.back();
-				// if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
 			}
 		} while (any_changed);
 	}
@@ -535,11 +533,8 @@ namespace LL2W {
 		after->instructions.clear();
 
 		for (InstructionPtr &instruction: linearInstructions) {
-			if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
-				if (llvm->node->nodeType() == NodeType::BrUncond) {
-					BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llvm);
-					std::cout << "[" << *branch->destination << "]\n";
-				}
+			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
+				std::cout << "[" << *branch->destination << "]\n";
 			}
 		}
 
