@@ -501,8 +501,10 @@ namespace LL2W {
 	}
 
 	void Function::mergeAllBlocks() {
-		bool any_changed = false;
+		bool any_changed;
+		bool changed;
 		do {
+			changed = false;
 			auto pre_end = blocks.end();
 			--pre_end;
 			for (auto iter = blocks.begin(); iter != pre_end; ++iter) {
@@ -510,16 +512,24 @@ namespace LL2W {
 
 				if (block->instructions.empty() || !CompilerUtil::isTerminator(block->instructions.back())) {
 					mergeBlocks(block, *(++iter));
-					any_changed = true;
+					any_changed = changed = true;
 					break;
 				}
 			}
-		} while (any_changed);
+		} while (changed);
+
+		if (any_changed) {
+			makeCFG();
+			reindexBlocks();
+		}
 	}
 
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
 		// The after-block will be absorbed into the before-block.
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
+
+		std::cout << "Merging some blocks (" << before->label << " and " << after->label << ")\n";
+
 		for (BasicBlockPtr &block: blocks) {
 			for (int &pred: block->preds) {
 				if (pred == after->label)
@@ -534,7 +544,13 @@ namespace LL2W {
 
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
-				std::cout << "[" << *branch->destination << "]\n";
+				if (*branch->destination == "%" + std::to_string(after->label))
+					branch->destination = StringSet::intern("%" + std::to_string(before->label));
+			} else if (BrCondNode *branch = CompilerUtil::brCondCast(instruction)) {
+				if (*branch->ifTrue == "%" + std::to_string(after->label))
+					branch->ifTrue = StringSet::intern("%" + std::to_string(before->label));
+				if (*branch->ifFalse == "%" + std::to_string(after->label))
+					branch->ifFalse = StringSet::intern("%" + std::to_string(before->label));
 			}
 		}
 
@@ -718,8 +734,12 @@ namespace LL2W {
 			spilled = linearScan();
 		}
 
-		removeUselessBranches();
 		updateArgumentLoads(stackSize - initial_stack_size);
+		removeUselessBranches();
+		debug();
+		std::cout << "\e[47m\e[2K\e[0m\n";
+		mergeAllBlocks();
+		std::cout << "\e[47m\e[2K\e[0m\n";
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
