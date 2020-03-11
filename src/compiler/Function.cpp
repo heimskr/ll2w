@@ -652,6 +652,9 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 
+#ifdef DEBUG_SPILL
+		debug();
+#endif
 
 		int spilled = linearScan();
 #ifdef DEBUG_SPILL
@@ -661,6 +664,7 @@ namespace LL2W {
 		while (0 < spilled) {
 #ifdef DEBUG_SPILL
 			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+			debug();
 #endif
 			splitBlocks();
 			for (BasicBlockPtr &block: blocks)
