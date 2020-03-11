@@ -637,6 +637,7 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		loadArguments();
+		const int initial_stack_size = stackSize;
 		extractVariables();
 		makeCFG();
 		removeUselessBranches();
@@ -644,6 +645,7 @@ namespace LL2W {
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
+
 
 		int spilled = linearScan();
 #ifdef DEBUG_SPILL
@@ -664,6 +666,8 @@ namespace LL2W {
 			computeLiveness();
 			spilled = linearScan();
 		}
+
+		updateArgumentLoads(stackSize - initial_stack_size);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
@@ -755,6 +759,17 @@ namespace LL2W {
 			removeUselessBranch(entry);
 		} else {
 			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
+		}
+	}
+
+	void Function::updateArgumentLoads(int offset) {
+		for (InstructionPtr &instruction: linearInstructions) {
+			if (std::shared_ptr<AddIInstruction> add = std::dynamic_pointer_cast<AddIInstruction>(instruction)) {
+				std::shared_ptr<Variable> &rs = add->rs, &rd = add->rd;
+				// Check for "$sp + x -> $m0" (loadArguments uses $m0).
+				if (rs && rs->reg == WhyInfo::stackPointerOffset && rd && rd->reg == WhyInfo::assemblerOffset)
+					add->imm += offset;
+			}
 		}
 	}
 
@@ -874,11 +889,14 @@ namespace LL2W {
 			          << ", %" << interval.endpoint() << "]; reg = $" << WhyInfo::registerName(interval.reg) << " ("
 			          << interval.reg << ")\n";
 		}
-
+#endif
+#ifdef DEBUG_STACK
 		if (!stack.empty()) {
 			std::cout << "Stack (" << stack.size() << "):\n";
-			for (const std::pair<const int, StackLocation> &pair: stack)
-				std::cout << "    " << pair.first << ": " << pair.second.getName() << "\n";
+			for (const std::pair<const int, StackLocation> &pair: stack) {
+				std::cout << "    " << pair.first << ": " << pair.second.getName()
+				          << " (" << pair.second.width << ")\n";
+			}
 		}
 		std::cout << "\n";
 #endif

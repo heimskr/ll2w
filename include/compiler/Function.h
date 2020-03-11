@@ -204,6 +204,10 @@ namespace LL2W {
 			/** Inserts instructions to load arguments from the stack as necessary. */
 			void loadArguments();
 
+			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
+			 *  other allocations have occurred because they move the stack pointer down. */
+			void updateArgumentLoads(int offset);
+
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>);
 
