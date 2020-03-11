@@ -618,6 +618,7 @@ namespace LL2W {
 		splitBlocks();
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
+		loadArguments();
 		extractVariables();
 		makeCFG();
 		removeUselessBranches();
@@ -625,7 +626,6 @@ namespace LL2W {
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
-		loadArguments();
 
 		int spilled = linearScan();
 #ifdef DEBUG_SPILL
