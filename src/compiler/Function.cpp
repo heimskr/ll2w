@@ -423,7 +423,13 @@ namespace LL2W {
 				int defs = 0;
 				std::shared_ptr<Instruction> prev_instruction;
 				for (InstructionPtr &instruction: block->instructions) {
-					if (WhyInfo::allocatableRegisters < defs + instruction->written.size()) {
+					int regular_written_count = 0;
+					for (const VariablePtr &variable: instruction->written) {
+						if (variable->reg != -1 && !WhyInfo::isSpecialPurpose(variable->reg))
+							++regular_written_count;
+					}
+
+					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
 						splitBlock(block, prev_instruction);
 						any_changed = true;
 						++split_count;
@@ -431,7 +437,7 @@ namespace LL2W {
 					}
 
 					prev_instruction = instruction;
-					defs += instruction->written.size();
+					defs += regular_written_count;
 				}
 			}
 
