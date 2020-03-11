@@ -8,6 +8,7 @@ namespace LL2W {
 	struct BrUncondNode;
 	struct BrCondNode;
 	struct RetNode;
+	struct SwitchNode;
 	struct UnreachableNode;
 
 	namespace CompilerUtil {
@@ -16,6 +17,7 @@ namespace LL2W {
 		   BrUncondNode *    brUncondCast(std::shared_ptr<Instruction>);
 		     BrCondNode *      brCondCast(std::shared_ptr<Instruction>);
 		        RetNode *         retCast(std::shared_ptr<Instruction>);
+		     SwitchNode *      switchCast(std::shared_ptr<Instruction>);
 		UnreachableNode * unreachableCast(std::shared_ptr<Instruction>);
 	}
 }

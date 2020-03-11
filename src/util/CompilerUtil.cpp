@@ -29,5 +29,6 @@ namespace LL2W::CompilerUtil {
 	CAST_METHOD(BrUncond, brUncond)
 	CAST_METHOD(BrCond, brCond)
 	CAST_METHOD(Ret, ret)
+	CAST_METHOD(Switch, switch)
 	CAST_METHOD(Unreachable, unreachable)
 }

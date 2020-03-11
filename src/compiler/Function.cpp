@@ -525,11 +525,9 @@ namespace LL2W {
 	}
 
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
-		// The after-block will be absorbed into the before-block.
-		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
-
 		std::cout << "Merging some blocks (" << before->label << " and " << after->label << ")\n";
 
+		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (BasicBlockPtr &block: blocks) {
 			for (int &pred: block->preds) {
 				if (pred == after->label)
@@ -542,15 +540,29 @@ namespace LL2W {
 			before->instructions.push_back(instruction);
 		after->instructions.clear();
 
+		// Replace the after-block's label with the before-block's in all instructions.
+		// TODO: When Why.js branches are implemented, add them here.
+		const std::string *before_p_label = StringSet::intern("%" + std::to_string(before->label));
+		const std::string *after_p_label  = StringSet::intern("%" + std::to_string(after->label));
+		const std::string *before_label = StringSet::intern(std::to_string(before->label));
+		const std::string *after_label  = StringSet::intern(std::to_string(after->label));
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
-				if (*branch->destination == "%" + std::to_string(after->label))
-					branch->destination = StringSet::intern("%" + std::to_string(before->label));
+				if (branch->destination == after_p_label)
+					branch->destination = before_p_label;
 			} else if (BrCondNode *branch = CompilerUtil::brCondCast(instruction)) {
-				if (*branch->ifTrue == "%" + std::to_string(after->label))
-					branch->ifTrue = StringSet::intern("%" + std::to_string(before->label));
-				if (*branch->ifFalse == "%" + std::to_string(after->label))
-					branch->ifFalse = StringSet::intern("%" + std::to_string(before->label));
+				if (branch->ifTrue == after_p_label)
+					branch->ifTrue = before_p_label;
+				if (branch->ifFalse == after_p_label)
+					branch->ifFalse = before_p_label;
+			} else if (SwitchNode *sw = CompilerUtil::switchCast(instruction)) {
+				std::cout << "[" << *sw->label << "]\n";
+				if (sw->label == after_label)
+					sw->label = before_label;
+				for (std::tuple<Type *, Value *, const std::string *> &tuple: sw->table) {
+					if (std::get<2>(tuple) == after_label)
+						std::get<2>(tuple) = before_label;
+				}
 			}
 		}
 

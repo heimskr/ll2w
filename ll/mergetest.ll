@@ -31,5 +31,6 @@ define i32 @hello(i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i3
 	br label %20
 	br label %31
 	br label %37
+	switch i32 %41, label %31 [ i32 1, label %20   i32 2, label   %31 i32 3, label %37   i32 4, label %42 ]
 	ret i32 %41
 }
