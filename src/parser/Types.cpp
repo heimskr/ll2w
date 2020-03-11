@@ -170,7 +170,8 @@ namespace LL2W {
 		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
 
 	StructType::~StructType() {
-		delete node;
+		if (node)
+			delete node;
 	}
 
 	StructType::operator std::string() {
@@ -196,10 +197,38 @@ namespace LL2W {
 		return out;
 	}
 
-	Type * StructType::extractType(const std::vector<int> &indices) const {
+	Type * StructType::extractType(std::list<int> indices) const {
 		// TODO!: Implement.
 		node->debug();
-		throw std::runtime_error("StructType::extractType is unimplemented.");
+		for (int index: indices) std::cout << index << " "; std::cout << "\n";
+		Type *type = node->types.at(indices.front())->copy();
+		if (indices.size() == 1) {
+			std::cout << "[1] Returning " << std::string(*type) << "\n";
+			return type;
+		}
+
+		AggregateType *aggregate = dynamic_cast<AggregateType *>(type);
+		if (!aggregate)
+			throw std::runtime_error("Expected an AggregateType in StructType::extractType");
+
+		indices.pop_front();
+		Type *new_type = aggregate->extractType(indices);
+		delete aggregate;
+		type = new_type;
+
+		// while (!indices.empty()) {
+		// 	AggregateType *aggregate = dynamic_cast<AggregateType *>(type);
+		// 	if (!aggregate)
+		// 		throw std::runtime_error("Expected an AggregateType in StructType::extractType");
+		// 	indices.pop_front();
+		// 	Type *new_type = aggregate->extractType(std::list<int> {indices.front()});
+		// 	delete type;
+		// 	type = new_type;
+		// }
+
+		std::cout << "Returning " << std::string(*type) << "\n";
+		return type;
+		// throw std::runtime_error("StructType::extractType is unimplemented.");
 	}
 
 	bool StructType::operator==(const Type &other) const {

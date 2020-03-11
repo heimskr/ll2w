@@ -49,7 +49,10 @@ namespace LL2W {
 	};
 
 	struct AggregateType: public Type {
-		virtual Type * extractType(const std::vector<int> &indices) const = 0;
+		virtual Type * extractType(std::list<int> indices) const = 0;
+		Type * extractType(const std::vector<int> &indices) const {
+			return extractType(std::list<int>(indices.begin(), indices.end()));
+		}
 	};
 
 	struct ArrayType: public AggregateType {
@@ -63,7 +66,7 @@ namespace LL2W {
 		operator std::string() override;
 		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
-		Type * extractType(const std::vector<int> &) const override { return subtype->copy(); }
+		Type * extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
 	};
 
@@ -128,13 +131,14 @@ namespace LL2W {
 		StructForm form = StructForm::Struct;
 		StructShape shape = StructShape::Default;
 		const StructNode *node = nullptr;
-		StructType(const std::string *name_, StructForm form_ = StructForm::Struct): name(name_), form(form_) {}
+		StructType(const std::string *name_, StructForm form_ = StructForm::Struct,
+		StructShape shape_ = StructShape::Default): name(name_), form(form_), shape(shape_) {}
 		StructType(const StructNode *);
 		~StructType();
 		operator std::string() override;
-		Type * copy() const override { return new StructType(name); }
+		Type * copy() const override { return node? new StructType(node) : new StructType(name, form, shape); }
 		int width() const override;
-		Type * extractType(const std::vector<int> &indices) const override;
+		Type * extractType(std::list<int> indices) const override;
 		bool operator==(const Type &) const override;
 	};
 
