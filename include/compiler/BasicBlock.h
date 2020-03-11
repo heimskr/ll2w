@@ -26,6 +26,7 @@ namespace LL2W {
 
 		public:
 			int label;
+			int index = -1;
 			std::vector<int> preds;
 			std::list<std::shared_ptr<Instruction>> instructions;
 			std::set<std::shared_ptr<Variable>> read, written;

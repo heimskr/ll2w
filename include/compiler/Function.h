@@ -136,6 +136,9 @@ namespace LL2W {
 			/** Reassigns indices to all instructions. */
 			void reindexInstructions();
 
+			/** Reassigns indices to all basic blocks. */
+			void reindexBlocks();
+
 			/** Splits basic blocks such that no basic block contains more definitions than the number of physical
 			 *  registers. */
 			void splitBlocks();

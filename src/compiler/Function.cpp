@@ -33,7 +33,8 @@ namespace LL2W {
 		std::vector<int> preds {};
 		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
-		int instructionIndex = 0;
+		int instructionIndex = -1;
+		int blockIndex = -1;
 
 		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
 			block->offset = offset;
@@ -61,7 +62,8 @@ namespace LL2W {
 				label = header->label;
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
-				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, instructionIndex++));
+				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, ++instructionIndex));
+				instructions.back()->index = ++blockIndex;
 				linearInstructions.push_back(instructions.back());
 			}
 		}
@@ -397,6 +399,12 @@ namespace LL2W {
 			instruction->index = ++index;
 	}
 
+	void Function::reindexBlocks() {
+		int index = -1;
+		for (BasicBlockPtr &block: blocks)
+			block->index = ++index;
+	}
+
 	void Function::splitBlocks() {
 		// Liveness analysis appears to work on the level of basic blocks, rather than instructions. This means that
 		// variables can't die until the end of a basic block. If there are more definitions in a basic block than there
@@ -662,8 +670,10 @@ namespace LL2W {
 				intervals.emplace_back(pair.second);
 		}
 
+		reindexBlocks();
+
 		intervals.sort([&](const Interval &left, const Interval &right) {
-			return left.firstDefinition->label < right.firstDefinition->label;
+			return left.firstDefinition->index < right.firstDefinition->index;
 		});
 
 		return intervals;
