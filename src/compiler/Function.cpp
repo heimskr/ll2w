@@ -692,9 +692,11 @@ namespace LL2W {
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
 				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var);
 
-				insertBefore(entry->instructions.front(), add);
-				insertAfter(add, load);
+				insertBefore(entry->instructions.front(), add, false);
+				insertAfter(add, load, false);
 			}
+
+			reindexInstructions();
 		} else {
 			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
 		}
