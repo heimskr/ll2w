@@ -23,7 +23,7 @@ namespace LL2W {
 			virtual operator std::string() = 0;
 			virtual ~Type() {}
 			virtual Type * copy() const = 0;
-			/** Returns the width of the type in bytes. */
+			/** Returns the width of the type in bits. */
 			virtual int width() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
@@ -39,6 +39,7 @@ namespace LL2W {
 
 	struct IntType: public Type {
 		TypeType typeType() const override { return TypeType::Int; }
+		/** The width of the integer in bits. */
 		int intWidth;
 		IntType(int width_): intWidth(width_) {}
 		operator std::string() override;

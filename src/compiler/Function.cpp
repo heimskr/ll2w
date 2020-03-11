@@ -746,7 +746,7 @@ namespace LL2W {
 					to_skip += arguments->at(arg2 - WhyInfo::argumentCount).type->width();
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
-				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var);
+				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var, arg_var->type->width() / 8);
 				if (!first_load)
 					first_load = load;
 
