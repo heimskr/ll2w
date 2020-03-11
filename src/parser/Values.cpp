@@ -44,7 +44,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	LocalValue::LocalValue(const ASTNode *node) {
+	LocalValue::LocalValue(const ASTNode *node): VariableValue(nullptr) {
 		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 
@@ -52,7 +52,7 @@ namespace LL2W {
 		return "\e[32m" + (variable? std::string(*variable) : "%" + *name) + "\e[39m";
 	}
 
-	GlobalValue::GlobalValue(const ASTNode *node) {
+	GlobalValue::GlobalValue(const ASTNode *node): VariableValue(nullptr) {
 		name = node->lexerInfo->at(0) == '@'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 

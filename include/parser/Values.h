@@ -81,12 +81,17 @@ namespace LL2W {
 		operator std::string() override { return value? "true" : "false"; }
 	};
 
-	struct VariableValue: public Value {};
+	struct VariableValue: public Value {
+		protected:
+			VariableValue(const std::string *name_): name(name_) {}
+
+		public:
+			const std::string *name = nullptr;
+	};
 
 	struct LocalValue: public VariableValue {
-		const std::string *name;
 		std::shared_ptr<Variable> variable = nullptr;
-		LocalValue(const std::string *name_): name(name_) {}
+		LocalValue(const std::string *name_): VariableValue(name_) {}
 		LocalValue(const std::string &name_): LocalValue(&name_) {}
 		LocalValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Local; }
@@ -95,8 +100,7 @@ namespace LL2W {
 	};
 
 	struct GlobalValue: public VariableValue {
-		const std::string *name;
-		GlobalValue(const std::string *name_): name(name_) {}
+		GlobalValue(const std::string *name_): VariableValue(name_) {}
 		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
 		GlobalValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::Global; }

@@ -270,6 +270,7 @@ namespace LL2W {
 #endif
 				if (replaced) {
 					instruction->read.erase(variable);
+					instruction->read.insert(new_var);
 					auto load = std::make_shared<StackLoadInstruction>(new_var, *variableLocations.at(variable), -1);
 					insertBefore(instruction, load);
 					out = true;
@@ -1211,16 +1212,6 @@ namespace LL2W {
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
 #endif
-		resetLiveness();
-		computeLiveness();
-		auto intervals = sortedIntervals();
-
-		std::cout << "\e[1;4m" << *name << "(" << getArity() << ")\e[0m: " << intervals.size() << "\n";
-		for (Interval &interval: intervals) {
-			std::cout << "    Interval for variable %" << interval.variable->id << ": [%"
-			          << interval.firstDefinition->label << ", %" << interval.lastUse->label << "]; reg = $"
-			          << WhyInfo::registerName(interval.variable->reg) << " (" << interval.variable->reg << ")\n";
-		}
 	}
 
 	void Function::debugMergeSets() const {

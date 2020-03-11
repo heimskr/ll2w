@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
-#define DEBUG_INTERVALS
+// #define DEBUG_INTERVALS
 // #define DEBUG_STACK
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
