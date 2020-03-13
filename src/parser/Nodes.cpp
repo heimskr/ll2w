@@ -709,7 +709,7 @@ namespace LL2W {
 
 // RetNode
 
-	RetNode::RetNode(): type(new VoidType()), value(new VoidValue()) {}
+	RetNode::RetNode(): type(std::make_shared<VoidType>()), value(std::make_shared<VoidValue>()) {}
 
 	RetNode::RetNode(ASTNode *type_, ASTNode *value_) {
 		type = getType(type_);

@@ -63,8 +63,6 @@ namespace LL2W {
 		int count;
 		TypePtr subtype;
 		ArrayType(int count_, TypePtr subtype_): count(count_), subtype(subtype_) {}
-		template <typename T>
-		ArrayType(int count_, const T &subtype_): count(count_), subtype(new T(subtype_)) {}
 		operator std::string() override;
 		TypePtr copy() const override { return std::make_shared<ArrayType>(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
@@ -96,8 +94,6 @@ namespace LL2W {
 		TypeType typeType() const override { return TypeType::Pointer; }
 		TypePtr subtype;
 		PointerType(TypePtr subtype_): subtype(subtype_) {}
-		template <typename T>
-		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
 		operator std::string() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
 		int width() const override { return WhyInfo::pointerWidth; }
