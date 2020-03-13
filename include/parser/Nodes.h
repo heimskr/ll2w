@@ -216,7 +216,7 @@ namespace LL2W {
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader {
 		bool inbounds = false;
 		TypePtr type = nullptr, ptrType = nullptr;
-		std::shared_ptr<LocalValue> ptrValue = nullptr;
+		std::shared_ptr<LocalValue> ptrValue;
 		// width, value/index, has minrange, is pvar
 		std::vector<std::tuple<int, int, bool, bool>> indices;
 

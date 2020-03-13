@@ -669,8 +669,9 @@ namespace LL2W {
 					ptr_value->location);
 			}
 		}
-		ValuePtr value = getValue(ptr_value);
-		if (!std::dynamic_pointer_cast<LocalValue>(value))
+
+		ptrValue = std::dynamic_pointer_cast<LocalValue>(getValue(ptr_value));
+		if (!ptrValue)
 			yyerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
 
 		for (ASTNode *comma: *indices_) {
