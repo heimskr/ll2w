@@ -43,6 +43,7 @@ namespace LL2W {
 		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
 			block->offset = offset;
 			block->parent = this;
+			block->index = ++blockIndex;
 			bbLabels.insert(block->label);
 			bbMap.emplace(StringSet::intern(std::to_string(block->label)), block);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
@@ -69,7 +70,6 @@ namespace LL2W {
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
 				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, ++instructionIndex));
-				instructions.back()->index = ++blockIndex;
 				linearInstructions.push_back(instructions.back());
 			}
 		}
