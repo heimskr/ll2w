@@ -14,6 +14,9 @@
 namespace LL2W {
 	class StructNode;
 
+	class Type;
+	using TypePtr = std::shared_ptr<Type>;
+
 	class Type {
 		protected:
 			enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary};
@@ -22,7 +25,7 @@ namespace LL2W {
 			virtual TypeType typeType() const { return TypeType::None; }
 			virtual operator std::string() = 0;
 			virtual ~Type() {}
-			virtual Type * copy() const = 0;
+			virtual TypePtr copy() const = 0;
 			/** Returns the width of the type in bits. */
 			virtual int width() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
@@ -33,7 +36,7 @@ namespace LL2W {
 		TypeType typeType() const override { return TypeType::Void; }
 		VoidType() {}
 		virtual operator std::string() override { return "void"; }
-		Type * copy() const override { return new VoidType(); }
+		TypePtr copy() const override { return std::make_shared<VoidType>(); }
 		int width() const override { return 0; }
 	};
 
@@ -43,14 +46,14 @@ namespace LL2W {
 		int intWidth;
 		IntType(int width_): intWidth(width_) {}
 		operator std::string() override;
-		Type * copy() const override { return new IntType(intWidth); }
+		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
 		int width() const override { return intWidth; }
 		bool operator==(const Type &other) const override;
 	};
 
 	struct AggregateType: public Type {
-		virtual Type * extractType(std::list<int> indices) const = 0;
-		Type * extractType(const std::vector<int> &indices) const {
+		virtual TypePtr extractType(std::list<int> indices) const = 0;
+		TypePtr extractType(const std::vector<int> &indices) const {
 			return extractType(std::list<int>(indices.begin(), indices.end()));
 		}
 	};
@@ -58,15 +61,14 @@ namespace LL2W {
 	struct ArrayType: public AggregateType {
 		TypeType typeType() const override { return TypeType::Array; }
 		int count;
-		Type *subtype;
-		ArrayType(int count_, Type *subtype_): count(count_), subtype(subtype_) {}
+		TypePtr subtype;
+		ArrayType(int count_, TypePtr subtype_): count(count_), subtype(subtype_) {}
 		template <typename T>
 		ArrayType(int count_, const T &subtype_): count(count_), subtype(new T(subtype_)) {}
-		~ArrayType() { delete subtype; }
 		operator std::string() override;
-		Type * copy() const override { return new ArrayType(count, subtype->copy()); }
+		TypePtr copy() const override { return std::make_shared<ArrayType>(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
-		Type * extractType(std::list<int>) const override { return subtype->copy(); }
+		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
 	};
 
@@ -74,7 +76,7 @@ namespace LL2W {
 		TypeType typeType() const override { return TypeType::Vector; }
 		using ArrayType::ArrayType;
 		operator std::string() override;
-		Type * copy() const override { return new VectorType(count, subtype->copy()); }
+		TypePtr copy() const override { return std::make_shared<VectorType>(count, subtype->copy()); }
 		bool operator==(const Type &) const override;
 	};
 
@@ -84,7 +86,7 @@ namespace LL2W {
 		FloatType::Type type;
 		FloatType(FloatType::Type type_): type(type_) {}
 		operator std::string() override;
-		LL2W::Type * copy() const override { return new FloatType(type); }
+		LL2W::TypePtr copy() const override { return std::make_shared<FloatType>(type); }
 		static Type getType(const std::string &);
 		int width() const override;
 		bool operator==(const LL2W::Type &) const override;
@@ -92,13 +94,12 @@ namespace LL2W {
 
 	struct PointerType: public Type {
 		TypeType typeType() const override { return TypeType::Pointer; }
-		Type *subtype;
-		PointerType(Type *subtype_): subtype(subtype_) {}
+		TypePtr subtype;
+		PointerType(TypePtr subtype_): subtype(subtype_) {}
 		template <typename T>
 		PointerType(const T &subtype_): subtype(new T(subtype_)) {}
-		~PointerType() { delete subtype; }
 		operator std::string() override;
-		Type * copy() const override { return new PointerType(subtype->copy()); }
+		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
 		int width() const override { return WhyInfo::pointerWidth; }
 		bool operator==(const Type &) const override;
 	};
@@ -109,16 +110,16 @@ namespace LL2W {
 			std::string cached = "";
 
 		public:
-			Type *returnType;
-			std::vector<Type *> argumentTypes;
+			TypePtr returnType;
+			std::vector<TypePtr> argumentTypes;
 			bool ellipsis;
 			FunctionType(const ASTNode *);
-			FunctionType(Type *return_type, std::vector<Type *> &argument_types, bool ellipsis_ = false):
+			FunctionType(TypePtr return_type, std::vector<TypePtr> &argument_types,
+			bool ellipsis_ = false):
 				returnType(return_type), argumentTypes(std::move(argument_types)), ellipsis(ellipsis_) {}
-			~FunctionType();
 			void uncache() { cached.clear(); }
 			operator std::string() override;
-			Type * copy() const override;
+			TypePtr copy() const override;
 			int width() const override { return WhyInfo::pointerWidth; }
 			bool operator==(const Type &) const override;
 			bool operator!=(const Type &) const override;
@@ -130,15 +131,17 @@ namespace LL2W {
 		const std::string *name;
 		StructForm form = StructForm::Struct;
 		StructShape shape = StructShape::Default;
-		const StructNode *node = nullptr;
+		std::shared_ptr<StructNode> node;
 		StructType(const std::string *name_, StructForm form_ = StructForm::Struct,
 		StructShape shape_ = StructShape::Default): name(name_), form(form_), shape(shape_) {}
+		StructType(std::shared_ptr<StructNode>);
 		StructType(const StructNode *);
-		~StructType();
 		operator std::string() override;
-		Type * copy() const override { return node? new StructType(node) : new StructType(name, form, shape); }
+		TypePtr copy() const override {
+			return node? std::make_shared<StructType>(node) : std::make_shared<StructType>(name, form, shape);
+		}
 		int width() const override;
-		Type * extractType(std::list<int> indices) const override;
+		TypePtr extractType(std::list<int> indices) const override;
 		bool operator==(const Type &) const override;
 	};
 
@@ -152,11 +155,11 @@ namespace LL2W {
 		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}
 		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(StringSet::intern(node->extractName())) {}
 		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
-		Type * copy() const override { return new GlobalTemporaryType(globalName); }
+		TypePtr copy() const override { return std::make_shared<GlobalTemporaryType>(globalName); }
 		int width() const override { throw std::runtime_error("Calling GlobalTemporaryType::width() is invalid"); }
 	};
 
-	Type * getType(const ASTNode *);
+	TypePtr getType(const ASTNode *);
 	std::ostream & operator<<(std::ostream &os, Type &type);
 }
 

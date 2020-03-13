@@ -15,7 +15,8 @@ namespace LL2W {
 	}
 
 	bool IntType::operator==(const Type &other) const {
-		return other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth;
+		return this == &other ||
+			(other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth);
 	}
 
 	ArrayType::operator std::string() {
@@ -23,6 +24,8 @@ namespace LL2W {
 	}
 
 	bool ArrayType::operator==(const Type &other) const {
+		if (this == &other)
+			return true;
 		if (other.typeType() != TypeType::Array)
 			return false;
 		if (const ArrayType *otherArray = dynamic_cast<const ArrayType *>(&other))
@@ -35,6 +38,8 @@ namespace LL2W {
 	}
 
 	bool VectorType::operator==(const Type &other) const {
+		if (this == &other)
+			return true;
 		if (other.typeType() != TypeType::Vector)
 			return false;
 		if (const VectorType *otherVector = dynamic_cast<const VectorType *>(&other))
@@ -74,7 +79,8 @@ namespace LL2W {
 	}
 
 	bool FloatType::operator==(const LL2W::Type &other) const {
-		return other.typeType() == TypeType::Float && dynamic_cast<const FloatType &>(other).type == type;
+		return this == &other ||
+			(other.typeType() == TypeType::Float && dynamic_cast<const FloatType &>(other).type == type);
 	}
 
 	PointerType::operator std::string() {
@@ -82,7 +88,8 @@ namespace LL2W {
 	}
 
 	bool PointerType::operator==(const Type &other) const {
-		return other.typeType() == TypeType::Pointer && *dynamic_cast<const PointerType &>(other).subtype == *subtype;
+		return this == &other ||
+			(other.typeType() == TypeType::Pointer && *dynamic_cast<const PointerType &>(other).subtype == *subtype);
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {
@@ -95,12 +102,6 @@ namespace LL2W {
 		}
 
 		ellipsis = node->size() == 3 || (1 < node->size() && node->at(1)->symbol == TOK_ELLIPSIS);
-	}
-
-	FunctionType::~FunctionType() {
-		delete returnType;
-		for (Type *argumentType: argumentTypes)
-			delete argumentType;
 	}
 
 	FunctionType::operator std::string() {
@@ -127,14 +128,16 @@ namespace LL2W {
 		return cached = out.str();
 	}
 
-	Type * FunctionType::copy() const {
-		std::vector<Type *> argument_types {};
-		for (Type *argument_type: argumentTypes)
+	TypePtr FunctionType::copy() const {
+		std::vector<TypePtr> argument_types {};
+		for (TypePtr argument_type: argumentTypes)
 			argument_types.push_back(argument_type->copy());
-		return new FunctionType(returnType->copy(), argument_types);
+		return std::make_shared<FunctionType>(returnType->copy(), argument_types);
 	}
 
 	bool FunctionType::operator==(const Type &other) const {
+		if (this == &other)
+			return true;
 		if (other.typeType() != TypeType::Function)
 			return false;
 		const FunctionType &otherFunction = dynamic_cast<const FunctionType &>(other);
@@ -166,13 +169,10 @@ namespace LL2W {
 
 	std::unordered_map<std::string, std::shared_ptr<StructType>> StructType::knownStructs = {};
 
-	StructType::StructType(const StructNode *node_):
-		name(node_->name), form(node_->form), shape(node_->shape), node(node_->copy()) {}
+	StructType::StructType(std::shared_ptr<StructNode> node_):
+		name(node_->name), form(node_->form), shape(node_->shape), node(node_) {}
 
-	StructType::~StructType() {
-		if (node)
-			delete node;
-	}
+	StructType::StructType(const StructNode *node_): StructType(std::shared_ptr<StructNode>(node_->copy())) {}
 
 	StructType::operator std::string() {
 		if (*name == "[anon]" && node)
@@ -192,29 +192,27 @@ namespace LL2W {
 			return knownStructs.at(bare_name)->width();
 		}
 
-		for (const Type *type: node->types)
+		for (const TypePtr type: node->types)
 			out += type->width();
 		return out;
 	}
 
-	Type * StructType::extractType(std::list<int> indices) const {
+	TypePtr StructType::extractType(std::list<int> indices) const {
 		// TODO!: Implement.
 		node->debug();
 		for (int index: indices) std::cout << index << " "; std::cout << "\n";
-		Type *type = node->types.at(indices.front())->copy();
+		TypePtr type = node->types.at(indices.front())->copy();
 		if (indices.size() == 1) {
 			std::cout << "[1] Returning " << std::string(*type) << "\n";
 			return type;
 		}
 
-		AggregateType *aggregate = dynamic_cast<AggregateType *>(type);
+		std::shared_ptr<AggregateType> aggregate = std::dynamic_pointer_cast<AggregateType>(type);
 		if (!aggregate)
 			throw std::runtime_error("Expected an AggregateType in StructType::extractType");
 
 		indices.pop_front();
-		Type *new_type = aggregate->extractType(indices);
-		delete aggregate;
-		type = new_type;
+		type = aggregate->extractType(indices);
 
 		// while (!indices.empty()) {
 		// 	AggregateType *aggregate = dynamic_cast<AggregateType *>(type);
@@ -238,20 +236,22 @@ namespace LL2W {
 		throw std::runtime_error("StructType::operator== is unimplemented.");
 	}
 
-	Type * getType(const ASTNode *node) {
+	TypePtr getType(const ASTNode *node) {
 		switch (node->symbol) {
-			case FUNCTIONTYPE:  return new FunctionType(node);
-			case TOK_INTTYPE:   return new IntType(atoi(node->lexerInfo->substr(1).c_str()));
-			case TOK_FLOATTYPE: return new FloatType(FloatType::getType(*node->lexerInfo));
-			case ARRAYTYPE:     return new  ArrayType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
-			case VECTORTYPE:    return new VectorType(atoi(node->at(0)->lexerInfo->c_str()), getType(node->at(1)));
-			case POINTERTYPE:   return new PointerType(getType(node->at(0)));
-			case TOK_VOID:      return new VoidType();
-			case TOK_STRUCTVAR: return new StructType(node->lexerInfo, StructForm::Struct);
-			case TOK_CLASSVAR:  return new StructType(node->lexerInfo, StructForm::Class);
-			case TOK_UNIONVAR:  return new StructType(node->lexerInfo, StructForm::Union);
-			case STRUCTDEF:     return new StructType(dynamic_cast<const StructNode *>(node));
-			case TOK_GVAR:      return new GlobalTemporaryType(node);
+			case FUNCTIONTYPE:  return std::make_shared<FunctionType>(node);
+			case TOK_INTTYPE:   return std::make_shared<IntType>(atoi(node->lexerInfo->substr(1).c_str()));
+			case TOK_FLOATTYPE: return std::make_shared<FloatType>(FloatType::getType(*node->lexerInfo));
+			case POINTERTYPE:   return std::make_shared<PointerType>(getType(node->at(0)));
+			case TOK_VOID:      return std::make_shared<VoidType>();
+			case TOK_STRUCTVAR: return std::make_shared<StructType>(node->lexerInfo, StructForm::Struct);
+			case TOK_CLASSVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Class);
+			case TOK_UNIONVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Union);
+			case STRUCTDEF:     return std::make_shared<StructType>(dynamic_cast<const StructNode *>(node));
+			case TOK_GVAR:      return std::make_shared<GlobalTemporaryType>(node);
+			case ARRAYTYPE:
+				return std::make_shared<ArrayType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
+			case VECTORTYPE:
+				return std::make_shared<VectorType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

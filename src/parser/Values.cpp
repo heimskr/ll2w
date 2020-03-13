@@ -16,18 +16,11 @@ namespace LL2W {
 			values.push_back({getType((*iter)->at(0)), getValue((*iter)->at(1))});
 	}
 
-	VectorValue::~VectorValue() {
-		for (const std::pair<Type *, Value *> &pair: values) {
-			delete pair.first;
-			delete pair.second;
-		}
-	}
-
-	Value * VectorValue::copy() const {
-		std::vector<std::pair<Type *, Value *>> newvec {};
-		for (const std::pair<Type *, Value *> &pair: values)
+	ValuePtr VectorValue::copy() const {
+		std::vector<std::pair<TypePtr, ValuePtr>> newvec {};
+		for (const std::pair<TypePtr, ValuePtr> &pair: values)
 			newvec.push_back({pair.first->copy(), pair.second->copy()});
-		return new VectorValue(newvec);
+		return std::make_shared<VectorValue>(newvec);
 	}
 
 	VectorValue::operator std::string() {
@@ -35,7 +28,7 @@ namespace LL2W {
 		out << "\e[2m<\e[0m";
 		auto begin = values.cbegin();
 		for (auto iter = begin, end = values.cend(); iter != end; ++iter) {
-			const std::pair<Type *, Value *> &pair = *iter;
+			const std::pair<TypePtr, ValuePtr> &pair = *iter;
 			if (iter != begin)
 				out << "\e[2m,\e[0m ";
 			out << std::string(*pair.first) << " " << std::string(*pair.second);
@@ -56,7 +49,7 @@ namespace LL2W {
 		name = node->lexerInfo->at(0) == '@'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}
 
-	GetelementptrValue::GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
+	GetelementptrValue::GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
 	                                       const std::vector<std::pair<int, long>> &decimals_):
 		inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_), decimals(decimals_) {}
 
@@ -97,12 +90,6 @@ namespace LL2W {
 		}
 	}
 
-	GetelementptrValue::~GetelementptrValue() {
-		delete type;
-		delete ptrType;
-		delete variable;
-	}
-
 	GetelementptrValue::operator std::string() {
 		std::stringstream out;
 		out << "\e[91mgetelementptr\e[0m";
@@ -118,19 +105,14 @@ namespace LL2W {
 
 	StructValue::StructValue(const ASTNode *node) {
 		for (const ASTNode *sub: *node->at(0))
-			constants.push_back(new Constant(sub));
+			constants.push_back(std::make_shared<Constant>(sub));
 	}
 
-	StructValue::~StructValue() {
-		for (Constant *constant: constants)
-			delete constant;
-	}
-
-	Value * StructValue::copy() const {
-		std::vector<Constant *> constants_copy;
-		for (const Constant *constant: constants)
+	ValuePtr StructValue::copy() const {
+		std::vector<std::shared_ptr<Constant>> constants_copy;
+		for (ConstantPtr constant: constants)
 			constants_copy.push_back(constant->copy());
-		return new StructValue(std::move(constants_copy));
+		return std::make_shared<StructValue>(std::move(constants_copy));
 	}
 
 	StructValue::operator std::string() {
@@ -147,20 +129,15 @@ namespace LL2W {
 
 	ArrayValue::ArrayValue(const ASTNode *node) {
 		for (const ASTNode *sub: *node)
-			constants.push_back(new Constant(sub));
+			constants.push_back(std::make_shared<Constant>(sub));
 	}
 
-	ArrayValue::~ArrayValue() {
-		for (Constant *constant: constants)
-			delete constant;
-	}
-
-	Value * ArrayValue::copy() const {
-		std::vector<Constant *> constants_copy;
+	ValuePtr ArrayValue::copy() const {
+		std::vector<ConstantPtr> constants_copy;
 		constants_copy.reserve(constants.size());
-		for (const Constant *constant: constants)
+		for (ConstantPtr constant: constants)
 			constants_copy.push_back(constant->copy());
-		return new ArrayValue(constants_copy);
+		return std::make_shared<ArrayValue>(constants_copy);
 	}
 
 	ArrayValue::operator std::string() {
@@ -177,22 +154,22 @@ namespace LL2W {
 
 	CStringValue::CStringValue(const ASTNode *node): CStringValue(StringSet::intern(node->extractName())) {}
 
-	Value * getValue(ASTNode *node) {
+	ValuePtr getValue(ASTNode *node) {
 		switch (node->symbol) {
-			case TOK_FLOATING:        return new DoubleValue(node);
-			case TOK_DECIMAL:         return new IntValue(node);
-			case TOK_BOOL:            return new BoolValue(node);
-			case VECTOR:              return new VectorValue(node);
-			case TOK_PVAR:            return new LocalValue(node);
-			case TOK_GVAR:            return new GlobalValue(node);
-			case TOK_GETELEMENTPTR:   return new GetelementptrValue(node);
-			case TOK_VOID:            return new VoidValue();
-			case STRUCT_VALUE:        return new StructValue(node);
-			case VALUE_LIST:          return new ArrayValue(node);
-			case TOK_NULL:            return new NullValue();
-			case TOK_CSTRING:         return new CStringValue(node);
-			case TOK_ZEROINITIALIZER: return new ZeroinitializerValue();
-			case TOK_UNDEF:           return new UndefValue();
+			case TOK_FLOATING:        return std::make_shared<DoubleValue>(node);
+			case TOK_DECIMAL:         return std::make_shared<IntValue>(node);
+			case TOK_BOOL:            return std::make_shared<BoolValue>(node);
+			case VECTOR:              return std::make_shared<VectorValue>(node);
+			case TOK_PVAR:            return std::make_shared<LocalValue>(node);
+			case TOK_GVAR:            return std::make_shared<GlobalValue>(node);
+			case TOK_GETELEMENTPTR:   return std::make_shared<GetelementptrValue>(node);
+			case TOK_VOID:            return std::make_shared<VoidValue>();
+			case STRUCT_VALUE:        return std::make_shared<StructValue>(node);
+			case VALUE_LIST:          return std::make_shared<ArrayValue>(node);
+			case TOK_NULL:            return std::make_shared<NullValue>();
+			case TOK_CSTRING:         return std::make_shared<CStringValue>(node);
+			case TOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
+			case TOK_UNDEF:           return std::make_shared<UndefValue>();
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
 			                                     std::string(Parser::getName(node->symbol)));
 		}

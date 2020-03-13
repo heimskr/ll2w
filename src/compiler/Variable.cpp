@@ -7,14 +7,9 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
-	Variable::Variable(int id_, Type *type_, const std::set<std::shared_ptr<BasicBlock>> &defining_blocks,
+	Variable::Variable(int id_, TypePtr type_, const std::set<std::shared_ptr<BasicBlock>> &defining_blocks,
 	const std::set<BasicBlockPtr> &using_blocks):
 		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
-
-	Variable::~Variable() {
-		if (type && !parent)
-			delete type;
-	}
 
 	int Variable::weight() const {
 		int sum = 0;
@@ -65,8 +60,6 @@ namespace LL2W {
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {
-		if (type && !parent)
-			delete type;
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {
@@ -191,12 +184,10 @@ namespace LL2W {
 		return definitions.begin()->lock();
 	}
 
-	void Variable::setType(Type *new_type) {
+	void Variable::setType(TypePtr new_type) {
 		if (parent) {
 			parent->setType(new_type);
 		} else {
-			if (type)
-				delete type;
 			type = new_type? new_type->copy() : nullptr;
 			for (Variable *alias: aliases)
 				alias->type = type;

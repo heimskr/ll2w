@@ -1,6 +1,7 @@
 #ifndef PARSER_FUNCTIONHEADER_H_
 #define PARSER_FUNCTIONHEADER_H_
 
+#include <memory>
 #include <unordered_set>
 
 #include "FunctionArgs.h"
@@ -17,18 +18,17 @@ namespace LL2W {
 		Deref deref = Deref::Default;
 		std::unordered_set<RetAttr> retattrs;
 		int dereferenceableBytes = -1;
-		Type *returnType;
-		FunctionArgs *arguments;
+		TypePtr returnType;
+		std::shared_ptr<FunctionArgs> arguments;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		std::unordered_set<FnAttr> fnattrs;
 		int align = -1;
 		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
-		Constant *personality = nullptr;
+		ConstantPtr personality;
 		
 		using N = ASTNode *;
 		FunctionHeader(N _linkage, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type, N function_name,
 		               N function_args, N unnamed_addr, N _fnattrs, N _align, N _personality);
-		~FunctionHeader();
 
 		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[38;5;202m"; }

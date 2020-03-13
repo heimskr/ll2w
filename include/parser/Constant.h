@@ -1,6 +1,7 @@
 #ifndef PARSER_CONSTANT_H_
 #define PARSER_CONSTANT_H_
 
+#include <memory>
 #include <unordered_set>
 
 #include "Enums.h"
@@ -10,24 +11,25 @@
 
 namespace LL2W {
 	class ASTNode;
-	class Constant {
-		private:
-			Constant(Type *, Value *, const ParAttrs &, Conversion, Constant *, Type *);
 
-		public:
-			Type *type;
-			Value *value;
-			ParAttrs parattrs;
-			Conversion conversion = Conversion::None;
-			Constant *conversionSource = nullptr;
-			Type *conversionType = nullptr;
+	struct Constant;
+	using ConstantPtr = std::shared_ptr<Constant>;
 
-			Constant() = delete;
-			Constant(const Constant &) = delete;
-			Constant(const ASTNode *);
-			~Constant();
-			Constant * copy() const;
-			operator std::string() const;
+	struct Constant {
+		TypePtr type;
+		ValuePtr value;
+		ParAttrs parattrs;
+		Conversion conversion = Conversion::None;
+		ConstantPtr conversionSource = nullptr;
+		TypePtr conversionType = nullptr;
+
+		Constant() = delete;
+		Constant(const Constant &) = delete;
+		Constant(TypePtr, ValuePtr, const ParAttrs &, Conversion, ConstantPtr, TypePtr);
+		Constant(const ASTNode *);
+
+		ConstantPtr copy() const;
+		operator std::string() const;
 	};
 
 	std::ostream & operator<<(std::ostream &, const Constant &);

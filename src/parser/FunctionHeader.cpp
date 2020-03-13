@@ -116,18 +116,11 @@ namespace LL2W {
 		}
 
 		if (_personality) {
-			personality = new Constant(_personality->at(0));
+			personality = std::make_shared<Constant>(_personality->at(0));
 			delete _personality;
 		}
 	}
 
-	FunctionHeader::~FunctionHeader() {
-		delete returnType;
-		delete arguments;
-		if (personality)
-			delete personality;
-	}
-	
 	std::string FunctionHeader::debugExtra() const {
 		std::stringstream out;
 		out << " \e[0;33m" << std::string(*returnType);

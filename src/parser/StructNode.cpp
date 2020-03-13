@@ -6,10 +6,10 @@
 #include "parser/StringSet.h"
 
 namespace LL2W {
-	StructNode::StructNode(std::initializer_list<Type *>  types_, StructShape shape_):
+	StructNode::StructNode(std::initializer_list<TypePtr>  types_, StructShape shape_):
 		ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
 
-	StructNode::StructNode(const std::vector<Type *> &types_, StructShape shape_):
+	StructNode::StructNode(const std::vector<TypePtr> &types_, StructShape shape_):
 		ASTNode(STRUCTDEF, ""), shape(shape_), types(types_) {}
 
 	StructNode::StructNode(StructShape shape_, ASTNode *left, ASTNode *types_):
@@ -26,11 +26,6 @@ namespace LL2W {
 	StructNode::StructNode(StructShape shape_, ASTNode *types_): ASTNode(STRUCTDEF, "[anon]"), shape(shape_) {
 		name = StringSet::intern("[anon]");
 		addTypes(types_);
-	}
-
-	StructNode::~StructNode() {
-		for (Type *type: types)
-			delete type;
 	}
 
 	void StructNode::addTypes(ASTNode *types_) {
@@ -68,12 +63,12 @@ namespace LL2W {
 		return out.str();
 	}
 
-	StructNode * StructNode::copy() const {
-		std::vector<Type *> type_copies;
+	std::shared_ptr<StructNode> StructNode::copy() const {
+		std::vector<TypePtr> type_copies;
 		type_copies.reserve(types.size());
-		for (const Type *type: types)
+		for (TypePtr type: types)
 			type_copies.push_back(type->copy());
-		StructNode *copied = new StructNode(type_copies, shape);
+		std::shared_ptr<StructNode> copied = std::make_shared<StructNode>(type_copies, shape);
 		copied->form = form;
 		copied->name = name;
 		return copied;

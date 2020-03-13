@@ -155,16 +155,16 @@ namespace LL2W {
 			VariablePtr target = getVariable(*phi_node->result, phi_node->type);
 			BasicBlockPtr phi_definer = target->onlyDefiner();
 
-			for (const std::pair<Value *, const std::string *> &pair: phi_node->pairs) {
-				const LocalValue *local =
-					pair.first->valueType() == ValueType::Local? dynamic_cast<LocalValue *>(pair.first) : nullptr;
+			for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
+				const std::shared_ptr<LocalValue> local = pair.first->valueType() == ValueType::Local?
+					std::dynamic_pointer_cast<LocalValue>(pair.first) : nullptr;
 				if (!local) {
 					// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
 					// instructions in the penultimate slots of the predicate labels for which the phi function
 					// parameters specify a constant.
 					if (pair.first->valueType() == ValueType::Bool) {
-						const BoolValue *boolval = dynamic_cast<BoolValue *>(pair.first);
+						const std::shared_ptr<BoolValue> boolval = std::dynamic_pointer_cast<BoolValue>(pair.first);
 						BasicBlockPtr block = bbMap.at(pair.second);
 
 						auto new_instr = std::make_shared<SetInstruction>(target, boolval->value? 1 : 0, -1);
@@ -213,7 +213,7 @@ namespace LL2W {
 		return label;
 	}
 
-	VariablePtr Function::newVariable(Type *type, std::shared_ptr<BasicBlock> definer) {
+	VariablePtr Function::newVariable(TypePtr type, std::shared_ptr<BasicBlock> definer) {
 		return getVariable(newLabel(), type, definer);
 	}
 
@@ -568,7 +568,7 @@ namespace LL2W {
 			} else if (SwitchNode *sw = CompilerUtil::switchCast(instruction)) {
 				if (sw->label == after_label)
 					sw->label = before_label;
-				for (std::tuple<Type *, Value *, const std::string *> &tuple: sw->table) {
+				for (std::tuple<TypePtr, ValuePtr, const std::string *> &tuple: sw->table) {
 					if (std::get<2>(tuple) == after_label)
 						std::get<2>(tuple) = before_label;
 				}
@@ -667,7 +667,7 @@ namespace LL2W {
 
 			InstructionNode *node = llvm->node;
 			if (Reader *reader = dynamic_cast<Reader *>(node)) {
-				for (LocalValue *value: reader->allLocals())
+				for (std::shared_ptr<LocalValue> value: reader->allLocals())
 					value->variable = getVariable(*value->name);
 			}
 
@@ -686,7 +686,7 @@ namespace LL2W {
 
 			InstructionNode *node = llvm->node;
 			if (Reader *reader = dynamic_cast<Reader *>(node)) {
-				for (LocalValue *value: reader->allLocals()) {
+				for (std::shared_ptr<LocalValue> value: reader->allLocals()) {
 					if (value->variable)
 						value->name = StringSet::intern(std::to_string(value->variable->id));
 				}
@@ -785,9 +785,7 @@ namespace LL2W {
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {
 		if (WhyInfo::totalRegisters <= index)
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
-		IntType *i64 = new IntType(64);
-		VariablePtr new_var = newVariable(i64, block);
-		delete i64;
+		VariablePtr new_var = newVariable(std::make_shared<IntType>(64), block);
 		new_var->setRegister(index);
 		return new_var;
 
@@ -1013,7 +1011,7 @@ namespace LL2W {
 		return getVariable(parseLong(label));
 	}
 
-	VariablePtr Function::getVariable(int label, const Type *type, BasicBlockPtr definer) {
+	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
 			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
 		VariablePtr out = variableStore.at(label);
@@ -1022,7 +1020,7 @@ namespace LL2W {
 		return out;
 	}
 
-	VariablePtr Function::getVariable(const std::string &label, const Type *type, BasicBlockPtr definer) {
+	VariablePtr Function::getVariable(const std::string &label, const TypePtr type, BasicBlockPtr definer) {
 		return getVariable(parseLong(label), type, definer);
 	}
 

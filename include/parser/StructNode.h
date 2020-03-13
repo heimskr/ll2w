@@ -17,19 +17,18 @@ namespace LL2W {
 			const std::string *name = nullptr;
 			StructShape shape = StructShape::Default;
 			StructForm form = StructForm::Struct;
-			std::vector<Type *> types;
+			std::vector<TypePtr> types;
 
-			StructNode(std::initializer_list<Type *>  types_, StructShape shape_);
-			StructNode(const     std::vector<Type *> &types_, StructShape shape_);
+			StructNode(std::initializer_list<TypePtr>  types_, StructShape shape_);
+			StructNode(const     std::vector<TypePtr> &types_, StructShape shape_);
 
 			StructNode(StructShape, ASTNode *left, ASTNode *types_);
 			StructNode(StructShape, ASTNode *types_);
-			~StructNode();
 
 			std::string typeStr() const;
 			virtual std::string debugExtra() const override;
 			virtual std::string style() const override { return "\e[33m"; }
-			StructNode * copy() const;
+			std::shared_ptr<StructNode> copy() const;
 	};
 }
 

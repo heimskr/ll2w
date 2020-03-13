@@ -6,8 +6,8 @@
 #include "parser/Lexer.h"
 
 namespace LL2W {
-	Constant::Constant(Type *type_, Value *value_, const ParAttrs &parattrs_, Conversion conversion_,
-	                   Constant *conversion_source, Type *conversion_type):
+	Constant::Constant(TypePtr type_, ValuePtr value_, const ParAttrs &parattrs_, Conversion conversion_,
+	                   ConstantPtr conversion_source, TypePtr conversion_type):
 		type(type_), value(value_), parattrs(parattrs_), conversion(conversion_),
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
@@ -33,7 +33,7 @@ namespace LL2W {
 					}
 				}
 				value = nullptr;
-				conversionSource = new Constant(value_node->at(0));
+				conversionSource = std::make_shared<Constant>(value_node->at(0));
 				conversionType = getType(value_node->at(1));
 			} else {
 				value = getValue(value_node);
@@ -44,17 +44,8 @@ namespace LL2W {
 		}
 	}
 
-	Constant::~Constant() {
-		delete type;
-		delete value;
-		if (conversionSource)
-			delete conversionSource;
-		if (conversionType)
-			delete conversionType;
-	}
-
-	Constant * Constant::copy() const {
-		return new Constant(type->copy(), value->copy(), parattrs, conversion,
+	ConstantPtr Constant::copy() const {
+		return std::make_shared<Constant>(type->copy(), value->copy(), parattrs, conversion,
 			conversionSource? conversionSource->copy() : nullptr, conversionType? conversionType->copy() : nullptr);
 	}
 

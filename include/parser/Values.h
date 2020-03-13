@@ -12,7 +12,7 @@
 namespace LL2W {
 	class ASTNode;
 	class Type;
-	class Constant;
+	struct Constant;
 	class Variable;
 
 	enum class ValueType {
@@ -20,11 +20,15 @@ namespace LL2W {
 		Undef
 	};
 
+	struct Value;
+	using ValuePtr = std::shared_ptr<Value>;
+	using ConstantPtr = std::shared_ptr<Constant>;
+
 	struct Value {
 		virtual operator std::string() = 0;
 		virtual ~Value() {}
 		virtual ValueType valueType() const = 0;
-		virtual Value * copy() const = 0;
+		virtual ValuePtr copy() const = 0;
 	};
 
 	struct DoubleValue: public Value {
@@ -35,7 +39,7 @@ namespace LL2W {
 		DoubleValue(const std::string *value_): value(std::stod(*value_)), original(value_) {}
 		DoubleValue(const ASTNode *node): DoubleValue(node->lexerInfo) {}
 		ValueType valueType() const override { return ValueType::Double; }
-		Value * copy() const override { return new DoubleValue(value); }
+		ValuePtr copy() const override { return std::make_shared<DoubleValue>(value); }
 		operator std::string() override { return *original; }
 	};
 
@@ -46,28 +50,24 @@ namespace LL2W {
 		IntValue(const std::string *value_): IntValue(*value_) {}
 		IntValue(const ASTNode *node): IntValue(node->lexerInfo) {}
 		ValueType valueType() const override { return ValueType::Int; }
-		Value * copy() const override { return new IntValue(value); }
+		ValuePtr copy() const override { return std::make_shared<IntValue>(value); }
 		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
 	};
 
 	struct NullValue: public IntValue {
 		NullValue(): IntValue(0) {}
 		ValueType valueType() const override { return ValueType::Null; }
-		Value * copy() const override { return new NullValue(); }
+		ValuePtr copy() const override { return std::make_shared<NullValue>(); }
 		operator std::string() override { return "null"; }
 	};
 
-	class VectorValue: public Value {
-		private:
-			VectorValue(const std::vector<std::pair<Type *, Value *>> &values_): values(values_) {}
-
-		public:
-			std::vector<std::pair<Type *, Value *>> values;
-			VectorValue(const ASTNode *);
-			~VectorValue();
-			ValueType valueType() const override { return ValueType::Vector; }
-			Value * copy() const override;
-			operator std::string() override;
+	struct VectorValue: public Value {
+		std::vector<std::pair<TypePtr, ValuePtr>> values;
+		VectorValue(const ASTNode *);
+		VectorValue(const std::vector<std::pair<TypePtr, ValuePtr>> &values_): values(values_) {}
+		ValueType valueType() const override { return ValueType::Vector; }
+		ValuePtr copy() const override;
+		operator std::string() override;
 	};
 
 	struct BoolValue: public Value {
@@ -77,7 +77,7 @@ namespace LL2W {
 		BoolValue(const std::string *value_): BoolValue(*value_) {}
 		BoolValue(const ASTNode *node): BoolValue(node->lexerInfo) {}
 		ValueType valueType() const override { return ValueType::Bool; }
-		Value * copy() const override { return new BoolValue(value); }
+		ValuePtr copy() const override { return std::make_shared<BoolValue>(value); }
 		operator std::string() override { return value? "true" : "false"; }
 	};
 
@@ -95,7 +95,7 @@ namespace LL2W {
 		LocalValue(const std::string &name_): LocalValue(&name_) {}
 		LocalValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Local; }
-		Value * copy() const override { return new LocalValue(name); }
+		ValuePtr copy() const override { return std::make_shared<LocalValue>(name); }
 		operator std::string() override;
 	};
 
@@ -104,62 +104,51 @@ namespace LL2W {
 		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
 		GlobalValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::Global; }
-		Value * copy() const override { return new GlobalValue(name); }
+		ValuePtr copy() const override { return std::make_shared<GlobalValue>(name); }
 		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
 	};
 
-	class GetelementptrValue: public Value {
-		private:
-			GetelementptrValue(bool inbounds_, Type *type_, Type *ptr_type, Value *variable_,
-			                   const std::vector<std::pair<int, long>> &decimals_);
+	struct GetelementptrValue: public Value {
+		bool inbounds = false;
+		TypePtr type, ptrType;
+		ValuePtr variable;
+		std::vector<std::pair<int, long>> decimals {}; // the ints represent the width of the integer type
 
-		public:
-			bool inbounds = false;
-			Type *type, *ptrType;
-			Value *variable;
-			std::vector<std::pair<int, long>> decimals {}; // the ints represent the width of the integer type
-
-			GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
-			                   ASTNode *decimal_list);
-			GetelementptrValue(ASTNode *node);
-			~GetelementptrValue();
-			ValueType valueType() const override { return ValueType::Getelementptr; }
-			Value * copy() const override {
-				return new GetelementptrValue(inbounds, type->copy(), ptrType->copy(), variable->copy(), decimals);
-			}
-			operator std::string() override;
+		GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
+							ASTNode *decimal_list);
+		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
+							const std::vector<std::pair<int, long>> &decimals_);
+		GetelementptrValue(ASTNode *node);
+		ValueType valueType() const override { return ValueType::Getelementptr; }
+		ValuePtr copy() const override {
+			return std::make_shared<GetelementptrValue>(inbounds, type->copy(), ptrType->copy(), variable->copy(),
+				decimals);
+		}
+		operator std::string() override;
 	};
 
 	struct VoidValue: public Value {
 		ValueType valueType() const override { return ValueType::Void; }
-		Value * copy() const override { return new VoidValue(); }
+		ValuePtr copy() const override { return std::make_shared<VoidValue>(); }
 		operator std::string() override { return "void"; }
 	};
 
-	class StructValue: public Value {
-		private:
-			StructValue(std::vector<Constant *> &&constants_): constants(constants_) {}
-
-		public:
-			std::vector<Constant *> constants;
-			StructValue(const ASTNode *);
-			~StructValue();
-			ValueType valueType() const override { return ValueType::Struct; }
-			Value * copy() const override;
-			operator std::string() override;
+	struct StructValue: public Value {
+		std::vector<ConstantPtr> constants;
+		StructValue(const ASTNode *);
+		StructValue(const std::vector<ConstantPtr> &constants_): constants(constants_) {}
+		ValueType valueType() const override { return ValueType::Struct; }
+		ValuePtr copy() const override;
+		operator std::string() override;
 	};
 
-	class ArrayValue: public Value {
-		private:
-			ArrayValue(const std::vector<Constant *> &constants_): constants(constants_) {}
-
-		public:
-			std::vector<Constant *> constants;
-			ArrayValue(const ASTNode *);
-			~ArrayValue();
-			ValueType valueType() const override { return ValueType::Array; }
-			Value * copy() const override;
-			operator std::string() override;
+	struct ArrayValue: public Value {
+		std::vector<ConstantPtr> constants;
+		ArrayValue(const ASTNode *);
+		ArrayValue(const std::vector<ConstantPtr> &constants_): constants(constants_) {}
+		ValueType valueType() const override { return ValueType::Array; }
+		ValuePtr copy() const override;
+		operator std::string() override;
 	};
 
 	struct CStringValue: public Value {
@@ -167,25 +156,25 @@ namespace LL2W {
 		CStringValue(const std::string *value_): value(value_) {}
 		CStringValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::CString; }
-		Value * copy() const override { return new CStringValue(value); }
+		ValuePtr copy() const override { return std::make_shared<CStringValue>(value); }
 		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
 	};
 
 	struct ZeroinitializerValue: public Value {
 		ZeroinitializerValue() {}
 		ValueType valueType() const override { return ValueType::Zeroinitializer; }
-		Value * copy() const override { return new ZeroinitializerValue(); }
+		ValuePtr copy() const override { return std::make_shared<ZeroinitializerValue>(); }
 		operator std::string() override { return "zeroinitializer"; }
 	};
 
 	struct UndefValue: public Value {
 		UndefValue() {}
 		ValueType valueType() const override { return ValueType::Undef; }
-		Value * copy() const override { return new UndefValue(); }
+		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }
 		operator std::string() override { return "undef"; }
 	};
 
-	Value * getValue(ASTNode *);
+	ValuePtr getValue(ASTNode *);
 	std::ostream & operator<<(std::ostream &, Value &);
 }
 

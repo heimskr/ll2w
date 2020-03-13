@@ -21,7 +21,7 @@ namespace LL2W {
 
 		public:
 			int id;
-			Type *type = nullptr;
+			TypePtr type = nullptr;
 			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
 			std::weak_ptr<Instruction> lastUse;
 			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
@@ -31,11 +31,9 @@ namespace LL2W {
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(int id_, Type *type_ = nullptr,
+			Variable(int id_, TypePtr type_ = nullptr,
 			         const std::set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
 			         const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
-
-			~Variable();
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int weight() const;
@@ -60,7 +58,7 @@ namespace LL2W {
 
 
 			void setID(int);
-			void setType(Type *);
+			void setType(TypePtr);
 			void setDefiningBlocks(const decltype(definingBlocks) &);
 			void setDefinitions(const decltype(definitions) &);
 			void setUses(const decltype(uses) &);

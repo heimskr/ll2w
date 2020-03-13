@@ -35,7 +35,7 @@ namespace LL2W {
 			Program *parent = nullptr;
 
 			/** A pointer to an AST node that contains data about the function's arguments. */
-			FunctionArgs *argumentsNode = nullptr;
+			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
 
 			/** A pointer to a list of all function arguments. */
 			std::vector<FunctionArgument> *arguments = nullptr;
@@ -109,7 +109,7 @@ namespace LL2W {
 			int newLabel() const;
 
 			/** Produces a new variable with an as yet unused label. */
-			std::shared_ptr<Variable> newVariable(Type * = nullptr, std::shared_ptr<BasicBlock> = nullptr);
+			std::shared_ptr<Variable> newVariable(TypePtr = nullptr, std::shared_ptr<BasicBlock> = nullptr);
 			bool spill(std::shared_ptr<Variable>);
 
 			/** Returns a pointer to the instruction following a given instruction. */
@@ -232,11 +232,11 @@ namespace LL2W {
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			std::shared_ptr<Variable> getVariable(int, const Type *, BasicBlockPtr = nullptr);
+			std::shared_ptr<Variable> getVariable(int, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			std::shared_ptr<Variable> getVariable(const std::string &, const Type *, BasicBlockPtr = nullptr);
+			std::shared_ptr<Variable> getVariable(const std::string &, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns a pointer to the entry block. */
 			BasicBlockPtr getEntry();

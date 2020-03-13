@@ -6,7 +6,7 @@
 #include "parser/Lexer.h"
 
 namespace LL2W {
-	FunctionArgument::FunctionArgument(Type *type_, const std::string &name_):
+	FunctionArgument::FunctionArgument(TypePtr type_, const std::string &name_):
 		type(type_), name(StringSet::intern(name_)) {}
 
 	FunctionArgs::FunctionArgs(ASTNode *list, bool ellipsis_): ASTNode(FUNCTION_ARGS, ""), ellipsis(ellipsis_) {

@@ -6,9 +6,9 @@
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
-#define IFLV(x, t) do { \
-	if (const LocalValue *local_value = dynamic_cast<const LocalValue *>((x))) readname(local_value, (t)); } while (0)
-#define FORV(x...) for (const Value *value: {x})
+#define IFLV(x, t) do { if (std::shared_ptr<LocalValue> local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
+	readname(local_value, (t)); } while (0)
+#define FORV(x...) for (ValuePtr value: {x})
 #define CAST(t) const t *cast = dynamic_cast<const t *>(node); if (!cast) break
 
 namespace LL2W {
@@ -30,11 +30,11 @@ namespace LL2W {
 		written.clear();
 		extracted = true;
 
-		auto readname = [&](const LocalValue *lv, const Type *type) {
+		auto readname = [&](std::shared_ptr<LocalValue> lv, TypePtr type) {
 			read.insert(parent.lock()->parent->getVariable(parseLong(lv->name), type));
 		};
 
-		auto write = [&](const std::string *str, const Type *type) {
+		auto write = [&](const std::string *str, TypePtr type) {
 			if (str)
 				written.insert(parent.lock()->parent->getVariable(parseLong(str), type, parent.lock()));
 		};
@@ -50,9 +50,8 @@ namespace LL2W {
 
 			case NodeType::Alloca: {
 				CAST(AllocaNode);
-				PointerType *ptr = new PointerType(cast->type->copy());
+				std::shared_ptr<PointerType> ptr = std::make_shared<PointerType>(cast->type->copy());
 				write(cast->result, ptr);
-				delete ptr;
 				IFLV(cast->numelementsValue, cast->numelementsType);
 				break;
 			}
@@ -86,7 +85,7 @@ namespace LL2W {
 
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
-				IFLV(cast->condition, new IntType(1));
+				IFLV(cast->condition, std::make_shared<IntType>(1));
 				break;
 			}
 
@@ -94,7 +93,7 @@ namespace LL2W {
 			case NodeType::Invoke: {
 				CAST(CallInvokeNode);
 				write(cast->result, cast->returnType);
-				for (const Constant *constant: cast->constants)
+				for (ConstantPtr constant: cast->constants)
 					IFLV(constant->value, constant->type);
 				break;
 			}
@@ -121,7 +120,7 @@ namespace LL2W {
 
 			case NodeType::Landingpad: {
 				CAST(LandingpadNode);
-				for (const LandingpadNode::Clause *clause: cast->clauses)
+				for (const std::shared_ptr<LandingpadNode::Clause> &clause: cast->clauses)
 					IFLV(clause->value, clause->type);
 				break;
 			}
@@ -144,7 +143,7 @@ namespace LL2W {
 			case NodeType::Phi: {
 				CAST(PhiNode);
 				write(cast->result, cast->type);
-				for (const std::pair<Value *, const std::string *> &pair: cast->pairs)
+				for (const std::pair<ValuePtr, const std::string *> &pair: cast->pairs)
 					IFLV(pair.first, cast->type);
 				break;
 			}

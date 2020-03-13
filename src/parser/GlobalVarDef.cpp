@@ -67,7 +67,7 @@ namespace LL2W {
 		}
 
 		if (type_or_constant->symbol == CONSTANT)
-			constant = new Constant(type_or_constant);
+			constant = std::make_shared<Constant>(type_or_constant);
 		else
 			type = getType(type_or_constant);
 
@@ -87,13 +87,6 @@ namespace LL2W {
 				// extra->debug();
 			}
 		}
-	}
-
-	GlobalVarDef::~GlobalVarDef() {
-		if (constant)
-			delete constant;
-		if (type)
-			delete type;
 	}
 
 	std::string GlobalVarDef::debugExtra() const {

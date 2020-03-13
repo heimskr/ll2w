@@ -164,9 +164,7 @@ namespace LL2W {
 		} else if (symbol == TOK_COMMA && size() == 2 && at(0)->isType() && at(1)->isValue()) {
 			return at(0)->concatenate() + " " + at(1)->concatenate();
 		} else if (isType()) {
-			Type *type = getType(this);
-			return "\e[33m" + std::string(*type) + "\e[0m";
-			delete type;
+			return "\e[33m" + std::string(*getType(this)) + "\e[0m";
 		} else if (isValue()) {
 			return "\e[1m" + *lexerInfo + "\e[0m";
 		} else if (empty()) {

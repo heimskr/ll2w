@@ -97,19 +97,19 @@ namespace LL2W {
 
 // Reader
 
-	std::vector<LocalValue *> Reader::allLocals() const {
-		std::vector<Value *> values = allValues();
-		std::vector<LocalValue *> out;
+	std::vector<std::shared_ptr<LocalValue>> Reader::allLocals() const {
+		std::vector<ValuePtr> values = allValues();
+		std::vector<std::shared_ptr<LocalValue>> out;
 		out.reserve(values.size());
-		for (Value *value: values) {
+		for (ValuePtr value: values) {
 			if (value && value->valueType() == ValueType::Local)
-				out.push_back(dynamic_cast<LocalValue *>(value));
+				out.push_back(std::dynamic_pointer_cast<LocalValue>(value));
 		}
 		return out;
 	}
 
 	void Reader::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
-		for (LocalValue *value: allLocals()) {
+		for (std::shared_ptr<LocalValue> value: allLocals()) {
 			if (value->variable->id == to_replace->id)
 				value->variable = new_var;
 		}
@@ -141,15 +141,6 @@ namespace LL2W {
 		delete val1;
 		delete type2;
 		delete val2;
-	}
-
-	SelectNode::~SelectNode() {
-		delete conditionType;
-		delete conditionValue;
-		delete firstType;
-		delete firstValue;
-		delete secondType;
-		delete secondValue;
 	}
 
 	std::string SelectNode::debugExtra() const {
@@ -193,12 +184,6 @@ namespace LL2W {
 		}
 	}
 
-	AllocaNode::~AllocaNode() {
-		delete type;
-		if (numelementsType) delete numelementsType;
-		if (numelementsValue) delete numelementsValue;
-	}
-
 	std::string AllocaNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91malloca\e[0m";
@@ -219,7 +204,7 @@ namespace LL2W {
 		atomic = false;
 		type = getType(type_);
 		value = getValue(value_);
-		constant = new Constant(constant_);
+		constant = std::make_shared<Constant>(constant_);
 
 		delete type_;
 		delete value_;
@@ -251,7 +236,7 @@ namespace LL2W {
 		atomic = true;
 		type = getType(type_);
 		value = getValue(value_);
-		constant = new Constant(constant_);
+		constant = std::make_shared<Constant>(constant_);
 		align = align_->atoi();
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
@@ -282,12 +267,6 @@ namespace LL2W {
 		}
 	}
 
-	StoreNode::~StoreNode() {
-		delete type;
-		delete value;
-		delete constant;
-	}
-
 	std::string StoreNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[91mstore\e[0m";
@@ -315,7 +294,7 @@ namespace LL2W {
 		atomic = false;
 		result = result_->extracted();
 		type = getType(type_);
-		constant = new Constant(constant_);
+		constant = std::make_shared<Constant>(constant_);
 
 		delete type_;
 		delete constant_;
@@ -371,7 +350,7 @@ namespace LL2W {
 		atomic = true;
 		result = result_->extracted();
 		type = getType(type_);
-		constant = new Constant(constant_);
+		constant = std::make_shared<Constant>(constant_);
 		align = align_->atoi();
 		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
@@ -400,11 +379,6 @@ namespace LL2W {
 			invariantGroupIndex = invariant_group->atoi(1);
 			delete invariant_group;
 		}
-	}
-
-	LoadNode::~LoadNode() {
-		delete type;
-		delete constant;
 	}
 
 	std::string LoadNode::debugExtra() const {
@@ -451,12 +425,6 @@ namespace LL2W {
 		delete op2;
 	}
 
-	IcmpNode::~IcmpNode() {
-		delete type;
-		delete value1;
-		delete value2;
-	}
-
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *type << " "
@@ -482,10 +450,6 @@ namespace LL2W {
 		delete condition_;
 		delete if_true;
 		delete if_false;
-	}
-
-	BrCondNode::~BrCondNode() {
-		delete condition;
 	}
 
 	std::string BrCondNode::debugExtra() const {
@@ -551,7 +515,7 @@ namespace LL2W {
 			delete _args;
 		}
 
-		name = dynamic_cast<VariableValue *>(getValue(function_name));
+		name = std::dynamic_pointer_cast<VariableValue>(getValue(function_name));
 		delete function_name;
 		if (!name) {
 			if (_constants)
@@ -562,7 +526,7 @@ namespace LL2W {
 
 		if (_constants) {
 			for (ASTNode *child: *_constants)
-				constants.push_back(new Constant(child));
+				constants.push_back(std::make_shared<Constant>(child));
 			delete _constants;
 		}
 
@@ -571,21 +535,12 @@ namespace LL2W {
 		delete attribute_list;
 	}
 
-	CallInvokeNode::~CallInvokeNode() {
-		delete returnType;
-		delete name;
-		for (Constant *constant: constants)
-			delete constant;
-		for (Type *type: argumentTypes)
-			delete type;
-	}
-
-	std::vector<Value *> CallInvokeNode::allValues() const {
-		std::vector<Value *> out;
+	std::vector<ValuePtr> CallInvokeNode::allValues() const {
+		std::vector<ValuePtr> out;
 		out.reserve(constants.size() + 1);
-		for (const Constant *constant: constants)
+		for (ConstantPtr constant: constants)
 			out.push_back(constant->value);
-		if (LocalValue *local = dynamic_cast<LocalValue *>(name))
+		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
 			out.push_back(local);
 		return out;
 	}
@@ -714,12 +669,9 @@ namespace LL2W {
 					ptr_value->location);
 			}
 		}
-		Value *value = getValue(ptr_value);
-		if ((ptrValue = dynamic_cast<LocalValue *>(value)));
-		else {
+		ValuePtr value = getValue(ptr_value);
+		if (!std::dynamic_pointer_cast<LocalValue>(value))
 			yyerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
-			delete value;
-		}
 
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
@@ -734,11 +686,6 @@ namespace LL2W {
 		delete ptr_type;
 		delete ptr_value;
 		delete indices_;
-	}
-
-	GetelementptrNode::~GetelementptrNode() {
-		delete type;
-		delete ptrType;
 	}
 
 	std::string GetelementptrNode::debugExtra() const {
@@ -771,11 +718,6 @@ namespace LL2W {
 		delete value_;
 	}
 
-	RetNode::~RetNode() {
-		delete type;
-		delete value;
-	}
-
 	std::string RetNode::debugExtra() const {
 		const std::string type_str = *type;
 		return "\e[91mret\e[0m " + (type_str != "void"? type_str + " " + std::string(*value) : type_str);
@@ -794,11 +736,6 @@ namespace LL2W {
 		}
 	}
 
-	LandingpadNode::Clause::~Clause() {
-		delete type;
-		delete value;
-	}
-
 	LandingpadNode::Clause::operator std::string() const {
 		return (clauseType == ClauseType::Catch? "catch" : "filter") + (type? " " + std::string(*type) : "") + " " +
 			std::string(*value);
@@ -808,7 +745,7 @@ namespace LL2W {
 		result = result_->extracted();
 		type = getType(type_);
 		for (ASTNode *clause: *clauses_) {
-			clauses.push_back(new Clause(clause));
+			clauses.push_back(std::make_shared<Clause>(clause));
 		}
 		cleanup = cleanup_;
 
@@ -817,26 +754,20 @@ namespace LL2W {
 		delete clauses_;
 	}
 
-	LandingpadNode::~LandingpadNode() {
-		delete type;
-		for (Clause *clause: clauses)
-			delete clause;
-	}
-
 	std::string LandingpadNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91mlandingpad\e[0m " << *type;
 		if (cleanup)
 			out << " cleanup";
-		for (const Clause *clause: clauses)
+		for (std::shared_ptr<Clause> clause: clauses)
 			out << " " << std::string(*clause);
 		return out.str();
 	}
 
-	std::vector<Value *> LandingpadNode::allValues() const {
-		std::vector<Value *> out;
+	std::vector<ValuePtr> LandingpadNode::allValues() const {
+		std::vector<ValuePtr> out;
 		out.reserve(clauses.size());
-		for (const Clause *clause: clauses)
+		for (std::shared_ptr<Clause> clause: clauses)
 			out.push_back(clause->value);
 		return out;
 	}
@@ -860,12 +791,6 @@ namespace LL2W {
 		delete from_;
 		delete value_;
 		delete to_;
-	}
-
-	ConversionNode::~ConversionNode() {
-		delete from;
-		delete to;
-		delete value;
 	}
 
 	std::string ConversionNode::debugExtra() const {
@@ -895,12 +820,6 @@ namespace LL2W {
 		delete right_;
 	}
 
-	BasicMathNode::~BasicMathNode() {
-		delete type;
-		delete left;
-		delete right;
-	}
-
 	std::string BasicMathNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91m" << *oper << " " << *type << " " << *left << "\e[2m,\e[0m "
@@ -915,7 +834,7 @@ namespace LL2W {
 		type = getType(type_);
 		getFastmath(fastmath, fastmath_);
 		for (ASTNode *node: *pairs_) {
-			Value *value = getValue(node->at(0));
+			ValuePtr value = getValue(node->at(0));
 			pairs.push_back({value, node->at(1)->extracted()});
 			if (value->valueType() != ValueType::Local)
 				pure = false;
@@ -926,16 +845,10 @@ namespace LL2W {
 		delete pairs_;
 	}
 
-	PhiNode::~PhiNode() {
-		delete type;
-		for (const std::pair<Value *, const std::string *> &pair: pairs)
-			delete pair.first;
-	}
-
 	std::string PhiNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << " \e[0;2m= \e[0;91mphi\e[0m" << fastmath << " " << *type;
-		for (const std::pair<Value *, const std::string *> &pair: pairs)
+		for (const std::pair<ValuePtr, const std::string *> &pair: pairs)
 			out << " \e[2m[\e[0m" << *pair.first << "\e[2m,\e[0;32m %" << *pair.second << "\e[0;2m]\e[0m";
 		return out.str();
 	}
@@ -953,12 +866,6 @@ namespace LL2W {
 		delete type_;
 		delete left_;
 		delete right_;
-	}
-
-	SimpleNode::~SimpleNode() {
-		delete type;
-		delete left;
-		delete right;
 	}
 
 	std::string SimpleNode::debugExtra() const {
@@ -1050,22 +957,13 @@ namespace LL2W {
 			table.push_back({getType(comma->at(0)), getValue(comma->at(1)), comma->at(2)->extracted()});
 	}
 
-	SwitchNode::~SwitchNode() {
-		delete type;
-		delete value;
-		for (std::tuple<Type *, Value *, const std::string *> &tuple: table) {
-			delete std::get<0>(tuple);
-			delete std::get<1>(tuple);
-		}
-	}
-
 	std::string SwitchNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[91mswitch\e[0m " << *type << " " << *value << "\e[2m,\e[0;34m label %" << *label << " \e[0;2m[\e[0m";
 		for (auto begin = table.cbegin(), iter = begin, end = table.cend(); iter != end; ++iter) {
 			if (iter != begin)
 				out << " ";
-			const std::tuple<Type *, Value *, const std::string *> &tuple = *iter;
+			const std::tuple<TypePtr, ValuePtr, const std::string *> &tuple = *iter;
 			out << *std::get<0>(tuple) << " " << *std::get<1>(tuple) << ", \e[34mlabel %" << *std::get<2>(tuple)
 			    << "\e[0m";
 		}
@@ -1078,12 +976,11 @@ namespace LL2W {
 	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
 	                                   ASTNode *decimals_) {
 		result = result_->extracted();
-		Type *uncasted = getType(aggregate_type);
-		aggregateType = dynamic_cast<AggregateType *>(uncasted);
+		TypePtr uncasted = getType(aggregate_type);
+		aggregateType = std::dynamic_pointer_cast<AggregateType>(uncasted);
 		if (!aggregateType) {
-			std::string uncasted_str = *uncasted;
-			delete uncasted;
-			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: " + uncasted_str);
+			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: " +
+				std::string(*uncasted));
 		}
 		aggregateValue = getValue(aggregate_value);
 		for (ASTNode *decimal: *decimals_)
@@ -1093,11 +990,6 @@ namespace LL2W {
 		delete aggregate_type;
 		delete aggregate_value;
 		delete decimals_;
-	}
-
-	ExtractValueNode::~ExtractValueNode() {
-		delete aggregateType;
-		delete aggregateValue;
 	}
 
 	std::string ExtractValueNode::debugExtra() const {
@@ -1128,13 +1020,6 @@ namespace LL2W {
 		delete decimals_;
 	}
 
-	InsertValueNode::~InsertValueNode() {
-		delete aggregateType;
-		delete aggregateValue;
-		delete type;
-		delete value;
-	}
-
 	std::string InsertValueNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[91minsertvalue\e[0m " << *aggregateType << " " << *aggregateValue << "\e[2m,\e[0m " << *type << " "
@@ -1149,11 +1034,6 @@ namespace LL2W {
 	ResumeNode::ResumeNode(ASTNode *type_, ASTNode *value_) {
 		type = getType(type_);
 		value = getValue(value_);
-	}
-
-	ResumeNode::~ResumeNode() {
-		delete type;
-		delete value;
 	}
 
 	std::string ResumeNode::debugExtra() const {

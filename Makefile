@@ -43,7 +43,7 @@ test: $(OUTPUT)
 	./$<
 
 clean:
-	rm -f $(OUTPUT) src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP)
+	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP)
 
 declutter:
 	rm -f graph_*.png

@@ -10,17 +10,16 @@
 namespace LL2W {
 	class FunctionArgument {
 		private:
-			FunctionArgument(Type *type_, const std::string *name_): type(type_), name(name_) {}
-			FunctionArgument(Type *type_, const std::string &name_);
+			FunctionArgument(TypePtr type_, const std::string *name_): type(type_), name(name_) {}
+			FunctionArgument(TypePtr type_, const std::string &name_);
 
 		public:
-			Type *type;
+			TypePtr type;
 			std::unordered_set<ParAttr> parattrs;
 			const std::string *name = nullptr;
 			const std::string *originalName = nullptr;
 
 			FunctionArgument(ASTNode *);
-			~FunctionArgument() { delete type; }
 	};
 
 	struct FunctionArgs: public ASTNode {
