@@ -48,6 +48,9 @@ clean:
 declutter:
 	rm -f graph_*.png
 
+grind: $(OUTPUT)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=no ./$<
+
 count:
 	cloc . parser $(CLOC_OPTIONS)
 
