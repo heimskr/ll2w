@@ -15,6 +15,7 @@
 #include "util/Util.h"
 #include "util/CompilerUtil.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/SetSymbolInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "instruction/AddIInstruction.h"
@@ -914,6 +915,17 @@ namespace LL2W {
 				} else if (std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value)) {
 					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
 					insertBefore(instruction, set);
+				} else if (auto gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value)) {
+					bool decimals00 =
+						gep->decimals.size() == 2 && gep->decimals[0].second == 0 && gep->decimals[1].second == 0;
+					std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
+					if (decimals00 && gep_global) {
+						std::shared_ptr<SetSymbolInstruction> setsym =
+							std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+						insertBefore(instruction, setsym);
+					} else {
+						std::cout << "This is tricky: " << *constant << "\n";
+					}
 				} else {
 					std::cout << "What is this? " << *constant << "\n";
 				}
