@@ -5,6 +5,8 @@
 #include <unordered_map>
 
 namespace LL2W {
+	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary};
+
 	enum class Linkage {
 		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
 		Common, Internal};

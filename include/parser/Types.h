@@ -18,9 +18,6 @@ namespace LL2W {
 	using TypePtr = std::shared_ptr<Type>;
 
 	class Type {
-		protected:
-			enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary};
-
 		public:
 			virtual TypeType typeType() const { return TypeType::None; }
 			virtual operator std::string() = 0;
