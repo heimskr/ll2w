@@ -31,7 +31,6 @@ namespace LL2W::Getelementptr {
 
 				int offset = 0;
 				for (int i = 0; i < front; ++i) {
-					std::cerr << "[width is " << snode->types.at(i)->width() << " for " << *snode->types.at(i) << "]\n";
 					offset += snode->types.at(i)->width();
 				}
 				return offset + compute_mutating(snode->types.at(front), indices);

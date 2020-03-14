@@ -922,16 +922,17 @@ namespace LL2W {
 						gep->decimals.size() == 2 && gep->decimals[0].second == 0 && gep->decimals[1].second == 0;
 					std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 					if (decimals00 && gep_global) {
-						std::shared_ptr<SetSymbolInstruction> setsym =
-							std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+						auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 						insertBefore(instruction, setsym);
 					} else {
-						std::cout << "This is tricky: " << *constant << "\n";
 						std::list<int> indices;
 						for (const std::pair<int, long> &decimal_pair: gep->decimals)
 							indices.push_back(decimal_pair.second);
-						std::cout << " :: " << Getelementptr::compute(constant->type, indices) << "\n";
-						insertBefore(instruction, std::make_shared<InvalidInstruction>());
+						int offset = Getelementptr::compute(gep->ptrType, indices);
+						auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+						auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
+						insertBefore(instruction, setsym);
+						insertAfter(setsym, addi);
 					}
 				} else {
 					std::cout << "What is this? " << *constant << "\n";

@@ -19,6 +19,11 @@ namespace LL2W {
 		ss << std::hex << n;
 		return ss.str();
 	}
+
+	template <typename T>
+	inline T updiv(T n, T d) {
+		return n / d + (n % d? 1 : 0);
+	}
 }
 
 #endif
