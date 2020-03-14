@@ -22,6 +22,11 @@ namespace LL2W {
 				case FUNCTION_DEF:
 					functions.emplace(*node->lexerInfo, Function(*this, *node));
 					break;
+				case TOK_DECLARE: {
+					ASTNode *header = node->at(0);
+					declarations.emplace(header->lexerInfo->substr(1), dynamic_cast<FunctionHeader *>(header));
+					break;
+				}
 				case TOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();
 					break;

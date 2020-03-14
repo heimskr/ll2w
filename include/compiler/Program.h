@@ -13,6 +13,7 @@ namespace LL2W {
 		public:
 			std::unordered_map<std::string, Function> functions;
 			std::string sourceFilename;
+			std::unordered_map<std::string, FunctionHeader *> declarations;
 
 			Program(const ASTNode &);
 
