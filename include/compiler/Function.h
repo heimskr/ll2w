@@ -211,6 +211,9 @@ namespace LL2W {
 			/** Inserts instructions to load arguments from the stack as necessary. */
 			void loadArguments();
 
+			/** Copies arguments into the argument registers or onto the stack as necessary before each call. */
+			void setupCalls();
+
 			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
 			 *  other allocations have occurred because they move the stack pointer down. */
 			void updateArgumentLoads(int offset);

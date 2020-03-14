@@ -30,13 +30,8 @@ namespace LL2W {
 				case TOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();
 					break;
-				// default: node->debug();
 			}
 		}
-
-		// for (const std::pair<std::string, Function> &pair: functions) {
-
-		// }
 	}
 
 	void Program::compile() {

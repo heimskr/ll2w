@@ -11,6 +11,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "compiler/Program.h"
 #include "util/Util.h"
 #include "util/CompilerUtil.h"
 #include "instruction/SetInstruction.h"
@@ -18,6 +19,7 @@
 #include "instruction/StackStoreInstruction.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/LoadRInstruction.h"
+#include "instruction/MoveInstruction.h"
 #include "options.h"
 
 namespace LL2W {
@@ -724,8 +726,9 @@ namespace LL2W {
 		loadArguments();
 		const int initial_stack_size = stackSize;
 		extractVariables();
-		makeCFG();
 		fillLocalValues();
+		setupCalls();
+		makeCFG();
 		coalescePhi();
 		computeLiveness();
 		updateInstructionNodes();
@@ -846,6 +849,76 @@ namespace LL2W {
 			removeUselessBranch(entry);
 		} else {
 			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
+		}
+	}
+
+	void Function::setupCalls() {
+		for (InstructionPtr &instruction: linearInstructions) {
+			// Look for a call instruction.
+			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+			if (!llvm || llvm->node->nodeType() != NodeType::Call)
+				continue;
+			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
+
+			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
+			VariableValue *name_value = call->name.get();
+			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
+			if (!global_name)
+				std::runtime_error("Calls to function pointers are currently unsupported");
+
+			// Now we need to find out about the function's arguments because we need to know how to call it.
+			CallingConvention convention;
+			std::vector<TypePtr> argument_types;
+			bool ellipsis;
+
+			// First, we check the call node itself—it sometimes contains the signature of the function.
+			if (call->argumentsExplicit) {
+				argument_types = call->argumentTypes;
+				ellipsis = call->argumentEllipsis;
+				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+			} else if (parent->functions.count("@" + *global_name->name) != 0) {
+				// When the arguments aren't explicit, we check the parent program's map of functions.
+				Function &func = parent->functions.at("@" + *global_name->name);
+				ellipsis = func.isVariadic();
+				convention = func.getCallingConvention();
+				argument_types.reserve(func.arguments->size());
+				for (FunctionArgument &argument: *func.arguments)
+					argument_types.push_back(argument.type);
+			} else if (parent->declarations.count(*global_name->name) != 0) {
+				// We can also check the map of declarations.
+				FunctionHeader *header = parent->declarations.at(*global_name->name);
+				ellipsis = header->arguments->ellipsis;
+				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+				argument_types.reserve(header->arguments->arguments.size());
+				for (FunctionArgument &argument: header->arguments->arguments)
+					argument_types.push_back(argument.type);
+			} else throw std::runtime_error("Couldn't find signature for function " + *global_name->name);
+
+			int reg_max = convention == CallingConvention::Reg16? WhyInfo::argumentCount : 0;
+			int arg_count = argument_types.size();
+
+			// First, move variables into the argument registers.
+			for (int i = 0; i < reg_max && i < arg_count; ++i) {
+				// Make a precolored dummy variable.
+				VariablePtr new_var = newVariable(argument_types[i]);
+				new_var->reg = WhyInfo::argumentOffset + i;
+				ConstantPtr constant = call->constants[i];
+
+				if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value)) {
+					std::shared_ptr<MoveInstruction> move =
+						std::make_shared<MoveInstruction>(local->variable, nullptr, new_var);
+					insertBefore(instruction, move);
+					std::cout << "Inserted " << move->debugExtra() << "\n";
+				} else if (std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value)) {
+					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, ival->value);
+					insertBefore(instruction, set);
+					std::cout << "Inserted " << set->debugExtra() << "\n";
+				} else {
+					std::cout << "What is this? " << *constant << "\n";
+				}
+			}
+
+			llvm->read.clear();
 		}
 	}
 

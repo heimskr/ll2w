@@ -1,3 +1,8 @@
+declare i32 @fprintf(%struct.__sFILE*, i8*, ...) #1
+declare i32 @fflush(%struct.__sFILE*) #1
+declare i8* @"\01_strerror"(i32) #1
+declare void @free(i8*) #1
+
 %struct.pcache_t = type { [1024 x %struct.pathc_t], %struct.superblock_t, i32*, i64, %struct.dir_t, i32, %struct._opaque_pthread_mutex_t }
 %struct.pathc_t = type { i8, [1025 x i8], %struct.dir_t, %struct.fdc_t*, i64, i64, %struct._opaque_pthread_mutex_t* }
 %struct.fdc_t = type { i8, i64, %struct.pathc_t* }
@@ -205,3 +210,5 @@ define i32 @fat_remove(i32, i8*, i32) #0 {
   %126 = load i32, i32* %4, align 4
   ret i32 %126
 }
+
+attributes #1 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
