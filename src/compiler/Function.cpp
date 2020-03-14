@@ -21,6 +21,7 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/LoadRInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/InvalidInstruction.h"
 #include "options.h"
 
 namespace LL2W {
@@ -925,9 +926,11 @@ namespace LL2W {
 						insertBefore(instruction, setsym);
 					} else {
 						std::cout << "This is tricky: " << *constant << "\n";
+						insertBefore(instruction, std::make_shared<InvalidInstruction>());
 					}
 				} else {
 					std::cout << "What is this? " << *constant << "\n";
+					insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				}
 			}
 
