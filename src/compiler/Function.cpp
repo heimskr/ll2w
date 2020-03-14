@@ -5,24 +5,25 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "parser/ASTNode.h"
-#include "parser/FunctionArgs.h"
-#include "parser/FunctionHeader.h"
 #include "compiler/Function.h"
+#include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
-#include "util/Util.h"
-#include "util/CompilerUtil.h"
+#include "instruction/AddIInstruction.h"
+#include "instruction/InvalidInstruction.h"
+#include "instruction/LoadRInstruction.h"
+#include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/SetSymbolInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
-#include "instruction/AddIInstruction.h"
-#include "instruction/LoadRInstruction.h"
-#include "instruction/MoveInstruction.h"
-#include "instruction/InvalidInstruction.h"
 #include "options.h"
+#include "parser/ASTNode.h"
+#include "parser/FunctionArgs.h"
+#include "parser/FunctionHeader.h"
+#include "util/CompilerUtil.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -926,6 +927,10 @@ namespace LL2W {
 						insertBefore(instruction, setsym);
 					} else {
 						std::cout << "This is tricky: " << *constant << "\n";
+						std::list<int> indices;
+						for (const std::pair<int, long> &decimal_pair: gep->decimals)
+							indices.push_back(decimal_pair.second);
+						std::cout << " :: " << Getelementptr::compute(constant->type, indices) << "\n";
 						insertBefore(instruction, std::make_shared<InvalidInstruction>());
 					}
 				} else {

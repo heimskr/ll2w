@@ -135,6 +135,7 @@ namespace LL2W {
 		}
 		int width() const override;
 		TypePtr extractType(std::list<int> indices) const override;
+		std::string barename() const;
 		bool operator==(const Type &) const override;
 	};
 

@@ -186,10 +186,7 @@ namespace LL2W {
 		int out = 0;
 		if (!node) {
 			// This is likely a named struct rather than a literal struct.
-			std::string bare_name = name->at(0) == '%'? name->substr(1) : *name;
-			if (bare_name.at(0) == '"')
-				bare_name = bare_name.substr(1, bare_name.size() - 2);
-			return knownStructs.at(bare_name)->width();
+			return knownStructs.at(barename())->width();
 		}
 
 		for (const TypePtr type: node->types)
@@ -227,6 +224,11 @@ namespace LL2W {
 		std::cout << "Returning " << std::string(*type) << "\n";
 		return type;
 		// throw std::runtime_error("StructType::extractType is unimplemented.");
+	}
+
+	std::string StructType::barename() const {
+		std::string out = name->at(0) == '%'? name->substr(1) : *name;
+		return out.at(0) == '"'? out.substr(1, out.size() - 2) : out;
 	}
 
 	bool StructType::operator==(const Type &other) const {
