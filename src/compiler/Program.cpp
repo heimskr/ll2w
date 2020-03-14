@@ -17,7 +17,7 @@ namespace LL2W {
 			}
 		}
 
-		for (const ASTNode *node: root) {
+		for (ASTNode *node: root) {
 			switch (node->symbol) {
 				case FUNCTION_DEF:
 					functions.emplace(*node->lexerInfo, Function(*this, *node));
@@ -29,6 +29,11 @@ namespace LL2W {
 				}
 				case TOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();
+					break;
+				case GLOBAL_DEF:
+					if (GlobalVarDef *global = dynamic_cast<GlobalVarDef *>(node)) {
+						globals.emplace(*node->lexerInfo, global);
+					} else throw std::runtime_error("Node with token GLOBAL_DEF isn't an instance of GlobalVarDef");
 					break;
 			}
 		}

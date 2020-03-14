@@ -14,6 +14,7 @@ namespace LL2W {
 			std::unordered_map<std::string, Function> functions;
 			std::string sourceFilename;
 			std::unordered_map<std::string, FunctionHeader *> declarations;
+			std::unordered_map<std::string, GlobalVarDef *> globals; // keys include the "@"
 
 			Program(const ASTNode &);
 
