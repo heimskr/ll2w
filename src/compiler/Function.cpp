@@ -908,11 +908,12 @@ namespace LL2W {
 					std::shared_ptr<MoveInstruction> move =
 						std::make_shared<MoveInstruction>(local->variable, nullptr, new_var);
 					insertBefore(instruction, move);
-					std::cout << "Inserted " << move->debugExtra() << "\n";
 				} else if (std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value)) {
 					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, ival->value);
 					insertBefore(instruction, set);
-					std::cout << "Inserted " << set->debugExtra() << "\n";
+				} else if (std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value)) {
+					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
+					insertBefore(instruction, set);
 				} else {
 					std::cout << "What is this? " << *constant << "\n";
 				}
