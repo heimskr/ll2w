@@ -214,6 +214,9 @@ namespace LL2W {
 			/** Copies arguments into the argument registers or onto the stack as necessary before each call. */
 			void setupCalls();
 
+			/** Inserts a value into a precolored variable before a call instruction. */
+			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
+
 			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
 			 *  other allocations have occurred because they move the stack pointer down. */
 			void updateArgumentLoads(int offset);

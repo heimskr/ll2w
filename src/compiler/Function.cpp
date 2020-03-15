@@ -906,49 +906,65 @@ namespace LL2W {
 				VariablePtr new_var = newVariable(argument_types[i]);
 				new_var->reg = WhyInfo::argumentOffset + i;
 				ConstantPtr constant = call->constants[i];
-
-				if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value)) {
-					// If it's a variable, move it into the argument register.
-					std::shared_ptr<MoveInstruction> move =
-						std::make_shared<MoveInstruction>(local->variable, nullptr, new_var);
-					insertBefore(instruction, move);
-				} else if (std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value)) {
-					// If it's an integer constant, set the argument register to it.
-					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, ival->value);
-					insertBefore(instruction, set);
-				} else if (std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value)) {
-					// If it's a boolean constant, convert it to an integer and do the same.
-					std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
-					insertBefore(instruction, set);
-				} else if (auto gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value)) {
-					// If it's a getelementptr expression, things are a little more difficult.
-					// If there are two indices and they're both zero, we don't have to do any arithmetic.
-					bool decimals00 =
-						gep->decimals.size() == 2 && gep->decimals[0].second == 0 && gep->decimals[1].second == 0;
-					std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
-					if (decimals00 && gep_global) {
-						auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-						insertBefore(instruction, setsym);
-					} else {
-						// Otherwise, we need to compute the address.
-						std::list<int> indices;
-						for (const std::pair<int, long> &decimal_pair: gep->decimals)
-							indices.push_back(decimal_pair.second);
-						int offset = Getelementptr::compute(gep->ptrType, indices);
-						auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-						auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
-						insertBefore(instruction, setsym);
-						insertAfter(setsym, addi);
-					}
-				} else {
-					std::cout << "What is this? " << *constant << "\n";
-					insertBefore(instruction, std::make_shared<InvalidInstruction>());
-				}
+				setupCallValue(new_var, instruction, constant);
 			}
 
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
-			// instruction's set of read variables so the register allocator doesn't try to insert any spills.
+			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
+		}
+	}
+
+	void Function::setupCallValue(VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
+		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value)) {
+
+			// If it's a variable, move it into the argument register.
+			auto move = std::make_shared<MoveInstruction>(local->variable, nullptr, new_var);
+
+			insertBefore(instruction, move);
+
+		} else if (std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value)) {
+
+			// If it's an integer constant, set the argument register to it.
+			std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, ival->value);
+
+			insertBefore(instruction, set);
+
+		} else if (std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value)) {
+
+			// If it's a boolean constant, convert it to an integer and do the same.
+			std::shared_ptr<SetInstruction> set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
+
+			insertBefore(instruction, set);
+
+		} else if (auto gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value)) {
+
+			// If it's a getelementptr expression, things are a little more difficult.
+			// If there are two indices and they're both zero, we don't have to do any arithmetic.
+			bool decimals00 = gep->decimals.size() == 2 && gep->decimals[0].second == 0 && gep->decimals[1].second == 0;
+			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
+			if (decimals00) {
+				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+				insertBefore(instruction, setsym);
+			} else if (gep_global) {
+				// Otherwise, we need to compute the address.
+				std::list<int> indices;
+				for (const std::pair<int, long> &decimal_pair: gep->decimals)
+					indices.push_back(decimal_pair.second);
+				int  offset = Getelementptr::compute(gep->ptrType, indices);
+				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+				auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
+				insertBefore(instruction, setsym);
+				insertAfter(setsym, addi);
+			} else {
+				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+			}
+
+		} else if (constant->conversionSource) {
+			setupCallValue(new_var, instruction, constant->conversionSource);
+		} else {
+			std::cout << "Not sure what to do with " << *constant << "\n";
+			insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}
 
