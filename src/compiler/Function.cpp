@@ -868,7 +868,7 @@ namespace LL2W {
 			VariableValue *name_value = std::dynamic_pointer_cast<VariableValue>(call->name).get();
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
 			if (!global_name)
-				std::runtime_error("Calls to function pointers are currently unsupported");
+				throw std::runtime_error("Calls to function pointers are currently unsupported");
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
 			CallingConvention convention;
