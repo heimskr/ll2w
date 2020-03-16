@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "compiler/Function.h"
+#include "parser/FunctionHeader.h"
 
 namespace LL2W {
 	class ASTNode;
