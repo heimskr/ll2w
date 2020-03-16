@@ -941,23 +941,24 @@ namespace LL2W {
 
 			// If it's a getelementptr expression, things are a little more difficult.
 			// If there are two indices and they're both zero, we don't have to do any arithmetic.
-			bool decimals00 = gep->decimals.size() == 2 && gep->decimals[0].second == 0 && gep->decimals[1].second == 0;
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
-			if (decimals00) {
-				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-				insertBefore(instruction, setsym);
-			} else if (gep_global) {
+			if (!gep_global) {
+				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				insertBefore(instruction, std::make_shared<InvalidInstruction>());
+			} else {
 				// Otherwise, we need to compute the address.
 				std::list<int> indices;
 				for (const std::pair<int, long> &decimal_pair: gep->decimals)
 					indices.push_back(decimal_pair.second);
 				int  offset = Getelementptr::compute(gep->ptrType, indices);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-				auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
+				insertBefore(instruction, std::make_shared<InvalidInstruction>("Hello"));
 				insertBefore(instruction, setsym);
-				insertAfter(setsym, addi);
-			} else {
-				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				int to_add = updiv(offset, 8);
+				if (to_add != 0) {
+					auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
+					insertAfter(setsym, addi);
+				}
 			}
 
 		} else if (constant->conversionSource) {
@@ -965,6 +966,14 @@ namespace LL2W {
 		} else {
 			std::cout << "Not sure what to do with " << *constant << "\n";
 			insertBefore(instruction, std::make_shared<InvalidInstruction>());
+		}
+	}
+
+	void Function::replaceGetelementptr() {
+		for (InstructionPtr &instruction: linearInstructions) {
+			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+			if (!llvm || llvm->node->nodeType() == NodeType::Call) continue;
+
 		}
 	}
 

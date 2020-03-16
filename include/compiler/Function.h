@@ -217,6 +217,9 @@ namespace LL2W {
 			/** Inserts a value into a precolored variable before a call instruction. */
 			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
 
+			/** Goes over all instructions and computes getelementptr values and places the results in a variable. */
+			void replaceGetelementptr();
+
 			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
 			 *  other allocations have occurred because they move the stack pointer down. */
 			void updateArgumentLoads(int offset);
