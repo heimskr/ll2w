@@ -9,7 +9,7 @@ namespace LL2W {
 
 	namespace Getelementptr {
 		/** Computes the offset (in bits) of a getelementptr expression. */
-		int compute(std::shared_ptr<Type>, std::list<int>);
+		int compute(std::shared_ptr<Type>, std::list<int>, std::shared_ptr<Type> *out_type = nullptr);
 	}
 }
 

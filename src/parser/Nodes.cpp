@@ -515,9 +515,9 @@ namespace LL2W {
 			delete _args;
 		}
 
-		name = std::dynamic_pointer_cast<VariableValue>(getValue(function_name));
+		name = getValue(function_name);
 		delete function_name;
-		if (!name) {
+		if (!std::dynamic_pointer_cast<VariableValue>(name)) {
 			if (_constants)
 				delete _constants;
 			delete attribute_list;
@@ -542,6 +542,16 @@ namespace LL2W {
 			out.push_back(constant->value);
 		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
 			out.push_back(local);
+		return out;
+	}
+
+	std::vector<ValuePtr *> CallInvokeNode::allValuePointers() {
+		std::vector<ValuePtr *> out;
+		out.reserve(constants.size() + 1);
+		for (ConstantPtr &constant: constants)
+			out.push_back(&constant->value);
+		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
+			out.push_back(&name);
 		return out;
 	}
 
@@ -670,8 +680,8 @@ namespace LL2W {
 			}
 		}
 
-		ptrValue = std::dynamic_pointer_cast<LocalValue>(getValue(ptr_value));
-		if (!ptrValue)
+		ptrValue = getValue(ptr_value);
+		if (!std::dynamic_pointer_cast<LocalValue>(ptrValue))
 			yyerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
 
 		for (ASTNode *comma: *indices_) {
@@ -770,6 +780,14 @@ namespace LL2W {
 		out.reserve(clauses.size());
 		for (std::shared_ptr<Clause> clause: clauses)
 			out.push_back(clause->value);
+		return out;
+	}
+
+	std::vector<ValuePtr *> LandingpadNode::allValuePointers() {
+		std::vector<ValuePtr *> out;
+		out.reserve(clauses.size());
+		for (std::shared_ptr<Clause> &clause: clauses)
+			out.push_back(&clause->value);
 		return out;
 	}
 

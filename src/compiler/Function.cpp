@@ -731,6 +731,7 @@ namespace LL2W {
 		extractVariables();
 		fillLocalValues();
 		setupCalls();
+		replaceGetelementptr();
 		makeCFG();
 		coalescePhi();
 		computeLiveness();
@@ -864,7 +865,7 @@ namespace LL2W {
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
 
 			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
-			VariableValue *name_value = call->name.get();
+			VariableValue *name_value = std::dynamic_pointer_cast<VariableValue>(call->name).get();
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
 			if (!global_name)
 				std::runtime_error("Calls to function pointers are currently unsupported");
@@ -940,23 +941,19 @@ namespace LL2W {
 		} else if (auto gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value)) {
 
 			// If it's a getelementptr expression, things are a little more difficult.
-			// If there are two indices and they're both zero, we don't have to do any arithmetic.
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 			if (!gep_global) {
 				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 				insertBefore(instruction, std::make_shared<InvalidInstruction>());
 			} else {
-				// Otherwise, we need to compute the address.
 				std::list<int> indices;
 				for (const std::pair<int, long> &decimal_pair: gep->decimals)
 					indices.push_back(decimal_pair.second);
-				int  offset = Getelementptr::compute(gep->ptrType, indices);
+				int  offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-				insertBefore(instruction, std::make_shared<InvalidInstruction>("Hello"));
 				insertBefore(instruction, setsym);
-				int to_add = updiv(offset, 8);
-				if (to_add != 0) {
-					auto addi   = std::make_shared<AddIInstruction>(new_var, updiv(offset, 8), new_var);
+				if (offset != 0) {
+					auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 					insertAfter(setsym, addi);
 				}
 			}
@@ -972,8 +969,42 @@ namespace LL2W {
 	void Function::replaceGetelementptr() {
 		for (InstructionPtr &instruction: linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (!llvm || llvm->node->nodeType() == NodeType::Call) continue;
+			if (!llvm || llvm->node->nodeType() == NodeType::Call)
+				continue;
+			Reader *reader = dynamic_cast<Reader *>(llvm->node);
+			if (!reader)
+				continue;
+			for (ValuePtr *value: reader->allValuePointers()) {
+				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get());
+				if (!gep)
+					continue;
+				std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
+				if (!gep_global) {
+					std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+					insertBefore(instruction, std::make_shared<InvalidInstruction>());
+				} else {
+					std::list<int> indices;
+					for (const std::pair<int, long> &decimal_pair: gep->decimals)
+						indices.push_back(decimal_pair.second);
+					TypePtr out_type;
+					int  offset = updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
+					VariablePtr new_var = newVariable(out_type, instruction->parent.lock());
+					auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+					insertBefore(instruction, std::make_shared<InvalidInstruction>("Replaced"));
+					insertBefore(instruction, setsym);
+					setsym->extract();
+					if (offset != 0) {
+						auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+						insertAfter(setsym, addi);
+						addi->extract();
+					}
 
+					auto new_value = std::make_shared<LocalValue>(std::to_string(new_var->id));
+					new_value->variable = new_var;
+					*value = new_value;
+				}
+			}
+			instruction->extract(true);
 		}
 	}
 
