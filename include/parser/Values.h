@@ -92,7 +92,7 @@ namespace LL2W {
 	struct LocalValue: public VariableValue {
 		std::shared_ptr<Variable> variable = nullptr;
 		LocalValue(const std::string *name_): VariableValue(name_) {}
-		LocalValue(const std::string &name_): LocalValue(&name_) {}
+		LocalValue(const std::string &name_): LocalValue(StringSet::intern(name_)) {}
 		LocalValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Local; }
 		ValuePtr copy() const override { return std::make_shared<LocalValue>(name); }

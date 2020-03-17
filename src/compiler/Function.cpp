@@ -1001,7 +1001,6 @@ namespace LL2W {
 
 					auto new_value = std::make_shared<LocalValue>(std::to_string(new_var->id));
 					new_value->variable = new_var;
-					std::cout << "[" << new_value->variable->id << ":" << *new_value->name << ":" << new_value.get() << "]\n";
 					*value = new_value;
 				}
 			}
