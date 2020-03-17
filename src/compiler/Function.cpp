@@ -1006,6 +1006,8 @@ namespace LL2W {
 			}
 			instruction->extract(true);
 		}
+
+		extractVariables();
 	}
 
 	void Function::updateArgumentLoads(int offset) {

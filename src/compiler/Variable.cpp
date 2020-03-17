@@ -5,6 +5,7 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
+#include "options.h"
 
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const std::set<std::shared_ptr<BasicBlock>> &defining_blocks,
@@ -53,8 +54,10 @@ namespace LL2W {
 					out << ",";
 				out << (*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
 			}
-			out << "]\e[0m";
+			out << "]\e[22m";
 		}
+		out << "\e[2m<" << definingBlocks.size() << "." << definitions.size() << ":" << usingBlocks.size() << "."
+		    << uses.size() << ">\e[22m";
 #endif
 		return out.str();
 	}
