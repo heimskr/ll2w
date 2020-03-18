@@ -12,6 +12,7 @@
 #include "compiler/Program.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
+#include "instruction/JumpSymbolInstruction.h"
 #include "instruction/LoadRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
@@ -857,6 +858,8 @@ namespace LL2W {
 	}
 
 	void Function::setupCalls() {
+		std::list<InstructionPtr> to_remove;
+
 		for (InstructionPtr &instruction: linearInstructions) {
 			// Look for a call instruction.
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
@@ -913,7 +916,22 @@ namespace LL2W {
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
+
+			insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(*global_name->name, true));
+			if (call->result) {
+				auto move = std::make_shared<MoveInstruction>(makePrecoloredVariable(WhyInfo::returnValueOffset,
+					instruction->parent.lock()), nullptr, getVariable(*call->result));
+				insertBefore(instruction, move);
+				move->extract();
+			}
+
+			to_remove.push_back(instruction);
 		}
+
+		for (InstructionPtr &instruction: to_remove)
+			remove(instruction);
+
+		extractVariables();
 	}
 
 	void Function::setupCallValue(VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
@@ -1161,6 +1179,11 @@ namespace LL2W {
 			linearInstructions.erase(found);
 			for (auto end = linearInstructions.end(); iter != end; ++iter)
 				--(*iter)->index;
+		}
+
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
+			pair.second->removeUse(instruction);
+			pair.second->removeDefinition(instruction);
 		}
 	}
 
