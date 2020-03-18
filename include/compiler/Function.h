@@ -214,6 +214,9 @@ namespace LL2W {
 			/** Copies arguments into the argument registers or onto the stack as necessary before each call. */
 			void setupCalls();
 
+			/** Pushes a value to the stack before a call instruction. */
+			void pushCallValue(std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
+
 			/** Inserts a value into a precolored variable before a call instruction. */
 			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
 
