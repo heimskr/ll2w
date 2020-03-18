@@ -765,6 +765,7 @@ namespace LL2W {
 
 		updateArgumentLoads(stackSize - initial_stack_size);
 		replaceStoresAndLoads();
+		removeRedundantMoves();
 		// mergeAllBlocks();
 
 #ifdef DEBUG_SPILL
@@ -1076,6 +1077,20 @@ namespace LL2W {
 				remove(instruction);
 			to_remove.clear();
 		} while (any_changed);
+	}
+
+	void Function::removeRedundantMoves() {
+		std::list<InstructionPtr> to_remove;
+
+		for (InstructionPtr &instruction: linearInstructions) {
+			if (auto *move = dynamic_cast<MoveInstruction *>(instruction.get())) {
+				if (move->rs->reg != -1 && move->rs->reg == move->rd->reg)
+					to_remove.push_back(instruction);
+			}
+		}
+
+		for (InstructionPtr &instruction: to_remove)
+			remove(instruction);
 	}
 
 	void Function::updateArgumentLoads(int offset) {

@@ -224,6 +224,9 @@ namespace LL2W {
 			 *  location. This function replaces them with a register-to-register move. */
 			void replaceStoresAndLoads();
 
+			/** Removes move instructions that move a register to itself. */
+			void removeRedundantMoves();
+
 			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
 			 *  other allocations have occurred because they move the stack pointer down. */
 			void updateArgumentLoads(int offset);
