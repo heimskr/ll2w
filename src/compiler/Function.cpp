@@ -730,7 +730,7 @@ namespace LL2W {
 		loadArguments();
 		const int initial_stack_size = stackSize;
 		extractVariables();
-		replaceGetelementptr();
+		replaceGetelementptrValues();
 		fillLocalValues();
 		setupCalls();
 		makeCFG();
@@ -764,6 +764,7 @@ namespace LL2W {
 		}
 
 		updateArgumentLoads(stackSize - initial_stack_size);
+		replaceStoresAndLoads();
 		// mergeAllBlocks();
 
 #ifdef DEBUG_SPILL
@@ -920,7 +921,7 @@ namespace LL2W {
 			insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(*global_name->name, true));
 			if (call->result) {
 				auto move = std::make_shared<MoveInstruction>(makePrecoloredVariable(WhyInfo::returnValueOffset,
-					instruction->parent.lock()), nullptr, getVariable(*call->result));
+					instruction->parent.lock()), getVariable(*call->result));
 				insertBefore(instruction, move);
 				move->extract();
 			}
@@ -938,7 +939,7 @@ namespace LL2W {
 		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value)) {
 
 			// If it's a variable, move it into the argument register.
-			auto move = std::make_shared<MoveInstruction>(local->variable, nullptr, new_var);
+			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
 
 			insertBefore(instruction, move);
 
@@ -984,7 +985,7 @@ namespace LL2W {
 		}
 	}
 
-	void Function::replaceGetelementptr() {
+	void Function::replaceGetelementptrValues() {
 		for (InstructionPtr &instruction: linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
 			if (!llvm || llvm->node->nodeType() == NodeType::Call)
@@ -1008,7 +1009,6 @@ namespace LL2W {
 					int  offset = updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
 					VariablePtr new_var = newVariable(out_type, instruction->parent.lock());
 					auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-					insertBefore(instruction, std::make_shared<InvalidInstruction>("Replaced"));
 					insertBefore(instruction, setsym);
 					setsym->extract();
 					if (offset != 0) {
@@ -1026,6 +1026,56 @@ namespace LL2W {
 		}
 
 		extractVariables();
+	}
+
+	void Function::replaceStoresAndLoads() {
+		std::list<InstructionPtr> to_remove;
+		bool any_changed;
+
+		auto check_unique_load = [&](const InstructionPtr &check, const StackLocation &location) -> bool {
+			for (InstructionPtr &instruction: linearInstructions) {
+				if (instruction == check)
+					continue;
+				auto *load = dynamic_cast<StackLoadInstruction *>(instruction.get());
+				if (load && load->location.offset == location.offset)
+					return false;
+			}
+
+			return true;
+		};
+
+		do {
+			any_changed = false;
+			for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
+				InstructionPtr &start = *iter;
+				auto *store = dynamic_cast<StackStoreInstruction *>(start.get());
+				if (!store)
+					continue;
+				auto iter2 = iter;
+				for (++iter2; iter2 != end; ++iter2) {
+					InstructionPtr &next = *iter2;
+					auto *load = dynamic_cast<StackLoadInstruction *>(next.get());
+					if (!load && !dynamic_cast<StackStoreInstruction *>(next.get()))
+						break;
+					if (!load)
+						continue;
+					if (store->location.offset == load->location.offset) {
+						// If this is the only load for this stack location, we can safely remove the store.
+						if (check_unique_load(start, store->location))
+							to_remove.push_back(start);
+						to_remove.push_back(next);
+						insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result));
+						any_changed = true;
+						goto remove_instructions;
+					}
+				}
+			}
+
+			remove_instructions:
+			for (InstructionPtr &instruction: to_remove)
+				remove(instruction);
+			to_remove.clear();
+		} while (any_changed);
 	}
 
 	void Function::updateArgumentLoads(int offset) {
