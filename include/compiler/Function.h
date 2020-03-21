@@ -148,10 +148,6 @@ namespace LL2W {
 			/** Reassigns indices to all basic blocks. */
 			void reindexBlocks();
 
-			/** Splits basic blocks such that no basic block contains more definitions than the number of physical
-			 *  registers. */
-			void splitBlocks();
-
 			/** Splits a basic block after a given instruction. */
 			std::shared_ptr<BasicBlock> splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
 
