@@ -27,6 +27,15 @@ namespace LL2W {
 			extracted = true;
 			return {read.size(), written.size()};
 		}
+
+		bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
+			if (rs == to_replace) {
+				rs = new_var;
+				return true;
+			}
+
+			return false;
+		}
 	};
 }
 

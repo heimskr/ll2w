@@ -11,6 +11,7 @@ namespace LL2W {
 			int index_ = -1);
 
 		ExtractionResult extract(bool force = false) override;
+		bool replaceRead(std::shared_ptr<Variable>, std::shared_ptr<Variable>) override;
 	};
 }
 

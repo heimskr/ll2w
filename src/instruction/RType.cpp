@@ -22,4 +22,20 @@ namespace LL2W {
 		extracted = true;
 		return {read.size(), written.size()};
 	}
+
+	bool RType::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		bool changed = false;
+
+		if (rs == to_replace) {
+			rs = new_var;
+			changed = true;
+		}
+
+		if (rt == to_replace) {
+			rt = new_var;
+			changed = true;
+		}
+
+		return changed;
+	}
 }

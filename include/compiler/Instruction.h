@@ -37,6 +37,8 @@ namespace LL2W {
 
 			virtual std::string debugExtra() { return ""; }
 
+			/** Attempts to replace a variable read by the instruction with another variable. Should be overridden by
+			 *  any instruction that reads from a variable. */
 			virtual bool replaceRead(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
 				return false;
 			}
