@@ -610,6 +610,10 @@ namespace LL2W {
 			VariablePtr new_var = newVariable(constant->type);
 			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
 			insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+		} else if (value_type == ValueType::Null) {
+			VariablePtr new_var = newVariable(constant->type);
+			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
+			insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
 		} else if (value_type == ValueType::Getelementptr) {
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
@@ -652,6 +656,9 @@ namespace LL2W {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
+		} else if (value_type == ValueType::Null) {
+			// If it's a null constant, just use zero.
+			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
