@@ -28,6 +28,7 @@
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceStoresAndLoads.h"
+#include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
 
@@ -718,7 +719,7 @@ namespace LL2W {
 			spilled = linearScan();
 		}
 
-		updateArgumentLoads(stackSize - initial_stack_size);
+		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
@@ -1021,17 +1022,6 @@ namespace LL2W {
 		}
 
 		extractVariables();
-	}
-
-	void Function::updateArgumentLoads(int offset) {
-		for (InstructionPtr &instruction: linearInstructions) {
-			if (std::shared_ptr<AddIInstruction> add = std::dynamic_pointer_cast<AddIInstruction>(instruction)) {
-				std::shared_ptr<Variable> &rs = add->rs, &rd = add->rd;
-				// Check for "$sp + x -> $m0" (loadArguments uses $m0).
-				if (rs && rs->reg == WhyInfo::stackPointerOffset && rd && rd->reg == WhyInfo::assemblerOffset)
-					add->imm += offset;
-			}
-		}
 	}
 
 	StackLocation & Function::addToStack(VariablePtr variable) {
