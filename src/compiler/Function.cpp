@@ -26,6 +26,7 @@
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
 #include "pass/LinearScan.h"
+#include "pass/LoadArguments.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
@@ -503,7 +504,7 @@ namespace LL2W {
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		loadArguments();
+		Passes::loadArguments(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
@@ -591,48 +592,6 @@ namespace LL2W {
 				if (interval.variable->id < max)
 					interval.setRegister(++reg);
 			}
-		}
-	}
-
-	void Function::loadArguments() {
-		CallingConvention cconv = getCallingConvention();
-		if (cconv == CallingConvention::StackOnly) {
-			throw std::runtime_error("loadArguments is currently unimplemented for StackOnly functions.");
-		} else if (cconv == CallingConvention::Reg16) {
-			const int arity = getArity();
-			if (arity <= WhyInfo::argumentCount)
-				return;
-
-			BasicBlockPtr entry = getEntry();
-			std::shared_ptr<LoadRInstruction> first_load;
-			for (int arg = arity - 1; WhyInfo::argumentCount <= arg; --arg) {
-				VariablePtr arg_var = getVariable(arg, arguments->at(arg - WhyInfo::argumentCount).type, entry);
-				VariablePtr temp_var = makeAssemblerVariable(0, entry);
-				VariablePtr sp = makePrecoloredVariable(WhyInfo::stackPointerOffset, entry);
-
-				// The stack frame looks like [ $rt | $fp | argN-1 | ... | arg16 | var1 | var2 | ... ].
-				// The stack pointer will be pointing right after the stack frame. We need to skip over the local
-				// variables and the arguments after this one.
-				int to_skip = 0;
-				for (const std::pair<int, StackLocation> &pair: stack)
-					to_skip += pair.second.width;
-				for (int arg2 = WhyInfo::argumentCount; arg2 < arg; ++arg2)
-					to_skip += arguments->at(arg2 - WhyInfo::argumentCount).type->width() / 8;
-
-				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
-				auto load = std::make_shared<LoadRInstruction>(temp_var, nullptr, arg_var, arg_var->type->width() / 8);
-				if (!first_load)
-					first_load = load;
-
-				insertBefore(entry->instructions.front(), add, false);
-				insertAfter(add, load, false);
-			}
-
-			reindexInstructions();
-			splitBlock(entry, first_load);
-			removeUselessBranch(entry);
-		} else {
-			throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
 		}
 	}
 

@@ -2,6 +2,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/WhyInfo.h"
 #include "pass/LinearScan.h"
+#include "options.h"
 
 namespace LL2W::Passes {
 	int linearScan(Function &function) {

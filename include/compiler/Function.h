@@ -50,9 +50,6 @@ namespace LL2W {
 			/** Maps nodes to their successor merge sets. */
 			Node::Map succMergeSets;
 
-			/** Maps offsets to stack location information. */
-			std::map<int, StackLocation> stack;
-
 			/** Maps variables to their stack locations. */
 			std::map<std::shared_ptr<Variable>, StackLocation *> variableLocations;
 
@@ -76,6 +73,9 @@ namespace LL2W {
 
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<int, VariablePtr> variableStore;
+
+			/** Maps offsets to stack location information. */
+			std::map<int, StackLocation> stack;
 
 			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
 			 *  for the function's basic blocks. */
@@ -181,9 +181,6 @@ namespace LL2W {
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
-
-			/** Inserts instructions to load arguments from the stack as necessary. */
-			void loadArguments();
 
 			/** Pushes a value to the stack before a call instruction. */
 			void pushCallValue(std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
