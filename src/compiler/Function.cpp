@@ -531,16 +531,13 @@ namespace LL2W {
 				BasicBlockPtr &block = *iter;
 
 				if (block->instructions.empty() || !CompilerUtil::isTerminator(block->instructions.back())) {
-					++iter;
 					// Don't merge if multiple blocks jump to the next block. That would cause other blocks to jump to
 					// an earlier point than intended, which would cause incorrect behavior.
-					if ((*iter)->preds.size() == 1) {
+					if ((*++iter)->preds.size() == 1) {
 						mergeBlocks(block, *iter);
 						any_changed = changed = true;
 						break;
-					} else {
-						--iter;
-					}
+					} else --iter;
 				}
 			}
 		} while (changed);
