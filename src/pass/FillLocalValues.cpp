@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/LLVMInstruction.h"
 #include "pass/FillLocalValues.h"

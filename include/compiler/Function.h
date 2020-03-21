@@ -38,18 +38,11 @@ namespace LL2W {
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
 
-			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
-			std::map<int, VariablePtr> variableStore;
-
 			/** A set of the numeric labels of all the function's basic blocks. */
 			std::unordered_set<int> bbLabels;
 
 			/** Maps basic blocks to their corresponding CFG nodes. */
 			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
-
-			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
-			 *  for the function's basic blocks. */
-			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
 
 			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;
@@ -99,6 +92,13 @@ namespace LL2W {
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
 
+			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
+			std::map<int, VariablePtr> variableStore;
+
+			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
+			 *  for the function's basic blocks. */
+			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
+
 			Function(Program &, const ASTNode &);
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
@@ -113,9 +113,6 @@ namespace LL2W {
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
 			void relinearize();
-
-			/** Merges arguments of ϕ-instructions into single variables. */
-			void coalescePhi();
 
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
 			int newLabel() const;
