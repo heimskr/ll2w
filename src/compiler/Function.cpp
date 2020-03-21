@@ -24,6 +24,7 @@
 #include "parser/ASTNode.h"
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
+#include "pass/FillLocalValues.h"
 #include "pass/LinearScan.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
@@ -586,25 +587,6 @@ namespace LL2W {
 		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
 	}
 
-	void Function::fillLocalValues() {
-		for (InstructionPtr &instruction: linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
-				continue;
-
-			InstructionNode *node = llvm->node;
-			if (Reader *reader = dynamic_cast<Reader *>(node)) {
-				for (std::shared_ptr<LocalValue> value: reader->allLocals())
-					value->variable = getVariable(*value->name);
-			}
-
-			if (Writer *writer = dynamic_cast<Writer *>(node)) {
-				if (writer->result)
-					writer->variable = getVariable(*writer->result);
-			}
-		}
-	}
-
 	void Function::updateInstructionNodes() {
 		for (InstructionPtr &instruction: linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
@@ -652,7 +634,7 @@ namespace LL2W {
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
-		fillLocalValues();
+		Passes::fillLocalValues(*this);
 		Passes::setupCalls(*this);
 		makeCFG();
 		coalescePhi();

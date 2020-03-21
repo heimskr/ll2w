@@ -178,9 +178,6 @@ namespace LL2W {
 			/** Computes the merge sets for all nodes in the CFG. */
 			void computeSuccMergeSets();
 
-			/** Sets the variable fields of all local values in all instructions. */
-			void fillLocalValues();
-
 			/** Sets the pvar names in all instructions to those of the connected variables. */
 			void updateInstructionNodes();
 
