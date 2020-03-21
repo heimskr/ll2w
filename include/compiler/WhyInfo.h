@@ -4,6 +4,8 @@
 #include <set>
 #include <string>
 
+#include "options.h"
+
 namespace LL2W {
 	/** Contains constants pertaining to the Why.js architecture. */
 	struct WhyInfo {
@@ -31,8 +33,11 @@ namespace LL2W {
 		constexpr static int halfFloatWidth = 4, floatWidth = 8, doubleWidth = 8, pointerWidth = 8; // in bytes
 
 		constexpr static int generalPurposeRegisters = temporaryCount + savedCount;
-		constexpr static int allocatableRegisters = generalPurposeRegisters*0+4;
-
+#ifdef REGISTER_PRESSURE
+		constexpr static int allocatableRegisters = REGISTER_PRESSURE;
+#else
+		constexpr static int allocatableRegisters = generalPurposeRegisters;
+#endif
 		static std::set<int> makeRegisterPool();
 		static bool isSpecialPurpose(int);
 		static std::string registerName(int);
