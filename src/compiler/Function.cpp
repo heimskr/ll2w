@@ -25,6 +25,8 @@
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
 #include "pass/MergeAllBlocks.h"
+#include "pass/RemoveRedundantMoves.h"
+#include "pass/RemoveUselessBranches.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
 
@@ -390,32 +392,6 @@ namespace LL2W {
 		}
 	}
 
-	void Function::removeUselessBranches() {
-		std::list<InstructionPtr> to_remove;
-		for (auto iter = blocks.begin(), end = blocks.end(); iter != end; ++iter) {
-			BasicBlockPtr &block = *iter;
-			if (block->instructions.empty())
-				continue;
-			InstructionPtr &back = block->instructions.back();
-			if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
-				if (llback->node->nodeType() == NodeType::BrUncond) {
-					if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
-						auto next = iter;
-						++next;
-						if (next != end) {
-							const int destination = std::atoi(branch->destination->substr(1).c_str());
-							if ((*next)->label == destination)
-								to_remove.push_back(back);
-						}
-					} else throw std::runtime_error("branch is null in Function::removeUselessBranches");
-				}
-			}
-		}
-
-		for (InstructionPtr &ptr: to_remove)
-			remove(ptr);
-	}
-
 	void Function::reindexInstructions() {
 		int index = -1;
 		for (InstructionPtr &instruction: linearInstructions)
@@ -743,8 +719,8 @@ namespace LL2W {
 
 		updateArgumentLoads(stackSize - initial_stack_size);
 		replaceStoresAndLoads();
-		removeRedundantMoves();
-		removeUselessBranches();
+		Passes::removeRedundantMoves(*this);
+		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
 
 #ifdef DEBUG_SPILL
@@ -1094,20 +1070,6 @@ namespace LL2W {
 				remove(instruction);
 			to_remove.clear();
 		} while (any_changed);
-	}
-
-	void Function::removeRedundantMoves() {
-		std::list<InstructionPtr> to_remove;
-
-		for (InstructionPtr &instruction: linearInstructions) {
-			if (auto *move = dynamic_cast<MoveInstruction *>(instruction.get())) {
-				if (move->rs->reg != -1 && move->rs->reg == move->rd->reg)
-					to_remove.push_back(instruction);
-			}
-		}
-
-		for (InstructionPtr &instruction: to_remove)
-			remove(instruction);
 	}
 
 	void Function::updateArgumentLoads(int offset) {

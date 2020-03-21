@@ -6,6 +6,7 @@ namespace LL2W {
 }
 
 namespace LL2W::Passes {
+	/** Merges each terminal-free basic block with the basic block following it. */
 	void mergeAllBlocks(Function &);
 }
 

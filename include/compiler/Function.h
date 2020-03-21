@@ -142,9 +142,6 @@ namespace LL2W {
 			 *  if such a branch instruction exists. */
 			void removeUselessBranch(std::shared_ptr<BasicBlock>);
 
-			/** Removes all branch instructions that redundantly jump to the immediately following blocks. */
-			void removeUselessBranches();
-
 			/** Reassigns indices to all instructions. */
 			void reindexInstructions();
 
@@ -157,9 +154,6 @@ namespace LL2W {
 
 			/** Splits a basic block after a given instruction. */
 			std::shared_ptr<BasicBlock> splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
-
-			/** Merges each terminal-free basic block with the basic block following it. */
-			void mergeAllBlocks();
 
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
@@ -222,9 +216,6 @@ namespace LL2W {
 			/** Sometimes, spilling results in stores to one location immediately followed by a load from the same
 			 *  location. This function replaces them with a register-to-register move. */
 			void replaceStoresAndLoads();
-
-			/** Removes move instructions that move a register to itself. */
-			void removeRedundantMoves();
 
 			/** Updates the offsets in the adds inserted by loadArguments. This is necessary after spills and
 			 *  other allocations have occurred because they move the stack pointer down. */
