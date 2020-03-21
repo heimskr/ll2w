@@ -206,9 +206,6 @@ namespace LL2W {
 			/** Inserts a value into a precolored variable before a call instruction. */
 			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
 
-			/** Goes over all instructions and computes getelementptr values and places the results in a variable. */
-			void replaceGetelementptrValues();
-
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>);
 
