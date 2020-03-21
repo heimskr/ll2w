@@ -32,13 +32,8 @@ namespace LL2W {
 	 */
 	class Function {
 		private:
-			Program *parent = nullptr;
-
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
-
-			/** A pointer to a list of all function arguments. */
-			std::vector<FunctionArgument> *arguments = nullptr;
 
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
@@ -90,6 +85,11 @@ namespace LL2W {
 			int stackSize = 0;
 
 		public:
+			Program *parent = nullptr;
+
+			/** A pointer to a list of all function arguments. */
+			std::vector<FunctionArgument> *arguments = nullptr;
+
 			/** A pointer to an interned string containing the name of the function. */
 			const std::string *name;
 
@@ -196,9 +196,6 @@ namespace LL2W {
 
 			/** Inserts instructions to load arguments from the stack as necessary. */
 			void loadArguments();
-
-			/** Copies arguments into the argument registers or onto the stack as necessary before each call. */
-			void setupCalls();
 
 			/** Pushes a value to the stack before a call instruction. */
 			void pushCallValue(std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
