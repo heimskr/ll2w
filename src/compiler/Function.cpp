@@ -27,6 +27,7 @@
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
+#include "pass/ReplaceStoresAndLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
 
@@ -718,7 +719,7 @@ namespace LL2W {
 		}
 
 		updateArgumentLoads(stackSize - initial_stack_size);
-		replaceStoresAndLoads();
+		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
@@ -1020,56 +1021,6 @@ namespace LL2W {
 		}
 
 		extractVariables();
-	}
-
-	void Function::replaceStoresAndLoads() {
-		std::list<InstructionPtr> to_remove;
-		bool any_changed;
-
-		auto check_unique_load = [&](const InstructionPtr &check, const StackLocation &location) -> bool {
-			for (InstructionPtr &instruction: linearInstructions) {
-				if (instruction == check)
-					continue;
-				auto *load = dynamic_cast<StackLoadInstruction *>(instruction.get());
-				if (load && load->location.offset == location.offset)
-					return false;
-			}
-
-			return true;
-		};
-
-		do {
-			any_changed = false;
-			for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
-				InstructionPtr &start = *iter;
-				auto *store = dynamic_cast<StackStoreInstruction *>(start.get());
-				if (!store)
-					continue;
-				auto iter2 = iter;
-				for (++iter2; iter2 != end; ++iter2) {
-					InstructionPtr &next = *iter2;
-					auto *load = dynamic_cast<StackLoadInstruction *>(next.get());
-					if (!load && !dynamic_cast<StackStoreInstruction *>(next.get()))
-						break;
-					if (!load)
-						continue;
-					if (store->location.offset == load->location.offset) {
-						// If this is the only load for this stack location, we can safely remove the store.
-						if (check_unique_load(start, store->location))
-							to_remove.push_back(start);
-						to_remove.push_back(next);
-						insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result));
-						any_changed = true;
-						goto remove_instructions;
-					}
-				}
-			}
-
-			remove_instructions:
-			for (InstructionPtr &instruction: to_remove)
-				remove(instruction);
-			to_remove.clear();
-		} while (any_changed);
 	}
 
 	void Function::updateArgumentLoads(int offset) {
