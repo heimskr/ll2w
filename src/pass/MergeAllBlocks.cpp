@@ -1,4 +1,5 @@
 #include "compiler/Function.h"
+#include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "util/CompilerUtil.h"
 
@@ -27,7 +28,7 @@ namespace LL2W::Passes {
 		} while (changed);
 
 		if (any_changed) {
-			function.makeCFG();
+			makeCFG(function);
 			function.reindexBlocks();
 		}
 	}

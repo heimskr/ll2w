@@ -1,5 +1,4 @@
 #include <climits>
-#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -27,6 +26,7 @@
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
 #include "pass/LinearScan.h"
+#include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
@@ -455,70 +455,6 @@ namespace LL2W {
 		return argumentsNode? argumentsNode->ellipsis : false;
 	}
 
-	CFG & Function::makeCFG() {
-		cfg.clear();
-		cfg.name = "CFG";
-
-		// First pass: add all the nodes.
-		for (BasicBlockPtr &block: blocks) {
-			const std::string label = std::to_string(block->label);
-			cfg += label;
-			Node &node = cfg[label];
-			node.data = block;
-			block->node = &node;
-			bbNodeMap.insert({block.get(), &node});
-		}
-
-		cfg += "exit";
-
-		// Second pass: connect all the nodes.
-		for (BasicBlockPtr &block: blocks) {
-			const std::string label = std::to_string(block->label);
-			for (int pred: block->preds)
-				cfg.link(std::to_string(pred), label);
-			if (!block->instructions.empty() && block->instructions.back()->isTerminal())
-				cfg.link(label, "exit");
-		}
-
-		dTree.emplace(cfg, cfg[0]);
-		dTree->name = "DTree";
-		djGraph.emplace(cfg, cfg[0]);
-		djGraph->name = "DJ Graph";
-		mergeSets = djGraph->mergeSets((*djGraph)[0], (*djGraph)["exit"]);
-		computeSuccMergeSets();
-		walkCFG(1000, 0, 1000);
-		return cfg;
-	}
-
-	void Function::walkCFG(size_t walks, unsigned int seed, size_t inner_limit) {
-		srand(seed == 0? time(NULL) : seed);
-		for (size_t walk = 0; walk < walks; ++walk) {
-			Node *node = &cfg[0];
-			Node *end = &cfg["exit"];
-			size_t count = 0;
-			// End the walk once we reach the exit or until we've reached the maximum number of moves allowed per walk.
-			while (node != end && ++count <= inner_limit) {
-				// Increase the estimated execution count of the node we just walked to.
-				++node->get<BasicBlockPtr>()->estimatedExecutions;
-				// Check the number of outward edges.
-				size_t out_count = node->out().size();
-				if (out_count == 0) {
-					// If it's somehow zero, the walk is over.
-					break;
-				} else if (out_count == 1) {
-					// If it's just one, simply go to the next node.
-					node = *node->out().begin();
-				} else {
-					// Otherwise, if there are multiple options, choose one randomly.
-					node = *std::next(node->out().begin(), rand() % out_count);
-				}
-			}
-		}
-
-		// Increase the random walk counter once we're done doing all the walks.
-		walkCount += walks;
-	}
-
 	void Function::computeSuccMergeSets() {
 		succMergeSets.clear();
 		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
@@ -573,7 +509,7 @@ namespace LL2W {
 		Passes::replaceGetelementptrValues(*this);
 		Passes::fillLocalValues(*this);
 		Passes::setupCalls(*this);
-		makeCFG();
+		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();
 		updateInstructionNodes();
@@ -596,7 +532,7 @@ namespace LL2W {
 			for (BasicBlockPtr &block: blocks)
 				block->extract();
 			extractVariables(true);
-			makeCFG();
+			Passes::makeCFG(*this);
 			resetRegisters();
 			resetLiveness();
 			computeLiveness();

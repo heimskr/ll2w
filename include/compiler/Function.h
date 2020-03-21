@@ -35,14 +35,8 @@ namespace LL2W {
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
 
-			/** The control-flow graph computed by makeCFG. */
-			CFG cfg;
-
 			/** A set of the numeric labels of all the function's basic blocks. */
 			std::unordered_set<int> bbLabels;
-
-			/** Maps basic blocks to their corresponding CFG nodes. */
-			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
 
 			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;
@@ -53,20 +47,8 @@ namespace LL2W {
 			/** Whether liveness analysis has been performed on the function's variables yet. */
 			bool livenessComputed = false;
 
-			/** The dominator tree computed from the control-flow graph. */
-			std::optional<DTree> dTree;
-
-			/** The dominator tree computed from the control-flow graph with J-edges included. */
-			std::optional<DJGraph> djGraph;
-
-			/** Maps nodes to their merge sets. */
-			Node::Map mergeSets;
-
 			/** Maps nodes to their successor merge sets. */
 			Node::Map succMergeSets;
-
-			/** The number of random walks that have been performed on the control flow graph. */
-			int walkCount = 0;
 
 			/** Maps offsets to stack location information. */
 			std::map<int, StackLocation> stack;
@@ -98,6 +80,24 @@ namespace LL2W {
 			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
 			 *  for the function's basic blocks. */
 			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
+
+			/** Maps basic blocks to their corresponding CFG nodes. */
+			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
+
+			/** The control-flow graph computed by makeCFG. */
+			CFG cfg;
+
+			/** The dominator tree computed from the control-flow graph. */
+			std::optional<DTree> dTree;
+
+			/** The dominator tree computed from the control-flow graph with J-edges included. */
+			std::optional<DJGraph> djGraph;
+
+			/** Maps nodes to their merge sets. */
+			Node::Map mergeSets;
+
+			/** The number of random walks that have been performed on the control flow graph. */
+			int walkCount = 0;
 
 			Function(Program &, const ASTNode &);
 
@@ -165,12 +165,6 @@ namespace LL2W {
 
 			/** Returns whether the function is variadic (i.e., whether it takes a variable number of arguments). */
 			bool isVariadic() const;
-
-			/** Forms the function's control-flow graph from the basic blocks. */
-			CFG & makeCFG();
-
-			/** Randomly walks through the CFG and counts executions of each basic block. */
-			void walkCFG(size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 
 			/** Computes the merge sets for all nodes in the CFG. */
 			void computeSuccMergeSets();
