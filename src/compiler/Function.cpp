@@ -24,6 +24,7 @@
 #include "parser/ASTNode.h"
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
+#include "pass/MergeAllBlocks.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
 
@@ -519,35 +520,6 @@ namespace LL2W {
 		return new_block;
 	}
 
-	void Function::mergeAllBlocks() {
-		bool any_changed;
-		bool changed;
-		do {
-			changed = false;
-			auto pre_end = blocks.end();
-			--pre_end;
-			// Iterate through all blocks except the final block.
-			for (auto iter = blocks.begin(); iter != pre_end; ++iter) {
-				BasicBlockPtr &block = *iter;
-
-				if (block->instructions.empty() || !CompilerUtil::isTerminator(block->instructions.back())) {
-					// Don't merge if multiple blocks jump to the next block. That would cause other blocks to jump to
-					// an earlier point than intended, which would cause incorrect behavior.
-					if ((*++iter)->preds.size() == 1) {
-						mergeBlocks(block, *iter);
-						any_changed = changed = true;
-						break;
-					} else --iter;
-				}
-			}
-		} while (changed);
-
-		if (any_changed) {
-			makeCFG();
-			reindexBlocks();
-		}
-	}
-
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (BasicBlockPtr &block: blocks) {
@@ -773,7 +745,7 @@ namespace LL2W {
 		replaceStoresAndLoads();
 		removeRedundantMoves();
 		removeUselessBranches();
-		mergeAllBlocks();
+		Passes::mergeAllBlocks(*this);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";

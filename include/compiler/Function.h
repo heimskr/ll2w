@@ -89,6 +89,18 @@ namespace LL2W {
 			/** The number of bytes reserved on the stack for variables and spills. */
 			int stackSize = 0;
 
+		public:
+			/** A pointer to an interned string containing the name of the function. */
+			const std::string *name;
+
+			/** A list of all basic blocks in the order they appear. */
+			std::list<std::shared_ptr<BasicBlock>> blocks;
+
+			/** A list of all instructions in the order they appear in the source code. */
+			std::list<std::shared_ptr<Instruction>> linearInstructions;
+
+			Function(Program &, const ASTNode &);
+
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();
 
@@ -149,10 +161,6 @@ namespace LL2W {
 			/** Merges each terminal-free basic block with the basic block following it. */
 			void mergeAllBlocks();
 
-			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
-			 *  is responsible for recreating the CFG and reindexing all blocks. */
-			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);
-
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
@@ -164,18 +172,6 @@ namespace LL2W {
 
 			/** Returns a given basic block's CFG node. */
 			Node & operator[](const BasicBlock &) const;
-
-		public:
-			/** A pointer to an interned string containing the name of the function. */
-			const std::string *name;
-
-			/** A list of all basic blocks in the order they appear. */
-			std::list<std::shared_ptr<BasicBlock>> blocks;
-
-			/** A list of all instructions in the order they appear in the source code. */
-			std::list<std::shared_ptr<Instruction>> linearInstructions;
-
-			Function(Program &, const ASTNode &);
 
 			/** Returns the number of arguments the function takes. */
 			int getArity() const;
@@ -242,6 +238,10 @@ namespace LL2W {
 
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
+
+			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
+			 *  is responsible for recreating the CFG and reindexing all blocks. */
+			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			std::shared_ptr<Variable> getVariable(int);
