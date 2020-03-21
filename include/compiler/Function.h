@@ -212,9 +212,6 @@ namespace LL2W {
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>);
 
-			/** Assigns registers using a linear scan algorithm. Returns the number of necessary spills. */
-			int linearScan();
-
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
 
