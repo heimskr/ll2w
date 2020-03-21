@@ -510,6 +510,9 @@ namespace LL2W {
 		Passes::replaceGetelementptrValues(*this);
 		Passes::fillLocalValues(*this);
 		Passes::setupCalls(*this);
+		for (BasicBlockPtr &block: blocks)
+			block->extract(true);
+		extractVariables();
 		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();
@@ -643,6 +646,11 @@ namespace LL2W {
 	}
 
 	void Function::setupCallValue(VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
+		if (constant->conversionSource) {
+			setupCallValue(new_var, instruction, constant->conversionSource);
+			return;
+		}
+
 		ValueType value_type = constant->value->valueType();
 		if (value_type == ValueType::Local) {
 			// If it's a variable, move it into the argument register.
@@ -678,8 +686,6 @@ namespace LL2W {
 					insertAfter(setsym, addi);
 				}
 			}
-		} else if (constant->conversionSource) {
-			setupCallValue(new_var, instruction, constant->conversionSource);
 		} else {
 			std::cout << "Not sure what to do with " << *constant << "\n";
 			insertBefore(instruction, std::make_shared<InvalidInstruction>());
