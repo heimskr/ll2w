@@ -32,6 +32,8 @@
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceStackrestore.h"
+#include "pass/ReplaceStacksave.h"
 #include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
@@ -499,6 +501,7 @@ namespace LL2W {
 			return;
 
 		extractBlocks();
+		Passes::replaceStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		Passes::splitBlocks(*this);
@@ -509,6 +512,7 @@ namespace LL2W {
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
 		Passes::fillLocalValues(*this);
+		Passes::replaceStackrestore(*this);
 		Passes::setupCalls(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
