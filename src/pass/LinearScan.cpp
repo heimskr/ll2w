@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/WhyInfo.h"
@@ -7,8 +9,8 @@
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
 #ifdef DEBUG_LINEAR_SCAN
-		std::cerr << "\e[2mScanning \e[0;1m" << *name << "\e[0;2m {\e[0m\n";
-		debugStack();
+		std::cerr << "\e[2mScanning \e[0;1m" << *function.name << "\e[0;2m {\e[0m\n";
+		function.debugStack();
 #endif
 
 		std::list<Interval> intervals = function.sortedIntervals();
@@ -112,9 +114,9 @@ namespace LL2W::Passes {
 		}
 #endif
 #ifdef DEBUG_STACK
-		if (!stack.empty()) {
-			std::cout << "Stack (" << stack.size() << "):\n";
-			for (const std::pair<const int, StackLocation> &pair: stack) {
+		if (!function.stack.empty()) {
+			std::cout << "Stack for \e[1m" << *function.name << "\e[0m (" << function.stack.size() << "):\n";
+			for (const std::pair<const int, StackLocation> &pair: function.stack) {
 				std::cout << "    " << pair.first << ": " << pair.second.getName()
 				          << " (" << pair.second.width << ")\n";
 			}
