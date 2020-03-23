@@ -4,7 +4,7 @@
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	template <typename T>
+	template <typename T = int>
 	struct IType: public WhyInstruction {
 		std::shared_ptr<Variable> rs, rd;
 		T imm;

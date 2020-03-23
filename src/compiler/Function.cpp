@@ -504,13 +504,13 @@ namespace LL2W {
 		extractBlocks();
 		Passes::fillLocalValues(*this);
 		Passes::replaceStacksave(*this);
-		Passes::replaceAlloca(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		Passes::loadArguments(*this);
+		Passes::replaceAlloca(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);

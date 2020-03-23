@@ -4,7 +4,7 @@
 #include "instruction/JType.h"
 
 namespace LL2W {
-	struct JumpInstruction: public JType<int> {
+	struct JumpInstruction: public JType<> {
 		using JType::JType;
 
 		std::string debugExtra() override;
