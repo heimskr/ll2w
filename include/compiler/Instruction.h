@@ -43,12 +43,6 @@ namespace LL2W {
 				return false;
 			}
 
-			/** Attempts to assign a variable's type. The subclass should check which of its fields matches the variable
-			 *  and assign the according type. Returns true if a type was assigned to the variable. */
-			virtual bool setVariableType(std::shared_ptr<Variable>) {
-				return false;
-			}
-
 			virtual bool maySpill() const { return true; }
 	};
 
