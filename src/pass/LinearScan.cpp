@@ -30,7 +30,7 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
-			function.addToStack(interval.variable);
+			function.addToStack(interval.variable, StackLocation::Purpose::Spill);
 			if (function.spill(interval.variable))
 				++spill_count;
 		};

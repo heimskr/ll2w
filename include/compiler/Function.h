@@ -53,9 +53,6 @@ namespace LL2W {
 			/** Maps variables to their stack locations. */
 			std::map<std::shared_ptr<Variable>, StackLocation *> variableLocations;
 
-			/** The number of bytes reserved on the stack for variables and spills. */
-			int stackSize = 0;
-
 		public:
 			Program *parent = nullptr;
 
@@ -99,6 +96,9 @@ namespace LL2W {
 			/** The number of random walks that have been performed on the control flow graph. */
 			int walkCount = 0;
 
+			/** The number of bytes reserved on the stack for variables and spills. */
+			int stackSize = 0;
+
 			Function(Program &, const ASTNode &);
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
@@ -119,6 +119,8 @@ namespace LL2W {
 
 			/** Produces a new variable with an as yet unused label. */
 			std::shared_ptr<Variable> newVariable(TypePtr = nullptr, std::shared_ptr<BasicBlock> = nullptr);
+
+			/** Tries to spill a variable. Returns true if any instructions were inserted. */
 			bool spill(std::shared_ptr<Variable>);
 
 			/** Returns a pointer to the instruction following a given instruction. */
@@ -189,7 +191,7 @@ namespace LL2W {
 			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
 
 			/** Assigns or looks up a stack location for a given variable. */
-			StackLocation & addToStack(std::shared_ptr<Variable>);
+			StackLocation & addToStack(std::shared_ptr<Variable>, StackLocation::Purpose, int width = -1);
 
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);

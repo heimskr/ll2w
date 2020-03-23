@@ -31,6 +31,7 @@
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
+#include "pass/ReplaceAlloca.h"
 #include "pass/ReplaceGetelementptrValues.h"
 #include "pass/ReplaceStackrestore.h"
 #include "pass/ReplaceStacksave.h"
@@ -501,7 +502,9 @@ namespace LL2W {
 			return;
 
 		extractBlocks();
+		Passes::fillLocalValues(*this);
 		Passes::replaceStacksave(*this);
+		Passes::replaceAlloca(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		Passes::splitBlocks(*this);
@@ -511,7 +514,6 @@ namespace LL2W {
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
-		Passes::fillLocalValues(*this);
 		Passes::replaceStackrestore(*this);
 		Passes::setupCalls(*this);
 		for (BasicBlockPtr &block: blocks)
@@ -547,6 +549,7 @@ namespace LL2W {
 			spilled = Passes::linearScan(*this);
 		}
 
+		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
@@ -696,13 +699,15 @@ namespace LL2W {
 		}
 	}
 
-	StackLocation & Function::addToStack(VariablePtr variable) {
+	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
 		if (variableLocations.count(variable) == 1)
 			return *variableLocations.at(variable);
 
-		const int to_add = variable && variable->type? variable->type->width() / 8 : 8;
-		StackLocation &added = stack.emplace(stackSize, StackLocation(this, variable, stackSize, to_add)).first->second;
-		stackSize += to_add;
+		if (width == -1)
+			width = variable && variable->type? variable->type->width() / 8 : 8;
+
+		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
+		stackSize += width;
 		variableLocations.emplace(variable, &added);
 		return added;
 	}
