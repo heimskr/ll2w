@@ -33,6 +33,7 @@
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceAlloca.h"
 #include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceObjectsize.h"
 #include "pass/ReplaceStackrestore.h"
 #include "pass/ReplaceStacksave.h"
 #include "pass/ReplaceStoresAndLoads.h"
@@ -511,6 +512,7 @@ namespace LL2W {
 			block->extract(true);
 		Passes::loadArguments(*this);
 		Passes::replaceAlloca(*this);
+		Passes::replaceObjectsize(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
