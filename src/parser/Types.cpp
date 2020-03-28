@@ -238,6 +238,11 @@ namespace LL2W {
 		throw std::runtime_error("StructType::operator== is unimplemented.");
 	}
 
+	bool GlobalTemporaryType::operator==(const Type &other) const {
+		return this == &other || (other.typeType() == TypeType::GlobalTemporary &&
+		                          dynamic_cast<const GlobalTemporaryType &>(other).globalName == globalName);
+	}
+
 	TypePtr getType(const ASTNode *node) {
 		switch (node->symbol) {
 			case FUNCTIONTYPE:  return std::make_shared<FunctionType>(node);
