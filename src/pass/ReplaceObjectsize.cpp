@@ -53,8 +53,8 @@ namespace LL2W::Passes {
 				out = local->variable->type->width();
 			}
 
-			// function.insertBefore(instruction, std::make_shared<SetInstruction>(call->variable, out));
-			// to_remove.push_back(instruction);
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(call->variable, out));
+			to_remove.push_back(instruction);
 		}
 
 		for (InstructionPtr &instruction: to_remove)
