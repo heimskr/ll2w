@@ -14,10 +14,6 @@ namespace LL2W {
 		return typeType() == TypeType::Int;
 	}
 
-	bool Type::isBool() const {
-		return typeType() == TypeType::Bool;
-	}
-
 	IntType::operator std::string() {
 		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}
