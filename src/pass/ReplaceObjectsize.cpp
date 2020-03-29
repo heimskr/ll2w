@@ -18,7 +18,7 @@ namespace LL2W::Passes {
 				continue;
 			
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
-			if (call->name->valueType() != ValueType::Global)
+			if (!call->name->isGlobal())
 				continue;
 			
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(call->name.get());

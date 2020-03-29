@@ -27,6 +27,8 @@ namespace LL2W {
 			virtual int width() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
+			bool isInt() const;
+			bool isBool() const;
 	};
 
 	struct VoidType: public Type {

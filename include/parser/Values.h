@@ -29,6 +29,12 @@ namespace LL2W {
 		virtual ~Value() {}
 		virtual ValueType valueType() const = 0;
 		virtual ValuePtr copy() const = 0;
+		bool isInt() const;
+		bool isBool() const;
+		bool isNull() const;
+		bool isLocal() const;
+		bool isGlobal() const;
+		bool isGetelementptr() const;
 	};
 
 	struct DoubleValue: public Value {

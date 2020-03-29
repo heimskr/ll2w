@@ -102,7 +102,7 @@ namespace LL2W {
 		std::vector<std::shared_ptr<LocalValue>> out;
 		out.reserve(values.size());
 		for (ValuePtr value: values) {
-			if (value && value->valueType() == ValueType::Local)
+			if (value && value->isLocal())
 				out.push_back(std::dynamic_pointer_cast<LocalValue>(value));
 		}
 		return out;
@@ -855,7 +855,7 @@ namespace LL2W {
 		for (ASTNode *node: *pairs_) {
 			ValuePtr value = getValue(node->at(0));
 			pairs.push_back({value, node->at(1)->extracted()});
-			if (value->valueType() != ValueType::Local)
+			if (!value->isLocal())
 				pure = false;
 		}
 

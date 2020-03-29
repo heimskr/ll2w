@@ -11,6 +11,30 @@
 #include "parser/Constant.h"
 
 namespace LL2W {
+	bool Value::isInt() const {
+		return valueType() == ValueType::Int;
+	}
+
+	bool Value::isBool() const {
+		return valueType() == ValueType::Bool;
+	}
+
+	bool Value::isNull() const {
+		return valueType() == ValueType::Null;
+	}
+
+	bool Value::isLocal() const {
+		return valueType() == ValueType::Local;
+	}
+
+	bool Value::isGlobal() const {
+		return valueType() == ValueType::Global;
+	}
+
+	bool Value::isGetelementptr() const {
+		return valueType() == ValueType::Getelementptr;
+	}
+
 	VectorValue::VectorValue(const ASTNode *node) {
 		for (auto iter = node->cbegin(); iter != node->cend(); ++iter)
 			values.push_back({getType((*iter)->at(0)), getValue((*iter)->at(1))});

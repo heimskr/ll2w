@@ -10,6 +10,14 @@
 #include "parser/StructNode.h"
 
 namespace LL2W {
+	bool Type::isInt() const {
+		return typeType() == TypeType::Int;
+	}
+
+	bool Type::isBool() const {
+		return typeType() == TypeType::Bool;
+	}
+
 	IntType::operator std::string() {
 		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}

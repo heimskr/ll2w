@@ -15,7 +15,7 @@ namespace LL2W::Passes {
 			if (!llvm || llvm->node->nodeType() != NodeType::Call)
 				continue;
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
-			if (call->name->valueType() != ValueType::Global)
+			if (!call->name->isGlobal())
 				continue;
 			if (*dynamic_cast<GlobalValue *>(call->name.get())->name == "llvm.stacksave") {
 				auto move = std::make_shared<MoveInstruction>(

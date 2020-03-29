@@ -26,14 +26,14 @@ namespace LL2W::Passes {
 			BasicBlockPtr phi_definer = target->onlyDefiner();
 
 			for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
-				const std::shared_ptr<LocalValue> local = pair.first->valueType() == ValueType::Local?
+				const std::shared_ptr<LocalValue> local = pair.first->isLocal()?
 					std::dynamic_pointer_cast<LocalValue>(pair.first) : nullptr;
 				if (!local) {
 					// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
 					// instructions in the penultimate slots of the predicate labels for which the phi function
 					// parameters specify a constant.
-					if (pair.first->valueType() == ValueType::Bool) {
+					if (pair.first->isBool()) {
 						const std::shared_ptr<BoolValue> boolval = std::dynamic_pointer_cast<BoolValue>(pair.first);
 						BasicBlockPtr block = function.bbMap.at(pair.second);
 
