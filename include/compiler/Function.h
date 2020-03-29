@@ -184,12 +184,6 @@ namespace LL2W {
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
 
-			/** Pushes a value to the stack before a call instruction. */
-			void pushCallValue(std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
-
-			/** Inserts a value into a precolored variable before a call instruction. */
-			void setupCallValue(std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
-
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(std::shared_ptr<Variable>, StackLocation::Purpose, int width = -1);
 

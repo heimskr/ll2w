@@ -5,19 +5,10 @@
 #include <unistd.h>
 
 #include "compiler/Function.h"
-#include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
-#include "instruction/AddIInstruction.h"
-#include "instruction/InvalidInstruction.h"
-#include "instruction/JumpSymbolInstruction.h"
-#include "instruction/LoadRInstruction.h"
-#include "instruction/MoveInstruction.h"
-#include "instruction/SetInstruction.h"
-#include "instruction/SetSymbolInstruction.h"
 #include "instruction/StackLoadInstruction.h"
-#include "instruction/StackPushInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "options.h"
 #include "parser/ASTNode.h"
@@ -604,100 +595,6 @@ namespace LL2W {
 				if (interval.variable->id < max)
 					interval.setRegister(++reg);
 			}
-		}
-	}
-
-	void Function::pushCallValue(InstructionPtr instruction, ConstantPtr constant) {
-		ValueType value_type = constant->value->valueType();
-		if (value_type == ValueType::Local) {
-			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			insertBefore(instruction, std::make_shared<StackPushInstruction>(local->variable));
-		} else if (value_type == ValueType::Int) {
-			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
-			VariablePtr new_var = newVariable(constant->type);
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
-			insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
-		} else if (value_type == ValueType::Bool) {
-			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
-			VariablePtr new_var = newVariable(constant->type);
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-			insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
-		} else if (value_type == ValueType::Null) {
-			VariablePtr new_var = newVariable(constant->type);
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
-			insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
-		} else if (value_type == ValueType::Getelementptr) {
-			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
-			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
-			if (!gep_global) {
-				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				insertBefore(instruction, std::make_shared<InvalidInstruction>());
-			} else {
-				std::list<int> indices;
-				for (const std::pair<int, long> &decimal_pair: gep->decimals)
-					indices.push_back(decimal_pair.second);
-				int  offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
-				VariablePtr new_var = newVariable(constant->type);
-				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-				insertBefore(instruction, setsym);
-				if (offset != 0) {
-					auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
-					insertAfter(setsym, addi);
-				}
-				insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
-			}
-		} else if (constant->conversionSource) {
-			pushCallValue(instruction, constant->conversionSource);
-		} else {
-			std::cout << "Not sure what to do with " << *constant << "\n";
-			insertBefore(instruction, std::make_shared<InvalidInstruction>());
-		}
-	}
-
-	void Function::setupCallValue(VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
-		if (constant->conversionSource) {
-			setupCallValue(new_var, instruction, constant->conversionSource);
-			return;
-		}
-
-		ValueType value_type = constant->value->valueType();
-		if (value_type == ValueType::Local) {
-			// If it's a variable, move it into the argument register.
-			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			insertBefore(instruction, std::make_shared<MoveInstruction>(local->variable, new_var));
-		} else if (value_type == ValueType::Int) {
-			// If it's an integer constant, set the argument register to it.
-			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
-		} else if (value_type == ValueType::Bool) {
-			// If it's a boolean constant, convert it to an integer and do the same.
-			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-		} else if (value_type == ValueType::Null) {
-			// If it's a null constant, just use zero.
-			insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
-		} else if (value_type == ValueType::Getelementptr) {
-			// If it's a getelementptr expression, things are a little more difficult.
-			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
-			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
-			if (!gep_global) {
-				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				insertBefore(instruction, std::make_shared<InvalidInstruction>());
-			} else {
-				std::list<int> indices;
-				for (const std::pair<int, long> &decimal_pair: gep->decimals)
-					indices.push_back(decimal_pair.second);
-				int  offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
-				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
-				insertBefore(instruction, setsym);
-				if (offset != 0) {
-					auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
-					insertAfter(setsym, addi);
-				}
-			}
-		} else {
-			std::cout << "Not sure what to do with " << *constant << "\n";
-			insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}
 
