@@ -6,6 +6,9 @@
 
 namespace LL2W {
 	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary};
+	enum class ValueType {
+		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
+		Undef};
 
 	enum class Linkage {
 		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
@@ -40,6 +43,8 @@ namespace LL2W {
 		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
 		Addrspacecast};
 
+	extern std::unordered_map<TypeType,   std::string> type_map;
+	extern std::unordered_map<ValueType,  std::string> value_map;
 	extern std::unordered_map<Linkage,    std::string> linkage_map;
 	extern std::unordered_map<CConv,      std::string> cconv_map;
 	extern std::unordered_map<RetAttr,    std::string> retattr_map;

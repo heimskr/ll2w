@@ -1,6 +1,19 @@
 #include "parser/Enums.h"
 
 namespace LL2W {
+	std::unordered_map<TypeType, std::string> type_map {
+		{TypeType::None,    "None"},    {TypeType::Void,     "Void"},     {TypeType::Int,    "Int"},
+		{TypeType::Array,   "Array"},   {TypeType::Vector,   "Vector"},   {TypeType::Float,  "Float"},
+		{TypeType::Pointer, "Pointer"}, {TypeType::Function, "Function"}, {TypeType::Struct, "Struct"},
+		{TypeType::GlobalTemporary, "GlobalTemporary"}};
+
+	std::unordered_map<ValueType, std::string> value_map {
+		{ValueType::Double, "Double"}, {ValueType::Int,             "Int"},           {ValueType::Null,    "Null"},
+		{ValueType::Vector, "Vector"}, {ValueType::Bool,            "Bool"},          {ValueType::Local,   "Local"},
+		{ValueType::Global, "Global"}, {ValueType::Getelementptr,   "Getelementptr"}, {ValueType::Void,    "Void"},
+		{ValueType::Struct, "Struct"}, {ValueType::Array,           "Array"},         {ValueType::CString, "CString"},
+		{ValueType::Undef,  "Undef"},  {ValueType::Zeroinitializer, "Zeroinitializer"}};
+
 	std::unordered_map<Linkage, std::string> linkage_map {
 		{Linkage::Private,     "private"},      {Linkage::Appending,  "appending"},   {Linkage::Weak,    "weak"},
 		{Linkage::Linkonce,    "linkonce"},     {Linkage::ExternWeak, "extern_weak"}, {Linkage::WeakOdr, "weak_odr"},

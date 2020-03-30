@@ -8,10 +8,13 @@
 #include "instruction/ModIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "instruction/StoreIInstruction.h"
 #include "instruction/StoreRInstruction.h"
+#include "instruction/StoreSymbolInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
+#include "parser/Enums.h"
 #include "pass/ReplaceMemory.h"
 
 namespace LL2W::Passes {
@@ -54,8 +57,9 @@ namespace LL2W::Passes {
 		std::cout << "  Constant: " << *store->constant << "\n";
 
 		LocalValue *local = dynamic_cast<LocalValue *>(store->constant->value.get());
-		if (!local)
-			throw std::runtime_error("Expected a LocalValue in the constant of a store instruction");
+		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(store->constant->value.get());
+		if (!local && !global)
+			throw std::runtime_error("Expected a LocalValue or GlobalValue in the constant of a store instruction");
 		
 		PointerType *constant_ptr = dynamic_cast<PointerType *>(store->constant->type.get());
 		if (!constant_ptr)
@@ -72,17 +76,39 @@ namespace LL2W::Passes {
 		}
 
 		const ValueType value_type = store->value->valueType();
-		if (value_type == ValueType::Int) {
-			IntValue *int_value = dynamic_cast<IntValue *>(store->value.get());
-			auto store = std::make_shared<StoreIInstruction>(local->variable, int_value->value, size);
-			function.insertBefore(instruction, store);
+		if (value_type == ValueType::Int || value_type == ValueType::Null) {
+			int int_value = 0;
+			if (value_type == ValueType::Int)
+				int_value = dynamic_cast<IntValue *>(store->value.get())->value;
+			if (local) {
+				// imm -> %var
+				auto store = std::make_shared<StoreIInstruction>(local->variable, int_value, size);
+				function.insertBefore(instruction, store);
+				store->extract();
+			} else {
+				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				// imm -> $m0
+				auto set = std::make_shared<SetInstruction>(m0, int_value);
+				// $m0 -> [global]
+				auto store = std::make_shared<StoreSymbolInstruction>(m0, *global->name);
+				function.insertBefore(instruction, set);
+				function.insertBefore(instruction, store);
+				set->extract();
+				store->extract();
+			}
 		} else if (value_type == ValueType::Local) {
 			LocalValue *source = dynamic_cast<LocalValue *>(store->value.get());
-			auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
-		} else {
-			throw std::runtime_error("Unexpected ValueType in store instruction: "
-				+ std::to_string(static_cast<int>(value_type)));
-		}
-
+			if (local) {
+				// %src -> [%dest]
+				auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
+				function.insertBefore(instruction, store);
+				store->extract();
+			} else {
+				// %src -> [global]
+				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name);
+				function.insertBefore(instruction, store);
+				store->extract();
+			}
+		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
 	}
 }

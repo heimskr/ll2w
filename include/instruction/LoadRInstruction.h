@@ -4,6 +4,9 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
+	/**
+	 * [$rs] -> $rd
+	 */
 	struct LoadRInstruction: public RType {
 		/** The size of the load in bytes. */
 		int size;

@@ -4,6 +4,9 @@
 #include "instruction/IType.h"
 
 namespace LL2W {
+	/**
+	 * [imm] -> $rd
+	 */
 	struct LoadIInstruction: public IType<int> {
 		/** The size of the load in bytes. */
 		int size;

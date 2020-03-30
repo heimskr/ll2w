@@ -8,17 +8,13 @@
 #include <vector>
 
 #include "ASTNode.h"
+#include "Enums.h"
 
 namespace LL2W {
 	class ASTNode;
 	class Type;
 	struct Constant;
 	class Variable;
-
-	enum class ValueType {
-		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
-		Undef
-	};
 
 	struct Value;
 	using ValuePtr = std::shared_ptr<Value>;

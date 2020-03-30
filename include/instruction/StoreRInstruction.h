@@ -4,6 +4,9 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
+	/**
+	 * $rs -> [$rd]
+	 */
 	struct StoreRInstruction: public RType {
 		/** The size of the store in bytes. */
 		int size;
