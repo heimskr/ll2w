@@ -3,6 +3,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "compiler/Program.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/ModIInstruction.h"
@@ -29,11 +30,11 @@ namespace LL2W::Passes {
 			
 			if (llvm->node->nodeType() == NodeType::Load)
 				replaceLoad(function, instruction, *llvm);
-			else if (llvm->node->nodeType() == NodeType::Store)
+			else if (llvm->node->nodeType() == NodeType::Store) {
+				to_remove.push_back(instruction);
 				replaceStore(function, instruction, *llvm);
-			else continue;
+			} else continue;
 
-			to_remove.push_back(instruction);
 			++replaced_count;
 		}
 
@@ -51,10 +52,6 @@ namespace LL2W::Passes {
 
 	void replaceStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		StoreNode *store = dynamic_cast<StoreNode *>(llvm.node);
-
-		std::cout << "S: " << store->debugExtra() << "\n";
-		std::cout << "  Value: " << *store->value << "\n";
-		std::cout << "  Constant: " << *store->constant << "\n";
 
 		LocalValue *local = dynamic_cast<LocalValue *>(store->constant->value.get());
 		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(store->constant->value.get());
@@ -90,7 +87,8 @@ namespace LL2W::Passes {
 				// imm -> $m0
 				auto set = std::make_shared<SetInstruction>(m0, int_value);
 				// $m0 -> [global]
-				auto store = std::make_shared<StoreSymbolInstruction>(m0, *global->name);
+				auto store = std::make_shared<StoreSymbolInstruction>(m0, *global->name,
+					function.parent->symbolSize("@" + *global->name) / 8);
 				function.insertBefore(instruction, set);
 				function.insertBefore(instruction, store);
 				set->extract();
@@ -105,7 +103,8 @@ namespace LL2W::Passes {
 				store->extract();
 			} else {
 				// %src -> [global]
-				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name);
+				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name,
+					function.parent->symbolSize("@" + *global->name) / 8);
 				function.insertBefore(instruction, store);
 				store->extract();
 			}

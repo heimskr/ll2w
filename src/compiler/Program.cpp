@@ -44,6 +44,11 @@ namespace LL2W {
 			pair.second.compile();
 	}
 
+	int Program::symbolSize(const std::string &name) const {
+		GlobalVarDef *def = globals.at(name);
+		return def->type->width();
+	}
+
 	void Program::debug() {
 		for (std::pair<const std::string, Function> &pair: functions)
 			pair.second.debug();
