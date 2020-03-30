@@ -190,6 +190,9 @@ namespace LL2W {
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
 
+			/** Replaces the first instruction with the second. Not safe to call while iterating. */
+			void replace(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>);
+
 			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
 			 *  is responsible for recreating the CFG and reindexing all blocks. */
 			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);

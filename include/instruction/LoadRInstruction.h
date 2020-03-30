@@ -8,8 +8,7 @@ namespace LL2W {
 		/** The size of the load in bytes. */
 		int size;
 
-		LoadRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, std::shared_ptr<Variable> rd_,
-			int size_ = 8, int index_ = -1);
+		LoadRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rd_, int size_ = 8, int index_ = -1);
 
 		std::string debugExtra() override;
 	};

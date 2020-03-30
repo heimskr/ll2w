@@ -1,12 +1,12 @@
 #include "compiler/Variable.h"
-#include "instruction/LoadIInstruction.h"
+#include "instruction/StoreIInstruction.h"
 
 namespace LL2W {
-	LoadIInstruction::LoadIInstruction(int imm_, std::shared_ptr<Variable> rd_, int size_, int index_):
+	StoreIInstruction::StoreIInstruction(std::shared_ptr<Variable> rd_, int imm_, int size_, int index_):
 		IType(nullptr, imm_, rd_, index_), size(size_) {}
 
-	std::string LoadIInstruction::debugExtra() {
-		const std::string base = "\e[2m[\e[0;91m" + std::to_string(imm) + "\e[0;2m] ->\e[0m " + std::string(*rd);
+	std::string StoreIInstruction::debugExtra() {
+		const std::string base = std::string(*rd) + " \e[2m-> [\e[22;91m" + std::to_string(imm) + "\e[39;2m]\e[22m";
 		switch (size) {
 			case 8:  return base;
 			case 4:  return base + " /h";

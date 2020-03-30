@@ -24,6 +24,7 @@
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceAlloca.h"
 #include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceMemory.h"
 #include "pass/ReplaceObjectsize.h"
 #include "pass/ReplaceStackrestore.h"
 #include "pass/ReplaceStacksave.h"
@@ -512,6 +513,7 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
+		Passes::replaceMemory(*this);
 		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();
@@ -626,6 +628,11 @@ namespace LL2W {
 			pair.second->removeUse(instruction);
 			pair.second->removeDefinition(instruction);
 		}
+	}
+
+	void Function::replace(InstructionPtr to_replace, InstructionPtr substitute) {
+		insertBefore(to_replace, substitute);
+		remove(substitute);
 	}
 
 	VariablePtr Function::getVariable(int label) {
