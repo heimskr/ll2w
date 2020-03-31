@@ -4,6 +4,7 @@
 #include <memory>
 
 namespace LL2W {
+	struct Constant;
 	class Function;
 	class Instruction;
 	class LLVMInstruction;
@@ -18,6 +19,8 @@ namespace LL2W::Passes {
 
 	/** Replaces a store instruction with a Why instruction. */
 	void replaceStore(Function &, std::shared_ptr<Instruction> &, LLVMInstruction &);
+
+	int getLoadStoreSize(std::shared_ptr<Constant> &);
 }
 
 #endif

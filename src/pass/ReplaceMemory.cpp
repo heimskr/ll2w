@@ -6,6 +6,8 @@
 #include "compiler/Program.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/AddIInstruction.h"
+#include "instruction/LoadRInstruction.h"
+#include "instruction/LoadSymbolInstruction.h"
 #include "instruction/ModIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
@@ -31,10 +33,10 @@ namespace LL2W::Passes {
 			if (llvm->node->nodeType() == NodeType::Load)
 				replaceLoad(function, instruction, *llvm);
 			else if (llvm->node->nodeType() == NodeType::Store) {
-				to_remove.push_back(instruction);
 				replaceStore(function, instruction, *llvm);
 			} else continue;
 
+			to_remove.push_back(instruction);
 			++replaced_count;
 		}
 
@@ -45,45 +47,51 @@ namespace LL2W::Passes {
 	}
 
 	void replaceLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
-		LoadNode *load = dynamic_cast<LoadNode *>(llvm.node);
-		std::cout << "L: " << load->debugExtra() << "\n";
-		std::cout << "  Constant: " << *load->constant << "\n";
+		LoadNode *node = dynamic_cast<LoadNode *>(llvm.node);
+		const int size = getLoadStoreSize(node->constant);
+		const ValueType value_type = node->constant->value->valueType();
+
+		if (value_type == ValueType::Local) {
+			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
+			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
+			function.insertBefore(instruction, load);
+		} else if (value_type == ValueType::Global) {
+			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
+			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
+			function.insertBefore(instruction, load);
+		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
 
 	void replaceStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
-		StoreNode *store = dynamic_cast<StoreNode *>(llvm.node);
+		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
 
-		LocalValue *local = dynamic_cast<LocalValue *>(store->constant->value.get());
-		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(store->constant->value.get());
+		LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
+		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(node->constant->value.get());
 		if (!local && !global)
 			throw std::runtime_error("Expected a LocalValue or GlobalValue in the constant of a store instruction");
-		
-		PointerType *constant_ptr = dynamic_cast<PointerType *>(store->constant->type.get());
-		if (!constant_ptr)
-			throw std::runtime_error("Expected a PointerType in the constant of a store instruction");
 
-		int size;
-		if (IntType *constant_int = dynamic_cast<IntType *>(constant_ptr->subtype.get())) {
-			size = constant_int->width() / 8;
-		} else if (PointerType *subpointer = dynamic_cast<PointerType *>(constant_ptr->subtype.get())) {
-			size = WhyInfo::pointerWidth;
-		} else {
-			throw std::runtime_error("Unexpected pointer subtype in store instruction: "
-				+ std::string(*constant_ptr->subtype));
-		}
+		const int size = getLoadStoreSize(node->constant);
+		const ValueType value_type = node->value->valueType();
 
-		const ValueType value_type = store->value->valueType();
 		if (value_type == ValueType::Int || value_type == ValueType::Null) {
 			int int_value = 0;
 			if (value_type == ValueType::Int)
-				int_value = dynamic_cast<IntValue *>(store->value.get())->value;
+				int_value = dynamic_cast<IntValue *>(node->value.get())->value;
 			if (local) {
-				// imm -> %var
-				auto store = std::make_shared<StoreIInstruction>(local->variable, int_value, size);
+				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				// Because there's no single instruction of the form imm -> [$reg], we have to use a set+store pair.
+				// imm -> $m0
+				auto set = std::make_shared<SetInstruction>(m0, int_value);
+				// $m0 -> [%var]
+				auto store = std::make_shared<StoreRInstruction>(m0, local->variable, size);
+				function.insertBefore(instruction, set);
 				function.insertBefore(instruction, store);
+				set->extract();
 				store->extract();
 			} else {
 				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				// In this case, it would be impossible for there to be a single instruction for what we're trying to do
+				// because there are two immediate values. As such, we use two instructions by necessity.
 				// imm -> $m0
 				auto set = std::make_shared<SetInstruction>(m0, int_value);
 				// $m0 -> [global]
@@ -95,7 +103,7 @@ namespace LL2W::Passes {
 				store->extract();
 			}
 		} else if (value_type == ValueType::Local) {
-			LocalValue *source = dynamic_cast<LocalValue *>(store->value.get());
+			LocalValue *source = dynamic_cast<LocalValue *>(node->value.get());
 			if (local) {
 				// %src -> [%dest]
 				auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
@@ -109,5 +117,20 @@ namespace LL2W::Passes {
 				store->extract();
 			}
 		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
+	}
+
+	int getLoadStoreSize(ConstantPtr &constant) {
+		PointerType *constant_ptr = dynamic_cast<PointerType *>(constant->type.get());
+		if (!constant_ptr)
+			throw std::runtime_error("Expected a PointerType in the constant of a load/store instruction");
+
+		if (IntType *constant_int = dynamic_cast<IntType *>(constant_ptr->subtype.get())) {
+			return constant_int->width() / 8;
+		} else if (PointerType *subpointer = dynamic_cast<PointerType *>(constant_ptr->subtype.get())) {
+			return WhyInfo::pointerWidth;
+		} else {
+			throw std::runtime_error("Unexpected pointer subtype in load/store instruction: "
+				+ std::string(*constant_ptr->subtype));
+		}
 	}
 }
