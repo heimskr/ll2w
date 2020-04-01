@@ -23,6 +23,7 @@
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceAlloca.h"
+#include "pass/ReplaceBranches.h"
 #include "pass/ReplaceGetelementptrValues.h"
 #include "pass/ReplaceIcmp.h"
 #include "pass/ReplaceMemory.h"
@@ -453,6 +454,10 @@ namespace LL2W {
 		return argumentsNode? argumentsNode->ellipsis : false;
 	}
 
+	std::string Function::transformLabel(const std::string &str) const {
+		return "__" + name->substr(1) + "_label" + (str.front() == '%'? str.substr(1) : str);
+	}
+
 	void Function::computeSuccMergeSets() {
 		succMergeSets.clear();
 		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
@@ -551,6 +556,7 @@ namespace LL2W {
 		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
+		Passes::replaceBranches(*this);
 		Passes::mergeAllBlocks(*this);
 
 #ifdef DEBUG_SPILL

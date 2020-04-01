@@ -168,6 +168,9 @@ namespace LL2W {
 			/** Returns whether the function is variadic (i.e., whether it takes a variable number of arguments). */
 			bool isVariadic() const;
 
+			/** Transforms a string like "%64" into "__functionname_label64". */
+			std::string transformLabel(const std::string &) const;
+
 			/** Computes the merge sets for all nodes in the CFG. */
 			void computeSuccMergeSets();
 
