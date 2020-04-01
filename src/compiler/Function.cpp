@@ -506,10 +506,10 @@ namespace LL2W {
 		Passes::loadArguments(*this);
 		Passes::replaceAlloca(*this);
 		Passes::replaceObjectsize(*this);
+		Passes::replaceGetelementptrValues(*this);
 		Passes::replaceIcmp(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
-		Passes::replaceGetelementptrValues(*this);
 		Passes::replaceStackrestore(*this);
 		Passes::setupCalls(*this);
 		for (BasicBlockPtr &block: blocks)

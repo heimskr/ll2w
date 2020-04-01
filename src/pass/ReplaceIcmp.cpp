@@ -20,8 +20,8 @@ namespace LL2W::Passes {
 			to_remove.push_back(instruction);
 		}
 
-		// for (InstructionPtr &instruction: to_remove)
-		// 	function.remove(instruction);
+		for (InstructionPtr &instruction: to_remove)
+			function.remove(instruction);
 
 		return to_remove.size();
 	}
@@ -40,10 +40,7 @@ namespace LL2W::Passes {
 				// things simple by just swapping the two values and flipping the comparison operator.
 				std::swap(value1, value2);
 				cond = cond_rev_map.at(cond);
-			} else {
-				std::cerr << instruction->debugExtra() << "\n";
-				throw std::runtime_error("First value of icmp instruction expected to be a pvar");
-			}
+			} else throw std::runtime_error("First value of icmp instruction expected to be a pvar");
 		}
 
 		VariablePtr rs = dynamic_cast<LocalValue *>(value1.get())->variable;
@@ -64,10 +61,7 @@ namespace LL2W::Passes {
 				imm = dynamic_cast<IntValue *>(value2.get())->value;
 			} else if (type2 == ValueType::Null) {
 				imm = 0;
-			} else {
-				std::cerr << instruction->debugExtra() << "\n";
-				throw std::runtime_error("Unsupported value type in icmp instruction: " + value_map.at(type2));
-			}
+			} else throw std::runtime_error("Unsupported value type in icmp instruction: " + value_map.at(type2));
 
 			if (cond == IcmpCond::Ne) {
 				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, IcmpCond::Eq));
