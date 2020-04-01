@@ -24,6 +24,7 @@
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceAlloca.h"
 #include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceIcmp.h"
 #include "pass/ReplaceMemory.h"
 #include "pass/ReplaceObjectsize.h"
 #include "pass/ReplaceStackrestore.h"
@@ -505,6 +506,7 @@ namespace LL2W {
 		Passes::loadArguments(*this);
 		Passes::replaceAlloca(*this);
 		Passes::replaceObjectsize(*this);
+		Passes::replaceIcmp(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::replaceGetelementptrValues(*this);
