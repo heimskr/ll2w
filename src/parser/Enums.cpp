@@ -85,6 +85,17 @@ namespace LL2W {
 		{IcmpCond::Ult, "ult"}, {IcmpCond::Ule, "ule"}, {IcmpCond::Sgt, "sgt"}, {IcmpCond::Sge, "sge"},
 		{IcmpCond::Slt, "slt"}, {IcmpCond::Sle, "sle"}};
 
+	std::unordered_map<IcmpCond, std::string> cond_op_map {
+		{IcmpCond::Eq,  "=="}, {IcmpCond::Ne,  "!="},
+		{IcmpCond::Ugt, ">"},  {IcmpCond::Uge, ">="}, {IcmpCond::Ult, "<"}, {IcmpCond::Ule, "<="},
+		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="}};
+
+	std::unordered_map<IcmpCond, IcmpCond> cond_rev_map {
+		{IcmpCond::Eq, IcmpCond::Eq}, {IcmpCond::Ne, IcmpCond::Ne}, {IcmpCond::Ugt, IcmpCond::Ult},
+		{IcmpCond::Uge, IcmpCond::Ule}, {IcmpCond::Ult, IcmpCond::Ugt}, {IcmpCond::Ule, IcmpCond::Uge},
+		{IcmpCond::Sgt, IcmpCond::Slt}, {IcmpCond::Sge, IcmpCond::Sle}, {IcmpCond::Slt, IcmpCond::Sgt},
+		{IcmpCond::Sle, IcmpCond::Sge}};
+
 	std::unordered_map<Conversion, std::string> conversion_map {
 		{Conversion::None,    "none"},    {Conversion::Trunc,    "trunc"},    {Conversion::Zext,     "zext"},
 		{Conversion::Sext,    "sext"},    {Conversion::Fptrunc,  "fptrunc"},  {Conversion::Fpext,    "fpext"},

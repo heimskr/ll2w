@@ -53,6 +53,8 @@ namespace LL2W {
 	extern std::unordered_map<Fastmath,   std::string> fastmath_map;
 	extern std::unordered_map<Ordering,   std::string> ordering_map;
 	extern std::unordered_map<IcmpCond,   std::string> cond_map;
+	extern std::unordered_map<IcmpCond,   std::string> cond_op_map;
+	extern std::unordered_map<IcmpCond,   IcmpCond>    cond_rev_map;
 	extern std::unordered_map<Conversion, std::string> conversion_map;
 }
 

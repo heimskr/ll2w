@@ -5,13 +5,14 @@
 
 namespace LL2W {
 	struct RType: public WhyInstruction {
-		std::shared_ptr<Variable> rs, rt, rd;
+		using VariablePtr = std::shared_ptr<Variable>;
 
-		RType(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, std::shared_ptr<Variable> rd_,
-			int index_ = -1);
+		VariablePtr rs, rt, rd;
+
+		RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_ = -1);
 
 		ExtractionResult extract(bool force = false) override;
-		bool replaceRead(std::shared_ptr<Variable>, std::shared_ptr<Variable>) override;
+		bool replaceRead(VariablePtr, VariablePtr) override;
 	};
 }
 
