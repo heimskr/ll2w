@@ -16,6 +16,7 @@
 #include "parser/FunctionHeader.h"
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
+#include "pass/InsertLabels.h"
 #include "pass/LinearScan.h"
 #include "pass/LoadArguments.h"
 #include "pass/MakeCFG.h"
@@ -556,8 +557,9 @@ namespace LL2W {
 		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
-		Passes::replaceBranches(*this);
 		Passes::mergeAllBlocks(*this);
+		Passes::replaceBranches(*this);
+		Passes::insertLabels(*this);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
