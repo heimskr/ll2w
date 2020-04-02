@@ -2,6 +2,8 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "instruction/JumpInstruction.h"
+#include "instruction/JumpConditionalInstruction.h"
+#include "instruction/JumpSymbolConditionalInstruction.h"
 #include "instruction/JumpSymbolInstruction.h"
 #include "pass/ReplaceBranches.h"
 
@@ -21,7 +23,7 @@ namespace LL2W::Passes {
 			else
 				continue;
 
-			// to_remove.push_back(instruction);
+			to_remove.push_back(instruction);
 		}
 
 		for (InstructionPtr &instruction: to_remove)
@@ -31,10 +33,16 @@ namespace LL2W::Passes {
 	}
 
 	void replaceBranch(Function &function, InstructionPtr &instruction, BrCondNode *br) {
-
+		if (br->condition->valueType() != ValueType::Local)
+			throw std::runtime_error("Expected a pvar for the condition of a conditional jump");
+		function.insertBefore(instruction, std::make_shared<JumpSymbolConditionalInstruction>(
+			dynamic_cast<LocalValue *>(br->condition.get())->variable, function.transformLabel(*br->ifTrue), false));
+		function.insertBefore(instruction,
+			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->ifFalse), false));
 	}
 
 	void replaceBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
-		function.insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->destination), false));
+		function.insertBefore(instruction,
+			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->destination), false));
 	}
 }
