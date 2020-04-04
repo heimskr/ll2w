@@ -36,47 +36,48 @@ namespace LL2W::Passes {
 		return to_remove.size();
 	}
 
-	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
-		if (*node->oper == "add") {
-			lowerAdd(function, instruction, node);
-		} else if (*node->oper == "sub") {
-			lowerSub(function, instruction, node);
-		} else if (*node->oper == "mul") {
-			std::cout << "[mul]\n";
-		} else {
-			throw std::runtime_error("Unknown math operation: " + *node->oper);
-		}
-
-		std::cout << instruction->debugExtra() << "\n";
-	}
-
-	void lowerAdd(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+	template <typename R, typename I>
+	void lowerCommutative(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
 		ValuePtr left = node->left, right = node->right;
 
 		if (!left->isLocal()) {
 			if (right->isLocal()) {
-				// Addition is commutative, so we can get away with this.
+				// The operation is commutative, so we can get away with this.
 				std::swap(left, right);
 			} else {
 				std::cerr << instruction->debugExtra() << "\n";
-				throw std::runtime_error("Left value of add instruction expected to be a local value");
+				throw std::runtime_error("Left value of " + *node->oper + " instruction expected to be a local value");
 			}
 		}
 
 		VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
 		if (right->isLocal()) {
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-			auto add = std::make_shared<AddRInstruction>(left_var, right_var, node->variable);
-			function.insertBefore(instruction, add);
-			add->extract();
+			auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+			function.insertBefore(instruction, new_instruction);
+			new_instruction->extract();
 		} else if (right->isIntLike()) {
-			auto add = std::make_shared<AddIInstruction>(left_var, right->intValue(), node->variable);
-			function.insertBefore(instruction, add);
-			add->extract();
+			auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
+			function.insertBefore(instruction, new_instruction);
+			new_instruction->extract();
 		} else {
 			throw std::runtime_error("Unexpected value type in add instruction: " +
 				value_map.at(right->valueType()));
 		}
+	}
+
+	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+		if (*node->oper == "add") {
+			lowerCommutative<AddRInstruction, AddIInstruction>(function, instruction, node);
+		} else if (*node->oper == "sub") {
+			lowerSub(function, instruction, node);
+		} else if (*node->oper == "mul") {
+			lowerCommutative<MultRInstruction, MultIInstruction>(function, instruction, node);
+		} else {
+			throw std::runtime_error("Unknown math operation: " + *node->oper);
+		}
+
+		std::cout << instruction->debugExtra() << "\n";
 	}
 
 	void lowerSub(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
@@ -125,12 +126,6 @@ namespace LL2W::Passes {
 				fix->extract();
 			}
 		} else throw std::runtime_error("At least one operand of sub instruction expected to be a local variable");
-	}
-
-	void lowerMul(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
-		(void) function;
-		(void) instruction;
-		(void) node;
 	}
 
 	void lowerLogic(Function &function, InstructionPtr &instruction, LogicNode *node) {
