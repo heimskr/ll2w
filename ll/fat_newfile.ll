@@ -11,6 +11,31 @@
 %struct.__sbuf = type { i8*, i32 }
 %union.superblock_u = type { %struct.superblock_t }
 
+@debug_disable_method = external global i32, align 4
+@debug_enable = external global i32, align 4
+
+declare void @indent(i32) #1
+declare void @dbg2(i8*, i32, i8*, i8*, i8*) #1
+declare i32 @fat_find(i32, i64, i8*, %struct.dir_t*, %struct.dir_t**, i64*, i32, i8**) #0
+declare i8* @"\01_strerror"(i32) #1
+declare i32 @fflush(%struct.__sFILE*) #1
+declare i64 @strlen(i8*) #1
+declare void @free(i8*) #1
+declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i1) #2
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i1) #2
+declare i32 @fat_find_free_block() #0
+declare i8* @__memcpy_chk(i8*, i8*, i64, i64) #3
+declare i32 @fat_read_dir(i32, %struct.dir_t*, %struct.dir_t**, i64**, i64*, i32*) #0
+declare i64 @updiv(i64, i64) #1
+declare i32 @fat_write_entry(i32, %struct.dir_t*, i64) #0
+declare i32 @fat_has_free(i64) #0
+declare void @dbgn(i8*, i32, i8*, i8*, i64) #1
+declare void @dbg(i8*, i32, i8*, i8*) #1
+declare void @fat_save(i32, %struct.superblock_t*, i32*) #0
+declare i32 @pathc_insert(i8*, %struct.dir_t* byval align 8, i64, %struct.pathc_t**) #1
+declare void @quit(i32, i32) #1
+declare i8* @malloc(i64) #6
+
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @fat_newfile(i32, i8*, i32, i32, %struct.times_t*, %struct.dir_t**, i64*, %struct.dir_t**, i64*, i32) #0 {
   %11 = alloca i32, align 4
