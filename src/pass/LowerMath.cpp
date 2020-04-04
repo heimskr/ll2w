@@ -5,10 +5,16 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/AddRInstruction.h"
+#include "instruction/AndIInstruction.h"
+#include "instruction/AndRInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
+#include "instruction/OrIInstruction.h"
+#include "instruction/OrRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
+#include "instruction/XorIInstruction.h"
+#include "instruction/XorRInstruction.h"
 #include "pass/LowerMath.h"
 
 namespace LL2W::Passes {
@@ -20,12 +26,13 @@ namespace LL2W::Passes {
 			if (!llvm)
 				continue;
 
-			if (llvm->node->nodeType() == NodeType::BasicMath)
+			if (llvm->node->nodeType() == NodeType::BasicMath) {
 				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->node));
-			else if (llvm->node->nodeType() == NodeType::Logic)
+			} else if (llvm->node->nodeType() == NodeType::Logic) {
 				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->node));
-			else
+			} else {
 				continue;
+			}
 
 			to_remove.push_back(instruction);
 		}
@@ -36,8 +43,21 @@ namespace LL2W::Passes {
 		return to_remove.size();
 	}
 
-	template <typename R, typename I>
-	void lowerCommutative(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+	std::string getName(BasicMathNode *node) {
+		return *node->oper;
+	}
+
+	std::string getName(LogicNode *node) {
+		switch (node->logicType) {
+			case LogicNode::LogicType::And: return "and";
+			case LogicNode::LogicType::Or:  return "or";
+			case LogicNode::LogicType::Xor: return "xor";
+			default: return std::to_string(static_cast<int>(node->logicType));
+		}
+	}
+
+	template <typename R, typename I, typename N>
+	void lowerCommutative(Function &function, InstructionPtr &instruction, N *node) {
 		ValuePtr left = node->left, right = node->right;
 
 		if (!left->isLocal()) {
@@ -46,7 +66,7 @@ namespace LL2W::Passes {
 				std::swap(left, right);
 			} else {
 				std::cerr << instruction->debugExtra() << "\n";
-				throw std::runtime_error("Left value of " + *node->oper + " instruction expected to be a local value");
+				throw std::runtime_error("Left value of " + getName(node) + " instruction expected to be a pvar");
 			}
 		}
 
@@ -61,7 +81,7 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, new_instruction);
 			new_instruction->extract();
 		} else {
-			throw std::runtime_error("Unexpected value type in add instruction: " +
+			throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
 				value_map.at(right->valueType()));
 		}
 	}
@@ -76,8 +96,6 @@ namespace LL2W::Passes {
 		} else {
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
-
-		std::cout << instruction->debugExtra() << "\n";
 	}
 
 	void lowerSub(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
@@ -129,8 +147,18 @@ namespace LL2W::Passes {
 	}
 
 	void lowerLogic(Function &function, InstructionPtr &instruction, LogicNode *node) {
-		(void) function;
-		(void) instruction;
-		(void) node;
+		switch (node->logicType) {
+			case LogicNode::LogicType::And:
+				lowerCommutative<AndRInstruction, AndIInstruction>(function, instruction, node);
+				break;
+			case LogicNode::LogicType::Or:
+				lowerCommutative<OrRInstruction, OrIInstruction>(function, instruction, node);
+				break;
+			case LogicNode::LogicType::Xor:
+				lowerCommutative<XorRInstruction, XorIInstruction>(function, instruction, node);
+				break;
+			default:
+				throw std::runtime_error("Unknown logic type: " + std::to_string(static_cast<int>(node->logicType)));
+		}
 	}
 }
