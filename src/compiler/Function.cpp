@@ -22,6 +22,7 @@
 #include "pass/LowerAlloca.h"
 #include "pass/LowerBranches.h"
 #include "pass/LowerIcmp.h"
+#include "pass/LowerMath.h"
 #include "pass/LowerMemory.h"
 #include "pass/LowerObjectsize.h"
 #include "pass/LowerStackrestore.h"
@@ -514,6 +515,7 @@ namespace LL2W {
 		Passes::lowerObjectsize(*this);
 		Passes::replaceGetelementptrValues(*this);
 		Passes::lowerIcmp(*this);
+		Passes::lowerMath(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);
