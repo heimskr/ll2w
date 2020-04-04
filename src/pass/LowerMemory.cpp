@@ -95,8 +95,14 @@ namespace LL2W::Passes {
 				// imm -> $m0
 				auto set = std::make_shared<SetInstruction>(m0, int_value);
 				// $m0 -> [global]
-				auto store = std::make_shared<StoreSymbolInstruction>(m0, *global->name,
-					function.parent->symbolSize("@" + *global->name) / 8);
+				std::shared_ptr<StoreSymbolInstruction> store;
+				try {
+					store = std::make_shared<StoreSymbolInstruction>(m0, *global->name,
+						function.parent->symbolSize("@" + *global->name) / 8);
+				} catch (const std::out_of_range &) {
+					throw std::runtime_error("Couldn't find global variable @" + *global->name);
+				}
+
 				function.insertBefore(instruction, set);
 				function.insertBefore(instruction, store);
 				set->extract();
