@@ -31,6 +31,8 @@ namespace LL2W {
 		bool isLocal() const;
 		bool isGlobal() const;
 		bool isGetelementptr() const;
+		virtual bool isIntLike() const { return false; }
+		virtual int intValue() const { throw std::runtime_error("Value isn't int-like"); }
 	};
 
 	struct DoubleValue: public Value {
@@ -54,6 +56,8 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Int; }
 		ValuePtr copy() const override { return std::make_shared<IntValue>(value); }
 		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
+		bool isIntLike() const override { return true; }
+		int intValue() const override { return value; }
 	};
 
 	struct NullValue: public IntValue {
@@ -61,6 +65,8 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Null; }
 		ValuePtr copy() const override { return std::make_shared<NullValue>(); }
 		operator std::string() override { return "null"; }
+		bool isIntLike() const override { return true; }
+		int intValue() const override { return 0; }
 	};
 
 	struct VectorValue: public Value {
@@ -81,6 +87,8 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Bool; }
 		ValuePtr copy() const override { return std::make_shared<BoolValue>(value); }
 		operator std::string() override { return value? "true" : "false"; }
+		bool isIntLike() const override { return true; }
+		int intValue() const override { return value? 1 : 0; }
 	};
 
 	struct VariableValue: public Value {
