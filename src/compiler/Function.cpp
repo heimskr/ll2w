@@ -19,19 +19,19 @@
 #include "pass/InsertLabels.h"
 #include "pass/LinearScan.h"
 #include "pass/LoadArguments.h"
+#include "pass/LowerAlloca.h"
+#include "pass/LowerBranches.h"
+#include "pass/LowerIcmp.h"
+#include "pass/LowerMemory.h"
+#include "pass/LowerObjectsize.h"
+#include "pass/LowerStackrestore.h"
+#include "pass/LowerStacksave.h"
+#include "pass/LowerStoresAndLoads.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
-#include "pass/ReplaceAlloca.h"
-#include "pass/ReplaceBranches.h"
 #include "pass/ReplaceGetelementptrValues.h"
-#include "pass/ReplaceIcmp.h"
-#include "pass/ReplaceMemory.h"
-#include "pass/ReplaceObjectsize.h"
-#include "pass/ReplaceStackrestore.h"
-#include "pass/ReplaceStacksave.h"
-#include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
@@ -503,25 +503,25 @@ namespace LL2W {
 
 		extractBlocks();
 		Passes::fillLocalValues(*this);
-		Passes::replaceStacksave(*this);
+		Passes::lowerStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		Passes::loadArguments(*this);
-		Passes::replaceAlloca(*this);
-		Passes::replaceObjectsize(*this);
+		Passes::lowerAlloca(*this);
+		Passes::lowerObjectsize(*this);
 		Passes::replaceGetelementptrValues(*this);
-		Passes::replaceIcmp(*this);
+		Passes::lowerIcmp(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
-		Passes::replaceStackrestore(*this);
+		Passes::lowerStackrestore(*this);
 		Passes::setupCalls(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
-		Passes::replaceMemory(*this);
+		Passes::lowerMemory(*this);
 		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();
@@ -554,11 +554,11 @@ namespace LL2W {
 
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
-		Passes::replaceStoresAndLoads(*this);
+		Passes::lowerStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
-		Passes::replaceBranches(*this);
+		Passes::lowerBranches(*this);
 		Passes::insertLabels(*this);
 
 #ifdef DEBUG_SPILL

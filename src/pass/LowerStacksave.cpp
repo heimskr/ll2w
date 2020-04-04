@@ -4,10 +4,10 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "instruction/MoveInstruction.h"
-#include "pass/ReplaceStacksave.h"
+#include "pass/LowerStacksave.h"
 
 namespace LL2W::Passes {
-	void replaceStacksave(Function &function) {
+	void lowerStacksave(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

@@ -4,10 +4,10 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
-#include "pass/ReplaceStoresAndLoads.h"
+#include "pass/LowerStoresAndLoads.h"
 
 namespace LL2W::Passes {
-	void replaceStoresAndLoads(Function &function) {
+	void lowerStoresAndLoads(Function &function) {
 		std::list<InstructionPtr> to_remove, &linearInstructions = function.linearInstructions;
 		bool any_changed;
 

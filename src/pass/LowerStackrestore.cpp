@@ -4,10 +4,10 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "instruction/MoveInstruction.h"
-#include "pass/ReplaceStackrestore.h"
+#include "pass/LowerStackrestore.h"
 
 namespace LL2W::Passes {
-	void replaceStackrestore(Function &function) {
+	void lowerStackrestore(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

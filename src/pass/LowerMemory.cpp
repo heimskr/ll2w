@@ -18,10 +18,10 @@
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "parser/Enums.h"
-#include "pass/ReplaceMemory.h"
+#include "pass/LowerMemory.h"
 
 namespace LL2W::Passes {
-	int replaceMemory(Function &function) {
+	int lowerMemory(Function &function) {
 		int replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
@@ -31,9 +31,9 @@ namespace LL2W::Passes {
 				continue;
 			
 			if (llvm->node->nodeType() == NodeType::Load)
-				replaceLoad(function, instruction, *llvm);
+				lowerLoad(function, instruction, *llvm);
 			else if (llvm->node->nodeType() == NodeType::Store) {
-				replaceStore(function, instruction, *llvm);
+				lowerStore(function, instruction, *llvm);
 			} else continue;
 
 			to_remove.push_back(instruction);
@@ -46,7 +46,7 @@ namespace LL2W::Passes {
 		return replaced_count;
 	}
 
-	void replaceLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
+	void lowerLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		LoadNode *node = dynamic_cast<LoadNode *>(llvm.node);
 		const int size = getLoadStoreSize(node->constant);
 		const ValueType value_type = node->constant->value->valueType();
@@ -62,7 +62,7 @@ namespace LL2W::Passes {
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
 
-	void replaceStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
+	void lowerStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
 
 		LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());

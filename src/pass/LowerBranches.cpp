@@ -5,10 +5,10 @@
 #include "instruction/JumpConditionalInstruction.h"
 #include "instruction/JumpSymbolConditionalInstruction.h"
 #include "instruction/JumpSymbolInstruction.h"
-#include "pass/ReplaceBranches.h"
+#include "pass/LowerBranches.h"
 
 namespace LL2W::Passes {
-	int replaceBranches(Function &function) {
+	int lowerBranches(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -17,9 +17,9 @@ namespace LL2W::Passes {
 				continue;
 			const NodeType node_type = llvm->node->nodeType();
 			if (node_type == NodeType::BrCond)
-				replaceBranch(function, instruction, dynamic_cast<BrCondNode *>(llvm->node));
+				lowerBranch(function, instruction, dynamic_cast<BrCondNode *>(llvm->node));
 			else if (node_type == NodeType::BrUncond)
-				replaceBranch(function, instruction, dynamic_cast<BrUncondNode *>(llvm->node));
+				lowerBranch(function, instruction, dynamic_cast<BrUncondNode *>(llvm->node));
 			else
 				continue;
 
@@ -32,7 +32,7 @@ namespace LL2W::Passes {
 		return to_remove.size();
 	}
 
-	void replaceBranch(Function &function, InstructionPtr &instruction, BrCondNode *br) {
+	void lowerBranch(Function &function, InstructionPtr &instruction, BrCondNode *br) {
 		if (br->condition->valueType() != ValueType::Local)
 			throw std::runtime_error("Expected a pvar for the condition of a conditional jump");
 		function.insertBefore(instruction, std::make_shared<JumpSymbolConditionalInstruction>(
@@ -41,7 +41,7 @@ namespace LL2W::Passes {
 			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->ifFalse), false));
 	}
 
-	void replaceBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
+	void lowerBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
 		function.insertBefore(instruction,
 			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->destination), false));
 	}

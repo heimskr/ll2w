@@ -1,5 +1,5 @@
-#ifndef PASS_REPLACEOBJECTSIZE_H_
-#define PASS_REPLACEOBJECTSIZE_H_
+#ifndef PASS_LOWEROBJECTSIZE_H_
+#define PASS_LOWEROBJECTSIZE_H_
 
 namespace LL2W {
 	class Function;
@@ -7,7 +7,7 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Replaces the @llvm.objectsize.* intrinsic with set instructions. */
-	int replaceObjectsize(Function &);
+	int lowerObjectsize(Function &);
 }
 
 #endif

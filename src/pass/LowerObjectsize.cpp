@@ -5,10 +5,10 @@
 #include "compiler/LLVMInstruction.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/SetInstruction.h"
-#include "pass/ReplaceObjectsize.h"
+#include "pass/LowerObjectsize.h"
 
 namespace LL2W::Passes {
-	int replaceObjectsize(Function &function) {
+	int lowerObjectsize(Function &function) {
 		int replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 

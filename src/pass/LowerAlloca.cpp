@@ -8,10 +8,10 @@
 #include "instruction/MultIInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
-#include "pass/ReplaceAlloca.h"
+#include "pass/LowerAlloca.h"
 
 namespace LL2W::Passes {
-	int replaceAlloca(Function &function) {
+	int lowerAlloca(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		int replaced_count = 0;
