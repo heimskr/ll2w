@@ -48,6 +48,8 @@ namespace LL2W::Passes {
 				TypePtr out_type;
 				const int offset = updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
+				function.insertBefore(instruction, add);
+				add->extract();
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
 				VariablePtr index = function.getVariable(std::get<1>(node->indices.at(0)));
