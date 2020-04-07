@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -9,7 +7,6 @@
 
 namespace LL2W::Passes {
 	int lowerObjectsize(Function &function) {
-		int replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -55,12 +52,11 @@ namespace LL2W::Passes {
 
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(call->variable, out));
 			to_remove.push_back(instruction);
-			++replaced_count;
 		}
 
 		for (InstructionPtr &instruction: to_remove)
 			function.remove(instruction);
 
-		return replaced_count;
+		return to_remove.size();
 	}
 }

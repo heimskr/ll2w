@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 
-#define COMPILE_MULTITHREADED
+// #define COMPILE_MULTITHREADED
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"

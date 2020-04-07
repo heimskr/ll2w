@@ -1,0 +1,53 @@
+#include "compiler/Function.h"
+#include "compiler/Instruction.h"
+#include "compiler/LLVMInstruction.h"
+#include "instruction/MoveInstruction.h"
+#include "pass/LowerConversions.h"
+
+namespace LL2W::Passes {
+	int lowerConversions(Function &function) {
+		std::list<InstructionPtr> to_remove;
+
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm || llvm->node->nodeType() != NodeType::Conversion)
+				continue;
+			
+			ConversionNode *conversion = dynamic_cast<ConversionNode *>(llvm->node);
+			Conversion type = conversion->conversionType;
+
+			bool remove = true;
+			switch (type) {
+				case Conversion::Zext: lowerZext(function, instruction, conversion); break;
+				case Conversion::Trunc: lowerTrunc(function, instruction, conversion); break;
+				default:
+					remove = false;
+					conversion->debug();
+					// throw std::runtime_error("Unsupported conversion: " + conversion_map.at(type));
+			}
+
+			if (remove)
+				to_remove.push_back(instruction);
+		}
+
+		for (InstructionPtr &instruction: to_remove)
+			function.remove(instruction);
+
+		return to_remove.size();
+	}
+
+	void lowerZext(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
+		if (!conversion->value->isLocal())
+			throw std::runtime_error("Expected a pvar in zext conversion");
+		auto source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
+		auto move = std::make_shared<MoveInstruction>(source, conversion->variable);
+		function.insertBefore(instruction, move);
+	}
+
+	void lowerTrunc(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
+		IntValue *int_value = dynamic_cast<IntValue *>(conversion->to.get());
+		if (!int_value)
+			std::runtime_error("Trunc conversion expected to convert to an integer type");
+		
+	}
+}
