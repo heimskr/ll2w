@@ -19,8 +19,13 @@ namespace LL2W::Passes {
 
 			bool remove = true;
 			switch (type) {
-				case Conversion::Zext: lowerZext(function, instruction, conversion); break;
-				case Conversion::Trunc: lowerTrunc(function, instruction, conversion); break;
+				case Conversion::Bitcast:
+				case Conversion::Zext:
+					lowerBasicConversion(function, instruction, conversion);
+					break;
+				case Conversion::Trunc:
+					lowerTrunc(function, instruction, conversion);
+					break;
 				default:
 					remove = false;
 					conversion->debug();
@@ -37,11 +42,12 @@ namespace LL2W::Passes {
 		return to_remove.size();
 	}
 
-	void lowerZext(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
-		if (!conversion->value->isLocal())
-			throw std::runtime_error("Expected a pvar in zext conversion");
-		auto source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
-		auto move = std::make_shared<MoveInstruction>(source, conversion->variable);
+	void lowerBasicConversion(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *node) {
+		if (!node->value->isLocal())
+			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
+		auto source = dynamic_cast<LocalValue *>(node->value.get())->variable;
+		node->variable->setType(node->to);
+		auto move = std::make_shared<MoveInstruction>(source, node->variable);
 		function.insertBefore(instruction, move);
 	}
 
