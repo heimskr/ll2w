@@ -19,9 +19,8 @@ namespace LL2W::Passes {
 				continue;
 			
 			ConversionNode *conversion = dynamic_cast<ConversionNode *>(llvm->node);
-			Conversion type = conversion->conversionType;
+			const Conversion type = conversion->conversionType;
 
-			bool remove = true;
 			switch (type) {
 				case Conversion::Bitcast:
 				case Conversion::Zext:
@@ -34,13 +33,11 @@ namespace LL2W::Passes {
 					lowerSext(function, instruction, conversion);
 					break;
 				default:
-					remove = false;
 					conversion->debug();
-					// throw std::runtime_error("Unsupported conversion: " + conversion_map.at(type));
+					throw std::runtime_error("Unsupported conversion: " + conversion_map.at(type));
 			}
 
-			if (remove)
-				to_remove.push_back(instruction);
+			to_remove.push_back(instruction);
 		}
 
 		for (InstructionPtr &instruction: to_remove)
