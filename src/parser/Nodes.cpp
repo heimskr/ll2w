@@ -472,28 +472,32 @@ namespace LL2W {
 			delete _cconv;
 		}
 
-		for (ASTNode *child: *_retattrs) {
-			const std::string &raname = *child->lexerInfo;
-			if (raname == "dereferenceable") {
-				dereferenceable = child->at(0)->atoi();
-			} else {
-				for (const std::pair<RetAttr, std::string> &pair: retattr_map) {
-					if (raname == pair.second) {
-						retattrs.insert(pair.first);
-						break;
+		if (_retattrs) {
+			for (ASTNode *child: *_retattrs) {
+				const std::string &raname = *child->lexerInfo;
+				if (raname == "dereferenceable") {
+					dereferenceable = child->at(0)->atoi();
+				} else {
+					for (const std::pair<RetAttr, std::string> &pair: retattr_map) {
+						if (raname == pair.second) {
+							retattrs.insert(pair.first);
+							break;
+						}
 					}
 				}
 			}
+			delete _retattrs;
 		}
-		delete _retattrs;
 
 		if (_addrspace) {
 			addrspace = _addrspace->at(0)->atoi();
 			delete _addrspace;
 		}
 
-		returnType = getType(return_type);
-		delete return_type;
+		if (return_type) {
+			returnType = getType(return_type);
+			delete return_type;
+		}
 
 		if (_args) {
 			argumentsExplicit = true;
@@ -515,13 +519,15 @@ namespace LL2W {
 			delete _args;
 		}
 
-		name = getValue(function_name);
-		delete function_name;
-		if (!std::dynamic_pointer_cast<VariableValue>(name)) {
-			if (_constants)
-				delete _constants;
-			delete attribute_list;
-			throw std::runtime_error("Function name isn't a global or local variable");
+		if (function_name) {
+			name = getValue(function_name);
+			delete function_name;
+			if (!std::dynamic_pointer_cast<VariableValue>(name)) {
+				if (_constants)
+					delete _constants;
+				delete attribute_list;
+				throw std::runtime_error("Function name isn't a global or local variable");
+			}
 		}
 
 		if (_constants) {
@@ -530,9 +536,11 @@ namespace LL2W {
 			delete _constants;
 		}
 
-		for (ASTNode *child: *attribute_list)
-			attributeIndices.push_back(child->atoi());
-		delete attribute_list;
+		if (attribute_list) {
+			for (ASTNode *child: *attribute_list)
+				attributeIndices.push_back(child->atoi());
+			delete attribute_list;
+		}
 	}
 
 	std::vector<ValuePtr> CallInvokeNode::allValues() const {
@@ -605,6 +613,42 @@ namespace LL2W {
 		}
 		out << "\e[2m)\e[0m";
 		return out.str();
+	}
+
+// AsmNode
+
+	AsmNode::AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
+	                 ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
+	                 ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc):
+	                 CallInvokeNode(_result, nullptr, _retattrs, nullptr, return_type, _args, nullptr, _constants,
+	                                attribute_list) {
+		contents = asm_string->lexerInfo;
+		delete asm_string;
+
+		if (_sideeffect) {
+			sideeffect = true;
+			delete _sideeffect;
+		}
+
+		if (_alignstack) {
+			alignstack = true;
+			delete _alignstack;
+		}
+
+		if (_inteldialect)
+			delete _inteldialect;
+
+		if (_srcloc) {
+			srcloc = _srcloc->atoi();
+			delete _srcloc;
+		}
+
+		constraints = asm_constraints->lexerInfo;
+		delete asm_constraints;
+	}
+
+	std::string AsmNode::debugExtra() const {
+		return "???";
 	}
 
 // InvokeNode

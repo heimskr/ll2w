@@ -18,7 +18,7 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
 		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
-		Switch, ExtractValue, InsertValue, Resume, Unreachable
+		Switch, ExtractValue, InsertValue, Resume, Unreachable, Asm
 	};
 
 	struct BaseNode: public ASTNode {
@@ -211,6 +211,20 @@ namespace LL2W {
 		         ASTNode *attribute_list);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Call; }
+	};
+
+	struct AsmNode: public CallInvokeNode {
+		const std::string *contents = nullptr;
+		const std::string *constraints = nullptr;
+		bool sideeffect = false;
+		bool alignstack = false;
+		int srcloc = -1;
+
+		AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
+		        ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
+		        ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc);
+		virtual std::string debugExtra() const override;
+		virtual NodeType nodeType() const override { return NodeType::Asm; }
 	};
 
 	struct InvokeNode: public CallInvokeNode {

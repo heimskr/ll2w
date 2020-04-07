@@ -126,6 +126,7 @@ using AN = LL2W::ASTNode;
 %token TOK_DEREFERENCEABLE "!dereferenceable"
 %token TOK_DEREFERENCEABLE_OR_NULL "!dereferenceable_or_null"
 %token TOK_BANGALIGN "!align"
+%token TOK_SRCLOC "!srcloc"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
 %token TOK_ICMP "icmp"
@@ -157,6 +158,9 @@ using AN = LL2W::ASTNode;
 %token TOK_PHI "phi"
 %token TOK_SWITCH "switch"
 %token TOK_UNREACHABLE "unreachable"
+%token TOK_ASM "asm"
+%token TOK_SIDEEFFECT "sideeffect"
+%token TOK_INTELDIALECT "inteldialect"
 
 %token CONSTANT CONVERSION_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -380,7 +384,9 @@ i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = (new BrCondNode($
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
-        { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14))->locate(loc); D($3, $11, $13); };
+        { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14))->locate(loc); D($3, $11, $13); }
+      | _result "call" _retattrs type_any _args "asm" _sideeffect _alignstack _inteldialect TOK_STRING "," TOK_STRING "(" _constants ")" call_attrs _srcloc
+        { auto loc = L({$1, $2, $3}); $$ = (new AsmNode($1, $3, $4, $5, $7, $8, $9, $10, $12, $14, $16, $17))->locate(loc); D($2, $6, $11, $13, $15); };
 _result: result | { $$ = nullptr; };
 result: TOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
@@ -392,6 +398,11 @@ _constants: constants | { $$ = new AN(CONSTANT_LIST); };
 constants: constants "," constant { $1->adopt($3); D($2); }
          | constant               { $$ = (new AN(CONSTANT_LIST))->adopt($1); };
 call_attrs: call_attrs "#" TOK_DECIMAL { $1->adopt($3); D($2); } | { $$ = new AN(ATTRIBUTE_LIST); };
+_sideeffect:   TOK_SIDEEFFECT   | { $$ = nullptr; };
+_alignstack:   TOK_ALIGNSTACK   | { $$ = nullptr; };
+_inteldialect: TOK_INTELDIALECT | { $$ = nullptr; };
+_srcloc: srcloc | { $$ = nullptr; };
+srcloc: "," "!srcloc" TOK_INTBANG { $$ = $3; D($1, $2); };
 
 i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable gep_indices
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };

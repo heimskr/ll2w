@@ -123,6 +123,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "!nonnull"					{ RTOKEN(NONNULL) }
 "!dereferenceable"			{ RTOKEN(DEREFERENCEABLE) }
 "!align"					{ RTOKEN(BANGALIGN) }
+"!srcloc"					{ RTOKEN(SRCLOC) }
 {INTBANG}					{ RTOKEN(INTBANG) }
 {METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }
@@ -217,6 +218,9 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "phi"						{ RTOKEN(PHI) }
 "switch"					{ RTOKEN(SWITCH) }
 "unreachable"				{ RTOKEN(UNREACHABLE) }
+"asm"						{ RTOKEN(ASM) }
+"sideeffect"				{ RTOKEN(SIDEEFFECT) }
+"inteldialect"				{ RTOKEN(INTELDIALECT) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

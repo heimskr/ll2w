@@ -178,7 +178,7 @@ namespace LL2W {
 	}
 
 	int ASTNode::atoi() const {
-		if (symbol == TOK_PVAR)
+		if (symbol == TOK_PVAR || symbol == TOK_INTBANG)
 			return atoi(1);
 		return parseLong(*lexerInfo);
 	}
