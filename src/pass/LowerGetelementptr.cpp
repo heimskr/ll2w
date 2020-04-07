@@ -5,7 +5,6 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/AddRInstruction.h"
 #include "instruction/MultIInstruction.h"
-#include "instruction/SetInstruction.h"
 #include "pass/LowerGetelementptr.h"
 #include "util/Util.h"
 

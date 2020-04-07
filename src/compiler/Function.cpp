@@ -29,12 +29,12 @@
 #include "pass/LowerObjectsize.h"
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"
-#include "pass/LowerStoresAndLoads.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
@@ -560,7 +560,7 @@ namespace LL2W {
 
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
-		Passes::lowerStoresAndLoads(*this);
+		Passes::replaceStoresAndLoads(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
