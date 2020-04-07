@@ -3,6 +3,10 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AndIInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/SetInstruction.h"
+#include "instruction/ShiftLeftLogicalIInstruction.h"
+#include "instruction/SubRInstruction.h"
+#include "instruction/XorRInstruction.h"
 #include "pass/LowerConversions.h"
 
 namespace LL2W::Passes {
@@ -26,6 +30,9 @@ namespace LL2W::Passes {
 				case Conversion::Trunc:
 					lowerTrunc(function, instruction, conversion);
 					break;
+				case Conversion::Sext:
+					lowerSext(function, instruction, conversion);
+					break;
 				default:
 					remove = false;
 					conversion->debug();
@@ -45,7 +52,7 @@ namespace LL2W::Passes {
 	void lowerBasicConversion(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *node) {
 		if (!node->value->isLocal())
 			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
-		auto source = dynamic_cast<LocalValue *>(node->value.get())->variable;
+		VariablePtr source = dynamic_cast<LocalValue *>(node->value.get())->variable;
 		node->variable->setType(node->to);
 		auto move = std::make_shared<MoveInstruction>(source, node->variable);
 		function.insertBefore(instruction, move);
@@ -54,14 +61,44 @@ namespace LL2W::Passes {
 	void lowerTrunc(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
 		if (!conversion->to->isInt())
 			throw std::runtime_error("Trunc conversion expected to convert to an integer type");
-		IntType *int_type = dynamic_cast<IntType *>(conversion->to.get());
 
 		if (!conversion->value->isLocal())
 			throw std::runtime_error("Expected a pvar in zext conversion");
-		auto source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
+		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
 
-		const int mask = (1 << int_type->intWidth) - 1;
+		const int mask = (1 << conversion->to->width()) - 1;
 		auto andi = std::make_shared<AndIInstruction>(source, mask, conversion->variable);
 		function.insertBefore(instruction, andi);
+	}
+
+	void lowerSext(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
+		if (!conversion->from->isInt() || !conversion->to->isInt())
+			throw std::runtime_error("Expected from and to types to be integer types in sext conversion");
+
+		if (!conversion->value->isLocal())
+			throw std::runtime_error("Expected a pvar in zext conversion");
+		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
+		VariablePtr destination = conversion->variable;
+
+		int from = conversion->from->width(), to = conversion->to->width();
+		if (to == 64) {
+			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
+			// http://graphics.stanford.edu/~seander/bithacks.html
+			auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+			// 1 -> $m0
+			auto set1 = std::make_shared<SetInstruction>(m0, 1);
+			// $m0 << (from - 1) -> $m0
+			auto shift = std::make_shared<ShiftLeftLogicalIInstruction>(m0, from - 1, m0);
+			// Now $m0 contains "m".
+			// $src x $m0 -> $dst
+			auto xorr = std::make_shared<XorRInstruction>(source, m0, destination);
+			// $dst -= $m0
+			auto sub = std::make_shared<SubRInstruction>(destination, m0, destination);
+			for (const InstructionPtr &inst: std::initializer_list<InstructionPtr> {set1, shift, xorr, sub}) {
+				function.insertBefore(instruction, inst);
+				inst->extract();
+			}
+		} else throw std::runtime_error("Sign extensions to widths other than 64 are currently unsupported");
+		// TODO: support other destination widths
 	}
 }

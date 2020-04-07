@@ -15,6 +15,7 @@ namespace LL2W::Passes {
 
 	void lowerBasicConversion(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 	void lowerTrunc(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
+	void lowerSext(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 }
 
 #endif
