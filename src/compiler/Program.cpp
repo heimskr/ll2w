@@ -1,9 +1,12 @@
 #include <iostream>
+#include <thread>
 
-#include "parser/ASTNode.h"
-#include "parser/StructNode.h"
+#define COMPILE_MULTITHREADED
+
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"
+#include "parser/ASTNode.h"
+#include "parser/StructNode.h"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
@@ -40,8 +43,22 @@ namespace LL2W {
 	}
 
 	void Program::compile() {
+#ifdef COMPILE_MULTITHREADED
+		std::vector<std::thread> threads;
+		threads.reserve(functions.size());
+
+		for (std::pair<const std::string, Function> &pair: functions) {
+			threads.emplace_back(std::thread([&]() {
+				pair.second.compile();
+			}));
+		}
+
+		for (std::thread &thread: threads)
+			thread.join();
+#else
 		for (std::pair<const std::string, Function> &pair: functions)
 			pair.second.compile();
+#endif
 	}
 
 	int Program::symbolSize(const std::string &name) const {
