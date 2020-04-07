@@ -1,6 +1,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "instruction/AndIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "pass/LowerConversions.h"
 
@@ -45,9 +46,16 @@ namespace LL2W::Passes {
 	}
 
 	void lowerTrunc(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
-		IntValue *int_value = dynamic_cast<IntValue *>(conversion->to.get());
-		if (!int_value)
-			std::runtime_error("Trunc conversion expected to convert to an integer type");
-		
+		if (!conversion->to->isInt())
+			throw std::runtime_error("Trunc conversion expected to convert to an integer type");
+		IntType *int_type = dynamic_cast<IntType *>(conversion->to.get());
+
+		if (!conversion->value->isLocal())
+			throw std::runtime_error("Expected a pvar in zext conversion");
+		auto source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
+
+		const int mask = (1 << int_type->intWidth) - 1;
+		auto andi = std::make_shared<AndIInstruction>(source, mask, conversion->variable);
+		function.insertBefore(instruction, andi);
 	}
 }
