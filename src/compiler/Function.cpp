@@ -571,7 +571,7 @@ namespace LL2W {
 		Passes::lowerBranches(*this);
 		Passes::insertLabels(*this);
 		Passes::insertPrologue(*this);
-		// Passes::lowerRet(*this);
+		Passes::lowerRet(*this);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";

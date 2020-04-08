@@ -7,7 +7,7 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Replaces ret instructions with epilogues and corresponding Why instructions. */
-	void lowerRet(Function &);
+	int lowerRet(Function &);
 }
 
 #endif
