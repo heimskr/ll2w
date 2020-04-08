@@ -54,7 +54,7 @@ namespace LL2W {
 		argumentsNode = header->arguments;
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
-		node.debug();
+		returnType = header->returnType;
 	}
 
 	void Function::extractBlocks() {
@@ -780,7 +780,7 @@ namespace LL2W {
 
 	void Function::debug() {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cout << "\e[1m" << *name << "\e[0m(";
+		std::cout << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
 				std::cout << "\e[2m,\e[0m ";
@@ -788,7 +788,7 @@ namespace LL2W {
 			if (iter->name)
 				std::cout << " " << *iter->name;
 		}
-		std::cout << ") {\n";
+		std::cout << "\e[94m) {\e[39m\n";
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
@@ -850,7 +850,7 @@ namespace LL2W {
 		}
 #endif
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cout << "}\n\n";
+		std::cout << "\e[94m}\e[39m\n\n";
 #endif
 #ifdef DEBUG_RENDER
 		for (Node *node: cfg.nodes()) {

@@ -62,6 +62,8 @@ namespace LL2W {
 			/** A pointer to an interned string containing the name of the function. */
 			const std::string *name;
 
+			TypePtr returnType;
+
 			/** A list of all basic blocks in the order they appear. */
 			std::list<std::shared_ptr<BasicBlock>> blocks;
 
