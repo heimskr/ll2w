@@ -10,6 +10,7 @@ namespace LL2W {
 		Label(const std::string &name_, int index_ = -1);
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

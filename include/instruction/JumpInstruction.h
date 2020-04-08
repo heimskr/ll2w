@@ -8,6 +8,7 @@ namespace LL2W {
 		using JType::JType;
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

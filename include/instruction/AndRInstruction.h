@@ -7,6 +7,7 @@ namespace LL2W {
 	struct AndRInstruction: public RType {
 		using RType::RType;
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

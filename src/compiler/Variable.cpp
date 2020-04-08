@@ -62,6 +62,10 @@ namespace LL2W {
 		return out.str();
 	}
 
+	std::string Variable::toString() const {
+		return reg != -1? "$" + WhyInfo::registerName(reg) : *this;
+	}
+
 	void Variable::makeAliasOf(Variable &new_parent) {
 		parent = &new_parent;
 		new_parent.aliases.insert(this);

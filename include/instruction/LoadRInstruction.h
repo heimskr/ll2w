@@ -14,6 +14,7 @@ namespace LL2W {
 		LoadRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rd_, int size_ = 8, int index_ = -1);
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

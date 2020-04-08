@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <thread>
 
 // #define COMPILE_MULTITHREADED
@@ -59,6 +60,13 @@ namespace LL2W {
 		for (std::pair<const std::string, Function> &pair: functions)
 			pair.second.compile();
 #endif
+	}
+
+	std::string Program::toString() {
+		std::stringstream out;
+		for (std::pair<const std::string, Function> &pair: functions)
+			out << pair.second.toString() << "\n";
+		return out.str();
 	}
 
 	int Program::symbolSize(const std::string &name) const {

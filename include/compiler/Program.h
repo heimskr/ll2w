@@ -22,6 +22,9 @@ namespace LL2W {
 			/** Compiles all the functions in the program. */
 			void compile();
 
+			/** Returns the source code of the program. */
+			std::string toString();
+
 			/** Returns the size (in bits) of the global variable with a given name.
 			 *  The name should include an initial "@". */
 			int symbolSize(const std::string &) const;

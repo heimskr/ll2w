@@ -235,6 +235,9 @@ namespace LL2W {
 			/** Determines whether a variable is live-out at a given basic block. */
 			bool isLiveOut(BasicBlock &, VariablePtr);
 
+			/** Returns the compiled assembly code. */
+			std::string toString();
+
 			/** Prints debug information about the function. */
 			void debug();
 

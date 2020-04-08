@@ -11,6 +11,7 @@ namespace LL2W {
 			JType(nullptr, -1, link_, index_), symbol(symbol_) {}
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

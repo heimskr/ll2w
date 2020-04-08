@@ -36,6 +36,7 @@ namespace LL2W {
 			bool operator>(const Instruction &) const;
 
 			virtual std::string debugExtra() { return ""; }
+			virtual std::string toString() const;
 
 			/** Attempts to replace a variable read by the instruction with another variable. Should be overridden by
 			 *  any instruction that reads from a variable. */

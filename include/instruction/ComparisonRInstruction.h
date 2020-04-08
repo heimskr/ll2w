@@ -16,6 +16,7 @@ namespace LL2W {
 			RType(rs_, rt_, rd_, index_), ComparisonInstruction(cond_) {}
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

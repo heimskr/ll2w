@@ -66,6 +66,7 @@ namespace LL2W {
 			void setLastUse(decltype(lastUse));
 			void setRegister(int);
 
+			std::string toString() const;
 			operator std::string() const;
 			bool operator==(const Variable &) const;
 

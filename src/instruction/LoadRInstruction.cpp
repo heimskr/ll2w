@@ -16,4 +16,15 @@ namespace LL2W {
 			default: return base + " /" + std::to_string(size);
 		}
 	}
+
+	std::string LoadRInstruction::toString() const {
+		const std::string base = "[" + rs->toString() + "] -> " + rd->toString();
+		switch (size) {
+			case 8:  return base;
+			case 4:  return base + " /h";
+			case 2:  return base + " /s";
+			case 1:  return base + " /b";
+			default: return base + " /" + std::to_string(size);
+		}
+	}
 }

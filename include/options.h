@@ -1,6 +1,8 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
+// #define SPACE_COUNT 4
+
 // #define DEBUG_INTERVALS
 // #define DEBUG_STACK
 #define DEBUG_BLOCKS

@@ -778,6 +778,21 @@ namespace LL2W {
 		return false;
 	}
 
+	std::string Function::toString() {
+		std::stringstream out;
+		out << "sub " << name->substr(1) << "() {\n";
+		for (InstructionPtr &instruction: linearInstructions) {
+#ifdef SPACE_COUNT
+			out << std::string(' ', SPACE_COUNT);
+#else
+			out << "\t";
+#endif
+			out << instruction->toString() << "\n";
+		}
+		out << "}\n";
+		return out.str();
+	}
+
 	void Function::debug() {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cout << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";

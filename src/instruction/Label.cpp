@@ -7,4 +7,8 @@ namespace LL2W {
 	std::string Label::debugExtra() {
 		return "\e[94m@" + name + "\e[39m";
 	}
+
+	std::string Label::toString() const {
+		return "@" + name;
+	}
 }

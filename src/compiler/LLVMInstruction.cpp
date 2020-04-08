@@ -196,6 +196,10 @@ namespace LL2W {
 		return node->debugExtra();
 	}
 
+	std::string LLVMInstruction::toString() const {
+		return "\e[41;37;1mUntranslated node:\e[0m " + node->debugExtra();
+	}
+
 	bool LLVMInstruction::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
 		if (Reader *reader = dynamic_cast<Reader *>(node)) {
 			reader->replaceRead(to_replace, new_var);

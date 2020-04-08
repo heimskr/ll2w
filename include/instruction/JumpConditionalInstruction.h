@@ -9,6 +9,7 @@ namespace LL2W {
 	struct JumpConditionalInstruction: public JType<> {
 		using JType::JType;
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 
