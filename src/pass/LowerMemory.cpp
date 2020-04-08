@@ -55,10 +55,12 @@ namespace LL2W::Passes {
 			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
 			function.insertBefore(instruction, load);
+			load->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
 			function.insertBefore(instruction, load);
+			load->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
 

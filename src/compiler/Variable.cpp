@@ -219,4 +219,24 @@ namespace LL2W {
 	std::ostream & operator<<(std::ostream &os, const LL2W::Variable &var) {
 		return os << std::string(var);
 	}
+
+	void Variable::debug() {
+		std::cerr << *this << "\n";
+		std::cerr << "   Defining blocks:";
+		for (const BasicBlockPtr &block: definingBlocks)
+			std::cerr << " %" << block->label;
+		std::cerr << "\n";
+		std::cerr << "   Using blocks:";
+		for (const BasicBlockPtr &block: usingBlocks)
+			std::cerr << " %" << block->label;
+		std::cerr << "\n";
+		std::cerr << "   Last use: " << lastUse.lock()->debugExtra() << "\n";
+		if (definitions.empty()) {
+			std::cerr << "   No definitions.\n";
+		} else {
+			std::cerr << "   Definitions (" << definitions.size() << "):\n";
+			for (const std::weak_ptr<Instruction> &instruction: definitions)
+				std::cerr << "      " << instruction.lock()->debugExtra() << "\n";
+		}
+	}
 }

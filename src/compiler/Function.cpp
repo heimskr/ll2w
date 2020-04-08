@@ -185,7 +185,7 @@ namespace LL2W {
 		// before the use insert a definition for the variable by loading it from the stack.
 		if (variable->definitions.empty()) {
 			debug();
-			std::cerr << *variable << "\n";
+			variable->debug();
 			throw std::runtime_error("Cannot spill variable: no definitions");
 		}
 
@@ -528,10 +528,10 @@ namespace LL2W {
 		extractVariables();
 		Passes::lowerStackrestore(*this);
 		Passes::setupCalls(*this);
+		Passes::lowerMemory(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
-		Passes::lowerMemory(*this);
 		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();

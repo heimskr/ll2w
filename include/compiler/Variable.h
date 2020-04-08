@@ -68,6 +68,8 @@ namespace LL2W {
 
 			operator std::string() const;
 			bool operator==(const Variable &) const;
+
+			void debug();
 	};
 
 	std::ostream & operator<<(std::ostream &, const LL2W::Variable &);
