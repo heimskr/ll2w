@@ -17,6 +17,8 @@
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
 #include "pass/InsertLabels.h"
+#include "pass/InsertPrologue.h"
+#include "pass/InsertLabels.h"
 #include "pass/LinearScan.h"
 #include "pass/LoadArguments.h"
 #include "pass/LowerAlloca.h"
@@ -27,6 +29,7 @@
 #include "pass/LowerMath.h"
 #include "pass/LowerMemory.h"
 #include "pass/LowerObjectsize.h"
+#include "pass/LowerRet.h"
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"
 #include "pass/MakeCFG.h"
@@ -512,8 +515,8 @@ namespace LL2W {
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		Passes::loadArguments(*this);
 		Passes::lowerAlloca(*this);
+		Passes::loadArguments(*this);
 		Passes::lowerObjectsize(*this);
 		Passes::replaceGetelementptrValues(*this);
 		Passes::lowerIcmp(*this);
@@ -566,6 +569,8 @@ namespace LL2W {
 		Passes::mergeAllBlocks(*this);
 		Passes::lowerBranches(*this);
 		Passes::insertLabels(*this);
+		Passes::insertPrologue(*this);
+		// Passes::lowerRet(*this);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";

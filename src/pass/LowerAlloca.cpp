@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -45,12 +47,12 @@ namespace LL2W::Passes {
 			int num_elements = -1;
 			if (alloca->numelementsValue) {
 				Value *value = alloca->numelementsValue.get();
-				IntValue *int_value = dynamic_cast<IntValue *>(value);
-				if (int_value) {
+				if (value->isInt()) {
 					// If there's an integer constant, things are easy.
-					num_elements = int_value->value;
-				} else if (LocalValue *local = dynamic_cast<LocalValue *>(value)) {
+					num_elements = value->intValue();
+				} else if (value->isLocal()) {
 					// If it's a local variable instead, we can't do the multiplication at compile time.
+					LocalValue *local = dynamic_cast<LocalValue *>(value);
 					auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
 					auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 					function.insertBefore(instruction, move);
@@ -75,6 +77,9 @@ namespace LL2W::Passes {
 					function.insertAfter(move, sub);
 				}
 			}
+
+			std::cout << "Adding to stack: var=" << *alloca->variable << " type=" << *alloca->variable->type << " width=" << alloca->variable->type->width() << "\n";
+			function.addToStack(alloca->variable, StackLocation::Purpose::Alloca);
 
 			++replaced_count;
 		}

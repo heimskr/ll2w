@@ -94,7 +94,7 @@ namespace LL2W {
 		PointerType(TypePtr subtype_): subtype(subtype_) {}
 		operator std::string() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
-		int width() const override { return WhyInfo::pointerWidth; }
+		int width() const override { return WhyInfo::pointerWidth * 8; }
 		bool operator==(const Type &) const override;
 	};
 

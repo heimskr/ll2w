@@ -11,6 +11,7 @@
 
 define i32 @hello(i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32) {
 	; Implicit entry block: %20
+	%44 = alloca i64, align 8
 	%21 = and i32 %0,  %1
 	%22 = and i32 %2,  %3
 	%23 = and i32 %4,  %5
