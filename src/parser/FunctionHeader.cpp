@@ -128,7 +128,7 @@ namespace LL2W {
 		out << "\e[0;94m(";
 		for (auto iter = arguments->arguments.begin(), end = arguments->arguments.end(); iter != end; ++iter) {
 			if (iter != arguments->arguments.begin())
-				out << ", ";
+				out << "\e[2m,\e[22m ";
 			const FunctionArgument &arg = *iter;
 			out << std::string(*arg.type);
 			for (ParAttr parattr: arg.parattrs)
@@ -138,7 +138,7 @@ namespace LL2W {
 		}
 		if (arguments->ellipsis)
 			out << (arguments->arguments.empty()? "..." : ", ...");
-		out << ")\e[0;36m";
+		out << "\e[94m)\e[0;36m";
 		if (linkage != Linkage::Default)
 			out << " " << linkage_map.at(linkage);
 		switch (visibility) {

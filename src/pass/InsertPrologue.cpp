@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "instruction/Label.h"
 #include "instruction/MoveInstruction.h"
@@ -11,7 +9,6 @@ namespace LL2W::Passes {
 	void insertPrologue(Function &function) {
 		BasicBlockPtr front_block = function.blocks.front();
 		InstructionPtr first;
-		// InstructionPtr first = front_block->instructions.front();
 		for (InstructionPtr &instruction: front_block->instructions) {
 			if (!dynamic_cast<Label *>(instruction.get())) {
 				first = instruction;
@@ -28,11 +25,11 @@ namespace LL2W::Passes {
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt));
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp));
 		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp));
+
 		int to_skip = 0;
-		for (const std::pair<int, StackLocation> &pair: function.stack) {
-			std::cout << pair.first << " " << pair.second.getName() << " " << pair.second.width << "\n";
+		for (const std::pair<int, StackLocation> &pair: function.stack)
 			to_skip += pair.second.width;
-		}
+
 		if (to_skip != 0)
 			function.insertBefore(first, std::make_shared<SubIInstruction>(sp, to_skip, sp));
 	}

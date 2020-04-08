@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -78,7 +76,6 @@ namespace LL2W::Passes {
 				}
 			}
 
-			std::cout << "Adding to stack: var=" << *alloca->variable << " type=" << *alloca->variable->type << " width=" << alloca->variable->type->width() << "\n";
 			function.addToStack(alloca->variable, StackLocation::Purpose::Alloca);
 
 			++replaced_count;

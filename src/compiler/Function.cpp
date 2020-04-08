@@ -54,6 +54,7 @@ namespace LL2W {
 		argumentsNode = header->arguments;
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
+		node.debug();
 	}
 
 	void Function::extractBlocks() {
