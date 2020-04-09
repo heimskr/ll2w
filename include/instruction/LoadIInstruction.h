@@ -2,12 +2,13 @@
 #define INSTRUCTION_LOADIINSTRUCTION_H_
 
 #include "instruction/IType.h"
+#include "instruction/SizedInstruction.h"
 
 namespace LL2W {
 	/**
 	 * [imm] -> $rd
 	 */
-	struct LoadIInstruction: public IType<int> {
+	struct LoadIInstruction: public IType<int>, public SizedInstruction {
 		/** The size of the load in bytes. */
 		int size;
 

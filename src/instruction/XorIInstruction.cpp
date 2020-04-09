@@ -5,4 +5,8 @@ namespace LL2W {
 	std::string XorIInstruction::debugExtra() {
 		return std::string(*rs) + " \e[2mx\e[0m " + std::to_string(imm) + " \e[2m->\e[0m " + std::string(*rd);
 	}
+
+	std::string XorIInstruction::toString() const {
+		return rs->toString() + " x " + std::to_string(imm) + " -> " + rd->toString();
+	}
 }

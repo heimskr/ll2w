@@ -12,6 +12,7 @@ namespace LL2W {
 			RType(rs_, nullptr, rs_, index_) {}
 
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

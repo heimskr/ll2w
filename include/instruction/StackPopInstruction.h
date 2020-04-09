@@ -7,6 +7,7 @@ namespace LL2W {
 	struct StackPopInstruction: public RType {
 		StackPopInstruction(std::shared_ptr<Variable> rd_, int index_ = -1);
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

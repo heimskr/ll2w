@@ -7,6 +7,7 @@ namespace LL2W {
 	struct XorIInstruction: public IType<> {
 		using IType::IType;
 		std::string debugExtra() override;
+		std::string toString() const override;
 	};
 }
 

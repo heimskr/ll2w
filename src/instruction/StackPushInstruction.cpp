@@ -8,4 +8,8 @@ namespace LL2W {
 	std::string StackPushInstruction::debugExtra() {
 		return "\e[2m[\e[22m " + std::string(*rs);
 	}
+
+	std::string StackPushInstruction::toString() const {
+		return "[ " + rs->toString();
+	}
 }

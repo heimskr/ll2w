@@ -8,4 +8,8 @@ namespace LL2W {
 	std::string StackPopInstruction::debugExtra() {
 		return "\e[2m]\e[22m " + std::string(*rd);
 	}
+
+	std::string StackPopInstruction::toString() const {
+		return "] " + rd->toString();
+	}
 }
