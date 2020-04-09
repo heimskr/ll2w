@@ -3,6 +3,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/CompareRInstruction.h"
 #include "instruction/SelectInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/LowerSelect.h"
 
@@ -18,7 +19,43 @@ namespace LL2W::Passes {
 				continue;
 			SelectNode *select = dynamic_cast<SelectNode *>(llvm->node);
 
+			VariablePtr left_var, right_var;
 
+			// If the true-condition is an integer-like constant, we need to put it in a register.
+			if (select->firstValue->isIntLike()) {
+				left_var = function.newVariable(select->firstType, instruction->parent.lock());
+				auto set = std::make_shared<SetInstruction>(left_var, select->firstValue->intValue());
+				function.insertBefore(instruction, set);
+				set->extract();
+			} else if (select->firstValue->isLocal()) {
+				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
+			} else {
+				throw std::runtime_error("Invalid true-value in select instruction: " +
+					std::string(*select->firstValue));
+			}
+
+			// If the false-condition is an integer-like constant, we need to put it in a register.
+			if (select->secondValue->isIntLike()) {
+				right_var = function.newVariable(select->firstType, instruction->parent.lock());
+				auto set = std::make_shared<SetInstruction>(right_var, select->secondValue->intValue());
+				function.insertBefore(instruction, set);
+				set->extract();
+			} else if (select->secondValue->isLocal()) {
+				right_var = dynamic_cast<LocalValue *>(select->secondValue.get())->variable;
+			} else {
+				throw std::runtime_error("Invalid false-value in select instruction: " +
+					std::string(*select->secondValue));
+			}
+
+			// Next, we need to compare the i1 value with zero.
+			if (select->conditionValue->isIntLike()) {
+				
+			} else if (select->conditionValue->isLocal()) {
+
+			} else {
+				throw std::runtime_error("Invalid condition-value in select instruction: " +
+					std::string(*select->conditionValue));
+			}
 
 			to_remove.push_back(instruction);
 		}
