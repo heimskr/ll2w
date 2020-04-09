@@ -51,7 +51,7 @@ namespace LL2W {
 			Node::Map succMergeSets;
 
 			/** Maps variables to their stack locations. */
-			std::map<std::shared_ptr<Variable>, StackLocation *> variableLocations;
+			std::map<VariablePtr, StackLocation *> variableLocations;
 
 		public:
 			Program *parent = nullptr;
@@ -65,7 +65,7 @@ namespace LL2W {
 			TypePtr returnType;
 
 			/** A list of all basic blocks in the order they appear. */
-			std::list<std::shared_ptr<BasicBlock>> blocks;
+			std::list<BasicBlockPtr> blocks;
 
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
@@ -78,7 +78,7 @@ namespace LL2W {
 
 			/** Maps interned strings representing labels to their corresponding basic blocks. This is the main storage
 			 *  for the function's basic blocks. */
-			std::map<const std::string *, std::shared_ptr<BasicBlock>> bbMap;
+			std::map<const std::string *, BasicBlockPtr> bbMap;
 
 			/** Maps basic blocks to their corresponding CFG nodes. */
 			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
@@ -120,16 +120,16 @@ namespace LL2W {
 			int newLabel() const;
 
 			/** Produces a new variable with an as yet unused label. */
-			std::shared_ptr<Variable> newVariable(TypePtr = nullptr, std::shared_ptr<BasicBlock> = nullptr);
+			VariablePtr newVariable(TypePtr = nullptr, BasicBlockPtr = nullptr);
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
-			bool spill(std::shared_ptr<Variable>);
+			bool spill(VariablePtr);
 
 			/** Returns a pointer to the instruction following a given instruction. */
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
 
 			/** Returns a pointer to the basic block following a given basic block. */
-			std::shared_ptr<BasicBlock> after(std::shared_ptr<BasicBlock>);
+			BasicBlockPtr after(BasicBlockPtr);
 
 			/** Inserts one instruction after another. */
 			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
@@ -141,7 +141,7 @@ namespace LL2W {
 
 			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
 			 *  if such a branch instruction exists. */
-			void removeUselessBranch(std::shared_ptr<BasicBlock>);
+			void removeUselessBranch(BasicBlockPtr);
 
 			/** Reassigns indices to all instructions. */
 			void reindexInstructions();
@@ -150,16 +150,16 @@ namespace LL2W {
 			void reindexBlocks();
 
 			/** Splits a basic block after a given instruction. */
-			std::shared_ptr<BasicBlock> splitBlock(std::shared_ptr<BasicBlock>, std::shared_ptr<Instruction>);
+			BasicBlockPtr splitBlock(BasicBlockPtr, std::shared_ptr<Instruction>);
 
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
 			/** Creates a precolored variable corresponding to any register. */
-			VariablePtr makePrecoloredVariable(unsigned char, std::shared_ptr<BasicBlock>);
+			VariablePtr makePrecoloredVariable(unsigned char, BasicBlockPtr);
 
 			/** Creates a precolored variable corresponding to a given $mx (assembler-reserved) register. */
-			VariablePtr makeAssemblerVariable(unsigned char, std::shared_ptr<BasicBlock>);
+			VariablePtr makeAssemblerVariable(unsigned char, BasicBlockPtr);
 
 			/** Returns a given basic block's CFG node. */
 			Node & operator[](const BasicBlock &) const;
@@ -190,7 +190,7 @@ namespace LL2W {
 			void precolorArguments(std::list<Interval> &);
 
 			/** Assigns or looks up a stack location for a given variable. */
-			StackLocation & addToStack(std::shared_ptr<Variable>, StackLocation::Purpose, int width = -1);
+			StackLocation & addToStack(VariablePtr, StackLocation::Purpose, int width = -1);
 
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
@@ -200,21 +200,21 @@ namespace LL2W {
 
 			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
 			 *  is responsible for recreating the CFG and reindexing all blocks. */
-			void mergeBlocks(std::shared_ptr<BasicBlock> before, std::shared_ptr<BasicBlock> after);
+			void mergeBlocks(BasicBlockPtr before, BasicBlockPtr after);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
-			std::shared_ptr<Variable> getVariable(int);
+			VariablePtr getVariable(int);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
-			std::shared_ptr<Variable> getVariable(const std::string &);
+			VariablePtr getVariable(const std::string &);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			std::shared_ptr<Variable> getVariable(int, const TypePtr, BasicBlockPtr = nullptr);
+			VariablePtr getVariable(int, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			std::shared_ptr<Variable> getVariable(const std::string &, const TypePtr, BasicBlockPtr = nullptr);
+			VariablePtr getVariable(const std::string &, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns a pointer to the entry block. */
 			BasicBlockPtr getEntry();
@@ -246,6 +246,12 @@ namespace LL2W {
 
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
+
+			/** Convenience method for creating a precolored $m0 register. */
+			VariablePtr m0(BasicBlockPtr);
+
+			/** Convenience method for creating a precolored $m0 register. */
+			VariablePtr m0(std::shared_ptr<Instruction>);
 	};
 }
 

@@ -15,11 +15,14 @@
 #include "instruction/DivuiIInstruction.h"
 #include "instruction/DivuIInstruction.h"
 #include "instruction/DivuRInstruction.h"
+#include "instruction/ModIInstruction.h"
+#include "instruction/ModRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
 #include "instruction/OrIInstruction.h"
 #include "instruction/OrRInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorIInstruction.h"
@@ -187,7 +190,7 @@ namespace LL2W::Passes {
 			} else {
 				// If the LHS is a non-zero integer, we need to use the property a-b = -(b-a) and then subtract the
 				// result from the zero register to fix the sign.
-				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				auto m0 = function.m0(instruction);
 				auto reverse = std::make_shared<SubIInstruction>(right_var, left->intValue(), m0);
 				auto fix = std::make_shared<SubRInstruction>(zero, m0, node->variable);
 				function.insertBefore(instruction, reverse);
@@ -214,6 +217,43 @@ namespace LL2W::Passes {
 		}
 	}
 
+	void lowerRem(Function &function, InstructionPtr &instruction, RemNode *node) {
+		ValuePtr left = node->left, right = node->right;
+
+		if (left->isLocal()) {
+			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto mod = std::make_shared<ModRInstruction>(left_var, right_var, node->variable);
+				function.insertBefore(instruction, mod);
+				mod->extract();
+			} else if (right->isIntLike()) {
+				auto mod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
+				function.insertBefore(instruction, mod);
+				mod->extract();
+			} else {
+				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
+					value_map.at(right->valueType()));
+			}
+		} else if (left->isIntLike()) {
+			if (right->isLocal()) {
+				// Instead of making a backwards immediate modulo instruction, we can just put the immediate value into
+				// $m0 and use the R-type modulo instruction.
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				VariablePtr m0 = function.m0(instruction);
+				auto set = std::make_shared<SetInstruction>(m0, left->intValue());
+				auto mod = std::make_shared<ModRInstruction>(m0, right_var, node->variable);
+				function.insertBefore(instruction, set);
+				function.insertBefore(instruction, mod);
+				set->extract();
+				mod->extract();
+			} else {
+				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
+					std::string(*right));
+			}
+		} else throw std::runtime_error("Unrecognized LHS value type in division instruction: " + std::string(*left));
+	}
+
 	int lowerMath(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
@@ -222,17 +262,21 @@ namespace LL2W::Passes {
 			if (!llvm)
 				continue;
 
-			if (llvm->node->nodeType() == NodeType::BasicMath) {
+			const NodeType type = llvm->node->nodeType();
+			if (type == NodeType::BasicMath) {
 				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->node));
-			} else if (llvm->node->nodeType() == NodeType::Logic) {
+			} else if (type == NodeType::Logic) {
 				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->node));
-			} else if (llvm->node->nodeType() == NodeType::Div) {
+			} else if (type == NodeType::Div) {
 				DivNode *div = dynamic_cast<DivNode *>(llvm->node);
 				if (div->divType == DivNode::DivType::Udiv) {
 					lowerDiv<DivuRInstruction, DivuIInstruction, DivuiIInstruction>(function, instruction, div);
 				} else if (div->divType == DivNode::DivType::Sdiv) {
 					lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, div);
 				}
+			} else if (type == NodeType::Rem) {
+				// TODO: differentiate between signed and unsigned remainder
+				lowerRem(function, instruction, dynamic_cast<RemNode *>(llvm->node));
 			} else {
 				continue;
 			}

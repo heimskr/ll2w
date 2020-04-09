@@ -898,4 +898,12 @@ namespace LL2W {
 			std::cout << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
 		std::cout << "\n";
 	}
+
+	VariablePtr Function::m0(BasicBlockPtr block) {
+		return makeAssemblerVariable(0, block);
+	}
+
+	VariablePtr Function::m0(InstructionPtr instruction) {
+		return m0(instruction->parent.lock());
+	}
 }
