@@ -30,6 +30,7 @@
 #include "pass/LowerMemory.h"
 #include "pass/LowerObjectsize.h"
 #include "pass/LowerRet.h"
+#include "pass/LowerSelect.h"
 #include "pass/LowerStack.h"
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"

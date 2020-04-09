@@ -42,6 +42,7 @@ namespace LL2W {
 	enum class Conversion {
 		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
 		Addrspacecast};
+	enum class Condition {Positive, Negative, Zero, Nonzero};
 
 	extern std::unordered_map<TypeType,   std::string> type_map;
 	extern std::unordered_map<ValueType,  std::string> value_map;
