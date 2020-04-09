@@ -1,6 +1,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "instruction/CompareRInstruction.h"
 #include "instruction/SelectInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/LowerSelect.h"
