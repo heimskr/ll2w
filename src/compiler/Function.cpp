@@ -526,6 +526,7 @@ namespace LL2W {
 		Passes::lowerMath(*this);
 		Passes::lowerConversions(*this);
 		Passes::lowerGetelementptr(*this);
+		Passes::lowerSelect(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);

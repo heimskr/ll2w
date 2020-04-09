@@ -66,6 +66,10 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, comp);
 			comp->extract();
 
+			auto sel = std::make_shared<SelectInstruction>(left_var, right_var, select->variable, Condition::Nonzero);
+			function.insertBefore(instruction, sel);
+			sel->extract();
+
 			to_remove.push_back(instruction);
 		}
 
