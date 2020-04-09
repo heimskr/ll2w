@@ -6,6 +6,9 @@
 #include "instruction/JType.h"
 
 namespace LL2W {
+	/**
+	 * : &symbol if $rs
+	 */
 	struct JumpSymbolConditionalInstruction: public JType<std::string> {
 		using JType::JType;
 		std::string debugExtra() override;

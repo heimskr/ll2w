@@ -34,6 +34,7 @@
 #include "pass/LowerStack.h"
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"
+#include "pass/LowerSwitch.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
@@ -527,6 +528,7 @@ namespace LL2W {
 		Passes::lowerConversions(*this);
 		Passes::lowerGetelementptr(*this);
 		Passes::lowerSelect(*this);
+		Passes::lowerSwitch(*this);
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);
