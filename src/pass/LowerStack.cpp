@@ -17,23 +17,37 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (StackStoreInstruction *stack_store = dynamic_cast<StackStoreInstruction *>(instruction.get())) {
-				// $fp - offset -> $m0
-				auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m0);
-				// %var -> [$m0]
-				auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m0);
-				function.insertBefore(instruction, sub);
-				function.insertBefore(instruction, store);
-				sub->extract();
-				store->extract();
+				if (stack_store->location.offset == 0) {
+					// %var -> [$fp]
+					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, fp);
+					function.insertBefore(instruction, store);
+					store->extract();
+				} else {
+					// $fp - offset -> $m0
+					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m0);
+					// %var -> [$m0]
+					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m0);
+					function.insertBefore(instruction, sub);
+					function.insertBefore(instruction, store);
+					sub->extract();
+					store->extract();
+				}
 			} else if (StackLoadInstruction *stack_load = dynamic_cast<StackLoadInstruction *>(instruction.get())) {
-				// $fp - offset -> $m0
-				auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m0);
-				// [$m0] -> %var
-				auto load = std::make_shared<LoadRInstruction>(m0, stack_load->result);
-				function.insertBefore(instruction, sub);
-				function.insertBefore(instruction, load);
-				sub->extract();
-				load->extract();
+				if (stack_load->location.offset == 0) {
+					// [$fp] -> %var
+					auto load = std::make_shared<LoadRInstruction>(fp, stack_load->result);
+					function.insertBefore(instruction, load);
+					load->extract();
+				} else {
+					// $fp - offset -> $m0
+					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m0);
+					// [$m0] -> %var
+					auto load = std::make_shared<LoadRInstruction>(m0, stack_load->result);
+					function.insertBefore(instruction, sub);
+					function.insertBefore(instruction, load);
+					sub->extract();
+					load->extract();
+				}
 			} else continue;
 
 			to_remove.push_back(instruction);
