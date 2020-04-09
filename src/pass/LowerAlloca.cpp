@@ -35,6 +35,8 @@ namespace LL2W::Passes {
 				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 				function.insertBefore(instruction, mod);
 				function.insertAfter(mod, sub);
+				mod->extract();
+				sub->extract();
 			}
 
 			const int width = alloca->type->width();
@@ -54,11 +56,18 @@ namespace LL2W::Passes {
 					auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
 					auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 					function.insertBefore(instruction, move);
+					move->extract();
 					if (width != 0) {
-						auto mult = std::make_shared<MultIInstruction>(local->variable, width, m0);
+						auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+						auto mult = std::make_shared<MultIInstruction>(local->variable, width);
+						auto movelo = std::make_shared<MoveInstruction>(lo, m0);
 						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 						function.insertBefore(instruction, mult);
+						function.insertBefore(instruction, movelo);
 						function.insertBefore(instruction, sub);
+						mult->extract();
+						movelo->extract();
+						sub->extract();
 					}
 				} else throw std::runtime_error("Unsupported value for numelementsValue: " + std::string(*value));
 			} else {
@@ -69,10 +78,12 @@ namespace LL2W::Passes {
 			if (num_elements != -1) {
 				auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 				function.insertBefore(instruction, move);
+				move->extract();
 				const int to_sub = num_elements * width;
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
 					function.insertAfter(move, sub);
+					sub->extract();
 				}
 			}
 

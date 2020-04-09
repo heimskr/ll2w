@@ -4,6 +4,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/AddRInstruction.h"
+#include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "pass/LowerGetelementptr.h"
 #include "util/Util.h"
@@ -52,14 +53,19 @@ namespace LL2W::Passes {
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
 				VariablePtr index = function.getVariable(std::get<1>(node->indices.at(0)));
+				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 				const int width = updiv(node->type->width(), 8);
-				// index * width -> result
-				auto mult = std::make_shared<MultIInstruction>(index, width, node->variable);
+				// index * width
+				auto mult = std::make_shared<MultIInstruction>(index, width);
+				// $lo -> result
+				auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
 				function.insertBefore(instruction, mult);
+				function.insertBefore(instruction, movelo);
 				function.insertBefore(instruction, add);
 				mult->extract();
+				movelo->extract();
 				add->extract();
 			} else throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
 
