@@ -574,8 +574,8 @@ namespace LL2W {
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
-		Passes::lowerBranches(*this);
 		Passes::insertLabels(*this);
+		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
 		Passes::lowerRet(*this);
 
