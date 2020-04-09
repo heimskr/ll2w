@@ -27,29 +27,36 @@
 #include "pass/LowerMath.h"
 
 namespace LL2W::Passes {
-	int lowerMath(Function &function) {
-		std::list<InstructionPtr> to_remove;
+	template <typename R, typename I, typename Inv>
+	void lowerDiv(Function &function, InstructionPtr &instruction, DivNode *node) {
+		ValuePtr left = node->left, right = node->right;
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
-				continue;
-
-			if (llvm->node->nodeType() == NodeType::BasicMath) {
-				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->node));
-			} else if (llvm->node->nodeType() == NodeType::Logic) {
-				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->node));
+		if (left->isLocal()) {
+			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto div = std::make_shared<R>(left_var, right_var, node->variable);
+				function.insertBefore(instruction, div);
+				div->extract();
+			} else if (right->isIntLike()) {
+				auto div = std::make_shared<I>(left_var, right->intValue(), node->variable);
+				function.insertBefore(instruction, div);
+				div->extract();
 			} else {
-				continue;
+				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
+					value_map.at(right->valueType()));
 			}
-
-			to_remove.push_back(instruction);
-		}
-
-		for (InstructionPtr &instruction: to_remove)
-			function.remove(instruction);
-
-		return to_remove.size();
+		} else if (left->isIntLike()) {
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto divi = std::make_shared<Inv>(right_var, left->intValue(), node->variable);
+				function.insertBefore(instruction, divi);
+				divi->extract();
+			} else {
+				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
+					std::string(*right));
+			}
+		} else throw std::runtime_error("Unrecognized LHS value type in division instruction: " + std::string(*left));
 	}
 
 	std::string getName(BasicMathNode *node) {
@@ -95,38 +102,6 @@ namespace LL2W::Passes {
 		}
 	}
 
-	template <typename R, typename I, typename Inv>
-	void lowerDiv(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
-		ValuePtr left = node->left, right = node->right;
-
-		if (left->isLocal()) {
-			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
-			if (right->isLocal()) {
-				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto div = std::make_shared<R>(left_var, right_var, node->variable);
-				function.insertBefore(instruction, div);
-				div->extract();
-			} else if (right->isIntLike()) {
-				auto div = std::make_shared<I>(left_var, right->intValue(), node->variable);
-				function.insertBefore(instruction, div);
-				div->extract();
-			} else {
-				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
-					value_map.at(right->valueType()));
-			}
-		} else if (left->isIntLike()) {
-			if (right->isLocal()) {
-				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto divi = std::make_shared<Inv>(right_var, left->intValue(), node->variable);
-				function.insertBefore(instruction, divi);
-				divi->extract();
-			} else {
-				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
-					std::string(*right));
-			}
-		} else throw std::runtime_error("Unrecognized LHS value type in division instruction: " + std::string(*left));
-	}
-
 	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
 		if (*node->oper == "add") {
 			lowerCommutative<AddRInstruction, AddIInstruction>(function, instruction, node);
@@ -134,10 +109,6 @@ namespace LL2W::Passes {
 			lowerSub(function, instruction, node);
 		} else if (*node->oper == "mul") {
 			lowerMult(function, instruction, node);
-		} else if (*node->oper == "udiv") {
-			lowerDiv<DivuRInstruction, DivuIInstruction, DivuiIInstruction>(function, instruction, node);
-		} else if (*node->oper == "sdiv") {
-			lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, node);
 		} else {
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
@@ -241,5 +212,37 @@ namespace LL2W::Passes {
 			default:
 				throw std::runtime_error("Unknown logic type: " + std::to_string(static_cast<int>(node->logicType)));
 		}
+	}
+
+	int lowerMath(Function &function) {
+		std::list<InstructionPtr> to_remove;
+
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm)
+				continue;
+
+			if (llvm->node->nodeType() == NodeType::BasicMath) {
+				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->node));
+			} else if (llvm->node->nodeType() == NodeType::Logic) {
+				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->node));
+			} else if (llvm->node->nodeType() == NodeType::Div) {
+				DivNode *div = dynamic_cast<DivNode *>(llvm->node);
+				if (div->divType == DivNode::DivType::Udiv) {
+					lowerDiv<DivuRInstruction, DivuIInstruction, DivuiIInstruction>(function, instruction, div);
+				} else if (div->divType == DivNode::DivType::Sdiv) {
+					lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, div);
+				}
+			} else {
+				continue;
+			}
+
+			to_remove.push_back(instruction);
+		}
+
+		for (InstructionPtr &instruction: to_remove)
+			function.remove(instruction);
+
+		return to_remove.size();
 	}
 }
