@@ -8,5 +8,7 @@ namespace LL2W::Passes {
 			auto label = std::make_shared<Label>(function.transformLabel(std::to_string(block->label)));
 			block->instructions.push_front(label);
 		}
+
+		function.relinearize();
 	}
 }

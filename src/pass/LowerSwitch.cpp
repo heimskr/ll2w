@@ -42,7 +42,7 @@ namespace LL2W::Passes {
 			}
 
 			auto jump = std::make_shared<JumpSymbolInstruction>(function.transformLabel(*sw->label), false);
-			function.insertBefore(instruction, jump);
+			function.insertBefore(instruction, jump, false);
 			jump->extract();
 			to_remove.push_back(instruction);
 		}
