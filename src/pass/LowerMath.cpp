@@ -1,3 +1,5 @@
+// Sorry for all the repetition.
+
 #include <iostream>
 
 #include "compiler/Function.h"
@@ -7,6 +9,7 @@
 #include "instruction/AddRInstruction.h"
 #include "instruction/AndIInstruction.h"
 #include "instruction/AndRInstruction.h"
+#include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
 #include "instruction/OrIInstruction.h"
@@ -92,10 +95,54 @@ namespace LL2W::Passes {
 		} else if (*node->oper == "sub") {
 			lowerSub(function, instruction, node);
 		} else if (*node->oper == "mul") {
-			lowerCommutative<MultRInstruction, MultIInstruction>(function, instruction, node);
+			lowerMult(function, instruction, node);
+		} else if (*node->oper == "udiv") {
+			lowerUdiv(function, instruction, node);
 		} else {
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
+	}
+
+	void lowerMult(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+		ValuePtr left = node->left, right = node->right;
+
+		if (!left->isLocal()) {
+			if (right->isLocal()) {
+				// The operation is commutative, so we can get away with this.
+				std::swap(left, right);
+			} else {
+				std::cerr << instruction->debugExtra() << "\n";
+				throw std::runtime_error("Left value of mult instruction expected to be a pvar");
+			}
+		}
+
+		VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+		VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+		if (right->isLocal()) {
+			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+			auto new_instruction = std::make_shared<MultRInstruction>(left_var, right_var);
+			auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
+			function.insertBefore(instruction, new_instruction);
+			function.insertBefore(instruction, movelo);
+			new_instruction->extract();
+			movelo->extract();
+		} else if (right->isIntLike()) {
+			auto new_instruction = std::make_shared<MultIInstruction>(left_var, right->intValue());
+			auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
+			function.insertBefore(instruction, new_instruction);
+			function.insertBefore(instruction, movelo);
+			new_instruction->extract();
+			movelo->extract();
+		} else {
+			throw std::runtime_error("Unexpected value type in mult instruction: " +
+				value_map.at(right->valueType()));
+		}
+	}
+
+	void lowerUdiv(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+		ValuePtr left = node->left, right = node->right;
+
+		// if (left->
 	}
 
 	void lowerSub(Function &function, InstructionPtr &instruction, BasicMathNode *node) {

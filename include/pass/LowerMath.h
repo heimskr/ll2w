@@ -17,9 +17,9 @@ namespace LL2W::Passes {
 	int lowerMath(Function &);
 
 	void lowerMath(Function &, InstructionPtr &, BasicMathNode *);
-	void lowerAdd(Function &, InstructionPtr &, BasicMathNode *);
+	void lowerMult(Function &, InstructionPtr &, BasicMathNode *);
+	void lowerUdiv(Function &, InstructionPtr &, BasicMathNode *);
 	void lowerSub(Function &, InstructionPtr &, BasicMathNode *);
-	void lowerMul(Function &, InstructionPtr &, BasicMathNode *);
 
 	void lowerLogic(Function &, InstructionPtr &, LogicNode *);
 }
