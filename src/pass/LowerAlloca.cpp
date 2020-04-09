@@ -15,8 +15,8 @@ namespace LL2W::Passes {
 		std::list<InstructionPtr> to_remove;
 
 		int replaced_count = 0;
-		VariablePtr frame_pointer = function.makePrecoloredVariable(WhyInfo::framePointerOffset, function.getEntry());
-		VariablePtr stack_pointer = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, function.getEntry());
+		VariablePtr frame_pointer = function.fp(function.getEntry());
+		VariablePtr stack_pointer = function.sp(function.getEntry());
 
 		// Loop over all instructions, ignoring everything except allocas.
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -30,7 +30,7 @@ namespace LL2W::Passes {
 
 			// Move the stack pointer down to get the alignment right.
 			if (0 < alloca->align) {
-				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				auto m0 = function.m0(instruction);
 				auto mod = std::make_shared<ModIInstruction>(stack_pointer, alloca->align, m0);
 				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 				function.insertBefore(instruction, mod);
@@ -53,7 +53,7 @@ namespace LL2W::Passes {
 				} else if (value->isLocal()) {
 					// If it's a local variable instead, we can't do the multiplication at compile time.
 					LocalValue *local = dynamic_cast<LocalValue *>(value);
-					auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+					auto m0 = function.m0(instruction);
 					auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 					function.insertBefore(instruction, move);
 					move->extract();

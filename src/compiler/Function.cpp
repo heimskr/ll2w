@@ -30,6 +30,7 @@
 #include "pass/LowerMemory.h"
 #include "pass/LowerObjectsize.h"
 #include "pass/LowerRet.h"
+#include "pass/LowerStack.h"
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"
 #include "pass/MakeCFG.h"
@@ -565,6 +566,7 @@ namespace LL2W {
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
 		Passes::replaceStoresAndLoads(*this);
+		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
@@ -905,5 +907,21 @@ namespace LL2W {
 
 	VariablePtr Function::m0(InstructionPtr instruction) {
 		return m0(instruction->parent.lock());
+	}
+
+	VariablePtr Function::fp(BasicBlockPtr block) {
+		return makePrecoloredVariable(WhyInfo::framePointerOffset, block);
+	}
+
+	VariablePtr Function::fp(InstructionPtr instruction) {
+		return fp(instruction->parent.lock());
+	}
+
+	VariablePtr Function::sp(BasicBlockPtr block) {
+		return makePrecoloredVariable(WhyInfo::stackPointerOffset, block);
+	}
+
+	VariablePtr Function::sp(InstructionPtr instruction) {
+		return sp(instruction->parent.lock());
 	}
 }
