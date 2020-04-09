@@ -1,6 +1,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "instruction/CompareIInstruction.h"
 #include "instruction/CompareRInstruction.h"
 #include "instruction/SelectInstruction.h"
 #include "instruction/SetInstruction.h"
@@ -48,14 +49,22 @@ namespace LL2W::Passes {
 			}
 
 			// Next, we need to compare the i1 value with zero.
+			std::shared_ptr<CompareIInstruction> comp;
 			if (select->conditionValue->isIntLike()) {
-				
+				VariablePtr zero = function.makePrecoloredVariable(WhyInfo::zeroOffset, instruction->parent.lock());
+				// We can compare backwards because the select instruction following the comparison isn't checking for
+				// greater-than or less-than conditions; it's checking for inequality.
+				comp = std::make_shared<CompareIInstruction>(zero, select->conditionValue->intValue());
 			} else if (select->conditionValue->isLocal()) {
-
+				VariablePtr cond_var = dynamic_cast<LocalValue *>(select->conditionValue.get())->variable;
+				comp = std::make_shared<CompareIInstruction>(cond_var, 0);
 			} else {
 				throw std::runtime_error("Invalid condition-value in select instruction: " +
 					std::string(*select->conditionValue));
 			}
+
+			function.insertBefore(instruction, comp);
+			comp->extract();
 
 			to_remove.push_back(instruction);
 		}
