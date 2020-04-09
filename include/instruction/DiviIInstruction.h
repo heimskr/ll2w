@@ -1,10 +1,10 @@
-#ifndef INSTRUCTION_ADDIINSTRUCTION_H_
-#define INSTRUCTION_ADDIINSTRUCTION_H_
+#ifndef INSTRUCTION_DIVIIINSTRUCTION_H_
+#define INSTRUCTION_DIVIIINSTRUCTION_H_
 
 #include "instruction/IType.h"
 
 namespace LL2W {
-	struct AddIInstruction: public IType<int> {
+	struct DiviIInstruction: public IType<int> {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;

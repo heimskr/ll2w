@@ -9,6 +9,12 @@
 #include "instruction/AddRInstruction.h"
 #include "instruction/AndIInstruction.h"
 #include "instruction/AndRInstruction.h"
+#include "instruction/DiviIInstruction.h"
+#include "instruction/DivIInstruction.h"
+#include "instruction/DivRInstruction.h"
+#include "instruction/DivuiIInstruction.h"
+#include "instruction/DivuIInstruction.h"
+#include "instruction/DivuRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
@@ -89,6 +95,38 @@ namespace LL2W::Passes {
 		}
 	}
 
+	template <typename R, typename I, typename Inv>
+	void lowerDiv(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+		ValuePtr left = node->left, right = node->right;
+
+		if (left->isLocal()) {
+			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto div = std::make_shared<R>(left_var, right_var, node->variable);
+				function.insertBefore(instruction, div);
+				div->extract();
+			} else if (right->isIntLike()) {
+				auto div = std::make_shared<I>(left_var, right->intValue(), node->variable);
+				function.insertBefore(instruction, div);
+				div->extract();
+			} else {
+				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
+					value_map.at(right->valueType()));
+			}
+		} else if (left->isIntLike()) {
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto divi = std::make_shared<Inv>(right_var, left->intValue(), node->variable);
+				function.insertBefore(instruction, divi);
+				divi->extract();
+			} else {
+				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
+					std::string(*right));
+			}
+		} else throw std::runtime_error("Unrecognized LHS value type in division instruction: " + std::string(*left));
+	}
+
 	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
 		if (*node->oper == "add") {
 			lowerCommutative<AddRInstruction, AddIInstruction>(function, instruction, node);
@@ -97,7 +135,9 @@ namespace LL2W::Passes {
 		} else if (*node->oper == "mul") {
 			lowerMult(function, instruction, node);
 		} else if (*node->oper == "udiv") {
-			lowerUdiv(function, instruction, node);
+			lowerDiv<DivuRInstruction, DivuIInstruction, DivuiIInstruction>(function, instruction, node);
+		} else if (*node->oper == "sdiv") {
+			lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, node);
 		} else {
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
@@ -137,12 +177,6 @@ namespace LL2W::Passes {
 			throw std::runtime_error("Unexpected value type in mult instruction: " +
 				value_map.at(right->valueType()));
 		}
-	}
-
-	void lowerUdiv(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
-		ValuePtr left = node->left, right = node->right;
-
-		// if (left->
 	}
 
 	void lowerSub(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
