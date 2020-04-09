@@ -14,7 +14,11 @@ namespace LL2W::Passes {
 		
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Ret)
+			if (!llvm)
+				continue;
+			if (llvm->node->nodeType() == NodeType::Unreachable)
+				to_remove.push_back(instruction);
+			if (llvm->node->nodeType() != NodeType::Ret)
 				continue;
 
 			RetNode *ret = dynamic_cast<RetNode *>(llvm->node);
