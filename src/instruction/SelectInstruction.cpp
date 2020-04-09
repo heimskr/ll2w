@@ -10,8 +10,8 @@ namespace LL2W {
 	};
 
 	std::string SelectInstruction::debugExtra() {
-		return "[" + std::string(*rs) + " " + std::string(operMap.at(condition)) + " " + std::string(*rt) +
-			"] \e[2m->\e[22m " + std::string(*rd);
+		return "\e[2m[\e[22m" + std::string(*rs) + " " + std::string(operMap.at(condition)) + " " + std::string(*rt) +
+			"\e[2m] ->\e[22m " + std::string(*rd);
 	}
 
 	std::string SelectInstruction::toString() const {
