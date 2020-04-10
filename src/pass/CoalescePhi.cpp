@@ -47,7 +47,7 @@ namespace LL2W::Passes {
 						target->addDefiner(block);
 						new_instr->extract();
 					} else {
-						std::cout << "pair.first (" << std::string(*pair.first) << ") isn't a boolean in  "
+						std::cout << "pair.first (" << std::string(*pair.first) << ") isn't intlike in  "
 						          << phi_node->debugExtra() << "\n";
 					}
 				} else {

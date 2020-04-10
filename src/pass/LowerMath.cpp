@@ -23,6 +23,8 @@
 #include "instruction/OrIInstruction.h"
 #include "instruction/OrRInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/ShiftLeftLogicalIInstruction.h"
+#include "instruction/ShiftLeftLogicalRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorIInstruction.h"
@@ -105,6 +107,28 @@ namespace LL2W::Passes {
 		}
 	}
 
+	template <typename R, typename I>
+	void lowerNoncommutative(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+		ValuePtr left = node->left, right = node->right;
+		if (!left->isLocal())
+			throw std::runtime_error("Intlikes are unsupported on the LHS of a " + getName(node) + " instruction");
+
+		VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+		if (right->isLocal()) {
+			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+			auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+			function.insertBefore(instruction, new_instruction);
+			new_instruction->extract();
+		} else if (right->isIntLike()) {
+			auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
+			function.insertBefore(instruction, new_instruction);
+			new_instruction->extract();
+		} else {
+			throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
+				value_map.at(right->valueType()));
+		}
+	}
+
 	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
 		if (*node->oper == "add") {
 			lowerCommutative<AddRInstruction, AddIInstruction>(function, instruction, node);
@@ -112,7 +136,11 @@ namespace LL2W::Passes {
 			lowerSub(function, instruction, node);
 		} else if (*node->oper == "mul") {
 			lowerMult(function, instruction, node);
+		} else if (*node->oper == "shl") {
+			lowerNoncommutative<ShiftLeftLogicalRInstruction, ShiftLeftLogicalIInstruction>(function, instruction,
+				node);
 		} else {
+			std::cerr << instruction->debugExtra() << "\n";
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
 	}
