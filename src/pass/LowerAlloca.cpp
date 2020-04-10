@@ -39,7 +39,7 @@ namespace LL2W::Passes {
 				sub->extract();
 			}
 
-			const int width = alloca->type->width();
+			const int width = alloca->type->width() / 8;
 
 			// The number of elements requested is usually an integer constant, but it can also be a local variable.
 			// We need to copy the stack pointer to the result variable and then move the stack pointer down past the
@@ -59,8 +59,11 @@ namespace LL2W::Passes {
 					move->extract();
 					if (width != 0) {
 						auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+						// %var * width
 						auto mult = std::make_shared<MultIInstruction>(local->variable, width);
+						// $l0 -> $m0
 						auto movelo = std::make_shared<MoveInstruction>(lo, m0);
+						// $sp -= $m0
 						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 						function.insertBefore(instruction, mult);
 						function.insertBefore(instruction, movelo);
