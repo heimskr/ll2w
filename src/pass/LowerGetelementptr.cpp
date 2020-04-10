@@ -38,7 +38,7 @@ namespace LL2W::Passes {
 				// Gather all the indices while making sure they're all decimals.
 				std::list<int> indices;
 				for (const IndexTuple &tuple: node->indices) {
-					if (std::get<3>(tuple)) {
+					if (std::get<3>(tuple) && tt == TypeType::Struct) {
 						node->debug();
 						throw std::runtime_error("Unable to index a struct with a pvar");
 					}
