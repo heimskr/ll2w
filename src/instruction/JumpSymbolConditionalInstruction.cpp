@@ -3,11 +3,11 @@
 
 namespace LL2W {
 	std::string JumpSymbolConditionalInstruction::debugExtra() {
-		return "\e[2m" + std::string(link? "::" : ":") + "\e[0m \e[91m&" + addr + " \e[39;2mif\e[22m " +
+		return "\e[2m" + std::string(link? "::" : ":") + "\e[0m \e[91m" + addr + " \e[39;2mif\e[22m " +
 			std::string(*rs);
 	}
 
 	std::string JumpSymbolConditionalInstruction::toString() const {
-		return std::string(link? "::" : ":") + " &" + addr + " if " + rs->toString();
+		return std::string(link? "::" : ":") + " " + addr + " if " + rs->toString();
 	}
 }
