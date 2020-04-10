@@ -33,11 +33,9 @@ namespace LL2W::Passes {
 					// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
 					// instructions in the penultimate slots of the predicate labels for which the phi function
 					// parameters specify a constant.
-					if (pair.first->isBool()) {
-						const std::shared_ptr<BoolValue> boolval = std::dynamic_pointer_cast<BoolValue>(pair.first);
+					if (pair.first->isIntLike()) {
 						BasicBlockPtr block = function.bbMap.at(pair.second);
-
-						auto new_instr = std::make_shared<SetInstruction>(target, boolval->value? 1 : 0, -1);
+						auto new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue(), -1);
 						new_instr->parent = block;
 						if (block->instructions.empty()) {
 							block->insertBeforeTerminal(new_instr);
@@ -47,6 +45,7 @@ namespace LL2W::Passes {
 						}
 						target->addDefinition(new_instr);
 						target->addDefiner(block);
+						new_instr->extract();
 					} else {
 						std::cout << "pair.first (" << std::string(*pair.first) << ") isn't a boolean in  "
 						          << phi_node->debugExtra() << "\n";
