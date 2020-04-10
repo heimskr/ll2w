@@ -22,15 +22,9 @@ namespace LL2W::Passes {
 		VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, front_block);
 		VariablePtr fp = function.makePrecoloredVariable(WhyInfo::framePointerOffset, front_block);
 		VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, front_block);
-		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt));
-		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp));
-		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp));
-
-		int to_skip = 0;
-		for (const std::pair<int, StackLocation> &pair: function.stack)
-			to_skip += pair.second.width;
-
-		if (to_skip != 0)
-			function.insertBefore(first, std::make_shared<SubIInstruction>(sp, to_skip, sp));
+		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false);
+		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false);
+		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false);
+		function.reindexInstructions();
 	}
 }
