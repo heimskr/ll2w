@@ -4,6 +4,13 @@ target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-apple-macosx10.15.0"
 
 ; Function Attrs: noinline nounwind optnone ssp uwtable
+define void @prd(i32) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, i32* %2, align 4
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @main(i32, i8**) #0 {
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
@@ -29,7 +36,7 @@ define i32 @main(i32, i8**) #0 {
 ; <label>:13:                                     ; preds = %10
   %14 = load i32, i32* %9, align 4
   %15 = srem i32 %14, 3
-  %16 = icmp ne i32 %15, 0
+  %16 = icmp eq i32 %15, 0
   br i1 %16, label %17, label %20
 
 ; <label>:17:                                     ; preds = %13
@@ -41,7 +48,7 @@ define i32 @main(i32, i8**) #0 {
 ; <label>:20:                                     ; preds = %17, %13
   %21 = load i32, i32* %9, align 4
   %22 = srem i32 %21, 5
-  %23 = icmp ne i32 %22, 0
+  %23 = icmp eq i32 %22, 0
   br i1 %23, label %24, label %27
 
 ; <label>:24:                                     ; preds = %20
@@ -53,7 +60,7 @@ define i32 @main(i32, i8**) #0 {
 ; <label>:27:                                     ; preds = %24, %20
   %28 = load i32, i32* %9, align 4
   %29 = srem i32 %28, 15
-  %30 = icmp ne i32 %29, 0
+  %30 = icmp eq i32 %29, 0
   br i1 %30, label %31, label %34
 
 ; <label>:31:                                     ; preds = %27
@@ -72,8 +79,14 @@ define i32 @main(i32, i8**) #0 {
   br label %10
 
 ; <label>:38:                                     ; preds = %10
-  %39 = load i32, i32* %8, align 4
-  ret i32 %39
+  %39 = load i32, i32* %6, align 4
+  call void @prd(i32 %39)
+  %40 = load i32, i32* %7, align 4
+  call void @prd(i32 %40)
+  %41 = load i32, i32* %8, align 4
+  call void @prd(i32 %41)
+  %42 = load i32, i32* %8, align 4
+  ret i32 %42
 }
 
 attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
