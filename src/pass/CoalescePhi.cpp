@@ -48,7 +48,8 @@ namespace LL2W::Passes {
 						target->addDefinition(new_instr);
 						target->addDefiner(block);
 					} else {
-						std::cout << "? " << std::string(*pair.first) << ": " << phi_node->debugExtra() << "\n";
+						std::cout << "pair.first (" << std::string(*pair.first) << ") isn't a boolean in  "
+						          << phi_node->debugExtra() << "\n";
 					}
 				} else {
 					// Remove the old temporary from the variable store, then copy the name and type of the target
