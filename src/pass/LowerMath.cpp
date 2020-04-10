@@ -25,6 +25,10 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftLeftLogicalRInstruction.h"
+#include "instruction/ShiftRightArithmeticIInstruction.h"
+#include "instruction/ShiftRightArithmeticRInstruction.h"
+#include "instruction/ShiftRightLogicalIInstruction.h"
+#include "instruction/ShiftRightLogicalRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorIInstruction.h"
@@ -138,6 +142,12 @@ namespace LL2W::Passes {
 			lowerMult(function, instruction, node);
 		} else if (*node->oper == "shl") {
 			lowerNoncommutative<ShiftLeftLogicalRInstruction, ShiftLeftLogicalIInstruction>(function, instruction,
+				node);
+		} else if (*node->oper == "ashr") {
+			lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
+				instruction, node);
+		} else if (*node->oper == "lshr") {
+			lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function, instruction,
 				node);
 		} else {
 			std::cerr << instruction->debugExtra() << "\n";
