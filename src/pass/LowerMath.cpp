@@ -81,6 +81,14 @@ namespace LL2W::Passes {
 		}
 	}
 
+	std::string getName(ShrNode *node) {
+		switch (node->shrType) {
+			case ShrNode::ShrType::Ashr: return "ashr";
+			case ShrNode::ShrType::Lshr: return "lshr";
+			default: return "invalid";
+		}
+	}
+
 	template <typename R, typename I, typename N>
 	void lowerCommutative(Function &function, InstructionPtr &instruction, N *node) {
 		ValuePtr left = node->left, right = node->right;
@@ -111,8 +119,8 @@ namespace LL2W::Passes {
 		}
 	}
 
-	template <typename R, typename I>
-	void lowerNoncommutative(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
+	template <typename R, typename I, typename N>
+	void lowerNoncommutative(Function &function, InstructionPtr &instruction, N *node) {
 		ValuePtr left = node->left, right = node->right;
 		if (!left->isLocal())
 			throw std::runtime_error("Intlikes are unsupported on the LHS of a " + getName(node) + " instruction");
@@ -143,14 +151,7 @@ namespace LL2W::Passes {
 		} else if (*node->oper == "shl") {
 			lowerNoncommutative<ShiftLeftLogicalRInstruction, ShiftLeftLogicalIInstruction>(function, instruction,
 				node);
-		} else if (*node->oper == "ashr") {
-			lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
-				instruction, node);
-		} else if (*node->oper == "lshr") {
-			lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function, instruction,
-				node);
 		} else {
-			std::cerr << instruction->debugExtra() << "\n";
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
 	}
@@ -315,6 +316,15 @@ namespace LL2W::Passes {
 			} else if (type == NodeType::Rem) {
 				// TODO: differentiate between signed and unsigned remainder
 				lowerRem(function, instruction, dynamic_cast<RemNode *>(llvm->node));
+			} else if (type == NodeType::Shr) {
+				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
+				if (shr->shrType == ShrNode::ShrType::Ashr) {
+					lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
+						instruction, shr);
+				} else {
+					lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
+						instruction, shr);
+				}
 			} else {
 				continue;
 			}
