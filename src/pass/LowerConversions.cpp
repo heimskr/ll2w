@@ -78,7 +78,7 @@ namespace LL2W::Passes {
 		VariablePtr destination = conversion->variable;
 
 		int from = conversion->from->width(), to = conversion->to->width();
-		if (to == 64) {
+		if (to == 64 || to == 32) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
 			auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
@@ -95,7 +95,13 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, inst);
 				inst->extract();
 			}
-		} else throw std::runtime_error("Sign extensions to widths other than 64 are currently unsupported");
+
+			if (to == 32) {
+				auto andi = std::make_shared<AndIInstruction>(destination, 0xffffffff, destination);
+				function.insertBefore(instruction, andi);
+				andi->extract();
+			}
+		} else throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported");
 		// TODO: support other destination widths
 	}
 }
