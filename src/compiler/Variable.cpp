@@ -234,13 +234,25 @@ namespace LL2W {
 		for (const BasicBlockPtr &block: usingBlocks)
 			std::cerr << " %" << block->label;
 		std::cerr << "\n";
-		std::cerr << "   Last use: " << lastUse.lock()->debugExtra() << "\n";
+		std::cerr << "   Last use: ";
+		if (InstructionPtr last_use = lastUse.lock())
+			std::cerr << lastUse.lock()->debugExtra() << "\n";
+		else
+			std::cerr << "\e[2mnone\e[22m\n";
 		if (definitions.empty()) {
 			std::cerr << "   No definitions.\n";
 		} else {
 			std::cerr << "   Definitions (" << definitions.size() << "):\n";
 			for (const std::weak_ptr<Instruction> &instruction: definitions)
 				std::cerr << "      " << instruction.lock()->debugExtra() << "\n";
+		}
+		if (aliases.empty()) {
+			std::cerr << "   No aliases.\n";
+		} else {
+			std::cerr << "   Aliases:";
+			for (const Variable *alias: aliases)
+				std::cerr << " " << *alias;
+			std::cerr << "\n";
 		}
 	}
 }
