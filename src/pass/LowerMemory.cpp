@@ -134,7 +134,7 @@ namespace LL2W::Passes {
 
 		if (IntType *constant_int = dynamic_cast<IntType *>(constant_ptr->subtype.get())) {
 			return constant_int->width() / 8;
-		} else if (PointerType *subpointer = dynamic_cast<PointerType *>(constant_ptr->subtype.get())) {
+		} else if (dynamic_cast<PointerType *>(constant_ptr->subtype.get())) {
 			return WhyInfo::pointerWidth;
 		} else {
 			throw std::runtime_error("Unexpected pointer subtype in load/store instruction: "

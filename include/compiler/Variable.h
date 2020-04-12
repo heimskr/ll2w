@@ -4,6 +4,7 @@
 #include <memory>
 #include <ostream>
 #include <set>
+#include <unordered_set>
 
 #include "parser/Types.h"
 #include "util/WeakCompare.h"
@@ -22,9 +23,9 @@ namespace LL2W {
 		public:
 			int id;
 			TypePtr type = nullptr;
-			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
+			std::unordered_set<std::shared_ptr<BasicBlock>> definingBlocks;
 			std::weak_ptr<Instruction> lastUse;
-			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
+			std::unordered_set<std::shared_ptr<BasicBlock>> usingBlocks;
 			std::set<std::weak_ptr<Instruction>, WeakCompare<Instruction>> definitions, uses;
 			int reg = -1;
 
@@ -32,8 +33,8 @@ namespace LL2W {
 			std::list<Variable *> spilledTo; // Also tentative.
 
 			Variable(int id_, TypePtr type_ = nullptr,
-			         const std::set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
-			         const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
+			         const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
+			         const std::unordered_set<std::shared_ptr<BasicBlock>> &using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int weight() const;
@@ -55,7 +56,6 @@ namespace LL2W {
 
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
-
 
 			void setID(int);
 			void setType(TypePtr);

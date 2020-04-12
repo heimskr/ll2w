@@ -3,13 +3,14 @@
 #include <sstream>
 
 #include "compiler/BasicBlock.h"
+#include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
 #include "options.h"
 
 namespace LL2W {
-	Variable::Variable(int id_, TypePtr type_, const std::set<std::shared_ptr<BasicBlock>> &defining_blocks,
-	const std::set<BasicBlockPtr> &using_blocks):
+	Variable::Variable(int id_, TypePtr type_, const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks,
+	const std::unordered_set<BasicBlockPtr> &using_blocks):
 		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
 	int Variable::weight() const {
@@ -105,8 +106,13 @@ namespace LL2W {
 			parent->removeDefiner(block);
 		} else {
 			definingBlocks.erase(block);
-			for (Variable *alias: aliases)
+			std::cerr << "\n" << *block->parent->name << " " << *this << "\n";
+			this->debug();
+			for (Variable *alias: aliases) {
+				std::cerr << alias << ", " << block.get() << ", " << &alias->definingBlocks << ", ";
+				std::cerr << *alias << ", " << block->label << "\n";
 				alias->definingBlocks.erase(block);
+			}
 		}
 	}
 

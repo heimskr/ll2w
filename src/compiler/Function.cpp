@@ -756,7 +756,7 @@ namespace LL2W {
 		for (BasicBlockPtr defining_block: var->definingBlocks) {
 			if (defining_block.get() == &block) {
 				// return uses(a)\def(a)≠∅;
-				std::set<BasicBlockPtr> set = var->usingBlocks;
+				std::unordered_set<BasicBlockPtr> set = var->usingBlocks;
 				for (BasicBlockPtr bb: var->definingBlocks)
 					set.erase(bb);
 				return !set.empty();
