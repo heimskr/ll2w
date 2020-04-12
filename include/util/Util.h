@@ -2,6 +2,7 @@
 #define UTIL_UTIL_H_
 
 #include <iostream>
+#include <signal.h>
 #include <sstream>
 #include <string>
 
@@ -28,6 +29,14 @@ namespace LL2W {
 
 	inline std::ostream & warn() {
 		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
+	}
+
+	inline std::ostream & error() {
+		return std::cerr << "\e[2m[\e[22;31m!\e[39;2m]\e[22;31m Error: \e[39m";
+	}
+
+	inline void debugger() {
+		raise(SIGTRAP);
 	}
 }
 
