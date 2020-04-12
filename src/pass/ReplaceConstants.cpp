@@ -38,7 +38,7 @@ namespace LL2W::Passes {
 					function.insertBefore(instruction, setsym);
 					setsym->extract();
 					if (offset != 0) {
-						auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+						auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 						function.insertAfter(setsym, addi);
 						addi->extract();
 					}

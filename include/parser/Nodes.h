@@ -30,16 +30,16 @@ namespace LL2W {
 		bool distinct;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
 		std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Metadata; }
+		NodeType nodeType() const override { return NodeType::Metadata; }
 	};
 
 	struct HeaderNode: public BaseNode {
 		int label;
 		std::vector<int> preds;
 		HeaderNode(ASTNode *node);
-		virtual std::string style() const override { return "\e[32m"; }
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Header; }
+		std::string style() const override { return "\e[32m"; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Header; }
 	};
 
 	struct AttributesNode: public BaseNode {
@@ -49,9 +49,9 @@ namespace LL2W {
 		std::unordered_set<FnAttr> basicAttributes;
 		std::unordered_map<const std::string *, const std::string *> stringAttributes;
 		AttributesNode(ASTNode *);
-		virtual std::string style() const override { return "\e[31m"; }
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Attributes; }
+		std::string style() const override { return "\e[31m"; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Attributes; }
 	};
 
 	class InstructionNode: public BaseNode {
@@ -62,7 +62,7 @@ namespace LL2W {
 			int prof = -1;
 			InstructionNode(const std::string *str);
 			InstructionNode();
-			virtual std::string style() const override { return "\e[36m"; }
+			std::string style() const override { return "\e[36m"; }
 	};
 
 	struct Reader {
@@ -86,10 +86,10 @@ namespace LL2W {
 
 		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Select; }
-		virtual std::vector<ValuePtr> allValues() const override { return {conditionValue, firstValue, secondValue}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override {
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Select; }
+		std::vector<ValuePtr> allValues() const override { return {conditionValue, firstValue, secondValue}; }
+		std::vector<ValuePtr *> allValuePointers() override {
 			return {&conditionValue, &firstValue, &secondValue};
 		}
 	};
@@ -104,10 +104,10 @@ namespace LL2W {
 
 		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 		           ASTNode *addrspace_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Alloca; }
-		virtual std::vector<ValuePtr> allValues() const override { return {numelementsValue}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&numelementsValue}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Alloca; }
+		std::vector<ValuePtr> allValues() const override { return {numelementsValue}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&numelementsValue}; }
 	};
 
 	class StoreNode: public InstructionNode, public Reader {
@@ -165,10 +165,10 @@ namespace LL2W {
 		ValuePtr value1, value2;
 
 		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Icmp; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value1, value2}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value1, &value2}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Icmp; }
+		std::vector<ValuePtr> allValues() const override { return {value1, value2}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value1, &value2}; }
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -176,8 +176,8 @@ namespace LL2W {
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
 		BrUncondNode(const std::string &destination_): BrUncondNode(StringSet::intern(destination_)) {}
 		BrUncondNode(ASTNode *node, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::BrUncond; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::BrUncond; }
 	};
 
 	struct BrCondNode: public InstructionNode, public Reader {
@@ -185,10 +185,10 @@ namespace LL2W {
 		const std::string *ifTrue, *ifFalse;
 
 		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::BrCond; }
-		virtual std::vector<ValuePtr> allValues() const override { return {condition}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&condition}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::BrCond; }
+		std::vector<ValuePtr> allValues() const override { return {condition}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&condition}; }
 	};
 
 	class CallInvokeNode: public InstructionNode, public Writer, public Reader {
@@ -213,8 +213,8 @@ namespace LL2W {
 			TypePtr returnType;
 			ValuePtr name;
 
-			virtual std::vector<ValuePtr> allValues() const override;
-			virtual std::vector<ValuePtr *> allValuePointers() override;
+			std::vector<ValuePtr> allValues() const override;
+			std::vector<ValuePtr *> allValuePointers() override;
 			std::vector<ConstantPtr> allConstants() const override { return constants; }
 	};
 
@@ -225,8 +225,8 @@ namespace LL2W {
 		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 		         ASTNode *attribute_list, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Call; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Call; }
 	};
 
 	struct AsmNode: public CallInvokeNode {
@@ -239,8 +239,8 @@ namespace LL2W {
 		AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
 		        ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
 		        ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Asm; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Asm; }
 	};
 
 	struct InvokeNode: public CallInvokeNode {
@@ -249,8 +249,8 @@ namespace LL2W {
 		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
 		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
 		           ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Invoke; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Invoke; }
 	};
 
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader {
@@ -262,10 +262,10 @@ namespace LL2W {
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,
 		                  ASTNode *indices_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Getelementptr; }
-		virtual std::vector<ValuePtr> allValues() const override { return {ptrValue}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&ptrValue}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Getelementptr; }
+		std::vector<ValuePtr> allValues() const override { return {ptrValue}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&ptrValue}; }
 	};
 
 	struct RetNode: public InstructionNode, public Reader {
@@ -274,10 +274,10 @@ namespace LL2W {
 
 		RetNode(ASTNode *unibangs);
 		RetNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Ret; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Ret; }
+		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
 	struct LandingpadNode: public InstructionNode, public Writer, public Reader {
@@ -295,10 +295,10 @@ namespace LL2W {
 		std::vector<std::shared_ptr<Clause>> clauses;
 
 		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs, bool cleanup_);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Landingpad; }
-		virtual std::vector<ValuePtr> allValues() const override;
-		virtual std::vector<ValuePtr *> allValuePointers() override;
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Landingpad; }
+		std::vector<ValuePtr> allValues() const override;
+		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
 	struct ConversionNode: public InstructionNode, public Writer, public Reader {
@@ -307,10 +307,10 @@ namespace LL2W {
 		Conversion conversionType;
 		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
 		               ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Conversion; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Conversion; }
+		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
 	struct BasicMathNode: public InstructionNode, public Writer, public Reader {
@@ -321,21 +321,23 @@ namespace LL2W {
 		ValuePtr left, right;
 		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_,
 		              ASTNode *right_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::BasicMath; }
-		virtual std::vector<ValuePtr> allValues() const override { return {left, right}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::BasicMath; }
+		std::vector<ValuePtr> allValues() const override { return {left, right}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
-	struct PhiNode: public InstructionNode, public Writer {
+	struct PhiNode: public InstructionNode, public Reader, public Writer {
 		/** Whether all operands are local variables. */
 		bool pure = true;
 		std::unordered_set<Fastmath> fastmath;
 		TypePtr type;
 		std::vector<std::pair<ValuePtr, const std::string *>> pairs;
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Phi; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Phi; }
+		std::vector<ValuePtr> allValues() const override;
+		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
 	struct SimpleNode: public InstructionNode, public Writer, public Reader {
@@ -343,25 +345,25 @@ namespace LL2W {
 		ValuePtr left, right;
 		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const = 0;
-		virtual std::string debugExtra() const override;
-		virtual std::vector<ValuePtr> allValues() const override { return {left, right}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
+		std::string debugExtra() const override;
+		std::vector<ValuePtr> allValues() const override { return {left, right}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
 	struct DivNode: public SimpleNode {
 		enum class DivType {Sdiv, Udiv};
 		DivType divType;
 		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
-		virtual const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
-		virtual NodeType nodeType() const override { return NodeType::Div; }
+		const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
+		NodeType nodeType() const override { return NodeType::Div; }
 	};
 
 	struct RemNode: public SimpleNode {
 		enum class RemType {Srem, Urem};
 		RemType remType;
 		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
-		virtual const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
-		virtual NodeType nodeType() const override { return NodeType::Rem; }
+		const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
+		NodeType nodeType() const override { return NodeType::Rem; }
 	};
 
 	struct LogicNode: public SimpleNode {
@@ -369,7 +371,7 @@ namespace LL2W {
 		LogicType logicType;
 		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		const char * typeName() const override;
-		virtual NodeType nodeType() const override { return NodeType::Logic; }
+		NodeType nodeType() const override { return NodeType::Logic; }
 	};
 
 	struct ShrNode: public SimpleNode {
@@ -379,7 +381,7 @@ namespace LL2W {
 		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
 		        ASTNode *unibangs);
 		const char * typeName() const override { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
-		virtual NodeType nodeType() const override { return NodeType::Shr; }
+		NodeType nodeType() const override { return NodeType::Shr; }
 	};
 
 	struct FMathNode: public SimpleNode {
@@ -389,8 +391,8 @@ namespace LL2W {
 		FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_,
 		          ASTNode *unibangs);
 		const char * typeName() const override;
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::FMath; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::FMath; }
 	};
 
 	struct SwitchNode: public InstructionNode, public Reader {
@@ -400,10 +402,10 @@ namespace LL2W {
 		std::vector<std::tuple<TypePtr, ValuePtr, const std::string *>> table;
 
 		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Switch; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Switch; }
+		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
 	struct ExtractValueNode: public InstructionNode, public Writer, public Reader {
@@ -412,10 +414,10 @@ namespace LL2W {
 		std::vector<int> decimals;
 		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_,
 		                 ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::ExtractValue; }
-		virtual std::vector<ValuePtr> allValues() const override { return {aggregateValue}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::ExtractValue; }
+		std::vector<ValuePtr> allValues() const override { return {aggregateValue}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue}; }
 	};
 
 	struct InsertValueNode: public InstructionNode, public Writer, public Reader {
@@ -424,26 +426,26 @@ namespace LL2W {
 		std::vector<int> decimals;
 		InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_,
 		                ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::InsertValue; }
-		virtual std::vector<ValuePtr> allValues() const override { return {aggregateValue, value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue, &value}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::InsertValue; }
+		std::vector<ValuePtr> allValues() const override { return {aggregateValue, value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue, &value}; }
 	};
 
 	struct ResumeNode: public InstructionNode, public Reader {
 		TypePtr type;
 		ValuePtr value;
 		ResumeNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Resume; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Resume; }
+		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
 	struct UnreachableNode: public InstructionNode {
 		UnreachableNode() {}
-		virtual std::string debugExtra() const override { return "\e[91munreachable\e[39m"; }
-		virtual NodeType nodeType() const override { return NodeType::Unreachable; }
+		std::string debugExtra() const override { return "\e[91munreachable\e[39m"; }
+		NodeType nodeType() const override { return NodeType::Unreachable; }
 	};
 }
 

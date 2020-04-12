@@ -949,6 +949,20 @@ namespace LL2W {
 		return out.str();
 	}
 
+	std::vector<ValuePtr> PhiNode::allValues() const {
+		std::vector<ValuePtr> out;
+		for (const std::pair<ValuePtr, const std::string *> &pair: pairs)
+			out.push_back(pair.first);
+		return out;
+	}
+
+	std::vector<ValuePtr *> PhiNode::allValuePointers() {
+		std::vector<ValuePtr *> out;
+		for (std::pair<ValuePtr, const std::string *> &pair: pairs)
+			out.push_back(&pair.first);
+		return out;
+	}
+
 // SimpleNode
 
 	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
