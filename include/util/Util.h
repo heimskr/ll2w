@@ -1,6 +1,7 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -23,6 +24,10 @@ namespace LL2W {
 	template <typename T>
 	inline T updiv(T n, T d) {
 		return n / d + (n % d? 1 : 0);
+	}
+
+	inline std::ostream & warn() {
+		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}
 }
 

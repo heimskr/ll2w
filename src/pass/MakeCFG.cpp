@@ -5,11 +5,12 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
+#include "util/Util.h"
 
 namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {
 		function.cfg.clear();
-		function.cfg.name = "CFG";
+		function.cfg.name = "CFG for " + *function.name;
 
 		// First pass: add all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
@@ -26,8 +27,16 @@ namespace LL2W::Passes {
 		// Second pass: connect all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
 			const std::string label = std::to_string(block->label);
-			for (int pred: block->preds)
-				function.cfg.link(std::to_string(pred), label);
+			for (int pred: block->preds) {
+				const std::string pred_label = std::to_string(pred);
+				if (function.cfg.hasLabel(pred_label)) {
+					function.cfg.link(pred_label, label);
+				} else {
+					warn() << "Predicate \e[1m" << pred_label << "\e[22m doesn't correspond to any CFG node in function"
+				           << " \e[1m" << *function.name << "\e[22m\n";
+				}
+			}
+
 			if (!block->instructions.empty() && block->instructions.back()->isTerminal())
 				function.cfg.link(label, "exit");
 		}
