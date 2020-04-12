@@ -110,6 +110,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ALLOCSIZE "allocsize"
 %token TOK_PATCHABLE_PROLOGUE "patchable-function=\"prologue-short-redirect\""
 %token TOK_READONLY "readonly"
+%token TOK_READNONE "readnone"
 %token TOK_DECLARE "declare"
 %token TOK_DEFINE "define"
 
@@ -211,7 +212,7 @@ attribute: TOK_STRING "=" TOK_STRING { $$ = $2->adopt({$1, $3}); }
          | fnattr;
 
 basic_fnattr: TOK_FNATTR_BASIC | convertible_fnattr { $1->symbol = TOK_FNATTR_BASIC; };
-convertible_fnattr: TOK_WRITEONLY | TOK_READONLY | TOK_PATCHABLE_PROLOGUE;
+convertible_fnattr: TOK_WRITEONLY | TOK_READONLY | TOK_READNONE | TOK_PATCHABLE_PROLOGUE;
 fnattr: basic_fnattr
       | "alignstack" "(" TOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     }
       | "allocsize"  "(" TOK_DECIMAL "," TOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); }
@@ -497,7 +498,7 @@ parattr: TOK_PARATTR
        | TOK_ALIGN TOK_DECIMAL      { $$ = $1->adopt($2); };
        | TOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
        | retattr | TOK_BYVAL | TOK_WRITEONLY;
-parattr_simple: TOK_INALLOCA | TOK_READONLY;
+parattr_simple: TOK_INALLOCA | TOK_READONLY | TOK_READNONE;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
 operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
 conversion_expr: TOK_CONV_OP constant TOK_TO type_any         { $$ = (new AN(CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
