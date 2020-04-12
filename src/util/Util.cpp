@@ -36,5 +36,22 @@ namespace LL2W {
 	bool isNumeric(const char *str) {
 		return isNumeric(std::string(str));
 	}
+
+	std::string escape(const std::string &str) {
+		std::stringstream out;
+		for (char ch: str) {
+			if (ch == '"' || ch == '\\')
+				out << '\\' << ch;
+			else if (ch == '\t')
+				out << "\\t";
+			else if (ch == '\n')
+				out << "\\n";
+			else if (ch == '\r')
+				out << "\\r";
+			else
+				out << ch;
+		}
+		return out.str();
+	}
 }
 	
