@@ -53,9 +53,15 @@ namespace LL2W::Passes {
 				} else {
 					// Remove the old temporary from the variable store, then copy the name and type of the target
 					// temporary.
-					VariablePtr to_rename = function.getVariable(*local->name);
-					function.variableStore.erase(to_rename->id);
-					to_rename->makeAliasOf(*target);
+					try {
+						VariablePtr to_rename = function.getVariable(*local->name);
+						function.variableStore.erase(to_rename->id);
+						to_rename->makeAliasOf(*target);
+					} catch (const std::out_of_range &) {
+						// Sometimes, the same variable will appear multiple times in the table, e.g.
+						//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]
+						// We do nothing if we've already aliased the variable and removed it from the variable store.
+					}
 				}
 			}
 
