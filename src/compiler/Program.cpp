@@ -65,6 +65,10 @@ namespace LL2W {
 
 	std::string Program::toString() {
 		std::stringstream out;
+		out << "#meta\n";
+		out << "name: \"" << escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
+		out << "\n#data\n";
+		out << "\n#code\n\n";
 		for (std::pair<const std::string, Function> &pair: functions)
 			out << pair.second.toString() << "\n";
 		return out.str();
