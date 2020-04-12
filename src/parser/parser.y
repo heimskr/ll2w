@@ -448,8 +448,8 @@ addsubmulshl: "add" | "sub" | "mul" | "shl";
 i_basicmath: result addsubmulshl type_any value "," value             unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, false, $3, $4, $6, $7))->locate(loc); D($5); }
            | result addsubmulshl "nuw" type_any value "," value       unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, false, $4, $5, $7, $8))->locate(loc); D($3, $6); }
            | result addsubmulshl "nsw" type_any value "," value       unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, true, $4, $5, $7, $8))->locate(loc); D($3, $6); }
-           | result addsubmulshl "nuw" "nsw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $6); }
-           | result addsubmulshl "nsw" "nuw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $6); };
+           | result addsubmulshl "nuw" "nsw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $7); }
+           | result addsubmulshl "nsw" "nuw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $7); };
 
 i_phi: result "phi" fastmath_flags type_any phi_list unibangs
        { auto loc = $1->location; $$ = (new PhiNode($1, $3, $4, $5, $6))->locate(loc); D($2); };
