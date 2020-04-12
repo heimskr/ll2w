@@ -8,6 +8,7 @@
 #include "compiler/Program.h"
 #include "parser/ASTNode.h"
 #include "parser/StructNode.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
@@ -71,7 +72,14 @@ namespace LL2W {
 
 	int Program::symbolSize(const std::string &name) const {
 		GlobalVarDef *def = globals.at(name);
-		return def->type->width();
+		if (def->type)
+			return def->type->width();
+		if (def->constant) {
+			if (def->constant->type)
+				return def->constant->type->width();
+			throw std::runtime_error("Type is null in constant of global " + name);
+		}
+		throw std::runtime_error("Type and constant are both null for global " + name);
 	}
 
 	void Program::debug() {

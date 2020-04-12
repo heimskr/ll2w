@@ -2,12 +2,13 @@
 #include <map>
 #include <string>
 
+#include "compiler/Program.h"
 #include "graph/Graph.h"
 #include "graph/DTree.h"
 #include "graph/DJGraph.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
-#include "compiler/Program.h"
+#include "util/Util.h"
 
 void lttest();
 void djtest();

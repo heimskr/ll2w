@@ -7,7 +7,7 @@ target triple = "x86_64-apple-macosx10.15.0"
 
 @memory = common global i32* null, align 8
 @end = common global i8* null, align 8
-@global_base = common global %struct.block_meta* null, align 8
+@q = common global %struct.block_meta* null, align 8
 @.str = private unnamed_addr constant [37 x i8] c"\1B[38;5;226mSetting global_base\1B[0m.\0A\00", align 1
 @.str.1 = private unnamed_addr constant [7 x i8] c"~ %lu\0A\00", align 1
 @.str.2 = private unnamed_addr constant [17 x i8] c"block->next: %s\0A\00", align 1
