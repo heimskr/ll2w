@@ -673,7 +673,7 @@ namespace LL2W {
 
 	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
-			variableStore.insert({label, Variable::make(label, type? type->copy() : nullptr)});
+			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
 		VariablePtr out = variableStore.at(label);
 		if (definer)
 			out->addDefiner(definer);
@@ -756,7 +756,7 @@ namespace LL2W {
 		for (BasicBlockPtr defining_block: var->definingBlocks) {
 			if (defining_block.get() == &block) {
 				// return uses(a)\def(a)≠∅;
-				std::unordered_set<BasicBlockPtr> set = var->usingBlocks;
+				std::set<BasicBlockPtr> set = var->usingBlocks;
 				for (BasicBlockPtr bb: var->definingBlocks)
 					set.erase(bb);
 				return !set.empty();

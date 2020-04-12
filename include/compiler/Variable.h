@@ -4,7 +4,6 @@
 #include <memory>
 #include <ostream>
 #include <set>
-#include <unordered_set>
 
 #include "parser/Types.h"
 #include "util/WeakCompare.h"
@@ -17,29 +16,24 @@ namespace LL2W {
 	class Variable {
 		private:
 			std::list<Instruction *> useOrder;
-			std::set<std::weak_ptr<Variable>, WeakCompare<Variable>> aliases;
+			std::unordered_set<Variable *> aliases;
 			Variable *parent = nullptr;
-			std::weak_ptr<Variable> self;
 
 		public:
 			int id;
 			TypePtr type = nullptr;
-			std::unordered_set<std::shared_ptr<BasicBlock>> definingBlocks;
+			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
 			std::weak_ptr<Instruction> lastUse;
-			std::unordered_set<std::shared_ptr<BasicBlock>> usingBlocks;
+			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
 			std::set<std::weak_ptr<Instruction>, WeakCompare<Instruction>> definitions, uses;
 			int reg = -1;
 
-			Variable(int id_, TypePtr type_ = nullptr,
-			         const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
-			         const std::unordered_set<std::shared_ptr<BasicBlock>> &using_blocks = {});
-
-			static std::shared_ptr<Variable> make(int id_, TypePtr type_ = nullptr,
-				const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
-				const std::unordered_set<std::shared_ptr<BasicBlock>> &using_blocks = {});
-
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
+
+			Variable(int id_, TypePtr type_ = nullptr,
+			         const std::set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
+			         const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int weight() const;
@@ -48,7 +42,7 @@ namespace LL2W {
 			int spillCost() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
-			void makeAliasOf(std::shared_ptr<Variable>);
+			void makeAliasOf(Variable &);
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
@@ -61,6 +55,7 @@ namespace LL2W {
 
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
+
 
 			void setID(int);
 			void setType(TypePtr);

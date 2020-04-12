@@ -55,8 +55,9 @@ namespace LL2W::Passes {
 					// temporary.
 					try {
 						VariablePtr to_rename = function.getVariable(*local->name);
+						function.retiredVariables.push_back(to_rename);
 						function.variableStore.erase(to_rename->id);
-						to_rename->makeAliasOf(target);
+						to_rename->makeAliasOf(*target);
 					} catch (const std::out_of_range &) {
 						// Sometimes, the same variable will appear multiple times in the table, e.g.
 						//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]

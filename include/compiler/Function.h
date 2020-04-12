@@ -73,6 +73,8 @@ namespace LL2W {
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<int, VariablePtr> variableStore;
 
+			std::list<VariablePtr> retiredVariables;
+
 			/** Maps offsets to stack location information. */
 			std::map<int, StackLocation> stack;
 
