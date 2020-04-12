@@ -17,8 +17,9 @@ namespace LL2W {
 	class Variable {
 		private:
 			std::list<Instruction *> useOrder;
-			std::unordered_set<Variable *> aliases;
+			std::set<std::weak_ptr<Variable>, WeakCompare<Variable>> aliases;
 			Variable *parent = nullptr;
+			std::weak_ptr<Variable> self;
 
 		public:
 			int id;
@@ -29,12 +30,16 @@ namespace LL2W {
 			std::set<std::weak_ptr<Instruction>, WeakCompare<Instruction>> definitions, uses;
 			int reg = -1;
 
-			Variable *spilledFrom = nullptr; // Tentative.
-			std::list<Variable *> spilledTo; // Also tentative.
-
 			Variable(int id_, TypePtr type_ = nullptr,
 			         const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
 			         const std::unordered_set<std::shared_ptr<BasicBlock>> &using_blocks = {});
+
+			static std::shared_ptr<Variable> make(int id_, TypePtr type_ = nullptr,
+				const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
+				const std::unordered_set<std::shared_ptr<BasicBlock>> &using_blocks = {});
+
+			Variable *spilledFrom = nullptr; // Tentative.
+			std::list<Variable *> spilledTo; // Also tentative.
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int weight() const;
@@ -43,7 +48,7 @@ namespace LL2W {
 			int spillCost() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
-			void makeAliasOf(Variable &);
+			void makeAliasOf(std::shared_ptr<Variable>);
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);

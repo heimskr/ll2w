@@ -673,7 +673,7 @@ namespace LL2W {
 
 	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
-			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
+			variableStore.insert({label, Variable::make(label, type? type->copy() : nullptr)});
 		VariablePtr out = variableStore.at(label);
 		if (definer)
 			out->addDefiner(definer);

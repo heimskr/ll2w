@@ -13,6 +13,14 @@ namespace LL2W {
 	const std::unordered_set<BasicBlockPtr> &using_blocks):
 		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
+	VariablePtr Variable::make(int id_, TypePtr type_,
+	                           const std::unordered_set<std::shared_ptr<BasicBlock>> &defining_blocks,
+	                           const std::unordered_set<BasicBlockPtr> &using_blocks) {
+		VariablePtr out = std::make_shared<Variable>(id_, type_, defining_blocks, using_blocks);
+		out->self = std::weak_ptr<Variable>(out);
+		return out;
+	}
+
 	int Variable::weight() const {
 		int sum = 0;
 		for (BasicBlockPtr use: usingBlocks)
@@ -67,28 +75,30 @@ namespace LL2W {
 		return reg != -1? "$" + WhyInfo::registerName(reg) : *this;
 	}
 
-	void Variable::makeAliasOf(Variable &new_parent) {
-		parent = &new_parent;
-		new_parent.aliases.insert(this);
-		for (Variable *alias: aliases) {
-			alias->parent = &new_parent;
-			new_parent.aliases.insert(alias);
+	void Variable::makeAliasOf(VariablePtr new_parent) {
+		parent = new_parent.get();
+		new_parent->aliases.insert(self);
+		for (std::weak_ptr<Variable> alias: aliases) {
+			if (VariablePtr locked_alias = alias.lock()) {
+				locked_alias->parent = new_parent.get();
+				new_parent->aliases.insert(alias);
+			} else throw std::runtime_error("Unable to lock alias in Variable::makeAliasOf");
 		}
 		for (const std::shared_ptr<BasicBlock> &def: definingBlocks)
-			new_parent.definingBlocks.insert(def);
+			new_parent->definingBlocks.insert(def);
 		for (const std::shared_ptr<BasicBlock> &use: usingBlocks)
-			new_parent.usingBlocks.insert(use);
+			new_parent->usingBlocks.insert(use);
 		for (const std::weak_ptr<Instruction> &def: definitions)
-			new_parent.definitions.insert(def.lock());
+			new_parent->definitions.insert(def.lock());
 		for (const std::weak_ptr<Instruction> &use: uses)
-			new_parent.uses.insert(use.lock());
-		id = new_parent.id;
-		type = new_parent.type;
-		lastUse = new_parent.lastUse;
-		definingBlocks = new_parent.definingBlocks;
-		usingBlocks = new_parent.usingBlocks;
-		definitions = new_parent.definitions;
-		uses = new_parent.uses;
+			new_parent->uses.insert(use.lock());
+		id = new_parent->id;
+		type = new_parent->type;
+		lastUse = new_parent->lastUse;
+		definingBlocks = new_parent->definingBlocks;
+		usingBlocks = new_parent->usingBlocks;
+		definitions = new_parent->definitions;
+		uses = new_parent->uses;
 	}
 
 	void Variable::addDefiner(std::shared_ptr<BasicBlock> block) {
@@ -96,8 +106,8 @@ namespace LL2W {
 			parent->addDefiner(block);
 		} else {
 			definingBlocks.insert(block);
-			for (Variable *alias: aliases)
-				alias->definingBlocks.insert(block);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->definingBlocks.insert(block);
 		}
 	}
 
@@ -108,10 +118,12 @@ namespace LL2W {
 			definingBlocks.erase(block);
 			std::cerr << "\n" << *block->parent->name << " " << *this << "\n";
 			this->debug();
-			for (Variable *alias: aliases) {
-				std::cerr << alias << ", " << block.get() << ", " << &alias->definingBlocks << ", ";
-				std::cerr << *alias << ", " << block->label << "\n";
-				alias->definingBlocks.erase(block);
+			for (std::weak_ptr<Variable> alias: aliases) {
+				if (VariablePtr locked = alias.lock()) {
+					std::cerr << locked << ", " << block.get() << ", " << &locked->definingBlocks << ", ";
+					std::cerr << *locked << ", " << block->label << ", uses=" << block.use_count() << "\n";
+					locked->definingBlocks.erase(block);
+				}
 			}
 		}
 	}
@@ -121,8 +133,8 @@ namespace LL2W {
 			parent->addUsingBlock(block);
 		} else {
 			usingBlocks.insert(block);
-			for (Variable *alias: aliases)
-				alias->usingBlocks.insert(block);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->usingBlocks.insert(block);
 		}
 	}
 
@@ -131,8 +143,8 @@ namespace LL2W {
 			parent->removeUsingBlock(block);
 		} else {
 			usingBlocks.erase(block);
-			for (Variable *alias: aliases)
-				alias->usingBlocks.erase(block);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->usingBlocks.erase(block);
 		}
 	}
 
@@ -141,8 +153,8 @@ namespace LL2W {
 			parent->addDefinition(instruction);
 		} else {
 			definitions.insert(instruction);
-			for (Variable *alias: aliases)
-				alias->definitions.insert(instruction);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->definitions.insert(instruction);
 		}
 	}
 
@@ -151,8 +163,8 @@ namespace LL2W {
 			parent->removeDefinition(instruction);
 		} else {
 			definitions.erase(instruction);
-			for (Variable *alias: aliases)
-				alias->definitions.erase(instruction);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->definitions.erase(instruction);
 		}
 	}
 
@@ -161,8 +173,8 @@ namespace LL2W {
 			parent->addUse(instruction);
 		} else {
 			uses.insert(instruction);
-			for (Variable *alias: aliases)
-				alias->uses.insert(instruction);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->uses.insert(instruction);
 		}
 	}
 
@@ -171,8 +183,8 @@ namespace LL2W {
 			parent->removeUse(instruction);
 		} else {
 			uses.erase(instruction);
-			for (Variable *alias: aliases)
-				alias->uses.erase(instruction);
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->uses.erase(instruction);
 		}
 	}
 
@@ -202,8 +214,8 @@ namespace LL2W {
 			parent->setType(new_type);
 		} else {
 			type = new_type? new_type->copy() : nullptr;
-			for (Variable *alias: aliases)
-				alias->type = type;
+			for (std::weak_ptr<Variable> alias: aliases)
+				alias.lock()->type = type;
 		}
 	}
 
@@ -213,8 +225,8 @@ namespace LL2W {
 			parent->set##method(param); \
 		} else { \
 			field = param; \
-			for (Variable *alias: aliases) \
-				alias->field = param; \
+			for (std::weak_ptr<Variable> alias: aliases) \
+				alias.lock()->field = param; \
 		} \
 	}
 
@@ -256,8 +268,12 @@ namespace LL2W {
 			std::cerr << "   No aliases.\n";
 		} else {
 			std::cerr << "   Aliases:";
-			for (const Variable *alias: aliases)
-				std::cerr << " " << *alias;
+			for (const std::weak_ptr<Variable> alias: aliases) {
+				if (VariablePtr locked = alias.lock())
+					std::cerr << " " << *locked;
+				else
+					std::cerr << " \e[2m%?\e[22m";
+			}
 			std::cerr << "\n";
 		}
 	}
