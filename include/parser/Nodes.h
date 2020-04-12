@@ -104,44 +104,51 @@ namespace LL2W {
 		virtual std::vector<ValuePtr *> allValuePointers() override { return {&numelementsValue}; }
 	};
 
-	struct StoreNode: public InstructionNode, public Reader {
-		bool volatile_ = false, atomic = false;
-		TypePtr type;
-		ValuePtr value;
-		ConstantPtr constant;
-		int align = -1, nontemporalIndex = -1, invariantGroupIndex = -1;
-		const std::string *syncscope = nullptr;
-		Ordering ordering = Ordering::None;
+	class StoreNode: public InstructionNode, public Reader {
+		private:
+			void handleBangs(ASTNode *);
 
-		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
-		          ASTNode *nontemporal_, ASTNode *invariant_group);
-		StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
-		          ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Store; }
-		virtual std::vector<ValuePtr> allValues() const override { return {value, constant->value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&value, &constant->value}; }
+		public:
+			bool volatile_ = false, atomic = false;
+			TypePtr type;
+			ValuePtr value;
+			ConstantPtr constant;
+			int align = -1, nontemporalIndex = -1, invariantGroupIndex = -1, tbaa = -1;
+			const std::string *syncscope = nullptr;
+			Ordering ordering = Ordering::None;
+
+			StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
+					ASTNode *bangs);
+			StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
+					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
+			virtual std::string debugExtra() const override;
+			virtual NodeType nodeType() const override { return NodeType::Store; }
+			virtual std::vector<ValuePtr> allValues() const override { return {value, constant->value}; }
+			virtual std::vector<ValuePtr *> allValuePointers() override { return {&value, &constant->value}; }
 	};
 
-	struct LoadNode: public InstructionNode, public Writer, public Reader {
-		bool volatile_ = false, atomic = false;
-		TypePtr type;
-		ConstantPtr constant;
-		int align = -1, nontemporalIndex = -1, invariantLoadIndex = -1, invariantGroupIndex = -1,
-		    nonnullIndex = -1;
-		const std::string *dereferenceable = nullptr, *dereferenceableOrNull = nullptr, *bangAlign = nullptr;
-		const std::string *syncscope = nullptr;
-		Ordering ordering = Ordering::None;
+	class LoadNode: public InstructionNode, public Writer, public Reader {
+		private:
+			void handleBangs(ASTNode *);
 
-		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
-		         ASTNode *align_, ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group,
-		         ASTNode *nonnull_, ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null, ASTNode *bang_align);
-		LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
-		         ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
-		virtual std::string debugExtra() const override;
-		virtual NodeType nodeType() const override { return NodeType::Load; }
-		virtual std::vector<ValuePtr> allValues() const override { return {constant->value}; }
-		virtual std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
+		public:
+			bool volatile_ = false, atomic = false;
+			TypePtr type;
+			ConstantPtr constant;
+			int align = -1, nontemporalIndex = -1, invariantLoadIndex = -1, invariantGroupIndex = -1,
+				nonnullIndex = -1, tbaa = -1;
+			const std::string *dereferenceable = nullptr, *dereferenceableOrNull = nullptr, *bangAlign = nullptr;
+			const std::string *syncscope = nullptr;
+			Ordering ordering = Ordering::None;
+
+			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
+					ASTNode *bangs);
+			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
+					ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
+			virtual std::string debugExtra() const override;
+			virtual NodeType nodeType() const override { return NodeType::Load; }
+			virtual std::vector<ValuePtr> allValues() const override { return {constant->value}; }
+			virtual std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
 	};
 
 	struct IcmpNode: public InstructionNode, public Writer, public Reader {

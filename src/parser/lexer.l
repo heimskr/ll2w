@@ -124,6 +124,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "!dereferenceable"			{ RTOKEN(DEREFERENCEABLE) }
 "!align"					{ RTOKEN(BANGALIGN) }
 "!srcloc"					{ RTOKEN(SRCLOC) }
+"!tbaa"						{ RTOKEN(TBAA) }
 {INTBANG}					{ RTOKEN(INTBANG) }
 {METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }

@@ -200,7 +200,7 @@ namespace LL2W {
 // StoreNode
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
-	                     ASTNode *nontemporal_, ASTNode *invariant_group) {
+	                     ASTNode *bangs) {
 		atomic = false;
 		type = getType(type_);
 		value = getValue(value_);
@@ -220,19 +220,11 @@ namespace LL2W {
 			delete align_;
 		}
 
-		if (nontemporal_) { // TOK_INTBANG "!42"
-			nontemporalIndex = nontemporal_->atoi(1);
-			delete nontemporal_;
-		}
-
-		if (invariant_group) { // Same as above
-			invariantGroupIndex = invariant_group->atoi(1);
-			delete invariant_group;
-		}
+		handleBangs(bangs);
 	}
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
-	                     ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+	                     ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		atomic = true;
 		type = getType(type_);
 		value = getValue(value_);
@@ -261,10 +253,20 @@ namespace LL2W {
 			delete syncscope_;
 		}
 
-		if (invariant_group) {
-			invariantGroupIndex = invariant_group->atoi(1);
-			delete invariant_group;
+		handleBangs(bangs);
+	}
+
+	void StoreNode::handleBangs(ASTNode *bangs) {
+		for (const ASTNode *sub: *bangs) {
+			if (sub->symbol == TOK_NONTEMPORAL)
+				nontemporalIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_INVARIANT_GROUP)
+				invariantGroupIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_TBAA)
+				tbaa = sub->at(0)->atoi();
 		}
+
+		delete bangs;
 	}
 
 	std::string StoreNode::debugExtra() const {
@@ -289,8 +291,7 @@ namespace LL2W {
 // LoadNode
 
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
-	                   ASTNode *nontemporal_, ASTNode *invariant_load, ASTNode *invariant_group, ASTNode *nonnull_,
-	                   ASTNode *dereferenceable_, ASTNode *dereferenceable_or_null, ASTNode *bang_align) {
+	                   ASTNode *bangs) {
 		atomic = false;
 		result = result_->extracted();
 		type = getType(type_);
@@ -309,44 +310,11 @@ namespace LL2W {
 			delete align_;
 		}
 
-		if (nontemporal_) {
-			nontemporalIndex = nontemporal_->atoi(1);
-			delete nontemporal_;
-		}
-
-		if (invariant_load) {
-			invariantLoadIndex = invariant_load->atoi(1);
-			delete invariant_load;
-		}
-
-		if (invariant_group) {
-			invariantGroupIndex = invariant_group->atoi(1);
-			delete invariant_group;
-		}
-
-		if (nonnull_) {
-			nonnullIndex = nonnull_->atoi(1);
-			delete nonnull_;
-		}
-
-		if (dereferenceable_) {
-			dereferenceable = dereferenceable_->lexerInfo;
-			delete dereferenceable_;
-		}
-
-		if (dereferenceable_or_null) {
-			dereferenceableOrNull = dereferenceable_or_null->lexerInfo;
-			delete dereferenceable_or_null;
-		}
-
-		if (bang_align) {
-			bangAlign = bang_align->lexerInfo;
-			delete bang_align;
-		}
+		handleBangs(bangs);
 	}
 
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_,
-	                   ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group) {
+	                   ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		atomic = true;
 		result = result_->extracted();
 		type = getType(type_);
@@ -375,10 +343,30 @@ namespace LL2W {
 			delete volatile__;
 		}
 
-		if (invariant_group) {
-			invariantGroupIndex = invariant_group->atoi(1);
-			delete invariant_group;
+		handleBangs(bangs);
+	}
+
+	void LoadNode::handleBangs(ASTNode *bangs) {
+		for (const ASTNode *sub: *bangs) {
+			if (sub->symbol == TOK_NONTEMPORAL)
+				nontemporalIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_INVARIANT_LOAD)
+				invariantLoadIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_INVARIANT_GROUP)
+				invariantGroupIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_NONNULL)
+				nonnullIndex = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_DEREFERENCEABLE)
+				dereferenceable = sub->at(0)->lexerInfo;
+			else if (sub->symbol == TOK_DEREFERENCEABLE_OR_NULL)
+				dereferenceableOrNull = sub->at(0)->lexerInfo;
+			else if (sub->symbol == TOK_BANGALIGN)
+				bangAlign = sub->at(0)->lexerInfo;
+			else if (sub->symbol == TOK_TBAA)
+				tbaa = sub->at(0)->atoi();
 		}
+
+		delete bangs;
 	}
 
 	std::string LoadNode::debugExtra() const {

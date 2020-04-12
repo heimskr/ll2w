@@ -127,6 +127,7 @@ using AN = LL2W::ASTNode;
 %token TOK_DEREFERENCEABLE_OR_NULL "!dereferenceable_or_null"
 %token TOK_BANGALIGN "!align"
 %token TOK_SRCLOC "!srcloc"
+%token TOK_TBAA "!tbaa"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
 %token TOK_ICMP "icmp"
@@ -166,7 +167,7 @@ using AN = LL2W::ASTNode;
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
 %token FUNCTION_DEF STATEMENTS LABEL INSTRUCTION FASTMATH_FLAGS VECTOR METADATA_LIST PREDS_LIST FNTYPE CONSTANT_LIST
 %token GETELEMENTPTR_EXPR DECIMAL_LIST INDEX_LIST STRUCT_VALUE VALUE_LIST ARRAY_VALUE CLAUSES GLOBAL_DEF PHI_PAIR
-%token SWITCH_LIST BLOCKHEADER DECIMAL_PAIR_LIST
+%token SWITCH_LIST BLOCKHEADER DECIMAL_PAIR_LIST BANGS
 
 %start start
 
@@ -352,27 +353,34 @@ _align: align | { $$ = nullptr; };
 align: "," "align" TOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
-i_store: "store" _volatile type_any operand "," constant _align _nontemporal _invariant_group
-         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8, $9))->locate($1); D($1, $5); };
+i_store: "store" _volatile type_any operand "," constant _align store_bangs
+         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8))->locate($1); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
-_nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $3; D($1, $2); }  | { $$ = nullptr; };
-_invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); } | store_bangs tbaa { $$ = $1->adopt($2); }
+           | store_bangs nontemporal     { $$ = $1->adopt($2); } | { $$ = new AN(BANGS); };
+nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
+invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $2->adopt($3); D($1); }
+tbaa: "," "!tbaa" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
-i_store_atomic: "store" "atomic" _volatile type_any operand "," constant _syncscope TOK_ORDERING align _invariant_group
+i_store_atomic: "store" "atomic" _volatile type_any operand "," constant _syncscope TOK_ORDERING _align store_bangs
                 { $$ = (new StoreNode($3, $4, $5, $7, $8, $9, $10, $11))->locate($1); D($1, $2, $6); };
 _syncscope: "syncscope" "(" TOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
-i_load: result "load" _volatile type_any "," constant _align _nontemporal _invariant_load
-        _invariant_group _nonnull _dereferenceable _dereferenceable_or_null _bang_align
-        { auto loc = $1->location; $$ = (new LoadNode($1, $3, $4, $6, $7, $8, $9, $10, $11, $12, $13, $14))->locate(loc); D($2, $5); };
+i_load: result "load" _volatile type_any "," constant _align load_bangs
+        { auto loc = $1->location; $$ = (new LoadNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: what is the actual form of the arguments for these?
-_invariant_load:          "," "!invariant.load"          TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
-_nonnull:                 "," "!nonnull"                 TOK_INTBANG { $$ = $3; D($1, $2); } | { $$ = nullptr; };
-_dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
-_dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
-_bang_align:              "," "!align"                   metabang    { $$ = $3; D($1, $2); } | { $$ = nullptr; };
+load_bangs: load_bangs invariant_load  { $$ = $1->adopt($2); } | load_bangs nonnull                 { $$ = $1->adopt($2); }
+          | load_bangs dereferenceable { $$ = $1->adopt($2); } | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
+          | load_bangs bang_align      { $$ = $1->adopt($2); } | load_bangs tbaa                    { $$ = $1->adopt($2); }
+          | load_bangs nontemporal     { $$ = $1->adopt($2); } | load_bangs invariant_group         { $$ = $1->adopt($2); }
+          | { $$ = new AN(BANGS); };
+invariant_load:          "," "!invariant.load"          TOK_INTBANG { $$ = $2->adopt($3); D($1); };
+nonnull:                 "," "!nonnull"                 TOK_INTBANG { $$ = $2->adopt($3); D($1); };
+dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $2->adopt($3); D($1); };
+dereferenceable_or_null: "," "!dereferenceable_or_null" metabang    { $$ = $2->adopt($3); D($1); };
+bang_align:              "," "!align"                   metabang    { $$ = $2->adopt($3); D($1); };
 
-i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope TOK_ORDERING align _invariant_group
+i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope TOK_ORDERING align load_bangs
                { auto loc = $1->location; $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate(loc); D($2, $3, $6); };
 
 i_icmp: result "icmp" TOK_ICMP_COND type_any operand "," operand
