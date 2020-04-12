@@ -12,6 +12,6 @@ namespace LL2W {
 	}
 
 	std::string Instruction::toString() const {
-		return "\e[91m<invalid>\e[39m";
+		return "\e[91m<invalid>\e[39m: " + const_cast<Instruction *>(this)->debugExtra();
 	}
 }

@@ -167,8 +167,8 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.
-			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
-			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
+			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
+			GlobalValue *gep_global = dynamic_cast<GlobalValue *>(gep->variable.get());
 			if (!gep_global) {
 				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
@@ -179,13 +179,20 @@ namespace LL2W::Passes {
 				int  offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 				function.insertBefore(instruction, setsym);
+				setsym->extract();
 				if (offset != 0) {
-					auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 					function.insertAfter(setsym, addi);
+					addi->extract();
 				}
 			}
+		} else if (value_type == ValueType::Global) {
+			GlobalValue *global = dynamic_cast<GlobalValue *>(constant->value.get());
+			auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *global->name);
+			function.insertBefore(instruction, setsym);
+			setsym->extract();
 		} else {
-			std::cout << "Not sure what to do with " << *constant << "\n";
+			warn() << "Not sure what to do with " << *constant << "\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}

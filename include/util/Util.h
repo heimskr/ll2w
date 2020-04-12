@@ -35,6 +35,10 @@ namespace LL2W {
 		return std::cerr << "\e[2m[\e[22;31m!\e[39;2m]\e[22;31m Error: \e[39m";
 	}
 
+	inline std::ostream & info() {
+		return std::cerr << "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
+	}
+
 	inline void debugger() {
 		raise(SIGTRAP);
 	}
