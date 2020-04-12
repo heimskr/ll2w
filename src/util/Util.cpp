@@ -37,6 +37,10 @@ namespace LL2W {
 		return isNumeric(std::string(str));
 	}
 
+	bool isHex(const char ch) {
+		return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');
+	}
+
 	std::string escape(const std::string &str) {
 		std::stringstream out;
 		for (char ch: str) {

@@ -68,10 +68,43 @@ namespace LL2W {
 		out << "#meta\n";
 		out << "name: \"" << escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
 		out << "\n#data\n";
+		dataSection(out);
 		out << "\n#code\n\n";
 		for (std::pair<const std::string, Function> &pair: functions)
 			out << pair.second.toString() << "\n";
 		return out.str();
+	}
+
+	void Program::dataSection(std::ostream &out) {
+		for (const std::pair<std::string, GlobalVarDef *> &pair: globals) {
+			const std::string name = pair.first.substr(1);
+			GlobalVarDef *global = pair.second;
+			ConstantPtr constant = global->constant;
+
+			if (global->linkage == Linkage::External)
+				continue;
+
+			if (!constant) {
+				warn() << name << " inexplicably lacks a constant: " << global->debugExtra() << "\n";
+				continue;
+			}
+
+			ValuePtr value = constant->value;
+			if (value) {
+				ValueType type = value->valueType();
+				if (type == ValueType::CString)
+					out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
+				else if (type == ValueType::Zeroinitializer || type == ValueType::Null)
+					out << name << ": {" << (constant->type->width() / 8) << "}\n";
+				else if (type == ValueType::Int)
+					out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << "\n";
+				else
+					error() << "Unsupported global value: " << *value << "\n";
+			} else {
+				out << name << "\n";
+			}
+
+		}
 	}
 
 	int Program::symbolSize(const std::string &name) const {

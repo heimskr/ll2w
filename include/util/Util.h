@@ -15,6 +15,8 @@ namespace LL2W {
 	bool isNumeric(const std::string *);
 	bool isNumeric(const char *);
 
+	bool isHex(const char);
+
 	std::string escape(const std::string &);
 
 	template <typename T>

@@ -9,6 +9,7 @@
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
 #include "parser/Constant.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	bool Value::isInt() const {
@@ -177,6 +178,20 @@ namespace LL2W {
 	}
 
 	CStringValue::CStringValue(const ASTNode *node): CStringValue(StringSet::intern(node->extractName())) {}
+
+	std::string CStringValue::reescape() const {
+		std::string out;
+		for (int i = 0, max = value->length() - 2; i < max; ++i) {
+			const char ch0 = (*value)[i], ch1 = (*value)[i + 1], ch2 = (*value)[i + 2];
+			if (ch0 == '\\' && isHex(ch1) && isHex(ch2)) {
+				out += std::string("\\x") + ch1 + ch2;
+				i += 2;
+			} else {
+				out += ch0;
+			}
+		}
+		return out;
+	}
 
 	ValuePtr getValue(ASTNode *node) {
 		switch (node->symbol) {

@@ -168,6 +168,8 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::CString; }
 		ValuePtr copy() const override { return std::make_shared<CStringValue>(value); }
 		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
+		// Replaces LLVM-style escapes (e.g., "\1B") with WASM-style escapes (e.g., "\x1B").
+		std::string reescape() const;
 	};
 
 	struct ZeroinitializerValue: public Value {

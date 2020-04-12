@@ -25,6 +25,9 @@ namespace LL2W {
 			/** Returns the source code of the program. */
 			std::string toString();
 
+			/** Outputs the data section (excluding the #data header) to a stream. */
+			void dataSection(std::ostream &);
+
 			/** Returns the size (in bits) of the global variable with a given name.
 			 *  The name should include an initial "@". */
 			int symbolSize(const std::string &) const;
