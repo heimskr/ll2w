@@ -95,6 +95,13 @@ namespace LL2W {
 	InstructionNode::InstructionNode(const std::string *str): BaseNode(INSTRUCTION, str) {}
 	InstructionNode::InstructionNode(): BaseNode(INSTRUCTION, "") {}
 
+	void InstructionNode::handleUnibangs(ASTNode *unibangs) {
+		for (const ASTNode *sub: *unibangs) {
+			if (sub->symbol == TOK_PROF)
+				prof = sub->at(0)->atoi();
+		}
+	}
+
 // Reader
 
 	std::vector<std::shared_ptr<LocalValue>> Reader::allLocals() const {
@@ -123,8 +130,10 @@ namespace LL2W {
 
 // SelectNode
 
-	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type,
-	                       ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2) {
+	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
+	                       ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		getFastmath(fastmath, fastmath_);
 		conditionType = getType(condition_type);
@@ -154,7 +163,9 @@ namespace LL2W {
 // AllocaNode
 
 	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
-	                       ASTNode *addrspace_) {
+	                       ASTNode *addrspace_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		delete result_;
 
@@ -257,6 +268,7 @@ namespace LL2W {
 	}
 
 	void StoreNode::handleBangs(ASTNode *bangs) {
+		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
 			if (sub->symbol == TOK_NONTEMPORAL)
 				nontemporalIndex = sub->at(0)->atoi();
@@ -347,6 +359,7 @@ namespace LL2W {
 	}
 
 	void LoadNode::handleBangs(ASTNode *bangs) {
+		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
 			if (sub->symbol == TOK_NONTEMPORAL)
 				nontemporalIndex = sub->at(0)->atoi();
@@ -392,7 +405,10 @@ namespace LL2W {
 
 // IcmpNode
 
-	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2) {
+	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2,
+	                   ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 
 		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {
@@ -422,13 +438,21 @@ namespace LL2W {
 
 // BrUncondNode
 
+	BrUncondNode::BrUncondNode(ASTNode *node, ASTNode *unibangs): BrUncondNode(node->lexerInfo) {
+		handleUnibangs(unibangs);
+		delete node;
+		delete unibangs;
+	}
+
 	std::string BrUncondNode::debugExtra() const {
 		return "\e[91mbr\e[0;34m label \e[32m" + *destination + "\e[0m";
 	}
 
 // BrCondNode
 
-	BrCondNode::BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false) {
+	BrCondNode::BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		if (*type->lexerInfo != "i1")
 			yyerror("Expected i1 for br condition type");
 		condition = getValue(condition_);
@@ -449,7 +473,10 @@ namespace LL2W {
 
 	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 	                               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
-	                               ASTNode *attribute_list) {
+	                               ASTNode *attribute_list, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
+
 		if (_result) {
 			result = StringSet::intern(_result->extractName());
 			delete _result;
@@ -553,11 +580,11 @@ namespace LL2W {
 
 // CallNode
 
-	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv,
-	                   ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args,
-	                   ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list):
+	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
+	                   ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name,
+	                   ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
 	                   CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
-	                                  _constants, attribute_list) {
+	                                  _constants, attribute_list, unibangs) {
 		if (_tail) {
 			tail = _tail->lexerInfo;
 			delete _tail;
@@ -607,9 +634,9 @@ namespace LL2W {
 
 	AsmNode::AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
 	                 ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
-	                 ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc):
+	                 ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs):
 	                 CallInvokeNode(_result, nullptr, _retattrs, nullptr, return_type, _args, nullptr, _constants,
-	                                attribute_list) {
+	                                attribute_list, unibangs) {
 		contents = asm_string->lexerInfo;
 		delete asm_string;
 
@@ -643,9 +670,9 @@ namespace LL2W {
 
 	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 	                       ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
-	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label):
+	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs):
 	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
-	                                      _constants, attribute_list) {
+	                                      _constants, attribute_list, unibangs) {
 		normalLabel = StringSet::intern(normal_label->extractName());
 		delete normal_label;
 
@@ -693,7 +720,9 @@ namespace LL2W {
 // GetelementptrNode
 
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
-	                                     ASTNode *ptr_value, ASTNode *indices_) {
+	                                     ASTNode *ptr_value, ASTNode *indices_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = StringSet::intern(pvar->extractName());
 		if (_inbounds) {
 			inbounds = true;
@@ -751,9 +780,15 @@ namespace LL2W {
 
 // RetNode
 
-	RetNode::RetNode(): type(std::make_shared<VoidType>()), value(std::make_shared<VoidValue>()) {}
+	RetNode::RetNode(ASTNode *unibangs): type(std::make_shared<VoidType>()), value(std::make_shared<VoidValue>()) {
+		handleUnibangs(unibangs);
+		delete unibangs;
+	}
 
-	RetNode::RetNode(ASTNode *type_, ASTNode *value_) {
+	RetNode::RetNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
+
 		type = getType(type_);
 		value = getValue(value_);
 
@@ -784,7 +819,10 @@ namespace LL2W {
 			std::string(*value);
 	}
 
-	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_) {
+	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs,
+	                               bool cleanup_) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		type = getType(type_);
 		for (ASTNode *clause: *clauses_) {
@@ -825,7 +863,10 @@ namespace LL2W {
 
 // ConversionNode
 
-	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_) {
+	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
+	                               ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		from = getType(from_);
 		value = getValue(value_);
@@ -854,7 +895,9 @@ namespace LL2W {
 // BasicMathNode
 
 	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_,
-	                             ASTNode *left_, ASTNode *right_) {
+	                             ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		oper = oper_->lexerInfo;
 		operSymbol = oper_->symbol;
 		result = result_->extracted();
@@ -880,7 +923,9 @@ namespace LL2W {
 
 // PhiNode
 
-	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_) {
+	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		type = getType(type_);
 		getFastmath(fastmath, fastmath_);
@@ -906,7 +951,9 @@ namespace LL2W {
 
 // SimpleNode
 
-	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_) {
+	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		locate(result_);
 		result = result_->extracted();
 		type = getType(type_);
@@ -928,22 +975,25 @@ namespace LL2W {
 
 // DivNode
 
-	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_):
-		SimpleNode(result_, type_, left_, right_) {
+	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	                 ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
 		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
 	}
 
 // RemNode
 
-	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_):
-		SimpleNode(result_, type_, left_, right_) {
+	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	                 ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
 		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
 	}
 
 // LogicNode
 
-	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_):
-		SimpleNode(result_, type_, left_, right_) {
+	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	                     ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
 		if (*logic->lexerInfo == "and") logicType = LogicType::And;
 		else if (*logic->lexerInfo == "or") logicType = LogicType::Or;
 		else if (*logic->lexerInfo == "xor") logicType = LogicType::Xor;
@@ -961,8 +1011,9 @@ namespace LL2W {
 
 // ShrNode
 
-	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_):
-		SimpleNode(result_, type_, left_, right_) {
+	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	                 ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
 		shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
 		if (exact_) {
 			exact = true;
@@ -973,7 +1024,7 @@ namespace LL2W {
 // FMathNode
 
 	FMathNode::FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_,
-	                     ASTNode *right_): SimpleNode(result_, type_, left_, right_) {
+	                     ASTNode *right_, ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
 		if (*fmath->lexerInfo == "fadd") fmathType = FMathType::Fadd;
 		else if (*fmath->lexerInfo == "fsub") fmathType = FMathType::Fsub;
 		else if (*fmath->lexerInfo == "fmul") fmathType = FMathType::Fmul;
@@ -1003,7 +1054,9 @@ namespace LL2W {
 
 // SwitchNode
 
-	SwitchNode::SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_) {
+	SwitchNode::SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		type = getType(type_);
 		value = getValue(value_);
 		label = label_->extracted();
@@ -1029,7 +1082,9 @@ namespace LL2W {
 // ExtractValueNode
 
 	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
-	                                   ASTNode *decimals_) {
+	                                   ASTNode *decimals_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		TypePtr uncasted = getType(aggregate_type);
 		aggregateType = std::dynamic_pointer_cast<AggregateType>(uncasted);
@@ -1059,7 +1114,9 @@ namespace LL2W {
 // InsertValueNode
 
 	InsertValueNode::InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
-	                                 ASTNode *type_, ASTNode *value_, ASTNode *decimals_) {
+	                                 ASTNode *type_, ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		result = result_->extracted();
 		aggregateType = getType(aggregate_type);
 		aggregateValue = getValue(aggregate_value);
@@ -1086,7 +1143,9 @@ namespace LL2W {
 
 // ResumeNode
 
-	ResumeNode::ResumeNode(ASTNode *type_, ASTNode *value_) {
+	ResumeNode::ResumeNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
 		type = getType(type_);
 		value = getValue(value_);
 	}

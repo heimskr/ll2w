@@ -125,6 +125,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "!align"					{ RTOKEN(BANGALIGN) }
 "!srcloc"					{ RTOKEN(SRCLOC) }
 "!tbaa"						{ RTOKEN(TBAA) }
+"!prof"						{ RTOKEN(PROF) }
 {INTBANG}					{ RTOKEN(INTBANG) }
 {METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }

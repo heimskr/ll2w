@@ -54,10 +54,15 @@ namespace LL2W {
 		virtual NodeType nodeType() const override { return NodeType::Attributes; }
 	};
 
-	struct InstructionNode: public BaseNode {
-		InstructionNode(const std::string *str);
-		InstructionNode();
-		virtual std::string style() const override { return "\e[36m"; }
+	class InstructionNode: public BaseNode {
+		protected:
+			void handleUnibangs(ASTNode *);
+
+		public:
+			int prof = -1;
+			InstructionNode(const std::string *str);
+			InstructionNode();
+			virtual std::string style() const override { return "\e[36m"; }
 	};
 
 	struct Reader {
@@ -79,7 +84,7 @@ namespace LL2W {
 		ValuePtr conditionValue, firstValue, secondValue;
 
 		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
-		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2);
+		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Select; }
 		virtual std::vector<ValuePtr> allValues() const override { return {conditionValue, firstValue, secondValue}; }
@@ -97,7 +102,7 @@ namespace LL2W {
 		int addrspace = -1;
 
 		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
-		           ASTNode *addrspace_);
+		           ASTNode *addrspace_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Alloca; }
 		virtual std::vector<ValuePtr> allValues() const override { return {numelementsValue}; }
@@ -156,7 +161,7 @@ namespace LL2W {
 		TypePtr type;
 		ValuePtr value1, value2;
 
-		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2);
+		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Icmp; }
 		virtual std::vector<ValuePtr> allValues() const override { return {value1, value2}; }
@@ -167,7 +172,7 @@ namespace LL2W {
 		const std::string *destination;
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
 		BrUncondNode(const std::string &destination_): BrUncondNode(StringSet::intern(destination_)) {}
-		BrUncondNode(const ASTNode *node): BrUncondNode(node->lexerInfo) { delete node; }
+		BrUncondNode(ASTNode *node, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::BrUncond; }
 	};
@@ -176,7 +181,7 @@ namespace LL2W {
 		ValuePtr condition;
 		const std::string *ifTrue, *ifFalse;
 
-		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false);
+		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::BrCond; }
 		virtual std::vector<ValuePtr> allValues() const override { return {condition}; }
@@ -187,7 +192,7 @@ namespace LL2W {
 		protected:
 			CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 			               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
-			               ASTNode *attribute_list);
+			               ASTNode *attribute_list, ASTNode *unibangs);
 
 		public:
 			const std::string *cconv = nullptr;
@@ -215,7 +220,7 @@ namespace LL2W {
 
 		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
-		         ASTNode *attribute_list);
+		         ASTNode *attribute_list, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Call; }
 	};
@@ -229,7 +234,7 @@ namespace LL2W {
 
 		AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
 		        ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
-		        ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc);
+		        ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Asm; }
 	};
@@ -239,7 +244,7 @@ namespace LL2W {
 
 		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
 		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
-		           ASTNode *normal_label, ASTNode *exception_label);
+		           ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Invoke; }
 	};
@@ -252,7 +257,7 @@ namespace LL2W {
 		std::vector<std::tuple<int, int, bool, bool>> indices;
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,
-		                  ASTNode *indices_);
+		                  ASTNode *indices_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Getelementptr; }
 		virtual std::vector<ValuePtr> allValues() const override { return {ptrValue}; }
@@ -263,8 +268,8 @@ namespace LL2W {
 		TypePtr type;
 		ValuePtr value;
 
-		RetNode();
-		RetNode(ASTNode *type_, ASTNode *value_);
+		RetNode(ASTNode *unibangs);
+		RetNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Ret; }
 		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
@@ -285,7 +290,7 @@ namespace LL2W {
 		bool cleanup;
 		std::vector<std::shared_ptr<Clause>> clauses;
 
-		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, bool cleanup_);
+		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs, bool cleanup_);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Landingpad; }
 		virtual std::vector<ValuePtr> allValues() const override;
@@ -296,7 +301,8 @@ namespace LL2W {
 		TypePtr from, to;
 		ValuePtr value;
 		Conversion conversionType;
-		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_);
+		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
+		               ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Conversion; }
 		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
@@ -310,7 +316,7 @@ namespace LL2W {
 		TypePtr type;
 		ValuePtr left, right;
 		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_,
-		              ASTNode *right_);
+		              ASTNode *right_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::BasicMath; }
 		virtual std::vector<ValuePtr> allValues() const override { return {left, right}; }
@@ -323,7 +329,7 @@ namespace LL2W {
 		std::unordered_set<Fastmath> fastmath;
 		TypePtr type;
 		std::vector<std::pair<ValuePtr, const std::string *>> pairs;
-		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_);
+		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Phi; }
 	};
@@ -331,7 +337,7 @@ namespace LL2W {
 	struct SimpleNode: public InstructionNode, public Writer, public Reader {
 		TypePtr type;
 		ValuePtr left, right;
-		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const = 0;
 		virtual std::string debugExtra() const override;
 		virtual std::vector<ValuePtr> allValues() const override { return {left, right}; }
@@ -341,7 +347,7 @@ namespace LL2W {
 	struct DivNode: public SimpleNode {
 		enum class DivType {Sdiv, Udiv};
 		DivType divType;
-		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
 		virtual NodeType nodeType() const override { return NodeType::Div; }
 	};
@@ -349,7 +355,7 @@ namespace LL2W {
 	struct RemNode: public SimpleNode {
 		enum class RemType {Srem, Urem};
 		RemType remType;
-		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
 		virtual NodeType nodeType() const override { return NodeType::Rem; }
 	};
@@ -357,7 +363,7 @@ namespace LL2W {
 	struct LogicNode: public SimpleNode {
 		enum class LogicType {And, Or, Xor};
 		LogicType logicType;
-		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		const char * typeName() const override;
 		virtual NodeType nodeType() const override { return NodeType::Logic; }
 	};
@@ -366,7 +372,8 @@ namespace LL2W {
 		enum class ShrType {Lshr, Ashr};
 		ShrType shrType;
 		bool exact = false;
-		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+		        ASTNode *unibangs);
 		const char * typeName() const override { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
 		virtual NodeType nodeType() const override { return NodeType::Shr; }
 	};
@@ -375,7 +382,8 @@ namespace LL2W {
 		enum class FMathType {Fadd, Fsub, Fmul, Fdiv, Frem};
 		FMathType fmathType;
 		std::unordered_set<Fastmath> fastmath;
-		FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+		          ASTNode *unibangs);
 		const char * typeName() const override;
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::FMath; }
@@ -387,7 +395,7 @@ namespace LL2W {
 		const std::string *label;
 		std::vector<std::tuple<TypePtr, ValuePtr, const std::string *>> table;
 
-		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_);
+		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Switch; }
 		virtual std::vector<ValuePtr> allValues() const override { return {value}; }
@@ -398,7 +406,8 @@ namespace LL2W {
 		std::shared_ptr<AggregateType> aggregateType;
 		ValuePtr aggregateValue;
 		std::vector<int> decimals;
-		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_);
+		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_,
+		                 ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::ExtractValue; }
 		virtual std::vector<ValuePtr> allValues() const override { return {aggregateValue}; }
@@ -410,7 +419,7 @@ namespace LL2W {
 		ValuePtr aggregateValue, value;
 		std::vector<int> decimals;
 		InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_,
-		                ASTNode *value_, ASTNode *decimals_);
+		                ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::InsertValue; }
 		virtual std::vector<ValuePtr> allValues() const override { return {aggregateValue, value}; }
@@ -420,7 +429,7 @@ namespace LL2W {
 	struct ResumeNode: public InstructionNode, public Reader {
 		TypePtr type;
 		ValuePtr value;
-		ResumeNode(ASTNode *type_, ASTNode *value_);
+		ResumeNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		virtual std::string debugExtra() const override;
 		virtual NodeType nodeType() const override { return NodeType::Resume; }
 		virtual std::vector<ValuePtr> allValues() const override { return {value}; }

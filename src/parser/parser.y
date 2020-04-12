@@ -129,6 +129,7 @@ using AN = LL2W::ASTNode;
 %token TOK_BANGALIGN "!align"
 %token TOK_SRCLOC "!srcloc"
 %token TOK_TBAA "!tbaa"
+%token TOK_PROF "!prof"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
 %token TOK_ICMP "icmp"
@@ -344,11 +345,14 @@ instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_at
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
            | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable;
 
-i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value
-          { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11))->locate(loc); D($2, $6, $9); };
+unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(BANGS); }; // applicable to all instructions
+unibang: "," "!prof" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
-i_alloca: result "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace
-          { auto loc = $1->location; $$ = (new AllocaNode($1, $3, $4, $5, $6, $7))->locate(loc); D($2); };
+i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs
+          { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11, $12))->locate(loc); D($2, $6, $9); };
+
+i_alloca: result "alloca" _inalloca type_any _alloca_numelements _align _alloca_addrspace unibangs
+          { auto loc = $1->location; $$ = (new AllocaNode($1, $3, $4, $5, $6, $7, $8))->locate(loc); D($2); };
 _inalloca: "inalloca" | { $$ = nullptr; };
 _alloca_numelements: "," type_any value { $$ = $1->adopt({$2, $3}); } | { $$ = nullptr; };
 _align: align | { $$ = nullptr; };
@@ -358,8 +362,9 @@ _alloca_addrspace: "," "addrspace" "(" TOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, 
 i_store: "store" _volatile type_any operand "," constant _align store_bangs
          { $$ = (new StoreNode($2, $3, $4, $6, $7, $8))->locate($1); D($1, $5); };
 _volatile: TOK_VOLATILE | { $$ = nullptr; };
-store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); } | store_bangs tbaa { $$ = $1->adopt($2); }
-           | store_bangs nontemporal     { $$ = $1->adopt($2); } | { $$ = new AN(BANGS); };
+store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); } | store_bangs tbaa    { $$ = $1->adopt($2); }
+           | store_bangs nontemporal     { $$ = $1->adopt($2); } | store_bangs unibang { $$ = $1->adopt($2); }
+           | { $$ = new AN(BANGS); };
 nontemporal: "," "!nontemporal" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" TOK_INTBANG { $$ = $2->adopt($3); D($1); }
 tbaa: "," "!tbaa" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
@@ -375,6 +380,7 @@ load_bangs: load_bangs invariant_load  { $$ = $1->adopt($2); } | load_bangs nonn
           | load_bangs dereferenceable { $$ = $1->adopt($2); } | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
           | load_bangs bang_align      { $$ = $1->adopt($2); } | load_bangs tbaa                    { $$ = $1->adopt($2); }
           | load_bangs nontemporal     { $$ = $1->adopt($2); } | load_bangs invariant_group         { $$ = $1->adopt($2); }
+          | load_bangs unibang         { $$ = $1->adopt($2); }
           | { $$ = new AN(BANGS); };
 invariant_load:          "," "!invariant.load"          TOK_INTBANG { $$ = $2->adopt($3); D($1); };
 nonnull:                 "," "!nonnull"                 TOK_INTBANG { $$ = $2->adopt($3); D($1); };
@@ -385,18 +391,18 @@ bang_align:              "," "!align"                   metabang    { $$ = $2->a
 i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope TOK_ORDERING align load_bangs
                { auto loc = $1->location; $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate(loc); D($2, $3, $6); };
 
-i_icmp: result "icmp" TOK_ICMP_COND type_any operand "," operand
-        { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7))->locate(loc); D($2, $6); };
+i_icmp: result "icmp" TOK_ICMP_COND type_any operand "," operand unibangs
+        { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7, $8))->locate(loc); D($2, $6); };
 
-i_br_uncond: "br" "label" TOK_PVAR { $$ = (new BrUncondNode($3))->locate($1); D($1, $2); };
+i_br_uncond: "br" "label" TOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4))->locate($1); D($1, $2); };
 
-i_br_cond: "br" TOK_INTTYPE operand "," label "," label { $$ = (new BrCondNode($2, $3, $5, $7))->locate($1); D($1, $4, $6); };
+i_br_cond: "br" TOK_INTTYPE operand "," label "," label unibangs { $$ = (new BrCondNode($2, $3, $5, $7, $8))->locate($1); D($1, $4, $6); };
 label: "label" TOK_PVAR { $$ = $2; D($1); };
 
-i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
-        { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14))->locate(loc); D($3, $11, $13); }
-      | _result "call" _retattrs type_any _args "asm" _sideeffect _alignstack _inteldialect TOK_STRING "," TOK_STRING "(" _constants ")" call_attrs _srcloc
-        { auto loc = L({$1, $2, $3}); $$ = (new AsmNode($1, $3, $4, $5, $7, $8, $9, $10, $12, $14, $16, $17))->locate(loc); D($2, $6, $11, $13, $15); };
+i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
+        { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
+      | _result "call" _retattrs type_any _args "asm" _sideeffect _alignstack _inteldialect TOK_STRING "," TOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
+        { auto loc = L({$1, $2, $3}); $$ = (new AsmNode($1, $3, $4, $5, $7, $8, $9, $10, $12, $14, $16, $17, $18))->locate(loc); D($2, $6, $11, $13, $15); };
 _result: result | { $$ = nullptr; };
 result: TOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
@@ -414,73 +420,73 @@ _inteldialect: TOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" TOK_INTBANG { $$ = $3; D($1, $2); };
 
-i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable gep_indices
-               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
+i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable gep_indices unibangs
+               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8, $9))->locate(loc); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(INDEX_LIST); }
            | gep_indices "," _inrange type_any gep_index { $1->adopt($2->adopt({$4, $5, $3})); };
 gep_index: TOK_DECIMAL | TOK_PVAR;
 _inrange: TOK_INRANGE | { $$ = nullptr; };
 
-i_ret: "ret" type_nonvoid value { $$ = (new RetNode($2, $3))->locate($1); D($1); } | "ret" "void" { $$ = new RetNode(); D($1, $2); };
+i_ret: "ret" type_nonvoid value unibangs { $$ = (new RetNode($2, $3, $4))->locate($1); D($1); } | "ret" "void" unibangs { $$ = new RetNode($3); D($1, $2); };
 
-i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs
+i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
           /* TODO: operand bundles */ "to" label "unwind" label
-          { auto loc = L({$1, $2}); $$ = (new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16))->locate(loc); D($2, $9, $11, $13, $15); };
+          { auto loc = L({$1, $2}); $$ = (new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16, $17))->locate(loc); D($2, $9, $11, $13, $15); };
 
-i_landingpad: result "landingpad" type_any clauses            { auto loc = $1->location; $$ = (new LandingpadNode($1, $3, $4, false))->locate(loc); D($2);     }
-            | result "landingpad" type_any "cleanup" _clauses { auto loc = $1->location; $$ = (new LandingpadNode($1, $3, $5, true))->locate(loc);  D($2, $4); };
+i_landingpad: result "landingpad" type_any clauses            unibangs { auto loc = $1->location; $$ = (new LandingpadNode($1, $3, $4, $5, false))->locate(loc); D($2);     }
+            | result "landingpad" type_any "cleanup" _clauses unibangs { auto loc = $1->location; $$ = (new LandingpadNode($1, $3, $5, $6, true))->locate(loc);  D($2, $4); };
 _clauses: clauses | { $$ = new AN(CLAUSES); };
 clauses: clauses clause { $1->adopt($2); } | clause { $$ = (new AN(CLAUSES))->adopt($1); };
 clause: "catch" type_any value { $1->adopt({$2, $3}); }
       | "filter" array     { $1->adopt($2); };
 
-i_convert: result TOK_CONV_OP type_any value "to" type_any
-           { auto loc = $1->location; $$ = (new ConversionNode($1, $2, $3, $4, $6))->locate(loc); D($5); };
+i_convert: result TOK_CONV_OP type_any value "to" type_any unibangs
+           { auto loc = $1->location; $$ = (new ConversionNode($1, $2, $3, $4, $6, $7))->locate(loc); D($5); };
 
 addsubmulshl: "add" | "sub" | "mul" | "shl";
-i_basicmath: result addsubmulshl type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, false, $3, $4, $6))->locate(loc); D($5); }
-           | result addsubmulshl "nuw" type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, false, $4, $5, $7))->locate(loc); D($3, $6); }
-           | result addsubmulshl "nsw" type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, true, $4, $5, $7))->locate(loc); D($3, $6); }
-           | result addsubmulshl "nuw" "nsw" type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate(loc); D($3, $4, $6); }
-           | result addsubmulshl "nsw" "nuw" type_any value "," value { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8))->locate(loc); D($3, $4, $6); };
+i_basicmath: result addsubmulshl type_any value "," value             unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, false, $3, $4, $6, $7))->locate(loc); D($5); }
+           | result addsubmulshl "nuw" type_any value "," value       unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, false, $4, $5, $7, $8))->locate(loc); D($3, $6); }
+           | result addsubmulshl "nsw" type_any value "," value       unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, false, true, $4, $5, $7, $8))->locate(loc); D($3, $6); }
+           | result addsubmulshl "nuw" "nsw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $6); }
+           | result addsubmulshl "nsw" "nuw" type_any value "," value unibangs { auto loc = $1->location; $$ = (new BasicMathNode($1, $2, true, true, $5, $6, $8, $9))->locate(loc); D($3, $4, $6); };
 
-i_phi: result "phi" fastmath_flags type_any phi_list
-       { auto loc = $1->location; $$ = (new PhiNode($1, $3, $4, $5))->locate(loc); D($2); };
+i_phi: result "phi" fastmath_flags type_any phi_list unibangs
+       { auto loc = $1->location; $$ = (new PhiNode($1, $3, $4, $5, $6))->locate(loc); D($2); };
 phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = new AN(PHI_PAIR, $1); };
 phi_pair: "[" value "," TOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
-i_div: result TOK_DIV type_any value "," value
-       { $$ = new DivNode($1, $2, $3, $4, $6); D($5); };
+i_div: result TOK_DIV type_any value "," value unibangs
+       { $$ = new DivNode($1, $2, $3, $4, $6, $7); D($5); };
 
-i_rem: result TOK_REM type_any value "," value
-       { $$ = new RemNode($1, $2, $3, $4, $6); D($5); };
+i_rem: result TOK_REM type_any value "," value unibangs
+       { $$ = new RemNode($1, $2, $3, $4, $6, $7); D($5); };
 
-i_logic: result TOK_LOGIC type_any value "," value
-         { $$ = new LogicNode($1, $2, $3, $4, $6); D($5); };
+i_logic: result TOK_LOGIC type_any value "," value unibangs
+         { $$ = new LogicNode($1, $2, $3, $4, $6, $7); D($5); };
 
-i_switch: "switch" TOK_INTTYPE value "," label "[" switch_list "]"
-          { $$ = (new SwitchNode($2, $3, $5, $7))->locate($1); D($1, $4, $6, $8); };
+i_switch: "switch" TOK_INTTYPE value "," label "[" switch_list "]" unibangs
+          { $$ = (new SwitchNode($2, $3, $5, $7, $9))->locate($1); D($1, $4, $6, $8); };
 switch_list: switch_list switch_pair { $1->adopt($2); } | switch_pair { $$ = new AN(SWITCH_LIST, $1); };
 switch_pair: TOK_INTTYPE value "," label { $$ = $3->adopt({$1, $2, $4}); };
 
-i_shr: result TOK_SHR _exact type_any value "," value
-       { $$ = new ShrNode($1, $2, $3, $4, $5, $7); D($6); };
+i_shr: result TOK_SHR _exact type_any value "," value unibangs
+       { $$ = new ShrNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 _exact: "exact" | { $$ = nullptr; };
 
-i_fmath: result TOK_FMATH fastmath_flags type_any value "," value
-         { $$ = new FMathNode($1, $2, $3, $4, $5, $7); D($6); };
+i_fmath: result TOK_FMATH fastmath_flags type_any value "," value unibangs
+         { $$ = new FMathNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 
-i_extractvalue: result "extractvalue" type_any value decimals
-                { $$ = new ExtractValueNode($1, $3, $4, $5); };
+i_extractvalue: result "extractvalue" type_any value decimals unibangs
+                { $$ = new ExtractValueNode($1, $3, $4, $5, $6); };
 decimals: decimals "," TOK_DECIMAL { $1->adopt($3); D($2); }
         | { $$ = new AN(DECIMAL_LIST); }
 
-i_insertvalue: result "insertvalue" type_any value "," type_any value decimals
-               { $$ = new InsertValueNode($1, $3, $4, $6, $7, $8); D($2, $5); };
+i_insertvalue: result "insertvalue" type_any value "," type_any value decimals unibangs
+               { $$ = new InsertValueNode($1, $3, $4, $6, $7, $8, $9); D($2, $5); };
 
-i_resume: "resume" type_any value
-          { $$ = new ResumeNode($2, $3); D($1); };
+i_resume: "resume" type_any value unibangs
+          { $$ = new ResumeNode($2, $3, $4); D($1); };
 
 i_unreachable: "unreachable"
                { $$ = new UnreachableNode(); D($1); };

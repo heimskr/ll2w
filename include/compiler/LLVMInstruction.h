@@ -4,7 +4,7 @@
 #include "compiler/Instruction.h"
 
 namespace LL2W {
-	struct InstructionNode;
+	class InstructionNode;
 
 	class LLVMInstruction: public Instruction {
 		public:
