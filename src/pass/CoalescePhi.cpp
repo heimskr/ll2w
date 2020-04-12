@@ -23,7 +23,7 @@ namespace LL2W::Passes {
 
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
-			BasicBlockPtr phi_definer = target->onlyDefiner();
+			BasicBlockPtr phi_definer = instruction->parent.lock();
 
 			for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
 				const std::shared_ptr<LocalValue> local = pair.first->isLocal()?
