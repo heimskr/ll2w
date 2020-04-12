@@ -24,6 +24,8 @@ namespace LL2W::Passes {
 			switch (type) {
 				case Conversion::Bitcast:
 				case Conversion::Zext:
+				case Conversion::Ptrtoint:
+				case Conversion::Inttoptr:
 					lowerBasicConversion(function, instruction, conversion);
 					break;
 				case Conversion::Trunc:
