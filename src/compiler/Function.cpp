@@ -519,10 +519,10 @@ namespace LL2W {
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
+		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
 		Passes::lowerObjectsize(*this);
-		Passes::replaceConstants(*this);
 		Passes::lowerIcmp(*this);
 		Passes::lowerMath(*this);
 		Passes::lowerConversions(*this);

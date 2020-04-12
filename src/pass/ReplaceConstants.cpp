@@ -49,6 +49,14 @@ namespace LL2W::Passes {
 				}
 			}
 
+			for (ConstantPtr constant: reader->allConstants()) {
+				if (constant->conversion == Conversion::Bitcast) {
+					constant->type = constant->conversionType;
+					constant->value = constant->conversionSource->value;
+					constant->conversion = Conversion::None;
+				}
+			}
+
 			instruction->extract(true);
 		}
 
