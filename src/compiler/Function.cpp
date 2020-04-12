@@ -39,7 +39,7 @@
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUselessBranches.h"
-#include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceGetelementptrConstants.h"
 #include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
@@ -522,7 +522,7 @@ namespace LL2W {
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
 		Passes::lowerObjectsize(*this);
-		Passes::replaceGetelementptrValues(*this);
+		Passes::replaceGetelementptrConstants(*this);
 		Passes::lowerIcmp(*this);
 		Passes::lowerMath(*this);
 		Passes::lowerConversions(*this);

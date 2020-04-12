@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
@@ -7,25 +5,27 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
 #include "instruction/SetSymbolInstruction.h"
-#include "pass/ReplaceGetelementptrValues.h"
+#include "pass/ReplaceGetelementptrConstants.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	void replaceGetelementptrValues(Function &function) {
+	void replaceGetelementptrConstants(Function &function) {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
 			if (!llvm || llvm->node->nodeType() == NodeType::Call)
 				continue;
+
 			Reader *reader = dynamic_cast<Reader *>(llvm->node);
 			if (!reader)
 				continue;
+
 			for (ValuePtr *value: reader->allValuePointers()) {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get());
 				if (!gep)
 					continue;
 				std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 				if (!gep_global) {
-					std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+					warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				} else {
 					std::list<int> indices;
@@ -48,6 +48,7 @@ namespace LL2W::Passes {
 					*value = new_value;
 				}
 			}
+
 			instruction->extract(true);
 		}
 
