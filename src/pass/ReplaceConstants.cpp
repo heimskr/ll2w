@@ -5,11 +5,11 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
 #include "instruction/SetSymbolInstruction.h"
-#include "pass/ReplaceGetelementptrConstants.h"
+#include "pass/ReplaceConstants.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	void replaceGetelementptrConstants(Function &function) {
+	void replaceConstants(Function &function) {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
 			if (!llvm || llvm->node->nodeType() == NodeType::Call)

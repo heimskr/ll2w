@@ -70,6 +70,7 @@ namespace LL2W {
 		virtual std::vector<ValuePtr *> allValuePointers() = 0;
 		std::vector<std::shared_ptr<LocalValue>> allLocals() const;
 		void replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var);
+		virtual std::vector<ConstantPtr> allConstants() const { return {}; }
 	};
 
 	struct Writer {
@@ -126,10 +127,11 @@ namespace LL2W {
 					ASTNode *bangs);
 			StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
 					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
-			virtual std::string debugExtra() const override;
-			virtual NodeType nodeType() const override { return NodeType::Store; }
-			virtual std::vector<ValuePtr> allValues() const override { return {value, constant->value}; }
-			virtual std::vector<ValuePtr *> allValuePointers() override { return {&value, &constant->value}; }
+			std::string debugExtra() const override;
+			NodeType nodeType() const override { return NodeType::Store; }
+			std::vector<ValuePtr> allValues() const override { return {value, constant->value}; }
+			std::vector<ValuePtr *> allValuePointers() override { return {&value, &constant->value}; }
+			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
 	};
 
 	class LoadNode: public InstructionNode, public Writer, public Reader {
@@ -150,10 +152,11 @@ namespace LL2W {
 					ASTNode *bangs);
 			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
 					ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
-			virtual std::string debugExtra() const override;
-			virtual NodeType nodeType() const override { return NodeType::Load; }
-			virtual std::vector<ValuePtr> allValues() const override { return {constant->value}; }
-			virtual std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
+			std::string debugExtra() const override;
+			NodeType nodeType() const override { return NodeType::Load; }
+			std::vector<ValuePtr> allValues() const override { return {constant->value}; }
+			std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
+			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
 	};
 
 	struct IcmpNode: public InstructionNode, public Writer, public Reader {
@@ -212,6 +215,7 @@ namespace LL2W {
 
 			virtual std::vector<ValuePtr> allValues() const override;
 			virtual std::vector<ValuePtr *> allValuePointers() override;
+			std::vector<ConstantPtr> allConstants() const override { return constants; }
 	};
 
 	struct CallNode: public CallInvokeNode {
