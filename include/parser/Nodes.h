@@ -365,7 +365,8 @@ namespace LL2W {
 	struct ShrNode: public SimpleNode {
 		enum class ShrType {Lshr, Ashr};
 		ShrType shrType;
-		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		bool exact = false;
+		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_);
 		const char * typeName() const override { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
 		virtual NodeType nodeType() const override { return NodeType::Shr; }
 	};

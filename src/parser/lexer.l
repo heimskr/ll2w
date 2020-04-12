@@ -222,6 +222,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "asm"						{ RTOKEN(ASM) }
 "sideeffect"				{ RTOKEN(SIDEEFFECT) }
 "inteldialect"				{ RTOKEN(INTELDIALECT) }
+"exact"						{ RTOKEN(EXACT) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

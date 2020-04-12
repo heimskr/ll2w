@@ -961,9 +961,13 @@ namespace LL2W {
 
 // ShrNode
 
-	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *type_, ASTNode *left_, ASTNode *right_):
+	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_):
 		SimpleNode(result_, type_, left_, right_) {
 		shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
+		if (exact_) {
+			exact = true;
+			delete exact_;
+		}
 	}
 
 // FMathNode

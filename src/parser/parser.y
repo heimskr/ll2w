@@ -162,6 +162,7 @@ using AN = LL2W::ASTNode;
 %token TOK_ASM "asm"
 %token TOK_SIDEEFFECT "sideeffect"
 %token TOK_INTELDIALECT "inteldialect"
+%token TOK_EXACT "exact"
 
 %token CONSTANT CONVERSION_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -462,8 +463,9 @@ i_switch: "switch" TOK_INTTYPE value "," label "[" switch_list "]"
 switch_list: switch_list switch_pair { $1->adopt($2); } | switch_pair { $$ = new AN(SWITCH_LIST, $1); };
 switch_pair: TOK_INTTYPE value "," label { $$ = $3->adopt({$1, $2, $4}); };
 
-i_shr: result TOK_SHR type_any value "," value
-       { $$ = new ShrNode($1, $2, $3, $4, $6); D($5); };
+i_shr: result TOK_SHR _exact type_any value "," value
+       { $$ = new ShrNode($1, $2, $3, $4, $5, $7); D($6); };
+_exact: "exact" | { $$ = nullptr; };
 
 i_fmath: result TOK_FMATH fastmath_flags type_any value "," value
          { $$ = new FMathNode($1, $2, $3, $4, $5, $7); D($6); };
