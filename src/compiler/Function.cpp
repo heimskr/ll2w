@@ -47,6 +47,15 @@
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
 
+#define DEBUG_BLOCKS
+// #define DEBUG_LINEAR
+// #define DEBUG_VARS
+// #define DEBUG_RENDER
+// #define DEBUG_SPILL
+// #define DEBUG_SPLIT
+#define DEBUG_READ_WRITTEN
+// #define REGISTER_PRESSURE 4
+
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
 		parent = &program;
@@ -541,6 +550,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this);
 		computeLiveness();
 		updateInstructionNodes();
+		reindexBlocks();
 
 #ifdef DEBUG_SPILL
 		debug();
@@ -572,8 +582,8 @@ namespace LL2W {
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
-		Passes::removeUselessBranches(*this);
-		Passes::mergeAllBlocks(*this);
+		// Passes::removeUselessBranches(*this);
+		// Passes::mergeAllBlocks(*this);
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
@@ -813,7 +823,7 @@ namespace LL2W {
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << block->label << "\e[0;2;4m @ " << block->offset << "/"
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[0;2;4m @ " << block->offset << "/"
 			          << block->index << ": preds =";
 			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
@@ -847,10 +857,10 @@ namespace LL2W {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
 			          << pair.second->definitions.size() << ") =";
 			for (const BasicBlockPtr &def: pair.second->definingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << def->label << "\e[0m";
+				std::cout << " \e[1;2m%" << std::setw(2) << *def->label << "\e[0m";
 			std::cout << "  \e[0;2muses =";
 			for (const BasicBlockPtr &use: pair.second->usingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << use->label << "\e[0m";
+				std::cout << " \e[1;2m%" << std::setw(2) << *use->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
 			std::cout << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
 			if (pair.second->definingBlocks.size() > 1)
@@ -859,13 +869,13 @@ namespace LL2W {
 			std::cout << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (block->isLiveIn(pair.second))
-					std::cout << " %" << block->label;
+					std::cout << " %" << *block->label;
 			}
 			std::cout << "\e[0m\n";
 			std::cout << "    \e[2m;      \e[31mout =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (block->isLiveOut(pair.second))
-					std::cout << " %" << block->label;
+					std::cout << " %" << *block->label;
 			}
 			std::cout << "\e[0m\n";
 		}

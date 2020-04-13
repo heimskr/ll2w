@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	if (1 < argc) {
 		parsertest(argv[1]);
 	} else {
-		parsertest("ll/printf.ll");
+		parsertest("ll/20args.ll");
 		// mergetest2();
 	}
 }

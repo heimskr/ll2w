@@ -6,6 +6,10 @@
 #include "pass/LinearScan.h"
 #include "options.h"
 
+// #define DEBUG_INTERVALS
+// #define DEBUG_STACK
+// #define DEBUG_LINEAR_SCAN
+
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
 #ifdef DEBUG_LINEAR_SCAN
@@ -106,10 +110,11 @@ namespace LL2W::Passes {
 		std::cerr << "\e[2m}\e[0m\n\n";
 #endif
 #ifdef DEBUG_INTERVALS
-		std::cout << "\e[1;4m" << *name << "(" << getArity() << ")\e[0m [spills: " << spill_count << "]\n";
+		std::cout << "\e[1;4m" << *function.name << "(" << function.getArity() << ")\e[0m [spills: " << spill_count
+		          << "]\n";
 		for (Interval &interval: intervals) {
 			std::cout << "    Interval for variable %" << interval.variable->id << ": [%"
-			          << interval.firstDefinition->label << ", %" << interval.lastUse->label << "]; reg = $"
+			          << *interval.firstDefinition->label << ", %" << *interval.lastUse->label << "]; reg = $"
 			          << WhyInfo::registerName(interval.reg) << " (" << interval.reg << ")\n";
 		}
 #endif
