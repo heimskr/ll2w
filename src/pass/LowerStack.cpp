@@ -20,15 +20,15 @@ namespace LL2W::Passes {
 				if (stack_store->location.offset == 0) {
 					// %var -> [$fp]
 					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, fp);
-					function.insertBefore(instruction, store);
+					function.insertBefore(instruction, store, "LowerStack: %var -> [$fp]");
 					store->extract();
 				} else {
 					// $fp - offset -> $m0
 					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m0);
 					// %var -> [$m0]
 					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m0);
-					function.insertBefore(instruction, sub);
-					function.insertBefore(instruction, store);
+					function.insertBefore(instruction, sub,   "LowerStack: $fp - offset -> $m0");
+					function.insertBefore(instruction, store, "LowerStack: %var -> [$m0]");
 					sub->extract();
 					store->extract();
 				}
@@ -36,15 +36,15 @@ namespace LL2W::Passes {
 				if (stack_load->location.offset == 0) {
 					// [$fp] -> %var
 					auto load = std::make_shared<LoadRInstruction>(fp, stack_load->result);
-					function.insertBefore(instruction, load);
+					function.insertBefore(instruction, load, "LowerStack: [$fp] -> %var");
 					load->extract();
 				} else {
 					// $fp - offset -> $m0
 					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m0);
 					// [$m0] -> %var
 					auto load = std::make_shared<LoadRInstruction>(m0, stack_load->result);
-					function.insertBefore(instruction, sub);
-					function.insertBefore(instruction, load);
+					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m0");
+					function.insertBefore(instruction, load, "LowerStack: [$m0 -> %var]");
 					sub->extract();
 					load->extract();
 				}

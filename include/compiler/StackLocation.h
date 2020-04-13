@@ -14,7 +14,9 @@ namespace LL2W {
 		
 		Function *function = nullptr;
 		Purpose purpose;
-		int offset = 0, width = -1, align = -1;
+		int offset = 0;
+		int width = -1; // in bytes?
+		int align = -1;
 		TypePtr type;
 		std::shared_ptr<Variable> variable;
 

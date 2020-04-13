@@ -8,6 +8,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
+#include "instruction/Comment.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "options.h"
@@ -55,6 +56,7 @@
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
+// #define DISABLE_COMMENTS
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -333,6 +335,23 @@ namespace LL2W {
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
 				++(*linearIter)->index;
 		}
+	}
+
+	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,
+	                            bool reindex) {
+		insertBefore(base, new_instruction, false);
+		comment(base, text, reindex);
+	}
+
+	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text,
+	                            bool reindex) {
+		insertBefore(base, new_instruction, std::string(text), reindex);
+	}
+
+	void Function::comment(InstructionPtr instruction, const std::string &text, bool reindex) {
+#ifndef DISABLE_COMMENTS
+		insertBefore(instruction, std::make_shared<Comment>(text), reindex);
+#endif
 	}
 
 	void Function::removeUselessBranch(BasicBlockPtr block) {
@@ -823,12 +842,12 @@ namespace LL2W {
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[0;2;4m @ " << block->offset << "/"
-			          << block->index << ": preds =";
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[0;2;4m @ " << block->index
+			          << ": preds =";
 			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
 					std::cout << ",";
-				std::cout << " %" << *iter;
+				std::cout << " %" << **iter;
 			}
 			std::cout << "\e[0m\n";
 			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {

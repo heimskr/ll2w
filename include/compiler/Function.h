@@ -141,6 +141,17 @@ namespace LL2W {
 			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
 				bool reindex = true);
 
+			/** Inserts one instruction before another and adds a comment before the inserted instruction. */
+			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
+				const std::string &, bool reindex = true);
+
+			/** Inserts one instruction before another and adds a comment before the inserted instruction. */
+			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
+				const char *, bool reindex = true);
+
+			/** Inserts a comment before an instruction. */
+			void comment(std::shared_ptr<Instruction>, const std::string &, bool reindex = true);
+
 			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
 			 *  if such a branch instruction exists. */
 			void removeUselessBranch(BasicBlockPtr);
