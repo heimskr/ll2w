@@ -95,7 +95,7 @@ namespace LL2W {
 				if (type == ValueType::CString)
 					out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
 				else if (type == ValueType::Zeroinitializer || type == ValueType::Null)
-					out << name << ": {" << (constant->type->width() / 8) << "}\n";
+					out << name << ": (" << (constant->type->width() / 8) << ")\n";
 				else if (type == ValueType::Int)
 					out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << "\n";
 				else
