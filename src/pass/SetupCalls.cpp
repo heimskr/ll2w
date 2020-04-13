@@ -6,6 +6,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
+#include "instruction/JumpRegisterInstruction.h"
 #include "instruction/JumpSymbolInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
@@ -26,38 +27,48 @@ namespace LL2W::Passes {
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
 
 			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
-			VariableValue *name_value = std::dynamic_pointer_cast<VariableValue>(call->name).get();
+			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
-			if (!global_name)
-				throw std::runtime_error("Calls to function pointers are currently unsupported");
+			// if (!global_name) {
+				// error() << llvm->node->location << ": " << instruction->debugExtra() << " (explicit: " << (call->argumentsExplicit? "yes" : "no") << ")\n";
+				// throw std::runtime_error("Calls to function pointers are currently unsupported");
+			// }
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
 			CallingConvention convention;
 			std::vector<TypePtr> argument_types;
 			bool ellipsis;
 
-			// First, we check the call node itself—it sometimes contains the signature of the function.
-			if (call->argumentsExplicit) {
-				argument_types = call->argumentTypes;
-				ellipsis = call->argumentEllipsis;
-				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-			} else if (function.parent->functions.count("@" + *global_name->name) != 0) {
-				// When the arguments aren't explicit, we check the parent program's map of functions.
-				Function &func = function.parent->functions.at("@" + *global_name->name);
-				ellipsis = func.isVariadic();
-				convention = func.getCallingConvention();
-				argument_types.reserve(func.arguments->size());
-				for (FunctionArgument &argument: *func.arguments)
-					argument_types.push_back(argument.type);
-			} else if (function.parent->declarations.count(*global_name->name) != 0) {
-				// We can also check the map of declarations.
-				FunctionHeader *header = function.parent->declarations.at(*global_name->name);
-				ellipsis = header->arguments->ellipsis;
-				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-				argument_types.reserve(header->arguments->arguments.size());
-				for (FunctionArgument &argument: header->arguments->arguments)
-					argument_types.push_back(argument.type);
-			} else throw std::runtime_error("Couldn't find signature for function " + *global_name->name);
+			if (global_name) {
+				// First, we check the call node itself—it sometimes contains the signature of the function.
+				if (call->argumentsExplicit) {
+					argument_types = call->argumentTypes;
+					ellipsis = call->argumentEllipsis;
+					convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+				} else if (function.parent->functions.count("@" + *global_name->name) != 0) {
+					// When the arguments aren't explicit, we check the parent program's map of functions.
+					Function &func = function.parent->functions.at("@" + *global_name->name);
+					ellipsis = func.isVariadic();
+					convention = func.getCallingConvention();
+					argument_types.reserve(func.arguments->size());
+					for (FunctionArgument &argument: *func.arguments)
+						argument_types.push_back(argument.type);
+				} else if (function.parent->declarations.count(*global_name->name) != 0) {
+					// We can also check the map of declarations.
+					FunctionHeader *header = function.parent->declarations.at(*global_name->name);
+					ellipsis = header->arguments->ellipsis;
+					convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+					argument_types.reserve(header->arguments->arguments.size());
+					for (FunctionArgument &argument: header->arguments->arguments)
+						argument_types.push_back(argument.type);
+				} else throw std::runtime_error("Couldn't find signature for function " + *global_name->name);
+			} else {
+				info() << "Dealing with a function pointer.\n";
+				for (ConstantPtr &ptr: call->constants)
+					argument_types.push_back(ptr->type);
+				ellipsis = false;
+				convention = CallingConvention::Reg16;
+			}
 
 			int reg_max = convention == CallingConvention::Reg16? WhyInfo::argumentCount : 0;
 			int arg_count = argument_types.size();
@@ -78,7 +89,13 @@ namespace LL2W::Passes {
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
 
-			function.insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(*global_name->name, true));
+			if (global_name) {
+				function.insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(*global_name->name, true));
+			} else {
+				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
+				function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(local->variable, true));
+			}
+
 			if (call->result) {
 				auto move =
 					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
