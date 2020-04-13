@@ -7,7 +7,7 @@
 #include "options.h"
 
 // #define DEBUG_INTERVALS
-#define DEBUG_STACK
+// #define DEBUG_STACK
 // #define DEBUG_LINEAR_SCAN
 
 namespace LL2W::Passes {

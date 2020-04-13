@@ -12,6 +12,8 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/SetSymbolInstruction.h"
 #include "instruction/StackPushInstruction.h"
+#include "instruction/StoreRInstruction.h"
+#include "instruction/SubIInstruction.h"
 #include "pass/SetupCalls.h"
 #include "util/Util.h"
 
@@ -109,24 +111,35 @@ namespace LL2W::Passes {
 	}
 
 	void pushCallValue(Function &function, InstructionPtr instruction, ConstantPtr constant) {
+		VariablePtr sp = function.sp(instruction->parent.lock());
 		ValueType value_type = constant->value->valueType();
+		TypePtr type = constant->type;
+
+		// Pushing to the stack with the built-in instruction moves the stack pointer down by 8 bytes.
+		// However, we want the stack to be compact, so we have to store to the stack pointer and decrement it
+		// ourselves.
+
 		if (value_type == ValueType::Local) {
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(local->variable));
+			auto store = std::make_shared<StoreRInstruction>(local->variable, sp, type->width() / 8);
+			function.insertBefore(instruction, store);
 		} else if (value_type == ValueType::Int) {
 			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			auto store = std::make_shared<StoreRInstruction>(new_var, sp, type->width() / 8);
+			function.insertBefore(instruction, store);
 		} else if (value_type == ValueType::Bool) {
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			auto store = std::make_shared<StoreRInstruction>(new_var, sp, type->width() / 8);
+			function.insertBefore(instruction, store);
 		} else if (value_type == ValueType::Null) {
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			auto store = std::make_shared<StoreRInstruction>(new_var, sp, type->width() / 8);
+			function.insertBefore(instruction, store);
 		} else if (value_type == ValueType::Getelementptr) {
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
@@ -142,17 +155,22 @@ namespace LL2W::Passes {
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 				function.insertBefore(instruction, setsym);
 				if (offset != 0) {
-					auto addi   = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 					function.insertAfter(setsym, addi);
 				}
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+				auto store = std::make_shared<StoreRInstruction>(new_var, sp, type->width() / 8);
+				function.insertBefore(instruction, store);
 			}
 		} else if (constant->conversionSource) {
 			pushCallValue(function, instruction, constant->conversionSource);
+			return;
 		} else {
 			std::cout << "Not sure what to do with " << *constant << "\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+			return;
 		}
+
+		function.insertBefore(instruction, std::make_shared<SubIInstruction>(sp, type->width() / 8, sp));
 	}
 
 	void setupCallValue(Function &function, VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {

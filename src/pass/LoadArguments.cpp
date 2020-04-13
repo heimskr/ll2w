@@ -27,8 +27,8 @@ namespace LL2W::Passes {
 				// The stack pointer will be pointing right after the stack frame. We need to skip over the local
 				// variables and the arguments after this one, in addition to the return address and frame pointer.
 				int to_skip = 16; // in bytes
-				for (const std::pair<int, StackLocation> &pair: function.stack)
-					to_skip += pair.second.width;
+				// for (const std::pair<int, StackLocation> &pair: function.stack)
+				// 	to_skip += pair.second.width;
 				for (int arg2 = WhyInfo::argumentCount; arg2 < arg; ++arg2)
 					to_skip += function.arguments->at(arg2 - WhyInfo::argumentCount).type->width() / 8;
 
@@ -37,8 +37,9 @@ namespace LL2W::Passes {
 				if (!first_load)
 					first_load = load;
 
-				function.insertBefore(entry->instructions.front(), add, false);
+				function.insertBefore(entry->instructions.front(), add, "LoadArguments: $sp + to_skip -> %temp", false);
 				function.insertAfter(add, load, false);
+				function.comment(load, "LoadArguments: [%temp] -> %var", false);
 			}
 
 			function.reindexInstructions();
