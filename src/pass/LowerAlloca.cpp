@@ -55,7 +55,7 @@ namespace LL2W::Passes {
 					LocalValue *local = dynamic_cast<LocalValue *>(value);
 					auto m0 = function.m0(instruction);
 					auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
-					function.insertBefore(instruction, move);
+					function.insertBefore(instruction, move, "LowerAlloca: $sp -> %var");
 					move->extract();
 					if (width != 0) {
 						auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
@@ -65,7 +65,7 @@ namespace LL2W::Passes {
 						auto movelo = std::make_shared<MoveInstruction>(lo, m0);
 						// $sp -= $m0
 						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
-						function.insertBefore(instruction, mult);
+						function.insertBefore(instruction, mult,   "LowerAlloca: %var * width");
 						function.insertBefore(instruction, movelo);
 						function.insertBefore(instruction, sub);
 						mult->extract();

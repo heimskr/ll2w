@@ -340,7 +340,7 @@ namespace LL2W {
 	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,
 	                            bool reindex) {
 		insertBefore(base, new_instruction, false);
-		comment(base, text, reindex);
+		comment(new_instruction, text, reindex);
 	}
 
 	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text,
