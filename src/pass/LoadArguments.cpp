@@ -24,13 +24,10 @@ namespace LL2W::Passes {
 				VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, entry);
 
 				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ].
-				// The stack pointer will be pointing right after the stack frame. We need to skip over the local
-				// variables and the arguments after this one, in addition to the return address and frame pointer.
-				int to_skip = 16; // in bytes
-				// for (const std::pair<int, StackLocation> &pair: function.stack)
-				// 	to_skip += pair.second.width;
-				for (int arg2 = WhyInfo::argumentCount; arg2 < arg; ++arg2)
-					to_skip += function.arguments->at(arg2 - WhyInfo::argumentCount).type->width() / 8;
+				// The stack pointer will be pointing right after where the frame pointer was pushed.
+				// We need to skip over the arguments after this one, in addition to the return address and frame
+				// pointer.
+				const int to_skip = 16 + 8 * (arg - WhyInfo::argumentCount + 1); // in bytes
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
 				auto load = std::make_shared<LoadRInstruction>(temp_var, arg_var, arg_var->type->width() / 8);
