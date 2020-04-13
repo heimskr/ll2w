@@ -33,7 +33,7 @@ namespace LL2W::Passes {
 				auto m0 = function.m0(instruction);
 				auto mod = std::make_shared<ModIInstruction>(stack_pointer, alloca->align, m0);
 				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
-				function.insertBefore(instruction, mod);
+				function.insertBefore(instruction, mod, "LowerAlloca: align stack pointer");
 				function.insertAfter(mod, sub);
 				mod->extract();
 				sub->extract();

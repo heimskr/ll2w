@@ -54,12 +54,12 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
-			function.insertBefore(instruction, load);
+			function.insertBefore(instruction, load, "LowerMemory: [%local] -> %var");
 			load->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
-			function.insertBefore(instruction, load);
+			function.insertBefore(instruction, load, "LowerMemory: [global] -> %var");
 			load->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
@@ -86,8 +86,8 @@ namespace LL2W::Passes {
 				auto set = std::make_shared<SetInstruction>(m0, int_value);
 				// $m0 -> [%var]
 				auto store = std::make_shared<StoreRInstruction>(m0, local->variable, size);
-				function.insertBefore(instruction, set);
-				function.insertBefore(instruction, store);
+				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m0");
+				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [%var]");
 				set->extract();
 				store->extract();
 			} else {
@@ -105,8 +105,8 @@ namespace LL2W::Passes {
 					throw std::runtime_error("Couldn't find global variable @" + *global->name);
 				}
 
-				function.insertBefore(instruction, set);
-				function.insertBefore(instruction, store);
+				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m0");
+				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [global]");
 				set->extract();
 				store->extract();
 			}
@@ -115,13 +115,13 @@ namespace LL2W::Passes {
 			if (local) {
 				// %src -> [%dest]
 				auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
-				function.insertBefore(instruction, store);
+				function.insertBefore(instruction, store, "LowerMemory: %src -> [%dest]");
 				store->extract();
 			} else {
 				// %src -> [global]
 				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name,
 					function.parent->symbolSize("@" + *global->name) / 8);
-				function.insertBefore(instruction, store);
+				function.insertBefore(instruction, store, "LowerMemory: %src -> [global]");
 				store->extract();
 			}
 		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
