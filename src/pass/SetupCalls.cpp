@@ -29,10 +29,6 @@ namespace LL2W::Passes {
 			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
-			// if (!global_name) {
-				// error() << llvm->node->location << ": " << instruction->debugExtra() << " (explicit: " << (call->argumentsExplicit? "yes" : "no") << ")\n";
-				// throw std::runtime_error("Calls to function pointers are currently unsupported");
-			// }
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
 			CallingConvention convention;
@@ -63,7 +59,6 @@ namespace LL2W::Passes {
 						argument_types.push_back(argument.type);
 				} else throw std::runtime_error("Couldn't find signature for function " + *global_name->name);
 			} else {
-				info() << "Dealing with a function pointer.\n";
 				for (ConstantPtr &ptr: call->constants)
 					argument_types.push_back(ptr->type);
 				ellipsis = false;
