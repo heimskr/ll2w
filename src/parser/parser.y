@@ -130,6 +130,7 @@ using AN = LL2W::ASTNode;
 %token TOK_SRCLOC "!srcloc"
 %token TOK_TBAA "!tbaa"
 %token TOK_PROF "!prof"
+%token TOK_CALLEES "!callees"
 %token TOK_SYNCSCOPE "syncscope"
 %token TOK_ATOMIC "atomic"
 %token TOK_ICMP "icmp"
@@ -346,7 +347,8 @@ instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_at
            | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(BANGS); }; // applicable to all instructions
-unibang: "," "!prof" TOK_INTBANG { $$ = $2->adopt($3); D($1); };
+unibang: "," "!prof"    TOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!callees" TOK_INTBANG { $$ = $2->adopt($3); D($1); }
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11, $12))->locate(loc); D($2, $6, $9); };

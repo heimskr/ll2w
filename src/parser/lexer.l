@@ -37,7 +37,7 @@ PVAR				("%"({NUMBER}|{IDENT}|{STRING}))
 CSTRING				("c"{STRING})
 INTBANG				("!"{DIGIT}+)
 METABANG			("!"{IDENT})
-FLOATING			("-"?[0-9]+"."[0-9]+("e+"[0-9]+)?)
+FLOATING			("-"?[0-9]+"."[0-9]+("e"[+\-][0-9]+)?)
 FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 DLLPORT				("dllimport"|"dllexport")
 THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
@@ -126,6 +126,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "!srcloc"					{ RTOKEN(SRCLOC) }
 "!tbaa"						{ RTOKEN(TBAA) }
 "!prof"						{ RTOKEN(PROF) }
+"!callees"					{ RTOKEN(CALLEES) }
 {INTBANG}					{ RTOKEN(INTBANG) }
 {METABANG}					{ RTOKEN(METABANG) }
 "define"					{ RTOKEN(DEFINE) }
