@@ -35,8 +35,8 @@ namespace LL2W {
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
 
-			/** A set of the numeric labels of all the function's basic blocks. */
-			std::unordered_set<int> bbLabels;
+			/** A set of the labels of all the function's basic blocks. */
+			std::unordered_set<const std::string *> bbLabels;
 
 			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;

@@ -14,9 +14,9 @@ namespace LL2W::Passes {
 
 		// First pass: add all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
-			const std::string label = std::to_string(block->label);
-			function.cfg += label;
-			Node &node = function.cfg[label];
+			const std::string *label = block->label;
+			function.cfg += *label;
+			Node &node = function.cfg[*label];
 			node.data = block;
 			block->node = &node;
 			function.bbNodeMap.insert({block.get(), &node});
@@ -26,19 +26,18 @@ namespace LL2W::Passes {
 
 		// Second pass: connect all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
-			const std::string label = std::to_string(block->label);
-			for (int pred: block->preds) {
-				const std::string pred_label = std::to_string(pred);
-				if (function.cfg.hasLabel(pred_label)) {
-					function.cfg.link(pred_label, label);
+			const std::string *label = block->label;
+			for (const std::string *pred: block->preds) {
+				if (function.cfg.hasLabel(*pred)) {
+					function.cfg.link(*pred, *label);
 				} else {
-					warn() << "Predicate \e[1m" << pred_label << "\e[22m doesn't correspond to any CFG node in function"
+					warn() << "Predicate \e[1m" << *pred << "\e[22m doesn't correspond to any CFG node in function"
 				           << " \e[1m" << *function.name << "\e[22m\n";
 				}
 			}
 
 			if (!block->instructions.empty() && block->instructions.back()->isTerminal())
-				function.cfg.link(label, "exit");
+				function.cfg.link(*label, "exit");
 		}
 
 		function.dTree.emplace(function.cfg, function.cfg[0]);

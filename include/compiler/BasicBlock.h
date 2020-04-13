@@ -25,9 +25,9 @@ namespace LL2W {
 			void extract(Instruction &);
 
 		public:
-			int label;
+			const std::string *label;
 			int index = -1;
-			std::vector<int> preds;
+			std::vector<const std::string *> preds;
 			std::list<std::shared_ptr<Instruction>> instructions;
 			std::set<std::shared_ptr<Variable>> read, written;
 			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
@@ -37,7 +37,8 @@ namespace LL2W {
 			int offset = -1;
 			int estimatedExecutions = 0;
 
-			BasicBlock(int, const std::vector<int> &, const std::list<std::shared_ptr<Instruction>> &);
+			BasicBlock(const std::string *, const std::vector<const std::string *> &,
+			           const std::list<std::shared_ptr<Instruction>> &);
 
 			/** Extracts each instruction in the basic block. Returns a pair containing the total number of reads and
 			 *  the total number of writes in the basic block. */

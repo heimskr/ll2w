@@ -34,8 +34,8 @@ namespace LL2W {
 	};
 
 	struct HeaderNode: public BaseNode {
-		int label;
-		std::vector<int> preds;
+		const std::string *label;
+		std::vector<const std::string *> preds;
 		HeaderNode(ASTNode *node);
 		std::string style() const override { return "\e[32m"; }
 		std::string debugExtra() const override;
@@ -59,7 +59,7 @@ namespace LL2W {
 			void handleUnibangs(ASTNode *);
 
 		public:
-			int prof = -1;
+			int prof = -1, callees = -1;
 			InstructionNode(const std::string *str);
 			InstructionNode();
 			std::string style() const override { return "\e[36m"; }

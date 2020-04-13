@@ -17,8 +17,8 @@ namespace LL2W::Passes {
 						auto next = iter;
 						++next;
 						if (next != end) {
-							const int destination = std::atoi(branch->destination->substr(1).c_str());
-							if ((*next)->label == destination)
+							const std::string destination = branch->destination->substr(1);
+							if (*(*next)->label == destination)
 								to_remove.push_back(back);
 						}
 					} else throw std::runtime_error("branch is null in Function::removeUselessBranches");

@@ -61,8 +61,8 @@ namespace LL2W {
 	}
 
 	void Function::extractBlocks() {
-		int label = arguments->size();
-		std::vector<int> preds {};
+		const std::string *label = StringSet::intern(std::to_string(arguments->size()));
+		std::vector<const std::string *> preds {};
 		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
 		int instructionIndex = -1;
@@ -73,7 +73,7 @@ namespace LL2W {
 			block->parent = this;
 			block->index = ++blockIndex;
 			bbLabels.insert(block->label);
-			bbMap.emplace(StringSet::intern(std::to_string(block->label)), block);
+			bbMap.emplace(block->label, block);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
@@ -173,7 +173,7 @@ namespace LL2W {
 			label = iter->first + 1;
 		}
 
-		for (; bbLabels.count(label) == 1; ++label);
+		for (; bbLabels.count(StringSet::intern(std::to_string(label))) == 1; ++label);
 		return label;
 	}
 
@@ -337,8 +337,8 @@ namespace LL2W {
 				if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
 					BasicBlockPtr next = after(block);
 					if (next) {
-						const int destination = std::atoi(branch->destination->substr(1).c_str());
-						if (next->label == destination)
+						const std::string destination = branch->destination->substr(1);
+						if (*next->label == destination)
 							remove(back);
 					}
 				} else throw std::runtime_error("branch is null in Function::removeUselessBranch");
@@ -359,16 +359,16 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
-		const int label = newLabel();
+		const std::string *label = StringSet::intern(std::to_string(newLabel()));
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
 		          << " & " << label << "\n";
 #endif
-		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<int> {block->label},
+		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *> {block->label},
 			std::list<InstructionPtr>());
 		new_block->parent = this;
 		bbLabels.insert(label);
-		bbMap.emplace(StringSet::intern(std::to_string(label)), new_block);
+		bbMap.emplace(label, new_block);
 
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
@@ -396,7 +396,7 @@ namespace LL2W {
 		blocks.insert(blockIter, new_block);
 
 		// Add an unconditional branch from the original block to the new block.
-		BrUncondNode *node = new BrUncondNode("%" + std::to_string(label));
+		BrUncondNode *node = new BrUncondNode("%" + *label);
 		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
 		branch->parent = block;
 		block->instructions.push_back(branch);
@@ -414,7 +414,7 @@ namespace LL2W {
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (BasicBlockPtr &block: blocks) {
-			for (int &pred: block->preds) {
+			for (const std::string *&pred: block->preds) {
 				if (pred == after->label)
 					pred = before->label;
 			}
@@ -427,10 +427,10 @@ namespace LL2W {
 
 		// Replace the after-block's label with the before-block's in all instructions.
 		// TODO: When Why.js branches are implemented, add them here.
-		const std::string *before_p_label = StringSet::intern("%" + std::to_string(before->label));
-		const std::string *after_p_label  = StringSet::intern("%" + std::to_string(after->label));
-		const std::string *before_label = StringSet::intern(std::to_string(before->label));
-		const std::string *after_label  = StringSet::intern(std::to_string(after->label));
+		const std::string *before_p_label = StringSet::intern("%" + *before->label);
+		const std::string *after_p_label  = StringSet::intern("%" + *after->label);
+		const std::string *before_label   = before->label;
+		const std::string *after_label    = after->label;
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
 				if (branch->destination == after_p_label)

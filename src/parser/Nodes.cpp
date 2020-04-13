@@ -31,18 +31,18 @@ namespace LL2W {
 
 	HeaderNode::HeaderNode(ASTNode *node): BaseNode(BLOCKHEADER, "") {
 		locate(node);
-		label = node->at(0)->atoi();
+		label = node->at(0)->lexerInfo;
 		preds.reserve(node->at(2)->size());
-		for (ASTNode *pred: *node->at(2))
-			preds.push_back(pred->atoi(1));
+		for (const ASTNode *pred: *node->at(2))
+			preds.push_back(StringSet::intern(pred->lexerInfo->substr(1)));
 		delete node;
 	}
 
 	std::string HeaderNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[2;4m<label>:" << label << "; preds =";
-		for (int pred: preds)
-			out << " %" << pred;
+		for (const std::string *pred: preds)
+			out << " %" << *pred;
 		out << "\e[0m";
 		return out.str();
 	}
@@ -99,6 +99,8 @@ namespace LL2W {
 		for (const ASTNode *sub: *unibangs) {
 			if (sub->symbol == TOK_PROF)
 				prof = sub->at(0)->atoi();
+			else if (sub->symbol == TOK_CALLEES)
+				callees = sub->at(0)->atoi();
 		}
 	}
 

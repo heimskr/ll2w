@@ -3,7 +3,7 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
-	BasicBlock::BasicBlock(int label_, const std::vector<int> &preds_,
+	BasicBlock::BasicBlock(const std::string *label_, const std::vector<const std::string *> &preds_,
 	                       const std::list<std::shared_ptr<Instruction>> &instructions_):
 		label(label_), preds(preds_), instructions(instructions_) {}
 
