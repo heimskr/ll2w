@@ -5,9 +5,11 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
+#include "instruction/ShiftRightLogicalIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorRInstruction.h"
 #include "pass/LowerConversions.h"
+#include "util/Util.h"
 
 namespace LL2W::Passes {
 	int lowerConversions(Function &function) {
@@ -64,10 +66,23 @@ namespace LL2W::Passes {
 		if (!conversion->value->isLocal())
 			throw std::runtime_error("Expected a pvar in zext conversion");
 		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
+		VariablePtr destination = conversion->variable;
 
-		const int mask = (1 << conversion->to->width()) - 1;
-		auto andi = std::make_shared<AndIInstruction>(source, mask, conversion->variable);
-		function.insertBefore(instruction, andi);
+		const int from = conversion->from->width(), to = conversion->to->width();
+		const std::string tag = std::to_string(from) + " to " + std::to_string(to);
+
+		if (32 < to) {
+			// If the number of bits to truncate to is greater than 32, we can't fit a mask in an immediate value.
+			// Instead, we can shift left and then right by the same number of bits to clear the higher bits.
+			auto left = std::make_shared<ShiftLeftLogicalIInstruction>(source, 64 - to, destination);
+			auto right = std::make_shared<ShiftRightLogicalIInstruction>(destination, 64 - to, destination);
+			function.insertBefore(instruction, left,  "LowerTrunc: " + tag + ", left shift");
+			function.insertBefore(instruction, right, "LowerTrunc: " + tag + ", right shift");
+		} else {
+			const unsigned int mask = static_cast<int>((1L << conversion->to->width()) - 1);
+			auto andi = std::make_shared<AndIInstruction>(source, mask, destination);
+			function.insertBefore(instruction, andi, "LowerTrunc: " + tag + ", apply mask");
+		}
 	}
 
 	void lowerSext(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
@@ -79,7 +94,7 @@ namespace LL2W::Passes {
 		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
 		VariablePtr destination = conversion->variable;
 
-		int from = conversion->from->width(), to = conversion->to->width();
+		const int from = conversion->from->width(), to = conversion->to->width();
 		if (to == 64 || to == 32) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
@@ -100,7 +115,7 @@ namespace LL2W::Passes {
 
 			if (to == 32) {
 				auto andi = std::make_shared<AndIInstruction>(destination, 0xffffffff, destination);
-				function.insertBefore(instruction, andi);
+				function.insertBefore(instruction, andi, "LowerSext: to == 32");
 				andi->extract();
 			}
 		} else throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported");
