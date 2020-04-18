@@ -560,12 +560,13 @@ namespace LL2W {
 		const int initial_stack_size = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);
+		Passes::makeCFG(*this);
+		computeLiveness();
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
-		Passes::makeCFG(*this);
 		Passes::coalescePhi(*this);
 		computeLiveness();
 		updateInstructionNodes();

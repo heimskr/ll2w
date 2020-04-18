@@ -11,6 +11,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/SetSymbolInstruction.h"
+#include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
 #include "pass/SetupCalls.h"
 #include "util/Util.h"
@@ -25,6 +26,7 @@ namespace LL2W::Passes {
 			if (!llvm || llvm->node->nodeType() != NodeType::Call)
 				continue;
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
+			BasicBlockPtr block = instruction->parent.lock();
 
 			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
@@ -76,6 +78,14 @@ namespace LL2W::Passes {
 				setupCallValue(function, new_var, instruction, call->constants[i]);
 			}
 
+			// Before we push variables onto the stack, we need to push any live-out variables in case the function
+			// modifies them.
+			for (const VariablePtr &outvar: block->liveOut) {
+				auto spush = std::make_shared<StackPushInstruction>(outvar);
+				function.insertBefore(instruction, spush, "SetupCalls: save live-out variable");
+				spush->extract();
+			}
+
 			// Next, push variables onto the stack, right to left.
 			for (int i = arg_count - 1; reg_max <= i; --i)
 				pushCallValue(function, instruction, call->constants[i]);
@@ -84,19 +94,30 @@ namespace LL2W::Passes {
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
 
+			// At this point, we're ready to insert the jump.
 			if (global_name) {
 				function.insertBefore(instruction, std::make_shared<JumpSymbolInstruction>(*global_name->name, true));
 			} else {
 				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
-				function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(local->variable, true));
+				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);
+				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer");
+				jump->extract();
 			}
 
+			// If the call specified a result variable, move $r0 into that variable.
 			if (call->result) {
 				auto move =
 					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
-					instruction->parent.lock()), function.getVariable(*call->result));
-				function.insertBefore(instruction, move);
+						block), function.getVariable(*call->result));
+				function.insertBefore(instruction, move, "SetupCalls: move result from $r0");
 				move->extract();
+			}
+
+			// After we've done all that, it's time to restore any live-out variables we pushed to the stack.
+			for (const VariablePtr &outvar: block->liveOut) {
+				auto spop = std::make_shared<StackPopInstruction>(outvar);
+				function.insertBefore(instruction, spop, "SetupCalls: restore live-out variable");
+				spop->extract();
 			}
 
 			to_remove.push_back(instruction);
