@@ -10,6 +10,7 @@ namespace LL2W::CompilerUtil {
 				case NodeType::BrCond: return true;
 				case NodeType::Ret: return true;
 				case NodeType::Switch: return true;
+				case NodeType::Unreachable: return true;
 				default: return false;
 			}
 		}
