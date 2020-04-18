@@ -13,12 +13,24 @@
 #include "instruction/SetSymbolInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
+#include "pass/MakeCFG.h"
 #include "pass/SetupCalls.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	void setupCalls(Function &function) {
 		std::list<InstructionPtr> to_remove;
+
+		// First, we need to split all blocks after function calls and recompute liveness. This is so that we know which
+		// variables need to be saved before the function call and restored after.
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+			if (llvm && llvm->node->nodeType() == NodeType::Call)
+				function.splitBlock(instruction->parent.lock(), instruction);
+		}
+
+		Passes::makeCFG(function);
+		function.computeLiveness();
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// Look for a call instruction.
@@ -114,7 +126,10 @@ namespace LL2W::Passes {
 			}
 
 			// After we've done all that, it's time to restore any live-out variables we pushed to the stack.
-			for (const VariablePtr &outvar: block->liveOut) {
+			std::list<VariablePtr> reverse;
+			for (const VariablePtr &outvar: block->liveOut)
+				reverse.push_front(outvar);
+			for (const VariablePtr &outvar: reverse) {
 				auto spop = std::make_shared<StackPopInstruction>(outvar);
 				function.insertBefore(instruction, spop, "SetupCalls: restore live-out variable");
 				spop->extract();

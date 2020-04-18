@@ -561,7 +561,6 @@ namespace LL2W {
 		extractVariables();
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
-		computeLiveness();
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
 		for (BasicBlockPtr &block: blocks)
