@@ -71,7 +71,7 @@ namespace LL2W {
 		dataSection(out);
 		out << "\n#code\n\n";
 		if (functions.count("@main") == 1)
-			out << "::main \n<halt>\n\n";
+			out << ":: main\n<halt>\n\n";
 		for (std::pair<const std::string, Function> &pair: functions)
 			out << pair.second.toString() << "\n";
 		return out.str();

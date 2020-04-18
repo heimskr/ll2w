@@ -62,6 +62,7 @@ namespace LL2W {
 			/** A pointer to an interned string containing the name of the function. */
 			const std::string *name;
 
+			/** The type of the returned value. */
 			TypePtr returnType;
 
 			/** A list of all basic blocks in the order they appear. */
@@ -73,7 +74,12 @@ namespace LL2W {
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<int, VariablePtr> variableStore;
 
+			/** A list of variables that have been removed but are likely to be still referenced somewhere. */
 			std::list<VariablePtr> retiredVariables;
+
+			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by
+			 *  InsertPrologue. */
+			std::list<int> savedRegisters;
 
 			/** Maps offsets to stack location information. */
 			std::map<int, StackLocation> stack;

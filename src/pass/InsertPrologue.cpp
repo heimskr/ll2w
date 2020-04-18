@@ -21,11 +21,29 @@ namespace LL2W::Passes {
 		if (!first)
 			throw std::runtime_error("Couldn't find a non-label instruction in the initial block of " + *function.name);
 
+		// Start by pushing a few special registers to the stack.
 		VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, front_block);
 		VariablePtr fp = function.makePrecoloredVariable(WhyInfo::framePointerOffset, front_block);
 		VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, front_block);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false);
+
+		// Next, we need to push any variables that are written to.
+		std::set<int> written;
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			for (const VariablePtr &variable: instruction->written) {
+				if (variable->reg != -1 && !WhyInfo::isSpecialPurpose(variable->reg))
+					written.insert(variable->reg);
+			}
+		}
+
+		function.savedRegisters.clear();
+		for (int reg: written) {
+			function.savedRegisters.push_back(reg);
+			VariablePtr variable = function.makePrecoloredVariable(reg, front_block);
+			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false);
+		}
+
 		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false);
 
 #ifdef MOVE_STACK_POINTER

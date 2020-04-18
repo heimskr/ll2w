@@ -21,17 +21,6 @@ namespace LL2W::Passes {
 	void setupCalls(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
-		// First, we need to split all blocks after function calls and recompute liveness. This is so that we know which
-		// variables need to be saved before the function call and restored after.
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (llvm && llvm->node->nodeType() == NodeType::Call)
-				function.splitBlock(instruction->parent.lock(), instruction);
-		}
-
-		Passes::makeCFG(function);
-		function.computeLiveness();
-
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// Look for a call instruction.
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
@@ -90,14 +79,6 @@ namespace LL2W::Passes {
 				setupCallValue(function, new_var, instruction, call->constants[i]);
 			}
 
-			// Before we push variables onto the stack, we need to push any live-out variables in case the function
-			// modifies them.
-			for (const VariablePtr &outvar: block->liveOut) {
-				auto spush = std::make_shared<StackPushInstruction>(outvar);
-				function.insertBefore(instruction, spush, "SetupCalls: save live-out variable");
-				spush->extract();
-			}
-
 			// Next, push variables onto the stack, right to left.
 			for (int i = arg_count - 1; reg_max <= i; --i)
 				pushCallValue(function, instruction, call->constants[i]);
@@ -123,16 +104,6 @@ namespace LL2W::Passes {
 						block), function.getVariable(*call->result));
 				function.insertBefore(instruction, move, "SetupCalls: move result from $r0");
 				move->extract();
-			}
-
-			// After we've done all that, it's time to restore any live-out variables we pushed to the stack.
-			std::list<VariablePtr> reverse;
-			for (const VariablePtr &outvar: block->liveOut)
-				reverse.push_front(outvar);
-			for (const VariablePtr &outvar: reverse) {
-				auto spop = std::make_shared<StackPopInstruction>(outvar);
-				function.insertBefore(instruction, spop, "SetupCalls: restore live-out variable");
-				spop->extract();
 			}
 
 			to_remove.push_back(instruction);

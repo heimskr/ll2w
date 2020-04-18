@@ -32,23 +32,33 @@ namespace LL2W::Passes {
 			VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, block);
 			VariablePtr r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
 
-			// Insert the epilogue (minus the jump).
-			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp)); // $fp -> $sp
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp)); // ] $fp
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt)); // ] $rt
+			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp), false); // $fp -> $sp
 
 			// Put the return value into $r0.
 			if (ret->value->isIntLike()) {
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()));
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false);
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
-				function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0));
+				function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
 			}
 
+			// Pop all the variables that were saved in the prologue.
+			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
+			     iter != end; ++iter) {
+				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(variable), false);
+			}
+
+			// Insert the epilogue (minus the jump).
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false); // ] $fp
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false); // ] $rt
+
 			// Jump to the return address.
-			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false));
+			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false), false);
 			to_remove.push_back(instruction);
 		}
+
+		function.reindexInstructions();
 
 		for (InstructionPtr &instruction: to_remove)
 			function.remove(instruction);
