@@ -62,6 +62,7 @@ namespace LL2W {
 	};
 
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;
+	std::ostream & operator<<(std::ostream &, const BasicBlock &);
 }
 
 #endif

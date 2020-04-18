@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	if (1 < argc) {
 		parsertest(argv[1]);
 	} else {
-		parsertest("ll/20args.ll");
+		parsertest("ll/allocate.ll");
 		// mergetest2();
 	}
 }
@@ -120,7 +120,7 @@ void parsertest(const std::string &filename) {
 	LL2W::Parser::parse();
 	LL2W::Program prog(*LL2W::Parser::root);
 	prog.compile();
-	// prog.debug();
-	std::cout << prog.toString();
+	prog.debug();
+	// std::cout << prog.toString();
 	LL2W::Parser::done();
 }

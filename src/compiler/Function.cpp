@@ -51,7 +51,7 @@
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 // #define DEBUG_VARS
-// #define DEBUG_RENDER
+#define DEBUG_RENDER
 // #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
@@ -788,7 +788,13 @@ namespace LL2W {
 				std::set<BasicBlockPtr> set = var->usingBlocks;
 				for (BasicBlockPtr bb: var->definingBlocks)
 					set.erase(bb);
-				return !set.empty();
+
+				if (!set.empty()) {
+					block.liveOut.insert(var);
+					return true;
+				}
+
+				return false;
 			}
 		}
 
@@ -842,14 +848,31 @@ namespace LL2W {
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[0;2;4m @ " << block->index
+			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
 			          << ": preds =";
 			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
 					std::cout << ",";
 				std::cout << " %" << **iter;
 			}
-			std::cout << "\e[0m\n";
+			if (!block->liveIn.empty()) {
+				std::cout << "; live-in =";
+				for (auto begin = block->liveIn.begin(), iter = begin, end = block->liveIn.end(); iter != end; ++iter) {
+					if (iter != begin)
+						std::cout << ",";
+					std::cout << " %" << (*iter)->id;
+				}
+			}
+			if (!block->liveOut.empty()) {
+				std::cout << "; live-out =";
+				for (auto begin = block->liveOut.begin(), iter = begin, end = block->liveOut.end(); iter != end;
+				     ++iter) {
+					if (iter != begin)
+						std::cout << ",";
+					std::cout << " %" << (*iter)->id;
+				}
+			}
+			std::cout << "\e[22;24m\n";
 			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 #ifdef DEBUG_READ_WRITTEN
 				int read, written;

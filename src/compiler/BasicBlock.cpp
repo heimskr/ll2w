@@ -64,4 +64,8 @@ namespace LL2W {
 		}
 		return false;
 	}
+
+	std::ostream & operator<<(std::ostream &os, const BasicBlock &block) {
+		return os << "%" << *block.label;
+	}
 }
