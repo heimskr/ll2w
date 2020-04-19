@@ -23,8 +23,8 @@ namespace LL2W::Passes {
 
 		// Start by pushing a few special registers to the stack.
 		VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, front_block);
-		VariablePtr fp = function.makePrecoloredVariable(WhyInfo::framePointerOffset, front_block);
-		VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, front_block);
+		VariablePtr fp = function.fp(front_block);
+		VariablePtr sp = function.sp(front_block);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false);
 

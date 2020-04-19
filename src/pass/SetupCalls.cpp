@@ -71,7 +71,15 @@ namespace LL2W::Passes {
 			int reg_max = convention == CallingConvention::Reg16? WhyInfo::argumentCount : 0;
 			int arg_count = argument_types.size();
 
-			// First, move variables into the argument registers.
+			// First, push the current values of the argument registers to the stack.
+			if (convention == CallingConvention::Reg16) {
+				for (int i = 0; i < function.getArity() && i < WhyInfo::argumentCount; ++i) {
+					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
+					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false);
+				}
+			}
+
+			// Next, move variables into the argument registers.
 			for (int i = 0; i < reg_max && i < arg_count; ++i) {
 				// Make a precolored dummy variable.
 				VariablePtr new_var = function.newVariable(argument_types[i]);
@@ -79,7 +87,7 @@ namespace LL2W::Passes {
 				setupCallValue(function, new_var, instruction, call->constants[i]);
 			}
 
-			// Next, push variables onto the stack, right to left.
+			// Push variables onto the stack, right to left.
 			for (int i = arg_count - 1; reg_max <= i; --i)
 				pushCallValue(function, instruction, call->constants[i]);
 
@@ -95,6 +103,19 @@ namespace LL2W::Passes {
 				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);
 				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer");
 				jump->extract();
+			}
+
+			// Move the stack pointer up past the variables that were pushed onto the stack with pushCallValue.
+			if (convention == CallingConvention::Reg16 && reg_max < arg_count) {
+				VariablePtr sp = function.sp(block);
+				auto sub = std::make_shared<AddIInstruction>(sp, 8 * (arg_count - reg_max), sp);
+				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer");
+			}
+
+			// Pop the argument registers from the stack.
+			for (int i = std::min(15, function.getArity() - 1); 0 <= i; --i) {
+				VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false);
 			}
 
 			// If the call specified a result variable, move $r0 into that variable.

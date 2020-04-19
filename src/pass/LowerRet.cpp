@@ -42,7 +42,8 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
 			}
 
-			// Pop all the variables that were saved in the prologue.
+
+			// Pop all the general-purpose registers that were saved in the prologue.
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
 			     iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
