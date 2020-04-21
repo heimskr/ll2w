@@ -110,6 +110,43 @@ namespace LL2W::Passes {
 			function.reindexInstructions();
 		}
 
+		// Functions often begin with lots of allocas. Each time one was replaced, a modulo instruction was inserted to
+		// align the stack pointer. Often, the alignments are the same as the ones before them, rendering them
+		// unnecessary. (For example, performing $sp %= 4 after an earlier invocation of the same instruction has no
+		// effect.) We can reduce the number of unnecessary alignments by removing any alignment to n following an
+		// alignment to m such that n is a factor of m. For example, an alignment of 4 after an alignment of 8 can be
+		// safely removed.
+
+		for (BasicBlockPtr &block: function.blocks) {
+			do {
+				int alignments_removed = 0;
+				for (auto iter = block->instructions.begin(); iter != block->instructions.end(); ++iter) {
+					InstructionPtr &instruction = *iter;
+					ModIInstruction *mod = dynamic_cast<ModIInstruction *>(instruction.get());
+					if (!mod)
+						continue;
+					auto next = iter;
+					for (++next; next != block->instructions.end();) {
+						ModIInstruction *nextmod = dynamic_cast<ModIInstruction *>(next->get());
+						if (nextmod) {
+							if (mod->imm % nextmod->imm == 0) {
+								auto old = next++;
+								function.remove(*old);
+								++alignments_removed;
+							}
+
+							break;
+						} else {
+							++next;
+						}
+					}
+				}
+
+				if (alignments_removed == 0)
+					break;
+			} while (true);
+		}
+
 		return replaced_count;
 	}
 }
