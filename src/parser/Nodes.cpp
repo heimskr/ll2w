@@ -29,12 +29,27 @@ namespace LL2W {
 
 // HeaderNode
 
+	HeaderNode::HeaderNode(bool simple, ASTNode *node): BaseNode(BLOCKHEADER, "") {
+		locate(node);
+		ASTNode *list;
+
+		if (simple) {
+			label = StringSet::intern(node->lexerInfo->substr(0, node->lexerInfo->size() - 1));
+			list = node->at(1);
+		} else {
+			label = node->at(0)->lexerInfo;
+			list = node->at(2);
+		}
+
+		preds.reserve(list->size());
+		for (const ASTNode *pred: *list)
+			preds.push_back(StringSet::intern(pred->lexerInfo->substr(1)));
+		delete node;
+	}
+
 	HeaderNode::HeaderNode(ASTNode *node): BaseNode(BLOCKHEADER, "") {
 		locate(node);
-		label = node->at(0)->lexerInfo;
-		preds.reserve(node->at(2)->size());
-		for (const ASTNode *pred: *node->at(2))
-			preds.push_back(StringSet::intern(pred->lexerInfo->substr(1)));
+		label = StringSet::intern(node->lexerInfo->substr(0, node->lexerInfo->size() - 1));
 		delete node;
 	}
 

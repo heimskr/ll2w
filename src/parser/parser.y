@@ -55,7 +55,7 @@ using AN = LL2W::ASTNode;
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
-%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR TOK_FMATH
+%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR TOK_FMATH TOK_SIMPLE_LABEL TOK_NO_PREDS
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -333,8 +333,9 @@ function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(FUN
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LABEL; D($2); };
-bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list TOK_NEWLINE
-         { $$ = new HeaderNode($1->adopt({$2, $3, $4})); D($5); };
+bb_header: TOK_LABEL_COMMENT TOK_DECIMAL TOK_PREDS_COMMENT preds_list TOK_NEWLINE { $$ = new HeaderNode(false, $1->adopt({$2, $3, $4})); D($5); }
+         | TOK_SIMPLE_LABEL TOK_PREDS_COMMENT preds_list TOK_NEWLINE { $$ = new HeaderNode(true, $1->adopt({$2, $3})); D($4); }
+         | TOK_SIMPLE_LABEL TOK_NO_PREDS { $$ = new HeaderNode($1); D($2); };
 preds_list: preds_list TOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(PREDS_LIST); };
 

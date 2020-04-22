@@ -67,6 +67,8 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 %%
 
 <SGC>"<label>:"				{ BEGIN(LABEL1); RTOKEN(LABEL_COMMENT) }
+<SGC>" preds ="				{ BEGIN(PREDS); RTOKEN(PREDS_COMMENT) }
+<SGC>" No predecessors!"	{ RTOKEN(NO_PREDS) }
 <LABEL1>[0-9]+				{ RTOKEN(DECIMAL) }
 <LABEL1>":"					{ BEGIN(LABEL2); }
 <LABEL1>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); }
@@ -82,6 +84,7 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 <PREDS>[ \t,]+				{ }
 <PREDS>\n					{ LL2W::Lexer::newline(); BEGIN(INITIAL); RTOKEN(NEWLINE) }
 <PREDS>.					{ LL2W::Lexer::badchar(*yytext); }
+[0-9]+":"					{ RTOKEN(SIMPLE_LABEL) }
 
 ";"							{ BEGIN(SGC); }
 {MLCOMMENT}					{ }

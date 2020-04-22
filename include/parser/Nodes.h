@@ -36,7 +36,8 @@ namespace LL2W {
 	struct HeaderNode: public BaseNode {
 		const std::string *label;
 		std::vector<const std::string *> preds;
-		HeaderNode(ASTNode *node);
+		HeaderNode(bool simple, ASTNode *);
+		HeaderNode(ASTNode *);
 		std::string style() const override { return "\e[32m"; }
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Header; }

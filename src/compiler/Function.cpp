@@ -44,6 +44,7 @@
 #include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
+#include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
@@ -544,6 +545,7 @@ namespace LL2W {
 		Passes::lowerStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
+		Passes::trimBlocks(*this);
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
@@ -685,6 +687,10 @@ namespace LL2W {
 			pair.second->removeUse(instruction);
 			pair.second->removeDefinition(instruction);
 		}
+	}
+
+	void Function::remove(BasicBlockPtr block) {
+		blocks.remove(block);
 	}
 
 	void Function::replace(InstructionPtr to_replace, InstructionPtr substitute) {

@@ -214,6 +214,10 @@ namespace LL2W {
 			/** Removes an instruction from the function. */
 			void remove(std::shared_ptr<Instruction>);
 
+			/** Removes a basic block from the function. Any function that calls this should also be sure to relinearize
+			 *  instructions after calling this. */
+			void remove(BasicBlockPtr);
+
 			/** Replaces the first instruction with the second. Not safe to call while iterating. */
 			void replace(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>);
 
