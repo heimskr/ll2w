@@ -24,13 +24,6 @@ namespace LL2W::Passes {
 		int replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
-		std::cerr << *function.name << ":\n";
-		for (const std::pair<int, StackLocation> &pair: function.stack)
-			std::cerr << "    (" << pair.first << ", " << pair.second.variable->plainString() << ", "
-			          << pair.second.offset << ", " << (pair.second.purpose == StackLocation::Purpose::Alloca? "alloca"
-					     : "spill") << ")\n";
-		std::cerr << "\n";
-
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || (llvm->node->nodeType() != NodeType::Load && llvm->node->nodeType() != NodeType::Store))

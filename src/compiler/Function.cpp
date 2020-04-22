@@ -670,30 +670,15 @@ namespace LL2W {
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
 		for (std::pair<const int, StackLocation> &pair: stack) {
-			if (pair.second.variable == variable && pair.second.purpose == purpose) {
-				std::cerr << "Already found a location of type "
-				          << (purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca") << " for variable "
-				          << variable->plainString() << ".\n";
+			if (pair.second.variable == variable && pair.second.purpose == purpose)
 				return pair.second;
-			}
 		}
-
-
-		// if (variableLocations.count(variable) == 1) {
-			// std::cerr << "Tried to add " << *variable << " to the stack as "
-			//           << (purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca") << ", but there is already an "
-			//           << "entry of type "
-			//           << (variableLocations.at(variable)->purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca")
-			//           << ".\n";
-			// return *variableLocations.at(variable);
-		// }
 
 		if (width == -1)
 			width = variable && variable->type? variable->type->width() / 8 : 8;
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
-		// variableLocations.emplace(variable, &added);
 		return added;
 	}
 
