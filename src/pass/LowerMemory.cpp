@@ -15,7 +15,6 @@
 #include "instruction/StoreIInstruction.h"
 #include "instruction/StoreRInstruction.h"
 #include "instruction/StoreSymbolInstruction.h"
-#include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "parser/Enums.h"
 #include "pass/LowerMemory.h"
@@ -54,7 +53,8 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory: [%local] -> %var");
+			function.insertBefore(instruction, load, "LowerMemory: [%" + std::to_string(local->variable->id) + "] -> %"
+				+ std::to_string(node->variable->id));
 			load->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
