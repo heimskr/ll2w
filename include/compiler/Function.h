@@ -270,6 +270,10 @@ namespace LL2W {
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
 
+			StackLocation & getSpill(VariablePtr);
+
+			StackLocation & getAlloca(VariablePtr);
+
 			/** Convenience method for creating a precolored $m0 register. */
 			VariablePtr m0(BasicBlockPtr);
 

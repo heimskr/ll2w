@@ -24,6 +24,13 @@ namespace LL2W::Passes {
 		int replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
+		std::cerr << *function.name << ":\n";
+		for (const std::pair<int, StackLocation> &pair: function.stack)
+			std::cerr << "    (" << pair.first << ", " << pair.second.variable->plainString() << ", "
+			          << pair.second.offset << ", " << (pair.second.purpose == StackLocation::Purpose::Alloca? "alloca"
+					     : "spill") << ")\n";
+		std::cerr << "\n";
+
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || (llvm->node->nodeType() != NodeType::Load && llvm->node->nodeType() != NodeType::Store))
@@ -53,13 +60,13 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory: [%" + std::to_string(local->variable->id) + "] -> %"
-				+ std::to_string(node->variable->id));
+			function.insertBefore(instruction, load, "LowerMemory(load): [" + local->variable->plainString() + "] -> "
+				+ node->variable->plainString());
 			load->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
 			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory: [global] -> %var");
+			function.insertBefore(instruction, load, "LowerMemory(load): [global] -> %var");
 			load->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
@@ -87,7 +94,8 @@ namespace LL2W::Passes {
 				// $m0 -> [%var]
 				auto store = std::make_shared<StoreRInstruction>(m0, local->variable, size);
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m0");
-				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [%var]");
+				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [" + local->variable->plainString() +
+					"]");
 				set->extract();
 				store->extract();
 			} else {

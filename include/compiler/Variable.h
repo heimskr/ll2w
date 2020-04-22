@@ -67,6 +67,7 @@ namespace LL2W {
 			void setRegister(int);
 
 			std::string toString() const;
+			std::string plainString() const;
 			operator std::string() const;
 			bool operator==(const Variable &) const;
 

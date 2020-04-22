@@ -44,7 +44,7 @@ namespace LL2W {
 		if (reg == -1)
 			out << "\e[32m%" << id << "\e[39m";
 		else
-			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << std::to_string(id) << "\e[39;22m";
+			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << id << "\e[39;22m";
 #ifdef VARIABLE_EXTRA
 		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
 		if (!alias_set.empty()) {
@@ -64,6 +64,12 @@ namespace LL2W {
 
 	std::string Variable::toString() const {
 		return reg != -1? "$" + WhyInfo::registerName(reg) : *this;
+	}
+
+	std::string Variable::plainString() const {
+		if (reg == -1)
+			return "%" + std::to_string(id);
+		return "$" + WhyInfo::registerName(reg) + ":" + std::to_string(id);
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {

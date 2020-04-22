@@ -204,13 +204,15 @@ namespace LL2W {
 			throw std::runtime_error("Cannot spill variable: no definitions");
 		}
 
+		const StackLocation &location = getSpill(variable);
+
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
 #ifdef DEBUG_SPILL
 			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
 			          << definition->index << ")\n";
 #endif
-			auto store = std::make_shared<StackStoreInstruction>(*variableLocations.at(variable), variable);
+			auto store = std::make_shared<StackStoreInstruction>(location, variable);
 			auto next = after(definition);
 			bool should_insert = true;
 
@@ -226,12 +228,19 @@ namespace LL2W {
 			}
 
 			if (should_insert) {
-				insertAfter(definition, store);
+				insertAfter(definition, store, "Spill: stack store");
 				out = true;
 #ifdef DEBUG_SPILL
-			std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
+				std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
+#endif
+			} else {
+				comment(after(definition), "Spill: no store inserted here for " + variable->plainString());
+#ifdef DEBUG_SPILL
+				std::cerr << "    \e[1mNot\e[22m inserting a stack store after definition: " << store->debugExtra()
+				          << "\n";
 #endif
 			}
+
 		}
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
@@ -247,8 +256,8 @@ namespace LL2W {
 				if (replaced) {
 					instruction->read.erase(variable);
 					instruction->read.insert(new_var);
-					auto load = std::make_shared<StackLoadInstruction>(new_var, *variableLocations.at(variable), -1);
-					insertBefore(instruction, load);
+					auto load = std::make_shared<StackLoadInstruction>(new_var, location, -1);
+					insertBefore(instruction, load, "Spill: stack load: location=" + std::to_string(location.offset));
 					out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
@@ -600,7 +609,7 @@ namespace LL2W {
 
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
-		Passes::replaceStoresAndLoads(*this);
+		// Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
@@ -660,15 +669,31 @@ namespace LL2W {
 	}
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
-		if (variableLocations.count(variable) == 1)
-			return *variableLocations.at(variable);
+		for (std::pair<const int, StackLocation> &pair: stack) {
+			if (pair.second.variable == variable && pair.second.purpose == purpose) {
+				std::cerr << "Already found a location of type "
+				          << (purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca") << " for variable "
+				          << variable->plainString() << ".\n";
+				return pair.second;
+			}
+		}
+
+
+		// if (variableLocations.count(variable) == 1) {
+			// std::cerr << "Tried to add " << *variable << " to the stack as "
+			//           << (purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca") << ", but there is already an "
+			//           << "entry of type "
+			//           << (variableLocations.at(variable)->purpose == StackLocation::Purpose::Spill? "Spill" : "Alloca")
+			//           << ".\n";
+			// return *variableLocations.at(variable);
+		// }
 
 		if (width == -1)
 			width = variable && variable->type? variable->type->width() / 8 : 8;
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
-		variableLocations.emplace(variable, &added);
+		// variableLocations.emplace(variable, &added);
 		return added;
 	}
 
@@ -932,7 +957,7 @@ namespace LL2W {
 		std::cout << "\e[94m}\e[39m\n\n";
 #endif
 #ifdef DEBUG_RENDER
-		std::cout << "Rendering.\n";
+		std::cerr << "Rendering.\n";
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
 				BasicBlockPtr bb = node->get<BasicBlockPtr>();
@@ -962,6 +987,24 @@ namespace LL2W {
 		for (const std::pair<int, StackLocation> &pair: stack)
 			std::cout << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
 		std::cout << "\n";
+	}
+
+	StackLocation & Function::getSpill(VariablePtr variable) {
+		for (std::pair<const int, StackLocation> &pair: stack) {
+			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
+				return pair.second;
+		}
+
+		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
+	}
+
+	StackLocation & Function::getAlloca(VariablePtr variable) {
+		for (std::pair<const int, StackLocation> &pair: stack) {
+			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Alloca)
+				return pair.second;
+		}
+
+		throw std::out_of_range("Couldn't find an alloca location for " + variable->plainString());
 	}
 
 	VariablePtr Function::m0(BasicBlockPtr block) {
