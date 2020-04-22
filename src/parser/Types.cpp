@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "options.h"
 #include "parser/ASTNode.h"
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
@@ -193,8 +194,20 @@ namespace LL2W {
 			return knownStructs.at(barename())->width();
 		}
 
-		for (const TypePtr type: node->types)
+#ifndef STRUCT_PAD_X86
+		for (const TypePtr &type: node->types)
 			out += type->width();
+#else
+		int largest = 0;
+		for (const TypePtr &type: node->types) {
+			const int width = type->width();
+			out += width + ((width - (out % width)) % width);
+			if (largest < width)
+				largest = width;
+		}
+		if (largest != 0)
+			out += out % largest;
+#endif
 		return out;
 	}
 

@@ -33,8 +33,16 @@ namespace LL2W::Getelementptr {
 				}
 
 				int offset = 0;
+#ifndef STRUCT_PAD_X86
 				for (int i = 0; i < front; ++i)
 					offset += snode->types.at(i)->width();
+#else
+				int width;
+				for (int i = 0; i < front; ++i) {
+					width = snode->types.at(i)->width();
+					offset += width + ((width - (offset % width)) % width);
+				}
+#endif
 				return offset + compute_mutating(snode->types.at(front), indices, out_type);
 			}
 			default: throw TypeError("Getelementptr::compute encountered an invalid type", type);
