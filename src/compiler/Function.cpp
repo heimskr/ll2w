@@ -932,6 +932,7 @@ namespace LL2W {
 		std::cout << "\e[94m}\e[39m\n\n";
 #endif
 #ifdef DEBUG_RENDER
+		std::cout << "Rendering.\n";
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
 				BasicBlockPtr bb = node->get<BasicBlockPtr>();
