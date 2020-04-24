@@ -48,7 +48,8 @@ namespace LL2W::Passes {
 					auto load = std::make_shared<LoadRInstruction>(m0, stack_load->result);
 					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m0 for " +
 						stack_load->location.variable->plainString());
-					function.insertBefore(instruction, load, "LowerStack: [$m0 -> %var]");
+					function.insertBefore(instruction, load, "LowerStack: [$m0] -> " +
+						stack_load->result->plainString());
 					sub->extract();
 					load->extract();
 				}

@@ -11,6 +11,8 @@ namespace LL2W {
 	long parseLong(const std::string *);
 	long parseLong(const char *);
 
+	long roundUp(long, long);
+
 	bool isNumeric(const std::string &);
 	bool isNumeric(const std::string *);
 	bool isNumeric(const char *);

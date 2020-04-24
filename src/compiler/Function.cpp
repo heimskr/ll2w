@@ -675,7 +675,7 @@ namespace LL2W {
 		}
 
 		if (width == -1)
-			width = variable && variable->type? variable->type->width() / 8 : 8;
+			width = variable && variable->type? roundUp(variable->type->width() / 8, 8) : 8;
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;

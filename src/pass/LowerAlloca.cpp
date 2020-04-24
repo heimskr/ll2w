@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -9,6 +11,7 @@
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "pass/LowerAlloca.h"
+#include "util/Util.h"
 
 namespace LL2W::Passes {
 	int lowerAlloca(Function &function) {
@@ -30,8 +33,9 @@ namespace LL2W::Passes {
 
 			// Move the stack pointer down to get the alignment right.
 			if (0 < alloca->align) {
+				int align = roundUp(alloca->align, 8);
 				auto m0 = function.m0(instruction);
-				auto mod = std::make_shared<ModIInstruction>(stack_pointer, alloca->align, m0);
+				auto mod = std::make_shared<ModIInstruction>(stack_pointer, align, m0);
 				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 				function.insertBefore(instruction, mod, "LowerAlloca: align stack pointer");
 				function.insertAfter(mod, sub);
@@ -67,7 +71,7 @@ namespace LL2W::Passes {
 						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
 						function.insertBefore(instruction, mult,   "LowerAlloca: %var * width");
 						function.insertBefore(instruction, movelo);
-						function.insertBefore(instruction, sub);
+						function.insertBefore(instruction, sub, "LowerAlloca: move stack pointer");
 						mult->extract();
 						movelo->extract();
 						sub->extract();
@@ -83,9 +87,10 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, move);
 				move->extract();
 				const int to_sub = num_elements * width;
+				std::cerr << "to_sub == " << to_sub << "\n";
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
-					function.insertAfter(move, sub, "LowerAlloca: $sp -= to_sub");
+					function.insertBefore(instruction, sub, "LowerAlloca: $sp -= to_sub");
 					sub->extract();
 				}
 			}
