@@ -86,8 +86,7 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 				function.insertBefore(instruction, move);
 				move->extract();
-				const int to_sub = num_elements * width;
-				std::cerr << "to_sub == " << to_sub << "\n";
+				const int to_sub = roundUp(num_elements * width, 8);
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
 					function.insertBefore(instruction, sub, "LowerAlloca: $sp -= to_sub");

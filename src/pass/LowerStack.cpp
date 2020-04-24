@@ -13,7 +13,7 @@ namespace LL2W::Passes {
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr fp = function.fp(function.getEntry());
-		VariablePtr m0 = function.m0(function.getEntry());
+		VariablePtr m2 = function.mx(2, function.getEntry());
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (StackStoreInstruction *stack_store = dynamic_cast<StackStoreInstruction *>(instruction.get())) {
@@ -24,13 +24,13 @@ namespace LL2W::Passes {
 						stack_store->location.variable->plainString());
 					store->extract();
 				} else {
-					// $fp - offset -> $m0
-					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m0);
-					// %var -> [$m0]
-					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m0);
-					function.insertBefore(instruction, sub,   "LowerStack: $fp - offset -> $m0 for " +
+					// $fp - offset -> $m2
+					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m2);
+					// %var -> [$m2]
+					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m2);
+					function.insertBefore(instruction, sub,   "LowerStack: $fp - offset -> $m2 for " +
 						stack_store->location.variable->plainString());
-					function.insertBefore(instruction, store, "LowerStack: %var -> [$m0]");
+					function.insertBefore(instruction, store, "LowerStack: %var -> [$m2]");
 					sub->extract();
 					store->extract();
 				}
@@ -42,13 +42,13 @@ namespace LL2W::Passes {
 						stack_load->location.variable->plainString());
 					load->extract();
 				} else {
-					// $fp - offset -> $m0
-					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m0);
-					// [$m0] -> %var
-					auto load = std::make_shared<LoadRInstruction>(m0, stack_load->result);
-					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m0 for " +
+					// $fp - offset -> $m2
+					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m2);
+					// [$m2] -> %var
+					auto load = std::make_shared<LoadRInstruction>(m2, stack_load->result);
+					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m2 for " +
 						stack_load->location.variable->plainString());
-					function.insertBefore(instruction, load, "LowerStack: [$m0] -> " +
+					function.insertBefore(instruction, load, "LowerStack: [$m2] -> " +
 						stack_load->result->plainString());
 					sub->extract();
 					load->extract();

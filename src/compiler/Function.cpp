@@ -992,8 +992,16 @@ namespace LL2W {
 		throw std::out_of_range("Couldn't find an alloca location for " + variable->plainString());
 	}
 
+	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {
+		return makeAssemblerVariable(index, block);
+	}
+
+	VariablePtr Function::mx(unsigned char index, InstructionPtr instruction) {
+		return mx(index, instruction->parent.lock());
+	}
+
 	VariablePtr Function::m0(BasicBlockPtr block) {
-		return makeAssemblerVariable(0, block);
+		return mx(0, block);
 	}
 
 	VariablePtr Function::m0(InstructionPtr instruction) {

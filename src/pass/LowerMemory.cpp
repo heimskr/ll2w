@@ -80,34 +80,34 @@ namespace LL2W::Passes {
 			if (value_type == ValueType::Int)
 				int_value = dynamic_cast<IntValue *>(node->value.get())->value;
 			if (local) {
-				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				auto m1 = function.mx(1, instruction);
 				// Because there's no single instruction of the form imm -> [$reg], we have to use a set+store pair.
-				// imm -> $m0
-				auto set = std::make_shared<SetInstruction>(m0, int_value);
-				// $m0 -> [%var]
-				auto store = std::make_shared<StoreRInstruction>(m0, local->variable, size);
-				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m0");
-				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [" + local->variable->plainString() +
+				// imm -> $m1
+				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				// $m1 -> [%var]
+				auto store = std::make_shared<StoreRInstruction>(m1, local->variable, size);
+				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
+				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [" + local->variable->plainString() +
 					"]");
 				set->extract();
 				store->extract();
 			} else {
-				auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				auto m1 = function.makeAssemblerVariable(0, instruction->parent.lock());
 				// In this case, it would be impossible for there to be a single instruction for what we're trying to do
 				// because there are two immediate values. As such, we use two instructions by necessity.
-				// imm -> $m0
-				auto set = std::make_shared<SetInstruction>(m0, int_value);
-				// $m0 -> [global]
+				// imm -> $m1
+				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				// $m1 -> [global]
 				std::shared_ptr<StoreSymbolInstruction> store;
 				try {
-					store = std::make_shared<StoreSymbolInstruction>(m0, *global->name,
+					store = std::make_shared<StoreSymbolInstruction>(m1, *global->name,
 						function.parent->symbolSize("@" + *global->name) / 8);
 				} catch (const std::out_of_range &) {
 					throw std::runtime_error("Couldn't find global variable @" + *global->name);
 				}
 
-				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m0");
-				function.insertBefore(instruction, store, "LowerMemory: $m0 -> [global]");
+				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
+				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [global]");
 				set->extract();
 				store->extract();
 			}
