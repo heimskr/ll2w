@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "graph/Graph.h"
+#include "graph/UncolorableError.h"
 
 namespace LL2W {
 	Graph::Graph() {}
@@ -277,7 +278,7 @@ namespace LL2W {
 	void Graph::color(Graph::ColoringAlgorithm algo, int max_colors) {
 		if (algo == Graph::ColoringAlgorithm::Bad) {
 			if (max_colors != -1 && max_colors < static_cast<int>(nodes_.size()))
-				throw std::runtime_error("Unable to color graph: not enough colors");
+				throw UncolorableError();
 			int color = -1;
 			for (Node *node: nodes_)
 				node->color = ++color;
@@ -298,7 +299,7 @@ namespace LL2W {
 						available.erase(neighbor->color);
 				}
 				if (available.empty())
-					throw std::runtime_error("Unable to color graph: not enough colors");
+					throw UncolorableError();
 				node->color = *available.begin();
 			}
 			// throw std::runtime_error("Greedy coloring algorithm is unimplemented");
