@@ -53,7 +53,7 @@
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
-#define DEBUG_RENDER
+// #define DEBUG_RENDER
 #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
@@ -587,28 +587,28 @@ namespace LL2W {
 		debug();
 #endif
 
-		Passes::allocateColoring(*this);
+		// Passes::allocateColoring(*this);
 
-// 		int spilled = Passes::linearScan(*this);
-// #ifdef DEBUG_SPILL
-// 		int scans = 0;
-// #endif
+		int spilled = Passes::linearScan(*this);
+#ifdef DEBUG_SPILL
+		int scans = 0;
+#endif
 
-// 		while (0 < spilled) {
-// #ifdef DEBUG_SPILL
-// 			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
-// 			debug();
-// #endif
-// 			Passes::splitBlocks(*this);
-// 			for (BasicBlockPtr &block: blocks)
-// 				block->extract();
-// 			extractVariables(true);
-// 			Passes::makeCFG(*this);
-// 			resetRegisters();
-// 			resetLiveness();
-// 			computeLiveness();
-// 			spilled = Passes::linearScan(*this);
-// 		}
+		while (0 < spilled) {
+#ifdef DEBUG_SPILL
+			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+			debug();
+#endif
+			Passes::splitBlocks(*this);
+			for (BasicBlockPtr &block: blocks)
+				block->extract();
+			extractVariables(true);
+			Passes::makeCFG(*this);
+			resetRegisters();
+			resetLiveness();
+			computeLiveness();
+			spilled = Passes::linearScan(*this);
+		}
 
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
@@ -622,9 +622,9 @@ namespace LL2W {
 		Passes::insertPrologue(*this);
 		Passes::lowerRet(*this);
 
-// #ifdef DEBUG_SPILL
-// 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
-// #endif
+#ifdef DEBUG_SPILL
+		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
+#endif
 
 		compiled = true;
 	}
@@ -673,15 +673,23 @@ namespace LL2W {
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
 		for (std::pair<const int, StackLocation> &pair: stack) {
-			if (pair.second.variable == variable && pair.second.purpose == purpose)
+			if (pair.second.variable == variable && pair.second.purpose == purpose) {
+				std::cerr << "Shortcircuiting search for " << *variable << "\n";
 				return pair.second;
+			}
 		}
 
-		if (width == -1)
-			width = variable && variable->type? roundUp(variable->type->width() / 8, 8) : 8;
+		if (width == -1) {
+			width = variable && variable->type? roundUp(variable->type->width() < 8? 1 : variable->type->width() / 8, 8)
+			                                  : 8;
+		}
+		if (variable && variable->type)
+			std::cerr << "Type: " << *variable->type << "\n";
+		std::cerr << "Width == " << width << "\n";
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
+		std::cerr << "Added new for " << *variable << "\n";
 		return added;
 	}
 
@@ -979,6 +987,8 @@ namespace LL2W {
 
 	StackLocation & Function::getSpill(VariablePtr variable) {
 		for (std::pair<const int, StackLocation> &pair: stack) {
+			std::cerr << "\e[38;5;144m" << *pair.second.variable << " :: "
+			          << (pair.second.purpose == StackLocation::Purpose::Spill? "S" : "A") << "\n";
 			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
 		}

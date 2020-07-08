@@ -86,6 +86,39 @@ namespace LL2W {
 		return in_;
 	}
 
+	bool Node::canReach(Node &other) {
+		if (other.owner != owner)
+			return false;
+
+		if (reachability.count(&other) != 0)
+			return reachability.at(&other);
+
+		std::unordered_set<Node *> visited;
+		std::list<Node *> queue {this};
+		while (!queue.empty()) {
+			Node *node = queue.front();
+			queue.pop_front();
+			for (Node *out_node: node->out()) {
+				if (out_node == &other) {
+					reachability.emplace(&other, true);
+					return true;
+				}
+
+				if (visited.count(out_node) == 0) {
+					visited.insert(out_node);
+					queue.push_back(out_node);
+				}
+			}
+		}
+
+		reachability.emplace(&other, false);
+		return false;
+	}
+
+	void Node::clearReachability() {
+		reachability.clear();
+	}
+
 	size_t Node::degree() const {
 		size_t deg = 0;
 		for (Node *neighbor: out_) {

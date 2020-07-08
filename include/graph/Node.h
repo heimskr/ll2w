@@ -28,6 +28,7 @@ namespace LL2W {
 			std::set<Node *, Node_less> out_;
 			std::set<Node *, Node_less> in_;
 			int index_ = -1;
+			std::unordered_map<Node *, bool> reachability;
 
 		public:
 			using USet = std::unordered_set<Node *>;
@@ -88,6 +89,10 @@ namespace LL2W {
 
 			/** Returns a const set of the node's inward edges. */
 			const Set & in() const;
+
+			/** Returns whether there exists a path from this node to another. */
+			bool canReach(Node &);
+			void clearReachability();
 
 			/** Returns the number of bidirectional edges connected to this node. */
 			size_t degree() const;
