@@ -4,6 +4,16 @@
 #include <iostream>
 #include <unistd.h>
 
+#define DEBUG_BLOCKS
+// #define DEBUG_LINEAR
+#define DEBUG_VARS
+// #define DEBUG_RENDER
+// #define DEBUG_SPILL
+// #define DEBUG_SPLIT
+#define DEBUG_READ_WRITTEN
+// #define REGISTER_PRESSURE 4
+// #define DISABLE_COMMENTS
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -49,16 +59,6 @@
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
-
-#define DEBUG_BLOCKS
-// #define DEBUG_LINEAR
-#define DEBUG_VARS
-// #define DEBUG_RENDER
-#define DEBUG_SPILL
-// #define DEBUG_SPLIT
-#define DEBUG_READ_WRITTEN
-// #define REGISTER_PRESSURE 4
-// #define DISABLE_COMMENTS
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -674,7 +674,7 @@ namespace LL2W {
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
 		for (std::pair<const int, StackLocation> &pair: stack) {
 			if (pair.second.variable == variable && pair.second.purpose == purpose) {
-				std::cerr << "Shortcircuiting search for " << *variable << "\n";
+				// std::cerr << "Shortcircuiting search for " << *variable << "\n";
 				return pair.second;
 			}
 		}
@@ -683,13 +683,13 @@ namespace LL2W {
 			width = variable && variable->type? roundUp(variable->type->width() < 8? 1 : variable->type->width() / 8, 8)
 			                                  : 8;
 		}
-		if (variable && variable->type)
-			std::cerr << "Type: " << *variable->type << "\n";
-		std::cerr << "Width == " << width << "\n";
+		// if (variable && variable->type)
+		// 	std::cerr << "Type: " << *variable->type << "\n";
+		// std::cerr << "Width == " << width << "\n";
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
-		std::cerr << "Added new for " << *variable << "\n";
+		// std::cerr << "Added new for " << *variable << "\n";
 		return added;
 	}
 
@@ -987,8 +987,8 @@ namespace LL2W {
 
 	StackLocation & Function::getSpill(VariablePtr variable) {
 		for (std::pair<const int, StackLocation> &pair: stack) {
-			std::cerr << "\e[38;5;144m" << *pair.second.variable << " :: "
-			          << (pair.second.purpose == StackLocation::Purpose::Spill? "S" : "A") << "\n";
+			// std::cerr << "\e[38;5;144m" << *pair.second.variable << " :: "
+			        //   << (pair.second.purpose == StackLocation::Purpose::Spill? "S" : "A") << "\n";
 			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
 		}

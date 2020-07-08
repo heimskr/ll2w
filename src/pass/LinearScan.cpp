@@ -8,7 +8,7 @@
 
 // #define DEBUG_INTERVALS
 // #define DEBUG_STACK
-#define DEBUG_LINEAR_SCAN
+// #define DEBUG_LINEAR_SCAN
 
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
@@ -23,15 +23,15 @@ namespace LL2W::Passes {
 		int spill_count = 0;
 
 		std::function<bool(Interval &, Interval &)> compareEndpoints = [&](Interval &left, Interval &right) {
-			// return left.endpoint() < right.endpoint();
-			std::cerr << "\e[38;5;202mCompareEE " << left << ", " << right << "\e[39m\n";
+			return left.endpoint() < right.endpoint();
+			// std::cerr << "\e[38;5;202mCompareEE " << left << ", " << right << "\e[39m\n";
 			return function.cfg[left.endpoint()].canReach(function.cfg[right.endpoint()])
 				&& left.endpoint() != right.endpoint();
 		};
 
 		std::function<bool(Interval &, Interval &)> compareStartAndEnd = [&](Interval &left, Interval &right) {
-			// return left.startpoint() <= right.endpoint();
-			std::cerr << "\e[38;5;81mCompareSE " << left << ", " << right << "\e[39m\n";
+			return left.startpoint() <= right.endpoint();
+			// std::cerr << "\e[38;5;81mCompareSE " << left << ", " << right << "\e[39m\n";
 			return left.startpoint() == right.endpoint()
 				|| function.cfg[left.startpoint()].canReach(function.cfg[right.endpoint()]);
 		};
@@ -50,12 +50,12 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
-			std::cerr << "\e[31mAddLocation\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
+			// std::cerr << "\e[31mAddLocation\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			function.addToStack(interval.variable, StackLocation::Purpose::Spill);
-			std::cerr << "\e[31m::\e[39m\n";
+			// std::cerr << "\e[31m::\e[39m\n";
 			if (function.spill(interval.variable))
 				++spill_count;
-			std::cerr << "\e[31m//AddLocation\e[39m\n";
+			// std::cerr << "\e[31m//AddLocation\e[39m\n";
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
@@ -63,8 +63,11 @@ namespace LL2W::Passes {
 			for (auto iter = active.begin(); iter != active.end();) {
 				Interval &jnterval = **iter;
 				// if (interval.startpoint() <= jnterval.endpoint())
-				if (compareStartAndEnd(interval, jnterval))
+				if (compareStartAndEnd(interval, jnterval)) {
+					std::cerr << "Bye\n";
 					return;
+				}
+				std::cerr << "Inserting to pool\n";
 				pool.insert(jnterval.reg);
 				iter = active.erase(iter);
 			}
@@ -84,7 +87,7 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
-			std::cout << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
+			// std::cerr << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable; std::cerr << "\n";
 #endif
@@ -99,8 +102,8 @@ namespace LL2W::Passes {
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Chose spill: " << *spill.variable << "\n";
 #endif
-			// if (interval.endpoint() < spill.endpoint() || !maySpill(interval)) {
-			if (compareEndpoints(interval, spill) || !maySpill(interval)) {
+			if (interval.endpoint() < spill.endpoint()) {// || !maySpill(interval)) {
+			// if (compareEndpoints(interval, spill)) { // || !maySpill(interval)) {
 				interval.setRegister(spill.reg);
 				addLocation(spill);
 				active.remove(&spill);

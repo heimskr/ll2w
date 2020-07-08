@@ -59,7 +59,7 @@ namespace LL2W {
 			thread.join();
 #else
 		for (std::pair<const std::string, Function> &pair: functions) {
-			if (*pair.second.name == "@merge_blocks")
+			// if (*pair.second.name == "@merge_blocks")
 				pair.second.compile();
 		}
 #endif
@@ -125,7 +125,7 @@ namespace LL2W {
 
 	void Program::debug() {
 		for (std::pair<const std::string, Function> &pair: functions) {
-			if (*pair.second.name == "@merge_blocks")
+			// if (*pair.second.name == "@merge_blocks")
 				pair.second.debug();
 		}
 	}
