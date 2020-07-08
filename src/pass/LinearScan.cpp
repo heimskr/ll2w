@@ -6,9 +6,9 @@
 #include "pass/LinearScan.h"
 #include "options.h"
 
-// #define DEBUG_INTERVALS
+#define DEBUG_INTERVALS
 #define DEBUG_STACK
-// #define DEBUG_LINEAR_SCAN
+#define DEBUG_LINEAR_SCAN
 
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
@@ -23,6 +23,7 @@ namespace LL2W::Passes {
 		int spill_count = 0;
 
 		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
+			std::cout << "\e[31mAddToActive\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			int endpoint = interval.endpoint();
 			for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
 				if (endpoint < (*iter)->endpoint()) {
@@ -34,12 +35,14 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
+			std::cout << "\e[31mAddLocation\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			function.addToStack(interval.variable, StackLocation::Purpose::Spill);
 			if (function.spill(interval.variable))
 				++spill_count;
 		};
 
 		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
+			std::cout << "\e[31mExpireOldIntervals\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			for (auto iter = active.begin(); iter != active.end();) {
 				Interval &jnterval = **iter;
 				if (interval.startpoint() <= jnterval.endpoint())
@@ -63,6 +66,7 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
+			std::cout << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable; std::cerr << "\n";
 #endif

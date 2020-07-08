@@ -16,6 +16,7 @@
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
 #include "pass/CoalescePhi.h"
+#include "pass/ColoringAllocator.h"
 #include "pass/FillLocalValues.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
@@ -51,9 +52,9 @@
 
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 #define DEBUG_RENDER
-// #define DEBUG_SPILL
+#define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
@@ -586,26 +587,28 @@ namespace LL2W {
 		debug();
 #endif
 
-		int spilled = Passes::linearScan(*this);
-#ifdef DEBUG_SPILL
-		int scans = 0;
-#endif
+		Passes::allocateColoring(*this);
 
-		while (0 < spilled) {
-#ifdef DEBUG_SPILL
-			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
-			debug();
-#endif
-			Passes::splitBlocks(*this);
-			for (BasicBlockPtr &block: blocks)
-				block->extract();
-			extractVariables(true);
-			Passes::makeCFG(*this);
-			resetRegisters();
-			resetLiveness();
-			computeLiveness();
-			spilled = Passes::linearScan(*this);
-		}
+// 		int spilled = Passes::linearScan(*this);
+// #ifdef DEBUG_SPILL
+// 		int scans = 0;
+// #endif
+
+// 		while (0 < spilled) {
+// #ifdef DEBUG_SPILL
+// 			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+// 			debug();
+// #endif
+// 			Passes::splitBlocks(*this);
+// 			for (BasicBlockPtr &block: blocks)
+// 				block->extract();
+// 			extractVariables(true);
+// 			Passes::makeCFG(*this);
+// 			resetRegisters();
+// 			resetLiveness();
+// 			computeLiveness();
+// 			spilled = Passes::linearScan(*this);
+// 		}
 
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
@@ -619,9 +622,9 @@ namespace LL2W {
 		Passes::insertPrologue(*this);
 		Passes::lowerRet(*this);
 
-#ifdef DEBUG_SPILL
-		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
-#endif
+// #ifdef DEBUG_SPILL
+// 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
+// #endif
 
 		compiled = true;
 	}

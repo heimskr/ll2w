@@ -2,6 +2,7 @@
 #define COMPILER_INTERVAL_H_
 
 #include <memory>
+#include <ostream>
 
 namespace LL2W {
 	class BasicBlock;
@@ -17,7 +18,11 @@ namespace LL2W {
 		int endpoint() const;
 
 		int setRegister(int);
+
+		operator std::string() const;
 	};
+
+	std::ostream & operator<<(std::ostream &, const Interval &);
 }
 
 #endif

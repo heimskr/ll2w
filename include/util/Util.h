@@ -33,6 +33,27 @@ namespace LL2W {
 		return n / d + (n % d? 1 : 0);
 	}
 
+	/** Merges two sets. */
+	template <typename S>
+	S merge(const S &first, const S &second) {
+		S out;
+		for (const auto &item: first)
+			out.insert(item);
+		for (const auto &item: second)
+			out.insert(item);
+		return out;
+	}
+
+	/** Returns whether two sets have any items in common. */
+	template <typename S>
+	bool hasOverlap(const S &first, const S &second) {
+		for (const auto &item: first) {
+			if (second.count(item) != 0)
+				return true;
+		}
+		return false;
+	}
+
 	inline std::ostream & warn() {
 		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}

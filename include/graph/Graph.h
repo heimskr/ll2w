@@ -112,7 +112,7 @@ namespace LL2W {
 
 			/** Colors all the nodes in the graph according to a given coloring algorithm.
 			 *  Assumes all edges are bidirectional. */
-			void color(ColoringAlgorithm, int max_colors = -1);
+			void color(ColoringAlgorithm, int color_min = -1, int color_max = -1);
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
 			std::vector<std::pair<Node &, Node &>> allEdges() const;

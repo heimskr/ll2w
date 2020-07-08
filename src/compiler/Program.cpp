@@ -58,8 +58,10 @@ namespace LL2W {
 		for (std::thread &thread: threads)
 			thread.join();
 #else
-		for (std::pair<const std::string, Function> &pair: functions)
-			pair.second.compile();
+		for (std::pair<const std::string, Function> &pair: functions) {
+			if (*pair.second.name == "@dbg_blocks")
+				pair.second.compile();
+		}
 #endif
 	}
 
@@ -122,7 +124,9 @@ namespace LL2W {
 	}
 
 	void Program::debug() {
-		for (std::pair<const std::string, Function> &pair: functions)
-			pair.second.debug();
+		for (std::pair<const std::string, Function> &pair: functions) {
+			if (*pair.second.name == "@dbg_blocks")
+				pair.second.debug();
+		}
 	}
 }

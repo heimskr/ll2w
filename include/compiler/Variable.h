@@ -2,6 +2,7 @@
 #define COMPILER_VARIABLE_H_
 
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <set>
 
@@ -18,6 +19,7 @@ namespace LL2W {
 			std::list<Instruction *> useOrder;
 			std::unordered_set<Variable *> aliases;
 			Variable *parent = nullptr;
+			std::optional<int> spillCost_;
 
 		public:
 			int id;
@@ -39,7 +41,8 @@ namespace LL2W {
 			int weight() const;
 
 			/** Calculates the variable's spill cost. */
-			int spillCost() const;
+			int spillCost();
+			void clearSpillCost();
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(Variable &);

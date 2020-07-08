@@ -32,4 +32,12 @@ namespace LL2W {
 			variable->setRegister(new_reg);
 		return reg = new_reg;
 	}
+
+	Interval::operator std::string() const {
+		return variable->plainString() + "[" + std::to_string(startpoint()) + ", " + std::to_string(endpoint()) + "]";
+	}
+
+	std::ostream & operator<<(std::ostream &os, const Interval &interval) {
+		return os << std::string(interval);
+	}
 }

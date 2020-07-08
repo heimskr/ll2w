@@ -116,13 +116,15 @@ namespace LL2W::Passes {
 			if (local) {
 				// %src -> [%dest]
 				auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
-				function.insertBefore(instruction, store, "LowerMemory: %src -> [%dest]");
+				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() + " -> [" +
+					local->variable->plainString() + "]");
 				store->extract();
 			} else {
 				// %src -> [global]
 				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name,
 					function.parent->symbolSize("@" + *global->name) / 8);
-				function.insertBefore(instruction, store, "LowerMemory: %src -> [global]");
+				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() +
+					" -> [global]");
 				store->extract();
 			}
 		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
