@@ -21,9 +21,11 @@ namespace LL2W {
 
 		int n = -1;
 		std::function<void(Node *)> dfs = [&](Node *v) {
+			assert(semis[v] == -1);
 			semis[v] = ++n;
 			vertices[n] = v;
 			ancestors[v] = nullptr;
+			labels[v] = v;
 			for (Node *w: *v) {
 				if (semis[w] == -1) {
 					parents[w] = v;
@@ -92,12 +94,12 @@ namespace LL2W {
 				Node *u = eval(v);
 				doms[v] = semis[u] < semis[v]? u : parents[w];
 			}
+		}
 
-			for (size_t i = 1; i < gsize; ++i) {
-				w = vertices[i];
-				if (doms[w] != vertices[semis[w]])
-					doms[w] = doms[doms[w]];
-			}
+		for (size_t i = 1; i < gsize; ++i) {
+			Node *w = vertices[i];
+			if (doms[w] != vertices[semis[w]])
+				doms[w] = doms[doms[w]];
 		}
 
 		doms[&start] = &start;
