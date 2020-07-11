@@ -8,14 +8,14 @@
 #include "options.h"
 
 namespace LL2W {
-	Variable::Variable(int id_, TypePtr type_, const std::set<std::shared_ptr<BasicBlock>> &defining_blocks,
-	const std::set<BasicBlockPtr> &using_blocks):
+	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
+	const WeakSet<BasicBlock> &using_blocks):
 		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
 	int Variable::weight() const {
 		int sum = 0;
-		for (BasicBlockPtr use: usingBlocks)
-			sum += use->estimatedExecutions;
+		for (std::weak_ptr<BasicBlock> use: usingBlocks)
+			sum += use.lock()->estimatedExecutions;
 		return sum;
 	}
 
@@ -43,7 +43,7 @@ namespace LL2W {
 
 	bool Variable::isSimple() const {
 		return definingBlocks.size() == 1 && usingBlocks.size() == 1
-			&& (*usingBlocks.begin())->index == (*definingBlocks.begin())->index;
+			&& (*usingBlocks.begin()).lock()->index == (*definingBlocks.begin()).lock()->index;
 	}
 
 	bool Variable::operator==(const Variable &other) const {
@@ -91,9 +91,9 @@ namespace LL2W {
 			alias->parent = &new_parent;
 			new_parent.aliases.insert(alias);
 		}
-		for (const std::shared_ptr<BasicBlock> &def: definingBlocks)
+		for (const std::weak_ptr<BasicBlock> &def: definingBlocks)
 			new_parent.definingBlocks.insert(def);
-		for (const std::shared_ptr<BasicBlock> &use: usingBlocks)
+		for (const std::weak_ptr<BasicBlock> &use: usingBlocks)
 			new_parent.usingBlocks.insert(use);
 		for (const std::weak_ptr<Instruction> &def: definitions)
 			new_parent.definitions.insert(def.lock());
@@ -194,7 +194,7 @@ namespace LL2W {
 				" defining blocks");
 		}
 
-		return *definingBlocks.begin();
+		return definingBlocks.begin()->lock();
 	}
 
 	std::shared_ptr<Instruction> Variable::onlyDefinition() const {
@@ -245,12 +245,12 @@ namespace LL2W {
 	void Variable::debug() {
 		std::cerr << *this << "\n";
 		std::cerr << "   Defining blocks:";
-		for (const BasicBlockPtr &block: definingBlocks)
-			std::cerr << " %" << block->label;
+		for (const std::weak_ptr<BasicBlock> &block: definingBlocks)
+			std::cerr << " %" << block.lock()->label;
 		std::cerr << "\n";
 		std::cerr << "   Using blocks:";
-		for (const BasicBlockPtr &block: usingBlocks)
-			std::cerr << " %" << block->label;
+		for (const std::weak_ptr<BasicBlock> &block: usingBlocks)
+			std::cerr << " %" << block.lock()->label;
 		std::cerr << "\n";
 		std::cerr << "   Last use: ";
 		if (InstructionPtr last_use = lastUse.lock())

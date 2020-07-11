@@ -2,6 +2,7 @@
 #define UTIL_WEAKCOMPARE_H_
 
 #include <memory>
+#include <set>
 
 namespace LL2W {
 	template <typename T>
@@ -15,6 +16,9 @@ namespace LL2W {
 			return llock.get() < rlock.get();
 		}
 	};
+
+	template <typename T>
+	using WeakSet = std::set<std::weak_ptr<T>, WeakCompare<T>>;
 }
 
 #endif

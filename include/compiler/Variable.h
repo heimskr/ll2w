@@ -24,18 +24,16 @@ namespace LL2W {
 		public:
 			int id;
 			TypePtr type = nullptr;
-			std::set<std::shared_ptr<BasicBlock>> definingBlocks;
+			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
+			WeakSet<Instruction> definitions, uses;
 			std::weak_ptr<Instruction> lastUse;
-			std::set<std::shared_ptr<BasicBlock>> usingBlocks;
-			std::set<std::weak_ptr<Instruction>, WeakCompare<Instruction>> definitions, uses;
 			int reg = -1;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
 			Variable(int id_, TypePtr type_ = nullptr,
-			         const std::set<std::shared_ptr<BasicBlock>> &defining_blocks = {},
-			         const std::set<std::shared_ptr<BasicBlock>> &using_blocks = {});
+			         const WeakSet<BasicBlock> &defining_blocks = {}, const WeakSet<BasicBlock> &using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int weight() const;

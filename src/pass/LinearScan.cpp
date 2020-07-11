@@ -39,9 +39,9 @@ namespace LL2W::Passes {
 
 		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
 			// std::cerr << "\e[31mAddLocation\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
-			function.addToStack(interval.variable, StackLocation::Purpose::Spill);
+			function.addToStack(interval.variable.lock(), StackLocation::Purpose::Spill);
 			// std::cerr << "\e[31m::\e[39m\n";
-			if (function.spill(interval.variable))
+			if (function.spill(interval.variable.lock()))
 				++spill_count;
 			// std::cerr << "\e[31m//AddLocation\e[39m\n";
 		};
@@ -74,7 +74,7 @@ namespace LL2W::Passes {
 		};
 
 		std::function<bool(Interval &)> maySpill = [&](Interval &interval) {
-			VariablePtr variable = interval.variable;
+			VariablePtr variable = interval.variable.lock();
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "[maySpill(" << *variable << "): "
 			          << (variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill()? "true" : "false")
@@ -139,9 +139,9 @@ namespace LL2W::Passes {
 		std::cerr << "\e[1;4m" << *function.name << "(" << function.getArity() << ")\e[0m [spills: " << spill_count
 		          << "]\n";
 		for (Interval &interval: intervals) {
-			std::cerr << "    Interval for variable %" << interval.variable->id << ": [%"
-			          << *interval.firstDefinition->label << ", %" << *interval.lastUse->label << "]; reg = $"
-			          << WhyInfo::registerName(interval.reg) << " (" << interval.reg << ")\n";
+			std::cerr << "    Interval for variable %" << interval.variable.lock()->id << ": [%"
+			          << *interval.firstDefinition.lock()->label << ", %" << *interval.lastUse.lock()->label
+			          << "]; reg = $" << WhyInfo::registerName(interval.reg) << " (" << interval.reg << ")\n";
 		}
 #endif
 #ifdef DEBUG_STACK

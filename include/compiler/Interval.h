@@ -9,8 +9,8 @@ namespace LL2W {
 	class Variable;
 
 	struct Interval {
-		std::shared_ptr<BasicBlock> firstDefinition, lastUse;
-		std::shared_ptr<Variable> variable = nullptr;
+		std::weak_ptr<BasicBlock> firstDefinition, lastUse;
+		std::weak_ptr<Variable> variable;
 		int reg = -1;
 
 		Interval(std::shared_ptr<Variable>);

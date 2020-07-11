@@ -643,7 +643,7 @@ namespace LL2W {
 		reindexBlocks();
 
 		intervals.sort([&](const Interval &left, const Interval &right) {
-			return left.firstDefinition->index < right.firstDefinition->index;
+			return left.firstDefinition.lock()->index < right.firstDefinition.lock()->index;
 		});
 
 		return intervals;
@@ -704,7 +704,7 @@ namespace LL2W {
 		if (getCallingConvention() == CallingConvention::Reg16) {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (Interval &interval: intervals) {
-				if (interval.variable->id < max)
+				if (interval.variable.lock()->id < max)
 					interval.setRegister(++reg);
 			}
 		}
@@ -825,18 +825,19 @@ namespace LL2W {
 
 		// Iterate over all the uses of var
 		// for t ∈ uses(var) do
-		for (BasicBlockPtr t: var->usingBlocks) {
+		for (std::weak_ptr<BasicBlock> t: var->usingBlocks) {
 			// while t≠def(var) do
 			// TODO: is this valid, or is the algorithm not valid after phi coalescing?
 			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ M^r(block) then
-				if (m_r.count(t->node) > 0) {
+				if (m_r.count(t.lock()->node) > 0) {
 					block.liveIn.insert(var);
 					return true;
 				}
 				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
-				BasicBlockPtr t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlockPtr>();
-				if (t_new == t)
+				std::weak_ptr<BasicBlock> t_new =
+					cfg[*(*dTree)[*t.lock()->node].parent()].get<std::weak_ptr<BasicBlock>>();
+				if (t_new.lock() == t.lock())
 					break;
 				t = t_new;
 			}
@@ -848,11 +849,11 @@ namespace LL2W {
 	bool Function::isLiveOut(BasicBlock &block, VariablePtr var) {
 		// if def(a)=n
 
-		for (BasicBlockPtr defining_block: var->definingBlocks) {
-			if (defining_block.get() == &block) {
+		for (std::weak_ptr<BasicBlock> defining_block: var->definingBlocks) {
+			if (defining_block.lock().get() == &block) {
 				// return uses(a)\def(a)≠∅;
-				std::set<BasicBlockPtr> set = var->usingBlocks;
-				for (BasicBlockPtr bb: var->definingBlocks)
+				WeakSet<BasicBlock> set = var->usingBlocks;
+				for (std::weak_ptr<BasicBlock> bb: var->definingBlocks)
 					set.erase(bb);
 
 				if (!set.empty()) {
@@ -865,18 +866,19 @@ namespace LL2W {
 		}
 
 		// for t ∈ uses(a) do // Iterate over all the uses of a
-		for (BasicBlockPtr t: var->usingBlocks) {
+		for (std::weak_ptr<BasicBlock> t: var->usingBlocks) {
 			// while t≠def(a) do
 			while (var->definingBlocks.count(t) == 0) {
 				// if t ∩ Ms(n) then
-				if (0 < succMergeSets.at(block.node).count(t->node)) {
+				if (0 < succMergeSets.at(block.node).count(t.lock()->node)) {
 					block.liveOut.insert(var);
 					return true;
 				}
 
 				// t = dom-parent(t);
-				BasicBlockPtr t_new = cfg[*(*dTree)[*t->node].parent()].get<BasicBlockPtr>();
-				if (t_new == t)
+				std::weak_ptr<BasicBlock> t_new =
+					cfg[*(*dTree)[*t.lock()->node].parent()].get<std::weak_ptr<BasicBlock>>();
+				if (t_new.lock() == t.lock())
 					break;
 				t = t_new;
 			}
@@ -964,11 +966,11 @@ namespace LL2W {
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
 			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
 			          << pair.second->definitions.size() << ") =";
-			for (const BasicBlockPtr &def: pair.second->definingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << *def->label << "\e[0m";
+			for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
+				std::cout << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
 			std::cout << "  \e[0;2muses =";
-			for (const BasicBlockPtr &use: pair.second->usingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << *use->label << "\e[0m";
+			for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
+				std::cout << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
 			std::cout << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
 			if (pair.second->definingBlocks.size() > 1)

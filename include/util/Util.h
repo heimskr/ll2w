@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 
+#include "util/WeakCompare.h"
+
 namespace LL2W {
 	long parseLong(const std::string &);
 	long parseLong(const std::string *);

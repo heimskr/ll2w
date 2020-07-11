@@ -17,7 +17,7 @@ namespace LL2W::Passes {
 			const std::string *label = block->label;
 			function.cfg += *label;
 			Node &node = function.cfg[*label];
-			node.data = block;
+			node.data = std::weak_ptr<BasicBlock>(block);
 			block->node = &node;
 			function.bbNodeMap.insert({block.get(), &node});
 		}
