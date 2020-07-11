@@ -578,7 +578,10 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
+		computeLiveness();
+		buildIntervals();
 		Passes::coalescePhi(*this);
+		resetLiveness();
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -642,6 +645,42 @@ namespace LL2W {
 		intervals.sort([&](const Interval &left, const Interval &right) {
 			return left.firstDefinition->index < right.firstDefinition->index;
 		});
+
+		return intervals;
+	}
+
+	std::list<Interval> Function::buildIntervals() {
+		std::list<Interval> intervals;
+
+		// for each block b in reverse order do
+		for (auto iter = blocks.rbegin(), end = blocks.rend(); iter != end; ++iter) {
+			BasicBlockPtr block = *iter;
+
+			std::unordered_set<VariablePtr> live;
+			// live = union of successor.liveIn for each successor of b
+			for (Node *successor_node: bbNodeMap.at(block.get())->out()) {
+				if (!successor_node->data.has_value())
+					continue;
+				BasicBlockPtr successor = successor_node->get<BasicBlockPtr>();
+				absorb(live, successor->liveIn);
+				// for each phi function phi of successors of b do
+				for (InstructionPtr &instruction: successor->instructions) {
+					LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+					if (!llvm)
+						continue;
+					PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node);
+					if (!phi)
+						continue;
+					// live.add(phi.inputOf(b))
+					for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs) {
+						if (pair.second != block->label)
+							continue;
+						if (LocalValue *local = dynamic_cast<LocalValue *>(pair.first.get()))
+							live.insert(local->variable);
+					}
+				}
+			}
+		}
 
 		return intervals;
 	}

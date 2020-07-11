@@ -54,6 +54,13 @@ namespace LL2W {
 		return false;
 	}
 
+	/** Adds all items from one set into another. */
+	template <typename D, typename S>
+	void absorb(D &destination, const S &source) {
+		for (const auto &item: source)
+			destination.insert(item);
+	}
+
 	inline std::ostream & warn() {
 		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}

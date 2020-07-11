@@ -31,6 +31,8 @@ namespace LL2W {
 			std::list<std::shared_ptr<Instruction>> instructions;
 			std::set<std::shared_ptr<Variable>> read, written;
 			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
+			/** A list of all variables used by phi instructions in this block. */
+			std::unordered_set<std::shared_ptr<Variable>> phiUses;
 			Node *node = nullptr;
 			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
@@ -46,6 +48,9 @@ namespace LL2W {
 
 			/** Resets the cached read/write counts and marks the block as unextracted. */
 			void unextract();
+
+			/** Fills phiUses. */
+			void extractPhi();
 
 			/** Returns the number of instructions in the basic block. */
 			size_t size() const { return instructions.size(); }

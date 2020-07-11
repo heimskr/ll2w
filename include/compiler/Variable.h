@@ -44,6 +44,10 @@ namespace LL2W {
 			int spillCost();
 			void clearSpillCost();
 
+			/** Returns whether the variable has only one using block and whose single using block is the same as its
+			 *  defining block. */
+			bool isSimple() const;
+
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(Variable &);
 
@@ -58,7 +62,6 @@ namespace LL2W {
 
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
-
 
 			void setID(int);
 			void setType(TypePtr);

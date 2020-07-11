@@ -174,6 +174,9 @@ namespace LL2W {
 			/** Returns a list of intervals sorted by start point in ascending order. */
 			std::list<Interval> sortedIntervals();
 
+			/** Builds live intervals according to the algorithm presented by Christian Wimmer and Michael Franz. */
+			std::list<Interval> buildIntervals();
+
 			/** Creates a precolored variable corresponding to any register. */
 			VariablePtr makePrecoloredVariable(unsigned char, BasicBlockPtr);
 

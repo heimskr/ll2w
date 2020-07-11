@@ -7,9 +7,9 @@
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
-		Graph interference = makeInterferenceGraph(function);
 		int spill_count = 0;
 		while (true) {
+			Graph interference = makeInterferenceGraph(function);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
@@ -34,11 +34,12 @@ namespace LL2W::Passes {
 		VariablePtr ptr = function.variableStore.begin()->second;
 		int lowest = ptr->spillCost();
 		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
-			pair.second->clearSpillCost();
-			const int cost = pair.second->spillCost();
-			if (cost < lowest) {
+			const VariablePtr &var = pair.second;
+			var->clearSpillCost();
+			const int cost = var->spillCost();
+			if (cost < lowest && !var->isSimple()) {
 				lowest = cost;
-				ptr = pair.second;
+				ptr = var;
 			}
 		}
 

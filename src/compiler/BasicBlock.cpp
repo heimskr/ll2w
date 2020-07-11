@@ -1,5 +1,6 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"
+#include "compiler/LLVMInstruction.h"
 #include "compiler/Variable.h"
 
 namespace LL2W {
@@ -34,6 +35,19 @@ namespace LL2W {
 		extracted = false;
 	}
 
+	void BasicBlock::extractPhi() {
+		phiUses.clear();
+
+		if (instructions.empty())
+			return;
+
+		if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instructions.front().get()))
+			if (PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node))
+				for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs)
+					if (pair.first->valueType() == ValueType::Local)
+						phiUses.insert(dynamic_cast<LocalValue *>(pair.first.get())->variable);
+	}
+
 	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
 		if (instructions.empty()) {
 			instructions.push_back(instruction);
@@ -48,20 +62,18 @@ namespace LL2W {
 	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {
 		if (0 < liveIn.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> live_in: liveIn) {
+		for (const std::shared_ptr<Variable> live_in: liveIn)
 			if (live_in->id == var->id)
 				return true;
-		}
 		return false;
 	}
 
 	bool BasicBlock::isLiveOut(std::shared_ptr<Variable> var) const {
 		if (0 < liveOut.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> live_out: liveOut) {
+		for (const std::shared_ptr<Variable> live_out: liveOut)
 			if (live_out->id == var->id)
 				return true;
-		}
 		return false;
 	}
 

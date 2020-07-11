@@ -41,6 +41,11 @@ namespace LL2W {
 		spillCost_.reset();
 	}
 
+	bool Variable::isSimple() const {
+		return definingBlocks.size() == 1 && usingBlocks.size() == 1
+			&& (*usingBlocks.begin())->index == (*definingBlocks.begin())->index;
+	}
+
 	bool Variable::operator==(const Variable &other) const {
 		return id == other.id && (type == other.type || *type == *other.type);
 	}
