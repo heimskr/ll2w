@@ -14,15 +14,13 @@
 // 		int reg = -1;
 
 // 		MultiInterval(std::shared_ptr<Variable>);
-// 		int startpoint() const;
-// 		int endpoint() const;
 
 // 		int setRegister(int);
 
 // 		operator std::string() const;
 // 	};
 
-// 	std::ostream & operator<<(std::ostream &, const Interval &);
+// 	std::ostream & operator<<(std::ostream &, const MultiInterval &);
 // }
 
 // #endif

@@ -14,7 +14,7 @@ namespace LL2W::Passes {
 	/** Assigns registers using a graph coloring algorithm. Returns the number of necessary spills. */
 	int allocateColoring(Function &);
 
-	std::shared_ptr<Variable> selectLowestSpillCost(Function &);
+	std::shared_ptr<Variable> selectLowestSpillCost(Function &, const std::unordered_set<int> &avoid);
 
 	/** Creates an interference graph of all a function's variables. */
 	Graph makeInterferenceGraph(Function &);

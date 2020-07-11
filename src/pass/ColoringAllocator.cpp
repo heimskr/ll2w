@@ -8,20 +8,26 @@
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
 		int spill_count = 0;
+		std::unordered_set<int> tried;
 		while (true) {
 			Graph interference = makeInterferenceGraph(function);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 			} catch (const UncolorableError &err) {
-				// spill
-				VariablePtr to_spill = selectLowestSpillCost(function);
-				std::cout << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
+				VariablePtr to_spill = selectLowestSpillCost(function, tried);
+				if (!to_spill)
+					std::terminate();
+				std::cerr << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
+				tried.insert(to_spill->id);
 				function.addToStack(to_spill, StackLocation::Purpose::Spill);
 				if (function.spill(to_spill)) {
-					std::cout << "Spilled. " << function.variableStore.size() << "\n";
+					std::cerr << "Spilled. Variables: " << function.variableStore.size() << ". Stack locations: "
+					          << function.stack.size() << "\n";
 					++spill_count;
-				} else std::cout << "Not spilled.\n";
+				} else std::cerr << "Not spilled.\n";
+				function.resetLiveness();
+				function.computeLiveness();
 				continue;
 			}
 			break;
@@ -30,14 +36,14 @@ namespace LL2W::Passes {
 		return 0;
 	}
 
-	VariablePtr selectLowestSpillCost(Function &function) {
-		VariablePtr ptr = function.variableStore.begin()->second;
-		int lowest = ptr->spillCost();
+	VariablePtr selectLowestSpillCost(Function &function, const std::unordered_set<int> &avoid) {
+		VariablePtr ptr;
+		int lowest = -1;
 		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
 			const VariablePtr &var = pair.second;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
-			if (cost < lowest && !var->isSimple()) {
+			if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
 				lowest = cost;
 				ptr = var;
 			}
@@ -66,11 +72,14 @@ namespace LL2W::Passes {
 				live[pair.second->id].insert(bptr.lock()->index);
 		}
 
-		for (const std::weak_ptr<BasicBlock> &block: function.blocks) {
-			for (const VariablePtr var: block.lock()->liveIn)
-				live[var->id].insert(block.lock()->index);
-			for (const VariablePtr var: block.lock()->liveOut)
-				live[var->id].insert(block.lock()->index);
+		for (const std::weak_ptr<BasicBlock> &weak: function.blocks) {
+			std::shared_ptr<BasicBlock> block = weak.lock();
+			if (!block)
+				std::cerr << "block is null?\n";
+			for (const VariablePtr var: block->liveIn)
+				live[var->id].insert(block->index);
+			for (const VariablePtr var: block->liveOut)
+				live[var->id].insert(block->index);
 		}
 
 

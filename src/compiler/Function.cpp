@@ -7,14 +7,15 @@
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
-#define DEBUG_RENDER
-// #define DEBUG_SPILL
+// #define DEBUG_RENDER
+#define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
-#define DEBUG_MERGE
+// #define DEBUG_MERGE
 // #define DEBUG_ESTIMATIONS
+#define ALLOCATE_COLORING
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -219,6 +220,10 @@ namespace LL2W {
 			auto next = after(definition);
 			bool should_insert = true;
 
+			// Skip comments.
+			while (next && dynamic_cast<Comment *>(next.get()) != nullptr)
+				next = after(next);
+
 			if (next) {
 				std::shared_ptr<StackStoreInstruction> other_store =
 					std::dynamic_pointer_cast<StackStoreInstruction>(next);
@@ -245,6 +250,8 @@ namespace LL2W {
 			}
 
 		}
+
+		debug();
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
@@ -590,8 +597,11 @@ namespace LL2W {
 		debug();
 #endif
 
-		// Passes::allocateColoring(*this);
-
+#ifdef ALLOCATE_COLORING
+		Passes::allocateColoring(*this);
+		int spilled = -1;
+		(void) spilled;
+#else
 		int spilled = Passes::linearScan(*this);
 #ifdef DEBUG_SPILL
 		int scans = 0;
@@ -612,6 +622,7 @@ namespace LL2W {
 			computeLiveness();
 			spilled = Passes::linearScan(*this);
 		}
+#endif
 
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
@@ -791,18 +802,14 @@ namespace LL2W {
 
 	void Function::computeLiveness() {
 		for (BasicBlockPtr block: blocks) {
-			std::cerr << "Extracting phi from " << *block->label << "\n";
 			block->extractPhi();
 			block->extract();
 			for (VariablePtr var: block->phiUses) {
-				std::cerr << "Phi use: " << var->toString() << "\n";
 				block->liveOut.insert(var);
 				upAndMark(block, var);
 			}
-			for (VariablePtr var: block->nonPhiRead) {
-				std::cerr << "Non-phi use: " << var->toString() << "\n";
+			for (VariablePtr var: block->nonPhiRead)
 				upAndMark(block, var);
-			}
 		}
 	}
 
@@ -811,13 +818,9 @@ namespace LL2W {
 			if (instruction->isPhi())
 				continue;
 			// if def(v) ∈ B (φ excluded) then return
-			if (instruction->written.count(var) != 0) {
-				std::cerr << "    Okay, bye. " << instruction->debugExtra() << "\n";
+			if (instruction->written.count(var) != 0)
 				return;
-			}
 		}
-
-		std::cerr << "    Let's continue.\n";
 
 		// if v ∈ LiveIn(B) then return
 		if (block->liveIn.count(var) != 0)
