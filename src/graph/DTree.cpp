@@ -8,7 +8,6 @@ namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
 	DTree::DTree(Graph &graph, Node &start) {
 		const size_t gsize = graph.size();
-		std::unordered_map<Node *, int> visited;
 		std::vector<Node *> stack {&start}, vertices(graph.size(), nullptr);
 		std::unordered_map<Node *, int> semis;
 		std::unordered_map<Node *, Node *> ancestors, labels, parents, doms;
@@ -21,11 +20,9 @@ namespace LL2W {
 
 		int n = -1;
 		std::function<void(Node *)> dfs = [&](Node *v) {
-			assert(semis[v] == -1);
 			semis[v] = ++n;
-			vertices[n] = v;
+			vertices[n] = labels[v] = v;
 			ancestors[v] = nullptr;
-			labels[v] = v;
 			for (Node *w: *v) {
 				if (semis[w] == -1) {
 					parents[w] = v;
@@ -35,26 +32,9 @@ namespace LL2W {
 			}
 		};
 
-		// std::function<void(Node *)> dfs = [&](Node *node) {
-		// 	visited[node] = vertices.size();
-		// 	const int v = node->index();
-		// 	assert(semis[v] == -1);
-		// 	semis[v] = vertices.size();
-		// 	vertices.push_back(node);
-		// 	labels[v] = v;
-		// 	for (Node *successor: *node) {
-		// 		const int w = successor->index();
-		// 		if (semis.at(w) == -1) {
-		// 			parents[w] = v;
-		// 			dfs(successor);
-		// 		}
-
-		// 		preds.at(w).insert(v);
-		// 	}
-		// };
-
 		std::function<void(Node *)> compress = [&](Node *v) {
 			assert(ancestors[v] != nullptr);
+
 			if (ancestors[ancestors[v]] != nullptr) {
 				compress(ancestors[v]);
 				if (semis[labels[ancestors[v]]] < semis[labels[v]])
@@ -87,6 +67,7 @@ namespace LL2W {
 
 			buckets[vertices[semis[w]]].insert(w);
 			link_(parents[w], w);
+
 			std::unordered_set<Node *> &bucket = buckets[parents[w]];
 			for (auto iter = bucket.begin(); iter != bucket.end();) {
 				Node *v = *iter;
@@ -94,56 +75,27 @@ namespace LL2W {
 				Node *u = eval(v);
 				doms[v] = semis[u] < semis[v]? u : parents[w];
 			}
+
 		}
 
 		for (size_t i = 1; i < gsize; ++i) {
 			Node *w = vertices[i];
-			if (doms[w] != vertices[semis[w]])
+			if (doms[w] != vertices[semis[w]]) {
+				std::cerr << "doms[w] = doms[doms[w]] == " << doms[doms[w]] << "\n";
 				doms[w] = doms[doms[w]];
+			}
 		}
 
 		doms[&start] = &start;
-
-		// for (int i = gsize - 1; 1 <= i; --i) {
-		// 	int w = vertices[i]->index();
-
-			// for (int v: preds.at(w)) {
-			// 	int u = eval(v);
-			// 	if (semis.at(u) < semis.at(w))
-			// 		semis.at(w) = semis.at(u);
-			// }
-
-		// 	buckets[vertices.at(semis.at(w))->index()].insert(w);
-		// 	ancestors[w] = parents.at(w);
-
-		// 	std::unordered_set<int> &bucket = buckets.at(parents.at(w));
-		// 	for (auto iter = bucket.begin(); iter != bucket.end();) {
-		// 		int v = *iter;
-		// 		bucket.erase(iter++);
-		// 		int u = eval(v);
-		// 		doms[v] = semis.at(u) < semis.at(v)? u : parents.at(w);
-		// 	}
-		// }
-
-		// for (size_t i = 1; i < gsize; ++i) {
-		// 	int w = vertices.at(i)->index();
-		// 	if (doms.at(w) != vertices.at(semis.at(w))->index())
-		// 		doms[w] = doms.at(doms.at(w));
-		// }
-
-		// doms[&start] = &start;
 
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
 		for (const std::pair<Node *, Node *> &pair: doms) {
-
 			std::cerr << "doms[" << (pair.first? pair.first->label() : "null") << "] = " << (pair.second? pair.second->label() : "null") << "\n";
-			// link((*this)[*pair.first].label(), (*this)[*pair.second].label());
+			link((*this)[*pair.first].label(), (*this)[*pair.second].label());
 		}
 		std::cerr << "-----------\n";
-		// for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
-			// link((*this)[doms.at(i)].label(), (*this)[i].label());
 	}
 
 	void DTree::findLevels() {
