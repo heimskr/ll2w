@@ -8,91 +8,120 @@ namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
 	DTree::DTree(Graph &graph, Node &start) {
 		const size_t gsize = graph.size();
-		std::vector<Node *> stack {&start}, vertices(graph.size(), nullptr);
-		std::unordered_map<Node *, int> semis;
-		std::unordered_map<Node *, Node *> ancestors, labels, parents, doms;
-		std::unordered_map<Node *, std::unordered_set<Node *>> preds, buckets;
+		std::vector<Node *> stack {&start}, vertex(graph.size(), nullptr);
+		std::unordered_map<Node *, int> semi, size;
+		std::unordered_map<Node *, Node *> ancestor, label, parent, dom, child;
+		std::unordered_map<Node *, std::unordered_set<Node *>> pred, bucket;
 
 		for (Node *node: graph.nodes()) {
-			semis[node] = -1;
-			ancestors[node] = labels[node] = parents[node] = doms[node] = nullptr;
+			semi[node] = -1;
+			size[node] = 0;
+			ancestor[node] = label[node] = parent[node] = dom[node] = nullptr;
 		}
 
 		int n = -1;
 		std::function<void(Node *)> dfs = [&](Node *v) {
-			semis[v] = ++n;
-			vertices[n] = labels[v] = v;
-			ancestors[v] = nullptr;
+			semi[v] = ++n;
+			vertex[n] = label[v] = v;
+			ancestor[v] = nullptr;
+			size[v] = 1;
 			for (Node *w: *v) {
-				if (semis[w] == -1) {
-					parents[w] = v;
+				if (semi[w] == -1) {
+					parent[w] = v;
 					dfs(w);
 				}
-				preds[w].insert(v);
+				pred[w].insert(v);
 			}
 		};
 
 		std::function<void(Node *)> compress = [&](Node *v) {
-			assert(ancestors[v] != nullptr);
+			assert(ancestor[v] != nullptr);
 
-			if (ancestors[ancestors[v]] != nullptr) {
-				compress(ancestors[v]);
-				if (semis[labels[ancestors[v]]] < semis[labels[v]])
-					labels[v] = labels[ancestors[v]];
-				ancestors[v] = ancestors[ancestors[v]];
+			if (ancestor[ancestor[v]] != nullptr) {
+				compress(ancestor[v]);
+				if (semi[label[ancestor[v]]] < semi[label[v]])
+					label[v] = label[ancestor[v]];
+				ancestor[v] = ancestor[ancestor[v]];
 			}
 		};
 
 		std::function<Node *(Node *)> eval = [&](Node *v) {
-			if (ancestors[v] == nullptr) {
-				return v;
-			} else {
-				compress(v);
-				return labels[v];
-			}
+			if (ancestor[v] == nullptr)
+				return label[v];
+			compress(v);
+			if (semi[label[ancestor[v]]] >= semi[label[v]])
+				return label[v];
+			return label[ancestor[v]];
 		};
 
 		std::function<void(Node *, Node *)> link_ = [&](Node *v, Node *w) {
-			ancestors[w] = v;
+			Node *s = w;
+			while (semi[label[w]] < semi[label[child[s]]]) {
+				if (size[s] + size[child[child[s]]] >= 2 * size[child[s]]) {
+					ancestor[child[s]] = s;
+					child[s] = child[child[s]];
+				} else {
+					size[child[s]] = size[s];
+					s = ancestor[s] = child[s];
+				}
+			}
+
+			label[s] = label[w];
+			size[v] += size[w];
+			if (size[v] < 2 * size[w])
+				std::swap(s, child[v]);
+
+			while (s != nullptr) {
+				ancestor[s] = v;
+				s = child[s];
+			}
 		};
 
 		dfs(&start);
+
 		for (size_t i = gsize - 1; 1 <= i; --i) {
-			Node *w = vertices[i];
-			for (Node *v: preds[w]) {
+			Node *w = vertex[i];
+			for (Node *v: pred[w]) {
 				Node *u = eval(v);
-				if (semis[u] < semis[w])
-					semis[w] = semis[u];
+				if (semi[u] < semi[w])
+					semi[w] = semi[u];
 			}
 
-			buckets[vertices[semis[w]]].insert(w);
-			link_(parents[w], w);
+			bucket[vertex[semi[w]]].insert(w);
+			link_(parent[w], w);
 
-			std::unordered_set<Node *> &bucket = buckets[parents[w]];
-			for (auto iter = bucket.begin(); iter != bucket.end();) {
+			std::unordered_set<Node *> &pwbucket = bucket[parent[w]];
+			for (auto iter = pwbucket.begin(); iter != pwbucket.end();) {
 				Node *v = *iter;
-				iter = bucket.erase(iter);
+				iter = pwbucket.erase(iter);
 				Node *u = eval(v);
-				doms[v] = semis[u] < semis[v]? u : parents[w];
+				dom[v] = semi[u] < semi[v]? u : parent[w];
+				std::cerr << "dom[" << v->label() << "] := " << dom[v]->label() << " (" << u->label() << " vs. " << parent[w]->label() << ")\n";
+				std::cerr << "   w == " << w->label() << "\n";
 			}
-
 		}
 
 		for (size_t i = 1; i < gsize; ++i) {
-			Node *w = vertices[i];
-			if (doms[w] != vertices[semis[w]]) {
-				std::cerr << "doms[w] = doms[doms[w]] == " << doms[doms[w]] << "\n";
-				doms[w] = doms[doms[w]];
+			Node *w = vertex[i];
+			std::cerr << "dom [" << w->label() << "] = " << dom[w]->label() << "\n";
+			std::cerr << "semi[" << w->label() << "] = " << semi[w] << "\n";
+			std::cerr << "vertex[" << semi[w] << "] = " << vertex[semi[w]]->label() << "\n";
+			std::cerr << "dom[" << dom[w]->label() << "] = " << (dom[dom[w]]? dom[dom[w]]->label() : "null") << "\n";
+			std::cerr << "==========\n";
+			if (dom[w] != vertex[semi[w]]) {
+				dom[w] = dom[dom[w]];
 			}
 		}
 
-		doms[&start] = &start;
+		std::cerr << "vertex:"; for (Node *v: vertex) std::cerr << " " << v->label(); std::cerr << "\n";
+
+		dom[&start] = &start;
 
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
-		for (const std::pair<Node *, Node *> &pair: doms) {
-			std::cerr << "doms[" << (pair.first? pair.first->label() : "null") << "] = " << (pair.second? pair.second->label() : "null") << "\n";
+		for (const std::pair<Node *, Node *> &pair: dom) {
+			std::cerr << "dom[" << (pair.first? pair.first->label() : "null") << "] = " << (pair.second? pair.second->label() : "null") << "\n";
 			link((*this)[*pair.first].label(), (*this)[*pair.second].label());
 		}
 		std::cerr << "-----------\n";
@@ -153,10 +182,10 @@ namespace LL2W {
 		return nodes[0]->label();
 	}
 
-	std::string DTree::commonDominator(const std::vector<std::string> &labels) {
+	std::string DTree::commonDominator(const std::vector<std::string> &label) {
 		std::vector<Node *> nodes;
-		nodes.reserve(labels.size());
-		for (const std::string &label: labels)
+		nodes.reserve(label.size());
+		for (const std::string &label: label)
 			nodes.push_back(&(*this)[label]);
 		return commonDominator(nodes);
 	}
@@ -184,7 +213,7 @@ namespace LL2W {
 			Node *parent = *node->in().begin();
 			for (;;) {
 				out_map[node].insert(parent);
-				// Stop when we've reached the root. The node will have either no parents or only itself as its parent.
+				// Stop when we've reached the root. The node will have either no parent or only itself as its parent.
 				if (parent->in().empty() || *parent->in().begin() == parent)
 					break;
 				parent = *parent->in().begin();
