@@ -96,35 +96,22 @@ namespace LL2W {
 				iter = pwbucket.erase(iter);
 				Node *u = eval(v);
 				dom[v] = semi[u] < semi[v]? u : parent[w];
-				std::cerr << "dom[" << v->label() << "] := " << dom[v]->label() << " (" << u->label() << " vs. " << parent[w]->label() << ")\n";
-				std::cerr << "   w == " << w->label() << "\n";
 			}
 		}
 
 		for (size_t i = 1; i < gsize; ++i) {
 			Node *w = vertex[i];
-			std::cerr << "dom [" << w->label() << "] = " << dom[w]->label() << "\n";
-			std::cerr << "semi[" << w->label() << "] = " << semi[w] << "\n";
-			std::cerr << "vertex[" << semi[w] << "] = " << vertex[semi[w]]->label() << "\n";
-			std::cerr << "dom[" << dom[w]->label() << "] = " << (dom[dom[w]]? dom[dom[w]]->label() : "null") << "\n";
-			std::cerr << "==========\n";
 			if (dom[w] != vertex[semi[w]]) {
 				dom[w] = dom[dom[w]];
 			}
 		}
 
-		std::cerr << "vertex:"; for (Node *v: vertex) std::cerr << " " << v->label(); std::cerr << "\n";
-
 		dom[&start] = &start;
-
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
-		for (const std::pair<Node *, Node *> &pair: dom) {
-			std::cerr << "dom[" << (pair.first? pair.first->label() : "null") << "] = " << (pair.second? pair.second->label() : "null") << "\n";
+		for (const std::pair<Node *, Node *> &pair: dom)
 			link((*this)[*pair.first].label(), (*this)[*pair.second].label());
-		}
-		std::cerr << "-----------\n";
 	}
 
 	void DTree::findLevels() {
