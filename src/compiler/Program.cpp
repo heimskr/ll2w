@@ -10,7 +10,7 @@
 #include "parser/StructNode.h"
 #include "util/Util.h"
 
-// #define SINGLE_FUNCTION "@dbg_blocks"
+#define SINGLE_FUNCTION "@dbg_blocks"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {

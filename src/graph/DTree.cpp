@@ -101,17 +101,17 @@ namespace LL2W {
 
 		for (size_t i = 1; i < gsize; ++i) {
 			Node *w = vertex[i];
-			if (dom[w] != vertex[semi[w]]) {
+			if (dom[w] != vertex[semi[w]])
 				dom[w] = dom[dom[w]];
-			}
 		}
 
 		dom[&start] = &start;
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
-		for (const std::pair<Node *, Node *> &pair: dom)
-			link((*this)[*pair.first].label(), (*this)[*pair.second].label());
+		for (const std::pair<Node *, Node *> &pair: dom) {
+			link((*this)[*pair.second].label(), (*this)[*pair.first].label());
+		}
 	}
 
 	void DTree::findLevels() {

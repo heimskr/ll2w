@@ -60,17 +60,17 @@ namespace LL2W::Passes {
 
 		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
 			std::cout << *pair.second << "!\n";
-			for (const BasicBlockPtr &bptr: pair.second->definingBlocks)
-				live[pair.second->id].insert(bptr->index);
-			for (const BasicBlockPtr &bptr: pair.second->usingBlocks)
-				live[pair.second->id].insert(bptr->index);
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks)
+				live[pair.second->id].insert(bptr.lock()->index);
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks)
+				live[pair.second->id].insert(bptr.lock()->index);
 		}
 
-		for (const BasicBlockPtr &block: function.blocks) {
-			for (const VariablePtr var: block->liveIn)
-				live[var->id].insert(block->index);
-			for (const VariablePtr var: block->liveOut)
-				live[var->id].insert(block->index);
+		for (const std::weak_ptr<BasicBlock> &block: function.blocks) {
+			for (const VariablePtr var: block.lock()->liveIn)
+				live[var->id].insert(block.lock()->index);
+			for (const VariablePtr var: block.lock()->liveOut)
+				live[var->id].insert(block.lock()->index);
 		}
 
 

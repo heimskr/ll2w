@@ -10,6 +10,8 @@
 #include "parser/Lexer.h"
 #include "util/Util.h"
 
+#define DEBUGMODE
+
 void lttest();
 void djtest();
 void rendertest();
@@ -120,7 +122,10 @@ void parsertest(const std::string &filename) {
 	LL2W::Parser::parse();
 	LL2W::Program prog(*LL2W::Parser::root);
 	prog.compile();
+#ifdef DEBUGMODE
 	prog.debug();
-	// std::cout << prog.toString();
+#else
+	std::cout << prog.toString();
+#endif
 	LL2W::Parser::done();
 }

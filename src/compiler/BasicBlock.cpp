@@ -8,12 +8,20 @@ namespace LL2W {
 	                       const std::list<std::shared_ptr<Instruction>> &instructions_):
 		label(label_), preds(preds_), instructions(instructions_) {}
 
-	void BasicBlock::extract(Instruction &instruction) {
-		instruction.extract();
-		for (auto read_var: instruction.read)
+	void BasicBlock::extract(std::shared_ptr<Instruction> &instruction) {
+		instruction->extract();
+		for (auto read_var: instruction->read)
 			read.insert(read_var);
-		for (auto written_var: instruction.written)
+		for (auto written_var: instruction->written)
 			written.insert(written_var);
+		if (instruction->isPhi()) {
+			phiNode = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+			return;
+		}
+		for (auto read_var: instruction->read)
+			nonPhiRead.insert(read_var);
+		for (auto written_var: instruction->written)
+			nonPhiWritten.insert(written_var);
 	}
 
 	std::pair<char, char> BasicBlock::extract(bool force) {
@@ -22,9 +30,11 @@ namespace LL2W {
 
 		read.clear();
 		written.clear();
+		nonPhiWritten.clear();
+		nonPhiRead.clear();
 
 		for (std::shared_ptr<Instruction> &instruction: instructions)
-			extract(*instruction);
+			extract(instruction);
 
 		return {read.size(), written.size()};
 	}
@@ -32,6 +42,8 @@ namespace LL2W {
 	void BasicBlock::unextract() {
 		read.clear();
 		written.clear();
+		nonPhiWritten.clear();
+		nonPhiRead.clear();
 		extracted = false;
 	}
 
@@ -56,7 +68,7 @@ namespace LL2W {
 			instructions.insert(--iter, instruction);
 		}
 
-		extract(*instruction);
+		extract(instruction);
 	}
 
 	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {

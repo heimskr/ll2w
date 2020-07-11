@@ -22,22 +22,25 @@ namespace LL2W {
 	class BasicBlock {
 		private:
 			bool extracted = false;
-			void extract(Instruction &);
+			void extract(std::shared_ptr<Instruction> &);
 
 		public:
 			const std::string *label;
 			int index = -1;
 			std::vector<const std::string *> preds;
 			std::list<std::shared_ptr<Instruction>> instructions;
-			std::set<std::shared_ptr<Variable>> read, written;
+			std::set<std::shared_ptr<Variable>> read, written, nonPhiWritten, nonPhiRead;
 			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
-			/** A list of all variables used by phi instructions in this block. */
+			/** A list of all variables used by ϕ-instructions in this block. */
 			std::unordered_set<std::shared_ptr<Variable>> phiUses;
 			Node *node = nullptr;
 			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
 			int estimatedExecutions = 0;
+			/** If this basic block originally had a ϕ-instruction, it'll be contained in this field, even if the
+			 *  ϕ-instruction is removed. */
+			std::shared_ptr<LLVMInstruction> phiNode;
 
 			BasicBlock(const std::string *, const std::vector<const std::string *> &,
 			           const std::list<std::shared_ptr<Instruction>> &);

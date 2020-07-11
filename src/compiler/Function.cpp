@@ -580,10 +580,8 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
-		computeLiveness();
+		Passes::coalescePhi(*this, true);
 		buildIntervals();
-		Passes::coalescePhi(*this);
-		resetLiveness();
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -615,6 +613,8 @@ namespace LL2W {
 			spilled = Passes::linearScan(*this);
 		}
 
+		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
+		Passes::coalescePhi(*this);
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
 		// Passes::replaceStoresAndLoads(*this);
@@ -790,26 +790,76 @@ namespace LL2W {
 	}
 
 	void Function::computeLiveness() {
-		if (livenessComputed)
-			return;
-
-		livenessComputed = true;
-		for (BasicBlockPtr &block: blocks) {
-			std::unordered_set<Variable *> pool {};
-			for (const VariablePtr &variable: block->read) {
-				isLiveIn(*block, variable);
-				isLiveOut(*block, variable);
-				pool.insert(variable.get());
+		for (BasicBlockPtr block: blocks) {
+			std::cerr << "Extracting phi from " << *block->label << "\n";
+			block->extractPhi();
+			block->extract();
+			for (VariablePtr var: block->phiUses) {
+				std::cerr << "Phi use: " << var->toString() << "\n";
+				block->liveOut.insert(var);
+				upAndMark(block, var);
 			}
-
-			for (const VariablePtr &variable: block->written) {
-				if (pool.count(variable.get()) == 0) {
-					isLiveIn(*block, variable);
-					isLiveOut(*block, variable);
-				}
+			for (VariablePtr var: block->nonPhiRead) {
+				std::cerr << "Non-phi use: " << var->toString() << "\n";
+				upAndMark(block, var);
 			}
 		}
 	}
+
+	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
+		for (const std::shared_ptr<Instruction> instruction: block->instructions) {
+			if (instruction->isPhi())
+				continue;
+			// if def(v) ∈ B (φ excluded) then return
+			if (instruction->written.count(var) != 0) {
+				std::cerr << "    Okay, bye. " << instruction->debugExtra() << "\n";
+				return;
+			}
+		}
+
+		std::cerr << "    Let's continue.\n";
+
+		// if v ∈ LiveIn(B) then return
+		if (block->liveIn.count(var) != 0)
+			return;
+
+		// LiveIn(B) = LiveIn(B) ∪ {v}
+		block->liveIn.insert(var);
+
+		// if v ∈ PhiDefs(B) then return
+		if (block->written.count(var) != 0 && block->nonPhiWritten.count(var) == 0)
+			return;
+
+		// for each P ∈ CFG_preds(B) do
+		for (const Node *node: bbNodeMap.at(block.get())->in()) {
+			BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
+			// LiveOut(P) = LiveOut(P) ∪ {v}
+			p->liveOut.insert(var);
+			upAndMark(p, var);
+		}
+	}
+
+	// void Function::computeLiveness() {
+	// 	if (livenessComputed)
+	// 		return;
+
+	// 	livenessComputed = true;
+	// 	for (BasicBlockPtr &block: blocks) {
+	// 		std::unordered_set<Variable *> pool {};
+	// 		for (const VariablePtr &variable: block->read) {
+	// 			isLiveIn(*block, variable);
+	// 			isLiveOut(*block, variable);
+	// 			pool.insert(variable.get());
+	// 		}
+
+	// 		for (const VariablePtr &variable: block->written) {
+	// 			if (pool.count(variable.get()) == 0) {
+	// 				isLiveIn(*block, variable);
+	// 				isLiveOut(*block, variable);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	void Function::resetLiveness() {
 		for (BasicBlockPtr &block: blocks) {
@@ -1011,7 +1061,8 @@ namespace LL2W {
 #endif
 
 		cfg.renderTo("graph_" + *name + ".png");
-		dTree->renderTo("graph_D_" + *name + ".png");
+		if (dTree.has_value())
+			dTree->renderTo("graph_D_" + *name + ".png");
 		if (djGraph.has_value())
 			djGraph->renderTo("graph_DJ_" + *name + ".png");
 #endif

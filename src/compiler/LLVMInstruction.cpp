@@ -208,4 +208,8 @@ namespace LL2W {
 
 		return false;
 	}
+
+	bool LLVMInstruction::isPhi() const {
+		return node && node->nodeType() == NodeType::Phi;
+	}
 }

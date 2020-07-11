@@ -85,6 +85,9 @@ namespace LL2W {
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {
+		if (&new_parent == this || new_parent.aliases.count(this) != 0)
+			return;
+
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {

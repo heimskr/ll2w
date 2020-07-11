@@ -53,6 +53,8 @@ namespace LL2W {
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
 
+			void upAndMark(BasicBlockPtr, VariablePtr);
+
 		public:
 			Program *parent = nullptr;
 
@@ -249,7 +251,7 @@ namespace LL2W {
 			 *  the function is variadic. */
 			CallingConvention getCallingConvention() const;
 
-			/** Performs liveness analysis on all variables. */
+			/** Performs liveness analysis on all variables. Requires ϕ-instructions to still be present. */
 			void computeLiveness();
 
 			/** Resets the liveness data for all variables. */
