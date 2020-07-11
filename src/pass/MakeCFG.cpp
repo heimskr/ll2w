@@ -59,7 +59,7 @@ namespace LL2W::Passes {
 			// End the walk once we reach the exit or until we've reached the maximum number of moves allowed per walk.
 			while (node != end && ++count <= inner_limit) {
 				// Increase the estimated execution count of the node we just walked to.
-				++node->get<BasicBlockPtr>()->estimatedExecutions;
+				++node->get<std::weak_ptr<BasicBlock>>().lock()->estimatedExecutions;
 				// Check the number of outward edges.
 				size_t out_count = node->out().size();
 				if (out_count == 0) {

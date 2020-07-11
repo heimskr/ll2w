@@ -661,7 +661,7 @@ namespace LL2W {
 			for (Node *successor_node: bbNodeMap.at(block.get())->out()) {
 				if (!successor_node->data.has_value())
 					continue;
-				BasicBlockPtr successor = successor_node->get<BasicBlockPtr>();
+				BasicBlockPtr successor = successor_node->get<std::weak_ptr<BasicBlock>>().lock();
 				absorb(live, successor->liveIn);
 				// for each phi function phi of successors of b do
 				for (InstructionPtr &instruction: successor->instructions) {
@@ -997,7 +997,7 @@ namespace LL2W {
 		std::cerr << "Rendering.\n";
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
-				BasicBlockPtr bb = node->get<BasicBlockPtr>();
+				BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock();
 				if (bb)
 					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
 			}
