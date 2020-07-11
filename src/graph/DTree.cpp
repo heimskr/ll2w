@@ -7,88 +7,78 @@
 namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
 	DTree::DTree(Graph &graph, Node &start) {
-		const size_t gsize = graph.size();
-		std::unordered_map<Node *, int> visited;
-		std::vector<Node *> stack {&start}, vertices;
-		std::vector<int> semis(gsize, -1);
-		std::vector<int> ancestors(gsize, -1);
-		std::vector<int> labels(gsize, -1);
-		std::vector<int> parents(gsize, -1);
-		std::vector<int> doms(gsize, -1);
-		std::vector<std::unordered_set<int>> preds(gsize), buckets(gsize);
+		// Credit to Keith D. Cooper, Timothy J. Harvey and Ken Kennedy for this algorithm (and DTree::intersect).
+		// <https://www.cs.rice.edu/~keith/EMBED/dom.pdf>
 
-		std::function<void(Node *)> dfs = [&](Node *node) {
-			visited[node] = vertices.size();
-			const int v = node->index();
-			assert(semis[v] == -1);
-			semis[v] = vertices.size();
-			vertices.push_back(node);
-			labels[v] = v;
-			for (Node *successor: *node) {
-				const int w = successor->index();
-				if (semis.at(w) == -1) {
-					parents[w] = v;
-					dfs(successor);
+		const std::unordered_map<Node *, std::unordered_set<Node *>> preds = graph.predecessors();
+		const std::vector<Node *> post = postOrder(start);
+		std::vector<Node *> rpost = post;
+		std::reverse(rpost.begin(), rpost.end());
+		std::cerr << "rpost:"; for (const Node *n: rpost) std::cerr << " " << n->label(); std::cerr << "\n";
+
+		for (size_t i = 0; i < post.size(); ++i)
+			postIndices.insert({post[i], i});
+
+		for (Node *node: graph.nodes())
+			dominators.insert({node, nullptr});
+		dominators[&start] = &start;
+
+		std::cerr << "Start: " << start.label() << "\n";
+
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			for (Node *b: rpost) {
+				if (b == &start) {
+					std::cerr << "no\n";
+					continue;
 				}
 
-				preds.at(w).insert(v);
-			}
-		};
+				std::cerr << "b: " << b->label() << "\n";
 
-		std::function<void(int)> compress = [&](int v) {
-			if (ancestors.at(ancestors.at(v)) != -1) {
-				compress(ancestors[v]);
-				if (semis.at(labels.at(ancestors.at(v))) <= semis.at(labels.at(v)))
-					labels.at(v) = labels.at(ancestors.at(v));
-				ancestors[v] = ancestors.at(ancestors.at(v));
-			}
-		};
+				const std::unordered_set<Node *> &bpreds = preds.at(b);
+				Node *new_idom = *bpreds.begin();
+				for (Node *p: bpreds) {
+					if (p != new_idom && dominators[p] != nullptr)
+						intersect(&start, p, new_idom);
+				}
 
-		std::function<int(int)> eval = [&](int v) {
-			if (ancestors[v] == -1) {
-				return v;
-			} else {
-				compress(v);
-				return labels[v];
-			}
-		};
-
-		dfs(&start);
-
-		for (int i = gsize - 1; 1 <= i; --i) {
-			int w = vertices[i]->index();
-
-			for (int v: preds.at(w)) {
-				int u = eval(v);
-				if (semis.at(u) < semis.at(w))
-					semis.at(w) = semis.at(u);
-			}
-
-			buckets[vertices.at(semis.at(w))->index()].insert(w);
-			ancestors[w] = parents.at(w);
-
-			std::unordered_set<int> &bucket = buckets.at(parents.at(w));
-			for (auto iter = bucket.begin(); iter != bucket.end();) {
-				int v = *iter;
-				bucket.erase(iter++);
-				int u = eval(v);
-				doms[v] = semis.at(u) < semis.at(v)? u : parents.at(w);
+				if (dominators[b] != new_idom) {
+					dominators[b] = new_idom;
+					changed = true;
+				}
 			}
 		}
-
-		for (size_t i = 1; i < gsize; ++i) {
-			int w = vertices.at(i)->index();
-			if (doms.at(w) != vertices.at(semis.at(w))->index())
-				doms[w] = doms.at(doms.at(w));
-		}
-
-		doms[start.index()] = 0;
 
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
-		for (size_t i = 0, dlen = doms.size(); i < dlen; ++i)
-			link((*this)[doms.at(i)].label(), (*this)[i].label());
+		for (const std::pair<Node *, Node *> &pair: dominators)
+			link((*this)[*pair.first].label(), (*this)[*pair.second].label());
+		// for (size_t i = 0, dlen = dominators.size(); i < dlen; ++i)
+		// 	link((*this)[dominators.at(i)].label(), (*this)[i].label());
+	}
+
+	Node * DTree::intersect(Node *start, Node *b1, Node *b2) {
+		std::cerr << "Intersect(" << b1->label() << ", " << b2->label() << ")\n";
+		Node *finger1 = b1, *finger2 = b2;
+		while (finger1 != finger2) {
+			std::cerr << "[" << finger1->label() << ", " << finger2->label() << "]\n";
+			std::cerr << "pI: (" << postIndices[finger1] << ", " << postIndices[finger2] << ")\n";
+			while (postIndices[finger1] < postIndices[finger2]) {
+				finger1 = dominators[finger1];
+				std::cerr << "1 := " << finger1->label() << ", pI: " << postIndices[finger1] << "\n";
+				if (finger1 == start)
+					break;
+			}
+			while (postIndices[finger2] < postIndices[finger1]) {
+				finger2 = dominators[finger2];
+				std::cerr << "2 := " << finger2->label() << ", pI: " << postIndices[finger2] << "\n";
+				if (finger2 == start)
+					break;
+			}
+		}
+		return finger1;
 	}
 
 	void DTree::findLevels() {

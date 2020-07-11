@@ -1,5 +1,6 @@
-define void @das(i32) {
+define i32 @das(i32) {
 	%101 = alloca i1
+	br label %2
 
 2: ; preds = %1, %7
 	br i1 %101, label %3, label %11
@@ -29,5 +30,5 @@ define void @das(i32) {
 	br label %8
 
 11: ; preds = %2
-	ret void
+	ret i32 -1
 }

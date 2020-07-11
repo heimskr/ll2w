@@ -7,12 +7,14 @@
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
-// #define DEBUG_RENDER
+#define DEBUG_RENDER
 // #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
+#define DEBUG_MERGE
+// #define DEBUG_ESTIMATIONS
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -619,7 +621,7 @@ namespace LL2W {
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
-		Passes::mergeAllBlocks(*this);
+		// Passes::mergeAllBlocks(*this); // NOTE: disabled to test merge sets. Remember to reenable.
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
@@ -904,97 +906,101 @@ namespace LL2W {
 
 	void Function::debug() {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cout << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
+		std::cerr << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
-				std::cout << "\e[2m,\e[0m ";
-			std::cout << *iter->type;
+				std::cerr << "\e[2m,\e[0m ";
+			std::cerr << *iter->type;
 			if (iter->name)
-				std::cout << " " << *iter->name;
+				std::cerr << " " << *iter->name;
 		}
-		std::cout << "\e[94m) {\e[39m\n";
+		std::cerr << "\e[94m) {\e[39m\n";
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
-			std::cout << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
+			std::cerr << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
 			          << ": preds =";
 			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 				if (iter != begin)
-					std::cout << ",";
-				std::cout << " %" << **iter;
+					std::cerr << ",";
+				std::cerr << " %" << **iter;
 			}
 			if (!block->liveIn.empty()) {
-				std::cout << "; live-in =";
+				std::cerr << "; live-in =";
 				for (auto begin = block->liveIn.begin(), iter = begin, end = block->liveIn.end(); iter != end; ++iter) {
 					if (iter != begin)
-						std::cout << ",";
-					std::cout << " %" << (*iter)->id;
+						std::cerr << ",";
+					std::cerr << " %" << (*iter)->id;
 				}
 			}
 			if (!block->liveOut.empty()) {
-				std::cout << "; live-out =";
+				std::cerr << "; live-out =";
 				for (auto begin = block->liveOut.begin(), iter = begin, end = block->liveOut.end(); iter != end;
 				     ++iter) {
 					if (iter != begin)
-						std::cout << ",";
-					std::cout << " %" << (*iter)->id;
+						std::cerr << ",";
+					std::cerr << " %" << (*iter)->id;
 				}
 			}
-			std::cout << "\e[22;24m\n";
+			std::cerr << "\e[22;24m\n";
 			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 #ifdef DEBUG_READ_WRITTEN
 				int read, written;
 				std::tie(read, written) = instruction->extract();
-				std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
+				std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
 				          << "\e[0m\n";
 #else
-				std::cout << "    " << instruction->debugExtra() << "\n";
+				std::cerr << "    " << instruction->debugExtra() << "\n";
 #endif
 			}
-			std::cout << "\n";
+			std::cerr << "\n";
 		}
 #endif
 #ifdef DEBUG_LINEAR
 		for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
 			int read, written;
 			std::tie(read, written) = instruction->extract();
-			std::cout << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
+			std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
 		}
 #endif
 #ifdef DEBUG_VARS
-		std::cout << "    \e[2m; Variables:\e[0m\n";
+		std::cerr << "    \e[2m; Variables:\e[0m\n";
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			std::cout << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
+			std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
 			          << pair.second->definitions.size() << ") =";
 			for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
-			std::cout << "  \e[0;2muses =";
+				std::cerr << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
+			std::cerr << "  \e[0;2muses =";
 			for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
-				std::cout << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
+				std::cerr << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
 			int spill_cost = pair.second->spillCost();
-			std::cout << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
+			std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
 			if (pair.second->definingBlocks.size() > 1)
-				std::cout << " (multiple defs)";
-			std::cout << "\e[0m\n";
-			std::cout << "    \e[2m;      \e[32min  =\e[1m";
+				std::cerr << " (multiple defs)";
+			std::cerr << "\e[0m\n";
+			std::cerr << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (block->isLiveIn(pair.second))
-					std::cout << " %" << *block->label;
+					std::cerr << " %" << *block->label;
 			}
-			std::cout << "\e[0m\n";
-			std::cout << "    \e[2m;      \e[31mout =\e[1m";
+			std::cerr << "\e[0m\n";
+			std::cerr << "    \e[2m;      \e[31mout =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (block->isLiveOut(pair.second))
-					std::cout << " %" << *block->label;
+					std::cerr << " %" << *block->label;
 			}
-			std::cout << "\e[0m\n";
+			std::cerr << "\e[0m\n";
 		}
 #endif
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cout << "\e[94m}\e[39m\n\n";
+		std::cerr << "\e[94m}\e[39m\n\n";
+#endif
+#ifdef DEBUG_MERGE
+		debugMergeSets();
 #endif
 #ifdef DEBUG_RENDER
 		std::cerr << "Rendering.\n";
+#ifdef DEBUG_ESTIMATIONS
 		for (Node *node: cfg.nodes()) {
 			if (node->data.has_value()) {
 				BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock();
@@ -1002,28 +1008,31 @@ namespace LL2W {
 					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
 			}
 		}
+#endif
 
 		cfg.renderTo("graph_" + *name + ".png");
 		dTree->renderTo("graph_D_" + *name + ".png");
+		if (djGraph.has_value())
+			djGraph->renderTo("graph_DJ_" + *name + ".png");
 #endif
 	}
 
 	void Function::debugMergeSets() const {
 		for (const Node::Map &map: {mergeSets, succMergeSets}) {
-			std::cout << "--------------------------------\n";
+			std::cerr << "────────────────────────────────\n";
 			for (const std::pair<Node *, Node::Set> &pair: map) {
-				std::cout << pair.first->label() << ":";
+				std::cerr << pair.first->label() << ":";
 				for (Node *node: pair.second)
-					std::cout << " " << node->label();
-				std::cout << "\n";
+					std::cerr << " " << node->label();
+				std::cerr << "\n";
 			}
 		}
 	}
 
 	void Function::debugStack() const {
 		for (const std::pair<int, StackLocation> &pair: stack)
-			std::cout << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
-		std::cout << "\n";
+			std::cerr << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
+		std::cerr << "\n";
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable) {

@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "graph/DFSResult.h"
@@ -109,6 +110,9 @@ namespace LL2W {
 			std::vector<Node *> postOrder(Node &) const;
 			/** Returns a reverse-postorder list of nodes. */
 			std::vector<Node *> reversePostOrder(Node &) const;
+
+			/** Returns a map of nodes to sets of their predecessors. */
+			std::unordered_map<Node *, std::unordered_set<Node *>> predecessors() const;
 
 			/** Colors all the nodes in the graph according to a given coloring algorithm.
 			 *  Assumes all edges are bidirectional. */

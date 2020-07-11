@@ -1,15 +1,24 @@
 #ifndef DTREE_H_
 #define DTREE_H_
 
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "Graph.h"
 
 namespace LL2W {
 	class DTree: public Graph {
+		private:
+			std::unordered_map<Node *, int> postIndices;
+
+			Node * intersect(Node *start, Node *, Node *);
+
 		public:
 			Node *startNode = nullptr;
 			std::unordered_map<Node *, int> levels;
+			std::unordered_map<Node *, Node *> dominators;
 
 			/** Constructs a dominator tree from a graph. The dominator tree is a tree in which each node of the
 			 *  original graph is linked to by its immediate dominator. */

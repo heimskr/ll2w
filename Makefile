@@ -1,4 +1,5 @@
 COMPILER		?= clang++
+DEBUGGER		?= lldb
 OPTIMIZATION	?= -O0 -g
 STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
@@ -42,6 +43,9 @@ $(PARSECPP:.cpp=.o): $(PARSECPP) $(PARSEHDR)
 test: $(OUTPUT)
 	@# ./$< ~/src/mal/combined.9.ll
 	./$< ll/das.ll
+
+dbg: $(OUTPUT)
+	$(DEBUGGER) $< -- ll/das.ll
 
 clean:
 	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP) PVS-Studio.log report.tasks strace_out

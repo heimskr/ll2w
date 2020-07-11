@@ -275,6 +275,14 @@ namespace LL2W {
 		return post;
 	}
 
+	std::unordered_map<Node *, std::unordered_set<Node *>> Graph::predecessors() const {
+		std::unordered_map<Node *, std::unordered_set<Node *>> out;
+		for (const Node *node: nodes())
+			for (Node *successor: node->out())
+				out[successor].insert(const_cast<Node *>(node));
+		return out;
+	}
+
 	void Graph::color(Graph::ColoringAlgorithm algo, int color_min, int color_max) {
 		const int total_colors = color_max != -1? color_max - color_min + 1 : -1;
 		std::cout << "Total colors: " << total_colors << "\n";
