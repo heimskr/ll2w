@@ -17,7 +17,7 @@ namespace LL2W::Passes {
 	std::shared_ptr<Variable> selectLowestSpillCost(Function &, const std::unordered_set<int> &avoid);
 
 	/** Creates an interference graph of all a function's variables. */
-	Graph makeInterferenceGraph(Function &);
+	void makeInterferenceGraph(Function &, Graph &);
 }
 
 #endif

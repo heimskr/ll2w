@@ -73,11 +73,12 @@ namespace LL2W {
 	}
 
 	Graph & Graph::operator+=(const std::string &label) {
-		if (hasLabel(label))
-			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");
-		Node *node = new Node(this, label);
-		labelMap.insert({label, node});
-		nodes_.push_back(node);
+		addNode(label);
+		return *this;
+	}
+
+	Graph & Graph::operator+=(Node *node) {
+		addNode(node);
 		return *this;
 	}
 
@@ -106,6 +107,21 @@ namespace LL2W {
 		}
 
 		throw std::out_of_range("Can't remove: no node with label \"" + label + "\" found");
+	}
+
+	Node & Graph::addNode(const std::string &label) {
+		if (hasLabel(label))
+			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");
+		Node *node = new Node(this, label);
+		labelMap.insert({label, node});
+		nodes_.push_back(node);
+		return *node;
+	}
+
+	Node & Graph::addNode(Node *node) {
+		labelMap.insert({node->label(), node});
+		nodes_.push_back(node);
+		return *node;
 	}
 
 	Node & Graph::rename(const std::string &old_label, const std::string &new_label) {
@@ -285,7 +301,7 @@ namespace LL2W {
 
 	void Graph::color(Graph::ColoringAlgorithm algo, int color_min, int color_max) {
 		const int total_colors = color_max != -1? color_max - color_min + 1 : -1;
-		std::cout << "Total colors: " << total_colors << "\n";
+		std::cerr << "Total colors: " << total_colors << "\n";
 		if (algo == Graph::ColoringAlgorithm::Bad) {
 			if (color_max != -1 && total_colors < static_cast<int>(nodes_.size()))
 				throw UncolorableError();
@@ -297,13 +313,10 @@ namespace LL2W {
 			for (int i = color_min; i <= (color_max == -1? static_cast<int>(color_min + size() - 1) : color_max); ++i)
 				all_colors.insert(i);
 
-			std::cout << "all_colors size: " << all_colors.size() << "\n";
+			std::cerr << "all_colors size: " << all_colors.size() << "\n";
 
 			for (Node *node: nodes_) {
 				std::set<int> available = all_colors;
-				std::cerr << "Node: " << node;
-				std::cerr.flush();
-				std::cerr << ": [" << node->label() << "] " << node->out().size() << "\n";
 				for (Node *neighbor: node->out()) {
 					if (neighbor->color != -1)
 						available.erase(neighbor->color);

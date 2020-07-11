@@ -1,3 +1,5 @@
+#include <optional>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
@@ -13,7 +15,7 @@ namespace LL2W::Passes {
 		std::unordered_set<int> tried;
 		Graph interference;
 		while (true) {
-			interference = makeInterferenceGraph(function);
+			makeInterferenceGraph(function, interference);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
@@ -47,8 +49,12 @@ namespace LL2W::Passes {
 		std::cerr << "Spilling process complete. There " << (spill_count == 1? "was " : "were ") << spill_count << " "
 		          << "spill" << (spill_count == 1? ".\n" : "s.\n");
 
-		// for (const std::pair<std::string, Node *> &pair: interference)
-		// 	std::cerr << pair.first << " "; std::cerr << "\n";
+		for (const std::pair<std::string, Node *> &pair: interference) {
+			VariablePtr ptr = pair.second->get<VariablePtr>();
+			if (ptr->reg == -1)
+				ptr->reg = pair.second->color;
+			// std::cerr << pair.first << ":" << WhyInfo::registerName(pair.second->color) << (WhyInfo::isSpecialPurpose(pair.second->color)? " !" : "") << "\n";
+		}
 
 		return spill_count;
 	}
@@ -69,10 +75,15 @@ namespace LL2W::Passes {
 		return ptr;
 	}
 
-	Graph makeInterferenceGraph(Function &function) {
-		Graph graph;
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore)
-			graph += std::to_string(pair.second->id);
+	void makeInterferenceGraph(Function &function, Graph &graph) {
+		graph.clear();
+
+		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+			std::cerr << "%% " << pair.first << " " << *pair.second << "\n";
+			const std::string id = std::to_string(pair.first);
+			Node &node = graph.addNode(id);
+			node.data = pair.second;
+		}
 
 		std::vector<int> labels;
 		labels.reserve(function.variableStore.size());
@@ -81,21 +92,30 @@ namespace LL2W::Passes {
 
 		std::map<int, std::unordered_set<int>> live;
 
-		// for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
-			// for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks)
-			// 	live[pair.second->id].insert(bptr.lock()->index);
-			// for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks)
-			// 	live[pair.second->id].insert(bptr.lock()->index);
-		// }
+		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+			if (pair.second->reg != -1)
+				continue;
+			std::cerr << "Variable " << *pair.second << ":\n";
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
+				live[pair.second->id].insert(bptr.lock()->index);
+				std::cerr << "  definer: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
+			}
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
+				live[pair.second->id].insert(bptr.lock()->index);
+				std::cerr << "  user: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
+			}
+		}
 
 		for (const std::weak_ptr<BasicBlock> &weak: function.blocks) {
 			std::shared_ptr<BasicBlock> block = weak.lock();
 			if (!block)
 				std::cerr << "block is null?\n";
 			for (const VariablePtr var: block->liveIn)
-				live[var->id].insert(block->index);
+				if (var->reg == -1)
+					live[var->id].insert(block->index);
 			for (const VariablePtr var: block->liveOut)
-				live[var->id].insert(block->index);
+				if (var->reg == -1)
+					live[var->id].insert(block->index);
 		}
 
 		if (1 < labels.size()) {
@@ -115,7 +135,6 @@ namespace LL2W::Passes {
 		// static int x = 0;
 		// if (++x == 20)
 			// std::cout << ("RENDER: interference_" + *function.name + ".png") << "\n";
-			graph.renderTo("interference_" + *function.name + ".png");
-		return graph;
+			// graph.renderTo("interference_" + *function.name + ".png");
 	}
 }

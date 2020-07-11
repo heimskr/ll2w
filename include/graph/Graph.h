@@ -57,12 +57,21 @@ namespace LL2W {
 			/** Adds a node with a given label. */
 			Graph & operator+=(const std::string &);
 
+			/** Adds a premade node to the graph. Note that this doesn't check for label collisions. */
+			Graph & operator+=(Node *);
+
 			/** Removes and deletes a node. */
 			Graph & operator-=(Node &);
 			/** Removes and deletes a node. */
 			Graph & operator-=(Node *);
 			/** Removes and deletes a node with a given label. */
 			Graph & operator-=(const std::string &);
+
+			/** Adds a node with a given label. */
+			Node & addNode(const std::string &);
+
+			/** Adds a premade node to the graph. Note that this function doesn't check for label collisions. */
+			Node & addNode(Node *);
 
 			/** Assigns a new label to a node with a given label and returns the node. */
 			Node & rename(const std::string &, const std::string &);
