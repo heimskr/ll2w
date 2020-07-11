@@ -10,6 +10,8 @@
 #include "parser/StructNode.h"
 #include "util/Util.h"
 
+// #define SINGLE_FUNCTION "@dbg_blocks"
+
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
 		// Look for all struct definitions.
@@ -59,7 +61,9 @@ namespace LL2W {
 			thread.join();
 #else
 		for (std::pair<const std::string, Function> &pair: functions) {
-			if (*pair.second.name == "@dbg_blocks")
+#ifdef SINGLE_FUNCTION
+			if (*pair.second.name == SINGLE_FUNCTION)
+#endif
 				pair.second.compile();
 		}
 #endif
@@ -125,7 +129,9 @@ namespace LL2W {
 
 	void Program::debug() {
 		for (std::pair<const std::string, Function> &pair: functions) {
-			if (*pair.second.name == "@dbg_blocks")
+#ifdef SINGLE_FUNCTION
+			if (*pair.second.name == SINGLE_FUNCTION)
+#endif
 				pair.second.debug();
 		}
 	}

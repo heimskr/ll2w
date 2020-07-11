@@ -40,7 +40,8 @@ $(PARSECPP:.cpp=.o): $(PARSECPP) $(PARSEHDR)
 	$(COMPILER) $(CFLAGS) -c $< -o $@
 
 test: $(OUTPUT)
-	./$< ~/src/mal/combined.9.ll
+	@# ./$< ~/src/mal/combined.9.ll
+	./$< ll/das.ll
 
 clean:
 	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP) PVS-Studio.log report.tasks strace_out
