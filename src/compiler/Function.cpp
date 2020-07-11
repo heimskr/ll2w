@@ -834,11 +834,18 @@ namespace LL2W {
 			return;
 
 		// for each P ∈ CFG_preds(B) do
-		for (const Node *node: bbNodeMap.at(block.get())->in()) {
-			BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
-			// LiveOut(P) = LiveOut(P) ∪ {v}
-			p->liveOut.insert(var);
-			upAndMark(p, var);
+		try {
+			for (const Node *node: bbNodeMap.at(block.get())->in()) {
+				BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
+				// LiveOut(P) = LiveOut(P) ∪ {v}
+				p->liveOut.insert(var);
+				upAndMark(p, var);
+			}
+		} catch (std::out_of_range &) {
+			std::cerr << "What? Couldn't find " << *block->label << ".";
+			for (const auto &pair: bbNodeMap)
+				std::cerr << " " << *pair.first->label;
+			std::cerr << "\n";
 		}
 	}
 

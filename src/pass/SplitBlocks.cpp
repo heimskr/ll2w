@@ -4,7 +4,7 @@
 #include "pass/SplitBlocks.h"
 
 namespace LL2W::Passes {
-	void splitBlocks(Function &function) {
+	int splitBlocks(Function &function) {
 		// Liveness analysis appears to work on the level of basic blocks, rather than instructions. This means that
 		// variables can't die until the end of a basic block. If there are more definitions in a basic block than there
 		// are physical registers, register allocation is therefore impossible. A workaround is to ensure that no basic
@@ -41,5 +41,7 @@ namespace LL2W::Passes {
 			if (!any_changed)
 				break;
 		}
+
+		return split_count;
 	}
 }

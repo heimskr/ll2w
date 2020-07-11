@@ -3,14 +3,17 @@
 #include "compiler/Variable.h"
 #include "graph/UncolorableError.h"
 #include "pass/ColoringAllocator.h"
+#include "pass/MakeCFG.h"
+#include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
 		int spill_count = 0;
 		std::unordered_set<int> tried;
+		Graph interference;
 		while (true) {
-			Graph interference = makeInterferenceGraph(function);
+			interference = makeInterferenceGraph(function);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
@@ -25,15 +28,29 @@ namespace LL2W::Passes {
 					std::cerr << "Spilled. Variables: " << function.variableStore.size() << ". Stack locations: "
 					          << function.stack.size() << "\n";
 					++spill_count;
+					int split = Passes::splitBlocks(function);
+					if (0 < split) {
+						std::cerr << split << " block" << (split == 1? " was" : "s were") << " split.\n";
+						for (BasicBlockPtr &block: function.blocks)
+							block->extract();
+						Passes::makeCFG(function);
+						function.extractVariables(true);
+						function.resetLiveness();
+						function.computeLiveness();
+					} else std::cerr << "No blocks were split.\n";
 				} else std::cerr << "Not spilled.\n";
-				function.resetLiveness();
-				function.computeLiveness();
 				continue;
 			}
 			break;
 		}
 
-		return 0;
+		std::cerr << "Spilling process complete. There " << (spill_count == 1? "was " : "were ") << spill_count << " "
+		          << "spill" << (spill_count == 1? ".\n" : "s.\n");
+
+		// for (const std::pair<std::string, Node *> &pair: interference)
+		// 	std::cerr << pair.first << " "; std::cerr << "\n";
+
+		return spill_count;
 	}
 
 	VariablePtr selectLowestSpillCost(Function &function, const std::unordered_set<int> &avoid) {
@@ -64,13 +81,12 @@ namespace LL2W::Passes {
 
 		std::map<int, std::unordered_set<int>> live;
 
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
-			std::cout << *pair.second << "!\n";
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks)
-				live[pair.second->id].insert(bptr.lock()->index);
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks)
-				live[pair.second->id].insert(bptr.lock()->index);
-		}
+		// for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+			// for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks)
+			// 	live[pair.second->id].insert(bptr.lock()->index);
+			// for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks)
+			// 	live[pair.second->id].insert(bptr.lock()->index);
+		// }
 
 		for (const std::weak_ptr<BasicBlock> &weak: function.blocks) {
 			std::shared_ptr<BasicBlock> block = weak.lock();
@@ -81,7 +97,6 @@ namespace LL2W::Passes {
 			for (const VariablePtr var: block->liveOut)
 				live[var->id].insert(block->index);
 		}
-
 
 		if (1 < labels.size()) {
 			const size_t size = labels.size();
@@ -97,8 +112,10 @@ namespace LL2W::Passes {
 			}
 		}
 
-		// std::cout << ("RENDER: interference_" + *function.name + ".png") << "\n";
-		// graph.renderTo("interference_" + *function.name + ".png");
+		// static int x = 0;
+		// if (++x == 20)
+			// std::cout << ("RENDER: interference_" + *function.name + ".png") << "\n";
+			graph.renderTo("interference_" + *function.name + ".png");
 		return graph;
 	}
 }

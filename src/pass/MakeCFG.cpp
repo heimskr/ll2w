@@ -11,6 +11,7 @@ namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {
 		function.cfg.clear();
 		function.cfg.name = "CFG for " + *function.name;
+		function.bbNodeMap.clear();
 
 		// First pass: add all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {

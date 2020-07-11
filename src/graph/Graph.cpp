@@ -301,6 +301,9 @@ namespace LL2W {
 
 			for (Node *node: nodes_) {
 				std::set<int> available = all_colors;
+				std::cerr << "Node: " << node;
+				std::cerr.flush();
+				std::cerr << ": [" << node->label() << "] " << node->out().size() << "\n";
 				for (Node *neighbor: node->out()) {
 					if (neighbor->color != -1)
 						available.erase(neighbor->color);
