@@ -11,7 +11,7 @@ define i32 @das(i32) {
 4: ; preds = %3
 	br label %5
 
-5: ; preds = %4
+5: ; preds = %4, %6
 	br label %6
 
 6: ; preds = %5, %9
