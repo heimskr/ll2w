@@ -49,6 +49,8 @@ namespace LL2W {
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(Variable &);
 
+			const std::unordered_set<Variable *> & getAliases() const { return aliases; }
+
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
 			void addUsingBlock(std::shared_ptr<BasicBlock>);

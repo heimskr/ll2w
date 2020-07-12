@@ -807,11 +807,12 @@ namespace LL2W {
 	}
 
 	void Function::computeLiveness() {
-		for (BasicBlockPtr block: blocks) {
+		for (BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
 			for (VariablePtr var: block->phiUses) {
 				block->liveOut.insert(var);
+				std::cerr << "[" << __LINE__ << "] block{" << *block->label << "}->liveOut.insert(var{" << *var << "})\n";
 				upAndMark(block, var);
 			}
 			for (VariablePtr var: block->nonPhiRead)
@@ -834,6 +835,7 @@ namespace LL2W {
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
+		std::cerr << "[" << __LINE__ << "] block{" << *block->label << "}->liveIn.insert(var{" << *var << "})\n";
 
 		// if v ∈ PhiDefs(B) then return
 		if (block->written.count(var) != 0 && block->nonPhiWritten.count(var) == 0)
@@ -845,6 +847,7 @@ namespace LL2W {
 				BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
 				// LiveOut(P) = LiveOut(P) ∪ {v}
 				p->liveOut.insert(var);
+				std::cerr << "[" << __LINE__ << "] p{" << *p->label << "}->liveOut.insert(var{" << *var << "})\n";
 				upAndMark(p, var);
 			}
 		} catch (std::out_of_range &) {
@@ -884,6 +887,34 @@ namespace LL2W {
 		}
 
 		livenessComputed = false;
+	}
+
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
+	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) {
+		std::unordered_set<std::shared_ptr<BasicBlock>> out;
+		std::unordered_set<Variable *> alias_pointers = var->getAliases();
+		std::unordered_set<std::shared_ptr<Variable>> aliases;
+		for (const std::pair<const int, std::shared_ptr<Variable>> &pair: variableStore)
+			if (alias_pointers.count(pair.second.get()) != 0)
+				aliases.insert(pair.second);
+		aliases.insert(var);
+		for (const std::shared_ptr<Variable> &alias: aliases)
+			for (const std::shared_ptr<BasicBlock> &block: blocks)
+				if (getter(block).count(alias) != 0)
+					out.insert(block);
+		return out;
+	}
+
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(std::shared_ptr<Variable> var) {
+		return getLive(var, [&](const auto &block) -> auto & {
+			return block->liveIn;
+		});
+	}
+
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(std::shared_ptr<Variable> var) {
+		return getLive(var, [&](const auto &block) -> auto & {
+			return block->liveOut;
+		});
 	}
 
 	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
