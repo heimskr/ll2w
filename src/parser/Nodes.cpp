@@ -68,7 +68,7 @@ namespace LL2W {
 		index = node->at(0)->atoi();
 		for (ASTNode *child: *node->at(1)) {
 			if (child->symbol == TOK_FNATTR_BASIC) {
-				for (const std::pair<FnAttr, std::string> &pair: fnattr_map) {
+				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
 					if (*child->lexerInfo == pair.second) {
 						basicAttributes.insert(pair.first);
 						break;
@@ -95,7 +95,7 @@ namespace LL2W {
 		out << "attributes #\e[92m" << index << "\e[0m \e[2m= { \e[0m";
 		for (FnAttr attr: basicAttributes)
 			out << "\e[34m" << fnattr_map.at(attr) << "\e[0m ";
-		for (const std::pair<const std::string *, const std::string *> &pair: stringAttributes) {
+		for (const std::pair<const std::string * const, const std::string *> &pair: stringAttributes) {
 			out << "\e[93m\"" << *pair.first << "\"\e[0m";
 			if (!pair.second->empty())
 				out << "\e[2m=\e[0;93m\"" << *pair.second << "\"\e[0m";
@@ -258,7 +258,7 @@ namespace LL2W {
 		value = getValue(value_);
 		constant = std::make_shared<Constant>(constant_);
 		align = align_->atoi();
-		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
+		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
@@ -349,7 +349,7 @@ namespace LL2W {
 		type = getType(type_);
 		constant = std::make_shared<Constant>(constant_);
 		align = align_->atoi();
-		for (const std::pair<Ordering, std::string> &pair: ordering_map) {
+		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
@@ -428,7 +428,7 @@ namespace LL2W {
 		delete unibangs;
 		result = result_->extracted();
 
-		for (const std::pair<IcmpCond, std::string> &pair: cond_map) {
+		for (const std::pair<const IcmpCond, std::string> &pair: cond_map) {
 			if (*cond_->lexerInfo == pair.second) {
 				cond = pair.first;
 				break;
@@ -510,7 +510,7 @@ namespace LL2W {
 				if (raname == "dereferenceable") {
 					dereferenceable = child->at(0)->atoi();
 				} else {
-					for (const std::pair<RetAttr, std::string> &pair: retattr_map) {
+					for (const std::pair<const RetAttr, std::string> &pair: retattr_map) {
 						if (raname == pair.second) {
 							retattrs.insert(pair.first);
 							break;
@@ -888,7 +888,7 @@ namespace LL2W {
 		from = getType(from_);
 		value = getValue(value_);
 		to = getType(to_);
-		for (const std::pair<Conversion, std::string> &pair: conversion_map) {
+		for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
 			if (*conv_op->lexerInfo == pair.second) {
 				conversionType = pair.first;
 				break;

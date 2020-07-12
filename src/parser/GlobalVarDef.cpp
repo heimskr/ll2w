@@ -11,7 +11,7 @@ namespace LL2W {
 	                           ASTNode *gdef_extras): ASTNode(GLOBAL_DEF, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
-			for (const std::pair<Linkage, std::string> &pair: linkage_map) {
+			for (const std::pair<const Linkage, std::string> &pair: linkage_map) {
 				if (link == pair.second) {
 					linkage = pair.first;
 					break;

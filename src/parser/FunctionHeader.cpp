@@ -18,7 +18,7 @@ namespace LL2W {
 
 		if (_linkage) {
 			const std::string &link = *_linkage->lexerInfo;
-			for (const std::pair<Linkage, std::string> &pair: linkage_map) {
+			for (const std::pair<const Linkage, std::string> &pair: linkage_map) {
 				if (link == pair.second) {
 					linkage = pair.first;
 					break;
@@ -41,7 +41,7 @@ namespace LL2W {
 
 		if (_cconv) {
 			const std::string &cc = *_cconv->lexerInfo;
-			for (const std::pair<CConv, std::string> &pair: cconv_map) {
+			for (const std::pair<const CConv, std::string> &pair: cconv_map) {
 				if (cc == pair.second) {
 					cconv = pair.first;
 					break;
@@ -98,7 +98,7 @@ namespace LL2W {
 		} else if (_fnattrs->symbol == FNATTR_LIST) {
 			for (ASTNode *fnattr: _fnattrs->children) {
 				const std::string &fnattr_name = *fnattr->lexerInfo;
-				for (const std::pair<FnAttr, std::string> &pair: fnattr_map) {
+				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
 					if (fnattr_name == pair.second) {
 						fnattrs.insert(pair.first);
 						break;

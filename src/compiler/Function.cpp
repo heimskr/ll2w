@@ -126,7 +126,7 @@ namespace LL2W {
 
 	void Function::extractVariables(bool reset) {
 		if (reset) {
-			for (const std::pair<int, VariablePtr> &pair: variableStore) {
+			for (const std::pair<const int, VariablePtr> &pair: variableStore) {
 				pair.second->setUsingBlocks({});
 				pair.second->setDefiningBlocks({});
 				pair.second->setDefinitions({});
@@ -545,10 +545,10 @@ namespace LL2W {
 
 	void Function::resetRegisters(bool respectful) {
 		if (!respectful) {
-			for (const std::pair<int, VariablePtr> &pair: variableStore)
+			for (const std::pair<const int, VariablePtr> &pair: variableStore)
 				pair.second->setRegister(-1);
 		} else {
-			for (const std::pair<int, VariablePtr> &pair: variableStore) {
+			for (const std::pair<const int, VariablePtr> &pair: variableStore) {
 				if (!WhyInfo::isSpecialPurpose(pair.second->reg))
 					pair.second->setRegister(-1);
 			}
@@ -814,7 +814,7 @@ namespace LL2W {
 	}
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
-		for (const std::shared_ptr<Instruction> instruction: block->instructions) {
+		for (const std::shared_ptr<const Instruction> instruction: block->instructions) {
 			if (instruction->isPhi())
 				continue;
 			// if def(v) ∈ B (φ excluded) then return
@@ -1081,7 +1081,7 @@ namespace LL2W {
 	void Function::debugMergeSets() const {
 		for (const Node::Map &map: {mergeSets, succMergeSets}) {
 			std::cerr << "────────────────────────────────\n";
-			for (const std::pair<Node *, Node::Set> &pair: map) {
+			for (const std::pair<Node * const, Node::Set> &pair: map) {
 				std::cerr << pair.first->label() << ":";
 				for (Node *node: pair.second)
 					std::cerr << " " << node->label();
@@ -1091,7 +1091,7 @@ namespace LL2W {
 	}
 
 	void Function::debugStack() const {
-		for (const std::pair<int, StackLocation> &pair: stack)
+		for (const std::pair<const int, StackLocation> &pair: stack)
 			std::cerr << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
 		std::cerr << "\n";
 	}

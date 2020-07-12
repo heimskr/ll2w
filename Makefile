@@ -38,7 +38,7 @@ $(LEXCPP:.cpp=.o): $(LEXCPP)
 $(PARSECPP:.cpp=.o): $(PARSECPP) $(PARSEHDR)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
-%.o: %.cpp
+%.o: %.cpp include/yyparse.h
 	$(COMPILER) $(CFLAGS) -c $< -o $@
 
 test: $(OUTPUT)

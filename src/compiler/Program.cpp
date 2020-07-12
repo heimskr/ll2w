@@ -84,7 +84,7 @@ namespace LL2W {
 	}
 
 	void Program::dataSection(std::ostream &out) {
-		for (const std::pair<std::string, GlobalVarDef *> &pair: globals) {
+		for (const std::pair<const std::string, GlobalVarDef *> &pair: globals) {
 			const std::string name = pair.first.substr(1);
 			GlobalVarDef *global = pair.second;
 			ConstantPtr constant = global->constant;

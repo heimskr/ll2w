@@ -27,7 +27,7 @@ namespace LL2W {
 			} else if (child->symbol == PARATTR_LIST) {
 				for (ASTNode *parattr_node: child->children) {
 					const std::string &pname = *parattr_node->lexerInfo;
-					for (const std::pair<ParAttr, std::string> &pair: parattr_map) {
+					for (const std::pair<const ParAttr, std::string> &pair: parattr_map) {
 						if (pname == pair.second) {
 							parattrs.insert(pair.first);
 							break;

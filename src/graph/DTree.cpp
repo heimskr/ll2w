@@ -109,7 +109,7 @@ namespace LL2W {
 		graph.cloneTo(*this);
 		startNode = &(*this)[start];
 		unlink();
-		for (const std::pair<Node *, Node *> &pair: dom) {
+		for (const std::pair<Node * const, Node *> &pair: dom) {
 			link((*this)[*pair.second].label(), (*this)[*pair.first].label());
 		}
 	}

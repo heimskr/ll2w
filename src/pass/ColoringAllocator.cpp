@@ -49,7 +49,7 @@ namespace LL2W::Passes {
 		std::cerr << "Spilling process complete. There " << (spill_count == 1? "was " : "were ") << spill_count << " "
 		          << "spill" << (spill_count == 1? ".\n" : "s.\n");
 
-		for (const std::pair<std::string, Node *> &pair: interference) {
+		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 			if (ptr->reg == -1)
 				ptr->reg = pair.second->color;
@@ -62,7 +62,7 @@ namespace LL2W::Passes {
 	VariablePtr selectLowestSpillCost(Function &function, const std::unordered_set<int> &avoid) {
 		VariablePtr ptr;
 		int lowest = -1;
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 			const VariablePtr &var = pair.second;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
@@ -78,7 +78,7 @@ namespace LL2W::Passes {
 	void makeInterferenceGraph(Function &function, Graph &graph) {
 		graph.clear();
 
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 			std::cerr << "%% " << pair.first << " " << *pair.second << "\n";
 			const std::string id = std::to_string(pair.first);
 			Node &node = graph.addNode(id);
@@ -87,12 +87,12 @@ namespace LL2W::Passes {
 
 		std::vector<int> labels;
 		labels.reserve(function.variableStore.size());
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore)
+		for (const std::pair<const int, VariablePtr> &pair: function.variableStore)
 			labels.push_back(pair.first);
 
 		std::map<int, std::unordered_set<int>> live;
 
-		for (const std::pair<int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 			if (pair.second->reg != -1)
 				continue;
 			std::cerr << "Variable " << *pair.second << ":\n";
@@ -106,14 +106,13 @@ namespace LL2W::Passes {
 			}
 		}
 
-		for (const std::weak_ptr<BasicBlock> &weak: function.blocks) {
-			std::shared_ptr<BasicBlock> block = weak.lock();
+		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
 			if (!block)
 				std::cerr << "block is null?\n";
-			for (const VariablePtr var: block->liveIn)
+			for (const VariablePtr &var: block->liveIn)
 				if (var->reg == -1)
 					live[var->id].insert(block->index);
-			for (const VariablePtr var: block->liveOut)
+			for (const VariablePtr &var: block->liveOut)
 				if (var->reg == -1)
 					live[var->id].insert(block->index);
 		}

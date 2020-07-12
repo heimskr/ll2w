@@ -26,7 +26,7 @@ namespace LL2W {
 			if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 				value = gep_value->copy();
 			} else if (value_node->symbol == CONVERSION_EXPR) {
-				for (const std::pair<Conversion, std::string> &pair: conversion_map) {
+				for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
 					if (*value_node->lexerInfo == pair.second) {
 						conversion = pair.first;
 						break;

@@ -4,7 +4,7 @@
 namespace LL2W {
 	void getFastmath(std::unordered_set<Fastmath> &flags, ASTNode *node, bool destroy) {
 		for (ASTNode *child: *node) {
-			for (const std::pair<Fastmath, std::string> &pair: fastmath_map) {
+			for (const std::pair<const Fastmath, std::string> &pair: fastmath_map) {
 				if (*child->lexerInfo == pair.second) {
 					flags.insert(pair.first);
 					break;

@@ -74,7 +74,7 @@ namespace LL2W {
 	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {
 		if (0 < liveIn.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> live_in: liveIn)
+		for (const std::shared_ptr<Variable> &live_in: liveIn)
 			if (live_in->id == var->id)
 				return true;
 		return false;
@@ -83,7 +83,7 @@ namespace LL2W {
 	bool BasicBlock::isLiveOut(std::shared_ptr<Variable> var) const {
 		if (0 < liveOut.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> live_out: liveOut)
+		for (const std::shared_ptr<Variable> &live_out: liveOut)
 			if (live_out->id == var->id)
 				return true;
 		return false;

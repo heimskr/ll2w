@@ -29,7 +29,7 @@ namespace LL2W {
 				if (child->size() == 1)
 					byvalType = getType(child->at(0));
 			} else {
-				for (const std::pair<ParAttr, std::string> &pair: parattr_map) {
+				for (const std::pair<const ParAttr, std::string> &pair: parattr_map) {
 					if (*child->lexerInfo == pair.second) {
 						attributes.insert(pair.first);
 						break;
