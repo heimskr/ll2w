@@ -14,6 +14,7 @@ namespace LL2W::Passes {
 		int spill_count = 0;
 		std::unordered_set<int> tried;
 		Graph interference;
+		function.precolorArguments();
 		while (true) {
 			makeInterferenceGraph(function, interference);
 			try {
@@ -64,6 +65,8 @@ namespace LL2W::Passes {
 		int lowest = -1;
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 			const VariablePtr &var = pair.second;
+			if (var->reg != -1 && WhyInfo::isSpecialPurpose(var->reg))
+				continue;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
 			if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
@@ -79,10 +82,12 @@ namespace LL2W::Passes {
 		graph.clear();
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
-			std::cerr << "%% " << pair.first << " " << *pair.second << "\n";
-			const std::string id = std::to_string(pair.first);
-			Node &node = graph.addNode(id);
-			node.data = pair.second;
+			// std::cerr << "%% " << pair.first << " " << *pair.second << "\n";
+			if (pair.second->reg == -1) {
+				const std::string id = std::to_string(pair.first);
+				Node &node = graph.addNode(id);
+				node.data = pair.second;
+			}
 		}
 
 		std::vector<int> labels;

@@ -588,7 +588,6 @@ namespace LL2W {
 			block->extract(true);
 		extractVariables();
 		Passes::coalescePhi(*this, true);
-		buildIntervals();
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -598,8 +597,7 @@ namespace LL2W {
 #endif
 
 #ifdef ALLOCATE_COLORING
-		Passes::allocateColoring(*this);
-		int spilled = -1;
+		int spilled = Passes::allocateColoring(*this);
 		(void) spilled;
 #else
 		int spilled = Passes::linearScan(*this);
@@ -716,10 +714,18 @@ namespace LL2W {
 	void Function::precolorArguments(std::list<Interval> &intervals) {
 		if (getCallingConvention() == CallingConvention::Reg16) {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
-			for (Interval &interval: intervals) {
+			for (Interval &interval: intervals)
 				if (interval.variable.lock()->id < max)
 					interval.setRegister(++reg);
-			}
+		}
+	}
+
+	void Function::precolorArguments() {
+		if (getCallingConvention() == CallingConvention::Reg16) {
+			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
+			for (const std::pair<const int, VariablePtr> &pair: variableStore)
+				if (pair.second->id < max)
+					pair.second->reg = ++reg;
 		}
 	}
 

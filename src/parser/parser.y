@@ -42,7 +42,7 @@ using AN = LL2W::ASTNode;
 
 %debug
 %defines
-%define parse.error verbose
+%error-verbose
 %token-table
 %verbose
 %glr-parser

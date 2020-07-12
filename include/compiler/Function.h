@@ -213,6 +213,9 @@ namespace LL2W {
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
 
+			/** Assigns special argument registers to all variables as appropriate. */
+			void precolorArguments();
+
 			/** Assigns or looks up a stack location for a given variable. */
 			StackLocation & addToStack(VariablePtr, StackLocation::Purpose, int width = -1);
 
