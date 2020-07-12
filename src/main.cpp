@@ -10,7 +10,7 @@
 #include "parser/Lexer.h"
 #include "util/Util.h"
 
-#define DEBUGMODE
+// #define DEBUGMODE
 
 void lttest();
 void djtest();

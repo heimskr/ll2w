@@ -53,11 +53,11 @@ namespace LL2W::Passes {
 		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 			if (ptr->reg == -1)
-				ptr->reg = pair.second->color;
+				ptr->setRegister(pair.second->color);
 			// std::cerr << pair.first << ":" << WhyInfo::registerName(pair.second->color) << (WhyInfo::isSpecialPurpose(pair.second->color)? " !" : "") << "\n";
 		}
 
-		interference.renderTo("interference_" + *function.name + ".png");
+		// interference.renderTo("interference_" + *function.name + ".png");
 
 		return spill_count;
 	}
@@ -84,11 +84,15 @@ namespace LL2W::Passes {
 		graph.clear();
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
-			std::cerr << "%% " << pair.first << " " << *pair.second << "\n";
+			std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
+			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
+			std::cerr << "\n";
 			if (pair.second->reg == -1) {
-				const std::string id = std::to_string(pair.first);
-				Node &node = graph.addNode(id);
-				node.data = pair.second;
+				const std::string id = std::to_string(pair.second->id);
+				if (!graph.hasLabel(id)) { // Use only one variable from a set of aliases.
+					Node &node = graph.addNode(id);
+					node.data = pair.second;
+				}
 			}
 		}
 
@@ -111,30 +115,30 @@ namespace LL2W::Passes {
 				live[pair.second->id].insert(bptr.lock()->index);
 				std::cerr << "  user: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
 			}
-			for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveIn(pair.second)) {
-				live[pair.second->id].insert(bptr->index);
-				std::cerr << "  liveIn: " << *bptr->label << " (" << bptr->index << ")\n";
-			}
-			for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveOut(pair.second)) {
-				live[pair.second->id].insert(bptr->index);
-				std::cerr << "  liveOut: " << *bptr->label << " (" << bptr->index << ")\n";
-			}
+			// for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveIn(pair.second)) {
+			// 	live[pair.second->id].insert(bptr->index);
+			// 	std::cerr << "  liveIn: " << *bptr->label << " (" << bptr->index << ")\n";
+			// }
+			// for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveOut(pair.second)) {
+			// 	live[pair.second->id].insert(bptr->index);
+			// 	std::cerr << "  liveOut: " << *bptr->label << " (" << bptr->index << ")\n";
+			// }
 		}
 
-		// for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
-		// 	if (!block)
-		// 		std::cerr << "block is null?\n";
-			// for (const VariablePtr &var: block->liveIn)
-			// 	if (var->reg == -1) {
-			// 		std::cerr << "Variable " << *var << " is live-in at block " << *block->label << "\n";
-			// 		live[var->id].insert(block->index);
-			// 	}
-			// for (const VariablePtr &var: block->liveOut)
-			// 	if (var->reg == -1) {
-			// 		std::cerr << "Variable " << *var << " is live-out at block " << *block->label << "\n";
-			// 		live[var->id].insert(block->index);
-			// 	}
-		// }
+		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
+			if (!block)
+				std::cerr << "block is null?\n";
+			for (const VariablePtr &var: block->liveIn)
+				if (var->reg == -1) {
+					std::cerr << "Variable " << *var << " is live-in at block " << *block->label << "\n";
+					live[var->id].insert(block->index);
+				}
+			for (const VariablePtr &var: block->liveOut)
+				if (var->reg == -1) {
+					std::cerr << "Variable " << *var << " is live-out at block " << *block->label << "\n";
+					live[var->id].insert(block->index);
+				}
+		}
 
 		if (1 < labels.size()) {
 			const size_t size = labels.size();

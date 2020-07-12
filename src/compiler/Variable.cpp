@@ -88,6 +88,8 @@ namespace LL2W {
 		if (&new_parent == this || new_parent.aliases.count(this) != 0)
 			return;
 
+		std::cerr << *this << ".makeAliasOf(" << new_parent << ")\n";
+
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {
