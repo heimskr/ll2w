@@ -57,7 +57,8 @@ namespace LL2W::Passes {
 			// std::cerr << pair.first << ":" << WhyInfo::registerName(pair.second->color) << (WhyInfo::isSpecialPurpose(pair.second->color)? " !" : "") << "\n";
 		}
 
-		// interference.renderTo("interference_" + *function.name + ".png");
+		// if (*function.name == "@find_free_block")
+		// 	interference.renderTo("interference_" + *function.name + ".png");
 
 		return spill_count;
 	}
@@ -148,7 +149,7 @@ namespace LL2W::Passes {
 					            right = function.variableStore.at(labels[j]);
 					// std::cout << "Left  (" << left->id << "):";  for (const auto x: live[left->id])  std::cout << " " << x; std::cout << "\n";
 					// std::cout << "Right (" << right->id << "):"; for (const auto x: live[right->id]) std::cout << " " << x; std::cout << "\n";
-					if (hasOverlap(live[left->id], live[right->id]))
+					if (left->id != right->id && hasOverlap(live[left->id], live[right->id]))
 						graph.link(std::to_string(left->id), std::to_string(right->id), true);
 				}
 			}
