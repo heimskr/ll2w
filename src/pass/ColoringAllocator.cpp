@@ -9,6 +9,8 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
+// #define DEBUG_COLORING
+
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
 		int spill_count = 0;
@@ -24,41 +26,51 @@ namespace LL2W::Passes {
 				VariablePtr to_spill = selectLowestSpillCost(function, tried);
 				if (!to_spill)
 					std::terminate();
+#ifdef DEBUG_COLORING
 				std::cerr << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
+#endif
 				tried.insert(to_spill->id);
 				function.addToStack(to_spill, StackLocation::Purpose::Spill);
 				if (function.spill(to_spill)) {
+#ifdef DEBUG_COLORING
 					std::cerr << "Spilled. Variables: " << function.variableStore.size() << ". Stack locations: "
 					          << function.stack.size() << "\n";
+#endif
 					++spill_count;
 					int split = Passes::splitBlocks(function);
 					if (0 < split) {
+#ifdef DEBUG_COLORING
 						std::cerr << split << " block" << (split == 1? " was" : "s were") << " split.\n";
+#endif
 						for (BasicBlockPtr &block: function.blocks)
 							block->extract();
 						Passes::makeCFG(function);
 						function.extractVariables(true);
 						function.resetLiveness();
 						function.computeLiveness();
-					} else std::cerr << "No blocks were split.\n";
-				} else std::cerr << "Not spilled.\n";
+					}
+#ifdef DEBUG_COLORING
+					else std::cerr << "No blocks were split.\n";
+#endif
+				}
+#ifdef DEBUG_COLORING
+				else std::cerr << "Not spilled.\n";
+#endif
 				continue;
 			}
 			break;
 		}
 
+#ifdef DEBUG_COLORING
 		std::cerr << "Spilling process complete. There " << (spill_count == 1? "was " : "were ") << spill_count << " "
 		          << "spill" << (spill_count == 1? ".\n" : "s.\n");
+#endif
 
 		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 			if (ptr->reg == -1)
 				ptr->setRegister(pair.second->color);
-			// std::cerr << pair.first << ":" << WhyInfo::registerName(pair.second->color) << (WhyInfo::isSpecialPurpose(pair.second->color)? " !" : "") << "\n";
 		}
-
-		// if (*function.name == "@find_free_block")
-		// 	interference.renderTo("interference_" + *function.name + ".png");
 
 		return spill_count;
 	}
@@ -85,6 +97,11 @@ namespace LL2W::Passes {
 		graph.clear();
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+#ifdef DEBUG_COLORING
+			std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
+			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
+			std::cerr << "\n";
+#endif
 			if (pair.second->reg == -1) {
 				const std::string id = std::to_string(pair.second->id);
 				if (!graph.hasLabel(id)) { // Use only one variable from a set of aliases.
@@ -104,36 +121,40 @@ namespace LL2W::Passes {
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 			if (pair.second->reg != -1)
 				continue;
+#ifdef DEBUG_COLORING
 			std::cerr << "Variable " << *pair.second << ":\n";
+#endif
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
 				live[pair.second->id].insert(bptr.lock()->index);
+#ifdef DEBUG_COLORING
 				std::cerr << "  definer: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
+#endif
 			}
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
 				live[pair.second->id].insert(bptr.lock()->index);
+#ifdef DEBUG_COLORING
 				std::cerr << "  user: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
+#endif
 			}
-			// for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveIn(pair.second)) {
-			// 	live[pair.second->id].insert(bptr->index);
-			// 	std::cerr << "  liveIn: " << *bptr->label << " (" << bptr->index << ")\n";
-			// }
-			// for (const std::shared_ptr<BasicBlock> &bptr: function.getLiveOut(pair.second)) {
-			// 	live[pair.second->id].insert(bptr->index);
-			// 	std::cerr << "  liveOut: " << *bptr->label << " (" << bptr->index << ")\n";
-			// }
 		}
 
 		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
+#ifdef DEBUG_COLORING
 			if (!block)
 				std::cerr << "block is null?\n";
+#endif
 			for (const VariablePtr &var: block->liveIn)
 				if (var->reg == -1) {
+#ifdef DEBUG_COLORING
 					std::cerr << "Variable " << *var << " is live-in at block " << *block->label << "\n";
+#endif
 					live[var->id].insert(block->index);
 				}
 			for (const VariablePtr &var: block->liveOut)
 				if (var->reg == -1) {
+#ifdef DEBUG_COLORING
 					std::cerr << "Variable " << *var << " is live-out at block " << *block->label << "\n";
+#endif
 					live[var->id].insert(block->index);
 				}
 		}
@@ -144,17 +165,10 @@ namespace LL2W::Passes {
 				for (size_t j = i + 1; j < size; ++j) {
 					VariablePtr left  = function.variableStore.at(labels[i]),
 					            right = function.variableStore.at(labels[j]);
-					// std::cout << "Left  (" << left->id << "):";  for (const auto x: live[left->id])  std::cout << " " << x; std::cout << "\n";
-					// std::cout << "Right (" << right->id << "):"; for (const auto x: live[right->id]) std::cout << " " << x; std::cout << "\n";
 					if (left->id != right->id && hasOverlap(live[left->id], live[right->id]))
 						graph.link(std::to_string(left->id), std::to_string(right->id), true);
 				}
 			}
 		}
-
-		// static int x = 0;
-		// if (++x == 20)
-			// std::cout << ("RENDER: interference_" + *function.name + ".png") << "\n";
-		// graph.renderTo("interference_" + *function.name + ".png");
 	}
 }

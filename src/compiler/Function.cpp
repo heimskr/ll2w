@@ -730,24 +730,17 @@ namespace LL2W {
 	}
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
-		for (std::pair<const int, StackLocation> &pair: stack) {
-			if (pair.second.variable == variable && pair.second.purpose == purpose) {
-				// std::cerr << "Shortcircuiting search for " << *variable << "\n";
+		for (std::pair<const int, StackLocation> &pair: stack)
+			if (pair.second.variable == variable && pair.second.purpose == purpose)
 				return pair.second;
-			}
-		}
 
 		if (width == -1) {
 			width = variable && variable->type? roundUp(variable->type->width() < 8? 1 : variable->type->width() / 8, 8)
 			                                  : 8;
 		}
-		// if (variable && variable->type)
-		// 	std::cerr << "Type: " << *variable->type << "\n";
-		// std::cerr << "Width == " << width << "\n";
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
-		// std::cerr << "Added new for " << *variable << "\n";
 		return added;
 	}
 
@@ -1041,13 +1034,9 @@ namespace LL2W {
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable) {
-		for (std::pair<const int, StackLocation> &pair: stack) {
-			// std::cerr << "\e[38;5;144m" << *pair.second.variable << " :: "
-			        //   << (pair.second.purpose == StackLocation::Purpose::Spill? "S" : "A") << "\n";
+		for (std::pair<const int, StackLocation> &pair: stack)
 			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
-		}
-
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
 	}
 

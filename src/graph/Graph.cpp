@@ -301,7 +301,6 @@ namespace LL2W {
 
 	void Graph::color(Graph::ColoringAlgorithm algo, int color_min, int color_max) {
 		const int total_colors = color_max != -1? color_max - color_min + 1 : -1;
-		std::cerr << "Total colors: " << total_colors << "\n";
 		if (algo == Graph::ColoringAlgorithm::Bad) {
 			if (color_max != -1 && total_colors < static_cast<int>(nodes_.size()))
 				throw UncolorableError();
@@ -312,8 +311,6 @@ namespace LL2W {
 			std::set<int> all_colors;
 			for (int i = color_min; i <= (color_max == -1? static_cast<int>(color_min + size() - 1) : color_max); ++i)
 				all_colors.insert(i);
-
-			std::cerr << "all_colors size: " << all_colors.size() << "\n";
 
 			for (Node *node: nodes_) {
 				std::set<int> available = all_colors;
@@ -329,7 +326,6 @@ namespace LL2W {
 					throw UncolorableError();
 				node->color = *available.begin();
 			}
-			// throw std::runtime_error("Greedy coloring algorithm is unimplemented");
 		} else {
 			throw std::invalid_argument("Unknown graph coloring algorithm: " + std::to_string(static_cast<int>(algo)));
 		}
