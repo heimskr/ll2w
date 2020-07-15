@@ -9,9 +9,9 @@
 #include "util/WeakCompare.h"
 
 namespace LL2W {
-	long parseLong(const std::string &);
-	long parseLong(const std::string *);
-	long parseLong(const char *);
+	long parseLong(const std::string &, int base = 10);
+	long parseLong(const std::string *, int base = 10);
+	long parseLong(const char *, int base = 10);
 
 	long roundUp(long, long);
 

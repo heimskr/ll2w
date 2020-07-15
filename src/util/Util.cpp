@@ -4,21 +4,21 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	long parseLong(const std::string &str) {
+	long parseLong(const std::string &str, int base) {
 		const char *c_str = str.c_str();
 		char *end;
-		long parsed = strtol(c_str, &end, 10);
+		long parsed = strtol(c_str, &end, base);
 		if (c_str + str.length() != end)
 			throw std::invalid_argument("Not an integer: \"" + str + "\"");
 		return parsed;
 	}
 
-	long parseLong(const std::string *str) {
-		return parseLong(*str);
+	long parseLong(const std::string *str, int base) {
+		return parseLong(*str, base);
 	}
 
-	long parseLong(const char *str) {
-		return parseLong(std::string(str));
+	long parseLong(const char *str, int base) {
+		return parseLong(std::string(str), base);
 	}
 
 	long roundUp(long num, long to) {

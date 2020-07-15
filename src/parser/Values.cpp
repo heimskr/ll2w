@@ -36,6 +36,10 @@ namespace LL2W {
 		return valueType() == ValueType::Getelementptr;
 	}
 
+	IntValue::IntValue(const std::string &value_) {
+		value = parseLong(value_, value_.substr(0, 2) == "0x"? 16 : 10);
+	}
+
 	VectorValue::VectorValue(const ASTNode *node) {
 		for (auto iter = node->cbegin(); iter != node->cend(); ++iter)
 			values.push_back({getType((*iter)->at(0)), getValue((*iter)->at(1))});
@@ -197,6 +201,7 @@ namespace LL2W {
 		switch (node->symbol) {
 			case TOK_FLOATING:        return std::make_shared<DoubleValue>(node);
 			case TOK_DECIMAL:         return std::make_shared<IntValue>(node);
+			case TOK_HEXADECIMAL:     return std::make_shared<IntValue>(node);
 			case TOK_BOOL:            return std::make_shared<BoolValue>(node);
 			case VECTOR:              return std::make_shared<VectorValue>(node);
 			case TOK_PVAR:            return std::make_shared<LocalValue>(node);

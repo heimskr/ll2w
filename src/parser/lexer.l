@@ -26,14 +26,16 @@
 
 LETTER				[A-Za-z_]
 DIGIT				[0-9]
-NUMBER				("-"?{DIGIT}+)
+DECIMAL				("-"?{DIGIT}+)
+HEXADECIMAL			("-"?0x[a-fA-F0-9]+)
+NUMBER				({DECIMAL}|{HEXADECIMAL})
 IDENT				([-a-zA-Z$._][-a-zA-Z$._0-9]*)
 STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
 SGCOMMENT			(";"[^\n]*)
 MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 INTTYPE				("i"{DIGIT}+)
-GVAR				("@"({NUMBER}|{IDENT}|{STRING}))
-PVAR				("%"({NUMBER}|{IDENT}|{STRING}))
+GVAR				("@"({DECIMAL}|{IDENT}|{STRING}))
+PVAR				("%"({DECIMAL}|{IDENT}|{STRING}))
 CSTRING				("c"{STRING})
 INTBANG				("!"{DIGIT}+)
 METABANG			("!"{IDENT})
@@ -146,7 +148,8 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "target"					{ RTOKEN(TARGET) }
 "triple"					{ RTOKEN(TRIPLE) }
 {FLOATING}					{ RTOKEN(FLOATING) }
-{NUMBER}					{ RTOKEN(DECIMAL) }
+{DECIMAL}					{ RTOKEN(DECIMAL) }
+{HEXADECIMAL}				{ RTOKEN(HEXADECIMAL) }
 "distinct"					{ RTOKEN(DISTINCT) }
 "."							{ RTOKEN(DOT) }
 "!{"						{ RTOKEN(METADATA_OPEN) }

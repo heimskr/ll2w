@@ -55,7 +55,7 @@ using AN = LL2W::ASTNode;
 %token TOK_METADATA TOK_CSTRING TOK_PVAR TOK_GVAR TOK_FLOATTYPE TOK_DLLPORT TOK_BOOL TOK_RETATTR TOK_UNNAMED_ADDR_TYPE
 %token TOK_DEREF TOK_LINKAGE TOK_FNATTR_BASIC TOK_CCONV TOK_VISIBILITY TOK_FASTMATH TOK_STRUCTVAR TOK_CLASSVAR
 %token TOK_UNIONVAR TOK_INTBANG TOK_ORDERING TOK_ICMP_COND TOK_LABEL_COMMENT TOK_PREDS_COMMENT TOK_TAIL TOK_CONV_OP
-%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR TOK_FMATH TOK_SIMPLE_LABEL TOK_NO_PREDS
+%token TOK_DIV TOK_REM TOK_LOGIC TOK_SHR TOK_FMATH TOK_SIMPLE_LABEL TOK_NO_PREDS TOK_HEXADECIMAL
 %token TOK_SOURCE_FILENAME "source_filename"
 %token TOK_BANG "!"
 %token TOK_EQUALS "="
@@ -242,10 +242,10 @@ metadata_distinct: "distinct" { $$ = new AN(TOK_DISTINCT, "distinct"); }
 
 metabang: TOK_METABANG | TOK_INTBANG { $1->symbol = TOK_METABANG; };
 
-ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; }
+ident: TOK_IDENT | TOK_DECIMAL { $1->symbol = TOK_IDENT; } | TOK_HEXADECIMAL { $1->symbol = TOK_IDENT; };
 
-value: TOK_FLOATING | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | getelementptr_expr | conversion_expr
-     | "null" | "zeroinitializer" | "undef";
+value: TOK_FLOATING | TOK_HEXADECIMAL | TOK_DECIMAL | TOK_BOOL | vector | variable | struct | array | getelementptr_expr
+     | conversion_expr | "null" | "zeroinitializer" | "undef";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
@@ -509,7 +509,8 @@ parattr: TOK_PARATTR
        | retattr | TOK_BYVAL | TOK_WRITEONLY;
 parattr_simple: TOK_INALLOCA | TOK_READONLY | TOK_READNONE;
 retattr: TOK_RETATTR | TOK_DEREF "(" TOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
-operand: TOK_PVAR | TOK_DECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
+operand: TOK_PVAR | TOK_DECIMAL | TOK_HEXADECIMAL | TOK_GVAR | TOK_BOOL | TOK_FLOATING | struct | bare_array
+       | TOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
 conversion_expr: TOK_CONV_OP constant TOK_TO type_any         { $$ = (new AN(CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
                | TOK_CONV_OP "(" constant TOK_TO type_any ")" { $$ = (new AN(CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 

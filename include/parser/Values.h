@@ -50,7 +50,7 @@ namespace LL2W {
 	struct IntValue: public Value {
 		int value;
 		IntValue(int value_): value(value_) {}
-		IntValue(const std::string &value_): IntValue(atoi(value_.c_str())) {}
+		IntValue(const std::string &);
 		IntValue(const std::string *value_): IntValue(*value_) {}
 		IntValue(const ASTNode *node): IntValue(node->lexerInfo) {}
 		ValueType valueType() const override { return ValueType::Int; }
