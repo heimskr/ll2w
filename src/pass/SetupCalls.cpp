@@ -19,6 +19,7 @@
 
 namespace LL2W::Passes {
 	void setupCalls(Function &function) {
+		int i;
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -73,14 +74,14 @@ namespace LL2W::Passes {
 
 			// First, push the current values of the argument registers to the stack.
 			if (convention == CallingConvention::Reg16) {
-				for (int i = 0; i < function.getArity() && i < WhyInfo::argumentCount; ++i) {
+				for (i = 0; i < function.getArity() && i < WhyInfo::argumentCount; ++i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
 					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false);
 				}
 			}
 
 			// Next, move variables into the argument registers.
-			for (int i = 0; i < reg_max && i < arg_count; ++i) {
+			for (i = 0; i < reg_max && i < arg_count; ++i) {
 				// Make a precolored dummy variable.
 				VariablePtr new_var = function.newVariable(argument_types[i]);
 				new_var->reg = WhyInfo::argumentOffset + i;
@@ -88,7 +89,7 @@ namespace LL2W::Passes {
 			}
 
 			// Push variables onto the stack, right to left.
-			for (int i = arg_count - 1; reg_max <= i; --i)
+			for (i = (ellipsis? call->constants.size() : arg_count) - 1; reg_max <= i; --i)
 				pushCallValue(function, instruction, call->constants[i]);
 
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
@@ -113,7 +114,7 @@ namespace LL2W::Passes {
 			}
 
 			// Pop the argument registers from the stack.
-			for (int i = std::min(15, function.getArity() - 1); 0 <= i; --i) {
+			for (i = std::min(15, function.getArity() - 1); 0 <= i; --i) {
 				VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
 				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false);
 			}
