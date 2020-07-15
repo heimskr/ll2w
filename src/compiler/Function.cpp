@@ -15,7 +15,6 @@
 // #define DISABLE_COMMENTS
 // #define DEBUG_MERGE
 // #define DEBUG_ESTIMATIONS
-#define ALLOCATE_COLORING
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -596,31 +595,7 @@ namespace LL2W {
 		debug();
 #endif
 
-#ifdef ALLOCATE_COLORING
 		int spilled = Passes::allocateColoring(*this);
-		(void) spilled;
-#else
-		int spilled = Passes::linearScan(*this);
-#ifdef DEBUG_SPILL
-		int scans = 0;
-#endif
-
-		while (0 < spilled) {
-#ifdef DEBUG_SPILL
-			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
-			debug();
-#endif
-			Passes::splitBlocks(*this);
-			for (BasicBlockPtr &block: blocks)
-				block->extract();
-			extractVariables(true);
-			Passes::makeCFG(*this);
-			resetRegisters();
-			resetLiveness();
-			computeLiveness();
-			spilled = Passes::linearScan(*this);
-		}
-#endif
 
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
@@ -630,7 +605,7 @@ namespace LL2W {
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
-		// Passes::mergeAllBlocks(*this); // NOTE: disabled to test merge sets. Remember to reenable.
+		Passes::mergeAllBlocks(*this);
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
