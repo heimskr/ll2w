@@ -812,7 +812,6 @@ namespace LL2W {
 			block->extract();
 			for (VariablePtr var: block->phiUses) {
 				block->liveOut.insert(var);
-				std::cerr << "[" << __LINE__ << "] block{" << *block->label << "}->liveOut.insert(var{" << *var << "})\n";
 				upAndMark(block, var);
 			}
 			for (VariablePtr var: block->nonPhiRead)
@@ -835,7 +834,6 @@ namespace LL2W {
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
-		std::cerr << "[" << __LINE__ << "] block{" << *block->label << "}->liveIn.insert(var{" << *var << "})\n";
 
 		// if v ∈ PhiDefs(B) then return
 		if (block->written.count(var) != 0 && block->nonPhiWritten.count(var) == 0)
@@ -847,38 +845,16 @@ namespace LL2W {
 				BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
 				// LiveOut(P) = LiveOut(P) ∪ {v}
 				p->liveOut.insert(var);
-				std::cerr << "[" << __LINE__ << "] p{" << *p->label << "}->liveOut.insert(var{" << *var << "})\n";
 				upAndMark(p, var);
 			}
 		} catch (std::out_of_range &) {
-			std::cerr << "What? Couldn't find " << *block->label << ".";
+			std::cerr << "Couldn't find block " << *block->label << ".";
 			for (const auto &pair: bbNodeMap)
 				std::cerr << " " << *pair.first->label;
 			std::cerr << "\n";
+			throw;
 		}
 	}
-
-	// void Function::computeLiveness() {
-	// 	if (livenessComputed)
-	// 		return;
-
-	// 	livenessComputed = true;
-	// 	for (BasicBlockPtr &block: blocks) {
-	// 		std::unordered_set<Variable *> pool {};
-	// 		for (const VariablePtr &variable: block->read) {
-	// 			isLiveIn(*block, variable);
-	// 			isLiveOut(*block, variable);
-	// 			pool.insert(variable.get());
-	// 		}
-
-	// 		for (const VariablePtr &variable: block->written) {
-	// 			if (pool.count(variable.get()) == 0) {
-	// 				isLiveIn(*block, variable);
-	// 				isLiveOut(*block, variable);
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	void Function::resetLiveness() {
 		for (BasicBlockPtr &block: blocks) {
@@ -915,75 +891,6 @@ namespace LL2W {
 		return getLive(var, [&](const auto &block) -> auto & {
 			return block->liveOut;
 		});
-	}
-
-	bool Function::isLiveIn(BasicBlock &block, VariablePtr var) {
-		// M^r(block) = M(block) ∪ {block}; // Create a new set from the merge set
-		Node::Set m_r = mergeSets.at(block.node);
-		m_r.insert(block.node);
-
-		// Iterate over all the uses of var
-		// for t ∈ uses(var) do
-		for (std::weak_ptr<BasicBlock> t: var->usingBlocks) {
-			// while t≠def(var) do
-			// TODO: is this valid, or is the algorithm not valid after phi coalescing?
-			while (var->definingBlocks.count(t) == 0) {
-				// if t ∩ M^r(block) then
-				if (m_r.count(t.lock()->node) > 0) {
-					block.liveIn.insert(var);
-					return true;
-				}
-				// t = dom-parent(t); // Climb up from node t in the DJ-Graph
-				std::weak_ptr<BasicBlock> t_new =
-					cfg[*(*dTree)[*t.lock()->node].parent()].get<std::weak_ptr<BasicBlock>>();
-				if (t_new.lock() == t.lock())
-					break;
-				t = t_new;
-			}
-		}
-
-		return false;
-	}
-
-	bool Function::isLiveOut(BasicBlock &block, VariablePtr var) {
-		// if def(a)=n
-
-		for (std::weak_ptr<BasicBlock> defining_block: var->definingBlocks) {
-			if (defining_block.lock().get() == &block) {
-				// return uses(a)\def(a)≠∅;
-				WeakSet<BasicBlock> set = var->usingBlocks;
-				for (std::weak_ptr<BasicBlock> bb: var->definingBlocks)
-					set.erase(bb);
-
-				if (!set.empty()) {
-					block.liveOut.insert(var);
-					return true;
-				}
-
-				return false;
-			}
-		}
-
-		// for t ∈ uses(a) do // Iterate over all the uses of a
-		for (std::weak_ptr<BasicBlock> t: var->usingBlocks) {
-			// while t≠def(a) do
-			while (var->definingBlocks.count(t) == 0) {
-				// if t ∩ Ms(n) then
-				if (0 < succMergeSets.at(block.node).count(t.lock()->node)) {
-					block.liveOut.insert(var);
-					return true;
-				}
-
-				// t = dom-parent(t);
-				std::weak_ptr<BasicBlock> t_new =
-					cfg[*(*dTree)[*t.lock()->node].parent()].get<std::weak_ptr<BasicBlock>>();
-				if (t_new.lock() == t.lock())
-					break;
-				t = t_new;
-			}
-		}
-
-		return false;
 	}
 
 	std::string Function::toString() {

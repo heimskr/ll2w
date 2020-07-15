@@ -85,9 +85,6 @@ namespace LL2W::Passes {
 		graph.clear();
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
-			std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
-			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
-			std::cerr << "\n";
 			if (pair.second->reg == -1) {
 				const std::string id = std::to_string(pair.second->id);
 				if (!graph.hasLabel(id)) { // Use only one variable from a set of aliases.

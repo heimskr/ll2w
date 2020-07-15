@@ -269,12 +269,6 @@ namespace LL2W {
 			/** Returns a set of all blocks where a given variable or any of its aliases are live-out. */
 			std::unordered_set<std::shared_ptr<BasicBlock>> getLiveOut(std::shared_ptr<Variable>);
 
-			/** Determines whether a variable is live-in at a given basic block. */
-			bool isLiveIn(BasicBlock &, VariablePtr);
-
-			/** Determines whether a variable is live-out at a given basic block. */
-			bool isLiveOut(BasicBlock &, VariablePtr);
-
 			/** Returns the compiled assembly code. */
 			std::string toString();
 
