@@ -21,7 +21,7 @@ namespace LL2W::Passes {
 				const FunctionArgument &fn_arg = function.arguments->at(arg - WhyInfo::argumentCount);
 				VariablePtr arg_var = function.getVariable(arg, fn_arg.type, entry);
 				VariablePtr temp_var = function.makeAssemblerVariable(0, entry);
-				VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, entry);
+				VariablePtr sp = function.sp(entry);
 
 				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ].
 				// The stack pointer will be pointing right after where the frame pointer was pushed.

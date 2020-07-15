@@ -18,8 +18,7 @@ namespace LL2W::Passes {
 			if (!call->name->isGlobal())
 				continue;
 			if (*dynamic_cast<GlobalValue *>(call->name.get())->name == "llvm.stacksave") {
-				auto move = std::make_shared<MoveInstruction>(
-					function.makePrecoloredVariable(WhyInfo::stackPointerOffset, instruction->parent.lock()),
+				auto move = std::make_shared<MoveInstruction>(function.sp(instruction->parent.lock()),
 					function.getVariable(*call->result));
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);

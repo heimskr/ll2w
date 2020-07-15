@@ -20,7 +20,7 @@ namespace LL2W::Passes {
 			if (*dynamic_cast<GlobalValue *>(call->name.get())->name == "llvm.stackrestore") {
 				auto move = std::make_shared<MoveInstruction>(
 					dynamic_cast<LocalValue *>(call->constants[0]->value.get())->variable,
-					function.makePrecoloredVariable(WhyInfo::stackPointerOffset, instruction->parent.lock()));
+					function.sp(instruction->parent.lock()));
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);
 			}

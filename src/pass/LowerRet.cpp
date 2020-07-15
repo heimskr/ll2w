@@ -27,8 +27,8 @@ namespace LL2W::Passes {
 			if (!block)
 				throw std::runtime_error("Couldn't lock instruction parent in LowerRet");
 
-			VariablePtr fp = function.makePrecoloredVariable(WhyInfo::framePointerOffset, block);
-			VariablePtr sp = function.makePrecoloredVariable(WhyInfo::stackPointerOffset, block);
+			VariablePtr fp = function.fp(block);
+			VariablePtr sp = function.sp(block);
 			VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, block);
 			VariablePtr r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
 
