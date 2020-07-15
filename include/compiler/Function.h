@@ -176,12 +176,6 @@ namespace LL2W {
 			/** Splits a basic block after a given instruction. */
 			BasicBlockPtr splitBlock(BasicBlockPtr, std::shared_ptr<Instruction>);
 
-			/** Returns a list of intervals sorted by start point in ascending order. */
-			std::list<Interval> sortedIntervals();
-
-			/** Builds live intervals according to the algorithm presented by Christian Wimmer and Michael Franz. */
-			std::list<Interval> buildIntervals();
-
 			/** Creates a precolored variable corresponding to any register. */
 			VariablePtr makePrecoloredVariable(unsigned char, BasicBlockPtr);
 

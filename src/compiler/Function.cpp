@@ -601,7 +601,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this);
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
-		// Passes::replaceStoresAndLoads(*this);
+		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
@@ -616,59 +616,6 @@ namespace LL2W {
 #endif
 
 		compiled = true;
-	}
-
-	std::list<Interval> Function::sortedIntervals() {
-		std::list<Interval> intervals;
-
-		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			if (!WhyInfo::isSpecialPurpose(pair.second->reg))
-				intervals.emplace_back(pair.second);
-		}
-
-		reindexBlocks();
-
-		intervals.sort([&](const Interval &left, const Interval &right) {
-			return left.firstDefinition.lock()->index < right.firstDefinition.lock()->index;
-		});
-
-		return intervals;
-	}
-
-	std::list<Interval> Function::buildIntervals() {
-		std::list<Interval> intervals;
-
-		// for each block b in reverse order do
-		for (auto iter = blocks.rbegin(), end = blocks.rend(); iter != end; ++iter) {
-			BasicBlockPtr block = *iter;
-
-			std::unordered_set<VariablePtr> live;
-			// live = union of successor.liveIn for each successor of b
-			for (Node *successor_node: bbNodeMap.at(block.get())->out()) {
-				if (!successor_node->data.has_value())
-					continue;
-				BasicBlockPtr successor = successor_node->get<std::weak_ptr<BasicBlock>>().lock();
-				absorb(live, successor->liveIn);
-				// for each phi function phi of successors of b do
-				for (InstructionPtr &instruction: successor->instructions) {
-					LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-					if (!llvm)
-						continue;
-					PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node);
-					if (!phi)
-						continue;
-					// live.add(phi.inputOf(b))
-					for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs) {
-						if (pair.second != block->label)
-							continue;
-						if (LocalValue *local = dynamic_cast<LocalValue *>(pair.first.get()))
-							live.insert(local->variable);
-					}
-				}
-			}
-		}
-
-		return intervals;
 	}
 
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {

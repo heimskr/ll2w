@@ -1,4 +1,5 @@
 #include "compiler/Function.h"
+#include "instruction/Comment.h"
 #include "instruction/Label.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/StackPushInstruction.h"
@@ -12,7 +13,7 @@ namespace LL2W::Passes {
 		BasicBlockPtr front_block = function.blocks.front();
 		InstructionPtr first;
 		for (InstructionPtr &instruction: front_block->instructions) {
-			if (!dynamic_cast<Label *>(instruction.get())) {
+			if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get())) {
 				first = instruction;
 				break;
 			}
