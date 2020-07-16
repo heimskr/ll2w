@@ -6,11 +6,11 @@
 
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 // #define DEBUG_SPLIT
-#define DEBUG_READ_WRITTEN
+// #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
 // #define DEBUG_MERGE
@@ -21,6 +21,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
 #include "instruction/Comment.h"
+#include "instruction/Label.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "options.h"
@@ -286,6 +287,13 @@ namespace LL2W {
 
 		reindexInstructions();
 		return out;
+	}
+
+	std::shared_ptr<Instruction> Function::firstInstruction() {
+		for (InstructionPtr &instruction: blocks.front()->instructions)
+			if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get()))
+				return instruction;
+		return nullptr;
 	}
 
 	InstructionPtr Function::after(InstructionPtr instruction) {

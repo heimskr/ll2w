@@ -12,6 +12,7 @@ namespace LL2W {
 	struct FunctionHeader: public ASTNode {
 		const std::string *name;
 		Linkage linkage = Linkage::Default;
+		Preemption preemption = Preemption::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
 		CConv cconv = CConv::Default;
@@ -27,8 +28,8 @@ namespace LL2W {
 		ConstantPtr personality;
 		
 		using N = ASTNode *;
-		FunctionHeader(N _linkage, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type, N function_name,
-		               N function_args, N unnamed_addr, N _fnattrs, N _align, N _personality);
+		FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
+		               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _align, N _personality);
 
 		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[38;5;202m"; }
