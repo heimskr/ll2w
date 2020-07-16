@@ -76,8 +76,8 @@ namespace LL2W {
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
 
-			/** Maps labels to variables. This is the main storage for the function's variables. */
-			std::map<const std::string *, VariablePtr> variableStore;
+			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
+			std::map<int, VariablePtr> variableStore;
 
 			/** A list of variables that have been removed but are likely to be still referenced somewhere. */
 			std::list<VariablePtr> retiredVariables;
@@ -137,9 +137,6 @@ namespace LL2W {
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
 			bool spill(VariablePtr);
-
-			/** Returns the first instruction in the function that isn't a label or a comment. */
-			std::shared_ptr<Instruction> firstInstruction();
 
 			/** Returns a pointer to the instruction following a given instruction. */
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
@@ -234,14 +231,14 @@ namespace LL2W {
 			void mergeBlocks(BasicBlockPtr before, BasicBlockPtr after);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
-			VariablePtr getVariable(const std::string *);
+			VariablePtr getVariable(int);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			VariablePtr getVariable(const std::string &);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			VariablePtr getVariable(const std::string *, const TypePtr, BasicBlockPtr = nullptr);
+			VariablePtr getVariable(int, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */

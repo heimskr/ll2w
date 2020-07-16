@@ -14,7 +14,7 @@
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
 		int spill_count = 0;
-		std::unordered_set<const std::string *> tried;
+		std::unordered_set<int> tried;
 		Graph interference;
 		function.precolorArguments();
 		while (true) {

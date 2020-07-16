@@ -166,8 +166,6 @@ using AN = LL2W::ASTNode;
 %token TOK_SIDEEFFECT "sideeffect"
 %token TOK_INTELDIALECT "inteldialect"
 %token TOK_EXACT "exact"
-%token TOK_DSO_LOCAL "dso_local"
-%token TOK_DSO_PREEMPTABLE "dso_preemptable"
 
 %token CONSTANT CONVERSION_EXPR INITIAL_VALUE_LIST ARRAYTYPE VECTORTYPE POINTERTYPE TYPE_LIST FUNCTIONTYPE GDEF_EXTRAS
 %token STRUCTDEF ATTRIBUTE_LIST RETATTR_LIST FNATTR_LIST FUNCTION_TYPE_LIST PARATTR_LIST FUNCTION_HEADER FUNCTION_ARGS
@@ -312,11 +310,8 @@ comdat:  TOK_COMDAT "(" TOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
 
 // Functions
 
-function_header: _linkage _preemption _visibility _dll_storage_class _cconv _retattrs type_any function_name "("
-                 function_args ")" _unnamed_addr _fnattrs _header_align _personality
-                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15); D($9, $11); };
-_preemption: preemption | { $$ = nullptr; };
-preemption: TOK_DSO_PREEMPTABLE | TOK_DSO_LOCAL;
+function_header: _linkage _visibility _dll_storage_class _cconv _retattrs type_any function_name "(" function_args ")" _unnamed_addr _fnattrs _header_align _personality
+                { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $9, $11, $12, $13, $14); D($8, $10); };
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(RETATTR_LIST); };
 function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); D($2, $3); }
              | function_types { $$ = new FunctionArgs($1, false); }

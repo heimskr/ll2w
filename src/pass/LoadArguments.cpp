@@ -9,7 +9,7 @@ namespace LL2W::Passes {
 		CallingConvention cconv = function.getCallingConvention();
 		if (cconv == CallingConvention::StackOnly) {
 			error() << "LoadArguments failed for \e[1m" << *function.name << "\e[22m.\n";
-			// throw std::runtime_error("LoadArguments is currently unimplemented for StackOnly functions.");
+			throw std::runtime_error("loadArguments is currently unimplemented for StackOnly functions.");
 		} else if (cconv == CallingConvention::Reg16) {
 			const int arity = function.getArity();
 			if (arity <= WhyInfo::argumentCount)

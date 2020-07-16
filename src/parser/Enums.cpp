@@ -20,10 +20,6 @@ namespace LL2W {
 		{Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::External,   "external"},    {Linkage::Common,  "common"},
 		{Linkage::Internal,    "internal"},     {Linkage::AvailableExternally, "available_externally"}};
 
-	std::unordered_map<Preemption, std::string> preemption_map {
-		{Preemption::Default,  "default"}, {Preemption::DsoPreemptable, "dso_preemptable"},
-		{Preemption::DsoLocal, "dso_local"}};
-
 	std::unordered_map<CConv, std::string> cconv_map {
 		{CConv::Default, "default"}, {CConv::ccc, "ccc"}, {CConv::cxx_fast_tlscc, "cxx_fast_tlscc"},
 		{CConv::fastcc, "fastcc"}, {CConv::ghccc, "ghccc"}, {CConv::swiftcc, "swiftcc"},

@@ -31,12 +31,12 @@ namespace LL2W {
 		extracted = true;
 
 		auto readname = [&](std::shared_ptr<LocalValue> lv, TypePtr type) {
-			read.insert(parent.lock()->parent->getVariable(lv->name, type));
+			read.insert(parent.lock()->parent->getVariable(parseLong(lv->name), type));
 		};
 
 		auto write = [&](const std::string *str, TypePtr type) {
 			if (str)
-				written.insert(parent.lock()->parent->getVariable(str, type, parent.lock()));
+				written.insert(parent.lock()->parent->getVariable(parseLong(str), type, parent.lock()));
 		};
 
 		switch (node->nodeType()) {
@@ -101,13 +101,13 @@ namespace LL2W {
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
 				write(cast->result, cast->type);
-				const std::string *id = std::dynamic_pointer_cast<LocalValue>(cast->ptrValue)->name;
+				int id = parseLong(std::dynamic_pointer_cast<LocalValue>(cast->ptrValue)->name);
 				read.insert(parent.lock()->parent->getVariable(id, cast->ptrType));
-				for (const GetelementptrNode::Index &index: cast->indices) {
+				for (auto [width, value, minrange, pvar]: cast->indices) {
 					// Because we're assuming that these variables have already been defined earlier in the function,
 					// we can get them from the Function that contains this Instruction.
-					if (index.name != nullptr)
-						read.insert(parent.lock()->parent->getVariable(index.name));
+					if (pvar)
+						read.insert(parent.lock()->parent->getVariable(value));
 				}
 				break;
 			}

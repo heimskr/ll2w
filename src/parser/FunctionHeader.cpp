@@ -10,9 +10,9 @@
 // TODO: reduce duplication of GlobalVarDef code
 
 namespace LL2W {
-	FunctionHeader::FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv,
-	                               N _retattrs, N type, N function_name, N function_args, N unnamed_addr, N _fnattrs,
-	                               N _align, N _personality):
+	FunctionHeader::FunctionHeader(N _linkage, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
+	                               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _align,
+	                               N _personality):
 		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
 
@@ -25,15 +25,6 @@ namespace LL2W {
 				}
 			}
 			delete _linkage;
-		}
-
-		if (_preemption) {
-			if (*_preemption->lexerInfo == "dso_preemptable")
-				preemption = Preemption::DsoPreemptable;
-			else if (*_preemption->lexerInfo == "dso_local")
-				preemption = Preemption::DsoLocal;
-			else throw std::runtime_error("Invalid preemption: " + *_preemption->lexerInfo);
-			delete _preemption;
 		}
 
 		if (_visibility) {
