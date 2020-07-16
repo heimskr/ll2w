@@ -13,6 +13,7 @@ namespace LL2W {
 	enum class Linkage {
 		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
 		Common, Internal};
+	enum class Preemption {Default, DsoPreemptable, DsoLocal};
 	enum class Visibility {Default, Hidden, Protected};
 	enum class DllStorageClass {None, Import, Export};
 	enum class ThreadLocal {None, LocalDynamic, InitialExec, LocalExec};
@@ -47,6 +48,7 @@ namespace LL2W {
 	extern std::unordered_map<TypeType,   std::string> type_map;
 	extern std::unordered_map<ValueType,  std::string> value_map;
 	extern std::unordered_map<Linkage,    std::string> linkage_map;
+	extern std::unordered_map<Preemption, std::string> preemption_map;
 	extern std::unordered_map<CConv,      std::string> cconv_map;
 	extern std::unordered_map<RetAttr,    std::string> retattr_map;
 	extern std::unordered_map<ParAttr,    std::string> parattr_map;

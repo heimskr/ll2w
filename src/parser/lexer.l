@@ -232,6 +232,8 @@ FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 "sideeffect"				{ RTOKEN(SIDEEFFECT) }
 "inteldialect"				{ RTOKEN(INTELDIALECT) }
 "exact"						{ RTOKEN(EXACT) }
+"dso_local"					{ RTOKEN(DSO_LOCAL) }
+"dso_preemptable"			{ RTOKEN(DSO_PREEMPTABLE) }
 
 {IDENT}						{ RTOKEN(IDENT) }
 

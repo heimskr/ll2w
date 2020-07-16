@@ -11,13 +11,7 @@
 namespace LL2W::Passes {
 	void insertPrologue(Function &function) {
 		BasicBlockPtr front_block = function.blocks.front();
-		InstructionPtr first;
-		for (InstructionPtr &instruction: front_block->instructions) {
-			if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get())) {
-				first = instruction;
-				break;
-			}
-		}
+		InstructionPtr first = function.firstInstruction();
 
 		if (!first)
 			throw std::runtime_error("Couldn't find a non-label instruction in the initial block of " + *function.name);

@@ -21,6 +21,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
 #include "instruction/Comment.h"
+#include "instruction/Label.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "options.h"
@@ -286,6 +287,13 @@ namespace LL2W {
 
 		reindexInstructions();
 		return out;
+	}
+
+	std::shared_ptr<Instruction> Function::firstInstruction() {
+		for (InstructionPtr &instruction: blocks.front()->instructions)
+			if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get()))
+				return instruction;
+		return nullptr;
 	}
 
 	InstructionPtr Function::after(InstructionPtr instruction) {
@@ -692,15 +700,15 @@ namespace LL2W {
 		remove(substitute);
 	}
 
-	VariablePtr Function::getVariable(int label) {
+	VariablePtr Function::getVariable(const std::string *label) {
 		return variableStore.at(label);
 	}
 
 	VariablePtr Function::getVariable(const std::string &label) {
-		return getVariable(parseLong(label));
+		return variableStore.at(StringSet::intern(label));
 	}
 
-	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
+	VariablePtr Function::getVariable(const std::string *label, const TypePtr type, BasicBlockPtr definer) {
 		if (variableStore.count(label) == 0)
 			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
 		VariablePtr out = variableStore.at(label);
@@ -710,7 +718,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(const std::string &label, const TypePtr type, BasicBlockPtr definer) {
-		return getVariable(parseLong(label), type, definer);
+		return getVariable(StringSet::intern(label), type, definer);
 	}
 
 	BasicBlockPtr Function::getEntry() {

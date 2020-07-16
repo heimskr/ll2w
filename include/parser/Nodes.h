@@ -255,11 +255,17 @@ namespace LL2W {
 	};
 
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader {
+		struct Index {
+			int width;
+			int index;
+			bool hasMinrange;
+			const std::string *name;
+		};
+
 		bool inbounds = false;
 		TypePtr type = nullptr, ptrType = nullptr;
 		ValuePtr ptrValue;
-		// width, value/index, has minrange, is pvar
-		std::vector<std::tuple<int, int, bool, bool>> indices;
+		std::vector<Index> indices;
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,
 		                  ASTNode *indices_, ASTNode *unibangs);

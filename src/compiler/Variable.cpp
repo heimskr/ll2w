@@ -8,7 +8,7 @@
 #include "options.h"
 
 namespace LL2W {
-	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
+	Variable::Variable(const std::string *id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
 	const WeakSet<BasicBlock> &using_blocks):
 		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
@@ -54,9 +54,9 @@ namespace LL2W {
 		std::stringstream out;
 		const std::string base;
 		if (reg == -1)
-			out << "\e[32m%" << id << "\e[39m";
+			out << "\e[32m%" << *id << "\e[39m";
 		else
-			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << id << "\e[39;22m";
+			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << *id << "\e[39;22m";
 #ifdef VARIABLE_EXTRA
 		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
 		if (!alias_set.empty()) {
@@ -64,7 +64,7 @@ namespace LL2W {
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
 				if (iter != begin)
 					out << ",";
-				out << (*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
+				out << *(*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
 			}
 			out << "]\e[22m";
 		}
@@ -80,8 +80,8 @@ namespace LL2W {
 
 	std::string Variable::plainString() const {
 		if (reg == -1)
-			return "%" + std::to_string(id);
-		return "$" + WhyInfo::registerName(reg) + ":" + std::to_string(id);
+			return "%" + *id;
+		return "$" + WhyInfo::registerName(reg) + ":" + *id;
 	}
 
 	void Variable::makeAliasOf(Variable &new_parent) {
@@ -235,7 +235,7 @@ namespace LL2W {
 		} \
 	}
 
-	VARSETTER(ID, int, new_id, id)
+	VARSETTER(ID, const std::string *, new_id, id)
 	VARSETTER(DefiningBlocks, const decltype(Variable::definingBlocks) &, block, definingBlocks)
 	VARSETTER(Definitions, const decltype(Variable::definitions) &, defs, definitions)
 	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)

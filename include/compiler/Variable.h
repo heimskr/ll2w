@@ -22,7 +22,7 @@ namespace LL2W {
 			std::optional<int> spillCost_;
 
 		public:
-			int id;
+			const std::string *id;
 			TypePtr type = nullptr;
 			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
 			WeakSet<Instruction> definitions, uses;
@@ -32,7 +32,7 @@ namespace LL2W {
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(int id_, TypePtr type_ = nullptr,
+			Variable(const std::string *id_, TypePtr type_ = nullptr,
 			         const WeakSet<BasicBlock> &defining_blocks = {}, const WeakSet<BasicBlock> &using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
@@ -63,7 +63,7 @@ namespace LL2W {
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
 
-			void setID(int);
+			void setID(const std::string *);
 			void setType(TypePtr);
 			void setDefiningBlocks(const decltype(definingBlocks) &);
 			void setDefinitions(const decltype(definitions) &);

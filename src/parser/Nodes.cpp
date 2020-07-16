@@ -767,7 +767,7 @@ namespace LL2W {
 				comma->at(0)->atoi(1),
 				comma->at(1)->atoi(),
 				comma->size() == 3,
-				comma->at(1)->symbol == TOK_PVAR});
+				comma->at(1)->symbol == TOK_PVAR? comma->at(1)->lexerInfo : nullptr});
 		}
 
 		delete pvar;
