@@ -3,6 +3,7 @@
 #include <thread>
 
 // #define COMPILE_MULTITHREADED
+#define HIDE_PRINTS
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"
@@ -78,8 +79,12 @@ namespace LL2W {
 		out << "\n#code\n\n";
 		if (functions.count("@main") == 1)
 			out << ":: main\n<halt>\n\n";
-		for (std::pair<const std::string, Function> &pair: functions)
+		for (std::pair<const std::string, Function> &pair: functions) {
+#ifdef HIDE_PRINTS
+			if (pair.first != "@prc" && pair.first != "@prd" && pair.first != "@strprint")
+#endif
 			out << pair.second.toString() << "\n";
+		}
 		return out.str();
 	}
 
