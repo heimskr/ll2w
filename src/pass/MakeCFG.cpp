@@ -45,8 +45,6 @@ namespace LL2W::Passes {
 		function.dTree->name = "DTree";
 		function.djGraph.emplace(function.cfg, function.cfg[0]);
 		function.djGraph->name = "DJ Graph";
-		function.mergeSets = function.djGraph->mergeSets((*function.djGraph)[0], (*function.djGraph)["exit"]);
-		function.computeSuccMergeSets();
 		walkCFG(function, 1000, 0, 1000);
 		return function.cfg;
 	}

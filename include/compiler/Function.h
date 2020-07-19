@@ -44,12 +44,6 @@ namespace LL2W {
 			/** Whether the function has been compiled yet. */
 			bool compiled = false;
 
-			/** Whether liveness analysis has been performed on the function's variables yet. */
-			bool livenessComputed = false;
-
-			/** Maps nodes to their successor merge sets. */
-			Node::Map succMergeSets;
-
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
 
@@ -105,9 +99,6 @@ namespace LL2W {
 			/** The dominator tree computed from the control-flow graph with J-edges included. */
 			std::optional<DJGraph> djGraph;
 
-			/** Maps nodes to their merge sets. */
-			Node::Map mergeSets;
-
 			/** The number of random walks that have been performed on the control flow graph. */
 			int walkCount = 0;
 
@@ -121,9 +112,6 @@ namespace LL2W {
 
 			/** Copies use/definition information from the BasicBlocks into the Variables. */
 			void extractVariables(bool reset = false);
-
-			/** Computes a given node's merge set. */
-			void computeSuccMergeSet(Node *);
 
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
@@ -197,9 +185,6 @@ namespace LL2W {
 			/** Transforms a string like "%64" into "__functionname_label64". */
 			std::string transformLabel(const std::string &) const;
 
-			/** Computes the merge sets for all nodes in the CFG. */
-			void computeSuccMergeSets();
-
 			/** Sets the pvar names in all instructions to those of the connected variables. */
 			void updateInstructionNodes();
 
@@ -271,9 +256,6 @@ namespace LL2W {
 
 			/** Prints debug information about the function. */
 			void debug();
-
-			/** Prints debug information about the merge sets. */
-			void debugMergeSets() const;
 
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;

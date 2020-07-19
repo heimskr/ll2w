@@ -13,7 +13,6 @@
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
-// #define DEBUG_MERGE
 // #define DEBUG_ESTIMATIONS
 
 #include "compiler/Function.h"
@@ -157,17 +156,6 @@ namespace LL2W {
 				pair.second->addDefiner(blocks.front());
 				blocks.front()->written.insert(pair.second);
 			}
-		}
-	}
-
-	void Function::computeSuccMergeSet(Node *node) {
-		auto &ms = succMergeSets[node];
-		for (Node *succ: node->out()) {
-			ms.insert(succ);
-			for (Node *m: mergeSets.at(succ))
-				ms.insert(m);
-			if (succMergeSets.count(succ) == 0)
-				computeSuccMergeSet(succ);
 		}
 	}
 
@@ -531,11 +519,6 @@ namespace LL2W {
 		return "__" + name->substr(1) + "_label" + (str.front() == '%'? str.substr(1) : str);
 	}
 
-	void Function::computeSuccMergeSets() {
-		succMergeSets.clear();
-		computeSuccMergeSet(&djGraph.value()[*getEntry()->node]);
-	}
-
 	void Function::updateInstructionNodes() {
 		for (InstructionPtr &instruction: linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
@@ -793,8 +776,6 @@ namespace LL2W {
 			block->liveIn.clear();
 			block->liveOut.clear();
 		}
-
-		livenessComputed = false;
 	}
 
 	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
@@ -931,9 +912,6 @@ namespace LL2W {
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
 		std::cerr << "\e[94m}\e[39m\n\n";
 #endif
-#ifdef DEBUG_MERGE
-		debugMergeSets();
-#endif
 #ifdef DEBUG_RENDER
 		std::cerr << "Rendering.\n";
 #ifdef DEBUG_ESTIMATIONS
@@ -952,18 +930,6 @@ namespace LL2W {
 		if (djGraph.has_value())
 			djGraph->renderTo("graph_DJ_" + *name + ".png");
 #endif
-	}
-
-	void Function::debugMergeSets() const {
-		for (const Node::Map &map: {mergeSets, succMergeSets}) {
-			std::cerr << "────────────────────────────────\n";
-			for (const std::pair<Node * const, Node::Set> &pair: map) {
-				std::cerr << pair.first->label() << ":";
-				for (Node *node: pair.second)
-					std::cerr << " " << node->label();
-				std::cerr << "\n";
-			}
-		}
 	}
 
 	void Function::debugStack() const {
