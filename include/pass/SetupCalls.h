@@ -10,7 +10,7 @@ namespace LL2W::Passes {
 	void setupCalls(Function &);
 
 	/** Pushes a value to the stack before a call instruction. */
-	void pushCallValue(Function &, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
+	void pushCallValue(Function &, std::shared_ptr<Instruction>, std::shared_ptr<Constant>, bool sized);
 
 	/** Inserts a value into a precolored variable before a call instruction. */
 	void setupCallValue(Function &, std::shared_ptr<Variable>, std::shared_ptr<Instruction>, std::shared_ptr<Constant>);
