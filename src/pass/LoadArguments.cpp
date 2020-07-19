@@ -7,27 +7,40 @@
 namespace LL2W::Passes {
 	void loadArguments(Function &function) {
 		CallingConvention cconv = function.getCallingConvention();
-		if (cconv == CallingConvention::StackOnly) {
-			error() << "LoadArguments failed for \e[1m" << *function.name << "\e[22m.\n";
+		// if (cconv == CallingConvention::StackOnly) {
+		// 	error() << "LoadArguments failed for \e[1m" << *function.name << "\e[22m.\n";
 			// throw std::runtime_error("loadArguments is currently unimplemented for StackOnly functions.");
-		} else if (cconv == CallingConvention::Reg16) {
+
+		// } else if (cconv == CallingConvention::Reg16) {
+		if (cconv == CallingConvention::Reg16 || cconv == CallingConvention::StackOnly) {
 			const int arity = function.getArity();
-			if (arity <= WhyInfo::argumentCount)
+			const int min = cconv == CallingConvention::Reg16? WhyInfo::argumentCount : 0;
+			if (arity <= min)
 				return;
 
 			BasicBlockPtr entry = function.getEntry();
 			std::shared_ptr<LoadRInstruction> first_load;
-			for (int arg = arity - 1; WhyInfo::argumentCount <= arg; --arg) {
-				const FunctionArgument &fn_arg = function.arguments->at(arg - WhyInfo::argumentCount);
+			for (int arg = arity - 1; min <= arg; --arg) {
+				const FunctionArgument &fn_arg = function.arguments->at(arg - min);
 				VariablePtr arg_var = function.getVariable(arg, fn_arg.type, entry);
 				VariablePtr m0 = function.makeAssemblerVariable(0, entry);
 				VariablePtr sp = function.sp(entry);
 
-				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ].
+				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ] (if Reg16)
+				//                         or [ argN-1 | ... | arg0  | $rt | $fp | var1 | var2 | ... ] (if StackOnly).
 				// The stack pointer will be pointing right after where the frame pointer was pushed.
 				// We need to skip over the arguments after this one, in addition to the return address and frame
 				// pointer.
-				const int to_skip = 16 + 8 * (arg - WhyInfo::argumentCount + 1); // in bytes
+				int to_skip; // in bytes
+				if (cconv == CallingConvention::Reg16) {
+					// With Reg16, arguments are pushed with spacious (8-byte) stack pushes.
+					to_skip = 16 + 8 * (arg - min + 1);
+				} else {
+					// With StackOnly, arguments are pushed with packed (variable-width) stack pushes.
+					to_skip = 16;
+					for (int i = 0; i <= arg; ++i)
+						to_skip += function.arguments->at(i).type->width() / 8;
+				}
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, m0);
 				auto load = std::make_shared<LoadRInstruction>(m0, arg_var, arg_var->type->width() / 8);

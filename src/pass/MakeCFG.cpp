@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 		function.dTree->name = "DTree";
 		function.djGraph.emplace(function.cfg, function.cfg[0]);
 		function.djGraph->name = "DJ Graph";
-		walkCFG(function, 1000, 0, 1000);
+		// walkCFG(function, 1000, 0, 1000);
 		return function.cfg;
 	}
 

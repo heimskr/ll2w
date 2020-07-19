@@ -105,6 +105,9 @@ namespace LL2W {
 			/** The number of bytes reserved on the stack for variables and spills. */
 			int stackSize = 0;
 
+			/** The number of bytes pushed to the stack when InsertPrologue saves registers. */
+			int initialPushedBytes = -1;
+
 			Function(Program &, const ASTNode &);
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */

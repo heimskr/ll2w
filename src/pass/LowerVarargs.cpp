@@ -4,6 +4,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/StoreRInstruction.h"
 #include "parser/Nodes.h"
 #include "pass/LowerVarargs.h"
 
@@ -28,7 +29,9 @@ namespace LL2W::Passes {
 							// Surely no one would be silly enough to use a global variable with va_start, right?
 							throw std::runtime_error("Expected argument of llvm.va_start to be a local variable");
 						VariablePtr var = dynamic_cast<LocalValue *>(call->constants[0]->value.get())->variable;
-						function.insertBefore(instruction, std::make_shared<MoveInstruction>(m2, var));
+						// function.insertBefore(instruction, std::make_shared<MoveInstruction>(m2, var));
+						function.insertBefore(instruction,
+							std::make_shared<StoreRInstruction>(m2, var, var->type->width() / 8));
 						any_changed = true;
 						iter = ++iter;
 						function.remove(instruction);
