@@ -139,7 +139,7 @@ namespace LL2W {
 			bool spill(VariablePtr);
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
-			std::shared_ptr<Instruction> firstInstruction();
+			std::shared_ptr<Instruction> firstInstruction(bool includeComments = false);
 
 			/** Returns a pointer to the instruction following a given instruction. */
 			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);

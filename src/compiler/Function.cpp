@@ -50,6 +50,7 @@
 #include "pass/LowerStackrestore.h"
 #include "pass/LowerStacksave.h"
 #include "pass/LowerSwitch.h"
+#include "pass/LowerVarargs.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
@@ -289,10 +290,16 @@ namespace LL2W {
 		return out;
 	}
 
-	std::shared_ptr<Instruction> Function::firstInstruction() {
-		for (InstructionPtr &instruction: blocks.front()->instructions)
-			if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get()))
-				return instruction;
+	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
+		if (includeComments) {
+			for (InstructionPtr &instruction: blocks.front()->instructions)
+				if (!dynamic_cast<Label *>(instruction.get()))
+					return instruction;
+		} else {
+			for (InstructionPtr &instruction: blocks.front()->instructions)
+				if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get()))
+					return instruction;
+		}
 		return nullptr;
 	}
 
@@ -589,6 +596,7 @@ namespace LL2W {
 		extractVariables();
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
+		Passes::lowerVarargsFirst(*this);
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
 		for (BasicBlockPtr &block: blocks)
@@ -618,6 +626,7 @@ namespace LL2W {
 		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
 		Passes::lowerRet(*this);
+		Passes::lowerVarargsSecond(*this);
 
 #ifdef DEBUG_SPILL
 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";

@@ -92,6 +92,13 @@ namespace LL2W::Passes {
 			for (i = (ellipsis? call->constants.size() : arg_count) - 1; reg_max <= i; --i)
 				pushCallValue(function, instruction, call->constants[i]);
 
+			VariablePtr m2;
+
+			if (function.isVariadic()) {
+				m2 = function.makeAssemblerVariable(2, instruction->parent.lock());
+				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2));
+			}
+
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
@@ -112,6 +119,9 @@ namespace LL2W::Passes {
 				auto sub = std::make_shared<AddIInstruction>(sp, 8 * (arg_count - reg_max), sp);
 				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer");
 			}
+
+			if (function.isVariadic())
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2));
 
 			// Pop the argument registers from the stack.
 			for (i = std::min(15, function.getArity() - 1); 0 <= i; --i) {

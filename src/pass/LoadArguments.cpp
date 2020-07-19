@@ -20,7 +20,7 @@ namespace LL2W::Passes {
 			for (int arg = arity - 1; WhyInfo::argumentCount <= arg; --arg) {
 				const FunctionArgument &fn_arg = function.arguments->at(arg - WhyInfo::argumentCount);
 				VariablePtr arg_var = function.getVariable(arg, fn_arg.type, entry);
-				VariablePtr temp_var = function.makeAssemblerVariable(0, entry);
+				VariablePtr m0 = function.makeAssemblerVariable(0, entry);
 				VariablePtr sp = function.sp(entry);
 
 				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ].
@@ -29,8 +29,8 @@ namespace LL2W::Passes {
 				// pointer.
 				const int to_skip = 16 + 8 * (arg - WhyInfo::argumentCount + 1); // in bytes
 
-				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, temp_var);
-				auto load = std::make_shared<LoadRInstruction>(temp_var, arg_var, arg_var->type->width() / 8);
+				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, m0);
+				auto load = std::make_shared<LoadRInstruction>(m0, arg_var, arg_var->type->width() / 8);
 				if (!first_load)
 					first_load = load;
 
