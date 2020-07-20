@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "compiler/ExtractionResult.h"
+#include "instruction/InstructionMeta.h"
 
 namespace LL2W {
 	class BasicBlock;
@@ -18,9 +19,13 @@ namespace LL2W {
 
 		public:
 			std::weak_ptr<BasicBlock> parent;
+
 			std::unordered_set<std::shared_ptr<Variable>> read, written;
+
 			/** The order of the instruction within the entire function in its linearized representation. */
 			int index;
+
+			std::unordered_set<InstructionMeta> meta;
 
 			virtual ~Instruction();
 

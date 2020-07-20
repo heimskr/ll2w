@@ -8,6 +8,8 @@ namespace LL2W {
 namespace LL2W::Passes {
 	/** Inserts instructions to load arguments from the stack as necessary. */
 	void loadArguments(Function &);
+
+	void loadArgumentsReadjust(Function &);
 }
 
 #endif

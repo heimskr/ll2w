@@ -608,6 +608,7 @@ namespace LL2W {
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		Passes::insertPrologue(*this);
+		Passes::loadArgumentsReadjust(*this);
 		Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
 

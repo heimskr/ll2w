@@ -22,6 +22,7 @@ namespace LL2W::Passes {
 		VariablePtr sp = function.sp(front_block);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false);
 		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false);
+		function.initialPushedBytes = 16;
 
 		// Next, we need to push any variables that are written to.
 		std::set<int> written;
@@ -37,6 +38,7 @@ namespace LL2W::Passes {
 			function.savedRegisters.push_back(reg);
 			VariablePtr variable = function.makePrecoloredVariable(reg, front_block);
 			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false);
+			function.initialPushedBytes += 8;
 		}
 
 		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false);

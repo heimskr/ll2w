@@ -34,15 +34,16 @@ namespace LL2W::Passes {
 				int to_skip; // in bytes
 				if (cconv == CallingConvention::Reg16) {
 					// With Reg16, arguments are pushed with spacious (8-byte) stack pushes.
-					to_skip = 16 + 8 * (arg - min + 1);
+					to_skip = 8 * (arg - min + 1);
 				} else {
 					// With StackOnly, arguments are pushed with packed (variable-width) stack pushes.
-					to_skip = 16;
-					for (int i = 0; i <= arg; ++i)
+					to_skip = 0;
+					for (int i = 0; i < arg; ++i)
 						to_skip += function.arguments->at(i).type->width() / 8;
 				}
 
 				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, m0);
+				add->meta.insert(InstructionMeta::LoadArgumentsSkip);
 				auto load = std::make_shared<LoadRInstruction>(m0, arg_var, arg_var->type->width() / 8);
 				if (!first_load)
 					first_load = load;
@@ -56,5 +57,14 @@ namespace LL2W::Passes {
 			function.splitBlock(entry, first_load);
 			function.removeUselessBranch(entry);
 		} else throw std::invalid_argument("Invalid calling convention: " + std::to_string(static_cast<int>(cconv)));
+	}
+
+	void loadArgumentsReadjust(Function &function) {
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			if (instruction->meta.count(InstructionMeta::LoadArgumentsSkip) != 0) {
+				dynamic_cast<IType<int> *>(instruction.get())->imm += function.initialPushedBytes;
+				function.comment(instruction, "Increased by " + std::to_string(function.initialPushedBytes) + " bytes");
+			}
+		}
 	}
 }
