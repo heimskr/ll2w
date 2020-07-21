@@ -3,6 +3,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "instruction/AddIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/StoreRInstruction.h"
 #include "parser/Nodes.h"
@@ -53,9 +54,15 @@ namespace LL2W::Passes {
 	void lowerVarargsSecond(Function &function) {
 		if (!function.isVariadic())
 			return;
-		//At the beginning of each function, copy $sp into $m2.
+		// At the beginning of each function, copy the stack pointer plus the combined size of all the non-variadic
+		// arguments into $m2.
 		InstructionPtr first = function.firstInstruction(true);
-		auto m2 = function.makeAssemblerVariable(2, function.getEntry());
-		function.insertBefore(first, std::make_shared<MoveInstruction>(function.sp(function.getEntry()), m2));
+		BasicBlockPtr entry = function.getEntry();
+		auto sp = function.sp(entry);
+		auto m2 = function.makeAssemblerVariable(2, entry);
+		int skip = 0;
+		for (FunctionArgument &argument: *function.arguments)
+			skip += argument.type->width() / 8;
+		function.insertBefore(first, std::make_shared<AddIInstruction>(sp, skip, m2));
 	}
 }
