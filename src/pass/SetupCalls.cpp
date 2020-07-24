@@ -92,12 +92,11 @@ namespace LL2W::Passes {
 			// Push variables onto the stack, right to left.
 			if (ellipsis) {
 				for (i = call->constants.size() - 1; 0 <= i; --i)
-					pushCallValue(function, instruction, call->constants[i], true);
+					pushCallValue(function, instruction, call->constants[i]);
 			} else {
 				for (i = arg_count - 1; reg_max <= i; --i)
-					pushCallValue(function, instruction, call->constants[i], false);
+					pushCallValue(function, instruction, call->constants[i]);
 			}
-
 
 			VariablePtr m2;
 
@@ -154,38 +153,37 @@ namespace LL2W::Passes {
 		function.extractVariables();
 	}
 
-	void pushCallValue(Function &function, InstructionPtr instruction, ConstantPtr constant, bool sized) {
+	void pushCallValue(Function &function, InstructionPtr instruction, ConstantPtr constant) {
+		// I produce LLVM IR from C code for the mips64el-linux-gnu target, as it's seemingly the most similar to WhySA.
+		// Stack parameters are passed on a 64-bit boundary (https://gcc.gnu.org/projects/mipso64-abi.html), and this
+		// function has to adhere to that requirement to satisfy the assumptions that LLVM makes.
+
+		const int size = 8;
 		ValueType value_type = constant->value->valueType();
+
 		if (value_type == ValueType::Local) {
+			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			if (sized)
-				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable));
-			else
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(local->variable));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable, size, -1));
 		} else if (value_type == ValueType::Int) {
+			// Integer-like values
 			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
-			if (sized)
-				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var));
-			else
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
 		} else if (value_type == ValueType::Bool) {
+			// Booleans
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-			if (sized)
-				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var));
-			else
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
 		} else if (value_type == ValueType::Null) {
+			// Null values
 			VariablePtr new_var = function.newVariable(constant->type);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
-			if (sized)
-				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var));
-			else
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
 		} else if (value_type == ValueType::Getelementptr) {
+			// Getelementptr expressions
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 			if (!gep_global) {
@@ -203,13 +201,10 @@ namespace LL2W::Passes {
 					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 					function.insertAfter(setsym, addi);
 				}
-				if (sized)
-					function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var));
-				else
-					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(new_var));
+				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
 			}
 		} else if (constant->conversionSource) {
-			pushCallValue(function, instruction, constant->conversionSource, sized);
+			pushCallValue(function, instruction, constant->conversionSource);
 		} else {
 			std::cout << "Not sure what to do with " << *constant << "\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
