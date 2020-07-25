@@ -14,6 +14,7 @@
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
 #define DEBUG_ESTIMATIONS
+#define STRICT_READ_CHECK
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -201,6 +202,10 @@ namespace LL2W {
 
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
+			// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
+			// definition here.
+			if (definition->isPhi())
+				continue;
 #ifdef DEBUG_SPILL
 			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
 			          << definition->index << ")\n";
@@ -238,17 +243,24 @@ namespace LL2W {
 				          << "\n";
 #endif
 			}
-
 		}
 
 		debug();
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
+#ifdef STRICT_READ_CHECK
 			if (std::shared_ptr<Variable> read = instruction->doesRead(variable)) {
+#else
+			if (instruction->read.count(variable) != 0) {
+#endif
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
 				const std::string old_extra = instruction->debugExtra();
-				bool replaced = instruction->replaceRead(read, new_var);
+#ifdef STRICT_READ_CHECK
+				const bool replaced = instruction->replaceRead(read, new_var);
+#else
+				const bool replaced = instruction->replaceRead(variable, new_var);
+#endif
 #ifdef DEBUG_SPILL
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
@@ -258,7 +270,11 @@ namespace LL2W {
 				std::cerr << "\n";
 #endif
 				if (replaced) {
+#ifdef STRICT_READ_CHECK
 					instruction->read.erase(read);
+#else
+					instruction->read.erase(variable);
+#endif
 					instruction->read.insert(new_var);
 					auto load = std::make_shared<StackLoadInstruction>(new_var, location, -1);
 					insertBefore(instruction, load, "Spill: stack load: location=" + std::to_string(location.offset));
@@ -270,7 +286,7 @@ namespace LL2W {
 #endif
 				} else {
 #ifdef DEBUG_SPILL
-				std::cerr << "      Removing variable " << *new_var << "\n";
+					std::cerr << "      Removing variable " << *new_var << "\n";
 #endif
 					variableStore.erase(new_var->id);
 				}

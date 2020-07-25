@@ -27,15 +27,12 @@ namespace LL2W::Passes {
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 			} catch (const UncolorableError &err) {
 				std::cerr << "Coloring failed.\n";
-				// VariablePtr to_spill = selectLowestSpillCost(function, tried);
-				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+				VariablePtr to_spill = selectLowestSpillCost(function, tried);
+				// VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
 				if (!to_spill) {
 #ifdef DEBUG_COLORING
 					std::cerr << "to_spill is null!\n";
 #endif
-					// interference.renderTo("interference_failed.png");
-					// tried.clear();
-					// continue;
 					std::terminate();
 				}
 #ifdef DEBUG_COLORING

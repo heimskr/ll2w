@@ -50,8 +50,9 @@ namespace LL2W::Passes {
 		if (type2 == ValueType::Local) {
 			VariablePtr rt = dynamic_cast<LocalValue *>(value2.get())->variable;
 			if (cond == IcmpCond::Ne) {
-				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, IcmpCond::Eq));
-				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(rd));
+				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
+				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, m3, IcmpCond::Eq));
+				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3));
 			} else {
 				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, cond));
 			}
@@ -64,8 +65,9 @@ namespace LL2W::Passes {
 			} else throw std::runtime_error("Unsupported value type in icmp instruction: " + value_map.at(type2));
 
 			if (cond == IcmpCond::Ne) {
-				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, IcmpCond::Eq));
-				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(rd));
+				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
+				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, m3, IcmpCond::Eq));
+				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd));
 			} else {
 				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, cond));
 			}
