@@ -52,6 +52,8 @@ namespace LL2W {
 			virtual bool maySpill() const { return true; }
 
 			virtual bool isPhi() const { return false; }
+
+			virtual std::shared_ptr<Variable> doesRead(std::shared_ptr<Variable>) const;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

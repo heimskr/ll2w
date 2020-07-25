@@ -245,10 +245,10 @@ namespace LL2W {
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
-			if (instruction->read.count(variable) != 0) {
+			if (std::shared_ptr<Variable> read = instruction->doesRead(variable)) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
 				const std::string old_extra = instruction->debugExtra();
-				bool replaced = instruction->replaceRead(variable, new_var);
+				bool replaced = instruction->replaceRead(read, new_var);
 #ifdef DEBUG_SPILL
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
@@ -258,7 +258,7 @@ namespace LL2W {
 				std::cerr << "\n";
 #endif
 				if (replaced) {
-					instruction->read.erase(variable);
+					instruction->read.erase(read);
 					instruction->read.insert(new_var);
 					auto load = std::make_shared<StackLoadInstruction>(new_var, location, -1);
 					insertBefore(instruction, load, "Spill: stack load: location=" + std::to_string(location.offset));

@@ -21,9 +21,6 @@ namespace LL2W::Passes {
 		Graph interference;
 		function.precolorArguments();
 		while (true) {
-			function.extractVariables(false);
-			function.resetLiveness();
-			function.computeLiveness();
 			makeInterferenceGraph(function, interference);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
@@ -62,8 +59,8 @@ namespace LL2W::Passes {
 							block->extract();
 						Passes::makeCFG(function);
 						function.extractVariables(true);
-						// function.resetLiveness();
-						// function.computeLiveness();
+						function.resetLiveness();
+						function.computeLiveness();
 					}
 #ifdef DEBUG_COLORING
 					else std::cerr << "No blocks were split.\n";
