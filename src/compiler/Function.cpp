@@ -6,14 +6,14 @@
 
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
-// #define DEBUG_ESTIMATIONS
+#define DEBUG_ESTIMATIONS
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -226,6 +226,7 @@ namespace LL2W {
 
 			if (should_insert) {
 				insertAfter(definition, store, "Spill: stack store");
+				store->extract();
 				out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
@@ -246,17 +247,22 @@ namespace LL2W {
 			InstructionPtr &instruction = *iter;
 			if (instruction->read.count(variable) != 0) {
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
+				const std::string old_extra = instruction->debugExtra();
 				bool replaced = instruction->replaceRead(variable, new_var);
 #ifdef DEBUG_SPILL
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
-				          << " in " << instruction->debugExtra() << "\n";
+				          << " in " << old_extra;
+				if (replaced)
+					std::cerr << " (now " << instruction->debugExtra() << ")";
+				std::cerr << "\n";
 #endif
 				if (replaced) {
 					instruction->read.erase(variable);
 					instruction->read.insert(new_var);
 					auto load = std::make_shared<StackLoadInstruction>(new_var, location, -1);
 					insertBefore(instruction, load, "Spill: stack load: location=" + std::to_string(location.offset));
+					load->extract();
 					out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "

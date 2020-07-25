@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <fstream>
 #include <optional>
 
 #include "compiler/Function.h"
@@ -9,27 +11,41 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-// #define DEBUG_COLORING
+#define DEBUG_COLORING
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
 		int spill_count = 0;
 		std::unordered_set<int> tried;
+		std::unordered_set<Node *> tried_nodes;
 		Graph interference;
 		function.precolorArguments();
 		while (true) {
+			function.extractVariables(false);
+			function.resetLiveness();
+			function.computeLiveness();
 			makeInterferenceGraph(function, interference);
 			try {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 			} catch (const UncolorableError &err) {
-				VariablePtr to_spill = selectLowestSpillCost(function, tried);
-				if (!to_spill)
+				std::cerr << "Coloring failed.\n";
+				// VariablePtr to_spill = selectLowestSpillCost(function, tried);
+				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+				if (!to_spill) {
+#ifdef DEBUG_COLORING
+					std::cerr << "to_spill is null!\n";
+#endif
+					// interference.renderTo("interference_failed.png");
+					// tried.clear();
+					// continue;
 					std::terminate();
+				}
 #ifdef DEBUG_COLORING
 				std::cerr << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
 #endif
 				tried.insert(to_spill->id);
+				tried_nodes.insert(&interference[std::to_string(to_spill->id)]);
 				function.addToStack(to_spill, StackLocation::Purpose::Spill);
 				if (function.spill(to_spill)) {
 #ifdef DEBUG_COLORING
@@ -46,15 +62,15 @@ namespace LL2W::Passes {
 							block->extract();
 						Passes::makeCFG(function);
 						function.extractVariables(true);
-						function.resetLiveness();
-						function.computeLiveness();
+						// function.resetLiveness();
+						// function.computeLiveness();
 					}
 #ifdef DEBUG_COLORING
 					else std::cerr << "No blocks were split.\n";
 #endif
 				}
 #ifdef DEBUG_COLORING
-				else std::cerr << "Not spilled.\n";
+				else std::cerr << *to_spill << " wasn't spilled.\n";
 #endif
 				continue;
 			}
@@ -75,6 +91,20 @@ namespace LL2W::Passes {
 		return spill_count;
 	}
 
+	VariablePtr selectHighestDegree(Graph &interference, const std::unordered_set<Node *> &avoid) {
+		Node *highest_node;
+		int highest = -1;
+		for (Node *node: interference.nodes()) {
+			const int degree = node->degree();
+			if (highest < degree && avoid.count(node) == 0) {
+				highest_node = node;
+				highest = degree;
+			}
+		}
+
+		return highest_node->get<VariablePtr>();
+	}
+
 	VariablePtr selectLowestSpillCost(Function &function, const std::unordered_set<int> &avoid) {
 		VariablePtr ptr;
 		int lowest = -1;
@@ -85,6 +115,7 @@ namespace LL2W::Passes {
 			var->clearSpillCost();
 			const int cost = var->spillCost();
 			if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
+			// if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest))) {
 				lowest = cost;
 				ptr = var;
 			}
@@ -92,6 +123,8 @@ namespace LL2W::Passes {
 
 		return ptr;
 	}
+
+#undef DEBUG_COLORING
 
 	void makeInterferenceGraph(Function &function, Graph &graph) {
 		graph.clear();

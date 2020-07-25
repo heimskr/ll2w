@@ -122,7 +122,11 @@ namespace LL2W {
 	size_t Node::degree() const {
 		size_t deg = 0;
 		for (Node *neighbor: out_) {
-			if (in_.count(neighbor) == 1)
+			(void) neighbor;
+			++deg;
+		}
+		for (Node *neighbor: in_) {
+			if (out_.count(neighbor) == 0)
 				++deg;
 		}
 		return deg;

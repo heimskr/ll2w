@@ -344,6 +344,7 @@ namespace LL2W {
 	std::string Graph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes_) {
+			node->rename("\"" + node->label() + "_i" + std::to_string(node->in().size()) + "_o" + std::to_string(node->out().size()) + "\"");
 			if (node->reflexive())
 				reflexives.push_back(node);
 		}

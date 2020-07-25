@@ -94,7 +94,7 @@ namespace LL2W {
 			bool canReach(Node &);
 			void clearReachability();
 
-			/** Returns the number of bidirectional edges connected to this node. */
+			/** Returns the number of edges connected to this node. */
 			size_t degree() const;
 
 			/** If the node has only one inward edge, this function returns the other node. Otherwise, it throws an
