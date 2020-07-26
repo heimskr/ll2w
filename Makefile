@@ -1,4 +1,4 @@
-COMPILER		?= clang++
+COMPILER		?= g++-9
 DEBUGGER		?= lldb
 OPTIMIZATION	?= -O0 -g
 STANDARD		?= c++2a

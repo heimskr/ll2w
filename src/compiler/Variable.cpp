@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "compiler/BasicBlock.h"
+#include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
 #include "options.h"
@@ -248,14 +249,18 @@ namespace LL2W {
 	}
 
 	void Variable::debug() {
-		std::cerr << *this << "\n";
+		std::cerr << "Debug information for " << *this << " in function \e[1m";
+		if (!definingBlocks.empty()) {
+			std::cerr << *definingBlocks.begin()->lock()->parent->name;
+		} else std::cerr << "???";
+		std::cerr << "\e[22m:\n";
 		std::cerr << "   Defining blocks:";
 		for (const std::weak_ptr<BasicBlock> &block: definingBlocks)
-			std::cerr << " %" << block.lock()->label;
+			std::cerr << " %" << *block.lock()->label;
 		std::cerr << "\n";
 		std::cerr << "   Using blocks:";
 		for (const std::weak_ptr<BasicBlock> &block: usingBlocks)
-			std::cerr << " %" << block.lock()->label;
+			std::cerr << " %" << *block.lock()->label;
 		std::cerr << "\n";
 		std::cerr << "   Last use: ";
 		if (InstructionPtr last_use = lastUse.lock())

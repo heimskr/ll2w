@@ -12,6 +12,7 @@
 #include "util/Util.h"
 
 #define DEBUG_COLORING
+#define CONSTRUCT_BY_BLOCK
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
@@ -34,8 +35,8 @@ namespace LL2W::Passes {
 
 				}
 
-				// VariablePtr to_spill = selectLowestSpillCost(function, tried);
-				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+				VariablePtr to_spill = selectLowestSpillCost(function, tried);
+				// VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
 				if (!to_spill) {
 #ifdef DEBUG_COLORING
 					std::cerr << "to_spill is null!\n";
@@ -129,6 +130,7 @@ namespace LL2W::Passes {
 
 	void makeInterferenceGraph(Function &function, Graph &graph) {
 		graph.clear();
+		size_t links = 0;
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
 #ifdef DEBUG_COLORING
@@ -150,6 +152,7 @@ namespace LL2W::Passes {
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore)
 			labels.push_back(pair.first);
 
+#ifndef CONSTRUCT_BY_BLOCK
 		std::map<int, std::unordered_set<int>> live;
 
 		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
@@ -195,14 +198,67 @@ namespace LL2W::Passes {
 
 		if (1 < labels.size()) {
 			const size_t size = labels.size();
+			std::cerr << "Label count: " << size << "\n";
+			size_t checks = 0;
 			for (size_t i = 0; i < size - 1; ++i) {
 				for (size_t j = i + 1; j < size; ++j) {
 					VariablePtr left  = function.variableStore.at(labels[i]),
 					            right = function.variableStore.at(labels[j]);
-					if (left->id != right->id && hasOverlap(live[left->id], live[right->id]))
+					if (left->id != right->id && hasOverlap(live[left->id], live[right->id])) {
 						graph.link(std::to_string(left->id), std::to_string(right->id), true);
+						++links;
+					}
+					++checks;
 				}
 			}
+			std::cerr << "Ran " << checks << " check" << (checks == 1? "" : "s") << ".\n";
 		}
+
+#else
+		std::unordered_map<int, std::vector<int>> vecs;
+		std::unordered_map<int, std::unordered_set<int>> sets;
+
+		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+			if (pair.second->reg != -1)
+				continue;
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
+				const int index = bptr.lock()->index;
+				if (sets[index].count(pair.second->id) == 0)
+					vecs[index].push_back(pair.second->id);
+			}
+			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
+				const int index = bptr.lock()->index;
+				if (sets[index].count(pair.second->id) == 0)
+					vecs[index].push_back(pair.second->id);
+			}
+		}
+
+		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
+			std::vector<int> &vec = vecs[block->index];
+			std::unordered_set<int> &set = sets[block->index];
+			for (const VariablePtr &var: block->liveIn)
+				if (var->reg == -1 && set.count(var->id) == 0)
+					vec.push_back(var->id);
+			for (const VariablePtr &var: block->liveOut)
+				if (var->reg == -1 && set.count(var->id) == 0)
+					vec.push_back(var->id);
+		}
+
+		std::cerr << "Label count: " << labels.size() << "\n";
+		for (const std::pair<const int, std::vector<int>> &pair: vecs) {
+			// std::cerr << ":: " << pair.first << ", " << pair.second.size() << "\n";
+			const size_t size = pair.second.size();
+			if (size < 2)
+				continue;
+			for (size_t i = 0; i < size - 1; ++i)
+				for (size_t j = i + 1; j < size; ++j) {
+					// std::cerr << "Linking " << pair.second[i] << " and " << pair.second[j] << "\n";
+					graph.link(std::to_string(pair.second[i]), std::to_string(pair.second[j]), true);
+					++links;
+				}
+		}
+#endif
+
+		std::cerr << "Made " << links << " link" << (links == 1? "" : "s") << ".\n";
 	}
 }
