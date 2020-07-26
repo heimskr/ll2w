@@ -11,8 +11,9 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-#define DEBUG_COLORING
+// #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
+#define SELECT_LOWEST_COST
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
@@ -35,8 +36,12 @@ namespace LL2W::Passes {
 
 				}
 
+#ifdef SELECT_LOWEST_COST
 				VariablePtr to_spill = selectLowestSpillCost(function, tried);
-				// VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+#else
+				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+#endif
+
 				if (!to_spill) {
 #ifdef DEBUG_COLORING
 					std::cerr << "to_spill is null!\n";
@@ -117,7 +122,6 @@ namespace LL2W::Passes {
 			var->clearSpillCost();
 			const int cost = var->spillCost();
 			if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
-			// if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest))) {
 				lowest = cost;
 				ptr = var;
 			}
@@ -198,7 +202,9 @@ namespace LL2W::Passes {
 
 		if (1 < labels.size()) {
 			const size_t size = labels.size();
+#ifdef DEBUG_COLORING
 			std::cerr << "Label count: " << size << "\n";
+#endif
 			size_t checks = 0;
 			for (size_t i = 0; i < size - 1; ++i) {
 				for (size_t j = i + 1; j < size; ++j) {
@@ -211,7 +217,9 @@ namespace LL2W::Passes {
 					++checks;
 				}
 			}
+#ifdef DEBUG_COLORING
 			std::cerr << "Ran " << checks << " check" << (checks == 1? "" : "s") << ".\n";
+#endif
 		}
 
 #else
@@ -244,21 +252,23 @@ namespace LL2W::Passes {
 					vec.push_back(var->id);
 		}
 
+#ifdef DEBUG_COLORING
 		std::cerr << "Label count: " << labels.size() << "\n";
+#endif
 		for (const std::pair<const int, std::vector<int>> &pair: vecs) {
-			// std::cerr << ":: " << pair.first << ", " << pair.second.size() << "\n";
 			const size_t size = pair.second.size();
 			if (size < 2)
 				continue;
 			for (size_t i = 0; i < size - 1; ++i)
 				for (size_t j = i + 1; j < size; ++j) {
-					// std::cerr << "Linking " << pair.second[i] << " and " << pair.second[j] << "\n";
 					graph.link(std::to_string(pair.second[i]), std::to_string(pair.second[j]), true);
 					++links;
 				}
 		}
 #endif
 
+#ifdef DEBUG_COLORING
 		std::cerr << "Made " << links << " link" << (links == 1? "" : "s") << ".\n";
+#endif
 	}
 }
