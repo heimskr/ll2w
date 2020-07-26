@@ -15,6 +15,9 @@
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
+#ifdef DEBUG_COLORING
+		std::cerr << "Allocating for \e[1m" << *function.name << "\e[22m.\n";
+#endif
 		int spill_count = 0;
 		std::unordered_set<int> tried;
 		std::unordered_set<Node *> tried_nodes;
@@ -27,8 +30,12 @@ namespace LL2W::Passes {
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 			} catch (const UncolorableError &err) {
 				std::cerr << "Coloring failed.\n";
-				VariablePtr to_spill = selectLowestSpillCost(function, tried);
-				// VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+				if (function.variableStore.size() == 413) {
+
+				}
+
+				// VariablePtr to_spill = selectLowestSpillCost(function, tried);
+				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
 				if (!to_spill) {
 #ifdef DEBUG_COLORING
 					std::cerr << "to_spill is null!\n";
@@ -43,8 +50,8 @@ namespace LL2W::Passes {
 				function.addToStack(to_spill, StackLocation::Purpose::Spill);
 				if (function.spill(to_spill)) {
 #ifdef DEBUG_COLORING
-					std::cerr << "Spilled. Variables: " << function.variableStore.size() << ". Stack locations: "
-					          << function.stack.size() << "\n";
+					std::cerr << "Spilled " << *to_spill << ". Variables: " << function.variableStore.size()
+					          << ". Stack locations: " << function.stack.size() << "\n";
 #endif
 					++spill_count;
 					int split = Passes::splitBlocks(function);

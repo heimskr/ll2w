@@ -4,16 +4,16 @@
 #include <iostream>
 #include <unistd.h>
 
-#define DEBUG_BLOCKS
+// #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
-#define DEBUG_SPILL
+// #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
-#define DEBUG_ESTIMATIONS
+// #define DEBUG_ESTIMATIONS
 #define STRICT_READ_CHECK
 
 #include "compiler/Function.h"
@@ -297,6 +297,7 @@ namespace LL2W {
 #endif
 
 		reindexInstructions();
+		extractVariables(true); // Reset stale use/define data.
 		return out;
 	}
 
