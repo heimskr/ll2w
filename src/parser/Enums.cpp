@@ -72,6 +72,7 @@ namespace LL2W {
 		{FnAttr::sanitize_address,   "sanitize_address"},   {FnAttr::noinline,            "noinline"},
 		{FnAttr::ssp,                "ssp"},                {FnAttr::speculatable,        "speculatable"},
 		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly,            "readonly"},
+		{FnAttr::willreturn,         "willreturn"},         {FnAttr::nosync,              "nosync"},
 		{FnAttr::inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"}};
 
 	std::unordered_map<Fastmath, std::string> fastmath_map {

@@ -34,7 +34,7 @@ namespace LL2W {
 		sanitize_memory, jumptable, minsize, nobuiltin, noduplicate, noimplicitfloat, builtin, uwtable, nounwind,
 		optnone, optsize, readnone, naked, writeonly, argmemonly, returns_twice, safestack, inaccessiblememonly, cold,
 		noreturn, nonlazybind, sanitize_thread, thunk, sspstrong, sanitize_address, noinline, ssp, speculatable,
-		sanitize_hwaddress, readonly};
+		sanitize_hwaddress, readonly, willreturn, nosync};
 	enum class Fastmath {Nnan, Ninf, Nsz, Arcp, Contract, Afn, Reassoc, Fast};
 	enum class StructForm {Struct, Class, Union};
 	enum class StructShape {Default, Opaque, Packed};
