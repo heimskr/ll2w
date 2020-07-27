@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-// #define DEBUG_BLOCKS
+#define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 // #define DEBUG_VARS
 // #define DEBUG_RENDER
@@ -43,6 +43,7 @@
 #include "pass/LowerIcmp.h"
 #include "pass/LowerMath.h"
 #include "pass/LowerMemory.h"
+#include "pass/LowerMemset.h"
 #include "pass/LowerObjectsize.h"
 #include "pass/LowerRet.h"
 #include "pass/LowerSelect.h"
@@ -603,6 +604,7 @@ namespace LL2W {
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
 		Passes::lowerVarargsFirst(*this);
+		Passes::lowerMemset(*this);
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
 		for (BasicBlockPtr &block: blocks)

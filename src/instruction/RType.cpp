@@ -7,7 +7,7 @@ namespace LL2W {
 		WhyInstruction(index_), rs(rs_), rt(rt_), rd(rd_) {}
 
 	std::string RType::operDebug(const char *oper) const {
-		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + std::string(*rt) + " \e[2m->\e[0m " +
+		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + std::string(*rt) + " \e[2m->\e[22m " +
 			std::string(*rd);
 	}
 

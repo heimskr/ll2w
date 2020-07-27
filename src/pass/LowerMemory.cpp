@@ -92,7 +92,7 @@ namespace LL2W::Passes {
 				set->extract();
 				store->extract();
 			} else {
-				auto m1 = function.makeAssemblerVariable(0, instruction->parent.lock());
+				auto m1 = function.mx(1, instruction->parent.lock());
 				// In this case, it would be impossible for there to be a single instruction for what we're trying to do
 				// because there are two immediate values. As such, we use two instructions by necessity.
 				// imm -> $m1
