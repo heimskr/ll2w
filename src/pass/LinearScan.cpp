@@ -8,7 +8,7 @@
 
 // #define DEBUG_INTERVALS
 // #define DEBUG_STACK
-// #define DEBUG_LINEAR_SCAN
+#define DEBUG_LINEAR_SCAN
 
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
@@ -23,7 +23,9 @@ namespace LL2W::Passes {
 		int spill_count = 0;
 
 		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
-			// std::cout << "\e[31mAddToActive\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
+#ifdef DEBUG_LINEAR_SCAN
+			std::cout << "\e[31mAddToActive\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
+#endif
 			const int endpoint = interval.endpoint();
 			for (auto iter = active.begin(), end = active.end(); iter != end; ++iter) {
 #ifdef DEBUG_LINEAR_SCAN
@@ -89,9 +91,9 @@ namespace LL2W::Passes {
 		};
 
 		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
-			// std::cerr << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 #ifdef DEBUG_LINEAR_SCAN
-			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable; std::cerr << "\n";
+			std::cerr << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
+			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable.lock(); std::cerr << "\n";
 #endif
 			auto iter = active.end(), prebegin = active.begin();
 			--prebegin;
@@ -102,7 +104,7 @@ namespace LL2W::Passes {
 #endif
 			Interval &spill = iter == prebegin? *active.back() : **iter;
 #ifdef DEBUG_LINEAR_SCAN
-			std::cerr << "Chose spill: " << *spill.variable << "\n";
+			std::cerr << "Chose spill: " << *spill.variable.lock() << "\n";
 #endif
 			if (interval.endpoint() < spill.endpoint() || !maySpill(interval)) {
 			// if (interval.endpoint() < spill.endpoint()) {
@@ -112,9 +114,9 @@ namespace LL2W::Passes {
 				addToActive(interval);
 			} else {
 #ifdef DEBUG_LINEAR_SCAN
-				std::cerr << "Spilling " << *interval.variable << " instead.";
-				if (interval.variable->definitions.size() == 1)
-					std::cerr << " \e[2m//\e[0m " << interval.variable->onlyDefinition()->debugExtra();
+				std::cerr << "Spilling " << *interval.variable.lock() << " instead.";
+				if (interval.variable.lock()->definitions.size() == 1)
+					std::cerr << " \e[2m//\e[0m " << interval.variable.lock()->onlyDefinition()->debugExtra();
 				std::cerr << "\n";
 #endif
 				addLocation(interval);
