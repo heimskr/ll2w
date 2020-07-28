@@ -49,6 +49,7 @@ namespace LL2W::Passes {
 		const ValueType type2 = value2->valueType();
 		if (type2 == ValueType::Local) {
 			VariablePtr rt = dynamic_cast<LocalValue *>(value2.get())->variable;
+			// Because WhySA lacks a not-equals comparison, we have to do an equals comparison and invert it.
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
 				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, m3, IcmpCond::Eq));
