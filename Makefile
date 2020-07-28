@@ -5,9 +5,9 @@ STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
-# TESTFILE		?= ~/src/mal/combined.strprint.ll
+TESTFILE		?= ~/src/mal/combined.strprint.ll
 # TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
-TESTFILE		?= ll/fat.ll
+# TESTFILE		?= ll/fat.ll
 # TESTFILE		?= ll/mintf.ll
 MAIN			:= main
 SOURCES			:= $(shell find src/**/*.cpp)

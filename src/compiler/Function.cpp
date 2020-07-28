@@ -4,11 +4,11 @@
 #include <iostream>
 #include <unistd.h>
 
-#define DEBUG_BLOCKS
+// #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
-#define DEBUG_SPILL
+// #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
@@ -17,6 +17,7 @@
 // #define DEBUG_BLOCK_LIVENESS
 // #define DEBUG_VAR_LIVENESS
 #define STRICT_READ_CHECK
+// #define ALLOCATE_COLORING
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
@@ -624,15 +625,38 @@ namespace LL2W {
 
 #ifdef DEBUG_SPILL
 		debug();
-		int spilled = 
 #endif
+
+#ifdef ALLOCATE_COLORING
 		Passes::allocateColoring(*this);
+#else
+		int spilled = Passes::linearScan(*this);
+#ifdef DEBUG_SPILL
+		int scans = 0;
+#endif
+
+		while (0 < spilled) {
+#ifdef DEBUG_SPILL
+			std::cerr << "Spills in scan " << ++scans << ": \e[1m" << spilled << "\e[0m\n\n";
+			debug();
+#endif
+			Passes::splitBlocks(*this);
+			for (BasicBlockPtr &block: blocks)
+				block->extract();
+			extractVariables(true);
+			Passes::makeCFG(*this);
+			resetRegisters();
+			resetLiveness();
+			computeLiveness();
+			spilled = Passes::linearScan(*this);
+		}
+#endif
 
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
 		// TODO: insert prologue and epilogue
 		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
-		Passes::replaceStoresAndLoads(*this);
+		// Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
@@ -649,6 +673,59 @@ namespace LL2W {
 #endif
 
 		compiled = true;
+	}
+
+	std::list<Interval> Function::sortedIntervals() {
+		std::list<Interval> intervals;
+
+		for (std::pair<const int, VariablePtr> &pair: variableStore) {
+			if (!WhyInfo::isSpecialPurpose(pair.second->reg))
+				intervals.emplace_back(pair.second);
+		}
+
+		reindexBlocks();
+
+		intervals.sort([&](const Interval &left, const Interval &right) {
+			return left.firstDefinition.lock()->index < right.firstDefinition.lock()->index;
+		});
+
+		return intervals;
+	}
+
+	std::list<Interval> Function::buildIntervals() {
+		std::list<Interval> intervals;
+
+		// for each block b in reverse order do
+		for (auto iter = blocks.rbegin(), end = blocks.rend(); iter != end; ++iter) {
+			BasicBlockPtr block = *iter;
+
+			std::unordered_set<VariablePtr> live;
+			// live = union of successor.liveIn for each successor of b
+			for (Node *successor_node: bbNodeMap.at(block.get())->out()) {
+				if (!successor_node->data.has_value())
+					continue;
+				BasicBlockPtr successor = successor_node->get<std::weak_ptr<BasicBlock>>().lock();
+				absorb(live, successor->liveIn);
+				// for each phi function phi of successors of b do
+				for (InstructionPtr &instruction: successor->instructions) {
+					LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+					if (!llvm)
+						continue;
+					PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node);
+					if (!phi)
+						continue;
+					// live.add(phi.inputOf(b))
+					for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs) {
+						if (pair.second != block->label)
+							continue;
+						if (LocalValue *local = dynamic_cast<LocalValue *>(pair.first.get()))
+							live.insert(local->variable);
+					}
+				}
+			}
+		}
+
+		return intervals;
 	}
 
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {
