@@ -263,8 +263,10 @@ namespace LL2W {
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
 
+			/** Finds a spill stack location for a variable. */
 			StackLocation & getSpill(VariablePtr);
 
+			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);
 
 			/** Convenience method for creating a precolored assembler register. */

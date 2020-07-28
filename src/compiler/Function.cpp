@@ -6,14 +6,16 @@
 
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
-// #define DEBUG_SPILL
+#define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
+// #define DEBUG_BLOCK_LIVENESS
+// #define DEBUG_VAR_LIVENESS
 #define STRICT_READ_CHECK
 
 #include "compiler/Function.h"
@@ -245,6 +247,11 @@ namespace LL2W {
 #endif
 			}
 		}
+
+#ifdef DEBUG_SPILL
+		if (!out)
+			std::cerr << "  No stores inserted for " << *variable << ".\n";
+#endif
 
 		debug();
 
@@ -617,9 +624,9 @@ namespace LL2W {
 
 #ifdef DEBUG_SPILL
 		debug();
+		int spilled = 
 #endif
-
-		int spilled = Passes::allocateColoring(*this);
+		Passes::allocateColoring(*this);
 
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
@@ -868,6 +875,7 @@ namespace LL2W {
 					std::cerr << ",";
 				std::cerr << " %" << **iter;
 			}
+#ifdef DEBUG_BLOCK_LIVENESS
 			if (!block->liveIn.empty()) {
 				std::cerr << "; live-in =";
 				for (auto begin = block->liveIn.begin(), iter = begin, end = block->liveIn.end(); iter != end; ++iter) {
@@ -885,6 +893,7 @@ namespace LL2W {
 					std::cerr << " %" << (*iter)->id;
 				}
 			}
+#endif
 			std::cerr << "\e[22;24m\n";
 			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 #ifdef DEBUG_READ_WRITTEN
@@ -921,6 +930,7 @@ namespace LL2W {
 			if (pair.second->definingBlocks.size() > 1)
 				std::cerr << " (multiple defs)";
 			std::cerr << "\e[0m\n";
+#ifdef DEBUG_VAR_LIVENESS
 			std::cerr << "    \e[2m;      \e[32min  =\e[1m";
 			for (const BasicBlockPtr &block: blocks) {
 				if (block->isLiveIn(pair.second))
@@ -933,6 +943,7 @@ namespace LL2W {
 					std::cerr << " %" << *block->label;
 			}
 			std::cerr << "\e[0m\n";
+#endif
 		}
 #endif
 #if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)

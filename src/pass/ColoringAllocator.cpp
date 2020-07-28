@@ -11,7 +11,7 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-// #define DEBUG_COLORING
+#define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 #define SELECT_LOWEST_COST
 
@@ -31,11 +31,9 @@ namespace LL2W::Passes {
 				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 			} catch (const UncolorableError &err) {
+#ifdef DEBUG_COLORING
 				std::cerr << "Coloring failed.\n";
-				if (function.variableStore.size() == 413) {
-
-				}
-
+#endif
 #ifdef SELECT_LOWEST_COST
 				VariablePtr to_spill = selectLowestSpillCost(function, tried);
 #else

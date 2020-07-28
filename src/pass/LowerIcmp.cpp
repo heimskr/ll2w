@@ -52,7 +52,7 @@ namespace LL2W::Passes {
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
 				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, m3, IcmpCond::Eq));
-				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3));
+				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd));
 			} else {
 				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, cond));
 			}
