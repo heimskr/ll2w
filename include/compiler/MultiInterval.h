@@ -1,26 +1,37 @@
-// #ifndef COMPILER_MULTIINTERVAL_H_
-// #define COMPILER_MULTIINTERVAL_H_
+#ifndef COMPILER_MULTIINTERVAL_H_
+#define COMPILER_MULTIINTERVAL_H_
 
-// #include <memory>
-// #include <ostream>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <utility>
 
-// namespace LL2W {
-// 	class BasicBlock;
-// 	class Variable;
+namespace LL2W {
+	class Variable;
 
-// 	struct MultiInterval {
-// 		std::shared_ptr<BasicBlock> firstDefinition, lastUse;
-// 		std::shared_ptr<Variable> variable = nullptr;
-// 		int reg = -1;
+	class MultiInterval {
+		public:
+			using Range = std::pair<int, int>;
 
-// 		MultiInterval(std::shared_ptr<Variable>);
+		private:
+			std::list<Range> ranges;
 
-// 		int setRegister(int);
+		public:
+			std::weak_ptr<Variable> variable;
+			int reg = -1;
 
-// 		operator std::string() const;
-// 	};
+			MultiInterval(std::shared_ptr<Variable>);
 
-// 	std::ostream & operator<<(std::ostream &, const MultiInterval &);
-// }
+			int setRegister(int);
 
-// #endif
+			bool contains(int) const;
+
+			MultiInterval & operator+=(const Range &);
+
+			operator std::string() const;
+	};
+
+	std::ostream & operator<<(std::ostream &, const MultiInterval &);
+}
+
+#endif
