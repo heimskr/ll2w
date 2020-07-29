@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "compiler/BasicBlock.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -69,6 +71,16 @@ namespace LL2W {
 		}
 
 		extract(instruction);
+	}
+
+	int BasicBlock::firstIndex() const {
+		std::cerr << "firstIndex(): " << instructions.front()->index << "\n";
+		return instructions.front()->index;
+	}
+
+	int BasicBlock::lastIndex() const {
+		std::cerr << "lastIndex(): " << instructions.back()->index << "\n";
+		return instructions.back()->index;
 	}
 
 	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {

@@ -62,8 +62,11 @@ namespace LL2W {
 			 *  This function assumes that every basic block has exactly one terminal instruction. */
 			void insertBeforeTerminal(std::shared_ptr<Instruction>);
 
-			/** Returns the number of instructions in the basic block that define a variable. */
-			int countDefinitions();
+			/** Returns the index of the first instruction in the basic block. */
+			int firstIndex() const;
+
+			/** Returns the index of the last instruction in the basic block. */
+			int lastIndex() const;
 
 			bool isLiveIn(std::shared_ptr<Variable>) const;
 			bool isLiveOut(std::shared_ptr<Variable>) const;

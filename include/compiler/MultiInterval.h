@@ -15,19 +15,23 @@ namespace LL2W {
 
 		private:
 			std::list<Range> ranges;
+			void insert(const Range &);
 
 		public:
 			std::weak_ptr<Variable> variable;
 			int reg = -1;
 
-			MultiInterval(std::shared_ptr<Variable>);
+			MultiInterval() = delete;
+			MultiInterval(std::shared_ptr<Variable> variable_): variable(variable_) {}
 
 			int setRegister(int);
-
 			bool contains(int) const;
+			bool overlaps(const MultiInterval &) const;
+			void shortenFront(int);
+			int startpoint() const;
+			int endpoint() const;
 
 			MultiInterval & operator+=(const Range &);
-
 			operator std::string() const;
 	};
 

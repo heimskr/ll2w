@@ -8,6 +8,7 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
 #include "compiler/Interval.h"
+#include "compiler/MultiInterval.h"
 #include "compiler/StackLocation.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
@@ -174,7 +175,7 @@ namespace LL2W {
 			std::list<Interval> sortedIntervals();
 
 			/** Builds live intervals according to the algorithm presented by Christian Wimmer and Michael Franz. */
-			std::list<Interval> buildIntervals();
+			std::unordered_map<VariablePtr, MultiInterval> buildIntervals();
 
 			/** Creates a precolored variable corresponding to any register. */
 			VariablePtr makePrecoloredVariable(unsigned char, BasicBlockPtr);
@@ -206,6 +207,9 @@ namespace LL2W {
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
+
+			/** Assigns special argument registers to variables in a map of multi-intervals as appropriate. */
+			void precolorArguments(std::unordered_map<VariablePtr, MultiInterval> &);
 
 			/** Assigns special argument registers to all variables as appropriate. */
 			void precolorArguments();

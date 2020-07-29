@@ -686,14 +686,23 @@ namespace LL2W {
 		reindexBlocks();
 
 		intervals.sort([&](const Interval &left, const Interval &right) {
+			// std::cerr << "\e[1m" << left.firstDefinition.lock()->index << " vs. " << right.firstDefinition.lock()->index << "\e[0m\n";
 			return left.firstDefinition.lock()->index < right.firstDefinition.lock()->index;
 		});
 
 		return intervals;
 	}
 
-	std::list<Interval> Function::buildIntervals() {
-		std::list<Interval> intervals;
+	std::unordered_map<VariablePtr, MultiInterval> Function::buildIntervals() {
+		std::unordered_map<VariablePtr, MultiInterval> intervals;
+		reindexInstructions();
+
+		std::function<MultiInterval &(const VariablePtr &)> getInterval =
+			[&](const VariablePtr &var) -> MultiInterval & {
+				if (intervals.count(var) == 0)
+					intervals.insert({var, MultiInterval(var)});
+				return intervals.at(var);
+			};
 
 		// for each block b in reverse order do
 		for (auto iter = blocks.rbegin(), end = blocks.rend(); iter != end; ++iter) {
@@ -723,6 +732,40 @@ namespace LL2W {
 					}
 				}
 			}
+
+			// for each opd in live do
+			for (const VariablePtr &var: live) {
+				// intervals[opd].addRange(b.from, b.to)
+				getInterval(var) += {block->firstIndex(), block->lastIndex()};
+			}
+
+			// for each operation op of b in reverse order do
+			for (auto iter = block->instructions.rbegin(), end = block->instructions.rend(); iter != end; ++iter) {
+				const InstructionPtr &instruction = *iter;
+				// for each output operand opd of op do
+				for (const VariablePtr &output: instruction->written) {
+					getInterval(output).shortenFront(instruction->index); // intervals[opd].setFrom(op.id)
+					live.erase(output);                                   // live.remove(opd)
+				}
+
+				// for each input operand opd of op do
+				for (const VariablePtr &input: instruction->read) {
+					// intervals[opd].addRange(b.from, op.id)
+					getInterval(input) += {block->firstIndex(), block->lastIndex()};
+					live.insert(input); // live.add(opd)
+				}
+			}
+
+			// for each phi function phi of b do
+			for (InstructionPtr &instruction: block->instructions) {
+				if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
+					if (llvm->node->nodeType() != NodeType::Phi)
+						continue;
+					PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node);
+					// live.remove(phi.output)
+					live.erase(phi->variable);
+				}
+			}
 		}
 
 		return intervals;
@@ -749,6 +792,15 @@ namespace LL2W {
 			for (Interval &interval: intervals)
 				if (interval.variable.lock()->id < max)
 					interval.setRegister(++reg);
+		}
+	}
+
+	void Function::precolorArguments(std::unordered_map<VariablePtr, MultiInterval> &intervals) {
+		if (getCallingConvention() == CallingConvention::Reg16) {
+			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
+			for (std::pair<const VariablePtr, MultiInterval> &pair: intervals)
+				if (pair.second.variable.lock()->id < max)
+					pair.second.setRegister(++reg);
 		}
 	}
 

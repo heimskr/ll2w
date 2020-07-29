@@ -5,6 +5,8 @@
 #include "compiler/Interval.h"
 #include "compiler/Variable.h"
 
+#define SHOW_INDICES
+
 namespace LL2W {
 	Interval::Interval(VariablePtr var): variable(var) {
 		firstDefinition = *std::min_element(var->definingBlocks.begin(), var->definingBlocks.end(),
@@ -34,8 +36,13 @@ namespace LL2W {
 	}
 
 	Interval::operator std::string() const {
+#ifdef SHOW_INDICES
 		return variable.lock()->plainString() + "[" + std::to_string(startpoint()) + ", " + std::to_string(endpoint())
-			+ "]";
+		       + "]";
+#else
+		return variable.lock()->plainString() + "[" + *firstDefinition.lock()->label + ", " + *lastUse.lock()->label
+		       + "]";
+#endif
 	}
 
 	std::ostream & operator<<(std::ostream &os, const Interval &interval) {

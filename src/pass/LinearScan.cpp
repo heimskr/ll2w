@@ -2,27 +2,45 @@
 
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
+#include "compiler/MultiInterval.h"
 #include "compiler/WhyInfo.h"
 #include "pass/LinearScan.h"
 #include "options.h"
 
 // #define DEBUG_INTERVALS
 // #define DEBUG_STACK
-#define DEBUG_LINEAR_SCAN
+// #define DEBUG_LINEAR_SCAN
+#define USE_MULTIINTERVALS
 
 namespace LL2W::Passes {
 	int linearScan(Function &function) {
-#ifdef DEBUG_LINEAR_SCAN
 		std::cerr << "\e[2mScanning \e[0;1m" << *function.name << "\e[0;2m {\e[0m\n";
+#ifdef DEBUG_LINEAR_SCAN
 		function.debugStack();
 #endif
 
-		std::list<Interval> intervals = function.sortedIntervals();
-		std::list<Interval *> active;
+		auto intervals =
+#ifdef USE_MULTIINTERVALS
+			function.buildIntervals();
+		using IntervalType = MultiInterval;
+		for (const std::pair<const VariablePtr, MultiInterval> &pair: intervals)
+			std::cerr << "    " << pair.second << "\n";
+#else
+			function.sortedIntervals();
+		using IntervalType = Interval;
+		for (const Interval &ivl: intervals)
+			std::cerr << "    " << ivl << "\n";
+#endif
+
+
+		// std::cerr << "\e[2m}\e[22m\n";
+		// return 0;
+
+		std::list<IntervalType *> active;
 		std::set<int> pool = WhyInfo::makeRegisterPool();
 		int spill_count = 0;
 
-		std::function<void(Interval &)> addToActive = [&](Interval &interval) {
+		std::function<void(IntervalType &)> addToActive = [&](IntervalType &interval) {
 #ifdef DEBUG_LINEAR_SCAN
 			std::cout << "\e[31mAddToActive\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 #endif
@@ -39,7 +57,7 @@ namespace LL2W::Passes {
 			active.push_back(&interval);
 		};
 
-		std::function<void(Interval &)> addLocation = [&](Interval &interval) {
+		std::function<void(IntervalType &)> addLocation = [&](IntervalType &interval) {
 			// std::cerr << "\e[31mAddLocation\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			function.addToStack(interval.variable.lock(), StackLocation::Purpose::Spill);
 			// std::cerr << "\e[31m::\e[39m\n";
@@ -48,12 +66,12 @@ namespace LL2W::Passes {
 			// std::cerr << "\e[31m//AddLocation\e[39m\n";
 		};
 
-		std::function<void(Interval &)> expireOldIntervals = [&](Interval &interval) {
+		std::function<void(IntervalType &)> expireOldIntervals = [&](IntervalType &interval) {
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "\e[31mExpireOldIntervals\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 #endif
 			for (auto iter = active.begin(); iter != active.end();) {
-				Interval &jnterval = **iter;
+				IntervalType &jnterval = **iter;
 #ifdef DEBUG_LINEAR_SCAN
 				std::cerr << "S " << interval << " <= E " << jnterval << "?\n";
 				std::cerr << "  " << function.cfg[interval.startpoint()].label() << "\n";
@@ -77,7 +95,7 @@ namespace LL2W::Passes {
 			}
 		};
 
-		std::function<bool(Interval &)> maySpill = [&](Interval &interval) {
+		std::function<bool(IntervalType &)> maySpill = [&](IntervalType &interval) {
 			VariablePtr variable = interval.variable.lock();
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "[maySpill(" << *variable << "): "
@@ -90,7 +108,7 @@ namespace LL2W::Passes {
 			return variable->definitions.size() != 1 || variable->onlyDefinition()->maySpill();
 		};
 
-		std::function<void(Interval &)> spillAtInterval = [&](Interval &interval) {
+		std::function<void(IntervalType &)> spillAtInterval = [&](IntervalType &interval) {
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "\e[31mSpillAtInterval\e[39;2m(\e[22m" << interval << "\e[2m)\e[22m\n";
 			std::cerr << "Active:"; for (Interval *ivl: active) std::cerr << " " << *ivl->variable.lock(); std::cerr << "\n";
@@ -102,7 +120,7 @@ namespace LL2W::Passes {
 			if (iter == prebegin)
 				std::cerr << "iter == prebegin. This is not good.\n";
 #endif
-			Interval &spill = iter == prebegin? *active.back() : **iter;
+			IntervalType &spill = iter == prebegin? *active.back() : **iter;
 #ifdef DEBUG_LINEAR_SCAN
 			std::cerr << "Chose spill: " << *spill.variable.lock() << "\n";
 #endif
@@ -125,7 +143,12 @@ namespace LL2W::Passes {
 
 		function.precolorArguments(intervals);
 
+#ifdef USE_MULTIINTERVALS
+		for (std::pair<const VariablePtr, MultiInterval> &pair: intervals) {
+			MultiInterval &interval = pair.second;
+#else
 		for (Interval &interval: intervals) {
+#endif
 			if (WhyInfo::isSpecialPurpose(interval.reg))
 				continue;
 			expireOldIntervals(interval);
