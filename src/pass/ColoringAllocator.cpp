@@ -13,7 +13,7 @@
 
 #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
-#define SELECT_LOWEST_COST
+// #define SELECT_LOWEST_COST
 
 namespace LL2W::Passes {
 	int allocateColoring(Function &function) {
@@ -22,7 +22,7 @@ namespace LL2W::Passes {
 #endif
 		int spill_count = 0;
 		std::unordered_set<int> tried;
-		std::unordered_set<Node *> tried_nodes;
+		std::unordered_set<std::string> tried_labels;
 		Graph interference;
 		function.precolorArguments();
 		while (true) {
@@ -37,7 +37,7 @@ namespace LL2W::Passes {
 #ifdef SELECT_LOWEST_COST
 				VariablePtr to_spill = selectLowestSpillCost(function, tried);
 #else
-				VariablePtr to_spill = selectHighestDegree(interference, tried_nodes);
+				VariablePtr to_spill = selectHighestDegree(interference, tried_labels);
 #endif
 
 				if (!to_spill) {
@@ -50,7 +50,7 @@ namespace LL2W::Passes {
 				std::cerr << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
 #endif
 				tried.insert(to_spill->id);
-				tried_nodes.insert(&interference[std::to_string(to_spill->id)]);
+				tried_labels.insert(std::to_string(to_spill->id));
 				function.addToStack(to_spill, StackLocation::Purpose::Spill);
 				if (function.spill(to_spill)) {
 #ifdef DEBUG_COLORING
@@ -96,12 +96,13 @@ namespace LL2W::Passes {
 		return spill_count;
 	}
 
-	VariablePtr selectHighestDegree(Graph &interference, const std::unordered_set<Node *> &avoid) {
+	VariablePtr selectHighestDegree(Graph &interference, const std::unordered_set<std::string> &avoid) {
 		Node *highest_node;
 		int highest = -1;
+		std::cerr << "Avoid["; for (const std::string &s: avoid) std::cerr << " " << s; std::cerr << "]\n";
 		for (Node *node: interference.nodes()) {
 			const int degree = node->degree();
-			if (highest < degree && avoid.count(node) == 0) {
+			if (highest < degree && avoid.count(node->label()) == 0) {
 				highest_node = node;
 				highest = degree;
 			}

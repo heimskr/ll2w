@@ -6,7 +6,7 @@
 namespace LL2W {
 	class Function;
 	class Instruction;
-	class Value;
+	struct Value;
 	class Variable;
 }
 
