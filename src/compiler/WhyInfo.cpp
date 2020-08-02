@@ -43,7 +43,7 @@ namespace LL2W {
 
 		for (auto [offset, count, prefix]: list) {
 			if (offset <= reg && reg < offset + count)
-				return prefix + hex(reg - offset);
+				return prefix + Util::hex(reg - offset);
 		}
 
 		return "[" + std::to_string(reg) + "?]";

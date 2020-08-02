@@ -32,7 +32,7 @@ namespace LL2W::Passes {
 					for (const std::pair<int, long> &decimal_pair: gep->decimals)
 						indices.push_back(decimal_pair.second);
 					TypePtr out_type;
-					const int offset = updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
+					const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
 					VariablePtr new_var = function.newVariable(out_type, instruction->parent.lock());
 					auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 					function.insertBefore(instruction, setsym);

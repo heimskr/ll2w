@@ -1,14 +1,18 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
+#include <initializer_list>
 #include <iostream>
 #include <signal.h>
 #include <sstream>
+#include <stdlib.h>
 #include <string>
+#include <vector>
 
+#include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
-namespace LL2W {
+namespace LL2W::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);
@@ -20,6 +24,9 @@ namespace LL2W {
 	bool isNumeric(const char *);
 
 	bool isHex(const char);
+
+
+	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 
 	std::string escape(const std::string &);
 
@@ -33,6 +40,14 @@ namespace LL2W {
 	template <typename T>
 	inline T updiv(T n, T d) {
 		return n / d + (n % d? 1 : 0);
+	}
+
+	template <typename T, typename S>
+	bool isAny(const T &thing, std::initializer_list<S> list) {
+		for (const S &other: list)
+			if (thing == other)
+				return true;
+		return false;
 	}
 
 	/** Merges two sets. */
@@ -63,6 +78,42 @@ namespace LL2W {
 			destination.insert(item);
 	}
 
+	template <typename C>
+	std::vector<std::string> nsort(const C &container, const bool sensitive = true) {
+		std::vector<std::string> out(container.begin(), container.end());
+		if (sensitive) {
+			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
+				return strnatcmp(a.c_str(), b.c_str()) == -1;
+			});
+		} else {
+			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
+				return strnatcasecmp(a.c_str(), b.c_str()) == -1;
+			});
+		}
+
+		return out;
+	}
+
+	template <typename M>
+	std::vector<typename M::value_type> mapnsort(const M &map, const bool sensitive = true) {
+		using pair_type = std::pair<std::string, typename M::mapped_type>;
+		std::vector<pair_type> vec(map.begin(), map.end());
+		if (sensitive) {
+			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
+				return strnatcmp(a.first.c_str(), b.first.c_str()) == -1;
+			});
+		} else {
+			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
+				return strnatcasecmp(a.first.c_str(), b.first.c_str()) == -1;
+			});
+		}
+
+		// I don't think there's any other way to cast A<B<C, D>> to A<B<const C, D>>.
+		return *reinterpret_cast<std::vector<typename M::value_type> *>(&vec);
+	}
+}
+
+namespace LL2W {
 	inline std::ostream & warn() {
 		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}

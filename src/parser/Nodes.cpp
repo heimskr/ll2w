@@ -752,7 +752,7 @@ namespace LL2W {
 				std::string(Parser::getName(ptr_value->symbol)), ptr_value->location);
 		} else {
 			const std::string extracted = ptr_value->extractName();
-			if (!isNumeric(extracted)) {
+			if (!Util::isNumeric(extracted)) {
 				yyerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
 					ptr_value->location);
 			}

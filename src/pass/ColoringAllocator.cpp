@@ -99,7 +99,7 @@ namespace LL2W::Passes {
 	VariablePtr selectHighestDegree(Graph &interference, const std::unordered_set<std::string> &avoid) {
 		Node *highest_node;
 		int highest = -1;
-		std::cerr << "Avoid["; for (const std::string &s: avoid) std::cerr << " " << s; std::cerr << "]\n";
+		std::cerr << "Avoid["; for (const std::string &s: avoid) std::cerr << " " << s; std::cerr << " ]\n";
 		for (Node *node: interference.nodes()) {
 			const int degree = node->degree();
 			if (highest < degree && avoid.count(node->label()) == 0) {

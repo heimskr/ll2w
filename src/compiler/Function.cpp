@@ -690,8 +690,8 @@ namespace LL2W {
 				return pair.second;
 
 		if (width == -1) {
-			width = variable && variable->type? roundUp(variable->type->width() < 8? 1 : variable->type->width() / 8, 8)
-			                                  : 8;
+			width = !variable || !variable->type? 8 : Util::roundUp(variable->type->width() < 8? 1 :
+				variable->type->width() / 8, 8);
 		}
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
@@ -730,7 +730,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(const std::string &label) {
-		return getVariable(parseLong(label));
+		return getVariable(Util::parseLong(label));
 	}
 
 	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
@@ -743,7 +743,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(const std::string &label, const TypePtr type, BasicBlockPtr definer) {
-		return getVariable(parseLong(label), type, definer);
+		return getVariable(Util::parseLong(label), type, definer);
 	}
 
 	BasicBlockPtr Function::getEntry() {

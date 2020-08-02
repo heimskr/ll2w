@@ -46,7 +46,7 @@ namespace LL2W::Passes {
 				}
 
 				TypePtr out_type;
-				const int offset = updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
+				const int offset = Util::updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr: struct-type");
 				add->extract();
@@ -54,7 +54,7 @@ namespace LL2W::Passes {
 				// result = (base pointer) + (width * index value)
 				VariablePtr index = function.getVariable(std::get<1>(node->indices.at(0)));
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
-				const int width = updiv(node->type->width(), 8);
+				const int width = Util::updiv(node->type->width(), 8);
 				// index * width
 				auto mult = std::make_shared<MultIInstruction>(index, width);
 				// $lo -> result

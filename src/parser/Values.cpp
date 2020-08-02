@@ -37,7 +37,7 @@ namespace LL2W {
 	}
 
 	IntValue::IntValue(const std::string &value_) {
-		value = parseLong(value_, value_.substr(0, 2) == "0x"? 16 : 10);
+		value = Util::parseLong(value_, value_.substr(0, 2) == "0x"? 16 : 10);
 	}
 
 	VectorValue::VectorValue(const ASTNode *node) {
@@ -187,7 +187,7 @@ namespace LL2W {
 		std::string out;
 		for (int i = 0, max = value->length() - 2; i < max; ++i) {
 			const char ch0 = (*value)[i], ch1 = (*value)[i + 1], ch2 = (*value)[i + 2];
-			if (ch0 == '\\' && isHex(ch1) && isHex(ch2)) {
+			if (ch0 == '\\' && Util::isHex(ch1) && Util::isHex(ch2)) {
 				out += std::string("\\x") + ch1 + ch2;
 				i += 2;
 			} else {

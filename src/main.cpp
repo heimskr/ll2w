@@ -11,6 +11,7 @@
 #include "util/Util.h"
 
 // #define DEBUGMODE
+#define INTERACTIVE
 
 void lttest();
 void djtest();
@@ -18,6 +19,7 @@ void rendertest();
 void mergetest();
 void mergetest2();
 void parsertest(const std::string &);
+void interactive(LL2W::Program &);
 
 int main(int argc, char **argv) {
 	// if (argc != 3) {
@@ -121,11 +123,39 @@ void parsertest(const std::string &filename) {
 	LL2W::Parser::debug(false, false);
 	LL2W::Parser::parse();
 	LL2W::Program prog(*LL2W::Parser::root);
+#ifdef INTERACTIVE
+	interactive(prog);
+	std::cout << "Done.\n";
+#else
 	prog.compile();
 #ifdef DEBUGMODE
 	prog.debug();
 #else
 	std::cout << prog.toString();
 #endif
+#endif
 	LL2W::Parser::done();
+}
+
+void interactive(LL2W::Program &prog) {
+	std::string line;
+	std::cout << "\e[2m>>\e[22m ";
+	while (std::getline(std::cin, line)) {
+		const size_t space = line.find(' ');
+		const std::string first = line.substr(0, space);
+		const std::string rest = space == std::string::npos? "" : line.substr(space + 1);
+		const std::vector<std::string> split = Util::split(rest, " ", false);
+		// const size_t size = split.size();
+
+		if (first == "ls") {
+			if (Util::isAny(rest, {"", "f", "fn", "func", "function"})) {
+				for (const std::pair<const std::string, LL2W::Function> &pair: Util::mapnsort(prog.functions))
+					std::cout << "\e[2m-\e[22m " << pair.first << "\n";
+			} else if (Util::isAny(rest, {"g", "gl", "global", "globals"})) {
+				for (const std::pair<const std::string, GlobalVarDef *> &pair: Util::mapnsort(prog.globals))
+					std::cout << "\e[2m-\e[22m " << pair.first << "\n";
+			} else error() << "ls: Not sure what \"" << rest << "\" is.\n";
+		} else error() << "Unknown command: \"" << line << "\"\n";
+		std::cout << "\e[2m>>\e[22m ";
+	}
 }

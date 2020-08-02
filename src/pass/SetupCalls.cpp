@@ -193,7 +193,7 @@ namespace LL2W::Passes {
 				std::list<int> indices;
 				for (const std::pair<int, long> &decimal_pair: gep->decimals)
 					indices.push_back(decimal_pair.second);
-				const int offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				VariablePtr new_var = function.newVariable(constant->type);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 				function.insertBefore(instruction, setsym);
@@ -244,7 +244,7 @@ namespace LL2W::Passes {
 				std::list<int> indices;
 				for (const std::pair<int, long> &decimal_pair: gep->decimals)
 					indices.push_back(decimal_pair.second);
-				int  offset = updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				int  offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 				function.insertBefore(instruction, setsym);
 				setsym->extract();

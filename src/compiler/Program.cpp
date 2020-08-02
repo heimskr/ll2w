@@ -73,7 +73,7 @@ namespace LL2W {
 	std::string Program::toString() {
 		std::stringstream out;
 		out << "#meta\n";
-		out << "name: \"" << escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
+		out << "name: \"" << Util::escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
 		out << "\n#data\n";
 		dataSection(out);
 		out << "\n#code\n\n";
