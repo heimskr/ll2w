@@ -19,7 +19,7 @@ namespace LL2W {
 			if (Util::isAny(first, {"ls", "list", "l"})) {
 				if (Util::isAny(rest, {"", "f", "fn", "func", "function"})) {
 					for (const std::pair<const std::string, LL2W::Function> &pair: Util::mapnsort(program.functions))
-						std::cout << "\e[2m-\e[22m " << pair.first << "\n";
+						std::cout << "\e[2m-\e[22m " << pair.second.headerString() << "\n";
 				} else if (Util::isAny(rest, {"g", "gl", "global", "globals"})) {
 					for (const std::pair<const std::string, GlobalVarDef *> &pair: Util::mapnsort(program.globals))
 						std::cout << "\e[2m-\e[22m " << pair.first << "\n";
@@ -55,7 +55,7 @@ namespace LL2W {
 					info() << "Function \e[1m" << rest << "\e[22m: " << function.headerString() << "\n";
 				} else if (program.globals.count(rest) != 0) {
 					GlobalVarDef *global = program.globals.at(rest);
-
+					info() << "Global \e[1m" << rest << "\e[22m: " << global->debugExtra() << "\n";
 				} else error() << "Nothing found for \e[1m" << rest << "\e[22m.\n";
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << "\e[2m>>\e[22m ";

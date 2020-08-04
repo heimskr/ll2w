@@ -856,7 +856,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	std::string Function::headerString() {
+	std::string Function::headerString() const {
 		std::stringstream out;
 		out << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {

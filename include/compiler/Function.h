@@ -263,7 +263,7 @@ namespace LL2W {
 			std::string toString();
 
 			/** Returns the function header as a formatted string. */
-			std::string headerString();
+			std::string headerString() const;
 
 			/** Prints debug information about the function. */
 			void debug();
