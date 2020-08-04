@@ -41,8 +41,7 @@ namespace LL2W {
 			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;
 
-			/** Whether the function has been compiled yet. */
-			bool compiled = false;
+			int initialStackSize = 0;
 
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
@@ -195,6 +194,12 @@ namespace LL2W {
 			 *  that have been assigned special registers. */
 			void resetRegisters(bool respectful = true);
 
+			/** Performs the first set of compiler passes on the function before register allocation. */
+			void initialCompile();
+
+			/** Performs the last set of compiler passes on the function after register allocation. */
+			void finalCompile();
+
 			/** Performs a full set of compiler passes on the function. */
 			void compile();
 
@@ -256,6 +261,9 @@ namespace LL2W {
 
 			/** Returns the compiled assembly code. */
 			std::string toString();
+
+			/** Returns the function header as a formatted string. */
+			std::string headerString();
 
 			/** Prints debug information about the function. */
 			void debug();

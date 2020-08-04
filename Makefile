@@ -10,7 +10,7 @@ OUTPUT			?= ll2w
 TESTFILE		?= ll/fat.ll
 # TESTFILE		?= ll/mintf.ll
 MAIN			:= main
-SOURCES			:= $(shell find src/**/*.cpp)
+SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
@@ -26,7 +26,7 @@ CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
 
 all: $(OUTPUT)
 
-$(OUTPUT): src/$(MAIN).o $(OBJECTS)
+$(OUTPUT): $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 $(LEXCPP): $(FLEXSRC) $(PARSEHDR)

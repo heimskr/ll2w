@@ -583,10 +583,7 @@ namespace LL2W {
 		}
 	}
 
-	void Function::compile() {
-		if (compiled)
-			return;
-
+	void Function::initialCompile() {
 		extractBlocks();
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -606,7 +603,7 @@ namespace LL2W {
 		Passes::lowerGetelementptr(*this);
 		Passes::lowerSelect(*this);
 		Passes::lowerSwitch(*this);
-		const int initial_stack_size = stackSize;
+		initialStackSize = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
@@ -621,17 +618,12 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
+	}
 
-#ifdef DEBUG_SPILL
-		debug();
-		int spilled = 
-#endif
-		Passes::allocateColoring(*this);
-
+	void Function::finalCompile() {
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
-		// TODO: insert prologue and epilogue
-		Passes::updateArgumentLoads(*this, stackSize - initial_stack_size);
+		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::removeRedundantMoves(*this);
@@ -643,12 +635,22 @@ namespace LL2W {
 		Passes::loadArgumentsReadjust(*this);
 		Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
+	}
+
+	void Function::compile() {
+		initialCompile();
 
 #ifdef DEBUG_SPILL
-		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
+		debug();
+		int spilled =
 #endif
+		Passes::allocateColoring(*this);
 
-		compiled = true;
+		finalCompile();
+
+// #ifdef DEBUG_SPILL
+// 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
+// #endif
 	}
 
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {
@@ -854,17 +856,23 @@ namespace LL2W {
 		return out.str();
 	}
 
-	void Function::debug() {
-#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cerr << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
+	std::string Function::headerString() {
+		std::stringstream out;
+		out << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
-				std::cerr << "\e[2m,\e[0m ";
-			std::cerr << *iter->type;
+				out << "\e[2m,\e[0m ";
+			out << *iter->type;
 			if (iter->name)
-				std::cerr << " " << *iter->name;
+				out << " " << *iter->name;
 		}
-		std::cerr << "\e[94m) {\e[39m\n";
+		out << "\e[94m)\e[0m";
+		return out.str();
+	}
+
+	void Function::debug() {
+#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
+		std::cerr << headerString() + " \e[94m{\e[39m\n";
 #endif
 #ifdef DEBUG_BLOCKS
 		for (const BasicBlockPtr &block: blocks) {
