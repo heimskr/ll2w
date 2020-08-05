@@ -28,7 +28,7 @@ namespace LL2W {
 		for (ASTNode *node: root) {
 			switch (node->symbol) {
 				case FUNCTION_DEF:
-					functions.emplace(*node->lexerInfo, Function(*this, *node));
+					functions.emplace(*node->lexerInfo, new Function(*this, *node));
 					break;
 				case TOK_DECLARE: {
 					ASTNode *header = node->at(0);
@@ -47,25 +47,34 @@ namespace LL2W {
 		}
 	}
 
+	Program::~Program() {
+		for (std::pair<const std::string, Function *> &pair: functions)
+			delete pair.second;
+		for (std::pair<const std::string, FunctionHeader *> &pair: declarations)
+			delete pair.second;
+		for (std::pair<const std::string, GlobalVarDef *> &pair: globals)
+			delete pair.second;
+	}
+
 	void Program::compile() {
 #ifdef COMPILE_MULTITHREADED
 		std::vector<std::thread> threads;
 		threads.reserve(functions.size());
 
-		for (std::pair<const std::string, Function> &pair: functions) {
+		for (std::pair<const std::string, Function *> &pair: functions) {
 			threads.emplace_back(std::thread([&]() {
-				pair.second.compile();
+				pair.second->compile();
 			}));
 		}
 
 		for (std::thread &thread: threads)
 			thread.join();
 #else
-		for (std::pair<const std::string, Function> &pair: functions) {
+		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef SINGLE_FUNCTION
-			if (*pair.second.name == SINGLE_FUNCTION)
+			if (*pair.second->name == SINGLE_FUNCTION)
 #endif
-				pair.second.compile();
+				pair.second->compile();
 		}
 #endif
 	}
@@ -79,11 +88,11 @@ namespace LL2W {
 		out << "\n#code\n\n";
 		if (functions.count("@main") == 1)
 			out << ":: main\n<halt>\n\n";
-		for (std::pair<const std::string, Function> &pair: functions) {
+		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef HIDE_PRINTS
 			if (pair.first != "@prc" && pair.first != "@prd" && pair.first != "@strprint")
 #endif
-			out << pair.second.toString() << "\n";
+			out << pair.second->toString() << "\n";
 		}
 		return out.str();
 	}
@@ -133,11 +142,11 @@ namespace LL2W {
 	}
 
 	void Program::debug() {
-		for (std::pair<const std::string, Function> &pair: functions) {
+		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef SINGLE_FUNCTION
-			if (*pair.second.name == SINGLE_FUNCTION)
+			if (*pair.second->name == SINGLE_FUNCTION)
 #endif
-				pair.second.debug();
+				pair.second->debug();
 		}
 	}
 }

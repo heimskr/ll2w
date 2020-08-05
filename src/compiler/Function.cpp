@@ -78,11 +78,18 @@ namespace LL2W {
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
 		returnType = header->returnType;
+		allocator = new ColoringAllocator(*this);
 	}
 
 	Function::~Function() {
 		if (allocator)
 			delete allocator;
+	}
+
+	Allocator::Result Function::attemptAllocation() {
+		if ((lastAllocationResult = allocator->attempt()) == Allocator::Result::Success)
+			allocationDone = true;
+		return lastAllocationResult;
 	}
 
 	void Function::extractBlocks() {
@@ -623,6 +630,7 @@ namespace LL2W {
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
+		initialDone = true;
 	}
 
 	void Function::finalCompile() {
@@ -640,12 +648,10 @@ namespace LL2W {
 		Passes::loadArgumentsReadjust(*this);
 		Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
+		finalDone = true;
 	}
 
 	void Function::compile() {
-		if (!allocator)
-			allocator = new ColoringAllocator(*this);
-
 		initialCompile();
 
 #ifdef DEBUG_SPILL

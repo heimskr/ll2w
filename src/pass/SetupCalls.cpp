@@ -48,7 +48,7 @@ namespace LL2W::Passes {
 					convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
 				} else if (function.parent->functions.count("@" + *global_name->name) != 0) {
 					// When the arguments aren't explicit, we check the parent program's map of functions.
-					Function &func = function.parent->functions.at("@" + *global_name->name);
+					Function &func = *function.parent->functions.at("@" + *global_name->name);
 					ellipsis = func.isVariadic();
 					convention = func.getCallingConvention();
 					argument_types.reserve(func.arguments->size());

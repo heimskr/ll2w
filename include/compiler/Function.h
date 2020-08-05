@@ -44,8 +44,6 @@ namespace LL2W {
 
 			int initialStackSize = 0;
 
-			Allocator *allocator = nullptr;
-
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
 
@@ -110,9 +108,21 @@ namespace LL2W {
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
 			int initialPushedBytes = -1;
 
+			Allocator *allocator = nullptr;
+
+			bool initialDone = false, allocationDone = false, finalDone = false;
+
+			Allocator::Result lastAllocationResult;
+
+			Function(const Function &) = delete;
+			// Function(Function &&) = delete;
 			Function(Program &, const ASTNode &);
 
 			~Function();
+
+			void initAllocator();
+
+			Allocator::Result attemptAllocation();
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();
