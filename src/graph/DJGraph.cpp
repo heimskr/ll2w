@@ -12,12 +12,12 @@ namespace LL2W {
 		DTree dt(graph, start);
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
-		for (const auto [src, dest]: graph.allEdges()) {
-			if (doms.at(dest.label()).count(src.label()) != 0)
+		for (const auto &[src, dest]: graph.allEdges()) {
+			if (doms.at(dest->label()).count(src->label()) != 0)
 				continue;
-			link(src.label(), dest.label());
-			jEdges.push_back({(*this)[src.label()], (*this)[dest.label()]});
-			jMap[&(*this)[src.label()]].insert(&(*this)[dest.label()]);
+			link(src->label(), dest->label());
+			jEdges.push_back({&(*this)[src->label()], &(*this)[dest->label()]});
+			jMap[&(*this)[src->label()]].insert(&(*this)[dest->label()]);
 		}
 	}
 
@@ -28,8 +28,8 @@ namespace LL2W {
 	};
 
 	bool DJGraph::isJEdge(const Node &from, const Node &to) const {
-		for (const std::pair<Node &, Node &> &j_edge: jEdges) {
-			if (&j_edge.first == &from && &j_edge.second == &to)
+		for (const std::pair<Node *, Node *> &j_edge: jEdges) {
+			if (j_edge.first == &from && j_edge.second == &to)
 				return true;
 		}
 
@@ -38,9 +38,9 @@ namespace LL2W {
 
 	std::unordered_set<Node *> DJGraph::allInNodes(const Node &node) const {
 		std::unordered_set<Node *> out = {node.in().begin(), node.in().end()};
-		for (const std::pair<Node &, Node &> &j_edge: jEdges) {
-			if (&j_edge.second == &node)
-				out.insert(&j_edge.first);
+		for (const std::pair<Node *, Node *> &j_edge: jEdges) {
+			if (j_edge.second == &node)
+				out.insert(j_edge.first);
 		}
 
 		return out;

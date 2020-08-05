@@ -2,11 +2,11 @@
 #include <fstream>
 #include <optional>
 
+#include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
 #include "graph/UncolorableError.h"
-#include "pass/ColoringAllocator.h"
 #include "pass/MakeCFG.h"
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
@@ -15,76 +15,75 @@
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 
-namespace LL2W::Passes {
-	int allocateColoring(Function &function) {
+namespace LL2W {
+	ColoringAllocator::Result ColoringAllocator::attempt() {
+		++attempts;
 #ifdef DEBUG_COLORING
-		std::cerr << "Allocating for \e[1m" << *function.name << "\e[22m.\n";
+		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";
 #endif
-		int spill_count = 0;
-		std::unordered_set<int> tried;
-		std::unordered_set<std::string> tried_labels;
-		Graph interference;
-		function.precolorArguments();
-		while (true) {
-			makeInterferenceGraph(function, interference);
-			try {
-				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
-					WhyInfo::savedOffset + WhyInfo::savedCount - 1);
-			} catch (const UncolorableError &err) {
+		if (!argumentsPrecolored)
+			function->precolorArguments();
+
+		makeInterferenceGraph();
+		try {
+			interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
+				WhyInfo::savedOffset + WhyInfo::savedCount - 1);
+		} catch (const UncolorableError &err) {
 #ifdef DEBUG_COLORING
-				std::cerr << "Coloring failed.\n";
+			std::cerr << "Coloring failed.\n";
 #endif
 #ifdef SELECT_LOWEST_COST
-				VariablePtr to_spill = selectLowestSpillCost(function, tried);
+			VariablePtr to_spill = selectLowestSpillCost();
 #else
-				VariablePtr to_spill = selectHighestDegree(interference, tried_labels);
+			VariablePtr to_spill = selectHighestDegree();
 #endif
 
-				if (!to_spill) {
+			if (!to_spill) {
 #ifdef DEBUG_COLORING
-					std::cerr << "to_spill is null!\n";
+				std::cerr << "to_spill is null!\n";
 #endif
-					std::terminate();
-				}
-#ifdef DEBUG_COLORING
-				std::cerr << "Going to spill " << *to_spill << ". " << function.variableStore.size() << "\n";
-#endif
-				tried.insert(to_spill->id);
-				tried_labels.insert(std::to_string(to_spill->id));
-				function.addToStack(to_spill, StackLocation::Purpose::Spill);
-				if (function.spill(to_spill)) {
-#ifdef DEBUG_COLORING
-					std::cerr << "Spilled " << *to_spill << ". Variables: " << function.variableStore.size()
-					          << ". Stack locations: " << function.stack.size() << "\n";
-#endif
-					++spill_count;
-					int split = Passes::splitBlocks(function);
-					if (0 < split) {
-#ifdef DEBUG_COLORING
-						std::cerr << split << " block" << (split == 1? " was" : "s were") << " split.\n";
-#endif
-						for (BasicBlockPtr &block: function.blocks)
-							block->extract();
-						Passes::makeCFG(function);
-						function.extractVariables(true);
-						function.resetLiveness();
-						function.computeLiveness();
-					}
-#ifdef DEBUG_COLORING
-					else std::cerr << "No blocks were split.\n";
-#endif
-				}
-#ifdef DEBUG_COLORING
-				else std::cerr << *to_spill << " wasn't spilled.\n";
-#endif
-				continue;
+				std::terminate();
 			}
-			break;
+#ifdef DEBUG_COLORING
+			std::cerr << "Going to spill " << *to_spill << ". " << function->variableStore.size() << "\n";
+#endif
+			lastSpillAttempt = to_spill;
+			triedIDs.insert(to_spill->id);
+			triedLabels.insert(std::to_string(to_spill->id));
+			function->addToStack(to_spill, StackLocation::Purpose::Spill);
+			if (function->spill(to_spill)) {
+#ifdef DEBUG_COLORING
+				std::cerr << "Spilled " << *to_spill << ". Variables: " << function->variableStore.size()
+				          << ". Stack locations: " << function->stack.size() << "\n";
+#endif
+				lastSpill = to_spill;
+				++spillCount;
+				int split = Passes::splitBlocks(*function);
+				if (0 < split) {
+#ifdef DEBUG_COLORING
+					std::cerr << split << " block" << (split == 1? " was" : "s were") << " split.\n";
+#endif
+					for (BasicBlockPtr &block: function->blocks)
+						block->extract();
+					Passes::makeCFG(*function);
+					function->extractVariables(true);
+					function->resetLiveness();
+					function->computeLiveness();
+				}
+#ifdef DEBUG_COLORING
+				else std::cerr << "No blocks were split.\n";
+#endif
+				return Result::Spilled;
+			}
+#ifdef DEBUG_COLORING
+			else std::cerr << *to_spill << " wasn't spilled.\n";
+#endif
+			return Result::NotSpilled;
 		}
 
 #ifdef DEBUG_COLORING
-		std::cerr << "Spilling process complete. There " << (spill_count == 1? "was " : "were ") << spill_count << " "
-		          << "spill" << (spill_count == 1? ".\n" : "s.\n");
+		std::cerr << "Spilling process complete. There " << (spillCount == 1? "was " : "were ") << spillCount << " "
+		          << "spill" << (spillCount == 1? ".\n" : "s.\n");
 #endif
 
 		for (const std::pair<const std::string, Node *> &pair: interference) {
@@ -93,16 +92,16 @@ namespace LL2W::Passes {
 				ptr->setRegister(pair.second->color);
 		}
 
-		return spill_count;
+		return Result::Success;
 	}
 
-	VariablePtr selectHighestDegree(Graph &interference, const std::unordered_set<std::string> &avoid) {
+	VariablePtr ColoringAllocator::selectHighestDegree() const {
 		Node *highest_node;
 		int highest = -1;
-		std::cerr << "Avoid["; for (const std::string &s: avoid) std::cerr << " " << s; std::cerr << " ]\n";
+		// std::cerr << "Avoid["; for (const std::string &s: triedLabels) std::cerr << " " << s; std::cerr << " ]\n";
 		for (Node *node: interference.nodes()) {
 			const int degree = node->degree();
-			if (highest < degree && avoid.count(node->label()) == 0) {
+			if (highest < degree && triedLabels.count(node->label()) == 0) {
 				highest_node = node;
 				highest = degree;
 			}
@@ -111,16 +110,16 @@ namespace LL2W::Passes {
 		return highest_node->get<VariablePtr>();
 	}
 
-	VariablePtr selectLowestSpillCost(Function &function, const std::unordered_set<int> &avoid) {
+	VariablePtr ColoringAllocator::selectLowestSpillCost() const {
 		VariablePtr ptr;
 		int lowest = -1;
-		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 			const VariablePtr &var = pair.second;
 			if (var->reg != -1 && WhyInfo::isSpecialPurpose(var->reg))
 				continue;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
-			if (cost != -1 && avoid.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
+			if (cost != -1 && triedIDs.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
 				lowest = cost;
 				ptr = var;
 			}
@@ -131,11 +130,11 @@ namespace LL2W::Passes {
 
 #undef DEBUG_COLORING
 
-	void makeInterferenceGraph(Function &function, Graph &graph) {
-		graph.clear();
+	void ColoringAllocator::makeInterferenceGraph() {
+		interference.clear();
 		size_t links = 0;
 
-		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 #ifdef DEBUG_COLORING
 			std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
 			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
@@ -143,22 +142,22 @@ namespace LL2W::Passes {
 #endif
 			if (pair.second->reg == -1) {
 				const std::string id = std::to_string(pair.second->id);
-				if (!graph.hasLabel(id)) { // Use only one variable from a set of aliases.
-					Node &node = graph.addNode(id);
+				if (!interference.hasLabel(id)) { // Use only one variable from a set of aliases.
+					Node &node = interference.addNode(id);
 					node.data = pair.second;
 				}
 			}
 		}
 
 		std::vector<int> labels;
-		labels.reserve(function.variableStore.size());
-		for (const std::pair<const int, VariablePtr> &pair: function.variableStore)
+		labels.reserve(function->variableStore.size());
+		for (const std::pair<const int, VariablePtr> &pair: function->variableStore)
 			labels.push_back(pair.first);
 
 #ifndef CONSTRUCT_BY_BLOCK
 		std::map<int, std::unordered_set<int>> live;
 
-		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 			if (pair.second->reg != -1)
 				continue;
 #ifdef DEBUG_COLORING
@@ -178,7 +177,7 @@ namespace LL2W::Passes {
 			}
 		}
 
-		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
+		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
 #ifdef DEBUG_COLORING
 			if (!block)
 				std::cerr << "block is null?\n";
@@ -207,10 +206,10 @@ namespace LL2W::Passes {
 			size_t checks = 0;
 			for (size_t i = 0; i < size - 1; ++i) {
 				for (size_t j = i + 1; j < size; ++j) {
-					VariablePtr left  = function.variableStore.at(labels[i]),
-					            right = function.variableStore.at(labels[j]);
+					VariablePtr left  = function->variableStore.at(labels[i]),
+					            right = function->variableStore.at(labels[j]);
 					if (left->id != right->id && hasOverlap(live[left->id], live[right->id])) {
-						graph.link(std::to_string(left->id), std::to_string(right->id), true);
+						interference.link(std::to_string(left->id), std::to_string(right->id), true);
 						++links;
 					}
 					++checks;
@@ -225,7 +224,7 @@ namespace LL2W::Passes {
 		std::unordered_map<int, std::vector<int>> vecs;
 		std::unordered_map<int, std::unordered_set<int>> sets;
 
-		for (const std::pair<const int, VariablePtr> &pair: function.variableStore) {
+		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 			if (pair.second->reg != -1)
 				continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
@@ -240,7 +239,7 @@ namespace LL2W::Passes {
 			}
 		}
 
-		for (const std::shared_ptr<BasicBlock> &block: function.blocks) {
+		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
 			std::vector<int> &vec = vecs[block->index];
 			std::unordered_set<int> &set = sets[block->index];
 			for (const VariablePtr &var: block->liveIn)
@@ -260,7 +259,7 @@ namespace LL2W::Passes {
 				continue;
 			for (size_t i = 0; i < size - 1; ++i)
 				for (size_t j = i + 1; j < size; ++j) {
-					graph.link(std::to_string(pair.second[i]), std::to_string(pair.second[j]), true);
+					interference.link(std::to_string(pair.second[i]), std::to_string(pair.second[j]), true);
 					++links;
 				}
 		}

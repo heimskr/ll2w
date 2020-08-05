@@ -58,8 +58,8 @@ void djtest() {
 	LL2W::DJGraph dj(graph, graph[0]);
 	LL2W::DTree(graph, graph[0]).renderTo("graph_dj_dt.png", "BT");
 	dj.renderTo("graph_dj_out.png", "BT");
-	for (const auto [src, dest]: dj.jEdges)
-		std::cout << src << " <-> " << dest << "\n";
+	for (const auto &[src, dest]: dj.jEdges)
+		std::cout << *src << " <-> " << *dest << "\n";
 }
 
 void rendertest() {

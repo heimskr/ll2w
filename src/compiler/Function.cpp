@@ -18,6 +18,7 @@
 // #define DEBUG_VAR_LIVENESS
 #define STRICT_READ_CHECK
 
+#include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -31,7 +32,6 @@
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
 #include "pass/CoalescePhi.h"
-#include "pass/ColoringAllocator.h"
 #include "pass/FillLocalValues.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
@@ -78,6 +78,11 @@ namespace LL2W {
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
 		returnType = header->returnType;
+	}
+
+	Function::~Function() {
+		if (allocator)
+			delete allocator;
 	}
 
 	void Function::extractBlocks() {
@@ -638,13 +643,16 @@ namespace LL2W {
 	}
 
 	void Function::compile() {
+		if (!allocator)
+			allocator = new ColoringAllocator(*this);
+
 		initialCompile();
 
 #ifdef DEBUG_SPILL
 		debug();
-		int spilled =
 #endif
-		Passes::allocateColoring(*this);
+
+		while (allocator->attempt() != Allocator::Result::Success);
 
 		finalCompile();
 

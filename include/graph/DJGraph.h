@@ -15,7 +15,7 @@ namespace LL2W {
 			Node * parent(const Node &, const Node &start) const;
 
 		public:
-			std::vector<std::pair<Node &, Node &>> jEdges;
+			std::vector<std::pair<Node *, Node *>> jEdges;
 
 			DJGraph(Graph &, Node &);
 			DJGraph(Graph &, const std::string &);

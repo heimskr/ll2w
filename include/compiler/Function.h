@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 
+#include "allocator/Allocator.h"
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
 #include "compiler/Interval.h"
@@ -42,6 +43,8 @@ namespace LL2W {
 			const ASTNode *astnode;
 
 			int initialStackSize = 0;
+
+			Allocator *allocator = nullptr;
 
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
@@ -108,6 +111,8 @@ namespace LL2W {
 			int initialPushedBytes = -1;
 
 			Function(Program &, const ASTNode &);
+
+			~Function();
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();

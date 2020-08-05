@@ -128,7 +128,7 @@ namespace LL2W {
 			void color(ColoringAlgorithm, int color_min = -1, int color_max = -1);
 
 			/** Returns a vectors of all edges represented as a pair of the start node and the end node. */
-			std::vector<std::pair<Node &, Node &>> allEdges() const;
+			std::vector<std::pair<Node *, Node *>> allEdges() const;
 
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			virtual std::string toDot(const std::string &direction = "TB");

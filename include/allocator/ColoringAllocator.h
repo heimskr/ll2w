@@ -1,8 +1,10 @@
-#ifndef PASS_COLORINGALLOCATOR_H_
-#define PASS_COLORINGALLOCATOR_H_
+#ifndef ALLOCATOR_COLORINGALLOCATOR_H_
+#define ALLOCATOR_COLORINGALLOCATOR_H_
 
 #include <memory>
+#include <unordered_set>
 
+#include "allocator/Allocator.h"
 #include "graph/Graph.h"
 
 namespace LL2W {
@@ -10,15 +12,36 @@ namespace LL2W {
 	class Variable;
 }
 
-namespace LL2W::Passes {
-	/** Assigns registers using a graph coloring algorithm. Returns the number of necessary spills. */
-	int allocateColoring(Function &);
+namespace LL2W {
+	/** Assigns registers using a graph coloring algorithm. */
+	class ColoringAllocator: public Allocator {
+		private:
+			Graph interference;
 
-	std::shared_ptr<Variable> selectHighestDegree(Graph &, const std::unordered_set<std::string> &avoid);
-	std::shared_ptr<Variable> selectLowestSpillCost(Function &, const std::unordered_set<int> &avoid);
+			/** Creates an interference graph of all the function's variables. */
+			void makeInterferenceGraph();
 
-	/** Creates an interference graph of all a function's variables. */
-	void makeInterferenceGraph(Function &, Graph &);
+			/** Selects the variable whose corresponding node in the interference graph has the highest degree. */
+			std::shared_ptr<Variable> selectHighestDegree() const;
+
+			/** Selects the variable with the lowest spill cost. */
+			std::shared_ptr<Variable> selectLowestSpillCost() const;
+
+			std::unordered_set<int> triedIDs;
+			std::unordered_set<std::string> triedLabels;
+
+		public:
+			using Allocator::Allocator;
+
+			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
+			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
+			 *  colorable, it returns Success. */
+			Result attempt() override;
+	};
+
+	// int allocateColoring(Function &);
+
+
 }
 
 #endif

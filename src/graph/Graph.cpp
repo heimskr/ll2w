@@ -101,11 +101,9 @@ namespace LL2W {
 	}
 
 	Graph & Graph::operator-=(const std::string &label) {
-		for (Node *node: nodes_) {
+		for (Node *node: nodes_)
 			if (node->label() == label)
 				return *this -= node;
-		}
-
 		throw std::out_of_range("Can't remove: no node with label \"" + label + "\" found");
 	}
 
@@ -205,11 +203,9 @@ namespace LL2W {
 	}
 
 	Node * Graph::find(std::function<bool(Node &)> predicate) {
-		for (Node *node: nodes_) {
+		for (Node *node: nodes_)
 			if (predicate(*node))
 				return node;
-		}
-
 		return nullptr;
 	}
 
@@ -220,13 +216,11 @@ namespace LL2W {
 
 		std::function<void(Node *)> visit = [&](Node *node) {
 			discovered[node] = ++time;
-			for (Node *out: node->out()) {
+			for (Node *out: node->out())
 				if (discovered.count(out) == 0) {
 					parents[out] = node;
 					visit(out);
 				}
-			}
-
 			finished[node] = ++time;
 		};
 
@@ -251,13 +245,12 @@ namespace LL2W {
 		while (!queue.empty()) {
 			Node *next = queue.front();
 			queue.pop_front();
-			for (Node *out: next->out()) {
+			for (Node *out: next->out())
 				if (visited.count(out) == 0) {
 					visited.insert(out);
 					order.push_back(out);
 					queue.push_back(out);
 				}
-			}
 		}
 
 		return order;
@@ -275,10 +268,9 @@ namespace LL2W {
 		std::function<void(Node *)> visit = [&](Node *node) {
 			visited.insert(node);
 			out.push_back(node);
-			for (Node *successor: node->out()) {
+			for (Node *successor: node->out())
 				if (visited.count(successor) == 0)
 					visit(successor);
-			}
 		};
 
 		visit(&start);
@@ -309,19 +301,18 @@ namespace LL2W {
 				node->color = ++color;
 		} else if (algo == Graph::ColoringAlgorithm::Greedy) {
 			std::set<int> all_colors;
-			for (int i = color_min; i <= (color_max == -1? static_cast<int>(color_min + size() - 1) : color_max); ++i)
+			const int max = color_max == -1? static_cast<int>(color_min + size() - 1) : color_max;
+			for (int i = color_min; i <= max; ++i)
 				all_colors.insert(i);
 
 			for (Node *node: nodes_) {
 				std::set<int> available = all_colors;
-				for (Node *neighbor: node->out()) {
+				for (Node *neighbor: node->out())
 					if (neighbor->color != -1)
 						available.erase(neighbor->color);
-				}
-				for (Node *neighbor: node->in()) {
+				for (Node *neighbor: node->in())
 					if (neighbor->color != -1)
 						available.erase(neighbor->color);
-				}
 				if (available.empty())
 					throw UncolorableError();
 				node->color = *available.begin();
@@ -331,20 +322,19 @@ namespace LL2W {
 		}
 	}
 
-	std::vector<std::pair<Node &, Node &>> Graph::allEdges() const {
-		std::vector<std::pair<Node &, Node &>> out;
-		for (Node *node: nodes_) {
+	std::vector<std::pair<Node *, Node *>> Graph::allEdges() const {
+		std::vector<std::pair<Node *, Node *>> out;
+		for (Node *node: nodes_)
 			for (Node *successor: *node)
-				out.push_back({*node, *successor});
-		}
-
+				out.push_back({node, successor});
 		return out;
 	}
 
 	std::string Graph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes_) {
-			node->rename("\"" + node->label() + "_i" + std::to_string(node->in().size()) + "_o" + std::to_string(node->out().size()) + "\"");
+			node->rename("\"" + node->label() + "_i" + std::to_string(node->in().size()) + "_o" +
+				std::to_string(node->out().size()) + "\"");
 			if (node->reflexive())
 				reflexives.push_back(node);
 		}
@@ -364,28 +354,24 @@ namespace LL2W {
 
 		out << "\tnode [shape = circle];";
 		bool any_added = false;
-		for (Node *node: nodes_) {
+		for (Node *node: nodes_)
 			if (node->isolated()) {
 				out << " " << node->label();
 				any_added = true;
 			}
-		}
 
 		if (any_added)
 			out << ";";
 		out << "\n";
 
-		for (Node *node: nodes_) {
+		for (Node *node: nodes_)
 			if (0 <= node->color && static_cast<size_t>(node->color) < colors.size())
 				out << "\t" << node->label() << " [fillcolor=" << colors.at(node->color) << "];\n";
-		}
 
-		for (const Node *node: nodes_) {
-			for (const Node *neighbor: node->out()) {
+		for (const Node *node: nodes_)
+			for (const Node *neighbor: node->out())
 				if (neighbor != node)
 					out << "\t" << node->label() << " -> " << neighbor->label() << ";\n";
-			}
-		}
 		out << "}\n";
 		return out.str();
 	}
@@ -393,10 +379,9 @@ namespace LL2W {
 	void Graph::renderTo(const std::string &png_path, const std::string &direction) {
 		std::ofstream out;
 		std::string path = "/tmp/ll2w_graph_";
-		for (char ch: png_path) {
+		for (char ch: png_path)
 			if (std::isdigit(ch) || std::isalpha(ch) || ch == '_')
 				path += ch;
-		}
 		path += ".dot";
 		out.open(path);
 		out << toDot(direction);
