@@ -885,110 +885,152 @@ namespace LL2W {
 	}
 
 	void Function::debug() {
-#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cerr << headerString() + " \e[94m{\e[39m\n";
-#endif
+		debug(
 #ifdef DEBUG_BLOCKS
-		for (const BasicBlockPtr &block: blocks) {
-			std::cerr << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
-			          << ": preds =";
-			for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
-				if (iter != begin)
-					std::cerr << ",";
-				std::cerr << " %" << **iter;
-			}
-#ifdef DEBUG_BLOCK_LIVENESS
-			if (!block->liveIn.empty()) {
-				std::cerr << "; live-in =";
-				for (auto begin = block->liveIn.begin(), iter = begin, end = block->liveIn.end(); iter != end; ++iter) {
-					if (iter != begin)
-						std::cerr << ",";
-					std::cerr << " %" << (*iter)->id;
-				}
-			}
-			if (!block->liveOut.empty()) {
-				std::cerr << "; live-out =";
-				for (auto begin = block->liveOut.begin(), iter = begin, end = block->liveOut.end(); iter != end;
-				     ++iter) {
-					if (iter != begin)
-						std::cerr << ",";
-					std::cerr << " %" << (*iter)->id;
-				}
-			}
-#endif
-			std::cerr << "\e[22;24m\n";
-			for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
-#ifdef DEBUG_READ_WRITTEN
-				int read, written;
-				std::tie(read, written) = instruction->extract();
-				std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
-				          << "\e[0m\n";
+			true,
 #else
-				std::cerr << "    " << instruction->debugExtra() << "\n";
-#endif
-			}
-			std::cerr << "\n";
-		}
+			false,
 #endif
 #ifdef DEBUG_LINEAR
-		for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
-			int read, written;
-			std::tie(read, written) = instruction->extract();
-			std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
-		}
+			true,
+#else
+			false,
 #endif
 #ifdef DEBUG_VARS
-		std::cerr << "    \e[2m; Variables:\e[0m\n";
-		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
-			          << pair.second->definitions.size() << ") =";
-			for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
-				std::cerr << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
-			std::cerr << "  \e[0;2muses =";
-			for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
-				std::cerr << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
-			int spill_cost = pair.second->spillCost();
-			std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
-			if (pair.second->definingBlocks.size() > 1)
-				std::cerr << " (multiple defs)";
-			std::cerr << "\e[0m\n";
+			true,
+#else
+			false,
+#endif
+#ifdef DEBUG_BLOCK_LIVENESS
+			true,
+#else
+			false,
+#endif
+#ifdef DEBUG_READ_WRITTEN
+			true,
+#else
+			false,
+#endif
 #ifdef DEBUG_VAR_LIVENESS
-			std::cerr << "    \e[2m;      \e[32min  =\e[1m";
-			for (const BasicBlockPtr &block: blocks) {
-				if (block->isLiveIn(pair.second))
-					std::cerr << " %" << *block->label;
-			}
-			std::cerr << "\e[0m\n";
-			std::cerr << "    \e[2m;      \e[31mout =\e[1m";
-			for (const BasicBlockPtr &block: blocks) {
-				if (block->isLiveOut(pair.second))
-					std::cerr << " %" << *block->label;
-			}
-			std::cerr << "\e[0m\n";
-#endif
-		}
-#endif
-#if defined(DEBUG_BLOCKS) || defined(DEBUG_LINEAR) || defined(DEBUG_VARS)
-		std::cerr << "\e[94m}\e[39m\n\n";
+			true,
+#else
+			false,
 #endif
 #ifdef DEBUG_RENDER
-		std::cerr << "Rendering.\n";
+			true,
+#else
+			false,
+#endif
 #ifdef DEBUG_ESTIMATIONS
-		for (Node *node: cfg.nodes()) {
-			if (node->data.has_value()) {
-				BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock();
-				if (bb)
-					node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
+			true
+#else
+			false
+#endif
+		);
+	}
+
+	void Function::debug(const bool doBlocks, const bool linear, const bool vars, const bool blockLiveness,
+	                     const bool readWritten, const bool varLiveness, const bool render, const bool estimations) {
+		if (doBlocks || linear || vars)
+			std::cerr << headerString() + " \e[94m{\e[39m\n";
+		if (doBlocks) {
+			for (const BasicBlockPtr &block: blocks) {
+				std::cerr << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
+						<< ": preds =";
+				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
+					if (iter != begin)
+						std::cerr << ",";
+					std::cerr << " %" << **iter;
+				}
+				if (blockLiveness) {
+					if (!block->liveIn.empty()) {
+						std::cerr << "; live-in =";
+						const auto &liveIn = block->liveIn;
+						for (auto begin = liveIn.begin(), iter = begin, end = liveIn.end(); iter != end; ++iter) {
+							if (iter != begin)
+								std::cerr << ",";
+							std::cerr << " %" << (*iter)->id;
+						}
+					}
+					if (!block->liveOut.empty()) {
+						std::cerr << "; live-out =";
+						const auto &liveOut = block->liveOut;
+						for (auto begin = liveOut.begin(), iter = begin, end = liveOut.end(); iter != end; ++iter) {
+							if (iter != begin)
+								std::cerr << ",";
+							std::cerr << " %" << (*iter)->id;
+						}
+					}
+				}
+				std::cerr << "\e[22;24m\n";
+				if (readWritten)
+					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
+						int read, written;
+						std::tie(read, written) = instruction->extract();
+						std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
+						          << "\e[0m\n";
+					}
+				else
+					for (const std::shared_ptr<Instruction> &instruction: block->instructions)
+						std::cerr << "    " << instruction->debugExtra() << "\n";
+				std::cerr << "\n";
 			}
 		}
-#endif
-
-		cfg.renderTo("graph_" + *name + ".png");
-		if (dTree.has_value())
-			dTree->renderTo("graph_D_" + *name + ".png");
-		if (djGraph.has_value())
-			djGraph->renderTo("graph_DJ_" + *name + ".png");
-#endif
+		if (linear)
+			for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
+				int read, written;
+				std::tie(read, written) = instruction->extract();
+				std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
+			}
+		if (vars) {
+			std::cerr << "    \e[2m; Variables:\e[0m\n";
+			for (std::pair<const int, VariablePtr> &pair: variableStore) {
+				std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
+						<< pair.second->definitions.size() << ") =";
+				for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
+					std::cerr << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
+				std::cerr << "  \e[0;2muses =";
+				for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
+					std::cerr << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
+				int spill_cost = pair.second->spillCost();
+				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
+				if (pair.second->definingBlocks.size() > 1)
+					std::cerr << " (multiple defs)";
+				std::cerr << "\e[0m\n";
+				if (varLiveness) {
+					std::cerr << "    \e[2m;      \e[32min  =\e[1m";
+					for (const BasicBlockPtr &block: blocks) {
+						if (block->isLiveIn(pair.second))
+							std::cerr << " %" << *block->label;
+					}
+					std::cerr << "\e[0m\n";
+					std::cerr << "    \e[2m;      \e[31mout =\e[1m";
+					for (const BasicBlockPtr &block: blocks) {
+						if (block->isLiveOut(pair.second))
+							std::cerr << " %" << *block->label;
+					}
+					std::cerr << "\e[0m\n";
+				}
+			}
+		}
+		if (doBlocks || linear || vars)
+			std::cerr << "\e[94m}\e[39m\n\n";
+		if (render) {
+			std::cerr << "Rendering.\n";
+			if (estimations)
+				for (Node *node: cfg.nodes()) {
+					if (node->data.has_value()) {
+						BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock();
+						if (bb)
+							node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
+					}
+				}
+			cfg.renderTo("graph_" + *name + ".png");
+			if (dTree.has_value())
+				dTree->renderTo("graph_D_" + *name + ".png");
+			if (djGraph.has_value())
+				djGraph->renderTo("graph_DJ_" + *name + ".png");
+		}
 	}
 
 	void Function::debugStack() const {

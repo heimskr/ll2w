@@ -284,6 +284,10 @@ namespace LL2W {
 			/** Prints debug information about the function. */
 			void debug();
 
+			/** Prints debug information about the function. */
+			void debug(const bool doBlocks, const bool linear, const bool vars, const bool blockLiveness,
+			           const bool readWritten, const bool varLiveness, const bool render, const bool estimations);
+
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
 

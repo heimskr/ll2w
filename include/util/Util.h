@@ -25,7 +25,6 @@ namespace LL2W::Util {
 
 	bool isHex(const char);
 
-
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 
 	std::string escape(const std::string &);
@@ -110,6 +109,14 @@ namespace LL2W::Util {
 
 		// I don't think there's any other way to cast A<B<C, D>> to A<B<const C, D>>.
 		return *reinterpret_cast<std::vector<typename M::value_type> *>(&vec);
+	}
+
+	template <typename C, typename N>
+	bool contains(const C &container, const N &needle) {
+		for (const auto &item: container)
+			if (item == needle)
+				return true;
+		return false;
 	}
 }
 

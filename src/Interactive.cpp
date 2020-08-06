@@ -58,7 +58,8 @@ namespace LL2W {
 					{"attempt               ", "Attempts register allocation on the selected function."},
 					{"final                 ", "Performs final compilation on the selected function."},
 					{"reset                 ", "Resets the selected function's compilation status flags."},
-					{"debug                 ", "Prints the selected function's compiled code in its current state."},
+					{"debug                 ", "Prints the selected function's compiled code in its current state. "
+					                           "Options: -blocks, linear, vars, blive, vlive, rw, render, estimations"},
 					{"status                ", "Prints the selected function's status flags."},
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
 					{"stack                 ", "Prints the selected function's stack allocations."},
@@ -157,7 +158,15 @@ namespace LL2W {
 				function->finalDone = false;
 			} else if (Util::isAny(first, {"d", "dbg", "debug"})) {
 				GET_FN();
-				function->debug();
+				const bool doBlocks      = !Util::contains(split, "-blocks");
+				const bool linear        =  Util::contains(split, "linear");
+				const bool vars          =  Util::contains(split, "vars");
+				const bool blockLiveness =  Util::contains(split, "blive");
+				const bool readWritten   =  Util::contains(split, "rw");
+				const bool varLiveness   =  Util::contains(split, "vlive");
+				const bool render        =  Util::contains(split, "render");
+				const bool estimations   =  Util::contains(split, "estimations") || Util::contains(split, "est");
+				function->debug(doBlocks, linear, vars, blockLiveness, readWritten, varLiveness, render, estimations);
 			} else if (Util::isAny(first, {"st", "status"})) {
 				GET_FN();
 				info() << "Initial:    " << (function->initialDone? "done" : "not done") << "\n";
