@@ -390,8 +390,14 @@ namespace LL2W {
 		out.open(path);
 		out << toDot(direction);
 		out.close();
-		if (fork() == 0)
-			execlp("dot", "dot", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
+
+		if (fork() == 0) {
+			if (4096 <= allEdges().size())
+				execlp("dot", "dot", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
+			else
+				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
+		}
+
 	}
 
 	decltype(Graph::labelMap)::iterator Graph::begin() {
