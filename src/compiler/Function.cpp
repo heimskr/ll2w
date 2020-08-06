@@ -202,7 +202,7 @@ namespace LL2W {
 		return getVariable(newLabel(), type, definer);
 	}
 
-	bool Function::spill(VariablePtr variable) {
+	bool Function::spill(VariablePtr variable, bool doDebug) {
 		bool out = false;
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
@@ -265,7 +265,8 @@ namespace LL2W {
 			std::cerr << "  No stores inserted for " << *variable << ".\n";
 #endif
 
-		debug();
+		if (doDebug)
+			debug();
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;

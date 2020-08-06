@@ -121,16 +121,16 @@ namespace LL2W::Util {
 }
 
 namespace LL2W {
-	inline std::ostream & warn() {
-		return std::cerr << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
+	inline std::ostream & warn(bool cout = false) {
+		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;33m!\e[39;2m]\e[22;33m Warning: \e[39m";
 	}
 
-	inline std::ostream & error() {
-		return std::cerr << "\e[2m[\e[22;31m!\e[39;2m]\e[22;31m Error: \e[39m";
+	inline std::ostream & error(bool cout = false) {
+		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;31m!\e[39;2m]\e[22;31m Error: \e[39m";
 	}
 
-	inline std::ostream & info() {
-		return std::cerr << "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
+	inline std::ostream & info(bool cout = false) {
+		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
 	}
 
 	inline void debugger() {

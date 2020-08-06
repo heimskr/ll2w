@@ -63,8 +63,9 @@ namespace LL2W {
 					{"status                ", "Prints the selected function's status flags."},
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
 					{"stack                 ", "Prints the selected function's stack allocations."},
+					{"spill <variable>      ", "Spills a variable in the selected function."},
 				}) {
-					std::cerr << "    \e[2m-\e[22m \e[1m" << first << "\e[22m " << second << "\n";
+					std::cout << "    \e[2m-\e[22m \e[1m" << first << "\e[22m " << second << "\n";
 				}
 			} else if (Util::isAny(first, {"l", "ls", "list"})) {
 				if (Util::isAny(rest, {"", "f", "fn", "func", "function"})) {
@@ -186,12 +187,12 @@ namespace LL2W {
 				info() << "Tried IDs:   ";
 				const std::unordered_set<int> &ids = function->allocator->getTriedIDs();
 				for (int tried: std::set<int>(ids.begin(), ids.end()))
-					std::cerr << " " << tried;
-				std::cerr << "\n";
+					std::cout << " " << tried;
+				std::cout << "\n";
 				info() << "Tried labels:";
 				for (const std::string &tried: Util::nsort(function->allocator->getTriedLabels()))
-					std::cerr << " " << tried;
-				std::cerr << "\n";
+					std::cout << " " << tried;
+				std::cout << "\n";
 			} else if (Util::isAny(first, {"stk", "stack"})) {
 				GET_FN();
 				if (function->stack.empty()) {
@@ -199,15 +200,43 @@ namespace LL2W {
 				} else {
 					info() << "Stack locations for \e[1m" << *function->name << "\e[22m:\n";
 					for (const std::pair<const int, StackLocation> &pair: function->stack) {
-						std::cerr << "    \e[2m-\e[22m \e[1m" << std::right << std::setw(4) << pair.first << "\e[22m: "
-						          << (pair.second.purpose == StackLocation::Purpose::Alloca? "alloca" : "spill ")
-						          << " (offset=" << std::right << std::setw(4) << pair.second.offset << ", width="
-						          << pair.second.width << ", align=" << pair.second.align << ") for "
-						          << *pair.second.variable << "\n";
+						std::cout << "    \e[2m-\e[22m";
+						printStackLocation(pair.second);
+					}
+				}
+			} else if (Util::isAny(first, {"sp", "spill"})) {
+				GET_FN();
+				if (rest.empty()) {
+					error() << "Please specify a variable to spill.\n";
+				} else {
+					if (rest.front() == '%')
+						rest.erase(0, 1);
+					if (!Util::isNumeric(rest)) {
+						error() << "Expected a numeric variable name.\n";
+					} else {
+						int id = Util::parseLong(rest);
+						if (function->variableStore.count(id) == 0) {
+							error() << "Variable not found: \e[1m%" << id << "\e[22m.\n";
+						} else {
+							VariablePtr variable = function->variableStore.at(id);
+							function->addToStack(variable, StackLocation::Purpose::Spill);
+							const bool result = function->spill(variable);
+							info() << "Spill result: " << (result? "" : "no ") << "instructions were inserted.\n";
+							if (result) {
+								info() << "Stack location: ";
+								printStackLocation(function->getSpill(variable));
+							}
+						}
 					}
 				}
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << PROMPT;
 		}
+	}
+
+	void printStackLocation(const StackLocation &location) {
+		std::cout << "\e[1m" << std::right << std::setw(4) << location.offset << "\e[22m: "
+		          << (location.purpose == StackLocation::Purpose::Alloca? "alloca" : "spill ") << " (width="
+		          << location.width << ", align=" << location.align << ") for " << *location.variable << "\n";
 	}
 }

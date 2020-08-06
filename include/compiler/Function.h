@@ -142,7 +142,7 @@ namespace LL2W {
 			VariablePtr newVariable(TypePtr = nullptr, BasicBlockPtr = nullptr);
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
-			bool spill(VariablePtr);
+			bool spill(VariablePtr, bool doDebug = false);
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
 			std::shared_ptr<Instruction> firstInstruction(bool includeComments = false);
