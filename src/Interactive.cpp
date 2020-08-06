@@ -64,6 +64,7 @@ namespace LL2W {
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
 					{"stack                 ", "Prints the selected function's stack allocations."},
 					{"spill <variable>      ", "Spills a variable in the selected function."},
+					{"pig                   ", "Renders the selected function's interference graph."},
 				}) {
 					std::cout << "    \e[2m-\e[22m \e[1m" << first << "\e[22m " << second << "\n";
 				}
@@ -216,7 +217,8 @@ namespace LL2W {
 					} else {
 						int id = Util::parseLong(rest);
 						if (function->variableStore.count(id) == 0) {
-							error() << "Variable not found: \e[1m%" << id << "\e[22m.\n";
+							error() << "Variable not found: \e[1m%" << id << "\e[22m." << (function->initialDone? "\n" :
+								" Did you remember to run \e[1minit\e[22m?\n");
 						} else {
 							VariablePtr variable = function->variableStore.at(id);
 							function->addToStack(variable, StackLocation::Purpose::Spill);
@@ -228,6 +230,15 @@ namespace LL2W {
 							}
 						}
 					}
+				}
+			} else if (Util::isAny(first, {"pig", "interference", "🐖", "🐗", "🐷", "🐽"})) {
+				GET_FN();
+				if (function->allocator->interference.empty()) {
+					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+				} else {
+					function->allocator->interference.renderTo("interference_" + Util::escape(*function->name)
+						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".png");
+					info() << "Rendering the interference graph in the background.\n";
 				}
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << PROMPT;

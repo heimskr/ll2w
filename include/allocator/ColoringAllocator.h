@@ -16,8 +16,6 @@ namespace LL2W {
 	/** Assigns registers using a graph coloring algorithm. */
 	class ColoringAllocator: public Allocator {
 		private:
-			Graph interference;
-
 			/** Creates an interference graph of all the function's variables. */
 			void makeInterferenceGraph();
 
@@ -31,6 +29,8 @@ namespace LL2W {
 			std::unordered_set<std::string> triedLabels;
 
 		public:
+			Graph interference;
+
 			using Allocator::Allocator;
 
 			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
