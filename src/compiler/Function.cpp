@@ -317,8 +317,13 @@ namespace LL2W {
 		std::cerr << "\n";
 #endif
 
+		// TODO: can some of this be targeted to just the spilled variable?
 		reindexInstructions();
+		for (BasicBlockPtr &block: blocks)
+			block->extract(true);
+		resetLiveness();
 		extractVariables(true); // Reset stale use/define data.
+		computeLiveness();
 		return out;
 	}
 
@@ -993,7 +998,7 @@ namespace LL2W {
 				std::cerr << "  \e[0;2muses =";
 				for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
 					std::cerr << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
-				int spill_cost = pair.second->spillCost();
+				const int spill_cost = pair.second->spillCost();
 				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
 				if (pair.second->definingBlocks.size() > 1)
 					std::cerr << " (multiple defs)";
