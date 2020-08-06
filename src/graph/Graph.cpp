@@ -45,6 +45,10 @@ namespace LL2W {
 		return nodes_.size();
 	}
 
+	bool Graph::empty() const {
+		return nodes_.empty();
+	}
+
 	const std::list<Node *> Graph::nodes() const {
 		return nodes_;
 	}
