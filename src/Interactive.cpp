@@ -10,6 +10,7 @@
 #include "Interactive.h"
 
 #define PROMPT "\e[2m>>\e[22m ";
+#define DASH "\e[2m-\e[22m"
 
 #define GET_FN_SEL() Function *function; if (rest.empty()) { if (!selected) { error() << "No function is selected.\n"; \
 	std::cout << PROMPT; continue; } function = selected; } else { if (!checkRest()) { std::cout << \
@@ -31,7 +32,6 @@ namespace LL2W {
 			std::string rest = space == std::string::npos? "" : line.substr(space + 1);
 			const std::vector<std::string> split = Util::split(rest, " ", false);
 			std::string lastRest;
-			// const size_t size = split.size();
 
 			std::function<bool()> checkRest = [&]() -> bool {
 				if (rest == "_")
@@ -57,6 +57,8 @@ namespace LL2W {
 					{"compile               ", "Compiles the selected function."},
 					{"debug                 ", "Prints the selected function's compiled code in its current state. "
 					                           "Options: -blocks, linear, vars, blive, vlive, rw, render, estimations"},
+					{"edges <id>            ", "Prints the edges for a given node in the selected function's "
+					                           "interference graph."},
 					{"final                 ", "Performs final compilation on the selected function."},
 					{"hd <limit>            ", "Prints the interference graph nodes in descending order of degree."},
 					{"init                  ", "Performs initial compilation on the selected function."},
@@ -67,16 +69,17 @@ namespace LL2W {
 					{"stack                 ", "Prints the selected function's stack allocations."},
 					{"status                ", "Prints the selected function's status flags."},
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
+					{"var <id>              ", "Prints information about a variable in the selected function."},
 				}) {
-					std::cout << "    \e[2m-\e[22m \e[1m" << first << "\e[22m " << second << "\n";
+					std::cout << "    " DASH " \e[1m" << first << "\e[22m " << second << "\n";
 				}
 			} else if (Util::isAny(first, {"l", "ls", "list"})) {
 				if (Util::isAny(rest, {"", "f", "fn", "func", "function"})) {
 					for (const std::pair<const std::string, LL2W::Function *> &pair: Util::mapnsort(program.functions))
-						std::cout << "\e[2m-\e[22m " << pair.second->headerString() << "\n";
+						std::cout << DASH " " << pair.second->headerString() << "\n";
 				} else if (Util::isAny(rest, {"g", "gl", "global", "globals"})) {
 					for (const std::pair<const std::string, GlobalVarDef *> &pair: Util::mapnsort(program.globals))
-						std::cout << "\e[2m-\e[22m " << pair.first << "\n";
+						std::cout << DASH " " << pair.first << "\n";
 				} else error() << "ls: Not sure what \"" << rest << "\" is.\n";
 			} else if (Util::isAny(first, {"c", "comp", "compile"})) {
 				if (rest.empty()) {
@@ -155,7 +158,6 @@ namespace LL2W {
 					info() << "Final compilation for \e[1m" << *function->name << "\e[22m complete.\n";
 				}
 			} else if (Util::isAny(first, {"r", "reset"})) {
-				// Resets the initialDone, allocationDone and finalDone booleans for a function.
 				GET_FN();
 				function->initialDone = false;
 				function->allocationDone = false;
@@ -203,7 +205,7 @@ namespace LL2W {
 				} else {
 					info() << "Stack locations for \e[1m" << *function->name << "\e[22m:\n";
 					for (const std::pair<const int, StackLocation> &pair: function->stack) {
-						std::cout << "    \e[2m-\e[22m";
+						std::cout << "    " DASH;
 						printStackLocation(pair.second);
 					}
 				}
@@ -266,12 +268,96 @@ namespace LL2W {
 					if (nodes.size() < max)
 						max = nodes.size();
 					for (size_t i = 0; i < max; ++i)
-						std::cout << "\e[2m-\e[22m %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
+						std::cout << DASH " %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
 				}
 			} else if (Util::isAny(first, {"m", "make", "mig"})) {
 				GET_FN();
 				function->allocator->makeInterferenceGraph();
 				info() << "Generated an interference graph for \e[1m" << *function->name << "\e[22m.\n";
+			} else if (Util::isAny(first, {"e", "ed", "edges"})) {
+				GET_FN();
+				if (function->allocator->interference.empty()) {
+					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+				} else if (rest.empty()) {
+					error() << "Please specify a node label.\n";
+				} else {
+					if (rest.front() == '%')
+						rest.erase(0, 1);
+					Graph &interference = function->allocator->interference;
+					if (!interference.hasLabel(rest)) {
+						error() << "Couldn't find \e[1m%" << rest << "\e[22m.\n";
+					} else {
+						bool first = true;
+						for (Node *neighbor: interference[rest].allEdges()) {
+							if (!first)
+								std::cout << " ";
+							else
+								first = false;
+							std::cout << neighbor->label();
+						}
+						std::cout << "\n";
+					}
+				}
+			} else if (Util::isAny(first, {"v", "var", "variable"})) {
+				GET_FN();
+				if (!rest.empty() && rest.front() == '%')
+					rest.erase(0, 1);
+				if (!Util::isNumeric(rest)) {
+					error() << "Expected a numeric identifier.\n";
+				} else {
+					int id = Util::parseLong(rest);
+					if (function->variableStore.count(id) == 0) {
+						error() << "Variable \e[1m%" << id << "\e[22m not found.\n";
+					} else {
+						VariablePtr variable = function->variableStore.at(id);
+						if (variable->getParent())
+							info() << "Parent: " << *variable->getParent() << "\n";
+						if (!variable->getAliases().empty()) {
+							std::ostream &stream = info() << "Aliases:";
+							for (Variable *alias: variable->getAliases())
+								stream << " " << *alias;
+							stream << "\n";
+						} else if (variable->getParent() && !variable->getParent()->getAliases().empty()) {
+							// TODO: reduce code duplication
+							std::ostream &stream = info() << "Aliases:";
+							for (Variable *alias: variable->getParent()->getAliases())
+								stream << " " << *alias;
+							stream << "\n";
+						}
+						info() << "Defining blocks:\n";
+						for (const std::weak_ptr<BasicBlock> &def: variable->definingBlocks)
+							std::cout << DASH " %" << *def.lock()->label << "\n";
+						info() << "Using blocks:\n";
+						for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
+							std::cout << DASH " %" << *use.lock()->label << "\n";
+						const int spill_cost = variable->spillCost();
+						info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
+						       << "\e[22m\n";
+						bool live_in_anywhere = false, live_out_anywhere = false;
+						for (const BasicBlockPtr &block: function->blocks)
+							if (block->isLiveIn(variable)) {
+								live_in_anywhere = true;
+								break;
+							}
+						for (const BasicBlockPtr &block: function->blocks)
+							if (block->isLiveOut(variable)) {
+								live_out_anywhere = true;
+								break;
+							}
+						if (live_in_anywhere) {
+							info() << "Live-in at:\n";
+							for (const BasicBlockPtr &block: function->blocks)
+								if (block->isLiveIn(variable))
+									std::cout << DASH " %" << *block->label << "\n";
+						}
+						if (live_out_anywhere) {
+							info() << "Live-out at:\n";
+							for (const BasicBlockPtr &block: function->blocks)
+								if (block->isLiveOut(variable))
+									std::cout << DASH " %" << *block->label << "\n";
+						}
+					}
+				}
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << PROMPT;
 		}

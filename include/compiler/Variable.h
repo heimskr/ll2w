@@ -49,6 +49,7 @@ namespace LL2W {
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(Variable &);
 
+			Variable * getParent() const { return parent; }
 			const std::unordered_set<Variable *> & getAliases() const { return aliases; }
 
 			void addDefiner(std::shared_ptr<BasicBlock>);

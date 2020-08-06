@@ -90,6 +90,9 @@ namespace LL2W {
 			/** Returns a const set of the node's inward edges. */
 			const Set & in() const;
 
+			/** Returns a set of the node's outward and inward edges. */
+			Set allEdges() const;
+
 			/** Returns whether there exists a path from this node to another. */
 			bool canReach(Node &);
 			void clearReachability();

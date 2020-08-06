@@ -86,6 +86,15 @@ namespace LL2W {
 		return in_;
 	}
 
+	Node::Set Node::allEdges() const {
+		Set set;
+		for (Node *node: out_)
+			set.insert(node);
+		for (Node *node: in_)
+			set.insert(node);
+		return set;
+	}
+
 	bool Node::canReach(Node &other) {
 		if (other.owner != owner)
 			return false;
