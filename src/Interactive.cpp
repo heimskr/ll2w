@@ -53,18 +53,20 @@ namespace LL2W {
 					{"ls g                  ", "Lists all globals."},
 					{"info <function|global>", "Shows information about a function or global."},
 					{"select <function>     ", "Selects a function."},
-					{"compile               ", "Compiles the selected function."},
-					{"init                  ", "Performs initial compilation on the selected function."},
 					{"attempt               ", "Attempts register allocation on the selected function."},
-					{"final                 ", "Performs final compilation on the selected function."},
-					{"reset                 ", "Resets the selected function's compilation status flags."},
+					{"compile               ", "Compiles the selected function."},
 					{"debug                 ", "Prints the selected function's compiled code in its current state. "
 					                           "Options: -blocks, linear, vars, blive, vlive, rw, render, estimations"},
+					{"final                 ", "Performs final compilation on the selected function."},
+					{"hd <limit>            ", "Prints the interference graph nodes in descending order of degree."},
+					{"init                  ", "Performs initial compilation on the selected function."},
+					{"mig                   ", "Makes an interference graph for the selected function."},
+					{"pig                   ", "Renders the selected function's interference graph."},
+					{"spill <variable>      ", "Spills a variable in the selected function."},
+					{"reset                 ", "Resets the selected function's compilation status flags."},
+					{"stack                 ", "Prints the selected function's stack allocations."},
 					{"status                ", "Prints the selected function's status flags."},
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
-					{"stack                 ", "Prints the selected function's stack allocations."},
-					{"spill <variable>      ", "Spills a variable in the selected function."},
-					{"pig                   ", "Renders the selected function's interference graph."},
 				}) {
 					std::cout << "    \e[2m-\e[22m \e[1m" << first << "\e[22m " << second << "\n";
 				}
@@ -240,6 +242,36 @@ namespace LL2W {
 						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".png");
 					info() << "Rendering the interference graph in the background.\n";
 				}
+			} else if (Util::isAny(first, {"hd", "highest"})) {
+				GET_FN();
+				if (function->allocator->interference.empty()) {
+					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+				} else {
+					size_t max = SIZE_MAX;
+					if (!rest.empty()) {
+						if (!Util::isNumeric(rest)) {
+							error() << "Invalid limit specified.\n";
+							std::cout << PROMPT;
+							continue;
+						}
+						max = Util::parseLong(rest);
+					}
+
+					std::vector<std::pair<int, Node *>> nodes;
+					for (Node *node: function->allocator->interference.nodes())
+						nodes.push_back({node->degree(), node});
+					std::sort(nodes.begin(), nodes.end(), [](const auto &left, const auto &right) {
+						return left.first > right.first;
+					});
+					if (nodes.size() < max)
+						max = nodes.size();
+					for (size_t i = 0; i < max; ++i)
+						std::cout << "\e[2m-\e[22m %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
+				}
+			} else if (Util::isAny(first, {"m", "make", "mig"})) {
+				GET_FN();
+				function->allocator->makeInterferenceGraph();
+				info() << "Generated an interference graph for \e[1m" << *function->name << "\e[22m.\n";
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << PROMPT;
 		}

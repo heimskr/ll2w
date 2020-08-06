@@ -16,6 +16,14 @@ namespace LL2W {
 	/** Assigns registers using a graph coloring algorithm. */
 	class ColoringAllocator: public Allocator {
 		private:
+			std::unordered_set<int> triedIDs;
+			std::unordered_set<std::string> triedLabels;
+
+		public:
+			Graph interference;
+
+			using Allocator::Allocator;
+
 			/** Creates an interference graph of all the function's variables. */
 			void makeInterferenceGraph();
 
@@ -24,14 +32,6 @@ namespace LL2W {
 
 			/** Selects the variable with the lowest spill cost. */
 			std::shared_ptr<Variable> selectLowestSpillCost() const;
-
-			std::unordered_set<int> triedIDs;
-			std::unordered_set<std::string> triedLabels;
-
-		public:
-			Graph interference;
-
-			using Allocator::Allocator;
 
 			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
