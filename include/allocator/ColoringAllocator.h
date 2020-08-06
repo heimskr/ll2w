@@ -37,6 +37,9 @@ namespace LL2W {
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
 			 *  colorable, it returns Success. */
 			Result attempt() override;
+
+			const std::unordered_set<int> getTriedIDs() const { return triedIDs; }
+			const std::unordered_set<std::string> getTriedLabels() const { return triedLabels; }
 	};
 
 	// int allocateColoring(Function &);

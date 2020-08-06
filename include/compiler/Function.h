@@ -17,6 +17,7 @@
 
 namespace LL2W {
 	class ASTNode;
+	class ColoringAllocator;
 	struct FunctionArgs;
 	class Program;
 
@@ -108,7 +109,7 @@ namespace LL2W {
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
 			int initialPushedBytes = -1;
 
-			Allocator *allocator = nullptr;
+			ColoringAllocator *allocator = nullptr;
 
 			bool initialDone = false, allocationDone = false, finalDone = false;
 

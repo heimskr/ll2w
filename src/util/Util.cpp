@@ -26,6 +26,8 @@ namespace LL2W::Util {
 	}
 
 	bool isNumeric(const std::string &str) {
+		if (str.empty())
+			return false;
 		for (char c: str) {
 			if (c < '0' || '9' < c)
 				return false;
