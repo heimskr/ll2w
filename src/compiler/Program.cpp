@@ -50,10 +50,6 @@ namespace LL2W {
 	Program::~Program() {
 		for (std::pair<const std::string, Function *> &pair: functions)
 			delete pair.second;
-		for (std::pair<const std::string, FunctionHeader *> &pair: declarations)
-			delete pair.second;
-		for (std::pair<const std::string, GlobalVarDef *> &pair: globals)
-			delete pair.second;
 	}
 
 	void Program::compile() {

@@ -12,7 +12,7 @@
 #include "Interactive.h"
 
 // #define DEBUGMODE
-#define INTERACTIVE
+// #define INTERACTIVE
 
 void lttest();
 void djtest();
