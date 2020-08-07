@@ -55,6 +55,8 @@ namespace LL2W {
 			/** Fills phiUses. */
 			void extractPhi();
 
+			bool inPhiDefs(std::shared_ptr<Variable>) const;
+
 			/** Returns the number of instructions in the basic block. */
 			size_t size() const { return instructions.size(); }
 

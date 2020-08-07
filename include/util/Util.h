@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "util/strnatcmp.h"
@@ -87,6 +88,22 @@ namespace LL2W::Util {
 		} else {
 			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
 				return strnatcasecmp(a.c_str(), b.c_str()) == -1;
+			});
+		}
+
+		return out;
+	}
+
+	template <typename C, typename F, std::enable_if_t<!std::is_same<F, bool>::value, int> = 0>
+	auto nsort(const C &container, F get, const bool sensitive = true) {
+		std::vector<typename C::value_type> out(container.begin(), container.end());
+		if (sensitive) {
+			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
+				return strnatcmp(get(a).c_str(), get(b).c_str()) == -1;
+			});
+		} else {
+			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
+				return strnatcasecmp(get(a).c_str(), get(b).c_str()) == -1;
 			});
 		}
 
