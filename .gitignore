@@ -46,3 +46,5 @@ src/parser/yylex*
 PVS-Studio.log
 report.tasks
 strace_out
+callgrind.*
+

@@ -4,6 +4,8 @@
 #include <string>
 #include <tuple>
 
+#include <limits.h>
+
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Program.h"
 #include "util/Util.h"
