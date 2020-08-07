@@ -60,6 +60,21 @@ namespace LL2W {
 						phiUses.insert(dynamic_cast<LocalValue *>(pair.first.get())->variable);
 	}
 
+	bool BasicBlock::inPhiDefs(std::shared_ptr<Variable> var) const {
+		bool found_in_written = false;
+		for (const VariablePtr &other: written)
+			if (*var == *other) {
+				found_in_written = true;
+				break;
+			}
+		if (!found_in_written)
+			return false;
+		for (const VariablePtr &other: nonPhiWritten)
+			if (*var == *other)
+				return false;
+		return true;
+	}
+
 	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
 		if (instructions.empty()) {
 			instructions.push_back(instruction);

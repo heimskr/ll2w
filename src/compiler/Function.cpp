@@ -319,9 +319,9 @@ namespace LL2W {
 
 		// TODO: can some of this be targeted to just the spilled variable?
 		reindexInstructions();
+		resetLiveness();
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		resetLiveness();
 		extractVariables(true); // Reset stale use/define data.
 		computeLiveness();
 		return out;
@@ -781,6 +781,7 @@ namespace LL2W {
 			block->extractPhi();
 			block->extract();
 			for (VariablePtr var: block->phiUses) {
+				std::cerr << "Block[" << *block->label << "], Var[" << var->id << "]\n";
 				block->liveOut.insert(var);
 				upAndMark(block, var);
 			}
@@ -790,6 +791,9 @@ namespace LL2W {
 	}
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
+		const bool dbg = var->id == 850;
+		if (dbg) std::cerr << "UAM: Block[" << *block->label << "], Var[" << var->id << "]\n";
+
 		for (const std::shared_ptr<const Instruction> instruction: block->instructions) {
 			if (instruction->isPhi())
 				continue;
@@ -805,8 +809,16 @@ namespace LL2W {
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
 
+		if (dbg) {
+			std::cerr << "written:  "; for (const VariablePtr &v: block->written) std::cerr << " " << *v; std::cerr << "\n";
+			std::cerr << "NPwritten:"; for (const VariablePtr &v: block->nonPhiWritten) std::cerr << " " << *v; std::cerr << "\n";
+			std::cerr << (block->inPhiDefs(var)? "true" : "false") << "\n";
+			// std::cerr << block->written.count(var) << " " << block->nonPhiWritten.count(var) << "\n\n";
+		}
+
 		// if v ∈ PhiDefs(B) then return
-		if (block->written.count(var) != 0 && block->nonPhiWritten.count(var) == 0)
+		// if (block->written.count(var) != 0 && block->nonPhiWritten.count(var) == 0)
+		if (block->inPhiDefs(var))
 			return;
 
 		// for each P ∈ CFG_preds(B) do

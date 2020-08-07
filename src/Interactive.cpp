@@ -334,30 +334,42 @@ namespace LL2W {
 						info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
 						       << "\e[22m\n";
 						bool live_in_anywhere = false, live_out_anywhere = false;
-						for (const BasicBlockPtr &block: function->blocks)
+						const std::vector<BasicBlockPtr> sorted_blocks = Util::nsort(function->blocks,
+							[](const BasicBlockPtr &block) -> const std::string & {
+								return *block->label;
+							}, true);
+						for (const BasicBlockPtr &block: sorted_blocks)
 							if (block->isLiveIn(variable)) {
 								live_in_anywhere = true;
 								break;
 							}
-						for (const BasicBlockPtr &block: function->blocks)
+						for (const BasicBlockPtr &block: sorted_blocks)
 							if (block->isLiveOut(variable)) {
 								live_out_anywhere = true;
 								break;
 							}
 						if (live_in_anywhere) {
 							info() << "Live-in at:\n";
-							for (const BasicBlockPtr &block: function->blocks)
+							for (const BasicBlockPtr &block: sorted_blocks)
 								if (block->isLiveIn(variable))
 									std::cout << DASH " %" << *block->label << "\n";
 						}
 						if (live_out_anywhere) {
 							info() << "Live-out at:\n";
-							for (const BasicBlockPtr &block: function->blocks)
+							for (const BasicBlockPtr &block: sorted_blocks)
 								if (block->isLiveOut(variable))
 									std::cout << DASH " %" << *block->label << "\n";
 						}
 					}
 				}
+			} else if (Util::isAny(first, {"rl", "resetlive"})) {
+				GET_FN();
+				function->resetLiveness();
+				for (BasicBlockPtr &block: function->blocks)
+					block->extract(true);
+				function->extractVariables(true);
+				function->computeLiveness();
+				info() << "Recomputed liveness data for \e[1m" << *function->name << "\e[22m.\n";
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cout << PROMPT;
 		}
