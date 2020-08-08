@@ -13,7 +13,7 @@
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
 	const WeakSet<BasicBlock> &using_blocks):
-		id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
+		originalID(id_), id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
 	int Variable::weight() const {
 		int sum = 0;
@@ -87,11 +87,24 @@ namespace LL2W {
 		return "$" + WhyInfo::registerName(reg) + ":" + std::to_string(id);
 	}
 
+	std::string Variable::functionName() const {
+		return definingBlocks.empty()? (usingBlocks.empty()? "?" : usingBlocks.begin()->lock()->parent->name->substr(1))
+		                             : definingBlocks.begin()->lock()->parent->name->substr(1);
+	}
+
 	void Variable::makeAliasOf(Variable &new_parent) {
-		if (&new_parent == this || new_parent.aliases.count(this) != 0)
-			return;
 #ifdef DEBUG_ALIASES
-		std::cerr << *this << ".makeAliasOf(" << new_parent << ")\n";
+		std::cerr << *this << "{o" << originalID << "}.makeAliasOf(" << new_parent << "{o" << new_parent.originalID
+		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << &new_parent;
+#endif
+		if (&new_parent == this || new_parent.parent == this || new_parent.aliases.count(this) != 0) {
+#ifdef DEBUG_ALIASES
+			std::cerr << " \e[2m...\e[22;31mnope\e[39m\n";
+#endif
+			return;
+		}
+#ifdef DEBUG_ALIASES
+		std::cerr << "\n";
 #endif
 		parent = &new_parent;
 		new_parent.aliases.insert(this);

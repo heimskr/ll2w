@@ -22,6 +22,7 @@ namespace LL2W {
 			std::optional<int> spillCost_;
 
 		public:
+			const int originalID;
 			int id;
 			TypePtr type = nullptr;
 			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
@@ -45,6 +46,8 @@ namespace LL2W {
 			/** Returns whether the variable has only one using block and whose single using block is the same as its
 			 *  defining block. */
 			bool isSimple() const;
+
+			std::string functionName() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(Variable &);
