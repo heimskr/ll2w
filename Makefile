@@ -7,7 +7,7 @@ CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
 # TESTFILE		?= ~/src/mal/combined.strprint.ll
 # TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
-TESTFILE		?= ll/fat.ll
+TESTFILE		?= ll/pathc.ll
 # TESTFILE		?= ll/mintf.ll
 MAIN			:= main
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)

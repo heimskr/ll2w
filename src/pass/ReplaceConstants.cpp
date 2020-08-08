@@ -28,12 +28,10 @@ namespace LL2W::Passes {
 					warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				} else {
-					std::list<int> indices;
-					for (const std::pair<int, long> &decimal_pair: gep->decimals)
-						indices.push_back(decimal_pair.second);
 					TypePtr out_type;
-					const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
-					VariablePtr new_var = function.newVariable(out_type, instruction->parent.lock());
+					const int offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8);
+					TypePtr ptr_type = std::make_shared<PointerType>(out_type);
+					VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 					auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 					function.insertBefore(instruction, setsym);
 					setsym->extract();

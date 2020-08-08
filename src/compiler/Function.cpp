@@ -8,7 +8,7 @@
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
 // #define DEBUG_RENDER
-#define DEBUG_SPILL
+// #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 // #define DEBUG_READ_WRITTEN
 // #define REGISTER_PRESSURE 4

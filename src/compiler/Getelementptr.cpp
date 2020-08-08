@@ -4,6 +4,7 @@
 #include "exception/TypeError.h"
 #include "parser/Types.h"
 #include "parser/StructNode.h"
+#include "parser/Values.h"
 
 namespace LL2W::Getelementptr {
 	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type) {
@@ -51,5 +52,12 @@ namespace LL2W::Getelementptr {
 
 	int compute(TypePtr type, std::list<int> indices, TypePtr *out_type) {
 		return compute_mutating(type, indices, out_type);
+	}
+
+	int compute(const GetelementptrValue *value, TypePtr *out_type) {
+		std::list<int> indices;
+		for (const std::pair<int, long> &decimal_pair: value->decimals)
+			indices.push_back(decimal_pair.second);
+		return compute_mutating(value->ptrType, indices, out_type);
 	}
 }

@@ -11,7 +11,7 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-#define DEBUG_COLORING
+// #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 

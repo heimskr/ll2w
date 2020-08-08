@@ -8,6 +8,8 @@
 #include "compiler/Variable.h"
 #include "options.h"
 
+// #define DEBUG_ALIASES
+
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
 	const WeakSet<BasicBlock> &using_blocks):
@@ -88,9 +90,9 @@ namespace LL2W {
 	void Variable::makeAliasOf(Variable &new_parent) {
 		if (&new_parent == this || new_parent.aliases.count(this) != 0)
 			return;
-
+#ifdef DEBUG_ALIASES
 		std::cerr << *this << ".makeAliasOf(" << new_parent << ")\n";
-
+#endif
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {
