@@ -660,10 +660,6 @@ namespace LL2W {
 	void Function::compile() {
 		initialCompile();
 
-		for (const auto &[id, ptr]: variableStore)
-			std::cerr << id << " ";
-		std::cerr << "\n";
-
 #ifdef DEBUG_SPILL
 		debug();
 #endif
@@ -1076,17 +1072,13 @@ namespace LL2W {
 	}
 
 	void Function::hackVariables() {
-		std::cerr << "<hack>\n";
 		std::list<VariablePtr> all_vars = extraVariables;
 		for (auto &pair: variableStore)
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
-			std::cerr << "Var: " << std::string(*var) << "\n";
 			Variable *parent = var->getParent();
-			if (var->reg == -1 && parent) {
-				std::cerr << "Var " << std::string(*var) << "->reg := " << parent->reg << "\n";
+			if (var->reg == -1 && parent)
 				var->reg = parent->reg;
-			}
 			if (var->reg == -1) {
 				for (Variable *alias: var->getAliases())
 					if (alias->reg != -1) {
@@ -1106,15 +1098,11 @@ namespace LL2W {
 				}
 			} else {
 				for (Variable *alias: var->getAliases()) {
-					std::cerr << "\tAlias: " << std::string(*alias) << "\n";
-					if (alias->reg == -1) {
-						std::cerr << "Alias " << std::string(*alias) << "->reg := " << var->reg << "\n";
+					if (alias->reg == -1)
 						alias->reg = var->reg;
-					}
 				}
 			}
 		}
-		std::cerr << "</hack>\n";
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {
