@@ -57,15 +57,15 @@ namespace LL2W::Passes {
 							target->addDefiner(block);
 							new_instr->extract();
 						} else {
-							std::cout << "pair.first (" << std::string(*pair.first) << ") isn't intlike in  "
-									<< phi_node->debugExtra() << "\n";
+							std::cerr << "pair.first (" << std::string(*pair.first) << ") isn't intlike in  "
+							          << phi_node->debugExtra() << "\n";
 						}
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
 						// temporary.
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
-							function.retiredVariables.push_back(to_rename);
+							function.extraVariables.push_back(to_rename);
 							std::cerr << "coalescePhi: Removing variable " << std::string(*to_rename) << "\n";
 							function.variableStore.erase(to_rename->id);
 							to_rename->makeAliasOf(*target);

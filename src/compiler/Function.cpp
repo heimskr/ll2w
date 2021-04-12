@@ -1077,7 +1077,7 @@ namespace LL2W {
 
 	void Function::hackVariables() {
 		std::cerr << "<hack>\n";
-		std::list<VariablePtr> all_vars = retiredVariables;
+		std::list<VariablePtr> all_vars = extraVariables;
 		for (auto &pair: variableStore)
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
@@ -1093,6 +1093,17 @@ namespace LL2W {
 						var->reg = alias->reg;
 						break;
 					}
+				// As a last resort, if this variable *still* has no register assigned, check variableStore for a
+				// variable with the same id and try to absorb its register assignment.
+				if (var->reg == -1) {
+					for (VariablePtr &other: all_vars)
+						if (other != var && other->id == var->id && other->reg != -1) {
+							var->reg = other->reg;
+							break;
+						}
+					if (var->reg == -1)
+						std::cerr << "hackVariables: last resort failed\n";
+				}
 			} else {
 				for (Variable *alias: var->getAliases()) {
 					std::cerr << "\tAlias: " << std::string(*alias) << "\n";

@@ -74,8 +74,9 @@ namespace LL2W {
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<int, VariablePtr> variableStore;
 
-			/** A list of variables that have been removed but are likely to be still referenced somewhere. */
-			std::list<VariablePtr> retiredVariables;
+			/** A list of variables that have been removed but are likely to be still referenced somewhere, or that
+			 *  aren't in variableStore but need to be processed by hackVariables. */
+			std::list<VariablePtr> extraVariables;
 
 			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by
 			 *  InsertPrologue. */
