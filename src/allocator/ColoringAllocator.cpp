@@ -11,7 +11,7 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-// #define DEBUG_COLORING
+#define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 
@@ -88,6 +88,11 @@ namespace LL2W {
 
 		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
+#ifdef DEBUG_COLORING
+			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->reg << " -> " << pair.second->color << "\n";
+			if (ptr->id == 8)
+				ptr->debug();
+#endif
 			if (ptr->reg == -1)
 				ptr->setRegister(pair.second->color);
 		}
@@ -208,7 +213,7 @@ namespace LL2W {
 				for (size_t j = i + 1; j < size; ++j) {
 					VariablePtr left  = function->variableStore.at(labels[i]),
 					            right = function->variableStore.at(labels[j]);
-					if (left->id != right->id && hasOverlap(live[left->id], live[right->id])) {
+					if (left->id != right->id && Util::hasOverlap(live[left->id], live[right->id])) {
 						interference.link(std::to_string(left->id), std::to_string(right->id), true);
 						++links;
 					}

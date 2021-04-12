@@ -11,7 +11,7 @@
 #include "parser/StructNode.h"
 #include "util/Util.h"
 
-// #define SINGLE_FUNCTION "@find_free_block"
+#define SINGLE_FUNCTION "@merge_blocks"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {

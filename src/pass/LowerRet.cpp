@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -39,6 +41,8 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false);
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
+				// This is a hack to make sure the variable being returned is processed by hackVariables.
+				function.retiredVariables.push_back(var);
 				function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
 			}
 

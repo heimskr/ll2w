@@ -9,7 +9,6 @@ OUTPUT			?= ll2w
 # TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
 TESTFILE		?= ll/mal.ll
 # TESTFILE		?= ll/mintf.ll
-MAIN			:= main
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
 

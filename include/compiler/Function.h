@@ -297,6 +297,8 @@ namespace LL2W {
 			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);
 
+			void hackVariables();
+
 			/** Convenience method for creating a precolored assembler register. */
 			VariablePtr mx(unsigned char, BasicBlockPtr);
 

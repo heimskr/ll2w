@@ -109,10 +109,9 @@ namespace LL2W {
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
-				for (const std::unordered_set<VariablePtr> &variables: {instruction->read, instruction->written}) {
+				for (const std::unordered_set<VariablePtr> &variables: {instruction->read, instruction->written})
 					for (VariablePtr vptr: variables)
 						variableStore.insert({vptr->id, vptr});
-				}
 			}
 		};
 
@@ -637,11 +636,11 @@ namespace LL2W {
 		updateInstructionNodes();
 		reindexBlocks();
 		initialDone = true;
+		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
+		Passes::coalescePhi(*this);
 	}
 
 	void Function::finalCompile() {
-		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
-		Passes::coalescePhi(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
@@ -654,11 +653,16 @@ namespace LL2W {
 		Passes::loadArgumentsReadjust(*this);
 		Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
+		hackVariables();
 		finalDone = true;
 	}
 
 	void Function::compile() {
 		initialCompile();
+
+		for (const auto &[id, ptr]: variableStore)
+			std::cerr << id << " ";
+		std::cerr << "\n";
 
 #ifdef DEBUG_SPILL
 		debug();
@@ -667,6 +671,16 @@ namespace LL2W {
 		while (allocator->attempt() != Allocator::Result::Success);
 
 		finalCompile();
+
+		// for (const auto &[id, ptr]: variableStore) {
+		// 	std::cerr << id << "(o" << ptr->originalID << " r" << ptr->reg << ")";
+		// 	if (Variable *parent = ptr->getParent())
+		// 		std::cerr << ", parent = " << std::string(*parent);
+		// 	std::cerr << ":";
+		// 	for (Variable *var: ptr->getAliases())
+		// 		std::cerr << " " << var->id << "(o" << var->originalID << " r" << var->reg << ")";
+		// 	std::cerr << "\n";
+		// }
 
 // #ifdef DEBUG_SPILL
 // 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
@@ -1059,6 +1073,37 @@ namespace LL2W {
 		}
 
 		throw std::out_of_range("Couldn't find an alloca location for " + variable->plainString());
+	}
+
+	void Function::hackVariables() {
+		std::cerr << "<hack>\n";
+		std::list<VariablePtr> all_vars = retiredVariables;
+		for (auto &pair: variableStore)
+			all_vars.push_back(pair.second);
+		for (VariablePtr &var: all_vars) {
+			std::cerr << "Var: " << std::string(*var) << "\n";
+			Variable *parent = var->getParent();
+			if (var->reg == -1 && parent) {
+				std::cerr << "Var " << std::string(*var) << "->reg := " << parent->reg << "\n";
+				var->reg = parent->reg;
+			}
+			if (var->reg == -1) {
+				for (Variable *alias: var->getAliases())
+					if (alias->reg != -1) {
+						var->reg = alias->reg;
+						break;
+					}
+			} else {
+				for (Variable *alias: var->getAliases()) {
+					std::cerr << "\tAlias: " << std::string(*alias) << "\n";
+					if (alias->reg == -1) {
+						std::cerr << "Alias " << std::string(*alias) << "->reg := " << var->reg << "\n";
+						alias->reg = var->reg;
+					}
+				}
+			}
+		}
+		std::cerr << "</hack>\n";
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {

@@ -66,6 +66,7 @@ namespace LL2W::Passes {
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
 							function.retiredVariables.push_back(to_rename);
+							std::cerr << "coalescePhi: Removing variable " << std::string(*to_rename) << "\n";
 							function.variableStore.erase(to_rename->id);
 							to_rename->makeAliasOf(*target);
 						} catch (const std::out_of_range &) {

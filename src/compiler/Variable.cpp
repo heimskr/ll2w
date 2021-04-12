@@ -9,6 +9,7 @@
 #include "options.h"
 
 // #define DEBUG_ALIASES
+#define VARIABLE_EXTRA
 
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
@@ -127,6 +128,7 @@ namespace LL2W {
 		usingBlocks = new_parent.usingBlocks;
 		definitions = new_parent.definitions;
 		uses = new_parent.uses;
+		reg = new_parent.reg; // ???
 	}
 
 	void Variable::addDefiner(std::shared_ptr<BasicBlock> block) {
