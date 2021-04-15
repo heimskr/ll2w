@@ -1085,8 +1085,8 @@ namespace LL2W {
 						var->reg = alias->reg;
 						break;
 					}
-				// As a last resort, if this variable *still* has no register assigned, check variableStore for a
-				// variable with the same id and try to absorb its register assignment.
+				// As a last resort, if this variable *still* has no register assigned, check all other known variables
+				// for a variable with the same id and try to absorb its register assignment.
 				if (var->reg == -1) {
 					for (VariablePtr &other: all_vars)
 						if (other != var && other->id == var->id && other->reg != -1) {
