@@ -84,6 +84,7 @@ WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-
 "+"							{ WASMRTOKEN(PLUS) }
 "-"							{ WASMRTOKEN(MINUS) }
 
+{WASM_NUMBER}				{ WASMRTOKEN(NUMBER) }
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }
 .							{ LL2W::wasmLexer.badchar(*yytext); }
 

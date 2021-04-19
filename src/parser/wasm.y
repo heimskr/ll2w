@@ -94,10 +94,9 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_DEQ "=="
 %token WASMTOK_NEWLINE "\n"
 %token WASMTOK_REG
+%token WASMTOK_NUMBER
 
-%token WASM_RNODE WASM_STATEMENTS
-
-
+%token WASM_RNODE WASM_STATEMENTS WASM_INODE
 
 %start start
 
@@ -112,18 +111,22 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r | op_mult;
+operation: op_r | op_mult | op_lui | op_i;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
 basic_oper: "+" | "-"  | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
           | "<" | "<=" | "==";
+_unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
-_unsigned: "/u" | { $$ = nullptr; };
+op_lui: "lui" ":" number "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
+
+op_i: reg basic_oper number "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
 
 reg: WASMTOK_REG;
+number: WASMTOK_NUMBER;
 
 %%
 

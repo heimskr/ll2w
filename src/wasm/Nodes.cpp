@@ -11,4 +11,12 @@ namespace LL2W {
 	std::string RNode::debugExtra() const {
 		return *rs + " " + *oper + " " + *rt + " -> " + *rd + (isUnsigned? " /u" : "");
 	}
+
+	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
+		WASMBaseNode(wasmParser, WASM_INODE),
+		rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo), imm(imm_->atoi()), isUnsigned(!!unsigned_) {}
+
+	std::string INode::debugExtra() const {
+		return *rs + " " + *oper + " " + std::to_string(imm) + " -> " + *rd + (isUnsigned? " /u" : "");
+	}
 }
