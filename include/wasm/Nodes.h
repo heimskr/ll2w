@@ -3,10 +3,10 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {R, I, Copy, Load, Store, Set, Li, Si, Lni};
+	enum class WASMNodeType {RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh};
 
 	struct WASMBaseNode: public ASTNode {
-		using ASTNode::ASTNode;
+		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
 	};
 
@@ -15,7 +15,7 @@ namespace LL2W {
 		bool isUnsigned;
 		
 		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
-		WASMNodeType nodeType() const override { return WASMNodeType::R; }
+		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
 	};
 
@@ -25,7 +25,7 @@ namespace LL2W {
 		bool isUnsigned;
 
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
-		WASMNodeType nodeType() const override { return WASMNodeType::I; }
+		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;
 	};
 
@@ -33,7 +33,7 @@ namespace LL2W {
 		const std::string *rs, *rd;
 		bool isByte;
 
-		WASMMemoryNode(int token, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 	};
 
 	struct WASMCopyNode: public WASMMemoryNode {
@@ -86,6 +86,31 @@ namespace LL2W {
 	struct WASMLniNode: public WASMLiNode {
 		WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
+		std::string debugExtra() const override;
+	};
+
+
+	struct WASMHalfMemoryNode: public WASMBaseNode {
+		const std::string *rs, *rd;
+
+		WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
+	};
+
+	struct WASMChNode: public WASMHalfMemoryNode {
+		WASMChNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMLhNode: public WASMHalfMemoryNode {
+		WASMLhNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMShNode: public WASMHalfMemoryNode {
+		WASMShNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
 		std::string debugExtra() const override;
 	};
 }

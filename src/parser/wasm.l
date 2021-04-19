@@ -62,6 +62,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "=="						{ WASMRTOKEN(DEQ) }
 ">="						{ WASMRTOKEN(GEQ) }
 "/b"						{ WASMRTOKEN(BYTE) }
+"/h"						{ WASMRTOKEN(HALF) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
