@@ -3,7 +3,7 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {R, I, Copy, Load, Store};
+	enum class WASMNodeType {R, I, Copy, Load, Store, Set};
 
 	struct WASMBaseNode: public ASTNode {
 		using ASTNode::ASTNode;
@@ -29,6 +29,8 @@ namespace LL2W {
 		std::string debugExtra() const override;
 	};
 
+	// TODO: Add a base class for WASM(Copy|Load|Store)Node to reduce code duplication.
+
 	struct WASMCopyNode: public WASMBaseNode {
 		const std::string *rs, *rd;
 		bool isByte;
@@ -53,6 +55,15 @@ namespace LL2W {
 
 		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMSetNode: public WASMBaseNode {
+		const std::string *rd;
+		long imm;
+
+		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
 		std::string debugExtra() const override;
 	};
 }
