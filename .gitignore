@@ -37,11 +37,16 @@ ll2w
 *.png
 .DS_Store
 .vscode
-include/parser/yyparse*
-include/parser/yylex*
-include/yyparse.h
-src/parser/yyparse*
-src/parser/yylex*
+/include/parser/yyparse*
+/include/parser/yylex*
+/include/yyparse.h
+/src/parser/yyparse*
+/src/parser/yylex*
+/include/parser/wasmparse*
+/include/parser/wasmlex*
+/include/wasmparse.h
+/src/parser/wasmlex*
+/src/parser/wasmparse*
 
 PVS-Studio.log
 report.tasks
