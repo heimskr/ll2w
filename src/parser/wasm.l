@@ -57,6 +57,8 @@ WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-
 "/u"						{ WASMRTOKEN(UNSIGNED) }
 "<="						{ WASMRTOKEN(LEQ) }
 "=="						{ WASMRTOKEN(DEQ) }
+">="						{ WASMRTOKEN(GEQ) }
+"/b"						{ WASMRTOKEN(BYTE) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }

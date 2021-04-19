@@ -3,7 +3,7 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {R, I};
+	enum class WASMNodeType {R, I, Copy};
 
 	struct WASMBaseNode: public ASTNode {
 		using ASTNode::ASTNode;
@@ -26,6 +26,15 @@ namespace LL2W {
 
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::I; }
+		std::string debugExtra() const override;
+	};
+
+	struct CopyNode: public WASMBaseNode {
+		const std::string *rs, *rd;
+		bool isByte;
+
+		CopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
 	};
 }

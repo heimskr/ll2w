@@ -19,4 +19,11 @@ namespace LL2W {
 	std::string INode::debugExtra() const {
 		return *rs + " " + *oper + " " + std::to_string(imm) + " -> " + *rd + (isUnsigned? " /u" : "");
 	}
+
+	CopyNode::CopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+		WASMBaseNode(wasmParser, WASM_COPYNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {}
+
+	std::string CopyNode::debugExtra() const {
+		return "[" + *rs + "] -> [" + *rd + "]" + (isByte? " /b" : "");
+	}
 }
