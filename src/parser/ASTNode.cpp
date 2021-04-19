@@ -182,7 +182,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	int ASTNode::atoi() const {
+	long ASTNode::atoi() const {
 		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_INTBANG)
 			return atoi(1);
 		if (lexerInfo->substr(0, 2) == "0x")
@@ -190,7 +190,7 @@ namespace LL2W {
 		return Util::parseLong(*lexerInfo);
 	}
 
-	int ASTNode::atoi(int offset) const {
+	long ASTNode::atoi(int offset) const {
 		return Util::parseLong(lexerInfo->substr(offset));
 	}
 

@@ -147,4 +147,24 @@ namespace LL2W {
 	std::string WASMShNode::debugExtra() const {
 		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + " /h";
 	}
+
+	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rd_):
+	WASMBaseNode(WASM_CMPNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+		delete rs_;
+		delete rd_;
+	}
+
+	std::string WASMCmpNode::debugExtra() const {
+		return cyan(*rs) + dim(" ~ ") + cyan(*rd);
+	}
+
+	WASMCmpiNode::WASMCmpiNode(ASTNode *rs_, ASTNode *imm_):
+	WASMBaseNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(imm_->atoi()) {
+		delete rs_;
+		delete imm_;
+	}
+
+	std::string WASMCmpiNode::debugExtra() const {
+		return cyan(*rs) + dim(" ~ ") + green(std::to_string(imm));
+	}
 }
