@@ -73,6 +73,7 @@ int wasmparse();
 void llvmerror(const char *);
 void llvmerror(const std::string &, const LL2W::Location &);
 void wasmerror(const char *);
+void wasmerror(const std::string &);
 void wasmerror(const std::string &, const LL2W::Location &);
 
 #endif

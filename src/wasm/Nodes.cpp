@@ -182,7 +182,7 @@ namespace LL2W {
 		else if (*oper_->lexerInfo == "!=")
 			oper = Oper::NotEqual;
 		else
-			wasmerror("Invalid operator: " + *oper_->lexerInfo, wasmLexer.location);
+			wasmerror("Invalid operator: " + *oper_->lexerInfo);
 		delete oper_;
 	}
 
@@ -197,5 +197,42 @@ namespace LL2W {
 				throw std::runtime_error("Invalid operator in WASMSelNode: " + std::to_string(static_cast<int>(oper)));
 		}
 		return dim("[") + cyan(*rs) + " " + dim(oper_) + " " + cyan(*rt) + dim("] -> ") + cyan(*rd);
+	}
+
+	WASMJNode::WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_):
+	WASMBaseNode(WASM_JNODE), addr(addr_->atoi()), link(!colons->empty()) {
+		delete addr_;
+		delete colons;
+		if (!cond) {
+			condition = WASMCondition::None;
+		} else {
+			if (*cond->lexerInfo == "0")
+				condition = WASMCondition::Zero;
+			else if (*cond->lexerInfo == "+")
+				condition = WASMCondition::Positive;
+			else if (*cond->lexerInfo == "-")
+				condition = WASMCondition::Negative;
+			else if (*cond->lexerInfo == "*")
+				condition = WASMCondition::NonZero;
+			else
+				wasmerror("Invalid condition: " + *cond->lexerInfo);
+			delete cond;
+		}
+	}
+
+	std::string WASMJNode::debugExtra() const {
+		const char *cond;
+		switch (condition) {
+			case WASMCondition::None:     cond = "";  break;
+			case WASMCondition::Zero:     cond = "0"; break;
+			case WASMCondition::Positive: cond = "+"; break;
+			case WASMCondition::Negative: cond = "-"; break;
+			case WASMCondition::NonZero:  cond = "*"; break;
+			default:
+				throw std::runtime_error("Invalid condition in WASMJNode: "
+					+ std::to_string(static_cast<int>(condition)));
+		}
+
+		return dim(cond + std::string(link? "::" : ":")) + " " + green(std::to_string(addr));
 	}
 }
