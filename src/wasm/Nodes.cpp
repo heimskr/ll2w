@@ -63,4 +63,11 @@ namespace LL2W {
 	std::string WASMSetNode::debugExtra() const {
 		return green(std::to_string(imm)) + dim(" -> ") + cyan(*rd);
 	}
+
+	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
+		WASMBaseNode(wasmParser, WASM_LINODE), rd(rd_->lexerInfo), imm(imm_->atoi()), isByte(!!byte_) {}
+
+	std::string WASMLiNode::debugExtra() const {
+		return dim("[") + green(std::to_string(imm)) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
+	}
 }
