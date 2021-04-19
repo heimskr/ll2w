@@ -33,6 +33,12 @@ int main(int argc, char **argv) {
 	// djtest();
 	// rendertest();
 
+
+	if (1 < argc) {
+		wasmparsertest(argv[1]);
+		return 0;
+	}
+
 	if (1 < argc) {
 		parsertest(argv[1]);
 	} else {

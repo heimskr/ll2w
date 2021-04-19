@@ -7,12 +7,7 @@
 #include "parser/Lexer.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
-#include "parser/GlobalVarDef.h"
-#include "parser/FunctionHeader.h"
-#include "parser/FunctionArgs.h"
-#include "parser/Nodes.h"
-#include "parser/StructNode.h"
-#include "parser/Values.h"
+#include "wasm/Nodes.h"
 
 // Disable PVS-Studio warnings about branches that do the same thing.
 //-V::1037
@@ -45,7 +40,6 @@ using AN = LL2W::ASTNode;
 %define parse.error verbose
 %token-table
 %verbose
-%glr-parser
 
 %define api.prefix {wasm}
 
@@ -78,7 +72,12 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_COLON ":"
 %token WASMTOK_PLUS "+"
 %token WASMTOK_MINUS "-"
+%token WASMTOK_INTO "->"
+%token WASMTOK_DOLLAR "$"
 %token WASMTOK_NEWLINE
+%token WASMTOK_REG
+
+%token WASM_RNODE
 
 
 %start start
@@ -90,12 +89,11 @@ start: program;
 program: program operation { $1->adopt($2); }
        | { $$ = LL2W::wasmParser.root; };
 
-operation: op_add;
+operation: op_add { $$ = $1; };
 
-op_add: reg "+" 
+op_add: reg "+" reg "->" reg { $$ = new RNode($1, $2, $3, $5); D($4); };
 
-reg: "$" regname { $1->adopt($2); };
-regname: "0" | "g";
+reg: WASMTOK_REG;
 
 %%
 

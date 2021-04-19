@@ -8,7 +8,10 @@
 namespace LL2W {
 	void Parser::open(const std::string &filename_) {
 		filename = filename_;
-		llvmin = fopen(filename_.c_str(), "r");
+		if (mode == Mode::LLVM)
+			llvmin = fopen(filename.c_str(), "r");
+		else
+			wasmin = fopen(filename.c_str(), "r");
 	}
 
 	void Parser::debug(bool flex, bool bison) {

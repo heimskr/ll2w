@@ -27,10 +27,11 @@ WASM_DIGIT				[0-9]
 WASM_DECIMAL			("-"?{WASM_DIGIT}+)
 WASM_HEXADECIMAL		("-"?0x[a-fA-F0-9]+)
 WASM_NUMBER				({WASM_DECIMAL}|{WASM_HEXADECIMAL})
-WASM_IDENT				([-a-zA-Z$._][-a-zA-Z$._0-9]*)
+WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
 WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
 WASM_SGCOMMENT			("//"[^\n]*)
 WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
+WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
 
 %%
 
@@ -39,9 +40,9 @@ WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 [ \t]+						{ }
 \n							{ LL2W::wasmLexer.newline(); }
 
-"memset"					{ WASMRTOKEN(MEMSET) }
-"lui"						{ WASMRTOKEN(LUI) }
+{WASM_REG}					{ WASMRTOKEN(REG) }
 
+"->"						{ WASMRTOKEN(INTO) }
 "!"							{ WASMRTOKEN(BANG) }
 "="							{ WASMRTOKEN(EQUALS) }
 "."							{ WASMRTOKEN(DOT) }

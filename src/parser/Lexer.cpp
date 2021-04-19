@@ -40,7 +40,7 @@ namespace LL2W {
 
 	void Lexer::badchar(unsigned char ch) {
 		failed = true;
-		std::cerr << "Bad character at " << location << ": ";
+		std::cerr << "\e[31mBad character at \e[1m" << location << "\e[22m:\e[39m ";
 		if (isgraph(ch)) {
 			std::cerr << "'" << ch << "'\n";
 		} else {
