@@ -167,4 +167,35 @@ namespace LL2W {
 	std::string WASMCmpiNode::debugExtra() const {
 		return cyan(*rs) + dim(" ~ ") + green(std::to_string(imm));
 	}
+
+	WASMSelNode::WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_):
+	WASMBaseNode(WASM_SELNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo) {
+		delete rs_;
+		delete rt_;
+		delete rd_;
+		if (*oper_->lexerInfo == "=")
+			oper = Oper::Equal;
+		else if (*oper_->lexerInfo == "<")
+			oper = Oper::Less;
+		else if (*oper_->lexerInfo == ">")
+			oper = Oper::Greater;
+		else if (*oper_->lexerInfo == "!=")
+			oper = Oper::NotEqual;
+		else
+			wasmerror("Invalid operator: " + *oper_->lexerInfo, wasmLexer.location);
+		delete oper_;
+	}
+
+	std::string WASMSelNode::debugExtra() const {
+		const char *oper_;
+		switch (oper) {
+			case Oper::Equal:    oper_ = "=";  break;
+			case Oper::Less:     oper_ = "<";  break;
+			case Oper::Greater:  oper_ = ">";  break;
+			case Oper::NotEqual: oper_ = "!="; break;
+			default:
+				throw std::runtime_error("Invalid operator in WASMSelNode: " + std::to_string(static_cast<int>(oper)));
+		}
+		return dim("[") + cyan(*rs) + " " + dim(oper_) + " " + cyan(*rt) + dim("] -> ") + cyan(*rd);
+	}
 }

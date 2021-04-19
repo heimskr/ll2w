@@ -3,7 +3,7 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi};
+	enum class WASMNodeType {RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel};
 
 	struct WASMBaseNode: public ASTNode {
 		WASMBaseNode(int sym);
@@ -128,6 +128,16 @@ namespace LL2W {
 
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMSelNode: public WASMBaseNode {
+		enum class Oper {Equal, Less, Greater, NotEqual};
+
+		const std::string *rs, *rt, *rd;
+		Oper oper;
+		WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Sel; }
 		std::string debugExtra() const override;
 	};
 }

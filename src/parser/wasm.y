@@ -95,11 +95,12 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_BYTE "/b"
 %token WASMTOK_HALF "/h"
 %token WASMTOK_NEWLINE "\n"
+%token WASMTOK_NOTEQUAL "!="
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
-%token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE, WASM_CMPNODE WASM_CMPINODE
+%token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE
 
 %start start
 
@@ -114,8 +115,8 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r   | op_mult | op_multi | op_lui | op_i   | op_c   | op_l    | op_s | op_set | op_divii | op_li | op_si
-         | op_ms  | op_lni  | op_ch    | op_lh  | op_sh  | op_cmp | op_cmpi;
+operation: op_r   | op_mult | op_multi | op_lui | op_i   | op_c   | op_l    | op_s   | op_set | op_divii | op_li | op_si
+         | op_ms  | op_lni  | op_ch    | op_lh  | op_sh  | op_cmp | op_cmpi | op_sel;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -159,6 +160,9 @@ op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6
 op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
 
 op_cmpi: reg "~" number { $$ = new WASMCmpiNode($1, $3); D($2); };
+
+op_sel: "[" reg selop reg "]" "->" reg { $$ = new WASMSelNode($2, $3, $4, $7); D($1, $5, $6); };
+selop: "=" | "<" | ">" | "!=";
 
 reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;
