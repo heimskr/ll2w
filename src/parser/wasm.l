@@ -39,9 +39,34 @@ WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
 [ \t]+						{ }
 \n							{ LL2W::wasmLexer.newline(); }
 
+"memset"					{ WASMRTOKEN(MEMSET) }
+"lui"						{ WASMRTOKEN(LUI) }
+
+"!"							{ WASMRTOKEN(BANG) }
+"="							{ WASMRTOKEN(EQUALS) }
+"."							{ WASMRTOKEN(DOT) }
+"{"							{ WASMRTOKEN(LCURLY) }
+"}"							{ WASMRTOKEN(RCURLY) }
+","							{ WASMRTOKEN(COMMA) }
+"null"						{ WASMRTOKEN(NULL) }
+"%"							{ WASMRTOKEN(PERCENT) }
+"@"							{ WASMRTOKEN(AT) }
+"("							{ WASMRTOKEN(LPAR) }
+")"							{ WASMRTOKEN(RPAR) }
+"["							{ WASMRTOKEN(LSQUARE) }
+"]"							{ WASMRTOKEN(RSQUARE) }
+"x"							{ WASMRTOKEN(X) }
+"<"							{ WASMRTOKEN(LANGLE) }
+">"							{ WASMRTOKEN(RANGLE) }
+"memset"					{ WASMRTOKEN(MEMSET) }
+"lui"						{ WASMRTOKEN(LUI) }
+"*"							{ WASMRTOKEN(ASTERISK) }
+"#"							{ WASMRTOKEN(HASH) }
+":"							{ WASMRTOKEN(COLON) }
+"+"							{ WASMRTOKEN(PLUS) }
+"-"							{ WASMRTOKEN(MINUS) }
 
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }
-
 .							{ LL2W::wasmLexer.badchar(*yytext); }
 
 %%

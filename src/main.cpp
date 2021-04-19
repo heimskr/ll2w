@@ -20,6 +20,7 @@ void rendertest();
 void mergetest();
 void mergetest2();
 void parsertest(const std::string &);
+void wasmparsertest(const std::string &);
 void interactive(LL2W::Program &);
 
 int main(int argc, char **argv) {
@@ -139,4 +140,12 @@ void parsertest(const std::string &filename) {
 #endif
 	LL2W::llvmParser.done();
 	delete prog;
+}
+
+void wasmparsertest(const std::string &filename) {
+	LL2W::wasmParser.open(filename);
+	LL2W::wasmParser.debug(false, false);
+	LL2W::wasmParser.parse();
+	LL2W::wasmParser.root->debug();
+	LL2W::wasmParser.done();
 }
