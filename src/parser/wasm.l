@@ -38,18 +38,37 @@ WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-
 "//"						{ }
 {WASM_MLCOMMENT}			{ }
 [ \t]+						{ }
-\n							{ LL2W::wasmLexer.newline(); }
+\n							{ LL2W::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
 
 {WASM_REG}					{ WASMRTOKEN(REG) }
 
+"memset"					{ WASMRTOKEN(MEMSET) }
+"lui"						{ WASMRTOKEN(LUI) }
 "->"						{ WASMRTOKEN(INTO) }
+"!&&"						{ WASMRTOKEN(LNAND) }
+"!||"						{ WASMRTOKEN(LNOR) }
+"!xx"						{ WASMRTOKEN(LXNOR) }
+"&&"						{ WASMRTOKEN(LAND) }
+"||"						{ WASMRTOKEN(LOR) }
+"xx"						{ WASMRTOKEN(LXOR) }
+"~&"						{ WASMRTOKEN(NAND) }
+"~|"						{ WASMRTOKEN(NOR) }
+"~x"						{ WASMRTOKEN(XNOR) }
+"/u"						{ WASMRTOKEN(UNSIGNED) }
+"<="						{ WASMRTOKEN(LEQ) }
+"=="						{ WASMRTOKEN(DEQ) }
+
+";"							{ WASMRTOKEN(SEMICOLON) }
+"/"							{ WASMRTOKEN(SLASH) }
+"~"							{ WASMRTOKEN(NOT) }
+"&"							{ WASMRTOKEN(AND) }
+"|"							{ WASMRTOKEN(OR) }
 "!"							{ WASMRTOKEN(BANG) }
 "="							{ WASMRTOKEN(EQUALS) }
 "."							{ WASMRTOKEN(DOT) }
 "{"							{ WASMRTOKEN(LCURLY) }
 "}"							{ WASMRTOKEN(RCURLY) }
 ","							{ WASMRTOKEN(COMMA) }
-"null"						{ WASMRTOKEN(NULL) }
 "%"							{ WASMRTOKEN(PERCENT) }
 "@"							{ WASMRTOKEN(AT) }
 "("							{ WASMRTOKEN(LPAR) }
@@ -59,8 +78,6 @@ WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-
 "x"							{ WASMRTOKEN(X) }
 "<"							{ WASMRTOKEN(LANGLE) }
 ">"							{ WASMRTOKEN(RANGLE) }
-"memset"					{ WASMRTOKEN(MEMSET) }
-"lui"						{ WASMRTOKEN(LUI) }
 "*"							{ WASMRTOKEN(ASTERISK) }
 "#"							{ WASMRTOKEN(HASH) }
 ":"							{ WASMRTOKEN(COLON) }

@@ -40,6 +40,7 @@ using AN = LL2W::ASTNode;
 %define parse.error verbose
 %token-table
 %verbose
+%glr-parser
 
 %define api.prefix {wasm}
 
@@ -74,10 +75,28 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_MINUS "-"
 %token WASMTOK_INTO "->"
 %token WASMTOK_DOLLAR "$"
-%token WASMTOK_NEWLINE
+%token WASMTOK_AND "&"
+%token WASMTOK_NAND "~&"
+%token WASMTOK_LAND "&&"
+%token WASMTOK_LNAND "!&&"
+%token WASMTOK_OR "|"
+%token WASMTOK_NOR "~|"
+%token WASMTOK_LOR "||"
+%token WASMTOK_LNOR "!||"
+%token WASMTOK_XNOR "~x"
+%token WASMTOK_NOT "~"
+%token WASMTOK_SLASH "/"
+%token WASMTOK_LXNOR "!xx"
+%token WASMTOK_LXOR "xx"
+%token WASMTOK_SEMICOLON ";"
+%token WASMTOK_UNSIGNED "/u"
+%token WASMTOK_LEQ "<="
+%token WASMTOK_DEQ "=="
+%token WASMTOK_NEWLINE "\n"
 %token WASMTOK_REG
 
-%token WASM_RNODE
+%token WASM_RNODE WASM_STATEMENTS
+
 
 
 %start start
@@ -86,12 +105,23 @@ using AN = LL2W::ASTNode;
 
 start: program;
 
-program: program operation { $1->adopt($2); }
+program: program statement { $$ = $1->adopt($2); }
+       | program endop { $$ = $1; D($2); }
        | { $$ = LL2W::wasmParser.root; };
 
-operation: op_add { $$ = $1; };
+statement: operation;
+endop: "\n" | ";";
 
-op_add: reg "+" reg "->" reg { $$ = new RNode($1, $2, $3, $5); D($4); };
+operation: op_r | op_mult;
+
+op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
+    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
+basic_oper: "+" | "-"  | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
+          | "<" | "<=" | "==";
+
+op_mult: reg "*" reg _unsigned { $$ = $2->adopt({$1, $3, $4}); };
+
+_unsigned: "/u" | { $$ = nullptr; };
 
 reg: WASMTOK_REG;
 
