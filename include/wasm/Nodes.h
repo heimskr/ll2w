@@ -3,7 +3,7 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {R, I, Copy};
+	enum class WASMNodeType {R, I, Copy, Load, Store};
 
 	struct WASMBaseNode: public ASTNode {
 		using ASTNode::ASTNode;
@@ -29,12 +29,30 @@ namespace LL2W {
 		std::string debugExtra() const override;
 	};
 
-	struct CopyNode: public WASMBaseNode {
+	struct WASMCopyNode: public WASMBaseNode {
 		const std::string *rs, *rd;
 		bool isByte;
 
-		CopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMLoadNode: public WASMBaseNode {
+		const std::string *rs, *rd;
+		bool isByte;
+
+		WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMStoreNode: public WASMBaseNode {
+		const std::string *rs, *rd;
+		bool isByte;
+
+		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
 	};
 }
