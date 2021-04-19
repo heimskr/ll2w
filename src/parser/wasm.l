@@ -31,7 +31,9 @@ WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
 WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
 WASM_SGCOMMENT			("//"[^\n]*)
 WASM_MLCOMMENT			("/*"([^*]|"*"[^/])*"*/")
-WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
+/* The LLVM IR generated for "$t0 -> %1" looks like "$$t0 -> $1" */
+WASM_DOUBLE_REG			("$$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-9a-f]|"1"[0-6])|"st"|"f"[0-3]|"e"[0-5]))
+WASM_SINGLE_REG			("$"[0-9]+)
 
 %%
 
@@ -40,7 +42,8 @@ WASM_REG				("$"([0g]|[fs]"p"|"r"("t"|[0-9a-f])|"lo"|"hi"|[akm][0-9a-f]|[st]([0-
 [ \t]+						{ }
 \n							{ LL2W::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
 
-{WASM_REG}					{ WASMRTOKEN(REG) }
+{WASM_DOUBLE_REG}			{ WASMRTOKEN(REG) }
+{WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
 "lui"						{ WASMRTOKEN(LUI) }
