@@ -116,7 +116,7 @@ namespace LL2W {
 		};
 
 		for (ASTNode *child: *astnode->at(1)) {
-			if (child->symbol == BLOCKHEADER) {
+			if (child->symbol == LLVM_BLOCKHEADER) {
 				blocks.push_back(std::make_shared<BasicBlock>(label, preds, instructions));
 				finishBlock(blocks.back());
 				offset += instructions.size();

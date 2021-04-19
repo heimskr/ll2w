@@ -10,18 +10,26 @@
 namespace LL2W {
 	class Parser {
 		private:
-			static std::string filename;
+			std::string filename;
+			const char * getNameLLVM(int symbol);
+			const char * getNameWASM(int symbol);
 
 		public:
-			static ASTNode *root;
-			Parser() = delete;
-			static void open(const std::string &filename);
-			static void debug(bool flex, bool bison);
-			static void parse();
-			static void done();
+			enum class Mode {LLVM, WASM};
 
-			static const char * getName(int symbol);
+			Mode mode;
+			ASTNode *root = nullptr;
+
+			Parser(Mode mode_): mode(mode_) {}
+			void open(const std::string &filename);
+			void debug(bool flex, bool bison);
+			void parse();
+			void done();
+
+			const char * getName(int symbol);
 	};
+
+	extern Parser llvmParser, wasmParser;
 }
 
 #endif

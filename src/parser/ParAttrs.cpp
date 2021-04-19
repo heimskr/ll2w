@@ -19,12 +19,12 @@ namespace LL2W {
 	
 	ParAttrs::ParAttrs(const ASTNode &node) {
 		for (const ASTNode *child: node) {
-			if (child->symbol == TOK_DEREF) {
+			if (child->symbol == LLVMTOK_DEREF) {
 				dereferenceable = atoi(child->at(0)->lexerInfo->c_str());
 				orNull = *child->lexerInfo == "dereferenceable_or_null";
-			} else if (child->symbol == TOK_ALIGN) {
+			} else if (child->symbol == LLVMTOK_ALIGN) {
 				align = atoi(child->at(0)->lexerInfo->c_str());
-			} else if (child->symbol == TOK_BYVAL) {
+			} else if (child->symbol == LLVMTOK_BYVAL) {
 				attributes.insert(ParAttr::Byval);
 				if (child->size() == 1)
 					byvalType = getType(child->at(0));

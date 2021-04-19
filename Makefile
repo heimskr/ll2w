@@ -9,17 +9,23 @@ TESTFILE		?= ~/src/mal/combined.strprint.ll
 # TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
 # TESTFILE		?= ll/mal.ll
 # TESTFILE		?= ll/mintf.ll
-SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
-OBJECTS			:= $(SOURCES:.cpp=.o) src/parser/yylex.o src/parser/yyparse.o
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
-LEXCPP			:= src/parser/yylex.cpp
-PARSECPP		:= src/parser/yyparse.cpp
-PARSEHDR		:= include/yyparse.h
-FLEXSRC			:= src/parser/lexer.l
-BISONSRC		:= src/parser/parser.y
+LLVMLEXCPP		:= src/parser/yylex.cpp
+LLVMPARSECPP	:= src/parser/yyparse.cpp
+LLVMPARSEHDR	:= include/yyparse.h
+LLVMFLEXSRC		:= src/parser/lexer.l
+LLVMBISONSRC	:= src/parser/parser.y
 
-CLOC_OPTIONS := --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+WASMLEXCPP		:= src/parser/wasmlex.cpp
+WASMPARSECPP	:= src/parser/wasmparse.cpp
+WASMPARSEHDR	:= include/wasmparse.h
+WASMFLEXSRC		:= src/parser/wasm.l
+WASMBISONSRC	:= src/parser/wasm.y
+
+CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
+OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 
 .PHONY: all clean count countbf declutter test
 
@@ -28,19 +34,31 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
-$(LEXCPP): $(FLEXSRC) $(PARSEHDR)
-	flex --outfile=$(LEXCPP) $(FLEXSRC)
+$(LLVMLEXCPP): $(LLVMFLEXSRC) $(LLVMPARSEHDR)
+	flex --prefix=llvm --outfile=$(LLVMLEXCPP) $(LLVMFLEXSRC)
 
-$(PARSECPP) $(PARSEHDR): $(BISONSRC)
-	bison --defines=$(PARSEHDR) --output=$(PARSECPP) $(BISONSRC)
+$(LLVMPARSECPP) $(LLVMPARSEHDR): $(LLVMBISONSRC)
+	bison --defines=$(LLVMPARSEHDR) --output=$(LLVMPARSECPP) $(LLVMBISONSRC)
 
-$(LEXCPP:.cpp=.o): $(LEXCPP)
+$(LLVMLEXCPP:.cpp=.o): $(LLVMLEXCPP)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
-$(PARSECPP:.cpp=.o): $(PARSECPP) $(PARSEHDR)
+$(LLVMPARSECPP:.cpp=.o): $(LLVMPARSECPP) $(LLVMPARSEHDR)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
-%.o: %.cpp include/yyparse.h
+$(WASMLEXCPP): $(WASMFLEXSRC) $(WASMPARSEHDR)
+	flex --prefix=wasm --outfile=$(WASMLEXCPP) $(WASMFLEXSRC)
+
+$(WASMPARSECPP) $(WASMPARSEHDR): $(WASMBISONSRC)
+	bison --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
+
+$(WASMLEXCPP:.cpp=.o): $(WASMLEXCPP)
+	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
+
+$(WASMPARSECPP:.cpp=.o): $(WASMPARSECPP) $(WASMPARSEHDR)
+	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
+
+%.o: %.cpp include/yyparse.h include/wasmparse.h
 	$(COMPILER) $(CFLAGS) -c $< -o $@
 
 test: $(OUTPUT)
@@ -50,7 +68,10 @@ dbg: $(OUTPUT)
 	$(DEBUGGER) $< -- $(TESTFILE)
 
 clean:
-	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png $(PARSEHDR) $(PARSECPP) $(LEXCPP) $(PARSECPP:.c=.output) $(LEXCPP) $(PARSECPP) PVS-Studio.log report.tasks strace_out
+	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png \
+		$(LLVMPARSEHDR) $(LLVMPARSECPP) $(LLVMLEXCPP) $(LLVMPARSECPP:.c=.output) $(LLVMLEXCPP) $(LLVMPARSECPP) \
+		$(WASMPARSEHDR) $(WASMPARSECPP) $(WASMLEXCPP) $(WASMPARSECPP:.c=.output) $(WASMLEXCPP) $(WASMPARSECPP) \
+		PVS-Studio.log report.tasks strace_out
 
 declutter:
 	rm -f graph_*.png

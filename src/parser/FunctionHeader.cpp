@@ -13,7 +13,8 @@ namespace LL2W {
 	FunctionHeader::FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv,
 	                               N _retattrs, N type, N function_name, N function_args, N unnamed_addr, N _fnattrs,
 	                               N _align, N _personality):
-		ASTNode(FUNCTION_HEADER, function_name->lexerInfo), arguments(dynamic_cast<FunctionArgs *>(function_args)) {
+	ASTNode(llvmParser, LLVM_FUNCTION_HEADER, function_name->lexerInfo),
+	arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
 
 		if (_linkage) {
@@ -62,14 +63,14 @@ namespace LL2W {
 		if (_retattrs) {
 			for (ASTNode *retattr: *_retattrs) {
 				const std::string *str = retattr->lexerInfo;
-				if (retattr->symbol == TOK_RETATTR) {
+				if (retattr->symbol == LLVMTOK_RETATTR) {
 					if (*str == "zeroext") retattrs.insert(RetAttr::Zeroext);
 					else if (*str == "inreg") retattrs.insert(RetAttr::Inreg);
 					else if (*str == "noalias") retattrs.insert(RetAttr::Noalias);
 					else if (*str == "signext") retattrs.insert(RetAttr::Signext);
 					else if (*str == "nonnull") retattrs.insert(RetAttr::Nonnull);
 					else throw std::runtime_error("Unrecognized retattr: " + *str);
-				} else if (retattr->symbol == TOK_DEREF) {
+				} else if (retattr->symbol == LLVMTOK_DEREF) {
 					Deref new_deref;
 					if (*str == "dereferenceable") new_deref = Deref::Dereferenceable;
 					else if (*str == "dereferenceable_or_null") new_deref = Deref::DereferenceableOrNull;
@@ -102,9 +103,9 @@ namespace LL2W {
 			delete unnamed_addr;
 		}
 
-		if (_fnattrs->symbol == TOK_DECIMAL) {
+		if (_fnattrs->symbol == LLVMTOK_DECIMAL) {
 			fnattrsIndex = _fnattrs->atoi();
-		} else if (_fnattrs->symbol == FNATTR_LIST) {
+		} else if (_fnattrs->symbol == LLVM_FNATTR_LIST) {
 			for (ASTNode *fnattr: _fnattrs->children) {
 				const std::string &fnattr_name = *fnattr->lexerInfo;
 				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
@@ -116,7 +117,7 @@ namespace LL2W {
 			}
 			delete _fnattrs;
 		} else {
-			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(Parser::getName(_fnattrs->symbol)));
+			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(parser->getName(_fnattrs->symbol)));
 		}
 
 		if (_align) {

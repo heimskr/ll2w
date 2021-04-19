@@ -8,11 +8,14 @@
 
 #include "parser/ASTNode.h"
 
-#define YYSTYPE_IS_DECLARED
-typedef LL2W::ASTNode * YYSTYPE;
+#define LLVMSTYPE_IS_DECLARED
+#define WASMSTYPE_IS_DECLARED
+typedef LL2W::ASTNode * LLVMSTYPE;
+typedef LL2W::ASTNode * WASMSTYPE;
 
 #ifndef NO_YYPARSE
 #include "yyparse.h"
+#include "wasmparse.h"
 #endif
 
 #ifdef __APPLE__
@@ -21,34 +24,55 @@ typedef size_t yysize;
 typedef int yysize;
 #endif
 
-extern FILE *yyin;
-extern char *yytext;
-extern yysize yyleng;
-extern int yy_flex_debug;
-extern int yydebug;
+extern FILE *llvmin;
+extern char *llvmtext;
+extern yysize llvmleng;
+extern int llvm_flex_debug;
+extern int llvmdebug;
 
+extern FILE *wasmin;
+extern char *wasmtext;
+extern yysize wasmleng;
+extern int wasm_flex_debug;
+extern int wasmdebug;
 
 namespace LL2W {
-	struct Lexer {
-		static Location location;
-		static std::string line;
-		static yysize last_yylength;
-		static std::unordered_map<int, std::string> lines;
-		static bool failed;
-		static std::vector<std::pair<std::string, Location>> errors;
+	class Parser;
 
-		static const std::string * filename(int fileno);
-		static void advance();
-		static void newline();
-		static void badchar(unsigned char);
-		static int token(int symbol);
+	class Lexer {
+		private:
+			Parser *parser;
+			yysize *leng;
+			ASTNode **lval;
+
+		public:
+			Location location = {0, 1};
+			std::string line;
+			yysize lastYylength = 0;
+			std::unordered_map<int, std::string> lines;
+			bool failed = false;
+			std::vector<std::pair<std::string, Location>> errors;
+
+			Lexer(Parser &, yysize &, ASTNode *&);
+			const std::string * filename(int fileno);
+			void advance(const char *);
+			void newline();
+			void badchar(unsigned char);
+			int token(const char *, int symbol);
 	};
+
+	extern Lexer llvmLexer, wasmLexer;
 }
 
-int yylex();
-int yylex_destroy();
-int yyparse();
-void yyerror(const char *);
-void yyerror(const std::string &, const LL2W::Location & = LL2W::Lexer::location);
+int llvmlex();
+int llvmlex_destroy();
+int llvmparse();
+int wasmlex();
+int wasmlex_destroy();
+int wasmparse();
+void llvmerror(const char *);
+void llvmerror(const std::string &, const LL2W::Location &);
+void wasmerror(const char *);
+void wasmerror(const std::string &, const LL2W::Location &);
 
 #endif

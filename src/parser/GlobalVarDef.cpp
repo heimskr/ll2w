@@ -3,12 +3,13 @@
 #include <sstream>
 
 #include "parser/GlobalVarDef.h"
+#include "parser/Parser.h"
 
 namespace LL2W {
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
 	                           ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
 	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *type_or_constant,
-	                           ASTNode *gdef_extras): ASTNode(GLOBAL_DEF, gvar->lexerInfo) {
+	                           ASTNode *gdef_extras): ASTNode(llvmParser, LLVM_GLOBAL_DEF, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
 			for (const std::pair<const Linkage, std::string> &pair: linkage_map) {
@@ -66,18 +67,18 @@ namespace LL2W {
 			delete global_or_constant;
 		}
 
-		if (type_or_constant->symbol == CONSTANT)
+		if (type_or_constant->symbol == LLVM_CONSTANT)
 			constant = std::make_shared<Constant>(type_or_constant);
 		else
 			type = getType(type_or_constant);
 
 		for (ASTNode *extra: *gdef_extras) {
-			if (extra->symbol == TOK_SECTION) {
+			if (extra->symbol == LLVMTOK_SECTION) {
 				section = extra->at(0)->lexerInfo;
-			} else if (extra->symbol == TOK_COMDAT) {
+			} else if (extra->symbol == LLVMTOK_COMDAT) {
 				const std::string *str = extra->at(0)->lexerInfo;
 				if (str->empty() || str->front() != '$')
-					yyerror("Comdat expected to begin with \"$\"");
+					llvmerror("Comdat expected to begin with \"$\"");
 				comdat = str;
 			} else if (!extra) {
 				std::cout << "\e[91m!extra\e[0m\n";

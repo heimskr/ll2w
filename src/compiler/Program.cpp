@@ -17,7 +17,7 @@ namespace LL2W {
 	Program::Program(const ASTNode &root) {
 		// Look for all struct definitions.
 		for (const ASTNode *node: root) {
-			if (node->symbol == STRUCTDEF) {
+			if (node->symbol == LLVM_STRUCTDEF) {
 				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
 				if (!struct_node)
 					throw std::runtime_error("struct_node is null in Program::Program");
@@ -27,18 +27,18 @@ namespace LL2W {
 
 		for (ASTNode *node: root) {
 			switch (node->symbol) {
-				case FUNCTION_DEF:
+				case LLVM_FUNCTION_DEF:
 					functions.emplace(*node->lexerInfo, new Function(*this, *node));
 					break;
-				case TOK_DECLARE: {
+				case LLVMTOK_DECLARE: {
 					ASTNode *header = node->at(0);
 					declarations.emplace(header->lexerInfo->substr(1), dynamic_cast<FunctionHeader *>(header));
 					break;
 				}
-				case TOK_SOURCE_FILENAME:
+				case LLVMTOK_SOURCE_FILENAME:
 					sourceFilename = node->extractName();
 					break;
-				case GLOBAL_DEF:
+				case LLVM_GLOBAL_DEF:
 					if (GlobalVarDef *global = dynamic_cast<GlobalVarDef *>(node)) {
 						globals.emplace(*node->lexerInfo, global);
 					} else throw std::runtime_error("Node with token GLOBAL_DEF isn't an instance of GlobalVarDef");

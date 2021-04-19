@@ -16,26 +16,29 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &, const Location &);
 
+	class Parser;
+
 	class ASTNode {
 		private:
 			ASTNode() {}
 
 		public:
+			Parser *parser;
 			int symbol;
 			Location location;
 			const std::string *lexerInfo;
 			ASTNode *parent = nullptr;
 			std::list<ASTNode *> children;
 
-			ASTNode(int sym, const Location &loc, const char *info);
-			ASTNode(int sym, const Location &loc, const std::string *info);
-			ASTNode(int sym, const char *info);
-			ASTNode(int sym, const std::string *info);
-			ASTNode(int sym, const Location &loc);
-			ASTNode(int sym);
+			ASTNode(Parser &, int sym, const Location &loc, const char *info);
+			ASTNode(Parser &, int sym, const Location &loc, const std::string *info);
+			ASTNode(Parser &, int sym, const char *info);
+			ASTNode(Parser &, int sym, const std::string *info);
+			ASTNode(Parser &, int sym, const Location &loc);
+			ASTNode(Parser &, int sym);
 			/** Constructs an ASTNode that adopts another node and copies its location. */
-			ASTNode(int sym, ASTNode *, const char *info = "");
-			ASTNode(int sym, ASTNode *, const std::string *info);
+			ASTNode(Parser &, int sym, ASTNode *, const char *info = "");
+			ASTNode(Parser &, int sym, ASTNode *, const std::string *info);
 			virtual ~ASTNode();
 
 			ASTNode * operator[](size_t) const;

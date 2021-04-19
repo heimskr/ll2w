@@ -18,32 +18,37 @@ namespace LL2W {
 		return os;
 	}
 
-	ASTNode::ASTNode(int sym, const Location &loc, const char *info) {
+	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc, const char *info) {
+		parser = &parser_;
 		symbol = sym;
 		location = loc;
 		lexerInfo = StringSet::intern(info);
 	}
 
-	ASTNode::ASTNode(int sym, const Location &loc, const std::string *info):
-		symbol(sym), location(loc), lexerInfo(info) {}
+	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc, const std::string *info):
+		parser(&parser_), symbol(sym), location(loc), lexerInfo(info) {}
 
-	ASTNode::ASTNode(int sym, const std::string *info): symbol(sym), location(Lexer::location), lexerInfo(info) {}
+	ASTNode::ASTNode(Parser &parser_, int sym, const std::string *info):
+		parser(&parser_), symbol(sym), location(llvmLexer.location), lexerInfo(info) {}
 
-	ASTNode::ASTNode(int sym, const char *info) {
+	ASTNode::ASTNode(Parser &parser_, int sym, const char *info) {
+		parser = &parser_;
 		symbol = sym;
-		location = Lexer::location;
+		location = llvmLexer.location;
 		lexerInfo = StringSet::intern(info);
 	}
 
-	ASTNode::ASTNode(int sym, const Location &loc): ASTNode(sym, loc, "") {}
+	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc): ASTNode(parser_, sym, loc, "") {}
 
-	ASTNode::ASTNode(int sym): ASTNode(sym, "") {}
+	ASTNode::ASTNode(Parser &parser_, int sym): ASTNode(parser_, sym, "") {}
 
-	ASTNode::ASTNode(int sym, ASTNode *node, const char *info): ASTNode(sym, node->location, info) {
+	ASTNode::ASTNode(Parser &parser_, int sym, ASTNode *node, const char *info):
+			ASTNode(parser_, sym, node->location, info) {
 		adopt(node);
 	}
 
-	ASTNode::ASTNode(int sym, ASTNode *node, const std::string *info): ASTNode(sym, node->location, info) {
+	ASTNode::ASTNode(Parser &parser_, int sym, ASTNode *node, const std::string *info):
+			ASTNode(parser_, sym, node->location, info) {
 		adopt(node);
 	}
 
@@ -147,7 +152,7 @@ namespace LL2W {
 	}
 
 	std::string ASTNode::concatenate() const {
-		if (symbol == VECTOR) {
+		if (symbol == LLVM_VECTOR) {
 			std::stringstream out;
 			out << "\e[2m<\e[0m";
 			auto begin = cbegin();
@@ -159,9 +164,9 @@ namespace LL2W {
 			}
 			out << "\e[2m>\e[0m";
 			return out.str();
-		} else if (symbol == TOK_LANGLE && size() == 1 && at(0)->symbol == VECTOR) {
+		} else if (symbol == LLVMTOK_LANGLE && size() == 1 && at(0)->symbol == LLVM_VECTOR) {
 			return at(0)->concatenate();
-		} else if (symbol == TOK_COMMA && size() == 2 && at(0)->isType() && at(1)->isValue()) {
+		} else if (symbol == LLVMTOK_COMMA && size() == 2 && at(0)->isType() && at(1)->isValue()) {
 			return at(0)->concatenate() + " " + at(1)->concatenate();
 		} else if (isType()) {
 			return "\e[33m" + std::string(*getType(this)) + "\e[0m";
@@ -178,7 +183,7 @@ namespace LL2W {
 	}
 
 	int ASTNode::atoi() const {
-		if (symbol == TOK_PVAR || symbol == TOK_INTBANG)
+		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_INTBANG)
 			return atoi(1);
 		return Util::parseLong(*lexerInfo);
 	}
@@ -188,17 +193,18 @@ namespace LL2W {
 	}
 
 	bool ASTNode::isType() const {
-		return symbol == TOK_INTTYPE || symbol == TOK_FLOATTYPE || symbol == ARRAYTYPE || symbol == VECTORTYPE
-		    || symbol == POINTERTYPE || symbol == TOK_VOID || symbol == FUNCTIONTYPE || symbol == TOK_STRUCTVAR;
+		return symbol == LLVMTOK_INTTYPE   || symbol == LLVMTOK_FLOATTYPE || symbol == LLVM_ARRAYTYPE
+		    || symbol == LLVM_VECTORTYPE   || symbol == LLVM_POINTERTYPE  || symbol == LLVMTOK_VOID
+		    || symbol == LLVM_FUNCTIONTYPE || symbol == LLVMTOK_STRUCTVAR;
 	}
 
 	bool ASTNode::isValue() const {
-		return symbol == TOK_DECIMAL || symbol == TOK_FLOATING || symbol == TOK_BOOL || symbol == VECTOR
-		    || symbol == TOK_PVAR || symbol == TOK_GVAR;
+		return symbol == LLVMTOK_DECIMAL || symbol == LLVMTOK_FLOATING || symbol == LLVMTOK_BOOL || symbol == LLVM_VECTOR
+		    || symbol == LLVMTOK_PVAR || symbol == LLVMTOK_GVAR;
 	}
 
 	const char * ASTNode::getName() const {
-		return Parser::getName(symbol);
+		return parser->getName(symbol);
 	}
 
 	void ASTNode::debug(int indent, bool is_last, bool suppress_line) const {
@@ -213,7 +219,7 @@ namespace LL2W {
 			std::cerr << "\e[0m";
 		}
 
-		std::cerr << style() << Parser::getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
+		std::cerr << style() << parser->getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
 		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
 			child->debug(indent + 1, child == children.back());
@@ -267,20 +273,20 @@ namespace LL2W {
 	}
 
 	std::string ASTNode::extractName() const {
-		if (symbol == TOK_PVAR || symbol == TOK_GVAR) {
+		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_GVAR) {
 			return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
-		} else if (symbol == TOK_CLASSVAR || symbol == TOK_STRUCTVAR || symbol == TOK_UNIONVAR) {
+		} else if (symbol == LLVMTOK_CLASSVAR || symbol == LLVMTOK_STRUCTVAR || symbol == LLVMTOK_UNIONVAR) {
 			if (lexerInfo->at(1) == '"')
 				return lexerInfo->substr(2, lexerInfo->size() - 3);
 			return lexerInfo->substr(1);
-		} else if (symbol == TOK_CSTRING) {
+		} else if (symbol == LLVMTOK_CSTRING) {
 			return lexerInfo->substr(2, lexerInfo->size() - 3);
-		} else if (symbol == TOK_STRING || symbol == TOK_SOURCE_FILENAME) {
+		} else if (symbol == LLVMTOK_STRING || symbol == LLVMTOK_SOURCE_FILENAME) {
 			return lexerInfo->substr(1, lexerInfo->size() - 2);
 		}
 
 		throw std::runtime_error("extractName() was called on an inappropriate symbol: " +
-			std::string(Parser::getName(symbol)));
+			std::string(parser->getName(symbol)));
 	}
 
 	const std::string * ASTNode::extracted() const {

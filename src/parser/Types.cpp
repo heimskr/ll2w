@@ -99,14 +99,14 @@ namespace LL2W {
 
 	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
-		if (node->children.size() == 3 || (1 < node->size() && node->at(1)->symbol == TYPE_LIST)) {
+		if (node->children.size() == 3 || (1 < node->size() && node->at(1)->symbol == LLVM_TYPE_LIST)) {
 			ASTNode *list = node->at(1);
 			argumentTypes.reserve(list->children.size());
 			for (ASTNode *child: *list)
 				argumentTypes.push_back(getType(child));
 		}
 
-		ellipsis = node->size() == 3 || (1 < node->size() && node->at(1)->symbol == TOK_ELLIPSIS);
+		ellipsis = node->size() == 3 || (1 < node->size() && node->at(1)->symbol == LLVMTOK_ELLIPSIS);
 	}
 
 	FunctionType::operator std::string() {
@@ -262,22 +262,22 @@ namespace LL2W {
 
 	TypePtr getType(const ASTNode *node) {
 		switch (node->symbol) {
-			case FUNCTIONTYPE:  return std::make_shared<FunctionType>(node);
-			case TOK_INTTYPE:   return std::make_shared<IntType>(atoi(node->lexerInfo->substr(1).c_str()));
-			case TOK_FLOATTYPE: return std::make_shared<FloatType>(FloatType::getType(*node->lexerInfo));
-			case POINTERTYPE:   return std::make_shared<PointerType>(getType(node->at(0)));
-			case TOK_VOID:      return std::make_shared<VoidType>();
-			case TOK_STRUCTVAR: return std::make_shared<StructType>(node->lexerInfo, StructForm::Struct);
-			case TOK_CLASSVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Class);
-			case TOK_UNIONVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Union);
-			case STRUCTDEF:     return std::make_shared<StructType>(dynamic_cast<const StructNode *>(node));
-			case TOK_GVAR:      return std::make_shared<GlobalTemporaryType>(node);
-			case ARRAYTYPE:
+			case LLVM_FUNCTIONTYPE: return std::make_shared<FunctionType>(node);
+			case LLVMTOK_INTTYPE:   return std::make_shared<IntType>(atoi(node->lexerInfo->substr(1).c_str()));
+			case LLVMTOK_FLOATTYPE: return std::make_shared<FloatType>(FloatType::getType(*node->lexerInfo));
+			case LLVM_POINTERTYPE:  return std::make_shared<PointerType>(getType(node->at(0)));
+			case LLVMTOK_VOID:      return std::make_shared<VoidType>();
+			case LLVMTOK_STRUCTVAR: return std::make_shared<StructType>(node->lexerInfo, StructForm::Struct);
+			case LLVMTOK_CLASSVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Class);
+			case LLVMTOK_UNIONVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Union);
+			case LLVM_STRUCTDEF:    return std::make_shared<StructType>(dynamic_cast<const StructNode *>(node));
+			case LLVMTOK_GVAR:      return std::make_shared<GlobalTemporaryType>(node);
+			case LLVM_ARRAYTYPE:
 				return std::make_shared<ArrayType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
-			case VECTORTYPE:
+			case LLVM_VECTORTYPE:
 				return std::make_shared<VectorType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
 			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
-			                                     std::string(Parser::getName(node->symbol)));
+			                                     std::string(llvmParser.getName(node->symbol)));
 		}
 	}
 

@@ -1,0 +1,356 @@
+Terminals unused in grammar
+
+    WASMTOK_ROOT
+    WASMTOK_IDENT
+    "!"
+    "="
+    "."
+    "target"
+    "datalayout"
+    "triple"
+    "distinct"
+    "!{"
+    "{"
+    "}"
+    ","
+    "null"
+    "%"
+    "@"
+    "("
+    ")"
+    "["
+    "]"
+    "x"
+    "<"
+    ">"
+    "void"
+    "..."
+    "*"
+    "#"
+    ":"
+    "undef"
+    WASMTOK_NEWLINE
+    "to"
+    "thread_local"
+    WASMTOK_THREAD_LOCAL_TYPE
+    "localdynamic"
+    "initialexec"
+    "localexec"
+    "addrspace"
+    "zeroinitializer"
+    "externally_initialized"
+    "global"
+    "constant"
+    "section"
+    "comdat"
+    "align"
+    "type"
+    "opaque"
+    "attributes"
+    "alignstack"
+    "allocsize"
+    "patchable-function=\"prologue-short-redirect\""
+    "readonly"
+    "readnone"
+    "declare"
+    "define"
+    "select"
+    "alloca"
+    "inalloca"
+    "store"
+    "load"
+    "volatile"
+    "!invariant.group"
+    "!invariant.load"
+    "!nontemporal"
+    "!nonnull"
+    "!dereferenceable"
+    "!dereferenceable_or_null"
+    "!align"
+    "!srcloc"
+    "!tbaa"
+    "!prof"
+    "!callees"
+    "syncscope"
+    "atomic"
+    "icmp"
+    "br"
+    "label"
+    "call"
+    "getelementptr"
+    "inbounds"
+    "inrange"
+    "ret"
+    "personality"
+    "invoke"
+    "unwind"
+    "cleanup"
+    "catch"
+    "landingpad"
+    "extractvalue"
+    "insertvalue"
+    "resume"
+    "filter"
+    "byval"
+    "writeonly"
+    "nuw"
+    "nsw"
+    "add"
+    "sub"
+    "mul"
+    "shl"
+    "phi"
+    "switch"
+    "unreachable"
+    "asm"
+    "sideeffect"
+    "inteldialect"
+    "exact"
+    "dso_local"
+    "dso_preemptable"
+    WASM_CONSTANT
+    WASM_CONVERSION_EXPR
+    WASM_INITIAL_VALUE_LIST
+    WASM_ARRAYTYPE
+    WASM_VECTORTYPE
+    WASM_POINTERTYPE
+    WASM_TYPE_LIST
+    WASM_FUNCTIONTYPE
+    WASM_GDEF_EXTRAS
+    WASM_STRUCTDEF
+    WASM_ATTRIBUTE_LIST
+    WASM_RETATTR_LIST
+    WASM_FNATTR_LIST
+    WASM_FUNCTION_TYPE_LIST
+    WASM_PARATTR_LIST
+    WASM_FUNCTION_HEADER
+    WASM_FUNCTION_ARGS
+    WASM_FUNCTION_DEF
+    WASM_STATEMENTS
+    WASM_LABEL
+    WASM_INSTRUCTION
+    WASM_FASTMATH_FLAGS
+    WASM_VECTOR
+    WASM_METADATA_LIST
+    WASM_PREDS_LIST
+    WASM_FNTYPE
+    WASM_CONSTANT_LIST
+    WASM_GETELEMENTPTR_EXPR
+    WASM_DECIMAL_LIST
+    WASM_INDEX_LIST
+    WASM_STRUCT_VALUE
+    WASM_VALUE_LIST
+    WASM_ARRAY_VALUE
+    WASM_CLAUSES
+    WASM_GLOBAL_DEF
+    WASM_PHI_PAIR
+    WASM_SWITCH_LIST
+    WASM_BLOCKHEADER
+    WASM_DECIMAL_PAIR_LIST
+    WASM_BANGS
+
+
+Grammar
+
+    0 $accept: start $end
+
+    1 start: program
+
+    2 program: %empty
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    WASMTOK_ROOT (258)
+    WASMTOK_IDENT (259)
+    "!" (260)
+    "=" (261)
+    "." (262)
+    "target" (263)
+    "datalayout" (264)
+    "triple" (265)
+    "distinct" (266)
+    "!{" (267)
+    "{" (268)
+    "}" (269)
+    "," (270)
+    "null" (271)
+    "%" (272)
+    "@" (273)
+    "(" (274)
+    ")" (275)
+    "[" (276)
+    "]" (277)
+    "x" (278)
+    "<" (279)
+    ">" (280)
+    "void" (281)
+    "..." (282)
+    "*" (283)
+    "#" (284)
+    ":" (285)
+    "undef" (286)
+    WASMTOK_NEWLINE (287)
+    "to" (288)
+    "thread_local" (289)
+    WASMTOK_THREAD_LOCAL_TYPE (290)
+    "localdynamic" (291)
+    "initialexec" (292)
+    "localexec" (293)
+    "addrspace" (294)
+    "zeroinitializer" (295)
+    "externally_initialized" (296)
+    "global" (297)
+    "constant" (298)
+    "section" (299)
+    "comdat" (300)
+    "align" (301)
+    "type" (302)
+    "opaque" (303)
+    "attributes" (304)
+    "alignstack" (305)
+    "allocsize" (306)
+    "patchable-function=\"prologue-short-redirect\"" (307)
+    "readonly" (308)
+    "readnone" (309)
+    "declare" (310)
+    "define" (311)
+    "select" (312)
+    "alloca" (313)
+    "inalloca" (314)
+    "store" (315)
+    "load" (316)
+    "volatile" (317)
+    "!invariant.group" (318)
+    "!invariant.load" (319)
+    "!nontemporal" (320)
+    "!nonnull" (321)
+    "!dereferenceable" (322)
+    "!dereferenceable_or_null" (323)
+    "!align" (324)
+    "!srcloc" (325)
+    "!tbaa" (326)
+    "!prof" (327)
+    "!callees" (328)
+    "syncscope" (329)
+    "atomic" (330)
+    "icmp" (331)
+    "br" (332)
+    "label" (333)
+    "call" (334)
+    "getelementptr" (335)
+    "inbounds" (336)
+    "inrange" (337)
+    "ret" (338)
+    "personality" (339)
+    "invoke" (340)
+    "unwind" (341)
+    "cleanup" (342)
+    "catch" (343)
+    "landingpad" (344)
+    "extractvalue" (345)
+    "insertvalue" (346)
+    "resume" (347)
+    "filter" (348)
+    "byval" (349)
+    "writeonly" (350)
+    "nuw" (351)
+    "nsw" (352)
+    "add" (353)
+    "sub" (354)
+    "mul" (355)
+    "shl" (356)
+    "phi" (357)
+    "switch" (358)
+    "unreachable" (359)
+    "asm" (360)
+    "sideeffect" (361)
+    "inteldialect" (362)
+    "exact" (363)
+    "dso_local" (364)
+    "dso_preemptable" (365)
+    WASM_CONSTANT (366)
+    WASM_CONVERSION_EXPR (367)
+    WASM_INITIAL_VALUE_LIST (368)
+    WASM_ARRAYTYPE (369)
+    WASM_VECTORTYPE (370)
+    WASM_POINTERTYPE (371)
+    WASM_TYPE_LIST (372)
+    WASM_FUNCTIONTYPE (373)
+    WASM_GDEF_EXTRAS (374)
+    WASM_STRUCTDEF (375)
+    WASM_ATTRIBUTE_LIST (376)
+    WASM_RETATTR_LIST (377)
+    WASM_FNATTR_LIST (378)
+    WASM_FUNCTION_TYPE_LIST (379)
+    WASM_PARATTR_LIST (380)
+    WASM_FUNCTION_HEADER (381)
+    WASM_FUNCTION_ARGS (382)
+    WASM_FUNCTION_DEF (383)
+    WASM_STATEMENTS (384)
+    WASM_LABEL (385)
+    WASM_INSTRUCTION (386)
+    WASM_FASTMATH_FLAGS (387)
+    WASM_VECTOR (388)
+    WASM_METADATA_LIST (389)
+    WASM_PREDS_LIST (390)
+    WASM_FNTYPE (391)
+    WASM_CONSTANT_LIST (392)
+    WASM_GETELEMENTPTR_EXPR (393)
+    WASM_DECIMAL_LIST (394)
+    WASM_INDEX_LIST (395)
+    WASM_STRUCT_VALUE (396)
+    WASM_VALUE_LIST (397)
+    WASM_ARRAY_VALUE (398)
+    WASM_CLAUSES (399)
+    WASM_GLOBAL_DEF (400)
+    WASM_PHI_PAIR (401)
+    WASM_SWITCH_LIST (402)
+    WASM_BLOCKHEADER (403)
+    WASM_DECIMAL_PAIR_LIST (404)
+    WASM_BANGS (405)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (151)
+        on left: 0
+    start (152)
+        on left: 1
+        on right: 0
+    program (153)
+        on left: 2
+        on right: 1
+
+
+State 0
+
+    0 $accept: • start $end
+
+    $default  reduce using rule 2 (program)
+
+    start    go to state 1
+    program  go to state 2
+
+
+State 1
+
+    0 $accept: start • $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    1 start: program •
+
+    $default  reduce using rule 1 (start)
+
+
+State 3
+
+    0 $accept: start $end •
+
+    $default  accept

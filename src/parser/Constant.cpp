@@ -12,7 +12,7 @@ namespace LL2W {
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
 	Constant::Constant(const ASTNode *node) {
-		if (node->symbol != CONSTANT)
+		if (node->symbol != LLVM_CONSTANT)
 			throw std::runtime_error("Constant::Constant: node doesn't have symbol CONSTANT");
 
 		if (node->size() == 1) {
@@ -25,7 +25,7 @@ namespace LL2W {
 			ASTNode *value_node = node->at(1);
 			if (GetelementptrValue *gep_value = dynamic_cast<GetelementptrValue *>(value_node)) {
 				value = gep_value->copy();
-			} else if (value_node->symbol == CONVERSION_EXPR) {
+			} else if (value_node->symbol == LLVM_CONVERSION_EXPR) {
 				for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
 					if (*value_node->lexerInfo == pair.second) {
 						conversion = pair.first;

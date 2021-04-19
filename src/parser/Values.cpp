@@ -199,23 +199,23 @@ namespace LL2W {
 
 	ValuePtr getValue(ASTNode *node) {
 		switch (node->symbol) {
-			case TOK_FLOATING:        return std::make_shared<DoubleValue>(node);
-			case TOK_DECIMAL:         return std::make_shared<IntValue>(node);
-			case TOK_HEXADECIMAL:     return std::make_shared<IntValue>(node);
-			case TOK_BOOL:            return std::make_shared<BoolValue>(node);
-			case VECTOR:              return std::make_shared<VectorValue>(node);
-			case TOK_PVAR:            return std::make_shared<LocalValue>(node);
-			case TOK_GVAR:            return std::make_shared<GlobalValue>(node);
-			case TOK_GETELEMENTPTR:   return std::make_shared<GetelementptrValue>(node);
-			case TOK_VOID:            return std::make_shared<VoidValue>();
-			case STRUCT_VALUE:        return std::make_shared<StructValue>(node);
-			case VALUE_LIST:          return std::make_shared<ArrayValue>(node);
-			case TOK_NULL:            return std::make_shared<NullValue>();
-			case TOK_CSTRING:         return std::make_shared<CStringValue>(node);
-			case TOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
-			case TOK_UNDEF:           return std::make_shared<UndefValue>();
+			case LLVMTOK_FLOATING:        return std::make_shared<DoubleValue>(node);
+			case LLVMTOK_DECIMAL:         return std::make_shared<IntValue>(node);
+			case LLVMTOK_HEXADECIMAL:     return std::make_shared<IntValue>(node);
+			case LLVMTOK_BOOL:            return std::make_shared<BoolValue>(node);
+			case LLVM_VECTOR:             return std::make_shared<VectorValue>(node);
+			case LLVMTOK_PVAR:            return std::make_shared<LocalValue>(node);
+			case LLVMTOK_GVAR:            return std::make_shared<GlobalValue>(node);
+			case LLVMTOK_GETELEMENTPTR:   return std::make_shared<GetelementptrValue>(node);
+			case LLVMTOK_VOID:            return std::make_shared<VoidValue>();
+			case LLVM_STRUCT_VALUE:       return std::make_shared<StructValue>(node);
+			case LLVM_VALUE_LIST:         return std::make_shared<ArrayValue>(node);
+			case LLVMTOK_NULL:            return std::make_shared<NullValue>();
+			case LLVMTOK_CSTRING:         return std::make_shared<CStringValue>(node);
+			case LLVMTOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
+			case LLVMTOK_UNDEF:           return std::make_shared<UndefValue>();
 			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
-			                                     std::string(Parser::getName(node->symbol)));
+			                                     std::string(llvmParser.getName(node->symbol)));
 		}
 	}
 

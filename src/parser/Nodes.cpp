@@ -14,7 +14,7 @@ namespace LL2W {
 // MetadataDef
 
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
-		BaseNode(TOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
+		BaseNode(llvmParser, LLVMTOK_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		locate(dotident_node);
 		distinct = distinct_node != nullptr;
 		if (distinct_node)
@@ -29,7 +29,7 @@ namespace LL2W {
 
 // HeaderNode
 
-	HeaderNode::HeaderNode(bool simple, ASTNode *node): BaseNode(BLOCKHEADER, "") {
+	HeaderNode::HeaderNode(bool simple, ASTNode *node): BaseNode(llvmParser, LLVM_BLOCKHEADER, "") {
 		locate(node);
 		ASTNode *list;
 
@@ -47,7 +47,7 @@ namespace LL2W {
 		delete node;
 	}
 
-	HeaderNode::HeaderNode(ASTNode *node): BaseNode(BLOCKHEADER, "") {
+	HeaderNode::HeaderNode(ASTNode *node): BaseNode(llvmParser, LLVM_BLOCKHEADER, "") {
 		locate(node);
 		label = StringSet::intern(node->lexerInfo->substr(0, node->lexerInfo->size() - 1));
 		delete node;
@@ -64,21 +64,21 @@ namespace LL2W {
 
 // AttributesNode
 
-	AttributesNode::AttributesNode(ASTNode *node): BaseNode(TOK_ATTRIBUTES, "") {
+	AttributesNode::AttributesNode(ASTNode *node): BaseNode(llvmParser, LLVMTOK_ATTRIBUTES, "") {
 		index = node->at(0)->atoi();
 		for (ASTNode *child: *node->at(1)) {
-			if (child->symbol == TOK_FNATTR_BASIC) {
+			if (child->symbol == LLVMTOK_FNATTR_BASIC) {
 				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
 					if (*child->lexerInfo == pair.second) {
 						basicAttributes.insert(pair.first);
 						break;
 					}
 				}
-			} else if (child->symbol == TOK_STRING) {
+			} else if (child->symbol == LLVMTOK_STRING) {
 				stringAttributes.insert({child->extracted(), StringSet::intern("")});
-			} else if (child->symbol == TOK_EQUALS) {
+			} else if (child->symbol == LLVMTOK_EQUALS) {
 				stringAttributes.insert({child->at(0)->extracted(), child->at(1)->extracted()});
-			} else if (child->symbol == TOK_ALLOCSIZE) {
+			} else if (child->symbol == LLVMTOK_ALLOCSIZE) {
 				allocsizeSize = child->at(0)->atoi();
 				if (1 < child->size())
 					allocsizeCount = child->at(1)->atoi();
@@ -107,14 +107,14 @@ namespace LL2W {
 
 // InstructionNode
 
-	InstructionNode::InstructionNode(const std::string *str): BaseNode(INSTRUCTION, str) {}
-	InstructionNode::InstructionNode(): BaseNode(INSTRUCTION, "") {}
+	InstructionNode::InstructionNode(const std::string *str): BaseNode(llvmParser, LLVM_INSTRUCTION, str) {}
+	InstructionNode::InstructionNode(): BaseNode(llvmParser, LLVM_INSTRUCTION, "") {}
 
 	void InstructionNode::handleUnibangs(ASTNode *unibangs) {
 		for (const ASTNode *sub: *unibangs) {
-			if (sub->symbol == TOK_PROF)
+			if (sub->symbol == LLVMTOK_PROF)
 				prof = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_CALLEES)
+			else if (sub->symbol == LLVMTOK_CALLEES)
 				callees = sub->at(0)->atoi();
 		}
 	}
@@ -194,7 +194,7 @@ namespace LL2W {
 		type = getType(type_);
 		delete type_;
 
-		// numelements_ is expected to be a TOK_COMMA node with a type_any child and a TOK_DECIMAL child.
+		// numelements_ is expected to be a LLVMTOK_COMMA node with a type_any child and a LLVMTOK_DECIMAL child.
 		if (numelements_) {
 			numelementsType = getType(numelements_->at(0));
 			numelementsValue = getValue(numelements_->at(1));
@@ -287,11 +287,11 @@ namespace LL2W {
 	void StoreNode::handleBangs(ASTNode *bangs) {
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
-			if (sub->symbol == TOK_NONTEMPORAL)
+			if (sub->symbol == LLVMTOK_NONTEMPORAL)
 				nontemporalIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_INVARIANT_GROUP)
+			else if (sub->symbol == LLVMTOK_INVARIANT_GROUP)
 				invariantGroupIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_TBAA)
+			else if (sub->symbol == LLVMTOK_TBAA)
 				tbaa = sub->at(0)->atoi();
 		}
 
@@ -378,21 +378,21 @@ namespace LL2W {
 	void LoadNode::handleBangs(ASTNode *bangs) {
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
-			if (sub->symbol == TOK_NONTEMPORAL)
+			if (sub->symbol == LLVMTOK_NONTEMPORAL)
 				nontemporalIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_INVARIANT_LOAD)
+			else if (sub->symbol == LLVMTOK_INVARIANT_LOAD)
 				invariantLoadIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_INVARIANT_GROUP)
+			else if (sub->symbol == LLVMTOK_INVARIANT_GROUP)
 				invariantGroupIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_NONNULL)
+			else if (sub->symbol == LLVMTOK_NONNULL)
 				nonnullIndex = sub->at(0)->atoi();
-			else if (sub->symbol == TOK_DEREFERENCEABLE)
+			else if (sub->symbol == LLVMTOK_DEREFERENCEABLE)
 				dereferenceable = sub->at(0)->lexerInfo;
-			else if (sub->symbol == TOK_DEREFERENCEABLE_OR_NULL)
+			else if (sub->symbol == LLVMTOK_DEREFERENCEABLE_OR_NULL)
 				dereferenceableOrNull = sub->at(0)->lexerInfo;
-			else if (sub->symbol == TOK_BANGALIGN)
+			else if (sub->symbol == LLVMTOK_BANGALIGN)
 				bangAlign = sub->at(0)->lexerInfo;
-			else if (sub->symbol == TOK_TBAA)
+			else if (sub->symbol == LLVMTOK_TBAA)
 				tbaa = sub->at(0)->atoi();
 		}
 
@@ -471,7 +471,7 @@ namespace LL2W {
 		handleUnibangs(unibangs);
 		delete unibangs;
 		if (*type->lexerInfo != "i1")
-			yyerror("Expected i1 for br condition type");
+			llvmerror("Expected i1 for br condition type");
 		condition = getValue(condition_);
 		ifTrue = if_true->lexerInfo;
 		ifFalse = if_false->lexerInfo;
@@ -538,7 +538,7 @@ namespace LL2W {
 				argumentEllipsis = true;
 				typelist = _args->at(0);
 			} else if (_args->size() == 1) { // Either a typelist or an ellipsis is specified.
-				if (_args->at(0)->symbol == TOK_ELLIPSIS) {
+				if (_args->at(0)->symbol == LLVMTOK_ELLIPSIS) {
 					argumentEllipsis = true;
 				} else {
 					typelist = _args->at(0);
@@ -747,27 +747,27 @@ namespace LL2W {
 		}
 		type = getType(type_);
 		ptrType = getType(ptr_type);
-		if (ptr_value->symbol != TOK_PVAR) {
-			yyerror("Invalid pointer symbol in getelementptr instruction: " +
-				std::string(Parser::getName(ptr_value->symbol)), ptr_value->location);
+		if (ptr_value->symbol != LLVMTOK_PVAR) {
+			llvmerror("Invalid pointer symbol in getelementptr instruction: " +
+				std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
 		} else {
 			const std::string extracted = ptr_value->extractName();
 			if (!Util::isNumeric(extracted)) {
-				yyerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
+				llvmerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
 					ptr_value->location);
 			}
 		}
 
 		ptrValue = getValue(ptr_value);
 		if (!std::dynamic_pointer_cast<LocalValue>(ptrValue))
-			yyerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
+			llvmerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
 
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
 				comma->at(0)->atoi(1),
 				comma->at(1)->atoi(),
 				comma->size() == 3,
-				comma->at(1)->symbol == TOK_PVAR});
+				comma->at(1)->symbol == LLVMTOK_PVAR});
 		}
 
 		delete pvar;
@@ -821,8 +821,8 @@ namespace LL2W {
 // LandingpadNode
 
 	LandingpadNode::Clause::Clause(ASTNode *node) {
-		clauseType = node->symbol == TOK_CATCH? ClauseType::Catch : ClauseType::Filter;
-		if (node->at(0)->symbol == ARRAY_VALUE) {
+		clauseType = node->symbol == LLVMTOK_CATCH? ClauseType::Catch : ClauseType::Filter;
+		if (node->at(0)->symbol == LLVM_ARRAY_VALUE) {
 			type = getType(node->at(0)->at(0));
 			value = getValue(node->at(0)->at(1));
 		} else {

@@ -122,10 +122,10 @@ void mergetest2() {
 LL2W::Program *prog = nullptr;
 
 void parsertest(const std::string &filename) {
-	LL2W::Parser::open(filename);
-	LL2W::Parser::debug(false, false);
-	LL2W::Parser::parse();
-	prog = new LL2W::Program(*LL2W::Parser::root);
+	LL2W::llvmParser.open(filename);
+	LL2W::llvmParser.debug(false, false);
+	LL2W::llvmParser.parse();
+	prog = new LL2W::Program(*LL2W::llvmParser.root);
 #ifdef INTERACTIVE
 	LL2W::interactive(*prog);
 	std::cout << "Done.\n";
@@ -137,6 +137,6 @@ void parsertest(const std::string &filename) {
 	std::cout << prog->toString();
 #endif
 #endif
-	LL2W::Parser::done();
+	LL2W::llvmParser.done();
 	delete prog;
 }
