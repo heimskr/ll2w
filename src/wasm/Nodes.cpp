@@ -33,22 +33,25 @@ namespace LL2W {
 		     + (isUnsigned? " /u" : "");
 	}
 
+	WASMMemoryNode::WASMMemoryNode(int token, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+		WASMBaseNode(wasmParser, token), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {}
+
 	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMBaseNode(wasmParser, WASM_COPYNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {}
+		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, byte_) {}
 
 	std::string WASMCopyNode::debugExtra() const {
 		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMBaseNode(wasmParser, WASM_LOADNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {}
+		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, byte_) {}
 
 	std::string WASMLoadNode::debugExtra() const {
 		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
 	}
 
 	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMBaseNode(wasmParser, WASM_STORENODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {}
+		WASMMemoryNode(WASM_STORENODE, rs_, rd_, byte_) {}
 
 	std::string WASMStoreNode::debugExtra() const {
 		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");

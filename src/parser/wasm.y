@@ -40,7 +40,6 @@ using AN = LL2W::ASTNode;
 %define parse.error verbose
 %token-table
 %verbose
-%glr-parser
 
 %define api.prefix {wasm}
 
@@ -113,7 +112,7 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r | op_mult | op_lui | op_i | op_c | op_l | op_s | op_set;
+operation: op_r | op_mult | op_multi | op_lui | op_i | op_c | op_l | op_s | op_set | op_divii;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -122,6 +121,8 @@ basic_oper: "+" | "-"  | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | 
 _unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = $2->adopt({$1, $3, $4}); };
+
+op_multi: reg "*" number _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
 op_lui: "lui" ":" number "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
 
@@ -135,6 +136,8 @@ op_l: "[" reg "]" "->" reg _byte { $$ = new WASMLoadNode($2, $5, $6); D($1, $3, 
 op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3, $5); };
 
 op_set: number "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
+
+op_divii: number "/" reg "->" reg _unsigned { $$ = $2->adopt({$1, $3, $5, $6}); D($4); };
 
 reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;

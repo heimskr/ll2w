@@ -29,30 +29,26 @@ namespace LL2W {
 		std::string debugExtra() const override;
 	};
 
-	// TODO: Add a base class for WASM(Copy|Load|Store)Node to reduce code duplication.
-
-	struct WASMCopyNode: public WASMBaseNode {
+	struct WASMMemoryNode: public WASMBaseNode {
 		const std::string *rs, *rd;
 		bool isByte;
 
+		WASMMemoryNode(int token, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
+	};
+
+	struct WASMCopyNode: public WASMMemoryNode {
 		WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
 	};
 
-	struct WASMLoadNode: public WASMBaseNode {
-		const std::string *rs, *rd;
-		bool isByte;
-
+	struct WASMLoadNode: public WASMMemoryNode {
 		WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
 		std::string debugExtra() const override;
 	};
 
-	struct WASMStoreNode: public WASMBaseNode {
-		const std::string *rs, *rd;
-		bool isByte;
-
+	struct WASMStoreNode: public WASMMemoryNode {
 		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
