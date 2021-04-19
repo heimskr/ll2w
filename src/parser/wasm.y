@@ -98,6 +98,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_NUMBER
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
+%token WASM_SINODE
 
 %start start
 
@@ -112,7 +113,7 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r | op_mult | op_multi | op_lui | op_i | op_c | op_l | op_s | op_set | op_divii | op_li;
+operation: op_r | op_mult | op_multi | op_lui | op_i | op_c | op_l | op_s | op_set | op_divii | op_li | op_si;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -140,6 +141,8 @@ op_set: number "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 op_divii: number "/" reg "->" reg _unsigned { $$ = $2->adopt({$1, $3, $5, $6}); D($4); };
 
 op_li: "[" number "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
+
+op_si: reg "->" "[" number "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 
 reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;
