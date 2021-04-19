@@ -110,4 +110,12 @@ namespace LL2W {
 	std::string WASMSiNode::debugExtra() const {
 		return cyan(*rs) + dim(" -> [") + green(std::to_string(imm)) + dim("]") + (isByte? " /b" : "");
 	}
+
+	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_): WASMLiNode(imm_, rd_, byte_) {
+		symbol = WASM_LNINODE;
+	}
+
+	std::string WASMLniNode::debugExtra() const {
+		return dim("[") + green(std::to_string(imm)) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
+	}
 }
