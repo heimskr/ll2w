@@ -126,7 +126,7 @@ using AN = LL2W::ASTNode;
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
-%token WASM_LUINODE
+%token WASM_LUINODE WASM_STACKNODE
 
 %start start
 
@@ -205,9 +205,9 @@ op_jrc: op_jr "if" reg { $$ = new WASMJrcNode(dynamic_cast<WASMJrNode *>($1), $3
 
 op_mv: reg "->" reg { $$ = new RNode($1, "|", "$$0", $3, nullptr); D($2); };
 
-op_spush: "[" reg { $$ = $1->adopt($2); };
+op_spush: "[" reg { $$ = new WASMStackNode($2, true); D($1); };
 
-op_spop: "]" reg { $$ = $1->adopt($2); };
+op_spop: "]" reg { $$ = new WASMStackNode($2, false); D($1); };
 
 op_nop: "<>";
 

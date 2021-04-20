@@ -389,4 +389,13 @@ namespace LL2W {
 	std::string WASMLuiNode::debugExtra() const {
 		return "lui" + dim(": ") + stringify(imm) + dim(" -> ") + cyan(*rd);
 	}
+
+	WASMStackNode::WASMStackNode(ASTNode *rd_, bool is_push):
+	WASMBaseNode(WASM_STACKNODE), rd(rd_->lexerInfo), isPush(is_push) {
+		delete rd_;
+	}
+
+	std::string WASMStackNode::debugExtra() const {
+		return dim(isPush? "[" : "]") + " " + cyan(*rd);
+	}
 }
