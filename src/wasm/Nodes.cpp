@@ -489,4 +489,10 @@ namespace LL2W {
 				return red("???");
 		}
 	}
+
+	WASMHaltNode::WASMHaltNode(): WASMBaseNode(WASM_HALTNODE) {}
+
+	std::string WASMHaltNode::debugExtra() const {
+		return "<" + blue("halt") + ">";
+	}
 }
