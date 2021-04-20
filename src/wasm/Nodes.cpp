@@ -440,4 +440,20 @@ namespace LL2W {
 	std::string WASMTimeRNode::debugExtra() const {
 		return blue("time") + " " + cyan(*rs);
 	}
+
+	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMBaseNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
+		delete imm_;
+	}
+
+	std::string WASMRingINode::debugExtra() const {
+		return blue("ring") + " " + stringify(imm);
+	}
+
+	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMBaseNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
+		delete rs_;
+	}
+
+	std::string WASMRingRNode::debugExtra() const {
+		return blue("ring") + " " + cyan(*rs);
+	}
 }

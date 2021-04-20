@@ -126,7 +126,8 @@ using AN = LL2W::ASTNode;
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
-%token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE
+%token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
+%token WASM_RINGRNODE
 
 %start start
 
@@ -219,9 +220,9 @@ op_time: "time" reg { $$ = new WASMTimeRNode($2); D($1); };
 
 op_timei: "time" immediate { $$ = new WASMTimeINode($2); D($1); };
 
-op_ring: "ring" reg { $$ = $1->adopt($2); };
+op_ring: "ring" reg { $$ = new WASMRingRNode($2); D($1); };
 
-op_ringi: "ring" immediate { $$ = $1->adopt($2); };
+op_ringi: "ring" immediate { $$ = new WASMRingINode($2); D($1); };
 
 op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
 
