@@ -127,7 +127,7 @@ using AN = LL2W::ASTNode;
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
-%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE
+%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE
 
 %start start
 
@@ -237,8 +237,8 @@ printop: "print" | "prx" | "prd" | "prc" | "prb"
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 
-op_page: "page" onoff { $$ = $1->adopt($2); };
-onoff: "on" | "off";
+op_page: "page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
+       | "page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
 op_setpt: "setpt" immediate { $$ = $1->adopt($2); };
 

@@ -503,4 +503,10 @@ namespace LL2W {
 	std::string WASMSleepRNode::debugExtra() const {
 		return "<" + blue("sleep") + " " + cyan(*rs) + ">";
 	}
+
+	WASMPageNode::WASMPageNode(bool on_): WASMBaseNode(WASM_PAGENODE), on(on_) {}
+
+	std::string WASMPageNode::debugExtra() const {
+		return blue("page") + " " + (on? "on" : "off");
+	}
 }
