@@ -46,11 +46,15 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
+"print"						{ WASMRTOKEN(PRINT) }
 "time"						{ WASMRTOKEN(TIME) }
 "ring"						{ WASMRTOKEN(RING) }
 "lui"						{ WASMRTOKEN(LUI) }
 "int"						{ WASMRTOKEN(INT) }
 "rit"						{ WASMRTOKEN(RIT) }
+"prc"						{ WASMRTOKEN(PRC) }
+"prx"						{ WASMRTOKEN(PRX) }
+"prd"						{ WASMRTOKEN(PRD) }
 "->"						{ WASMRTOKEN(INTO) }
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }
