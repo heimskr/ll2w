@@ -49,12 +49,14 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "print"						{ WASMRTOKEN(PRINT) }
 "time"						{ WASMRTOKEN(TIME) }
 "ring"						{ WASMRTOKEN(RING) }
+"halt"						{ WASMRTOKEN(HALT) }
 "lui"						{ WASMRTOKEN(LUI) }
 "int"						{ WASMRTOKEN(INT) }
 "rit"						{ WASMRTOKEN(RIT) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }
 "prd"						{ WASMRTOKEN(PRD) }
+"prb"						{ WASMRTOKEN(PRB) }
 "->"						{ WASMRTOKEN(INTO) }
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }

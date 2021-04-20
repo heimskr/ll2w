@@ -49,9 +49,13 @@ namespace LL2W {
 		}
 	}
 
-	static std::string stringify(const Immediate &imm) {
-		if (std::holds_alternative<long>(imm))
-			return green(std::to_string(std::get<long>(imm)));
+	static std::string stringify(const Immediate &imm, const bool colored = true) {
+		if (colored) {
+			if (std::holds_alternative<long>(imm))
+				return green(std::to_string(std::get<long>(imm)));
+			return *std::get<const std::string *>(imm);
+		} else if (std::holds_alternative<long>(imm))
+			return std::to_string(std::get<long>(imm));
 		return *std::get<const std::string *>(imm);
 	}
 
