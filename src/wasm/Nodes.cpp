@@ -15,6 +15,10 @@ static std::string green(const std::string &interior) {
 	return "\e[32m" + interior + "\e[39m";
 }
 
+static std::string red(const std::string &interior) {
+	return "\e[31m" + interior + "\e[39m";
+}
+
 namespace LL2W {
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
@@ -234,5 +238,21 @@ namespace LL2W {
 		}
 
 		return dim(cond + std::string(link? "::" : ":")) + " " + green(std::to_string(addr));
+	}
+
+	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
+	WASMBaseNode(WASM_JCNODE), link(j? j->link : false), addr(j? j->addr : 0), rs(rs_->lexerInfo) {
+		if (!j) {
+			wasmerror("No WASMCJNode found in jc instruction");
+		} else {
+			if (j->condition != WASMCondition::None)
+				wasmerror("Conditions specified for jc instruction");
+			delete j;
+		}
+		delete rs_;
+	}
+
+	std::string WASMJcNode::debugExtra() const {
+		return dim(link? "::" : ":") + " " + green(std::to_string(addr)) + red(" if ") + cyan(*rs);
 	}
 }

@@ -64,6 +64,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "/b"						{ WASMRTOKEN(BYTE) }
 "/h"						{ WASMRTOKEN(HALF) }
 "!="						{ WASMRTOKEN(NOTEQUAL) }
+"if"						{ WASMRTOKEN(IF) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
