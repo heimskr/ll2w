@@ -323,4 +323,14 @@ namespace LL2W {
 	std::string WASMJrcNode::debugExtra() const {
 		return dim(link? "::" : ":") + " " + cyan(*rd) + red(" if ") + cyan(*rs);
 	}
+
+	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push):
+	WASMBaseNode(WASM_SSNODE), size(size_->atoi()), rs(rs_->lexerInfo), isPush(is_push) {
+		delete size_;
+		delete rs_;
+	}
+
+	std::string WASMSizedStackNode::debugExtra() const {
+		return dim(std::string(isPush? "[" : "]") + ":" + std::to_string(size)) + " " + cyan(*rs);
+	}
 }

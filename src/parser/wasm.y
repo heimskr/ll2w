@@ -114,7 +114,7 @@ using AN = LL2W::ASTNode;
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
-%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE
+%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE
 
 %start start
 
@@ -129,10 +129,10 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r     | op_mult | op_multi | op_lui   | op_i    | op_c   | op_l   | op_s    | op_set  | op_divii | op_li
-         | op_si    | op_ms   | op_lni   | op_ch    | op_lh   | op_sh  | op_cmp | op_cmpi | op_sel  | op_j     | op_jc
-         | op_jr    | op_jrc  | op_mv    | op_spush | op_spop | op_nop | op_int | op_rit  | op_time | op_timei | op_ring
-         | op_ringi;
+operation: op_r     | op_mult  | op_multi  | op_lui   | op_i    | op_c   | op_l   | op_s    | op_set  | op_divii | op_li
+         | op_si    | op_ms    | op_lni    | op_ch    | op_lh   | op_sh  | op_cmp | op_cmpi | op_sel  | op_j     | op_jc
+         | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop | op_int | op_rit  | op_time | op_timei
+         | op_ring  | op_ringi | op_sspush | op_sspop;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -210,6 +210,10 @@ op_timei: "time" immediate { $$ = $1->adopt($2); };
 op_ring: "ring" reg { $$ = $1->adopt($2); };
 
 op_ringi: "ring" immediate { $$ = $1->adopt($2); };
+
+op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
+
+op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident;
