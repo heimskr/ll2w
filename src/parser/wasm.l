@@ -47,6 +47,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 
 "memset"					{ WASMRTOKEN(MEMSET) }
 "print"						{ WASMRTOKEN(PRINT) }
+"sleep"						{ WASMRTOKEN(SLEEP) }
 "time"						{ WASMRTOKEN(TIME) }
 "ring"						{ WASMRTOKEN(RING) }
 "halt"						{ WASMRTOKEN(HALT) }
