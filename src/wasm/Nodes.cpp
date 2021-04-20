@@ -456,4 +456,37 @@ namespace LL2W {
 	std::string WASMRingRNode::debugExtra() const {
 		return blue("ring") + " " + cyan(*rs);
 	}
+
+	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
+	WASMBaseNode(WASM_PRINTNODE), rs(rs_->lexerInfo) {
+		delete rs_;
+		const std::string &typestr = *type_->lexerInfo;
+		if (typestr == "prx")
+			type = WASMPrintType::Hex;
+		else if (typestr == "prd")
+			type = WASMPrintType::Dec;
+		else if (typestr == "prc")
+			type = WASMPrintType::Char;
+		else if (typestr == "print")
+			type = WASMPrintType::Full;
+		else if (typestr == "prb")
+			type = WASMPrintType::Bin;
+		else {
+			wasmerror("Invalid print type: " + typestr);
+			type = WASMPrintType::Full;
+		}
+		delete type_;
+	}
+
+	std::string WASMPrintNode::debugExtra() const {
+		switch (type) {
+			case WASMPrintType::Hex:  return "<" + blue("prx")   + " " + cyan(*rs) + ">";
+			case WASMPrintType::Dec:  return "<" + blue("prd")   + " " + cyan(*rs) + ">";
+			case WASMPrintType::Char: return "<" + blue("prc")   + " " + cyan(*rs) + ">";
+			case WASMPrintType::Full: return "<" + blue("print") + " " + cyan(*rs) + ">";
+			case WASMPrintType::Bin:  return "<" + blue("prb")   + " " + cyan(*rs) + ">";
+			default:
+				return red("???");
+		}
+	}
 }

@@ -7,10 +7,12 @@
 namespace LL2W {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc,
-		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR
+		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print
 	};
 
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
+
+	enum class WASMPrintType {Hex, Dec, Char, Full, Bin};
 
 	using Immediate = std::variant<long, const std::string *>;
 
@@ -310,6 +312,15 @@ namespace LL2W {
 
 		WASMRingRNode(ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RingR; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMPrintNode: public WASMBaseNode {
+		const std::string *rs;
+		WASMPrintType type;
+
+		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Print; }
 		std::string debugExtra() const override;
 	};
 }

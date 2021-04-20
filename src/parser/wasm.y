@@ -127,7 +127,7 @@ using AN = LL2W::ASTNode;
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
-%token WASM_RINGRNODE
+%token WASM_RINGRNODE WASM_PRINTNODE
 
 %start start
 
@@ -228,8 +228,11 @@ op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1
 
 op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
-op_ext: "<" extop reg ">" { $$ = $2->adopt($3); D($1, $4); };
-extop: "print" | "prx" | "prd" | "prc" | "prb" | "sleep";
+op_ext: op_print | "<" extop reg ">" { $$ = $2->adopt($3); D($1, $4); };
+extop: "sleep";
+
+op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
+printop: "print" | "prx" | "prd" | "prc" | "prb"
 
 op_halt: "<" "halt" ">" { $$ = $2; D($1, $3); };
 
