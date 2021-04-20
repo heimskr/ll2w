@@ -495,4 +495,12 @@ namespace LL2W {
 	std::string WASMHaltNode::debugExtra() const {
 		return "<" + blue("halt") + ">";
 	}
+
+	WASMSleepRNode::WASMSleepRNode(ASTNode *rs_): WASMBaseNode(WASM_SLEEPRNODE), rs(rs_->lexerInfo) {
+		delete rs_;
+	}
+
+	std::string WASMSleepRNode::debugExtra() const {
+		return "<" + blue("sleep") + " " + cyan(*rs) + ">";
+	}
 }
