@@ -20,6 +20,7 @@ namespace LL2W {
 	struct WASMBaseNode: public ASTNode {
 		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
+		virtual operator std::string() const = 0;
 	};
 
 	struct WASMImmediateNode: public WASMBaseNode {
@@ -28,6 +29,7 @@ namespace LL2W {
 		WASMImmediateNode(ASTNode *);
 		virtual WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct RNode: public WASMBaseNode {
@@ -39,6 +41,7 @@ namespace LL2W {
 		RNode(ASTNode *rs_, const std::string &oper_, const std::string &rt_, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct INode: public WASMBaseNode {
@@ -49,6 +52,7 @@ namespace LL2W {
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMMemoryNode: public WASMBaseNode {
@@ -62,18 +66,21 @@ namespace LL2W {
 		WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMLoadNode: public WASMMemoryNode {
 		WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMStoreNode: public WASMMemoryNode {
 		WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMSetNode: public WASMBaseNode {
@@ -83,6 +90,7 @@ namespace LL2W {
 		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMLiNode: public WASMBaseNode {
@@ -93,6 +101,7 @@ namespace LL2W {
 		WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMSiNode: public WASMBaseNode {
@@ -103,12 +112,14 @@ namespace LL2W {
 		WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Si; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMLniNode: public WASMLiNode {
 		WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 
@@ -122,18 +133,21 @@ namespace LL2W {
 		WASMChNode(ASTNode *rs_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMLhNode: public WASMHalfMemoryNode {
 		WASMLhNode(ASTNode *rs_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMShNode: public WASMHalfMemoryNode {
 		WASMShNode(ASTNode *rs_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMCmpNode: public WASMBaseNode {
@@ -142,6 +156,7 @@ namespace LL2W {
 		WASMCmpNode(ASTNode *rs_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmp; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMCmpiNode: public WASMBaseNode {
@@ -151,6 +166,7 @@ namespace LL2W {
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMSelNode: public WASMBaseNode {
@@ -161,6 +177,7 @@ namespace LL2W {
 		WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Sel; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMJNode: public WASMBaseNode {
@@ -171,6 +188,7 @@ namespace LL2W {
 		WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_);
 		WASMNodeType nodeType() const override { return WASMNodeType::J; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMJcNode: public WASMBaseNode {
@@ -181,6 +199,7 @@ namespace LL2W {
 		WASMJcNode(WASMJNode *, ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Jc; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	// Used for both jr and jrl.
@@ -192,6 +211,7 @@ namespace LL2W {
 		WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Jr; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	// Used for both jrc and jrlc.
@@ -202,6 +222,7 @@ namespace LL2W {
 		WASMJrcNode(WASMJrNode *, ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Jrc; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	// Used for both sspush and sspop.
@@ -213,6 +234,7 @@ namespace LL2W {
 		WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push);
 		WASMNodeType nodeType() const override { return WASMNodeType::SizedStack; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMMultRNode: public WASMBaseNode {
@@ -222,6 +244,7 @@ namespace LL2W {
 		WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::MultR; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMMultINode: public WASMBaseNode {
@@ -232,6 +255,7 @@ namespace LL2W {
 		WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMDiviINode: public WASMBaseNode {
@@ -242,6 +266,7 @@ namespace LL2W {
 		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMLuiNode: public WASMBaseNode {
@@ -251,6 +276,7 @@ namespace LL2W {
 		WASMLuiNode(ASTNode *imm_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Lui; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMStackNode: public WASMBaseNode {
@@ -260,12 +286,14 @@ namespace LL2W {
 		WASMStackNode(ASTNode *rd_, bool is_push);
 		WASMNodeType nodeType() const override { return WASMNodeType::Stack; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMNopNode: public WASMBaseNode {
 		WASMNopNode();
 		WASMNodeType nodeType() const override { return WASMNodeType::Nop; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMIntINode: public WASMBaseNode {
@@ -274,6 +302,7 @@ namespace LL2W {
 		WASMIntINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::IntI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMRitINode: public WASMBaseNode {
@@ -282,6 +311,7 @@ namespace LL2W {
 		WASMRitINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RitI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMTimeINode: public WASMBaseNode {
@@ -290,6 +320,7 @@ namespace LL2W {
 		WASMTimeINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMTimeRNode: public WASMBaseNode {
@@ -298,6 +329,7 @@ namespace LL2W {
 		WASMTimeRNode(ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeR; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMRingINode: public WASMBaseNode {
@@ -306,6 +338,7 @@ namespace LL2W {
 		WASMRingINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RingI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMRingRNode: public WASMBaseNode {
@@ -314,6 +347,7 @@ namespace LL2W {
 		WASMRingRNode(ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RingR; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMPrintNode: public WASMBaseNode {
@@ -323,12 +357,14 @@ namespace LL2W {
 		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Print; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMHaltNode: public WASMBaseNode {
 		WASMHaltNode();
 		WASMNodeType nodeType() const override { return WASMNodeType::Halt; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMSleepRNode: public WASMBaseNode {
@@ -337,6 +373,7 @@ namespace LL2W {
 		WASMSleepRNode(ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::SleepR; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMPageNode: public WASMBaseNode {
@@ -345,6 +382,7 @@ namespace LL2W {
 		WASMPageNode(bool on_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Page; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 
 	struct WASMSetptINode: public WASMBaseNode {
@@ -353,5 +391,6 @@ namespace LL2W {
 		WASMSetptINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptI; }
 		std::string debugExtra() const override;
+		virtual operator std::string() const override;
 	};
 }
