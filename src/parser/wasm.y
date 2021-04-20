@@ -119,6 +119,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_ON "on"
 %token WASMTOK_OFF "off"
 %token WASMTOK_PAGE "page"
+%token WASMTOK_SETPT "setpt"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 
@@ -142,7 +143,7 @@ endop: "\n" | ";";
 operation: op_r   | op_mult  | op_multi  | op_lui   | op_i    | op_c    | op_l    | op_s    | op_set  | op_divii | op_li
          | op_si  | op_ms    | op_lni    | op_ch    | op_lh   | op_sh   | op_cmp  | op_cmpi | op_sel  | op_j     | op_jc
          | op_jr  | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int  | op_rit  | op_time | op_timei
-         | op_ext | op_ringi | op_sspush | op_sspop | op_ring | op_halt | op_page;
+         | op_ext | op_ringi | op_sspush | op_sspop | op_ring | op_halt | op_page | op_setpt;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -233,10 +234,13 @@ op_halt: "<" "halt" ">" { $$ = $2; D($1, $3); };
 op_page: "page" onoff { $$ = $1->adopt($2); };
 onoff: "on" | "off";
 
+op_setpt: "setpt" immediate { $$ = $1->adopt($2); };
+
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident;
 
-ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | extop | WASMTOK_IDENT;
+ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | "setpt" | extop
+     | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
