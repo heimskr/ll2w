@@ -1,4 +1,7 @@
 %{
+// Parser for a slightly limited subset of Why.js assembly.
+// Some pseudoinstructions and the "&="-type shorthands aren't supported.
+
 #include <cassert>
 #include <cstdarg>
 #include <initializer_list>
@@ -97,6 +100,8 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_NEWLINE "\n"
 %token WASMTOK_NOTEQUAL "!="
 %token WASMTOK_IF "if"
+%token WASMTOK_NOP "<>"
+%token WASMTOK_INT "int"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 
@@ -117,9 +122,9 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r   | op_mult | op_multi | op_lui  | op_i  | op_c  | op_l   | op_s    | op_set | op_divii | op_li
-         | op_si  | op_ms   | op_lni   | op_ch   | op_lh | op_sh | op_cmp | op_cmpi | op_sel | op_j     | op_jc | op_jr
-         | op_jrc | op_mv   | op_spush | op_spop;
+operation: op_r  | op_mult | op_multi | op_lui   | op_i    | op_c   | op_l   | op_s    | op_set | op_divii | op_li
+         | op_si | op_ms   | op_lni   | op_ch    | op_lh   | op_sh  | op_cmp | op_cmpi | op_sel | op_j     | op_jc
+         | op_jr | op_jrc  | op_mv    | op_spush | op_spop | op_nop | op_int;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -183,6 +188,10 @@ op_mv: reg "->" reg { $$ = new RNode($1, "|", "$$0", $3, nullptr); D($2); };
 op_spush: "[" reg { $$ = $1->adopt($2); };
 
 op_spop: "]" reg { $$ = $1->adopt($2); };
+
+op_nop: "<>";
+
+op_int: "int" number { $$ = $1->adopt($2); };
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

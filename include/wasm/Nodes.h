@@ -6,6 +6,7 @@ namespace LL2W {
 	enum class WASMNodeType {
 		RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc
 	};
+
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
 
 	struct WASMBaseNode: public ASTNode {

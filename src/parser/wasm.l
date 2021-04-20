@@ -47,6 +47,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 
 "memset"					{ WASMRTOKEN(MEMSET) }
 "lui"						{ WASMRTOKEN(LUI) }
+"int"						{ WASMRTOKEN(INT) }
 "->"						{ WASMRTOKEN(INTO) }
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }
@@ -65,6 +66,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "/h"						{ WASMRTOKEN(HALF) }
 "!="						{ WASMRTOKEN(NOTEQUAL) }
 "if"						{ WASMRTOKEN(IF) }
+"<>"						{ WASMRTOKEN(NOP) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
