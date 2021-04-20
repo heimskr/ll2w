@@ -70,6 +70,9 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "!="						{ WASMRTOKEN(NOTEQUAL) }
 "if"						{ WASMRTOKEN(IF) }
 "<>"						{ WASMRTOKEN(NOP) }
+"<<"						{ WASMRTOKEN(LL) }
+">>>"						{ WASMRTOKEN(RL) }
+">>"						{ WASMRTOKEN(RA) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
