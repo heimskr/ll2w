@@ -125,7 +125,8 @@ using AN = LL2W::ASTNode;
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
-%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTR WASM_MULTI WASM_DIVII
+%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
+%token WASM_LUINODE
 
 %start start
 
@@ -155,7 +156,7 @@ op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
 
 op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2); };
 
-op_lui: "lui" ":" immediate "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
+op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
 op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
 
