@@ -102,7 +102,7 @@ using AN = LL2W::ASTNode;
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
-%token WASM_JCNODE WASM_JRNODE
+%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE
 
 %start start
 
@@ -118,7 +118,8 @@ statement: operation;
 endop: "\n" | ";";
 
 operation: op_r   | op_mult | op_multi | op_lui | op_i   | op_c   | op_l    | op_s   | op_set | op_divii | op_li | op_si
-         | op_ms  | op_lni  | op_ch    | op_lh  | op_sh  | op_cmp | op_cmpi | op_sel | op_j   | op_jc    | op_jr;
+         | op_ms  | op_lni  | op_ch    | op_lh  | op_sh  | op_cmp | op_cmpi | op_sel | op_j   | op_jc    | op_jr
+         | op_jrc;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -174,6 +175,8 @@ colons: ":" ":" { $$ = $1->adopt($2); } | ":";
 op_jc: op_j "if" reg { $$ = new WASMJcNode(dynamic_cast<WASMJNode *>($1), $3); D($2); };
 
 op_jr: _jcond colons reg { $$ = new WASMJrNode($1, $2, $3); };
+
+op_jrc: op_jr "if" reg { $$ = new WASMJrcNode(dynamic_cast<WASMJrNode *>($1), $3); D($2); };
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

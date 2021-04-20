@@ -3,7 +3,9 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	enum class WASMNodeType {RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr};
+	enum class WASMNodeType {
+		RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc
+	};
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
 
 	struct WASMBaseNode: public ASTNode {
@@ -170,6 +172,16 @@ namespace LL2W {
 
 		WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Jr; }
+		std::string debugExtra() const override;
+	};
+
+	// Used for both jrc and jrlc.
+	struct WASMJrcNode: public WASMBaseNode {
+		bool link;
+		const std::string *rs, *rd;
+
+		WASMJrcNode(WASMJrNode *, ASTNode *rs_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Jrc; }
 		std::string debugExtra() const override;
 	};
 }

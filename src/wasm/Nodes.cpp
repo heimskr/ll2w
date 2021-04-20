@@ -277,4 +277,20 @@ namespace LL2W {
 	std::string WASMJrNode::debugExtra() const {
 		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + cyan(*rd);
 	}
+
+	WASMJrcNode::WASMJrcNode(WASMJrNode *jr, ASTNode *rs_):
+	WASMBaseNode(WASM_JRCNODE), link(jr? jr->link : false), rs(rs_->lexerInfo), rd(jr? jr->rd : nullptr) {
+		if (!jr) {
+			wasmerror("No WASMCJrNode found in jr(l)c instruction");
+		} else {
+			if (jr->condition != WASMCondition::None)
+				wasmerror("Conditions specified for jr(l)c instruction will be ignored");
+			delete jr;
+		}
+		delete rs_;
+	}
+
+	std::string WASMJrcNode::debugExtra() const {
+		return dim(link? "::" : ":") + " " + cyan(*rd) + red(" if ") + cyan(*rs);
+	}
 }
