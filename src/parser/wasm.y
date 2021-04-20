@@ -137,7 +137,7 @@ op_mult: reg "*" reg _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
 op_multi: reg "*" number _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
-op_lui: "lui" ":" number "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
+op_lui: "lui" ":" immediate "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
 
 op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
 
@@ -148,17 +148,17 @@ op_l: "[" reg "]" "->" reg _byte { $$ = new WASMLoadNode($2, $5, $6); D($1, $3, 
 
 op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3, $5); };
 
-op_set: number "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
+op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 
 op_divii: number "/" reg "->" reg _unsigned { $$ = $2->adopt({$1, $3, $5, $6}); D($4); };
 
-op_li: "[" number "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
+op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
 
-op_si: reg "->" "[" number "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
+op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 
 op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6, nullptr); D($5); };
 
-op_lni: "[" number "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
+op_lni: "[" immediate "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 
 op_ch: "[" reg "]" "->" "[" reg "]" "/h" { $$ = new WASMChNode($2, $6); D($1, $3, $4, $5, $7, $8); };
 
@@ -168,12 +168,12 @@ op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6
 
 op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
 
-op_cmpi: reg "~" number { $$ = new WASMCmpiNode($1, $3); D($2); };
+op_cmpi: reg "~" immediate { $$ = new WASMCmpiNode($1, $3); D($2); };
 
 op_sel: "[" reg selop reg "]" "->" reg { $$ = new WASMSelNode($2, $3, $4, $7); D($1, $5, $6); };
 selop: "=" | "<" | ">" | "!=";
 
-op_j: _jcond colons number { $$ = new WASMJNode($1, $2, $3); };
+op_j: _jcond colons immediate { $$ = new WASMJNode($1, $2, $3); };
 _jcond: jcond | { $$ = nullptr; };
 jcond: zero | "+" | "-" | "*";
 colons: ":" ":" { $$ = $1->adopt($2); } | ":";

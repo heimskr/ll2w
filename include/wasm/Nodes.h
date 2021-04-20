@@ -74,7 +74,7 @@ namespace LL2W {
 
 	struct WASMSetNode: public WASMBaseNode {
 		const std::string *rd;
-		long imm;
+		Immediate imm;
 
 		WASMSetNode(ASTNode *imm_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
@@ -83,7 +83,7 @@ namespace LL2W {
 
 	struct WASMLiNode: public WASMBaseNode {
 		const std::string *rd;
-		long imm;
+		Immediate imm;
 		bool isByte;
 
 		WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
@@ -93,7 +93,7 @@ namespace LL2W {
 
 	struct WASMSiNode: public WASMBaseNode {
 		const std::string *rs;
-		long imm;
+		Immediate imm;
 		bool isByte;
 
 		WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_);
@@ -142,7 +142,7 @@ namespace LL2W {
 
 	struct WASMCmpiNode: public WASMBaseNode {
 		const std::string *rs;
-		long imm;
+		Immediate imm;
 
 		WASMCmpiNode(ASTNode *rs_, ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
@@ -160,7 +160,7 @@ namespace LL2W {
 	};
 
 	struct WASMJNode: public WASMBaseNode {
-		long addr;
+		Immediate addr;
 		WASMCondition condition;
 		bool link;
 
@@ -171,7 +171,7 @@ namespace LL2W {
 
 	struct WASMJcNode: public WASMBaseNode {
 		bool link;
-		long addr;
+		Immediate addr;
 		const std::string *rs;
 
 		WASMJcNode(WASMJNode *, ASTNode *rs_);

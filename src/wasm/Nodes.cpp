@@ -141,17 +141,17 @@ namespace LL2W {
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
-	WASMBaseNode(WASM_SETNODE), rd(rd_->lexerInfo), imm(imm_->atoi()) {
+	WASMBaseNode(WASM_SETNODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete imm_;
 		delete rd_;
 	}
 
 	std::string WASMSetNode::debugExtra() const {
-		return green(std::to_string(imm)) + dim(" -> ") + cyan(*rd);
+		return stringify(imm) + dim(" -> ") + cyan(*rd);
 	}
 
 	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
-	WASMBaseNode(WASM_LINODE), rd(rd_->lexerInfo), imm(imm_->atoi()), isByte(!!byte_) {
+	WASMBaseNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete imm_;
 		delete rd_;
 		if (byte_)
@@ -159,11 +159,11 @@ namespace LL2W {
 	}
 
 	std::string WASMLiNode::debugExtra() const {
-		return dim("[") + green(std::to_string(imm)) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
+		return dim("[") + stringify(imm) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
-	WASMBaseNode(WASM_SINODE), rs(rs_->lexerInfo), imm(imm_->atoi()), isByte(!!byte_) {
+	WASMBaseNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete rs_;
 		delete imm_;
 		if (byte_)
@@ -171,7 +171,7 @@ namespace LL2W {
 	}
 
 	std::string WASMSiNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + green(std::to_string(imm)) + dim("]") + (isByte? " /b" : "");
+		return cyan(*rs) + dim(" -> [") + stringify(imm) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_): WASMLiNode(imm_, rd_, byte_) {
@@ -179,7 +179,7 @@ namespace LL2W {
 	}
 
 	std::string WASMLniNode::debugExtra() const {
-		return dim("[") + green(std::to_string(imm)) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
+		return dim("[") + stringify(imm) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMHalfMemoryNode::WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
@@ -220,13 +220,13 @@ namespace LL2W {
 	}
 
 	WASMCmpiNode::WASMCmpiNode(ASTNode *rs_, ASTNode *imm_):
-	WASMBaseNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(imm_->atoi()) {
+	WASMBaseNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete imm_;
 	}
 
 	std::string WASMCmpiNode::debugExtra() const {
-		return cyan(*rs) + dim(" ~ ") + green(std::to_string(imm));
+		return cyan(*rs) + dim(" ~ ") + stringify(imm);
 	}
 
 	WASMSelNode::WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_):
@@ -261,7 +261,7 @@ namespace LL2W {
 	}
 
 	WASMJNode::WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_):
-	WASMBaseNode(WASM_JNODE), addr(addr_->atoi()), link(!colons->empty()) {
+	WASMBaseNode(WASM_JNODE), addr(getImmediate(addr_)), link(!colons->empty()) {
 		delete addr_;
 		delete colons;
 		if (!cond) {
@@ -273,7 +273,7 @@ namespace LL2W {
 	}
 
 	std::string WASMJNode::debugExtra() const {
-		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + green(std::to_string(addr));
+		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + stringify(addr);
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
@@ -289,7 +289,7 @@ namespace LL2W {
 	}
 
 	std::string WASMJcNode::debugExtra() const {
-		return dim(link? "::" : ":") + " " + green(std::to_string(addr)) + red(" if ") + cyan(*rs);
+		return dim(link? "::" : ":") + " " + stringify(addr) + red(" if ") + cyan(*rs);
 	}
 
 	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
