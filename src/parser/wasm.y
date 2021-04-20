@@ -148,9 +148,10 @@ operation: op_r   | op_mult  | op_multi  | op_lui   | op_i    | op_c    | op_l  
          | op_ext | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
-    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
+    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is a unary op
+    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here.
 basic_oper: "+" | "-"  | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
-          | "<" | "<=" | "==" | ">" | ">=" | "<<" | ">>>" | ">>";
+          | "<" | "<=" | "==" | ">" | ">=" | "<<" | ">>>" | ">>" | "!";
 _unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
