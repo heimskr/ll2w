@@ -22,6 +22,33 @@ static std::string red(const std::string &interior) {
 namespace LL2W {
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
+	static WASMCondition getCondition(const std::string &str) {
+		if (str == "0")
+			return WASMCondition::Zero;
+		if (str == "+")
+			return WASMCondition::Positive;
+		if (str == "-")
+			return WASMCondition::Negative;
+		if (str == "*")
+			return WASMCondition::NonZero;
+		if (!str.empty())
+			wasmerror("Invalid condition: " + str);
+		return WASMCondition::None;
+	}
+
+	static const char * conditionString(WASMCondition condition) {
+		switch (condition) {
+			case WASMCondition::None:     return "";
+			case WASMCondition::Zero:     return "0";
+			case WASMCondition::Positive: return "+";
+			case WASMCondition::Negative: return "-";
+			case WASMCondition::NonZero:  return "*";
+			default:
+				throw std::runtime_error("Invalid condition in WASMJNode: "
+					+ std::to_string(static_cast<int>(condition)));
+		}
+	}
+
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMBaseNode(WASM_RNODE),
 	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo), isUnsigned(!!unsigned_) {
@@ -210,34 +237,13 @@ namespace LL2W {
 		if (!cond) {
 			condition = WASMCondition::None;
 		} else {
-			if (*cond->lexerInfo == "0")
-				condition = WASMCondition::Zero;
-			else if (*cond->lexerInfo == "+")
-				condition = WASMCondition::Positive;
-			else if (*cond->lexerInfo == "-")
-				condition = WASMCondition::Negative;
-			else if (*cond->lexerInfo == "*")
-				condition = WASMCondition::NonZero;
-			else
-				wasmerror("Invalid condition: " + *cond->lexerInfo);
+			condition = getCondition(*cond->lexerInfo);
 			delete cond;
 		}
 	}
 
 	std::string WASMJNode::debugExtra() const {
-		const char *cond;
-		switch (condition) {
-			case WASMCondition::None:     cond = "";  break;
-			case WASMCondition::Zero:     cond = "0"; break;
-			case WASMCondition::Positive: cond = "+"; break;
-			case WASMCondition::Negative: cond = "-"; break;
-			case WASMCondition::NonZero:  cond = "*"; break;
-			default:
-				throw std::runtime_error("Invalid condition in WASMJNode: "
-					+ std::to_string(static_cast<int>(condition)));
-		}
-
-		return dim(cond + std::string(link? "::" : ":")) + " " + green(std::to_string(addr));
+		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + green(std::to_string(addr));
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
@@ -246,7 +252,7 @@ namespace LL2W {
 			wasmerror("No WASMCJNode found in jc instruction");
 		} else {
 			if (j->condition != WASMCondition::None)
-				wasmerror("Conditions specified for jc instruction");
+				wasmerror("Conditions specified for jc instruction will be ignored");
 			delete j;
 		}
 		delete rs_;
@@ -254,5 +260,21 @@ namespace LL2W {
 
 	std::string WASMJcNode::debugExtra() const {
 		return dim(link? "::" : ":") + " " + green(std::to_string(addr)) + red(" if ") + cyan(*rs);
+	}
+
+	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
+	WASMBaseNode(WASM_JRNODE), link(!colons->empty()), rd(rd_->lexerInfo) {
+		delete colons;
+		delete rd_;
+		if (!cond) {
+			condition = WASMCondition::None;
+		} else {
+			condition = getCondition(*cond->lexerInfo);
+			delete cond;
+		}
+	}
+
+	std::string WASMJrNode::debugExtra() const {
+		return dim(conditionString(condition) + std::string(link? "::" : ":")) + " " + cyan(*rd);
 	}
 }
