@@ -43,6 +43,7 @@ using AN = LL2W::ASTNode;
 %define parse.error verbose
 %token-table
 %verbose
+%glr-parser
 
 %define api.prefix {wasm}
 
@@ -107,7 +108,7 @@ using AN = LL2W::ASTNode;
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
-%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE
+%token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE
 
 %start start
 
@@ -138,7 +139,7 @@ op_multi: reg "*" number _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
 op_lui: "lui" ":" number "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
 
-op_i: reg basic_oper number "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
+op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
 
 op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 _byte: "/b" | { $$ = nullptr; };
@@ -192,6 +193,11 @@ op_spop: "]" reg { $$ = $1->adopt($2); };
 op_nop: "<>";
 
 op_int: "int" number { $$ = $1->adopt($2); };
+
+immediate: _immediate { $$ = new WASMImmediateNode($1); };
+_immediate: number | ident;
+
+ident: "memset" | "lui" | "int" | "if" | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

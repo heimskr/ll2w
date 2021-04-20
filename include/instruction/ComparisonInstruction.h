@@ -1,6 +1,8 @@
 #ifndef INSTRUCTION_COMPARISONINSTRUCTION_H_
 #define INSTRUCTION_COMPARISONINSTRUCTION_H_
 
+#include <stdexcept>
+
 #include "parser/Enums.h"
 
 namespace LL2W {

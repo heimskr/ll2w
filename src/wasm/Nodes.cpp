@@ -49,6 +49,28 @@ namespace LL2W {
 		}
 	}
 
+	static std::string stringify(const Immediate &imm) {
+		if (std::holds_alternative<long>(imm))
+			return green(std::to_string(std::get<long>(imm)));
+		return *std::get<const std::string *>(imm);
+	}
+
+	static Immediate getImmediate(ASTNode *node) {
+		if (node->symbol == WASM_IMMEDIATE)
+			return dynamic_cast<WASMImmediateNode *>(node)->imm;
+		if (node->symbol == WASMTOK_NUMBER)
+			return node->atoi();
+		return node->lexerInfo;
+	}
+
+	WASMImmediateNode::WASMImmediateNode(ASTNode *node): WASMBaseNode(WASM_IMMEDIATE), imm(getImmediate(node)) {
+		delete node;
+	}
+
+	std::string WASMImmediateNode::debugExtra() const {
+		return stringify(imm);
+	}
+
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMBaseNode(WASM_RNODE),
 	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo), isUnsigned(!!unsigned_) {
@@ -76,7 +98,7 @@ namespace LL2W {
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
 	WASMBaseNode(WASM_INODE),
-	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo), imm(imm_->atoi()), isUnsigned(!!unsigned_) {
+	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		delete imm_;
@@ -86,8 +108,7 @@ namespace LL2W {
 	}
 
 	std::string INode::debugExtra() const {
-		return cyan(*rs) + " " + dim(*oper) + " " + green(std::to_string(imm)) + dim(" -> ") + cyan(*rd)
-		     + (isUnsigned? " /u" : "");
+		return cyan(*rs) + " " + dim(*oper) + " " + stringify(imm) + dim(" -> ") + cyan(*rd) + (isUnsigned? " /u" : "");
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):

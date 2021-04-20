@@ -3,3 +3,4 @@
 [2020/04/08 20:35:39] Lower StackLoad and StackStore.
 [2020/04/08 20:35:59] Lower select.
 [2020/04/08 20:35:14] Lower switch.
+[2021/04/19 18:06:18] Allow use of labels for I-type/J-type instructions in the wasm parser.

@@ -1,17 +1,29 @@
 #pragma once
 
+#include <variant>
+
 #include "parser/ASTNode.h"
 
 namespace LL2W {
 	enum class WASMNodeType {
-		RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc
+		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc
 	};
 
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
 
+	using Immediate = std::variant<long, const std::string *>;
+
 	struct WASMBaseNode: public ASTNode {
 		WASMBaseNode(int sym);
 		virtual WASMNodeType nodeType() const = 0;
+	};
+
+	struct WASMImmediateNode: public WASMBaseNode {
+		Immediate imm;
+
+		WASMImmediateNode(ASTNode *);
+		virtual WASMNodeType nodeType() const override { return WASMNodeType::Immediate; }
+		std::string debugExtra() const override;
 	};
 
 	struct RNode: public WASMBaseNode {
@@ -27,7 +39,7 @@ namespace LL2W {
 
 	struct INode: public WASMBaseNode {
 		const std::string *rs, *oper, *rd;
-		long imm;
+		Immediate imm;
 		bool isUnsigned;
 
 		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);

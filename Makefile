@@ -25,6 +25,7 @@ WASMFLEXSRC		:= src/parser/wasm.l
 WASMBISONSRC	:= src/parser/wasm.y
 
 CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^yy(lex|parse)'
+BISON_OPTIONS	:= --color=always
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 
@@ -39,7 +40,7 @@ $(LLVMLEXCPP): $(LLVMFLEXSRC) $(LLVMPARSEHDR)
 	flex --prefix=llvm --outfile=$(LLVMLEXCPP) $(LLVMFLEXSRC)
 
 $(LLVMPARSECPP) $(LLVMPARSEHDR): $(LLVMBISONSRC)
-	bison --defines=$(LLVMPARSEHDR) --output=$(LLVMPARSECPP) $(LLVMBISONSRC)
+	bison $(BISON_OPTIONS) --defines=$(LLVMPARSEHDR) --output=$(LLVMPARSECPP) $(LLVMBISONSRC)
 
 $(LLVMLEXCPP:.cpp=.o): $(LLVMLEXCPP)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
@@ -51,7 +52,7 @@ $(WASMLEXCPP): $(WASMFLEXSRC) $(WASMPARSEHDR)
 	flex --prefix=wasm --outfile=$(WASMLEXCPP) $(WASMFLEXSRC)
 
 $(WASMPARSECPP) $(WASMPARSEHDR): $(WASMBISONSRC)
-	bison --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
+	bison $(BISON_OPTIONS) --defines=$(WASMPARSEHDR) --output=$(WASMPARSECPP) $(WASMBISONSRC)
 
 $(WASMLEXCPP:.cpp=.o): $(WASMLEXCPP)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
