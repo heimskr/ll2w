@@ -104,6 +104,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_NOP "<>"
 %token WASMTOK_INT "int"
 %token WASMTOK_RIT "rit"
+%token WASMTOK_TIME "time"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 
@@ -124,9 +125,9 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r  | op_mult | op_multi | op_lui   | op_i    | op_c   | op_l   | op_s    | op_set | op_divii | op_li
-         | op_si | op_ms   | op_lni   | op_ch    | op_lh   | op_sh  | op_cmp | op_cmpi | op_sel | op_j     | op_jc
-         | op_jr | op_jrc  | op_mv    | op_spush | op_spop | op_nop | op_int | op_rit;
+operation: op_r  | op_mult | op_multi | op_lui   | op_i    | op_c   | op_l   | op_s    | op_set  | op_divii | op_li
+         | op_si | op_ms   | op_lni   | op_ch    | op_lh   | op_sh  | op_cmp | op_cmpi | op_sel  | op_j     | op_jc
+         | op_jr | op_jrc  | op_mv    | op_spush | op_spop | op_nop | op_int | op_rit  | op_time | op_timei;
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // rt will be "~" to indicate this is a unary op
@@ -136,7 +137,7 @@ _unsigned: "/u" | { $$ = nullptr; };
 
 op_mult: reg "*" reg _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
-op_multi: reg "*" number _unsigned { $$ = $2->adopt({$1, $3, $4}); };
+op_multi: reg "*" immediate _unsigned { $$ = $2->adopt({$1, $3, $4}); };
 
 op_lui: "lui" ":" immediate "->" reg { $$ = $1->adopt({$3, $5}); D($2, $4); };
 
@@ -151,7 +152,7 @@ op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3,
 
 op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 
-op_divii: number "/" reg "->" reg _unsigned { $$ = $2->adopt({$1, $3, $5, $6}); D($4); };
+op_divii: immediate "/" reg "->" reg _unsigned { $$ = $2->adopt({$1, $3, $5, $6}); D($4); };
 
 op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
 
@@ -193,9 +194,13 @@ op_spop: "]" reg { $$ = $1->adopt($2); };
 
 op_nop: "<>";
 
-op_int: "int" number { $$ = $1->adopt($2); };
+op_int: "int" immediate { $$ = $1->adopt($2); };
 
 op_rit: "rit" immediate { $$ = $1->adopt($2); };
+
+op_time: "time" reg { $$ = $1->adopt($2); };
+
+op_timei: "time" immediate { $$ = $1->adopt($2); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident;

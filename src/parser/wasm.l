@@ -46,6 +46,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
+"time"						{ WASMRTOKEN(TIME) }
 "lui"						{ WASMRTOKEN(LUI) }
 "int"						{ WASMRTOKEN(INT) }
 "rit"						{ WASMRTOKEN(RIT) }
