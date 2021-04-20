@@ -23,6 +23,10 @@ static std::string orange(const std::string &interior) {
 	return "\e[38;5;202m" + interior + "\e[39m";
 }
 
+static std::string blue(const std::string &interior) {
+	return "\e[34m" + interior + "\e[39m";
+}
+
 namespace LL2W {
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
@@ -403,5 +407,13 @@ namespace LL2W {
 
 	std::string WASMNopNode::debugExtra() const {
 		return dim("<>");
+	}
+
+	WASMIntNode::WASMIntNode(ASTNode *imm_): WASMBaseNode(WASM_INTNODE), imm(getImmediate(imm_)) {
+		delete imm_;
+	}
+
+	std::string WASMIntNode::debugExtra() const {
+		return blue("int") + " " + stringify(imm);
 	}
 }

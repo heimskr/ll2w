@@ -7,7 +7,7 @@
 namespace LL2W {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc,
-		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop
+		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, Int
 	};
 
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
@@ -262,6 +262,14 @@ namespace LL2W {
 	struct WASMNopNode: public WASMBaseNode {
 		WASMNopNode();
 		WASMNodeType nodeType() const override { return WASMNodeType::Nop; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMIntNode: public WASMBaseNode {
+		Immediate imm;
+
+		WASMIntNode(ASTNode *imm_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Int; }
 		std::string debugExtra() const override;
 	};
 }
