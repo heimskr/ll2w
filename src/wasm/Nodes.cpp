@@ -409,11 +409,19 @@ namespace LL2W {
 		return dim("<>");
 	}
 
-	WASMIntNode::WASMIntNode(ASTNode *imm_): WASMBaseNode(WASM_INTNODE), imm(getImmediate(imm_)) {
+	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMBaseNode(WASM_INTINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
-	std::string WASMIntNode::debugExtra() const {
+	std::string WASMIntINode::debugExtra() const {
 		return blue("int") + " " + stringify(imm);
+	}
+
+	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMBaseNode(WASM_RITINODE), imm(getImmediate(imm_)) {
+		delete imm_;
+	}
+
+	std::string WASMRitINode::debugExtra() const {
+		return blue("rit") + " " + stringify(imm);
 	}
 }
