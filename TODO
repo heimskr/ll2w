@@ -1,5 +1,2 @@
 [2020/01/18 02:38:25] Add union support.
 [2020/04/08 20:35:19] Figure out signed/unsigned remainders.
-[2020/04/08 20:35:39] Lower StackLoad and StackStore.
-[2020/04/08 20:35:59] Lower select.
-[2020/04/08 20:35:14] Lower switch.
