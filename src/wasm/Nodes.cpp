@@ -509,4 +509,12 @@ namespace LL2W {
 	std::string WASMPageNode::debugExtra() const {
 		return blue("page") + " " + (on? "on" : "off");
 	}
+
+	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMBaseNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
+		delete imm_;
+	}
+
+	std::string WASMSetptINode::debugExtra() const {
+		return blue("setpt") + " " + stringify(imm);
+	}
 }
