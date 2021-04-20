@@ -7,7 +7,7 @@
 namespace LL2W {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc,
-		SizedStack
+		SizedStack, MultR, MultI, DiviI
 	};
 
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
@@ -209,6 +209,35 @@ namespace LL2W {
 
 		WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push);
 		WASMNodeType nodeType() const override { return WASMNodeType::SizedStack; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMMultRNode: public WASMBaseNode {
+		const std::string *rs, *rt;
+		bool isUnsigned;
+
+		WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_ = nullptr);
+		WASMNodeType nodeType() const override { return WASMNodeType::MultR; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMMultINode: public WASMBaseNode {
+		const std::string *rs;
+		Immediate imm;
+		bool isUnsigned;
+
+		WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_ = nullptr);
+		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
+		std::string debugExtra() const override;
+	};
+
+	struct WASMDiviINode: public WASMBaseNode {
+		const std::string *rs, *rd;
+		Immediate imm;
+		bool isUnsigned;
+
+		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_ = nullptr);
+		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
 		std::string debugExtra() const override;
 	};
 }
