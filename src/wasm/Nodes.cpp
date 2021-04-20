@@ -398,4 +398,10 @@ namespace LL2W {
 	std::string WASMStackNode::debugExtra() const {
 		return dim(isPush? "[" : "]") + " " + cyan(*rd);
 	}
+
+	WASMNopNode::WASMNopNode(): WASMBaseNode(WASM_NOPNODE) {}
+
+	std::string WASMNopNode::debugExtra() const {
+		return dim("<>");
+	}
 }
