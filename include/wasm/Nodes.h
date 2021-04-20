@@ -18,6 +18,8 @@ namespace LL2W {
 		bool isUnsigned;
 		
 		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
+		// Used for the mv pseudoinstruction.
+		RNode(ASTNode *rs_, const std::string &oper_, const std::string &rt_, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
 	};

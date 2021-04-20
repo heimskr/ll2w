@@ -61,6 +61,15 @@ namespace LL2W {
 			delete unsigned_;
 	}
 
+	RNode::RNode(ASTNode *rs_, const std::string &oper_, const std::string &rt_, ASTNode *rd_, ASTNode *unsigned_):
+	WASMBaseNode(WASM_RNODE), rs(rs_->lexerInfo), oper(StringSet::intern(oper_)), rt(StringSet::intern(rt_)),
+	rd(rd_->lexerInfo), isUnsigned(!!unsigned_) {
+		delete rs_;
+		delete rd_;
+		if (unsigned_)
+			delete unsigned_;
+	}
+
 	std::string RNode::debugExtra() const {
 		return cyan(*rs) + " " + dim(*oper) + " " + cyan(*rt) + dim(" -> ") + cyan(*rd) + (isUnsigned? " /u" : "");
 	}
