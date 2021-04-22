@@ -11,8 +11,8 @@ namespace LL2W {
 	/**
 	 * $rs == (<=, <...) $rt -> $rd (/u)
 	 */
-	struct ComparisonIInstruction: public IType<int>, public ComparisonInstruction {
-		ComparisonIInstruction(VariablePtr rs_, int imm_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):
+	struct ComparisonIInstruction: public IType<>, public ComparisonInstruction {
+		ComparisonIInstruction(VariablePtr rs_, ValueType imm_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):
 			IType(rs_, imm_, rd_, index_), ComparisonInstruction(cond_) {}
 
 		std::string debugExtra() override;

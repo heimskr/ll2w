@@ -2,7 +2,7 @@
 #include "instruction/StoreIInstruction.h"
 
 namespace LL2W {
-	StoreIInstruction::StoreIInstruction(std::shared_ptr<Variable> rs_, int imm_, int size_, int index_):
+	StoreIInstruction::StoreIInstruction(std::shared_ptr<Variable> rs_, ValueType imm_, int size_, int index_):
 		IType(rs_, imm_, nullptr, index_), SizedInstruction(size_) {}
 
 	std::string StoreIInstruction::debugExtra() {

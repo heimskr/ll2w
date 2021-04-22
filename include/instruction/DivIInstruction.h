@@ -4,7 +4,7 @@
 #include "instruction/IType.h"
 
 namespace LL2W {
-	struct DivIInstruction: public IType<int> {
+	struct DivIInstruction: public IType<> {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;

@@ -8,7 +8,7 @@ namespace LL2W {
 	 * &symbol -> $rd
 	 */
 	struct SetSymbolInstruction: public IType<std::string> {
-		SetSymbolInstruction(std::shared_ptr<Variable> rd_, std::string imm_, int index_ = -1):
+		SetSymbolInstruction(std::shared_ptr<Variable> rd_, const std::string &imm_, int index_ = -1):
 			IType(nullptr, imm_, rd_, index_) {}
 		std::string debugExtra() override;
 		std::string toString() const override;

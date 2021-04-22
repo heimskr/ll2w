@@ -18,6 +18,8 @@ namespace LL2W {
 			}
 
 		public:
+			using ValueType = T;
+
 			std::shared_ptr<Variable> rs, rd;
 			T imm;
 

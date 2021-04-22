@@ -1,3 +1,5 @@
+#include <variant>
+
 #include "compiler/Function.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/LoadRInstruction.h"
@@ -57,8 +59,13 @@ namespace LL2W::Passes {
 
 	void loadArgumentsReadjust(Function &function) {
 		for (InstructionPtr &instruction: function.linearInstructions) {
+			// TODO: should this be == 0?
 			if (instruction->meta.count(InstructionMeta::LoadArgumentsSkip) != 0) {
-				dynamic_cast<IType<int> *>(instruction.get())->imm += function.initialPushedBytes;
+				if (IType<int> *itype = dynamic_cast<IType<int> *>(instruction.get()))
+					itype->imm += function.initialPushedBytes;
+				else if (auto *itype = dynamic_cast<IType<std::variant<int, const std::string *>> *>(instruction.get()))
+					if (std::holds_alternative<int>(itype->imm))
+						std::get<int>(itype->imm) += function.initialPushedBytes;
 				function.comment(instruction, "Increased by " + std::to_string(function.initialPushedBytes) + " bytes");
 			}
 		}

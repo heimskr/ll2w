@@ -196,7 +196,8 @@ namespace LL2W {
 				return std::make_unique<AddRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_MINUS:
 				return std::make_unique<SubRInstruction>(conv(rs), conv(rt), conv(rd));
-			default: return nullptr;
+			default:
+				throw std::invalid_argument("Unknown operator: " + *oper);
 		}
 	}
 

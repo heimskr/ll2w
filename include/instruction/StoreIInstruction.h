@@ -8,11 +8,11 @@ namespace LL2W {
 	/**
 	 * $rs -> [imm]
 	 */
-	struct StoreIInstruction: public IType<int>, SizedInstruction {
+	struct StoreIInstruction: public IType<>, SizedInstruction {
 		/** The size of the store in bytes. */
 		int size;
 
-		StoreIInstruction(std::shared_ptr<Variable> rs_, int imm_, int size_, int index_ = -1);
+		StoreIInstruction(std::shared_ptr<Variable> rs_, ValueType imm_, int size_, int index_ = -1);
 
 		std::string debugExtra() override;
 		std::string toString() const override;
