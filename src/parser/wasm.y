@@ -120,6 +120,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_OFF "off"
 %token WASMTOK_PAGE "page"
 %token WASMTOK_SETPT "setpt"
+%token WASMTOK_SHORT "/s"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 

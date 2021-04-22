@@ -61,12 +61,13 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "prd"						{ WASMRTOKEN(PRD) }
 "prb"						{ WASMRTOKEN(PRB) }
 "off"						{ WASMRTOKEN(OFF) }
-"if"						{ WASMRTOKEN(IF) }
-"on"						{ WASMRTOKEN(ON) }
-"->"						{ WASMRTOKEN(INTO) }
+">>>"						{ WASMRTOKEN(RL) }
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }
 "!xx"						{ WASMRTOKEN(LXNOR) }
+"if"						{ WASMRTOKEN(IF) }
+"on"						{ WASMRTOKEN(ON) }
+"->"						{ WASMRTOKEN(INTO) }
 "&&"						{ WASMRTOKEN(LAND) }
 "||"						{ WASMRTOKEN(LOR) }
 "xx"						{ WASMRTOKEN(LXOR) }
@@ -79,10 +80,10 @@ WASM_SINGLE_REG			("$"[0-9]+)
 ">="						{ WASMRTOKEN(GEQ) }
 "/b"						{ WASMRTOKEN(BYTE) }
 "/h"						{ WASMRTOKEN(HALF) }
+"/s"						{ WASMRTOKEN(SHORT) }
 "!="						{ WASMRTOKEN(NOTEQUAL) }
 "<>"						{ WASMRTOKEN(NOP) }
 "<<"						{ WASMRTOKEN(LL) }
-">>>"						{ WASMRTOKEN(RL) }
 ">>"						{ WASMRTOKEN(RA) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }

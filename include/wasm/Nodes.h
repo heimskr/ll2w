@@ -82,6 +82,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Copy; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMLoadNode: public WASMMemoryNode {
@@ -89,6 +90,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Load; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMStoreNode: public WASMMemoryNode {
@@ -96,6 +98,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Store; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMSetNode: public WASMInstructionNode {
@@ -106,6 +109,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Set; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMLiNode: public WASMInstructionNode {
@@ -117,6 +121,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Li; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMSiNode: public WASMInstructionNode {
@@ -128,6 +133,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Si; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMLniNode: public WASMLiNode {
@@ -135,6 +141,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 
@@ -149,6 +156,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMLhNode: public WASMHalfMemoryNode {
@@ -156,6 +164,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMShNode: public WASMHalfMemoryNode {
@@ -163,15 +172,17 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMCmpNode: public WASMInstructionNode {
-		const std::string *rs, *rd;
+		const std::string *rs, *rt;
 
-		WASMCmpNode(ASTNode *rs_, ASTNode *rd_);
+		WASMCmpNode(ASTNode *rs_, ASTNode *rt_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmp; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMCmpiNode: public WASMInstructionNode {
@@ -182,6 +193,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::Cmpi; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMSelNode: public WASMInstructionNode {

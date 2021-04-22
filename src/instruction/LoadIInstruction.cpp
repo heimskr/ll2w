@@ -6,7 +6,7 @@ namespace LL2W {
 		IType(nullptr, imm_, rd_, index_), SizedInstruction(size_) {}
 
 	std::string LoadIInstruction::debugExtra() {
-		return "\e[2m[\e[0;91m" + colorize(imm) + "\e[0;2m] ->\e[0m " + std::string(*rd) + suffix();
+		return "\e[2m[\e[22m" + colorize(imm) + "\e[2m] ->\e[22m " + std::string(*rd) + suffix();
 	}
 
 	std::string LoadIInstruction::toString() const {
