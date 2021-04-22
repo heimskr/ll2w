@@ -4,10 +4,10 @@
 
 namespace LL2W {
 	/**
-	 * imm -> $rd
+	 * lui: imm -> $rd
 	 */
-	struct SetInstruction: public IType<> {
-		SetInstruction(std::shared_ptr<Variable> rd_, ValueType imm_, int index_ = -1):
+	struct LuiInstruction: public IType<> {
+		LuiInstruction(std::shared_ptr<Variable> rd_, ValueType imm_, int index_ = -1):
 			IType(nullptr, imm_, rd_, index_) {}
 		std::string debugExtra() override;
 		std::string toString() const override;

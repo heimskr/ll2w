@@ -39,8 +39,8 @@ namespace LL2W::Passes {
 				jump->extract();
 			}
 
-			auto jump = std::make_shared<JumpInstruction>(nullptr,
-				StringSet::intern(function.transformLabel(*sw->label)), false);
+			auto jump = std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*sw->label)),
+				false);
 			function.insertBefore(instruction, jump, false);
 			jump->extract();
 			to_remove.push_back(instruction);

@@ -111,7 +111,7 @@ namespace LL2W::Passes {
 
 			// At this point, we're ready to insert the jump.
 			if (global_name) {
-				function.insertBefore(instruction, std::make_shared<JumpInstruction>(nullptr, global_name->name, true));
+				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_name->name, true));
 			} else {
 				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
 				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);

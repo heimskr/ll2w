@@ -53,6 +53,16 @@
 #include "instruction/CompareRInstruction.h"
 #include "instruction/CompareIInstruction.h"
 #include "instruction/SelectInstruction.h"
+#include "instruction/JumpInstruction.h"
+#include "instruction/JumpConditionalInstruction.h"
+#include "instruction/JumpRegisterInstruction.h"
+#include "instruction/JumpRegisterConditionalInstruction.h"
+#include "instruction/SizedStackPushInstruction.h"
+#include "instruction/SizedStackPopInstruction.h"
+#include "instruction/MultRInstruction.h"
+#include "instruction/MultIInstruction.h"
+#include "instruction/DiviIInstruction.h"
+#include "instruction/LuiInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -576,6 +586,10 @@ namespace LL2W {
 		return conditionString(condition) + std::string(link? "::" : ":") + " " + toString(addr);
 	}
 
+	std::unique_ptr<WhyInstruction> WASMJNode::convert(Function &, VarMap &) {
+		return std::make_unique<JumpInstruction>(addr, link, condition);
+	}
+
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
 	WASMInstructionNode(WASM_JCNODE), link(j? j->link : false), addr(j? j->addr : 0), rs(rs_->lexerInfo) {
 		if (!j) {
@@ -594,6 +608,10 @@ namespace LL2W {
 
 	WASMJcNode::operator std::string() const {
 		return std::string(link? "::" : ":") + " " + toString(addr) + " if " + *rs;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMJcNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<JumpConditionalInstruction>(convertVariable(function, map, rs), addr, link);
 	}
 
 	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
@@ -616,6 +634,10 @@ namespace LL2W {
 		return conditionString(condition) + std::string(link? "::" : ":") + " " + *rd;
 	}
 
+	std::unique_ptr<WhyInstruction> WASMJrNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<JumpRegisterInstruction>(convertVariable(function, map, rd), false, condition);
+	}
+
 	WASMJrcNode::WASMJrcNode(WASMJrNode *jr, ASTNode *rs_):
 	WASMInstructionNode(WASM_JRCNODE), link(jr? jr->link : false), rs(rs_->lexerInfo), rd(jr? jr->rd : nullptr) {
 		if (!jr) {
@@ -636,6 +658,11 @@ namespace LL2W {
 		return std::string(link? "::" : ":") + " " + *rd + " if " + *rs;
 	}
 
+	std::unique_ptr<WhyInstruction> WASMJrcNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<JumpRegisterConditionalInstruction>(conv(rs), conv(rd), link);
+	}
+
 	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push):
 	WASMInstructionNode(WASM_SSNODE), size(size_->atoi()), rs(rs_->lexerInfo), isPush(is_push) {
 		delete size_;
@@ -648,6 +675,13 @@ namespace LL2W {
 
 	WASMSizedStackNode::operator std::string() const {
 		return std::string(isPush? "[" : "]") + ":" + std::to_string(size) + " " + *rs;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSizedStackNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		if (isPush)
+			return std::make_unique<SizedStackPushInstruction>(conv(rs), size);
+		return std::make_unique<SizedStackPopInstruction>(conv(rs), size);
 	}
 
 	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_):
@@ -666,6 +700,11 @@ namespace LL2W {
 		return *rs + " * " + *rt + (isUnsigned? " /u" : "");
 	}
 
+	std::unique_ptr<WhyInstruction> WASMMultRNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<MultRInstruction>(conv(rs), conv(rt));
+	}
+
 	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_):
 	WASMInstructionNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
 		delete rs_;
@@ -680,6 +719,10 @@ namespace LL2W {
 
 	WASMMultINode::operator std::string() const {
 		return *rs + " * " + toString(imm) + (isUnsigned? " /u" : "");
+	}
+
+	std::unique_ptr<WhyInstruction> WASMMultINode::convert(Function &function, VarMap &map) {
+		return std::make_unique<MultIInstruction>(convertVariable(function, map, rs), imm);
 	}
 
 	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_):
@@ -700,6 +743,11 @@ namespace LL2W {
 		return toString(imm) + " / " + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
 	}
 
+	std::unique_ptr<WhyInstruction> WASMDiviINode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<DiviIInstruction>(conv(rs), imm, conv(rd));
+	}
+
 	WASMLuiNode::WASMLuiNode(ASTNode *imm_, ASTNode *rd_):
 	WASMInstructionNode(WASM_LUINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete imm_;
@@ -712,6 +760,10 @@ namespace LL2W {
 
 	WASMLuiNode::operator std::string() const {
 		return "lui: " + toString(imm) + " -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMLuiNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<LuiInstruction>(convertVariable(function, map, rd), imm);
 	}
 
 	WASMStackNode::WASMStackNode(ASTNode *rd_, bool is_push):

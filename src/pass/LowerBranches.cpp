@@ -37,13 +37,11 @@ namespace LL2W::Passes {
 			dynamic_cast<LocalValue *>(br->condition.get())->variable,
 			StringSet::intern(function.transformLabel(*br->ifTrue)), false));
 		function.insertBefore(instruction,
-			std::make_shared<JumpInstruction>(nullptr, StringSet::intern(function.transformLabel(*br->ifFalse)),
-			false));
+			std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->ifFalse)), false));
 	}
 
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
 		function.insertBefore(instruction,
-			std::make_shared<JumpInstruction>(nullptr, StringSet::intern(function.transformLabel(*br->destination)),
-			false));
+			std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->destination)), false));
 	}
 }
