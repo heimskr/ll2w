@@ -16,6 +16,15 @@
 #include "instruction/XorRInstruction.h"
 #include "instruction/NandRInstruction.h"
 #include "instruction/NorRInstruction.h"
+#include "instruction/XnorRInstruction.h"
+#include "instruction/LogicalAndRInstruction.h"
+#include "instruction/LogicalOrRInstruction.h"
+#include "instruction/LogicalXorRInstruction.h"
+#include "instruction/LogicalNandRInstruction.h"
+#include "instruction/LogicalNorRInstruction.h"
+#include "instruction/LogicalXnorRInstruction.h"
+#include "instruction/AddRInstruction.h"
+#include "instruction/SubRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -169,6 +178,24 @@ namespace LL2W {
 				return std::make_unique<NandRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_NOR:
 				return std::make_unique<NorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_XNOR:
+				return std::make_unique<XnorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LAND:
+				return std::make_unique<LogicalAndRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LOR:
+				return std::make_unique<LogicalOrRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LXOR:
+				return std::make_unique<LogicalXorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LNAND:
+				return std::make_unique<LogicalNandRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LNOR:
+				return std::make_unique<LogicalNorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LXNOR:
+				return std::make_unique<LogicalXnorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_PLUS:
+				return std::make_unique<AddRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_MINUS:
+				return std::make_unique<SubRInstruction>(conv(rs), conv(rt), conv(rd));
 			default: return nullptr;
 		}
 	}
