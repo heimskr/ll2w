@@ -63,6 +63,11 @@
 #include "instruction/MultIInstruction.h"
 #include "instruction/DiviIInstruction.h"
 #include "instruction/LuiInstruction.h"
+#include "instruction/StackPushInstruction.h"
+#include "instruction/StackPopInstruction.h"
+#include "instruction/Nop.h"
+#include "instruction/IntIInstruction.h"
+#include "instruction/RitIInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -766,17 +771,23 @@ namespace LL2W {
 		return std::make_unique<LuiInstruction>(convertVariable(function, map, rd), imm);
 	}
 
-	WASMStackNode::WASMStackNode(ASTNode *rd_, bool is_push):
-	WASMInstructionNode(WASM_STACKNODE), rd(rd_->lexerInfo), isPush(is_push) {
-		delete rd_;
+	WASMStackNode::WASMStackNode(ASTNode *reg_, bool is_push):
+	WASMInstructionNode(WASM_STACKNODE), reg(reg_->lexerInfo), isPush(is_push) {
+		delete reg_;
 	}
 
 	std::string WASMStackNode::debugExtra() const {
-		return dim(isPush? "[" : "]") + " " + cyan(*rd);
+		return dim(isPush? "[" : "]") + " " + cyan(*reg);
 	}
 
 	WASMStackNode::operator std::string() const {
-		return std::string(isPush? "[" : "]") + " " + *rd;
+		return std::string(isPush? "[" : "]") + " " + *reg;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMStackNode::convert(Function &function, VarMap &map) {
+		if (isPush)
+			return std::make_unique<StackPushInstruction>(convertVariable(function, map, reg));
+		return std::make_unique<StackPopInstruction>(convertVariable(function, map, reg));
 	}
 
 	WASMNopNode::WASMNopNode(): WASMInstructionNode(WASM_NOPNODE) {}
@@ -787,6 +798,10 @@ namespace LL2W {
 
 	WASMNopNode::operator std::string() const {
 		return "<>";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMNopNode::convert(Function &, VarMap &) {
+		return std::make_unique<Nop>();
 	}
 
 	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMInstructionNode(WASM_INTINODE), imm(getImmediate(imm_)) {
@@ -801,6 +816,10 @@ namespace LL2W {
 		return "int " + toString(imm);
 	}
 
+	std::unique_ptr<WhyInstruction> WASMIntINode::convert(Function &, VarMap &) {
+		return std::make_unique<IntIInstruction>(imm);
+	}
+
 	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
@@ -811,6 +830,10 @@ namespace LL2W {
 
 	WASMRitINode::operator std::string() const {
 		return "rit " + toString(imm);
+	}
+
+	std::unique_ptr<WhyInstruction> WASMRitINode::convert(Function &, VarMap &) {
+		return std::make_unique<RitIInstruction>(imm);
 	}
 
 	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMInstructionNode(WASM_TIMEINODE), imm(getImmediate(imm_)) {
