@@ -298,6 +298,8 @@ namespace LL2W {
 			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);
 
+			/** Through questionable methods, this function ensures that all variables with the same numeric ID share
+			 *  the same register assignment. */
 			void hackVariables();
 
 			/** Convenience method for creating a precolored assembler register. */

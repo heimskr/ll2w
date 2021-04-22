@@ -127,7 +127,7 @@ using AN = LL2W::ASTNode;
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
-%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE
+%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE
 
 %start start
 
@@ -150,7 +150,7 @@ operation: op_r   | op_mult  | op_multi  | op_lui   | op_i    | op_c    | op_l  
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is a unary op
     | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here.
-basic_oper: "+" | "-"  | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
+basic_oper: "+" | "-" | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
           | "<" | "<=" | "==" | ">" | ">=" | "<<" | ">>>" | ">>" | "!";
 _unsigned: "/u" | { $$ = nullptr; };
 
@@ -205,7 +205,7 @@ op_jr: _jcond colons reg { $$ = new WASMJrNode($1, $2, $3); };
 
 op_jrc: op_jr "if" reg { $$ = new WASMJrcNode(dynamic_cast<WASMJrNode *>($1), $3); D($2); };
 
-op_mv: reg "->" reg { $$ = new RNode($1, "|", "$$0", $3, nullptr); D($2); };
+op_mv: reg "->" reg { $$ = new WASMMvNode($1, $3); D($2); };
 
 op_spush: "[" reg { $$ = new WASMStackNode($2, true); D($1); };
 

@@ -1,7 +1,21 @@
+#include <iostream>
+
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "wasm/Nodes.h"
+#include "wasm/Registers.h"
+
+#include "compiler/Function.h"
+#include "instruction/ModRInstruction.h"
+#include "instruction/DivRInstruction.h"
+#include "instruction/DivuRInstruction.h"
+#include "instruction/ComparisonRInstruction.h"
+#include "instruction/AndRInstruction.h"
+#include "instruction/OrRInstruction.h"
+#include "instruction/XorRInstruction.h"
+#include "instruction/NandRInstruction.h"
+#include "instruction/NorRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -75,6 +89,19 @@ namespace LL2W {
 
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
+	std::shared_ptr<Variable> WASMInstructionNode::convertVariable(Function &function, VarMap &map,
+	const std::string *name) {
+		if (name->substr(0, 2) == "$$")
+			return function.makePrecoloredVariable(registerMap.at(name), nullptr);
+		if (map.count(name) == 0) {
+			std::shared_ptr<Variable> new_var = function.newVariable();
+			map.emplace(name, new_var);
+			return new_var;
+		} else {
+			return map.at(name);
+		}
+	}
+
 	WASMImmediateNode::WASMImmediateNode(ASTNode *node): WASMBaseNode(WASM_IMMEDIATE), imm(getImmediate(node)) {
 		delete node;
 	}
@@ -88,21 +115,13 @@ namespace LL2W {
 	}
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_RNODE),
-	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_RNODE),
+	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo), operToken(oper_->symbol),
+	isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		if (oper_ != rt_)
 			delete rt_;
-		delete rd_;
-		if (unsigned_)
-			delete unsigned_;
-	}
-
-	RNode::RNode(ASTNode *rs_, const std::string &oper_, const std::string &rt_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_RNODE), rs(rs_->lexerInfo), oper(StringSet::intern(oper_)), rt(StringSet::intern(rt_)),
-	rd(rd_->lexerInfo), isUnsigned(!!unsigned_) {
-		delete rs_;
 		delete rd_;
 		if (unsigned_)
 			delete unsigned_;
@@ -118,8 +137,44 @@ namespace LL2W {
 		return *rs + " " + *oper + " " + *rt + " -> " + *rd + (isUnsigned? " /u" : "");
 	}
 
+	std::unique_ptr<WhyInstruction> RNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+
+		switch (operToken) {
+			case WASMTOK_PERCENT: return std::make_unique<ModRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_SLASH:
+				if (isUnsigned) return std::make_unique<DivuRInstruction>(conv(rs), conv(rt), conv(rd));
+				return std::make_unique<DivRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LANGLE:
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
+					isUnsigned? IcmpCond::Ult : IcmpCond::Slt);
+			case WASMTOK_LEQ:
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
+					isUnsigned? IcmpCond::Ule : IcmpCond::Sle);
+			case WASMTOK_DEQ:
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Eq);
+			case WASMTOK_RANGLE:
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
+					isUnsigned? IcmpCond::Ugt : IcmpCond::Sgt);
+			case WASMTOK_GEQ:
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
+					isUnsigned? IcmpCond::Uge : IcmpCond::Sge);
+			case WASMTOK_AND:
+				return std::make_unique<AndRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_OR:
+				return std::make_unique<OrRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_X:
+				return std::make_unique<XorRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_NAND:
+				return std::make_unique<NandRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_NOR:
+				return std::make_unique<NorRInstruction>(conv(rs), conv(rt), conv(rd));
+			default: return nullptr;
+		}
+	}
+
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_INODE),
+	WASMInstructionNode(WASM_INODE),
 	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
@@ -138,7 +193,7 @@ namespace LL2W {
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-	WASMBaseNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {
+	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {
 		delete rs_;
 		delete rd_;
 		if (byte_)
@@ -179,7 +234,7 @@ namespace LL2W {
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
-	WASMBaseNode(WASM_SETNODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_SETNODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete imm_;
 		delete rd_;
 	}
@@ -193,7 +248,7 @@ namespace LL2W {
 	}
 
 	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
-	WASMBaseNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete imm_;
 		delete rd_;
 		if (byte_)
@@ -209,7 +264,7 @@ namespace LL2W {
 	}
 
 	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
-	WASMBaseNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete rs_;
 		delete imm_;
 		if (byte_)
@@ -237,7 +292,7 @@ namespace LL2W {
 	}
 
 	WASMHalfMemoryNode::WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
-	WASMBaseNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
 		delete rd_;
 	}
@@ -276,7 +331,7 @@ namespace LL2W {
 	}
 
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rd_):
-	WASMBaseNode(WASM_CMPNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+	WASMInstructionNode(WASM_CMPNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
 		delete rd_;
 	}
@@ -290,7 +345,7 @@ namespace LL2W {
 	}
 
 	WASMCmpiNode::WASMCmpiNode(ASTNode *rs_, ASTNode *imm_):
-	WASMBaseNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_CMPINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete imm_;
 	}
@@ -304,7 +359,7 @@ namespace LL2W {
 	}
 
 	WASMSelNode::WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_):
-	WASMBaseNode(WASM_SELNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo) {
+	WASMInstructionNode(WASM_SELNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
 		delete rt_;
 		delete rd_;
@@ -348,7 +403,7 @@ namespace LL2W {
 	}
 
 	WASMJNode::WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_):
-	WASMBaseNode(WASM_JNODE), addr(getImmediate(addr_)), link(!colons->empty()) {
+	WASMInstructionNode(WASM_JNODE), addr(getImmediate(addr_)), link(!colons->empty()) {
 		delete addr_;
 		delete colons;
 		if (!cond) {
@@ -368,7 +423,7 @@ namespace LL2W {
 	}
 
 	WASMJcNode::WASMJcNode(WASMJNode *j, ASTNode *rs_):
-	WASMBaseNode(WASM_JCNODE), link(j? j->link : false), addr(j? j->addr : 0), rs(rs_->lexerInfo) {
+	WASMInstructionNode(WASM_JCNODE), link(j? j->link : false), addr(j? j->addr : 0), rs(rs_->lexerInfo) {
 		if (!j) {
 			wasmerror("No WASMCJNode found in jc instruction");
 		} else {
@@ -388,7 +443,7 @@ namespace LL2W {
 	}
 
 	WASMJrNode::WASMJrNode(ASTNode *cond, ASTNode *colons, ASTNode *rd_):
-	WASMBaseNode(WASM_JRNODE), link(!colons->empty()), rd(rd_->lexerInfo) {
+	WASMInstructionNode(WASM_JRNODE), link(!colons->empty()), rd(rd_->lexerInfo) {
 		delete colons;
 		delete rd_;
 		if (!cond) {
@@ -408,7 +463,7 @@ namespace LL2W {
 	}
 
 	WASMJrcNode::WASMJrcNode(WASMJrNode *jr, ASTNode *rs_):
-	WASMBaseNode(WASM_JRCNODE), link(jr? jr->link : false), rs(rs_->lexerInfo), rd(jr? jr->rd : nullptr) {
+	WASMInstructionNode(WASM_JRCNODE), link(jr? jr->link : false), rs(rs_->lexerInfo), rd(jr? jr->rd : nullptr) {
 		if (!jr) {
 			wasmerror("No WASMCJrNode found in jr(l)c instruction");
 		} else {
@@ -428,7 +483,7 @@ namespace LL2W {
 	}
 
 	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push):
-	WASMBaseNode(WASM_SSNODE), size(size_->atoi()), rs(rs_->lexerInfo), isPush(is_push) {
+	WASMInstructionNode(WASM_SSNODE), size(size_->atoi()), rs(rs_->lexerInfo), isPush(is_push) {
 		delete size_;
 		delete rs_;
 	}
@@ -442,7 +497,7 @@ namespace LL2W {
 	}
 
 	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_MULTRNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_MULTRNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete rt_;
 		if (unsigned_)
@@ -458,7 +513,7 @@ namespace LL2W {
 	}
 
 	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete imm_;
 		if (unsigned_)
@@ -474,7 +529,7 @@ namespace LL2W {
 	}
 
 	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMBaseNode(WASM_DIVIINODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)),
+	WASMInstructionNode(WASM_DIVIINODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)),
 	isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete rd_;
@@ -492,7 +547,7 @@ namespace LL2W {
 	}
 
 	WASMLuiNode::WASMLuiNode(ASTNode *imm_, ASTNode *rd_):
-	WASMBaseNode(WASM_LUINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMInstructionNode(WASM_LUINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete imm_;
 		delete rd_;
 	}
@@ -506,7 +561,7 @@ namespace LL2W {
 	}
 
 	WASMStackNode::WASMStackNode(ASTNode *rd_, bool is_push):
-	WASMBaseNode(WASM_STACKNODE), rd(rd_->lexerInfo), isPush(is_push) {
+	WASMInstructionNode(WASM_STACKNODE), rd(rd_->lexerInfo), isPush(is_push) {
 		delete rd_;
 	}
 
@@ -518,7 +573,7 @@ namespace LL2W {
 		return std::string(isPush? "[" : "]") + " " + *rd;
 	}
 
-	WASMNopNode::WASMNopNode(): WASMBaseNode(WASM_NOPNODE) {}
+	WASMNopNode::WASMNopNode(): WASMInstructionNode(WASM_NOPNODE) {}
 
 	std::string WASMNopNode::debugExtra() const {
 		return dim("<>");
@@ -528,7 +583,7 @@ namespace LL2W {
 		return "<>";
 	}
 
-	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMBaseNode(WASM_INTINODE), imm(getImmediate(imm_)) {
+	WASMIntINode::WASMIntINode(ASTNode *imm_): WASMInstructionNode(WASM_INTINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -540,7 +595,7 @@ namespace LL2W {
 		return "int " + stringify(imm, false);
 	}
 
-	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMBaseNode(WASM_RITINODE), imm(getImmediate(imm_)) {
+	WASMRitINode::WASMRitINode(ASTNode *imm_): WASMInstructionNode(WASM_RITINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -552,7 +607,7 @@ namespace LL2W {
 		return "rit " + stringify(imm, false);
 	}
 
-	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMBaseNode(WASM_TIMEINODE), imm(getImmediate(imm_)) {
+	WASMTimeINode::WASMTimeINode(ASTNode *imm_): WASMInstructionNode(WASM_TIMEINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -564,7 +619,7 @@ namespace LL2W {
 		return "time " + stringify(imm, false);
 	}
 
-	WASMTimeRNode::WASMTimeRNode(ASTNode *rs_): WASMBaseNode(WASM_TIMERNODE), rs(rs_->lexerInfo) {
+	WASMTimeRNode::WASMTimeRNode(ASTNode *rs_): WASMInstructionNode(WASM_TIMERNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
 
@@ -576,7 +631,7 @@ namespace LL2W {
 		return "time " + *rs;
 	}
 
-	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMBaseNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
+	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -588,7 +643,7 @@ namespace LL2W {
 		return "ring " + stringify(imm, false);
 	}
 
-	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMBaseNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
+	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
 
@@ -601,7 +656,7 @@ namespace LL2W {
 	}
 
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
-	WASMBaseNode(WASM_PRINTNODE), rs(rs_->lexerInfo) {
+	WASMInstructionNode(WASM_PRINTNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 		const std::string &typestr = *type_->lexerInfo;
 		if (typestr == "prx")
@@ -645,7 +700,7 @@ namespace LL2W {
 		}
 	}
 
-	WASMHaltNode::WASMHaltNode(): WASMBaseNode(WASM_HALTNODE) {}
+	WASMHaltNode::WASMHaltNode(): WASMInstructionNode(WASM_HALTNODE) {}
 
 	std::string WASMHaltNode::debugExtra() const {
 		return "<" + blue("halt") + ">";
@@ -655,7 +710,7 @@ namespace LL2W {
 		return "<halt>";
 	}
 
-	WASMSleepRNode::WASMSleepRNode(ASTNode *rs_): WASMBaseNode(WASM_SLEEPRNODE), rs(rs_->lexerInfo) {
+	WASMSleepRNode::WASMSleepRNode(ASTNode *rs_): WASMInstructionNode(WASM_SLEEPRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
 
@@ -667,7 +722,7 @@ namespace LL2W {
 		return "<sleep " + *rs + ">";
 	}
 
-	WASMPageNode::WASMPageNode(bool on_): WASMBaseNode(WASM_PAGENODE), on(on_) {}
+	WASMPageNode::WASMPageNode(bool on_): WASMInstructionNode(WASM_PAGENODE), on(on_) {}
 
 	std::string WASMPageNode::debugExtra() const {
 		return blue("page") + " " + (on? "on" : "off");
@@ -677,7 +732,7 @@ namespace LL2W {
 		return "page " + std::string(on? "on" : "off");
 	}
 
-	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMBaseNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
+	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMInstructionNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
 		delete imm_;
 	}
 
@@ -687,5 +742,19 @@ namespace LL2W {
 
 	WASMSetptINode::operator std::string() const {
 		return "setpt " + stringify(imm, false);
+	}
+
+	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):
+	WASMInstructionNode(WASM_MVNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+		delete rs_;
+		delete rd_;
+	}
+
+	std::string WASMMvNode::debugExtra() const {
+		return cyan(*rs) + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMMvNode::operator std::string() const {
+		return *rs + " -> " + *rd;
 	}
 }
