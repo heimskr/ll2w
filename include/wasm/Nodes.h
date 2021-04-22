@@ -5,6 +5,7 @@
 
 #include "compiler/Immediate.h"
 #include "parser/ASTNode.h"
+#include "parser/Enums.h"
 
 namespace LL2W {
 	enum class WASMNodeType {
@@ -12,8 +13,6 @@ namespace LL2W {
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI
 	};
-
-	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
 
 	enum class WASMPrintType {Hex, Dec, Char, Full, Bin};
 
@@ -144,7 +143,6 @@ namespace LL2W {
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
-
 	struct WASMHalfMemoryNode: public WASMInstructionNode {
 		const std::string *rs, *rd;
 
@@ -197,19 +195,19 @@ namespace LL2W {
 	};
 
 	struct WASMSelNode: public WASMInstructionNode {
-		enum class Oper {Equal, Less, Greater, NotEqual};
-
 		const std::string *rs, *rt, *rd;
-		Oper oper;
+		Condition condition;
+
 		WASMSelNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Sel; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMJNode: public WASMInstructionNode {
 		Immediate addr;
-		WASMCondition condition;
+		Condition condition;
 		bool link;
 
 		WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_);
@@ -231,7 +229,7 @@ namespace LL2W {
 
 	// Used for both jr and jrl.
 	struct WASMJrNode: public WASMInstructionNode {
-		WASMCondition condition;
+		Condition condition;
 		bool link;
 		const std::string *rd;
 

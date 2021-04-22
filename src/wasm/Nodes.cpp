@@ -52,6 +52,7 @@
 #include "instruction/LoadIndirectIInstruction.h"
 #include "instruction/CompareRInstruction.h"
 #include "instruction/CompareIInstruction.h"
+#include "instruction/SelectInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -70,27 +71,27 @@ static std::string blue(const std::string &interior) {
 }
 
 namespace LL2W {
-	static WASMCondition getCondition(const std::string &str) {
+	static Condition getCondition(const std::string &str) {
 		if (str == "0")
-			return WASMCondition::Zero;
+			return Condition::Zero;
 		if (str == "+")
-			return WASMCondition::Positive;
+			return Condition::Positive;
 		if (str == "-")
-			return WASMCondition::Negative;
+			return Condition::Negative;
 		if (str == "*")
-			return WASMCondition::NonZero;
+			return Condition::Nonzero;
 		if (!str.empty())
 			wasmerror("Invalid condition: " + str);
-		return WASMCondition::None;
+		return Condition::None;
 	}
 
-	static const char * conditionString(WASMCondition condition) {
+	static const char * conditionString(Condition condition) {
 		switch (condition) {
-			case WASMCondition::None:     return "";
-			case WASMCondition::Zero:     return "0";
-			case WASMCondition::Positive: return "+";
-			case WASMCondition::Negative: return "-";
-			case WASMCondition::NonZero:  return "*";
+			case Condition::None:     return "";
+			case Condition::Zero:     return "0";
+			case Condition::Positive: return "+";
+			case Condition::Negative: return "-";
+			case Condition::Nonzero:  return "*";
 			default:
 				throw std::runtime_error("Invalid condition in WASMJNode: "
 					+ std::to_string(static_cast<int>(condition)));
@@ -510,13 +511,13 @@ namespace LL2W {
 		delete rt_;
 		delete rd_;
 		if (*oper_->lexerInfo == "=")
-			oper = Oper::Equal;
+			condition = Condition::Zero;
 		else if (*oper_->lexerInfo == "<")
-			oper = Oper::Less;
+			condition = Condition::Negative;
 		else if (*oper_->lexerInfo == ">")
-			oper = Oper::Greater;
+			condition = Condition::Positive;
 		else if (*oper_->lexerInfo == "!=")
-			oper = Oper::NotEqual;
+			condition = Condition::Nonzero;
 		else
 			wasmerror("Invalid operator: " + *oper_->lexerInfo);
 		delete oper_;
@@ -524,28 +525,35 @@ namespace LL2W {
 
 	std::string WASMSelNode::debugExtra() const {
 		const char *oper_;
-		switch (oper) {
-			case Oper::Equal:    oper_ = "=";  break;
-			case Oper::Less:     oper_ = "<";  break;
-			case Oper::Greater:  oper_ = ">";  break;
-			case Oper::NotEqual: oper_ = "!="; break;
+		switch (condition) {
+			case Condition::Zero:     oper_ = "=";  break;
+			case Condition::Negative: oper_ = "<";  break;
+			case Condition::Positive: oper_ = ">";  break;
+			case Condition::Nonzero:  oper_ = "!="; break;
 			default:
-				throw std::runtime_error("Invalid operator in WASMSelNode: " + std::to_string(static_cast<int>(oper)));
+				throw std::runtime_error("Invalid operator in WASMSelNode: " +
+					std::to_string(static_cast<int>(condition)));
 		}
 		return dim("[") + cyan(*rs) + " " + dim(oper_) + " " + cyan(*rt) + dim("] -> ") + cyan(*rd);
 	}
 
 	WASMSelNode::operator std::string() const {
 		const char *oper_;
-		switch (oper) {
-			case Oper::Equal:    oper_ = "=";  break;
-			case Oper::Less:     oper_ = "<";  break;
-			case Oper::Greater:  oper_ = ">";  break;
-			case Oper::NotEqual: oper_ = "!="; break;
+		switch (condition) {
+			case Condition::Zero:     oper_ = "=";  break;
+			case Condition::Negative: oper_ = "<";  break;
+			case Condition::Positive: oper_ = ">";  break;
+			case Condition::Nonzero:  oper_ = "!="; break;
 			default:
-				throw std::runtime_error("Invalid operator in WASMSelNode: " + std::to_string(static_cast<int>(oper)));
+				throw std::runtime_error("Invalid operator in WASMSelNode: " +
+					std::to_string(static_cast<int>(condition)));
 		}
 		return "[" + *rs + " " + oper_ + " " + *rt + "] -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSelNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<SelectInstruction>(conv(rs), conv(rt), conv(rd), condition);
 	}
 
 	WASMJNode::WASMJNode(ASTNode *cond, ASTNode *colons, ASTNode *addr_):
@@ -553,7 +561,7 @@ namespace LL2W {
 		delete addr_;
 		delete colons;
 		if (!cond) {
-			condition = WASMCondition::None;
+			condition = Condition::None;
 		} else {
 			condition = getCondition(*cond->lexerInfo);
 			delete cond;
@@ -573,7 +581,7 @@ namespace LL2W {
 		if (!j) {
 			wasmerror("No WASMCJNode found in jc instruction");
 		} else {
-			if (j->condition != WASMCondition::None)
+			if (j->condition != Condition::None)
 				wasmerror("Conditions specified for jc instruction will be ignored");
 			delete j;
 		}
@@ -593,7 +601,7 @@ namespace LL2W {
 		delete colons;
 		delete rd_;
 		if (!cond) {
-			condition = WASMCondition::None;
+			condition = Condition::None;
 		} else {
 			condition = getCondition(*cond->lexerInfo);
 			delete cond;
@@ -613,7 +621,7 @@ namespace LL2W {
 		if (!jr) {
 			wasmerror("No WASMCJrNode found in jr(l)c instruction");
 		} else {
-			if (jr->condition != WASMCondition::None)
+			if (jr->condition != Condition::None)
 				wasmerror("Conditions specified for jr(l)c instruction will be ignored");
 			delete jr;
 		}
