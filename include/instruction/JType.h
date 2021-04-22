@@ -1,11 +1,13 @@
-#ifndef INSTRUCTION_JTYPE_H_
-#define INSTRUCTION_JTYPE_H_
+#pragma once
 
+#include "compiler/Immediate.h"
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	template <typename T = int>
+	template <typename T = Immediate>
 	struct JType: public WhyInstruction {
+		using ValueType = T;
+
 		std::shared_ptr<Variable> rs;
 		T addr;
 		bool link;
@@ -14,18 +16,18 @@ namespace LL2W {
 			WhyInstruction(index_), rs(rs_), addr(addr_), link(link_) {}
 
 		ExtractionResult extract(bool force = false) override {
-		if (extracted && !force)
+			if (extracted && !force)
+				return {read.size(), 0};
+
+			read.clear();
+			written.clear();
+
+			if (rs)
+				read.insert(rs);
+
+			extracted = true;
 			return {read.size(), 0};
-
-		read.clear();
-		written.clear();
-
-		if (rs)
-			read.insert(rs);
-
-		extracted = true;
-		return {read.size(), 0};
-	}
+		}
 
 		bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
 			if (rs == to_replace) {
@@ -37,5 +39,3 @@ namespace LL2W {
 		}
 	};
 }
-
-#endif

@@ -3,8 +3,6 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/JumpInstruction.h"
 #include "instruction/JumpConditionalInstruction.h"
-#include "instruction/JumpSymbolConditionalInstruction.h"
-#include "instruction/JumpSymbolInstruction.h"
 #include "pass/LowerBranches.h"
 
 namespace LL2W::Passes {
@@ -35,14 +33,17 @@ namespace LL2W::Passes {
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrCondNode *br) {
 		if (br->condition->valueType() != ValueType::Local)
 			throw std::runtime_error("Expected a pvar for the condition of a conditional jump");
-		function.insertBefore(instruction, std::make_shared<JumpSymbolConditionalInstruction>(
-			dynamic_cast<LocalValue *>(br->condition.get())->variable, function.transformLabel(*br->ifTrue), false));
+		function.insertBefore(instruction, std::make_shared<JumpConditionalInstruction>(
+			dynamic_cast<LocalValue *>(br->condition.get())->variable,
+			StringSet::intern(function.transformLabel(*br->ifTrue)), false));
 		function.insertBefore(instruction,
-			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->ifFalse), false));
+			std::make_shared<JumpInstruction>(nullptr, StringSet::intern(function.transformLabel(*br->ifFalse)),
+			false));
 	}
 
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
 		function.insertBefore(instruction,
-			std::make_shared<JumpSymbolInstruction>(function.transformLabel(*br->destination), false));
+			std::make_shared<JumpInstruction>(nullptr, StringSet::intern(function.transformLabel(*br->destination)),
+			false));
 	}
 }

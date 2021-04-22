@@ -1,12 +1,10 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "exception/TypeError.h"
 #include "instruction/ComparisonIInstruction.h"
-#include "instruction/JumpSymbolConditionalInstruction.h"
-#include "instruction/JumpSymbolInstruction.h"
+#include "instruction/JumpConditionalInstruction.h"
+#include "instruction/JumpInstruction.h"
 #include "pass/LowerSwitch.h"
 
 namespace LL2W::Passes {
@@ -32,16 +30,17 @@ namespace LL2W::Passes {
 			for (const auto &[type, value, label]: sw->table) {
 				if (!value->isInt())
 					throw TypeError("Expected int constant in table of switch instruction", type);
-				const std::string transformed = function.transformLabel(*label);
+				const std::string *transformed = StringSet::intern(function.transformLabel(*label));
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
-				auto jump = std::make_shared<JumpSymbolConditionalInstruction>(m0, transformed, false);
+				auto jump = std::make_shared<JumpConditionalInstruction>(m0, transformed, false);
 				function.insertBefore(instruction, comp, false);
 				function.insertBefore(instruction, jump, false);
 				comp->extract();
 				jump->extract();
 			}
 
-			auto jump = std::make_shared<JumpSymbolInstruction>(function.transformLabel(*sw->label), false);
+			auto jump = std::make_shared<JumpInstruction>(nullptr,
+				StringSet::intern(function.transformLabel(*sw->label)), false);
 			function.insertBefore(instruction, jump, false);
 			jump->extract();
 			to_remove.push_back(instruction);

@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERBRANCHES_H_
-#define PASS_LOWERBRANCHES_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -12,5 +11,3 @@ namespace LL2W::Passes {
 	void lowerBranch(Function &, InstructionPtr &, BrCondNode *);
 	void lowerBranch(Function &, InstructionPtr &, BrUncondNode *);
 }
-
-#endif
