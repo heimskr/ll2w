@@ -6,10 +6,10 @@ namespace LL2W {
 		IType(rs_, imm_, nullptr, index_), SizedInstruction(size_) {}
 
 	std::string StoreIInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m-> [\e[22;91m" + std::to_string(imm) + "\e[39;2m]\e[22m" + suffix();
+		return std::string(*rs) + " \e[2m-> [\e[22;91m" + colorize(imm) + "\e[39;2m]\e[22m" + suffix();
 	}
 
 	std::string StoreIInstruction::toString() const {
-		return rs->toString() + " -> [" + std::to_string(imm) + "]" + suffix();
+		return rs->toString() + " -> [" + LL2W::toString(imm) + "]" + suffix();
 	}
 }

@@ -2,14 +2,14 @@
 #include "instruction/CompareIInstruction.h"
 
 namespace LL2W {
-	CompareIInstruction::CompareIInstruction(VariablePtr rs_, int imm_, int index_):
+	CompareIInstruction::CompareIInstruction(VariablePtr rs_, ValueType imm_, int index_):
 		IType(rs_, imm_, nullptr, index_) {}
 
 	std::string CompareIInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m~\e[0m " + std::to_string(imm);
+		return std::string(*rs) + " \e[2m~\e[0m " + colorize(imm);
 	}
 
 	std::string CompareIInstruction::toString() const {
-		return rs->toString() + " ~ " + std::to_string(imm);
+		return rs->toString() + " ~ " + LL2W::toString(imm);
 	}
 }

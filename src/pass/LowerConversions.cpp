@@ -79,7 +79,7 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, left,  "LowerTrunc: " + tag + ", left shift");
 			function.insertBefore(instruction, right, "LowerTrunc: " + tag + ", right shift");
 		} else {
-			const unsigned int mask = static_cast<int>((1L << conversion->to->width()) - 1);
+			const int mask = static_cast<int>((1L << conversion->to->width()) - 1);
 			auto andi = std::make_shared<AndIInstruction>(source, mask, destination);
 			function.insertBefore(instruction, andi, "LowerTrunc: " + tag + ", apply mask");
 		}
@@ -114,7 +114,7 @@ namespace LL2W::Passes {
 			}
 
 			if (to == 32) {
-				auto andi = std::make_shared<AndIInstruction>(destination, 0xffffffff, destination);
+				auto andi = std::make_shared<AndIInstruction>(destination, static_cast<int>(0xffffffff), destination);
 				function.insertBefore(instruction, andi, "LowerSext: to == 32");
 				andi->extract();
 			}

@@ -1,20 +1,21 @@
 #ifndef INSTRUCTION_ITYPE_H_
 #define INSTRUCTION_ITYPE_H_
 
+#include "compiler/Immediate.h"
 #include "compiler/Variable.h"
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	template <typename T = int>
+	template <typename T = Immediate>
 	class IType: public WhyInstruction {
 		protected:
 			std::string operDebug(const char *oper) const {
-				return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + std::to_string(imm) +
-					" \e[2m->\e[0m " + std::string(*rd);
+				return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + colorize(imm) + " \e[2m->\e[0m " +
+					std::string(*rd);
 			}
 
 			std::string operString(const char *oper) const {
-				return rs->toString() + " " + std::string(oper) + " " + std::to_string(imm) + " -> " + rd->toString();
+				return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm) + " -> " + rd->toString();
 			}
 
 		public:

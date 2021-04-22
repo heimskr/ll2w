@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <unordered_map>
-#include <variant>
 
+#include "compiler/Immediate.h"
 #include "parser/ASTNode.h"
 
 namespace LL2W {
@@ -16,8 +16,6 @@ namespace LL2W {
 	enum class WASMCondition {None, Positive, Negative, Zero, NonZero};
 
 	enum class WASMPrintType {Hex, Dec, Char, Full, Bin};
-
-	using Immediate = std::variant<long, const std::string *>;
 
 	class WhyInstruction;
 	class Function;

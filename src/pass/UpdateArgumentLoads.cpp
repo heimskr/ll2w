@@ -10,7 +10,8 @@ namespace LL2W::Passes {
 				std::shared_ptr<Variable> &rs = add->rs, &rd = add->rd;
 				// Check for "$sp + x -> $m0" (loadArguments uses $m0).
 				if (rs && rs->reg == WhyInfo::stackPointerOffset && rd && rd->reg == WhyInfo::assemblerOffset)
-					add->imm += offset;
+					if (std::holds_alternative<int>(add->imm))
+						std::get<int>(add->imm) += offset;
 			}
 		}
 	}
