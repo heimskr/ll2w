@@ -59,6 +59,7 @@ namespace LL2W {
 
 	struct INode: public WASMInstructionNode {
 		const std::string *rs, *oper, *rd;
+		int operToken;
 		Immediate imm;
 		bool isUnsigned;
 
@@ -66,6 +67,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMMemoryNode: public WASMInstructionNode {

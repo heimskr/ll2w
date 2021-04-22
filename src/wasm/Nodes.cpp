@@ -25,6 +25,24 @@
 #include "instruction/LogicalXnorRInstruction.h"
 #include "instruction/AddRInstruction.h"
 #include "instruction/SubRInstruction.h"
+#include "instruction/ModIInstruction.h"
+#include "instruction/DivuIInstruction.h"
+#include "instruction/DivIInstruction.h"
+#include "instruction/ComparisonIInstruction.h"
+#include "instruction/AndIInstruction.h"
+#include "instruction/OrIInstruction.h"
+#include "instruction/XorIInstruction.h"
+#include "instruction/NandIInstruction.h"
+#include "instruction/NorIInstruction.h"
+#include "instruction/XnorIInstruction.h"
+#include "instruction/LogicalAndIInstruction.h"
+#include "instruction/LogicalOrIInstruction.h"
+#include "instruction/LogicalXorIInstruction.h"
+#include "instruction/LogicalNandIInstruction.h"
+#include "instruction/LogicalNorIInstruction.h"
+#include "instruction/LogicalXnorIInstruction.h"
+#include "instruction/AddIInstruction.h"
+#include "instruction/SubIInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -106,9 +124,8 @@ namespace LL2W {
 	}
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_RNODE),
-	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo), operToken(oper_->symbol),
-	isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_RNODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo),
+	operToken(oper_->symbol), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		if (oper_ != rt_)
@@ -184,8 +201,8 @@ namespace LL2W {
 	}
 
 	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_INODE),
-	rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	WASMInstructionNode(WASM_INODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo),
+	operToken(oper_->symbol), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
 		delete rs_;
 		delete oper_;
 		delete imm_;
@@ -200,6 +217,61 @@ namespace LL2W {
 
 	INode::operator std::string() const {
 		return *rs + " " + *oper + " " + toString(imm) + " -> " + *rd + (isUnsigned? " /u" : "");
+	}
+
+	std::unique_ptr<WhyInstruction> INode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+
+		switch (operToken) {
+			case WASMTOK_PERCENT: return std::make_unique<ModIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_SLASH:
+				if (isUnsigned) return std::make_unique<DivuIInstruction>(conv(rs), imm, conv(rd));
+				return std::make_unique<DivIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LANGLE:
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
+					isUnsigned? IcmpCond::Ult : IcmpCond::Slt);
+			case WASMTOK_LEQ:
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
+					isUnsigned? IcmpCond::Ule : IcmpCond::Sle);
+			case WASMTOK_DEQ:
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Eq);
+			case WASMTOK_RANGLE:
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
+					isUnsigned? IcmpCond::Ugt : IcmpCond::Sgt);
+			case WASMTOK_GEQ:
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
+					isUnsigned? IcmpCond::Uge : IcmpCond::Sge);
+			case WASMTOK_AND:
+				return std::make_unique<AndIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_OR:
+				return std::make_unique<OrIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_X:
+				return std::make_unique<XorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_NAND:
+				return std::make_unique<NandIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_NOR:
+				return std::make_unique<NorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_XNOR:
+				return std::make_unique<XnorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LAND:
+				return std::make_unique<LogicalAndIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LOR:
+				return std::make_unique<LogicalOrIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LXOR:
+				return std::make_unique<LogicalXorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LNAND:
+				return std::make_unique<LogicalNandIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LNOR:
+				return std::make_unique<LogicalNorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LXNOR:
+				return std::make_unique<LogicalXnorIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_PLUS:
+				return std::make_unique<AddIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_MINUS:
+				return std::make_unique<SubIInstruction>(conv(rs), imm, conv(rd));
+			default:
+				throw std::invalid_argument("Unknown operator: " + *oper);
+		}
 	}
 
 	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
