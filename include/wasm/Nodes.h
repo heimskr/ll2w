@@ -14,8 +14,6 @@ namespace LL2W {
 		Page, SetptI
 	};
 
-	enum class WASMPrintType {Hex, Dec, Char, Full, Bin};
-
 	class WhyInstruction;
 	class Function;
 	class Variable;
@@ -394,12 +392,13 @@ namespace LL2W {
 
 	struct WASMPrintNode: public WASMInstructionNode {
 		const std::string *rs;
-		WASMPrintType type;
+		PrintType type;
 
 		WASMPrintNode(ASTNode *rs_, ASTNode *type_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Print; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMHaltNode: public WASMInstructionNode {

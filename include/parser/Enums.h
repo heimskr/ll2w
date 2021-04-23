@@ -44,6 +44,7 @@ namespace LL2W {
 		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
 		Addrspacecast};
 	enum class Condition {Positive, Negative, Zero, Nonzero, None};
+	enum class PrintType {Dec, Bin, Hex, Char, Full};
 
 	extern std::unordered_map<TypeType,   std::string> type_map;
 	extern std::unordered_map<ValueType,  std::string> value_map;

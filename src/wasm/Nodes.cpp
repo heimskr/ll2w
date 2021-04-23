@@ -72,6 +72,8 @@
 #include "instruction/TimeRInstruction.h"
 #include "instruction/RingIInstruction.h"
 #include "instruction/RingRInstruction.h"
+#include "instruction/PrintRInstruction.h"
+#include "instruction/HaltInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -909,29 +911,29 @@ namespace LL2W {
 		delete rs_;
 		const std::string &typestr = *type_->lexerInfo;
 		if (typestr == "prx")
-			type = WASMPrintType::Hex;
+			type = PrintType::Hex;
 		else if (typestr == "prd")
-			type = WASMPrintType::Dec;
+			type = PrintType::Dec;
 		else if (typestr == "prc")
-			type = WASMPrintType::Char;
+			type = PrintType::Char;
 		else if (typestr == "print")
-			type = WASMPrintType::Full;
+			type = PrintType::Full;
 		else if (typestr == "prb")
-			type = WASMPrintType::Bin;
+			type = PrintType::Bin;
 		else {
 			wasmerror("Invalid print type: " + typestr);
-			type = WASMPrintType::Full;
+			type = PrintType::Full;
 		}
 		delete type_;
 	}
 
 	std::string WASMPrintNode::debugExtra() const {
 		switch (type) {
-			case WASMPrintType::Hex:  return "<" + blue("prx")   + " " + cyan(*rs) + ">";
-			case WASMPrintType::Dec:  return "<" + blue("prd")   + " " + cyan(*rs) + ">";
-			case WASMPrintType::Char: return "<" + blue("prc")   + " " + cyan(*rs) + ">";
-			case WASMPrintType::Full: return "<" + blue("print") + " " + cyan(*rs) + ">";
-			case WASMPrintType::Bin:  return "<" + blue("prb")   + " " + cyan(*rs) + ">";
+			case PrintType::Hex:  return "<" + blue("prx")   + " " + cyan(*rs) + ">";
+			case PrintType::Dec:  return "<" + blue("prd")   + " " + cyan(*rs) + ">";
+			case PrintType::Char: return "<" + blue("prc")   + " " + cyan(*rs) + ">";
+			case PrintType::Full: return "<" + blue("print") + " " + cyan(*rs) + ">";
+			case PrintType::Bin:  return "<" + blue("prb")   + " " + cyan(*rs) + ">";
 			default:
 				return red("???");
 		}
@@ -939,14 +941,18 @@ namespace LL2W {
 
 	WASMPrintNode::operator std::string() const {
 		switch (type) {
-			case WASMPrintType::Hex:  return "<prx "   + *rs + ">";
-			case WASMPrintType::Dec:  return "<prd "   + *rs + ">";
-			case WASMPrintType::Char: return "<prc "   + *rs + ">";
-			case WASMPrintType::Full: return "<print " + *rs + ">";
-			case WASMPrintType::Bin:  return "<prb "   + *rs + ">";
+			case PrintType::Hex:  return "<prx "   + *rs + ">";
+			case PrintType::Dec:  return "<prd "   + *rs + ">";
+			case PrintType::Char: return "<prc "   + *rs + ">";
+			case PrintType::Full: return "<print " + *rs + ">";
+			case PrintType::Bin:  return "<prb "   + *rs + ">";
 			default:
 				return "???";
 		}
+	}
+
+	std::unique_ptr<WhyInstruction> WASMPrintNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<PrintRInstruction>(convertVariable(function, map, rs), type);
 	}
 
 	WASMHaltNode::WASMHaltNode(): WASMInstructionNode(WASM_HALTNODE) {}
