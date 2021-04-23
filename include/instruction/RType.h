@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_RTYPE_H_
-#define INSTRUCTION_RTYPE_H_
+#pragma once
 
 #include "instruction/WhyInstruction.h"
 
@@ -19,5 +18,3 @@ namespace LL2W {
 			bool replaceRead(VariablePtr, VariablePtr) override;
 	};
 }
-
-#endif

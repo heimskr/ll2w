@@ -68,6 +68,10 @@
 #include "instruction/Nop.h"
 #include "instruction/IntIInstruction.h"
 #include "instruction/RitIInstruction.h"
+#include "instruction/TimeIInstruction.h"
+#include "instruction/TimeRInstruction.h"
+#include "instruction/RingIInstruction.h"
+#include "instruction/RingRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -848,6 +852,10 @@ namespace LL2W {
 		return "time " + toString(imm);
 	}
 
+	std::unique_ptr<WhyInstruction> WASMTimeINode::convert(Function &, VarMap &) {
+		return std::make_unique<TimeIInstruction>(imm);
+	}
+
 	WASMTimeRNode::WASMTimeRNode(ASTNode *rs_): WASMInstructionNode(WASM_TIMERNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
@@ -858,6 +866,10 @@ namespace LL2W {
 
 	WASMTimeRNode::operator std::string() const {
 		return "time " + *rs;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMTimeRNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<TimeRInstruction>(convertVariable(function, map, rs));
 	}
 
 	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
@@ -872,6 +884,10 @@ namespace LL2W {
 		return "ring " + toString(imm);
 	}
 
+	std::unique_ptr<WhyInstruction> WASMRingINode::convert(Function &, VarMap &) {
+		return std::make_unique<RingIInstruction>(imm);
+	}
+
 	WASMRingRNode::WASMRingRNode(ASTNode *rs_): WASMInstructionNode(WASM_RINGRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
@@ -882,6 +898,10 @@ namespace LL2W {
 
 	WASMRingRNode::operator std::string() const {
 		return "ring " + *rs;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMRingRNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<RingRInstruction>(convertVariable(function, map, rs));
 	}
 
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):

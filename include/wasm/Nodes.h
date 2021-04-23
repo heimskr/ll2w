@@ -359,6 +359,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMTimeRNode: public WASMInstructionNode {
@@ -368,6 +369,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMRingINode: public WASMInstructionNode {
@@ -377,6 +379,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::RingI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMRingRNode: public WASMInstructionNode {
@@ -386,6 +389,7 @@ namespace LL2W {
 		WASMNodeType nodeType() const override { return WASMNodeType::RingR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
 	struct WASMPrintNode: public WASMInstructionNode {
