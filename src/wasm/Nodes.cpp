@@ -74,6 +74,10 @@
 #include "instruction/RingRInstruction.h"
 #include "instruction/PrintRInstruction.h"
 #include "instruction/HaltInstruction.h"
+#include "instruction/SleepRInstruction.h"
+#include "instruction/PageInstruction.h"
+#include "instruction/SetptIInstruction.h"
+#include "instruction/MoveInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -965,6 +969,10 @@ namespace LL2W {
 		return "<halt>";
 	}
 
+	std::unique_ptr<WhyInstruction> WASMHaltNode::convert(Function &, VarMap &) {
+		return std::make_unique<HaltInstruction>();
+	}
+
 	WASMSleepRNode::WASMSleepRNode(ASTNode *rs_): WASMInstructionNode(WASM_SLEEPRNODE), rs(rs_->lexerInfo) {
 		delete rs_;
 	}
@@ -977,6 +985,10 @@ namespace LL2W {
 		return "<sleep " + *rs + ">";
 	}
 
+	std::unique_ptr<WhyInstruction> WASMSleepRNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<SleepRInstruction>(convertVariable(function, map, rs));
+	}
+
 	WASMPageNode::WASMPageNode(bool on_): WASMInstructionNode(WASM_PAGENODE), on(on_) {}
 
 	std::string WASMPageNode::debugExtra() const {
@@ -985,6 +997,10 @@ namespace LL2W {
 
 	WASMPageNode::operator std::string() const {
 		return "page " + std::string(on? "on" : "off");
+	}
+
+	std::unique_ptr<WhyInstruction> WASMPageNode::convert(Function &, VarMap &) {
+		return std::make_unique<PageInstruction>(on);
 	}
 
 	WASMSetptINode::WASMSetptINode(ASTNode *imm_): WASMInstructionNode(WASM_SETPTINODE), imm(getImmediate(imm_)) {
@@ -999,6 +1015,10 @@ namespace LL2W {
 		return "setpt " + toString(imm);
 	}
 
+	std::unique_ptr<WhyInstruction> WASMSetptINode::convert(Function &, VarMap &) {
+		return std::make_unique<SetptIInstruction>(imm);
+	}
+
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):
 	WASMInstructionNode(WASM_MVNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
@@ -1011,5 +1031,10 @@ namespace LL2W {
 
 	WASMMvNode::operator std::string() const {
 		return *rs + " -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMMvNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<MoveInstruction>(conv(rs), conv(rd));
 	}
 }
