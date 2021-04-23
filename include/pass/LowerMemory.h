@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERMEMORY_H_
-#define PASS_LOWERMEMORY_H_
+#pragma once
 
 #include <memory>
 
@@ -22,5 +21,3 @@ namespace LL2W::Passes {
 
 	int getLoadStoreSize(std::shared_ptr<Constant> &);
 }
-
-#endif

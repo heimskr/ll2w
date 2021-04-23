@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERMATH_H_
-#define PASS_LOWERMATH_H_
+#pragma once
 
 #include <memory>
 
@@ -22,5 +21,3 @@ namespace LL2W::Passes {
 	void lowerRem(Function &, InstructionPtr &, RemNode *);
 	void lowerLogic(Function &, InstructionPtr &, LogicNode *);
 }
-
-#endif

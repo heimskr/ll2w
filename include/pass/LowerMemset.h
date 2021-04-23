@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERMEMSET_H_
-#define PASS_LOWERMEMSET_H_
+#pragma once
 
 #include <memory>
 
@@ -20,5 +19,3 @@ namespace LL2W::Passes {
 	void setupMemsetValue(Function &, Value &, std::shared_ptr<Instruction> &, std::shared_ptr<Variable> &,
 	                      bool shouldLoad, int assemblerIndex);
 }
-
-#endif

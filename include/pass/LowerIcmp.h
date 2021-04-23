@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERICMP_H_
-#define PASS_LOWERICMP_H_
+#pragma once
 
 #include <memory>
 
@@ -15,5 +14,3 @@ namespace LL2W::Passes {
 
 	void lowerIcmp(Function &, std::shared_ptr<Instruction> &, IcmpNode *node);
 }
-
-#endif

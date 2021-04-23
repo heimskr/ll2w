@@ -43,6 +43,7 @@
 #include "pass/LowerConversions.h"
 #include "pass/LowerGetelementptr.h"
 #include "pass/LowerIcmp.h"
+#include "pass/LowerInlineAsm.h"
 #include "pass/LowerMath.h"
 #include "pass/LowerMemory.h"
 #include "pass/LowerMemset.h"
@@ -628,6 +629,7 @@ namespace LL2W {
 		Passes::lowerMemset(*this);
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
+		Passes::lowerInlineAsm(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();

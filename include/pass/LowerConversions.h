@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERCONVERSIONS_H_
-#define PASS_LOWERCONVERSIONS_H_
+#pragma once
 
 #include <memory>
 
@@ -17,5 +16,3 @@ namespace LL2W::Passes {
 	void lowerTrunc(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 	void lowerSext(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 }
-
-#endif

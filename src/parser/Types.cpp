@@ -213,11 +213,11 @@ namespace LL2W {
 
 	TypePtr StructType::extractType(std::list<int> indices) const {
 		// TODO!: Implement.
-		node->debug();
-		for (int index: indices) std::cout << index << " "; std::cout << "\n";
+		// node->debug();
+		// for (int index: indices) std::cout << index << " "; std::cout << "\n";
 		TypePtr type = node->types.at(indices.front())->copy();
 		if (indices.size() == 1) {
-			std::cout << "[1] Returning " << std::string(*type) << "\n";
+			// std::cout << "[1] Returning " << std::string(*type) << "\n";
 			return type;
 		}
 
@@ -249,10 +249,22 @@ namespace LL2W {
 	}
 
 	bool StructType::operator==(const Type &other) const {
+		// TODO: is this correct?
 		if (other.typeType() != TypeType::Struct)
 			return false;
-		node->debug();
-		throw std::runtime_error("StructType::operator== is unimplemented.");
+		const StructType &otherstruct = dynamic_cast<const StructType &>(other);
+		if (form != otherstruct.form || shape != otherstruct.shape)
+			return false;
+		if ((name && name != otherstruct.name) || (!name && otherstruct.name))
+			return false;
+		if (node) {
+			if (!otherstruct.node || node->types.size() != otherstruct.node->types.size())
+				return false;
+			for (size_t i = 0, max = node->types.size(); i < max; ++i)
+				if (*node->types[i] != *otherstruct.node->types[i])
+					return false;
+		}
+		return true;
 	}
 
 	bool GlobalTemporaryType::operator==(const Type &other) const {
