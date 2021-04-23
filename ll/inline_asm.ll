@@ -21,7 +21,7 @@ define i32 @main(i32 %0, i8** %1) #0 {
   store i32 20, i32* %8, align 4
   %10 = load i32, i32* %6, align 4
   %11 = load i32, i32* %8, align 4
-  %12 = call { i32, i32 } asm "[ $$t0; *init; $2 -> $0; $3 + 1 -> $$t0; $$t0 -> $1; ] $$t0", "=r,=r,r,r,~{dirflag},~{fpsr},~{flags}"(i32 %10, i32 %11) #1, !srcloc !4
+  %12 = call { i32, i32 } asm "[ $$t0; *init; $2 -> $0; $3 + $4 -> $$t0; $$t0 -> $1; ] $$t0", "=r,=r,r,r,r,~{dirflag},~{fpsr},~{flags}"(i32 %10, i32 %11, i32 100) #1, !srcloc !4
   %13 = extractvalue { i32, i32 } %12, 0
   %14 = extractvalue { i32, i32 } %12, 1
   store i32 %13, i32* %7, align 4
