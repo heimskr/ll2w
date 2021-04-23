@@ -7,10 +7,14 @@
 
 #include "ASTNode.h"
 
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+
 namespace LL2W {
 	class Parser {
 		private:
 			std::string filename;
+			char *buffer = nullptr;
+			YY_BUFFER_STATE bufferState = nullptr;
 			const char * getNameLLVM(int symbol);
 			const char * getNameWASM(int symbol);
 
@@ -22,6 +26,7 @@ namespace LL2W {
 
 			Parser(Mode mode_): mode(mode_) {}
 			void open(const std::string &filename);
+			void in(const std::string &text);
 			void debug(bool flex, bool bison);
 			void parse();
 			void done();

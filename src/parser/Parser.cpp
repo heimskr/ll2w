@@ -1,9 +1,18 @@
+#include <cstring>
 #include <fstream>
 #include <sstream>
 
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
+
+int llvmwrap() { return 1; }
+int wasmwrap() { return 1; }
+
+extern YY_BUFFER_STATE llvm_scan_buffer(char *, size_t);
+extern YY_BUFFER_STATE wasm_scan_buffer(char *, size_t);
+extern void llvm_delete_buffer(YY_BUFFER_STATE);
+extern void wasm_delete_buffer(YY_BUFFER_STATE);
 
 namespace LL2W {
 	void Parser::open(const std::string &filename_) {
@@ -12,6 +21,16 @@ namespace LL2W {
 			llvmin = fopen(filename.c_str(), "r");
 		else
 			wasmin = fopen(filename.c_str(), "r");
+	}
+
+	void Parser::in(const std::string &text) {
+		buffer = new char[text.size() + 2];
+		std::strncpy(buffer, text.c_str(), text.size() + 1);
+		buffer[text.size() + 1] = '\0'; // Input to flex needs two null terminators.
+		if (mode == Mode::LLVM)
+			bufferState = llvm_scan_buffer(buffer, text.size() + 2);
+		else
+			bufferState = wasm_scan_buffer(buffer, text.size() + 2);
 	}
 
 	void Parser::debug(bool flex, bool bison) {
@@ -37,6 +56,20 @@ namespace LL2W {
 		else
 			wasmlex_destroy();
 		delete root;
+
+		if (buffer) {
+			delete buffer;
+			buffer = nullptr;
+		}
+
+		if (bufferState) {
+			// Causes a double free—does llvmparse/wasmparse already do this?
+			// if (mode == Mode::LLVM)
+			// 	llvm_delete_buffer(bufferState);
+			// else
+			// 	wasm_delete_buffer(bufferState);
+			// bufferState = nullptr;
+		}
 	}
 
 	const char * LL2W::Parser::getName(int symbol) {

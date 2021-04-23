@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_MOVEINSTRUCTION_H_
-#define INSTRUCTION_MOVEINSTRUCTION_H_
+#pragma once
 
 #include "instruction/RType.h"
 
@@ -13,5 +12,3 @@ namespace LL2W {
 		std::string toString() const override;
 	};
 }
-
-#endif

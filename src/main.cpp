@@ -33,6 +33,13 @@ int main(int argc, char **argv) {
 	// djtest();
 	// rendertest();
 
+	std::string test = "4 -> $$t0; $$t0 + $0 -> $1";
+	LL2W::wasmParser.in(test);
+	LL2W::wasmParser.debug(false, false);
+	LL2W::wasmParser.parse();
+	LL2W::wasmParser.root->debug();
+	LL2W::wasmParser.done();
+	return 0;
 
 	if (1 < argc) {
 		wasmparsertest(argv[1]);
