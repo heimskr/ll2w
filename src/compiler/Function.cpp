@@ -419,9 +419,13 @@ namespace LL2W {
 		insertBefore(base, new_instruction, std::string(text), reindex);
 	}
 
-	void Function::comment(InstructionPtr instruction, const std::string &text, bool reindex) {
+	InstructionPtr Function::comment(InstructionPtr instruction, const std::string &text, bool reindex) {
 #ifndef DISABLE_COMMENTS
-		insertBefore(instruction, std::make_shared<Comment>(text), reindex);
+		InstructionPtr comment = std::make_shared<Comment>(text);
+		insertBefore(instruction, comment, reindex);
+		return comment;
+#else
+		return nullptr;
 #endif
 	}
 

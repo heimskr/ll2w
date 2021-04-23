@@ -6,6 +6,7 @@
 #include "compiler/Immediate.h"
 #include "parser/ASTNode.h"
 #include "parser/Enums.h"
+#include "instruction/WhyInstruction.h"
 
 namespace LL2W {
 	enum class WASMNodeType {

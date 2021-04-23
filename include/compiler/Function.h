@@ -171,7 +171,8 @@ namespace LL2W {
 				const char *, bool reindex = true);
 
 			/** Inserts a comment before an instruction. */
-			void comment(std::shared_ptr<Instruction>, const std::string &, bool reindex = true);
+			std::shared_ptr<Instruction> comment(std::shared_ptr<Instruction>, const std::string &,
+				bool reindex = true);
 
 			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
 			 *  if such a branch instruction exists. */

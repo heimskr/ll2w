@@ -23,6 +23,7 @@ namespace LL2W {
 
 			Mode mode;
 			ASTNode *root = nullptr;
+			int errorCount = 0;
 
 			Parser(Mode mode_): mode(mode_) {}
 			void open(const std::string &filename);

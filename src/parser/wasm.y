@@ -121,6 +121,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_PAGE "page"
 %token WASMTOK_SETPT "setpt"
 %token WASMTOK_SHORT "/s"
+%token WASMTOK_INIT "*init"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 
@@ -137,7 +138,8 @@ using AN = LL2W::ASTNode;
 start: program;
 
 program: program statement { $$ = $1->adopt($2); }
-       | program endop { $$ = $1; D($2); }
+       | program "*init"   { $$ = $1->adopt($2); } // Optional; allows the user to control where the initial setup for
+       | program endop { $$ = $1; D($2); }         // an inline asm lowering goes.
        | { $$ = LL2W::wasmParser.root; };
 
 statement: operation;
