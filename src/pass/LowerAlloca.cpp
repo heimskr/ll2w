@@ -65,7 +65,7 @@ namespace LL2W::Passes {
 						auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 						// %var * width
 						auto mult = std::make_shared<MultIInstruction>(local->variable, width);
-						// $l0 -> $m0
+						// $lo -> $m0
 						auto movelo = std::make_shared<MoveInstruction>(lo, m0);
 						// $sp -= $m0
 						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
@@ -83,13 +83,14 @@ namespace LL2W::Passes {
 			}
 
 			if (num_elements != -1) {
+				// $sp -> %var
 				auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 				function.insertBefore(instruction, move);
 				move->extract();
 				const int to_sub = Util::roundUp(num_elements * width, 8);
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
-					function.insertBefore(instruction, sub, "LowerAlloca: $sp -= to_sub");
+					function.insertBefore(move, sub, "LowerAlloca: $sp -= to_sub");
 					sub->extract();
 				}
 			}

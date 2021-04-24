@@ -1,5 +1,4 @@
-#ifndef PARSER_GLOBALVARDEF_H_
-#define PARSER_GLOBALVARDEF_H_
+#pragma once
 
 #include "ASTNode.h"
 #include "Enums.h"
@@ -10,6 +9,7 @@
 namespace LL2W {
 	struct GlobalVarDef: public ASTNode {
 		Linkage linkage = Linkage::Default;
+		Preemption preemption = Preemption::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
 		ThreadLocal threadLocal = ThreadLocal::None;
@@ -27,13 +27,11 @@ namespace LL2W {
 		const std::string *comdat = nullptr;
 
 		using N = ASTNode *;
-		GlobalVarDef(N gvar, N linkage_, N visibility_, N dll_storage_class, N thread_local_, N unnamed_addr,
-		             N addrspace_, N externally_initialized_, N global_or_constant_, N type_or_constant,
+		GlobalVarDef(N gvar, N linkage_, N preemption_, N visibility_, N dll_storage_class, N thread_local_,
+		             N unnamed_addr, N addrspace_, N externally_initialized_, N global_or_constant_, N type_or_constant,
 		             N gdef_extras_);
 
 		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[32m"; }
 	};
 }
-
-#endif

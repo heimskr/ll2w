@@ -290,12 +290,12 @@ _ellipsis: "..." | { $$ = nullptr; };
 
 // Globals
 
-global_def: LLVMTOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
+global_def: LLVMTOK_GVAR "=" _linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
             _externally_initialized global_or_constant type_any gdef_extras
-            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); }
-          | LLVMTOK_GVAR "=" _linkage _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
+            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
+          | LLVMTOK_GVAR "=" _linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr _addrspace
             _externally_initialized global_or_constant constant gdef_extras
-            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12); };
+            { D($2); $$ = new GlobalVarDef($1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 _linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 _visibility: LLVMTOK_VISIBILITY | { $$ = nullptr; };
@@ -320,7 +320,7 @@ function_header: _linkage _preemption _visibility _dll_storage_class _cconv _ret
                  function_args ")" _unnamed_addr _fnattrs _header_align _personality
                  { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15); D($9, $11); };
 _preemption: preemption | { $$ = nullptr; };
-preemption: LLVMTOK_DSO_PREEMPTABLE | LLVMTOK_DSO_LOCAL;
+preemption: "dso_preemptable" | "dso_local";
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_RETATTR_LIST); };
 function_args: function_types "," "..." { $$ = new FunctionArgs($1, true); D($2, $3); }
              | function_types { $$ = new FunctionArgs($1, false); }

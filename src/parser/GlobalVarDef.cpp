@@ -6,10 +6,11 @@
 #include "parser/Parser.h"
 
 namespace LL2W {
-	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *visibility_, ASTNode *dll_storage_class,
-	                           ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *addrspace_,
-	                           ASTNode *externally_initialized, ASTNode *global_or_constant, ASTNode *type_or_constant,
-	                           ASTNode *gdef_extras): ASTNode(llvmParser, LLVM_GLOBAL_DEF, gvar->lexerInfo) {
+	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
+	                           ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr,
+	                           ASTNode *addrspace_, ASTNode *externally_initialized, ASTNode *global_or_constant,
+	                           ASTNode *type_or_constant, ASTNode *gdef_extras):
+	                           ASTNode(llvmParser, LLVM_GLOBAL_DEF, gvar->lexerInfo) {
 		if (linkage_) {
 			const std::string &link = *linkage_->lexerInfo;
 			for (const std::pair<const Linkage, std::string> &pair: linkage_map) {
@@ -19,6 +20,16 @@ namespace LL2W {
 				}
 			}
 			delete linkage_;
+		}
+
+		if (preemption_) {
+			if (*preemption_->lexerInfo == "dso_preemptable")
+				preemption = Preemption::DsoPreemptable;
+			else if (*preemption_->lexerInfo == "dso_local")
+				preemption = Preemption::DsoLocal;
+			else
+				throw std::runtime_error("Invalid preemption in GlobalVarDef: \"" + *preemption_->lexerInfo + "\"");
+			delete preemption_;
 		}
 
 		if (visibility_) {
