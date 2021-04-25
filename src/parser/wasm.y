@@ -129,7 +129,7 @@ using AN = LL2W::ASTNode;
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
-%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE
+%token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 
 %start start
 
@@ -145,10 +145,12 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r   | op_mult  | op_multi  | op_lui   | op_i    | op_c    | op_l    | op_s    | op_set  | op_divii | op_li
-         | op_si  | op_ms    | op_lni    | op_ch    | op_lh   | op_sh   | op_cmp  | op_cmpi | op_sel  | op_j     | op_jc
-         | op_jr  | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int  | op_rit  | op_time | op_timei
-         | op_ext | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt;
+operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
+         | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
+         | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
+         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | label;
+
+label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
 op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
     | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is a unary op

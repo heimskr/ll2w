@@ -116,8 +116,33 @@ namespace LL2W {
 					out << name << ": (" << (constant->type->width() / 8) << ")\n";
 				else if (type == ValueType::Int)
 					out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << "\n";
-				else
-					error() << "Unsupported global value: " << *value << "\n";
+				else if (type == ValueType::Array) {
+					ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
+					if (array->constants.empty())
+						out << name << ": (8)\n";
+					else {
+						for (size_t i = 0; i < array->constants.size(); ++i) {
+							if (i == 0)
+								out << name << ": ";
+							else
+								out << name << "__" << i << ": ";
+							ConstantPtr subconstant = array->constants[i];
+							do {
+								if (subconstant->value) {
+									out << subconstant->value->compile();
+									subconstant = nullptr;
+								} else if (subconstant->conversionSource) {
+									subconstant = subconstant->conversionSource;	
+								} else {
+									out << "???";
+									subconstant = nullptr;
+								}
+							} while (subconstant);
+							out << "\n";
+						}
+					}
+				} else
+					error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ")\n";
 			} else {
 				out << name << "\n";
 			}

@@ -41,6 +41,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_MLCOMMENT}			{ }
 [ \t]+						{ }
 \n							{ LL2W::wasmLexer.newline(); WASMRTOKEN(NEWLINE) }
+"\\09"						{ }
 
 {WASM_DOUBLE_REG}			{ WASMRTOKEN(REG) }
 {WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }

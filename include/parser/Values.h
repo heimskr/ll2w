@@ -33,6 +33,8 @@ namespace LL2W {
 		bool isGetelementptr() const;
 		virtual bool isIntLike() const { return false; }
 		virtual int intValue() const { throw std::runtime_error("Value isn't int-like"); }
+		/* Stringifies the Value into something that can be put in a #data section. */
+		virtual std::string compile() const = 0;
 	};
 
 	struct DoubleValue: public Value {
@@ -45,6 +47,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Double; }
 		ValuePtr copy() const override { return std::make_shared<DoubleValue>(value); }
 		operator std::string() override { return *original; }
+		std::string compile() const override { return std::to_string(value); }
 	};
 
 	struct IntValue: public Value {
@@ -58,6 +61,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
 		bool isIntLike() const override { return true; }
 		int intValue() const override { return value; }
+		std::string compile() const override { return std::to_string(value); }
 	};
 
 	struct NullValue: public IntValue {
@@ -67,6 +71,7 @@ namespace LL2W {
 		operator std::string() override { return "null"; }
 		bool isIntLike() const override { return true; }
 		int intValue() const override { return 0; }
+		std::string compile() const override { return "0"; }
 	};
 
 	struct VectorValue: public Value {
@@ -76,6 +81,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Vector; }
 		ValuePtr copy() const override;
 		operator std::string() override;
+		std::string compile() const override { return "UNIMPLEMENTED (Vector)"; }
 	};
 
 	struct BoolValue: public Value {
@@ -89,6 +95,7 @@ namespace LL2W {
 		operator std::string() override { return value? "true" : "false"; }
 		bool isIntLike() const override { return true; }
 		int intValue() const override { return value? 1 : 0; }
+		std::string compile() const override { return std::to_string(intValue()); }
 	};
 
 	struct VariableValue: public Value {
@@ -97,6 +104,7 @@ namespace LL2W {
 
 		public:
 			const std::string *name = nullptr;
+			std::string compile() const override { return "UNSUPPORTED (Variable)"; }
 	};
 
 	struct LocalValue: public VariableValue {
@@ -107,6 +115,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Local; }
 		ValuePtr copy() const override { return std::make_shared<LocalValue>(name); }
 		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Local)"; }
 	};
 
 	struct GlobalValue: public VariableValue {
@@ -116,6 +125,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Global; }
 		ValuePtr copy() const override { return std::make_shared<GlobalValue>(name); }
 		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
+		std::string compile() const override { return "&" + *name; }
 	};
 
 	struct GetelementptrValue: public Value {
@@ -135,12 +145,14 @@ namespace LL2W {
 				decimals);
 		}
 		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Getelementptr)"; }
 	};
 
 	struct VoidValue: public Value {
 		ValueType valueType() const override { return ValueType::Void; }
 		ValuePtr copy() const override { return std::make_shared<VoidValue>(); }
 		operator std::string() override { return "void"; }
+		std::string compile() const override { return "0"; }
 	};
 
 	struct StructValue: public Value {
@@ -150,6 +162,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Struct; }
 		ValuePtr copy() const override;
 		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Struct)"; }
 	};
 
 	struct ArrayValue: public Value {
@@ -159,6 +172,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Array; }
 		ValuePtr copy() const override;
 		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Array)"; }
 	};
 
 	struct CStringValue: public Value {
@@ -170,6 +184,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
 		// Replaces LLVM-style escapes (e.g., "\1B") with WASM-style escapes (e.g., "\x1B").
 		std::string reescape() const;
+		std::string compile() const override { return "\"" + *value + "\""; }
 	};
 
 	struct ZeroinitializerValue: public Value {
@@ -177,6 +192,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Zeroinitializer; }
 		ValuePtr copy() const override { return std::make_shared<ZeroinitializerValue>(); }
 		operator std::string() override { return "zeroinitializer"; }
+		std::string compile() const override { return "0"; }
 	};
 
 	struct UndefValue: public Value {
@@ -184,6 +200,7 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Undef; }
 		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }
 		operator std::string() override { return "undef"; }
+		std::string compile() const override { return "0"; }
 	};
 
 	ValuePtr getValue(ASTNode *);

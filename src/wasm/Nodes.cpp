@@ -78,6 +78,7 @@
 #include "instruction/PageInstruction.h"
 #include "instruction/SetptIInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/Label.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -156,6 +157,22 @@ namespace LL2W {
 
 	WASMImmediateNode::operator std::string() const {
 		return toString(imm);
+	}
+
+	WASMLabelNode::WASMLabelNode(ASTNode *label_): WASMInstructionNode(WASM_LABEL), label(label_->lexerInfo) {
+		delete label_;
+	}
+
+	std::string WASMLabelNode::debugExtra() const {
+		return cyan("@") + "\e[38;5;202m" + *label + "\e[39m";
+	}
+
+	WASMLabelNode::operator std::string() const {
+		return "@" + *label;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMLabelNode::convert(Function &, VarMap &) {
+		return std::make_unique<Label>(*label);
 	}
 
 	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
