@@ -6,7 +6,7 @@ void (*table[])() = {pagefault};
 void strprint(const char *str);
 
 void prd(long x) {
-	asm("<prd $0>" :: "r"(x));
+	asm("<prd %0>" :: "r"(x));
 }
 
 int main() {
@@ -25,11 +25,12 @@ void strprint(const char *str) {
 		@_strprint_loop          \
 		[%0] -> $ma /b           \
 		: _strprint_print if $ma \
-		: $rt                    \
+		: _strprint_done         \
 		@_strprint_print         \
 		<prc $ma>                \
 		%0 + 1 -> %0             \
-		: _strprint_loop" :: "r"(str));
+		: _strprint_loop         \
+		@_strprint_done" :: "r"(str));
 
 	// 	@_strprint_loop
 	// 		[$a0] -> $ma /b
