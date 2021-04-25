@@ -12,7 +12,7 @@
 namespace LL2W {
 	FunctionHeader::FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv,
 	                               N _retattrs, N type, N function_name, N function_args, N unnamed_addr, N _fnattrs,
-	                               N _align, N _personality):
+	                               N _section, N _comdat, N _align, N _personality):
 	ASTNode(llvmParser, LLVM_FUNCTION_HEADER, function_name->lexerInfo),
 	arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
@@ -118,6 +118,19 @@ namespace LL2W {
 			delete _fnattrs;
 		} else {
 			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(parser->getName(_fnattrs->symbol)));
+		}
+
+		if (_section) {
+			section = _section->at(0)->lexerInfo;
+			delete _section;
+		}
+
+		if (_comdat) {
+			if (_comdat->empty())
+				comdat = name;
+			else
+				comdat = _comdat->at(0)->lexerInfo;
+			delete _comdat;
 		}
 
 		if (_align) {

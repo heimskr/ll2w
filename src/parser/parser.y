@@ -53,11 +53,13 @@ using AN = LL2W::ASTNode;
     LL2W::llvmParser.root = new LL2W::ASTNode(LL2W::llvmParser, LLVMTOK_ROOT, {0, 0}, "");
 }
 
-%token LLVMTOK_ROOT LLVMTOK_STRING LLVMTOK_PERCENTID LLVMTOK_INTTYPE LLVMTOK_DECIMAL LLVMTOK_FLOATING LLVMTOK_IDENT LLVMTOK_METABANG LLVMTOK_PARATTR
-%token LLVMTOK_METADATA LLVMTOK_CSTRING LLVMTOK_PVAR LLVMTOK_GVAR LLVMTOK_FLOATTYPE LLVMTOK_DLLPORT LLVMTOK_BOOL LLVMTOK_RETATTR LLVMTOK_UNNAMED_ADDR_TYPE
-%token LLVMTOK_DEREF LLVMTOK_LINKAGE LLVMTOK_FNATTR_BASIC LLVMTOK_CCONV LLVMTOK_VISIBILITY LLVMTOK_FASTMATH LLVMTOK_STRUCTVAR LLVMTOK_CLASSVAR
-%token LLVMTOK_UNIONVAR LLVMTOK_INTBANG LLVMTOK_ORDERING LLVMTOK_ICMP_COND LLVMTOK_LABEL_COMMENT LLVMTOK_PREDS_COMMENT LLVMTOK_TAIL LLVMTOK_CONV_OP
-%token LLVMTOK_DIV LLVMTOK_REM LLVMTOK_LOGIC LLVMTOK_SHR LLVMTOK_FMATH LLVMTOK_SIMPLE_LABEL LLVMTOK_NO_PREDS LLVMTOK_HEXADECIMAL
+%token LLVMTOK_ROOT LLVMTOK_STRING LLVMTOK_PERCENTID LLVMTOK_INTTYPE LLVMTOK_DECIMAL LLVMTOK_FLOATING LLVMTOK_IDENT
+%token LLVMTOK_METABANG LLVMTOK_PARATTR LLVMTOK_METADATA LLVMTOK_CSTRING LLVMTOK_PVAR LLVMTOK_GVAR LLVMTOK_FLOATTYPE
+%token LLVMTOK_DLLPORT LLVMTOK_BOOL LLVMTOK_RETATTR LLVMTOK_UNNAMED_ADDR_TYPE LLVMTOK_DEREF LLVMTOK_LINKAGE
+%token LLVMTOK_FNATTR_BASIC LLVMTOK_CCONV LLVMTOK_VISIBILITY LLVMTOK_FASTMATH LLVMTOK_STRUCTVAR LLVMTOK_CLASSVAR
+%token LLVMTOK_UNIONVAR LLVMTOK_INTBANG LLVMTOK_ORDERING LLVMTOK_ICMP_COND LLVMTOK_LABEL_COMMENT LLVMTOK_PREDS_COMMENT
+%token LLVMTOK_TAIL LLVMTOK_CONV_OP LLVMTOK_DIV LLVMTOK_REM LLVMTOK_LOGIC LLVMTOK_SHR LLVMTOK_FMATH LLVMTOK_SIMPLE_LABEL
+%token LLVMTOK_NO_PREDS LLVMTOK_HEXADECIMAL LLVMTOK_COMDATTYPE
 %token LLVMTOK_SOURCE_FILENAME "source_filename"
 %token LLVMTOK_BANG "!"
 %token LLVMTOK_EQUALS "="
@@ -193,6 +195,7 @@ program: program source_filename { $1->adopt($2); }
        | program struct_def      { $1->adopt($2); }
        | program declaration     { $1->adopt($2); }
        | program function_def    { $1->adopt($2); }
+       | program comdat_def      { $1->adopt($2); }
        | { $$ = LL2W::llvmParser.root; };
 
 declaration: "declare" function_header { $1->adopt($2); };
@@ -246,9 +249,13 @@ metadata_listitem: "!" LLVMTOK_STRING { D($1); $$ = $2; } | metabang | constant 
 metadata_distinct: "distinct" { $$ = new AN(llvmParser, LLVMTOK_DISTINCT, "distinct"); }
                  |            { $$ = nullptr; };
 
-metabang: LLVMTOK_METABANG | LLVMTOK_INTBANG { $1->symbol = LLVMTOK_METABANG; };
+metabang: LLVMTOK_METABANG
+        | LLVMTOK_INTBANG  { $1->symbol = LLVMTOK_METABANG; };
 
-ident: LLVMTOK_IDENT | LLVMTOK_DECIMAL { $1->symbol = LLVMTOK_IDENT; } | LLVMTOK_HEXADECIMAL { $1->symbol = LLVMTOK_IDENT; };
+ident: LLVMTOK_IDENT
+     | LLVMTOK_DECIMAL     { $1->symbol = LLVMTOK_IDENT; }
+     | LLVMTOK_HEXADECIMAL { $1->symbol = LLVMTOK_IDENT; }
+     | LLVMTOK_COMDATTYPE  { $1->symbol = LLVMTOK_IDENT; };
 
 value: LLVMTOK_FLOATING | LLVMTOK_HEXADECIMAL | LLVMTOK_DECIMAL | LLVMTOK_BOOL | vector | variable | struct | array | getelementptr_expr
      | conversion_expr | "null" | "zeroinitializer" | "undef";
@@ -266,6 +273,8 @@ bare_array: "[" value_pairs "]" { $$ = $2; D($1, $3); };
 array: full_array;
 
 fastmath_flags: fastmath_flags LLVMTOK_FASTMATH { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_FASTMATH_FLAGS); };
+
+comdat_def: LLVMTOK_IDENT "=" "comdat" LLVMTOK_COMDATTYPE { $$ = $3->adopt({$1, $4}); D($2); };
 
 
 
@@ -306,7 +315,7 @@ _externally_initialized: LLVMTOK_EXTERNALLY_INITIALIZED | { $$ = nullptr; };
 global_or_constant: "global" | "constant";
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
-           | gdef_extras "," LLVMTOK_ALIGN LLVMTOK_DECIMAL   { $$ = $1->adopt($3->adopt($4)); D($2); }
+           | gdef_extras "," LLVMTOK_ALIGN LLVMTOK_DECIMAL { $$ = $1->adopt($3->adopt($4)); D($2); }
            | { $$ = new AN(llvmParser, LLVM_GDEF_EXTRAS); };
 section: LLVMTOK_SECTION LLVMTOK_STRING       { $$ = $1->adopt($2); };
 comdat:  LLVMTOK_COMDAT "(" LLVMTOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
@@ -317,8 +326,8 @@ comdat:  LLVMTOK_COMDAT "(" LLVMTOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
 // Functions
 
 function_header: _linkage _preemption _visibility _dll_storage_class _cconv _retattrs type_any function_name "("
-                 function_args ")" _unnamed_addr _fnattrs _header_align _personality
-                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15); D($9, $11); };
+                 function_args ")" _unnamed_addr _fnattrs _header_section _header_comdat _header_align _personality
+                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15, $16, $17); D($9, $11); };
 _preemption: preemption | { $$ = nullptr; };
 preemption: "dso_preemptable" | "dso_local";
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_RETATTR_LIST); };
@@ -337,6 +346,8 @@ _unnamed_addr: LLVMTOK_UNNAMED_ADDR_TYPE | { $$ = nullptr; };
 _variable: LLVMTOK_PVAR | { $$ = nullptr; };
 variable: LLVMTOK_PVAR | LLVMTOK_GVAR;
 _personality: "personality" constant { $1->adopt($2); } | { $$ = nullptr; };
+_header_section: "section" LLVMTOK_STRING { $1->adopt($2); } | { $$ = nullptr; };
+_header_comdat:  "comdat"  LLVMTOK_IDENT  { $1->adopt($2); } | "comdat" | { $$ = nullptr; };
 
 function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(llvmParser, LLVM_FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_STATEMENTS); };

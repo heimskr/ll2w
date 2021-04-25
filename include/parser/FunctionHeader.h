@@ -26,10 +26,13 @@ namespace LL2W {
 		int align = -1;
 		int fnattrsIndex = -1; // When there's /#\d+/ instead of an inline list of function attributes
 		ConstantPtr personality;
+		const std::string *section = nullptr, *comdat = nullptr;
+
 		
 		using N = ASTNode *;
 		FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
-		               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _align, N _personality);
+		               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _section, N _comdat, N _align,
+		               N _personality);
 
 		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[38;5;202m"; }

@@ -669,7 +669,6 @@ namespace LL2W {
 	}
 
 	void Function::compile() {
-		info() << "Naked: " << std::boolalpha << isNaked() << "\n";
 		initialCompile();
 
 #ifdef DEBUG_SPILL

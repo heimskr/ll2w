@@ -68,6 +68,7 @@ LLVM_REM				("srem"|"urem")
 LLVM_LOGIC				("and"|"or"|"xor")
 LLVM_SHR				("lshr"|"ashr")
 LLVM_FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
+LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 
 %%
 
@@ -124,6 +125,7 @@ LLVM_FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 {LLVM_LOGIC}				{ LLVMRTOKEN(LOGIC) }
 {LLVM_SHR}					{ LLVMRTOKEN(SHR) }
 {LLVM_FMATH}				{ LLVMRTOKEN(FMATH) }
+{LLVM_COMDATTYPE}			{ LLVMRTOKEN(COMDATTYPE) }
 
 "!invariant.group"			{ LLVMRTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ LLVMRTOKEN(INVARIANT_LOAD) }
