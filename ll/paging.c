@@ -1,16 +1,20 @@
 
 void pagefault();
 
-void (*table[])() = {pagefault};
+void (*table[])() = {0, 0, 0, 0, pagefault, 0};
 
 void strprint(const char *str);
 
-void prd(long x) {
-	asm("<prd %0>" :: "r"(x));
+void __attribute__((naked)) prd(long x) {
+	asm("<prd $a0>");
 }
 
 int main() {
 	strprint("Hello, world!\n");
+	asm("rit table");
+	prd(*((volatile long *) 1));
+	strprint("\n");
+	asm("page on");
 	prd(*((volatile long *) 1));
 	strprint("\n");
 }
@@ -20,24 +24,15 @@ void pagefault() {
 	asm(": $e0");
 }
 
-void strprint(const char *str) {
+void __attribute__((naked)) strprint(const char *str) {
 	asm("                        \
 		@_strprint_loop          \
-		[%0] -> $ma /b           \
+		[$a0] -> $ma /b          \
 		: _strprint_print if $ma \
 		: _strprint_done         \
 		@_strprint_print         \
 		<prc $ma>                \
-		%0 + 1 -> %0             \
+		$a0 + 1 -> $a0           \
 		: _strprint_loop         \
-		@_strprint_done" :: "r"(str));
-
-	// 	@_strprint_loop
-	// 		[$a0] -> $ma /b
-	// 		: _strprint_print if $ma
-	// 		!done
-	// 		@_strprint_print
-	// 		<prc $ma>
-	// 		$a0++
-	// 		: _strprint_loop
+		@_strprint_done");
 }

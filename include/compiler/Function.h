@@ -293,6 +293,8 @@ namespace LL2W {
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
 
+			bool isNaked() const;
+
 			/** Finds a spill stack location for a variable. */
 			StackLocation & getSpill(VariablePtr);
 

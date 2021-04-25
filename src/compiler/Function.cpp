@@ -58,6 +58,7 @@
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "pass/RemoveRedundantMoves.h"
+#include "pass/RemoveUnreachable.h"
 #include "pass/RemoveUselessBranches.h"
 #include "pass/ReplaceConstants.h"
 #include "pass/ReplaceStoresAndLoads.h"
@@ -655,15 +656,20 @@ namespace LL2W {
 		Passes::mergeAllBlocks(*this);
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
-		Passes::insertPrologue(*this);
+		const bool naked = isNaked();
+		if (!naked)
+			Passes::insertPrologue(*this);
 		Passes::loadArgumentsReadjust(*this);
-		Passes::lowerRet(*this);
+		if (!naked)
+			Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
+		Passes::removeUnreachable(*this);
 		hackVariables();
 		finalDone = true;
 	}
 
 	void Function::compile() {
+		info() << "Naked: " << std::boolalpha << isNaked() << "\n";
 		initialCompile();
 
 #ifdef DEBUG_SPILL
@@ -1059,6 +1065,17 @@ namespace LL2W {
 		for (const std::pair<const int, StackLocation> &pair: stack)
 			std::cerr << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
 		std::cerr << "\n";
+	}
+
+	bool Function::isNaked() const {
+		const FunctionHeader *header = dynamic_cast<const FunctionHeader *>(astnode->children.front());
+		if (header->fnattrs.count(FnAttr::naked) != 0)
+			return true;
+		if (!parent) {
+			warn() << "Function::isNaked(): parent is null\n";
+			return false;
+		}
+		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable) {

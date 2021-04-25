@@ -43,6 +43,11 @@ namespace LL2W {
 						globals.emplace(*node->lexerInfo, global);
 					} else throw std::runtime_error("Node with token GLOBAL_DEF isn't an instance of GlobalVarDef");
 					break;
+				case LLVMTOK_ATTRIBUTES: {
+					AttributesNode *attrnode = dynamic_cast<AttributesNode *>(node);
+					fnattrs.emplace(attrnode->index, attrnode->basicAttributes);
+					break;
+				}
 			}
 		}
 	}
