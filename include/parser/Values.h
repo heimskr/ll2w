@@ -15,6 +15,7 @@ namespace LL2W {
 	class Type;
 	struct Constant;
 	class Variable;
+	class Function;
 
 	struct Value;
 	using ValuePtr = std::shared_ptr<Value>;
@@ -116,6 +117,7 @@ namespace LL2W {
 		ValuePtr copy() const override { return std::make_shared<LocalValue>(name); }
 		operator std::string() override;
 		std::string compile() const override { return "UNSUPPORTED (Local)"; }
+		std::shared_ptr<Variable> getVariable(Function &);
 	};
 
 	struct GlobalValue: public VariableValue {

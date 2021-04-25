@@ -6,6 +6,7 @@
 #include "compiler/Program.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/AddIInstruction.h"
+#include "instruction/LoadIInstruction.h"
 #include "instruction/LoadRInstruction.h"
 #include "instruction/LoadSymbolInstruction.h"
 #include "instruction/ModIInstruction.h"
@@ -18,6 +19,7 @@
 #include "instruction/SubRInstruction.h"
 #include "parser/Enums.h"
 #include "pass/LowerMemory.h"
+#include "util/Util.h"
 
 namespace LL2W::Passes {
 	int lowerMemory(Function &function) {
@@ -48,18 +50,32 @@ namespace LL2W::Passes {
 	void lowerLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		LoadNode *node = dynamic_cast<LoadNode *>(llvm.node);
 		const int size = getLoadStoreSize(node->constant);
-		const ValueType value_type = node->constant->value->valueType();
+		ConstantPtr converted = node->constant->convert();
+		if (!converted->value)
+			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
+		const ValueType value_type = converted->value->valueType();
 
 		if (value_type == ValueType::Local) {
-			LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
-			auto load = std::make_shared<LoadRInstruction>(local->variable, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory(load): [" + local->variable->plainString() + "] -> "
+			LocalValue *local = dynamic_cast<LocalValue *>(converted->value.get());
+			VariablePtr localvar = local->getVariable(function);
+			auto load = std::make_shared<LoadRInstruction>(localvar, node->variable, size);
+			function.insertBefore(instruction, load, "LowerMemory(load): [" + localvar->plainString() + "] -> "
 				+ node->variable->plainString());
 			load->extract();
 		} else if (value_type == ValueType::Global) {
-			GlobalValue *global = dynamic_cast<GlobalValue *>(node->constant->value.get());
+			GlobalValue *global = dynamic_cast<GlobalValue *>(converted->value.get());
 			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
 			function.insertBefore(instruction, load, "LowerMemory(load): [global] -> %var");
+			load->extract();
+		} else if (value_type == ValueType::Null) { // In case you're feeling silly.
+			auto load = std::make_shared<LoadIInstruction>(0, node->variable, size);
+			function.insertBefore(instruction, load, "LowerMemory(load): [null] -> %var");
+			load->extract();
+		} else if (value_type == ValueType::Int) {
+			IntValue *intval = dynamic_cast<IntValue *>(converted->value.get());
+			auto load = std::make_shared<LoadIInstruction>(intval->value, node->variable, size);
+			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval->value) +
+				"] -> %var");
 			load->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}

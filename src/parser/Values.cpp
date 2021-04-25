@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "compiler/Function.h"
 #include "compiler/Variable.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
@@ -72,6 +73,12 @@ namespace LL2W {
 
 	LocalValue::operator std::string() {
 		return "\e[32m" + (variable? std::string(*variable) : "%" + *name) + "\e[39m";
+	}
+
+	std::shared_ptr<Variable> LocalValue::getVariable(Function &function) {
+		if (variable)
+			return variable;
+		return function.getVariable(*name);
 	}
 
 	GlobalValue::GlobalValue(const ASTNode *node): VariableValue(nullptr) {

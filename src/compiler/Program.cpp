@@ -3,7 +3,7 @@
 #include <thread>
 
 // #define COMPILE_MULTITHREADED
-#define HIDE_PRINTS
+// #define HIDE_PRINTS
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"

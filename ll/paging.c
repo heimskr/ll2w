@@ -5,6 +5,16 @@ void (*table[])() = {pagefault};
 
 void strprint(const char *str);
 
+void prd(long x) {
+	asm("<prd $0>" :: "r"(x));
+}
+
+int main() {
+	strprint("Hello, world!\n");
+	prd(*((volatile long *) 1));
+	strprint("\n");
+}
+
 void pagefault() {
 	strprint("Page fault!");
 	asm(": $e0");

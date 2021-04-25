@@ -29,6 +29,8 @@ namespace LL2W {
 		Constant(const ASTNode *);
 
 		ConstantPtr copy() const;
+		/** Applies ptrtoint/inttoptr conversions and returns a new Constant. */
+		ConstantPtr convert() const;
 		operator std::string() const;
 	};
 

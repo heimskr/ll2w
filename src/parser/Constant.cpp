@@ -4,6 +4,7 @@
 #include "parser/ASTNode.h"
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Constant::Constant(TypePtr type_, ValuePtr value_, const ParAttrs &parattrs_, Conversion conversion_,
@@ -47,6 +48,19 @@ namespace LL2W {
 	ConstantPtr Constant::copy() const {
 		return std::make_shared<Constant>(type->copy(), value->copy(), parattrs, conversion,
 			conversionSource? conversionSource->copy() : nullptr, conversionType? conversionType->copy() : nullptr);
+	}
+
+	ConstantPtr Constant::convert() const {
+		if (value)
+			return copy();
+		if (!conversionSource)
+			throw std::runtime_error("Constant has neither a value nor a conversion source in Constant::convert()");
+		if (conversion != Conversion::Ptrtoint && conversion != Conversion::Inttoptr)
+			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map[conversion]);
+		if (!conversionSource->value)
+			throw std::runtime_error("Conversion source has no value in Constant::convert()");
+		return std::make_shared<Constant>(conversionType->copy(), conversionSource->value->copy(), parattrs,
+			Conversion::None, nullptr, nullptr);
 	}
 
 	Constant::operator std::string() const {
