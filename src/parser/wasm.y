@@ -130,7 +130,7 @@ using AN = LL2W::ASTNode;
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE
 
 %start start
 
@@ -149,7 +149,8 @@ endop: "\n" | ";";
 operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_l    | op_s    | op_set   | op_divii
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
-         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | label;
+         | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | label
+         | op_svpg;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -248,6 +249,8 @@ op_page: "page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
        | "page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
 op_setpt: "setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
+
+op_svpg: "page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident;

@@ -80,6 +80,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/Label.h"
 #include "instruction/SetptRInstruction.h"
+#include "instruction/SvpgInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1070,5 +1071,23 @@ namespace LL2W {
 	std::unique_ptr<WhyInstruction> WASMMvNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
 		return std::make_unique<MoveInstruction>(conv(rs), conv(rd));
+	}
+
+	WASMSvpgNode::WASMSvpgNode(ASTNode *rd_):
+	WASMInstructionNode(WASM_SVPGNODE), rd(rd_->lexerInfo) {
+		delete rd_;
+	}
+
+	std::string WASMSvpgNode::debugExtra() const {
+		return blue("page") + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMSvpgNode::operator std::string() const {
+		return "page -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSvpgNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+		return std::make_unique<SvpgInstruction>(conv(rd));
 	}
 }
