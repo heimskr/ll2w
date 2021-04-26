@@ -77,6 +77,12 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval->value) +
 				"] -> %var");
 			load->extract();
+		} else if (value_type == ValueType::Bool) {
+			BoolValue *boolval = dynamic_cast<BoolValue *>(converted->value.get());
+			auto load = std::make_shared<LoadIInstruction>(boolval->value? 1 : 0, node->variable, size);
+			function.insertBefore(instruction, load, "LowerMemory(load): [bool " + std::to_string(boolval->value? 1 : 0)
+				+ "] -> %var");
+			load->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
 
@@ -91,10 +97,10 @@ namespace LL2W::Passes {
 		const int size = getLoadStoreSize(node->constant);
 		const ValueType value_type = node->value->valueType();
 
-		if (value_type == ValueType::Int || value_type == ValueType::Null) {
+		if (value_type == ValueType::Int || value_type == ValueType::Null || value_type == ValueType::Bool) {
 			int int_value = 0;
-			if (value_type == ValueType::Int)
-				int_value = dynamic_cast<IntValue *>(node->value.get())->value;
+			if (value_type == ValueType::Int || value_type == ValueType::Bool)
+				int_value = node->value->intValue();
 			if (local) {
 				auto m1 = function.mx(1, instruction);
 				// Because there's no single instruction of the form imm -> [$reg], we have to use a set+store pair.
@@ -153,6 +159,9 @@ namespace LL2W::Passes {
 
 		Type *subtype = constant_ptr->subtype.get();
 		if (IntType *constant_int = dynamic_cast<IntType *>(subtype)) {
+			const int width = constant_int->width();
+			if (width < 8)
+				return 1;
 			return constant_int->width() / 8;
 		} else if (dynamic_cast<PointerType *>(subtype) || dynamic_cast<FunctionType *>(subtype)) {
 			return WhyInfo::pointerWidth;

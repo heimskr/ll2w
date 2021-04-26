@@ -12,7 +12,7 @@ namespace LL2W {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label
+		Page, SetptI, Label, SetptR
 	};
 
 	class WhyInstruction;
@@ -445,6 +445,16 @@ namespace LL2W {
 
 		WASMSetptINode(ASTNode *imm_);
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptI; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMSetptRNode: public WASMInstructionNode {
+		const std::string *rs;
+
+		WASMSetptRNode(ASTNode *rs_);
+		WASMNodeType nodeType() const override { return WASMNodeType::SetptR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;

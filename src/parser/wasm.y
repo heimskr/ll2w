@@ -130,6 +130,7 @@ using AN = LL2W::ASTNode;
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
+%token WASM_SETPTRNODE
 
 %start start
 
@@ -246,7 +247,7 @@ op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 op_page: "page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
        | "page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
-op_setpt: "setpt" immediate { $$ = new WASMSetptINode($2); D($1); };
+op_setpt: "setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident;

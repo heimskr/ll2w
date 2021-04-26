@@ -79,6 +79,7 @@
 #include "instruction/SetptIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/Label.h"
+#include "instruction/SetptRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1034,6 +1035,22 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMSetptINode::convert(Function &, VarMap &) {
 		return std::make_unique<SetptIInstruction>(imm);
+	}
+
+	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_): WASMInstructionNode(WASM_SETPTRNODE), rs(rs_->lexerInfo) {
+		delete rs_;
+	}
+
+	std::string WASMSetptRNode::debugExtra() const {
+		return blue("setpt") + " " + cyan(*rs);
+	}
+
+	WASMSetptRNode::operator std::string() const {
+		return "setpt " + *rs;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSetptRNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<SetptRInstruction>(convertVariable(function, map, rs));
 	}
 
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):
