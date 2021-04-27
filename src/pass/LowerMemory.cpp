@@ -49,10 +49,10 @@ namespace LL2W::Passes {
 
 	void lowerLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		LoadNode *node = dynamic_cast<LoadNode *>(llvm.node);
-		const int size = getLoadStoreSize(node->constant);
 		ConstantPtr converted = node->constant->convert();
 		if (!converted->value)
 			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
+		const int size = getLoadStoreSize(converted);
 		const ValueType value_type = converted->value->valueType();
 
 		if (value_type == ValueType::Local) {
@@ -89,12 +89,19 @@ namespace LL2W::Passes {
 	void lowerStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
 
-		LocalValue *local = dynamic_cast<LocalValue *>(node->constant->value.get());
-		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(node->constant->value.get());
-		if (!local && !global)
-			throw std::runtime_error("Expected a LocalValue or GlobalValue in the constant of a store instruction");
+		ConstantPtr converted = node->constant->convert();
+		if (!converted->value)
+			throw std::runtime_error("Constant lacks value in lowerStore: " + std::string(*converted));
 
-		const int size = getLoadStoreSize(node->constant);
+		LocalValue *local = dynamic_cast<LocalValue *>(converted->value.get());
+		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(converted->value.get());
+		if (!local && !global && !converted->value->isIntLike()) {
+			error() << std::string(*node->constant) << "\n";
+			throw std::runtime_error("Expected a LocalValue, GlobalValue or intlike in the constant of a store "
+				"instruction");
+		}
+
+		const int size = getLoadStoreSize(converted);
 		const ValueType value_type = node->value->valueType();
 
 		if (value_type == ValueType::Int || value_type == ValueType::Null || value_type == ValueType::Bool) {
@@ -103,17 +110,17 @@ namespace LL2W::Passes {
 				int_value = node->value->intValue();
 			if (local) {
 				auto m1 = function.mx(1, instruction);
+				auto lvar = local->getVariable(function);
 				// Because there's no single instruction of the form imm -> [$reg], we have to use a set+store pair.
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
 				// $m1 -> [%var]
-				auto store = std::make_shared<StoreRInstruction>(m1, local->variable, size);
+				auto store = std::make_shared<StoreRInstruction>(m1, lvar, size);
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
-				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [" + local->variable->plainString() +
-					"]");
+				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [" + lvar->plainString() + "]");
 				set->extract();
 				store->extract();
-			} else {
+			} else if (global) {
 				auto m1 = function.mx(1, instruction->parent.lock());
 				// In this case, it would be impossible for there to be a single instruction for what we're trying to do
 				// because there are two immediate values. As such, we use two instructions by necessity.
@@ -132,21 +139,41 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [global]");
 				set->extract();
 				store->extract();
+			} else if (converted->value->isIntLike()) {
+				auto m1 = function.mx(1, instruction->parent.lock());
+				const int intptr = converted->value->intValue();
+				// imm -> $m1
+				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				// $m1 -> [intptr]
+				auto store = std::make_shared<StoreIInstruction>(m1, intptr, size);
+				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
+				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [" + std::to_string(intptr) + "]");
+				set->extract();
+				store->extract();
 			}
 		} else if (value_type == ValueType::Local) {
 			LocalValue *source = dynamic_cast<LocalValue *>(node->value.get());
 			if (local) {
+				auto lvar = local->getVariable(function);
 				// %src -> [%dest]
-				auto store = std::make_shared<StoreRInstruction>(source->variable, local->variable, size);
+				auto store = std::make_shared<StoreRInstruction>(source->variable, lvar, size);
 				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() + " -> [" +
-					local->variable->plainString() + "]");
+					lvar->plainString() + "]");
 				store->extract();
-			} else {
+			} else if (global) {
 				// %src -> [global]
-				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name,
-					function.parent->symbolSize("@" + *global->name) / 8);
+				int symsize = function.parent->symbolSize("@" + *global->name);
+				symsize = symsize / 8 + (symsize % 8? 1 : 0);
+				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name, symsize);
 				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() +
 					" -> [global]");
+				store->extract();
+			} else if (converted->value->isIntLike()) {
+				const int intptr = converted->value->intValue();
+				// %src -> [intptr]
+				auto store = std::make_shared<StoreIInstruction>(source->variable, intptr, size);
+				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() + " -> [" +
+					std::to_string(intptr) + "]");
 				store->extract();
 			}
 		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
