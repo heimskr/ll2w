@@ -394,8 +394,8 @@ _align: align | { $$ = nullptr; };
 align: "," "align" LLVMTOK_DECIMAL { $$ = $3; D($1, $2); };
 _alloca_addrspace: "," "addrspace" "(" LLVMTOK_DECIMAL ")" { $$ = $4; D($1, $2, $3, $5); } | { $$ = nullptr; };
 
-i_store: "store" _volatile type_any operand "," constant _align store_bangs
-         { $$ = (new StoreNode($2, $3, $4, $6, $7, $8))->locate($1); D($1, $5); };
+i_store: "store" _volatile constant "," constant _align store_bangs
+         { $$ = (new StoreNode($2, $3, $5, $6, $7))->locate($1); D($1, $4); };
 _volatile: LLVMTOK_VOLATILE | { $$ = nullptr; };
 store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); } | store_bangs tbaa    { $$ = $1->adopt($2); }
            | store_bangs nontemporal     { $$ = $1->adopt($2); } | store_bangs unibang { $$ = $1->adopt($2); }
@@ -404,8 +404,8 @@ nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
 tbaa: "," "!tbaa" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
-i_store_atomic: "store" "atomic" _volatile type_any operand "," constant _syncscope LLVMTOK_ORDERING _align store_bangs
-                { $$ = (new StoreNode($3, $4, $5, $7, $8, $9, $10, $11))->locate($1); D($1, $2, $6); };
+i_store_atomic: "store" "atomic" _volatile constant "," constant _syncscope LLVMTOK_ORDERING _align store_bangs
+                { $$ = (new StoreNode($3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $2, $5); };
 _syncscope: "syncscope" "(" LLVMTOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $$ = nullptr; };
 
 i_load: result "load" _volatile type_any "," constant _align load_bangs

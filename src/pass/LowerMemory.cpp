@@ -89,25 +89,26 @@ namespace LL2W::Passes {
 	void lowerStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
 
-		ConstantPtr converted = node->constant->convert();
+		ConstantPtr converted = node->destination->convert();
 		if (!converted->value)
 			throw std::runtime_error("Constant lacks value in lowerStore: " + std::string(*converted));
 
 		LocalValue *local = dynamic_cast<LocalValue *>(converted->value.get());
 		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(converted->value.get());
 		if (!local && !global && !converted->value->isIntLike()) {
-			error() << std::string(*node->constant) << "\n";
+			error() << std::string(*node->destination) << "\n";
 			throw std::runtime_error("Expected a LocalValue, GlobalValue or intlike in the constant of a store "
 				"instruction");
 		}
 
 		const int size = getLoadStoreSize(converted);
-		const ValueType value_type = node->value->valueType();
+		ValuePtr source_value = node->source->convert()->value;
+		const ValueType value_type = source_value->valueType();
 
 		if (value_type == ValueType::Int || value_type == ValueType::Null || value_type == ValueType::Bool) {
 			int int_value = 0;
 			if (value_type == ValueType::Int || value_type == ValueType::Bool)
-				int_value = node->value->intValue();
+				int_value = source_value->intValue();
 			if (local) {
 				auto m1 = function.mx(1, instruction);
 				auto lvar = local->getVariable(function);
@@ -152,7 +153,7 @@ namespace LL2W::Passes {
 				store->extract();
 			}
 		} else if (value_type == ValueType::Local) {
-			LocalValue *source = dynamic_cast<LocalValue *>(node->value.get());
+			LocalValue *source = dynamic_cast<LocalValue *>(source_value.get());
 			if (local) {
 				auto lvar = local->getVariable(function);
 				// %src -> [%dest]

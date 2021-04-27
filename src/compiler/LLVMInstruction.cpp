@@ -58,8 +58,9 @@ namespace LL2W {
 
 			case NodeType::Store: {
 				CAST(StoreNode);
-				IFLV(cast->value, cast->type);
-				IFLV(cast->constant->value, cast->constant->type);
+				// TODO: what if source is a conversion?
+				IFLV(cast->source->value, cast->source->type);
+				IFLV(cast->destination->value, cast->destination->type);
 				break;
 			}
 

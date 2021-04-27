@@ -227,16 +227,14 @@ namespace LL2W {
 
 // StoreNode
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_,
 	                     ASTNode *bangs) {
 		atomic = false;
-		type = getType(type_);
-		value = getValue(value_);
-		constant = std::make_shared<Constant>(constant_);
+		source = std::make_shared<Constant>(source_);
+		destination = std::make_shared<Constant>(destination_);
 
-		delete type_;
-		delete value_;
-		delete constant_;
+		delete source_;
+		delete destination_;
 
 		if (volatile__) {
 			volatile_ = true;
@@ -251,12 +249,11 @@ namespace LL2W {
 		handleBangs(bangs);
 	}
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_,
 	                     ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		atomic = true;
-		type = getType(type_);
-		value = getValue(value_);
-		constant = std::make_shared<Constant>(constant_);
+		source = std::make_shared<Constant>(source_);
+		destination = std::make_shared<Constant>(destination_);
 		align = align_->atoi();
 		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
@@ -265,9 +262,8 @@ namespace LL2W {
 			}
 		}
 
-		delete type_;
-		delete value_;
-		delete constant_;
+		delete source_;
+		delete destination_;
 		delete ordering_;
 		delete align_;
 
@@ -305,7 +301,7 @@ namespace LL2W {
 			out << " \e[38;5;202matomic\e[0m";
 		if (volatile_)
 			out << " \e[38;5;202mvolatile\e[0m";
-		out << "\e[0m " << *type << " " << *value << "\e[2m,\e[0m " << *constant;
+		out << "\e[0m " << *source << "\e[2m,\e[0m " << *destination;
 		if (syncscope)
 			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
 		if (align != -1)
@@ -315,6 +311,18 @@ namespace LL2W {
 		if (invariantGroupIndex != -1)
 			out << "\e[2m,\e[0;34m !invariant.group \e[0m" << invariantGroupIndex;
 		return out.str();
+	}
+
+	std::vector<ValuePtr> StoreNode::allValues() const {
+		return {source->convert()->value, destination->convert()->value};
+	}
+
+	std::vector<ValuePtr *> StoreNode::allValuePointers() {
+		if (!cachedSourceValue)
+			cachedSourceValue = source->convert()->value;
+		if (!cachedDestinationValue)
+			cachedDestinationValue = destination->convert()->value;
+		return {&cachedSourceValue, &cachedDestinationValue};
 	}
 
 // LoadNode

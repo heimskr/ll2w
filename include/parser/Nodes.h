@@ -114,25 +114,23 @@ namespace LL2W {
 	class StoreNode: public InstructionNode, public Reader {
 		private:
 			void handleBangs(ASTNode *);
+			ValuePtr cachedSourceValue = nullptr, cachedDestinationValue = nullptr;
 
 		public:
 			bool volatile_ = false, atomic = false;
-			TypePtr type;
-			ValuePtr value;
-			ConstantPtr constant;
+			ConstantPtr source, destination;
 			int align = -1, nontemporalIndex = -1, invariantGroupIndex = -1, tbaa = -1;
 			const std::string *syncscope = nullptr;
 			Ordering ordering = Ordering::None;
 
-			StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *align_,
-					ASTNode *bangs);
-			StoreNode(ASTNode *volatile__, ASTNode *type_, ASTNode *value_, ASTNode *constant_, ASTNode *syncscope_,
+			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_, ASTNode *bangs);
+			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_,
 					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
 			std::string debugExtra() const override;
 			NodeType nodeType() const override { return NodeType::Store; }
-			std::vector<ValuePtr> allValues() const override { return {value, constant->value}; }
-			std::vector<ValuePtr *> allValuePointers() override { return {&value, &constant->value}; }
-			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
+			std::vector<ValuePtr> allValues() const override;
+			std::vector<ValuePtr *> allValuePointers() override;
+			std::vector<ConstantPtr> allConstants() const override { return {source, destination}; }
 	};
 
 	class LoadNode: public InstructionNode, public Writer, public Reader {
