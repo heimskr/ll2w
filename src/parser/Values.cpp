@@ -221,9 +221,19 @@ namespace LL2W {
 			case LLVMTOK_CSTRING:         return std::make_shared<CStringValue>(node);
 			case LLVMTOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
 			case LLVMTOK_UNDEF:           return std::make_shared<UndefValue>();
-			default: throw std::invalid_argument("Couldn't create Value from a node with symbol " +
-			                                     std::string(llvmParser.getName(node->symbol)));
+			case LLVM_CONVERSION_EXPR:    return convertConversion(node);
+			default:
+				node->debug();
+				throw std::invalid_argument("Couldn't create Value from a node with symbol " +
+			                                std::string(llvmParser.getName(node->symbol)));
 		}
+	}
+
+	ValuePtr convertConversion(ASTNode *node) {
+		// TODO: verify
+		if (node->at(0)->symbol == LLVM_CONSTANT)
+			return Constant(node->at(0)).convert()->value;
+		return getValue(node->at(0));
 	}
 
 	std::ostream & operator<<(std::ostream &os, Value &value) {

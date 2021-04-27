@@ -548,11 +548,12 @@ operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | L
 conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
                | LLVMTOK_CONV_OP "(" constant LLVMTOK_TO type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
-getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr variable decimal_pairs ")"
+getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: LLVMTOK_INBOUNDS | { $$ = nullptr; };
 decimal_pairs: decimal_pairs "," LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); }
              | { $$ = new AN(llvmParser, LLVM_DECIMAL_PAIR_LIST); };
+gepexpr_operand: variable | getelementptr_expr;
 
 %%
 
