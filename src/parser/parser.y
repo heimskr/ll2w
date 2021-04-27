@@ -8,6 +8,7 @@
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
 #include "parser/GlobalVarDef.h"
+#include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
 #include "parser/FunctionArgs.h"
 #include "parser/Nodes.h"
@@ -172,6 +173,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_EXACT "exact"
 %token LLVMTOK_DSO_LOCAL "dso_local"
 %token LLVMTOK_DSO_PREEMPTABLE "dso_preemptable"
+%token LLVMTOK_ALIAS "alias"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -179,7 +181,7 @@ using AN = LL2W::ASTNode;
 %token LLVM_FUNCTION_DEF LLVM_STATEMENTS LLVM_LABEL LLVM_INSTRUCTION LLVM_FASTMATH_FLAGS LLVM_VECTOR LLVM_METADATA_LIST
 %token LLVM_PREDS_LIST LLVM_FNTYPE LLVM_CONSTANT_LIST LLVM_GETELEMENTPTR_EXPR LLVM_DECIMAL_LIST LLVM_INDEX_LIST
 %token LLVM_STRUCT_VALUE LLVM_VALUE_LIST LLVM_ARRAY_VALUE LLVM_CLAUSES LLVM_GLOBAL_DEF LLVM_PHI_PAIR LLVM_SWITCH_LIST
-%token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS
+%token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF
 
 %start start
 
@@ -196,6 +198,7 @@ program: program source_filename { $1->adopt($2); }
        | program declaration     { $1->adopt($2); }
        | program function_def    { $1->adopt($2); }
        | program comdat_def      { $1->adopt($2); }
+       | program alias_def       { $1->adopt($2); }
        | { $$ = LL2W::llvmParser.root; };
 
 declaration: "declare" function_header { $1->adopt($2); };
@@ -286,8 +289,8 @@ type_array:  "[" LLVMTOK_DECIMAL "x" type_any    "]" { $$ = (new AN(llvmParser, 
 type_vector: "<" LLVMTOK_DECIMAL "x" vector_type ">" { $$ = (new AN(llvmParser, LLVM_VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: LLVMTOK_INTTYPE | type_ptr | LLVMTOK_FLOATTYPE;
 type_ptr: type_any "*" { $$ = (new AN(llvmParser, LLVM_POINTERTYPE, "*"))->adopt($1); D($2); };
-type_function: type_any "(" types extra_ellipsis ")" "*" { $$ = (new AN(llvmParser, LLVM_FUNCTIONTYPE))->adopt({$1, $3, $4}); D($2, $5, $6); }
-             | type_any "("            _ellipsis ")" "*" { $$ = (new AN(llvmParser, LLVM_FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4, $5); };
+type_function: type_any "(" types extra_ellipsis ")" { $$ = (new AN(llvmParser, LLVM_FUNCTIONTYPE))->adopt({$1, $3, $4}); D($2, $5); }
+             | type_any "("            _ellipsis ")" { $$ = (new AN(llvmParser, LLVM_FUNCTIONTYPE))->adopt({$1, $3});     D($2, $4); };
 type_struct: "{" types "}"         { $$ = new StructNode(StructShape::Default, $2); D($1, $3);         }
            | "<" "{" types "}" ">" { $$ = new StructNode(StructShape::Packed,  $3); D($1, $2, $4, $5); };
 types: types "," type_any { $$ = $1->adopt($3); D($2); }
@@ -358,6 +361,15 @@ bb_header: LLVMTOK_LABEL_COMMENT LLVMTOK_DECIMAL LLVMTOK_PREDS_COMMENT preds_lis
          | LLVMTOK_SIMPLE_LABEL LLVMTOK_NO_PREDS { $$ = new HeaderNode($1); D($2); };
 preds_list: preds_list LLVMTOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(llvmParser, LLVM_PREDS_LIST); };
+
+
+
+// Aliases
+
+alias_def: LLVMTOK_GVAR "=" _alias_linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr
+           "alias" type_any "," type_ptr LLVMTOK_GVAR
+           { $$ = new AliasDef($1, $3, $4, $5, $6, $7, $8, $10, $12, $13); D($2, $9, $11); };
+_alias_linkage: "private" | "internal" | "linkonce" | "weak" | "linkonce_odr" | "weak_odr" | "external" | { $$ = nullptr; };
 
 
 

@@ -32,6 +32,6 @@ namespace LL2W {
 		             N gdef_extras_);
 
 		std::string debugExtra() const override;
-		virtual std::string style() const override { return "\e[32m"; }
+		std::string style() const override { return "\e[32m"; }
 	};
 }

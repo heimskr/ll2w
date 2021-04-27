@@ -48,6 +48,10 @@ namespace LL2W {
 					fnattrs.emplace(attrnode->index, attrnode->basicAttributes);
 					break;
 				}
+				case LLVM_ALIAS_DEF: {
+					node->debug();
+					break;
+				}
 			}
 		}
 	}

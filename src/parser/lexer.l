@@ -239,6 +239,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "exact"						{ LLVMRTOKEN(EXACT) }
 "dso_local"					{ LLVMRTOKEN(DSO_LOCAL) }
 "dso_preemptable"			{ LLVMRTOKEN(DSO_PREEMPTABLE) }
+"alias"						{ LLVMRTOKEN(ALIAS) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 

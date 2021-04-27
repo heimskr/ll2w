@@ -1,16 +1,15 @@
-#include <iostream>
-#include <cstdlib>
 #include <sstream>
 
-#include "parser/GlobalVarDef.h"
+#include "parser/AliasDef.h"
 #include "parser/Parser.h"
+#include "parser/Lexer.h"
 
 namespace LL2W {
-	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
-	                           ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr,
-	                           ASTNode *addrspace_, ASTNode *externally_initialized, ASTNode *global_or_constant,
-	                           ASTNode *type_or_constant, ASTNode *gdef_extras):
-	                           ASTNode(llvmParser, LLVM_GLOBAL_DEF, gvar->lexerInfo) {
+	AliasDef::AliasDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
+	                   ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *type_,
+	                   ASTNode *ptr_type, ASTNode *alias_to):
+	ASTNode(llvmParser, LLVM_ALIAS_DEF, gvar->lexerInfo) {
+		name = gvar->lexerInfo;
 		delete gvar;
 
 		if (linkage_) {
@@ -65,50 +64,19 @@ namespace LL2W {
 			delete unnamed_addr;
 		}
 
-		if (addrspace_) {
-			addrspace = addrspace_->children.front()->atoi();
-			delete addrspace_;
-		}
+		type = getType(type_);
+		delete type_;
 
-		if (externally_initialized) {
-			externallyInitialized = true;
-			delete externally_initialized;
-		}
+		ptrType = getType(ptr_type);
+		delete ptr_type;
 
-		if (global_or_constant) {
-			isConstant = *global_or_constant->lexerInfo == "constant";
-			delete global_or_constant;
-		}
-
-		if (type_or_constant->symbol == LLVM_CONSTANT)
-			constant = std::make_shared<Constant>(type_or_constant);
-		else
-			type = getType(type_or_constant);
-		delete type_or_constant;
-
-		for (ASTNode *extra: *gdef_extras) {
-			if (extra->symbol == LLVMTOK_SECTION) {
-				section = extra->at(0)->lexerInfo;
-			} else if (extra->symbol == LLVMTOK_COMDAT) {
-				const std::string *str = extra->at(0)->lexerInfo;
-				if (str->empty() || str->front() != '$')
-					llvmerror("Comdat expected to begin with \"$\"");
-				comdat = str;
-			} else if (!extra) {
-				std::cout << "\e[91m!extra\e[0m\n";
-			} else {
-				// TODO
-				// std::cout << "[" << Parser::getName(extra->symbol) << "]\n";
-				// extra->debug();
-			}
-		}
-		delete gdef_extras;
+		aliasTo = alias_to->lexerInfo;
+		delete alias_to;
 	}
 
-	std::string GlobalVarDef::debugExtra() const {
+	std::string AliasDef::debugExtra() const {
 		std::stringstream out;
-		out << "\e[36m";
-
+		out << " =";
 		if (linkage != Linkage::Default)
 			out << " " << linkage_map.at(linkage);
 		switch (visibility) {
@@ -132,20 +100,7 @@ namespace LL2W {
 			case UnnamedAddr::LocalUnnamed: out << " local_unnamed_addr"; break;
 			default:;
 		}
-		if (addrspace != -1)
-			out << " addrspace(" << addrspace << ")";
-		if (externallyInitialized)
-			out << " externally_initialized";
-		out << (isConstant? " constant" : " global");
-		// out << "\e[0m " << std::string(*type);
-		if (constant)
-			out << " " << std::string(*constant);
-		else
-			out << " " << std::string(*type);
-		// if (initialValue) {
-		// 	if (initialValue->symbol == TOK_CSTRING)
-		// 		out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
-		// }
+		out << " " << std::string(*type) << ", " << std::string(*ptrType) << " \e[36m" << *aliasTo << "\e[39m";
 		return out.str();
 	}
 }
