@@ -6,6 +6,7 @@
 #include "instruction/AddRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "pass/LowerGetelementptr.h"
 #include "util/Util.h"
 
@@ -28,9 +29,22 @@ namespace LL2W::Passes {
 			// ...after reviewing the documentation, it seems that only constant decimals are valid for structs, while
 			// pvars are valid for pointers, arrays and vectors. This makes sense.
 
-			if (!node->ptrValue->isLocal())
-				throw std::runtime_error("Expected a pvar as the pointer value in a getelementptr instruction");
-			VariablePtr pointer = dynamic_cast<LocalValue *>(node->ptrValue.get())->variable;
+			// Update: I've since encountered a gvar as a source argument:
+			//     %9 = getelementptr inbounds [200 x i8], [200 x i8]* @_ZNSt3__16__itoaL10cDigitsLutE, i64 0, i64 %8
+
+			if (!node->ptrValue->isLocal() && !node->ptrValue->isGlobal())
+				throw std::runtime_error("Expected a pvar or gvar as the pointer value in a getelementptr instruction");
+
+			VariablePtr pointer;
+			if (node->ptrValue->isLocal())
+				pointer = dynamic_cast<LocalValue *>(node->ptrValue.get())->variable;
+			else {
+				GlobalValue *global = dynamic_cast<GlobalValue *>(node->ptrValue.get());
+				pointer = function.newVariable(node->ptrType);
+				warn() << "global[" << *global->name << "]\n";
+				throw std::runtime_error("Globals not supported in LowerGetelementptr yet");
+				// function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name));
+			}
 
 			const TypeType tt = node->ptrType->typeType();
 			const bool one_pvar = node->indices.size() == 1 && std::get<3>(node->indices.at(0));

@@ -102,8 +102,8 @@ namespace LL2W {
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
 				write(cast->result, cast->type);
-				int id = Util::parseLong(std::dynamic_pointer_cast<LocalValue>(cast->ptrValue)->name);
-				read.insert(parent.lock()->parent->getVariable(id, cast->ptrType));
+				if (auto *local = dynamic_cast<LocalValue *>(cast->ptrValue.get()))
+					read.insert(parent.lock()->parent->getVariable(Util::parseLong(local->name), cast->ptrType));
 				for (auto [width, value, minrange, pvar]: cast->indices) {
 					// Because we're assuming that these variables have already been defined earlier in the function,
 					// we can get them from the Function that contains this Instruction.

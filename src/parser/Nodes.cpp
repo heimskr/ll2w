@@ -755,20 +755,22 @@ namespace LL2W {
 		}
 		type = getType(type_);
 		ptrType = getType(ptr_type);
-		if (ptr_value->symbol != LLVMTOK_PVAR) {
-			llvmerror("Invalid pointer symbol in getelementptr instruction: " +
-				std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
-		} else {
+		if (ptr_value->symbol == LLVMTOK_PVAR) {
 			const std::string extracted = ptr_value->extractName();
 			if (!Util::isNumeric(extracted)) {
 				llvmerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
 					ptr_value->location);
 			}
+		} else if (ptr_value->symbol == LLVMTOK_GVAR) {
+			llvmerror("TODO: support global variables in getelementptr instructions", ptr_value->location);
+		} else {
+			llvmerror("Invalid pointer symbol in getelementptr instruction: " +
+				std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
 		}
 
 		ptrValue = getValue(ptr_value);
-		if (!std::dynamic_pointer_cast<LocalValue>(ptrValue))
-			llvmerror("Expected LocalValue in getelementptr instruction", ptr_value->location);
+		if (!std::dynamic_pointer_cast<LocalValue>(ptrValue) && !std::dynamic_pointer_cast<GlobalValue>(ptrValue))
+			llvmerror("Expected LocalValue or GlobalValue in getelementptr instruction", ptr_value->location);
 
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
