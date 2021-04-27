@@ -34,35 +34,47 @@ namespace LL2W::Passes {
 			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
+			std::unique_ptr<GlobalValue> global_uptr;
+			if (global_name)
+				global_uptr = std::make_unique<GlobalValue>(*global_name);
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
 			CallingConvention convention;
 			std::vector<TypePtr> argument_types;
 			bool ellipsis;
 
-			if (global_name) {
-				// First, we check the call node itself—it sometimes contains the signature of the function.
-				if (call->argumentsExplicit) {
-					argument_types = call->argumentTypes;
-					ellipsis = call->argumentEllipsis;
-					convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-				} else if (function.parent->functions.count("@" + *global_name->name) != 0) {
-					// When the arguments aren't explicit, we check the parent program's map of functions.
-					Function &func = *function.parent->functions.at("@" + *global_name->name);
-					ellipsis = func.isVariadic();
-					convention = func.getCallingConvention();
-					argument_types.reserve(func.arguments->size());
-					for (FunctionArgument &argument: *func.arguments)
-						argument_types.push_back(argument.type);
-				} else if (function.parent->declarations.count(*global_name->name) != 0) {
-					// We can also check the map of declarations.
-					FunctionHeader *header = function.parent->declarations.at(*global_name->name);
-					ellipsis = header->arguments->ellipsis;
-					convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-					argument_types.reserve(header->arguments->arguments.size());
-					for (FunctionArgument &argument: header->arguments->arguments)
-						argument_types.push_back(argument.type);
-				} else throw std::runtime_error("Couldn't find signature for function " + *global_name->name);
+			if (global_uptr) {
+				do {
+					// First, we check the call node itself—it sometimes contains the signature of the function.
+					if (call->argumentsExplicit) {
+						argument_types = call->argumentTypes;
+						ellipsis = call->argumentEllipsis;
+						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+						break;
+					} else if (function.parent->functions.count("@" + *global_uptr->name) != 0) {
+						// When the arguments aren't explicit, we check the parent program's map of functions.
+						Function &func = *function.parent->functions.at("@" + *global_uptr->name);
+						ellipsis = func.isVariadic();
+						convention = func.getCallingConvention();
+						argument_types.reserve(func.arguments->size());
+						for (FunctionArgument &argument: *func.arguments)
+							argument_types.push_back(argument.type);
+						break;
+					} else if (function.parent->declarations.count(*global_uptr->name) != 0) {
+						// We can also check the map of declarations.
+						FunctionHeader *header = function.parent->declarations.at(*global_uptr->name);
+						ellipsis = header->arguments->ellipsis;
+						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+						argument_types.reserve(header->arguments->arguments.size());
+						for (FunctionArgument &argument: header->arguments->arguments)
+							argument_types.push_back(argument.type);
+						break;
+					} else if (function.parent->aliases.count(StringSet::intern("@" + *global_uptr->name)) != 0) {
+						// In rare cases, there may be an alias.
+						AliasDef *alias = function.parent->aliases.at(StringSet::intern("@" + *global_uptr->name));
+						global_uptr = std::make_unique<GlobalValue>(StringSet::intern(alias->aliasTo->substr(1)));
+					} else throw std::runtime_error("Couldn't find signature for function " + *global_uptr->name);
+				} while (true);
 			} else {
 				for (ConstantPtr &ptr: call->constants)
 					argument_types.push_back(ptr->type);
@@ -110,8 +122,8 @@ namespace LL2W::Passes {
 			llvm->read.clear();
 
 			// At this point, we're ready to insert the jump.
-			if (global_name) {
-				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_name->name, true));
+			if (global_uptr) {
+				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_uptr->name, true));
 			} else {
 				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
 				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);

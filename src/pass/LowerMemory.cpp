@@ -154,30 +154,33 @@ namespace LL2W::Passes {
 			}
 		} else if (value_type == ValueType::Local) {
 			LocalValue *source = dynamic_cast<LocalValue *>(source_value.get());
+			auto svar = source->getVariable(function);
 			if (local) {
 				auto lvar = local->getVariable(function);
 				// %src -> [%dest]
-				auto store = std::make_shared<StoreRInstruction>(source->variable, lvar, size);
-				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() + " -> [" +
+				auto store = std::make_shared<StoreRInstruction>(svar, lvar, size);
+				function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [" +
 					lvar->plainString() + "]");
 				store->extract();
 			} else if (global) {
 				// %src -> [global]
 				int symsize = function.parent->symbolSize("@" + *global->name);
 				symsize = symsize / 8 + (symsize % 8? 1 : 0);
-				auto store = std::make_shared<StoreSymbolInstruction>(source->variable, *global->name, symsize);
-				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() +
-					" -> [global]");
+				auto store = std::make_shared<StoreSymbolInstruction>(svar, *global->name, symsize);
+				function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [global]");
 				store->extract();
 			} else if (converted->value->isIntLike()) {
 				const int intptr = converted->value->intValue();
 				// %src -> [intptr]
-				auto store = std::make_shared<StoreIInstruction>(source->variable, intptr, size);
-				function.insertBefore(instruction, store, "LowerMemory: " + source->variable->plainString() + " -> [" +
+				auto store = std::make_shared<StoreIInstruction>(svar, intptr, size);
+				function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [" +
 					std::to_string(intptr) + "]");
 				store->extract();
-			}
-		} else throw std::runtime_error("Unexpected ValueType in store instruction: " + value_map.at(value_type));
+			} else
+				throw std::runtime_error("Unexpected destination ValueType in store instruction: " +
+					value_map.at(converted->value->valueType()));
+		} else
+			throw std::runtime_error("Unexpected source ValueType in store instruction: " + value_map.at(value_type));
 	}
 
 	int getLoadStoreSize(ConstantPtr &constant) {

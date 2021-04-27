@@ -48,10 +48,9 @@ namespace LL2W {
 					fnattrs.emplace(attrnode->index, attrnode->basicAttributes);
 					break;
 				}
-				case LLVM_ALIAS_DEF: {
-					node->debug();
+				case LLVM_ALIAS_DEF:
+					aliases.emplace(node->lexerInfo, dynamic_cast<AliasDef *>(node));
 					break;
-				}
 			}
 		}
 	}

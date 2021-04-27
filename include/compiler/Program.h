@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "compiler/Function.h"
+#include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
 
 namespace LL2W {
@@ -18,6 +19,7 @@ namespace LL2W {
 			std::unordered_map<std::string, FunctionHeader *> declarations;
 			std::map<std::string, GlobalVarDef *> globals; // keys include the "@"
 			std::map<int, std::unordered_set<FnAttr>> fnattrs;
+			std::unordered_map<const std::string *, AliasDef *> aliases;
 
 			Program(const ASTNode &);
 			~Program();
