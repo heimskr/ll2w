@@ -90,10 +90,12 @@ namespace LL2W {
 			if (extra->symbol == LLVMTOK_SECTION) {
 				section = extra->at(0)->lexerInfo;
 			} else if (extra->symbol == LLVMTOK_COMDAT) {
-				const std::string *str = extra->at(0)->lexerInfo;
-				if (str->empty() || str->front() != '$')
-					llvmerror("Comdat expected to begin with \"$\"");
-				comdat = str;
+				if (!extra->empty()) {
+					const std::string *str = extra->at(0)->lexerInfo;
+					if (str->empty() || str->front() != '$')
+						llvmerror("Comdat expected to begin with \"$\"");
+					comdat = str;
+				}
 			} else if (!extra) {
 				std::cout << "\e[91m!extra\e[0m\n";
 			} else {

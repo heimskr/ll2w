@@ -369,7 +369,7 @@ preds_list: preds_list LLVMTOK_PVAR { $1->adopt($2); }
 alias_def: LLVMTOK_GVAR "=" _alias_linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr
            "alias" type_any "," type_ptr LLVMTOK_GVAR
            { $$ = new AliasDef($1, $3, $4, $5, $6, $7, $8, $10, $12, $13); D($2, $9, $11); };
-_alias_linkage: "private" | "internal" | "linkonce" | "weak" | "linkonce_odr" | "weak_odr" | "external" | { $$ = nullptr; };
+_alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 
 
 
@@ -536,11 +536,13 @@ parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
             | parattr              { $$ = (new AN(llvmParser, LLVM_PARATTR_LIST))->adopt($1, true); };
 parattr: LLVMTOK_PARATTR
        | parattr_simple             { $1->symbol = LLVMTOK_PARATTR; }
-       | LLVMTOK_ALIGN LLVMTOK_DECIMAL      { $$ = $1->adopt($2); };
        | LLVMTOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
        | retattr | LLVMTOK_BYVAL | LLVMTOK_WRITEONLY;
 parattr_simple: LLVMTOK_INALLOCA | LLVMTOK_READONLY | LLVMTOK_READNONE;
-retattr: LLVMTOK_RETATTR | LLVMTOK_DEREF "(" LLVMTOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); };
+retattr: LLVMTOK_RETATTR
+       | LLVMTOK_DEREF "(" LLVMTOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); }
+       | "align" "(" LLVMTOK_DECIMAL ")"       { $$ = $1->adopt($3); D($2, $4); }
+       | "align" LLVMTOK_DECIMAL               { $$ = $1->adopt($2); };
 operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct | bare_array
        | LLVMTOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
 conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
