@@ -1016,17 +1016,25 @@ namespace LL2W {
 
 // DivNode
 
-	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_,  ASTNode *type_, ASTNode *left_, ASTNode *right_,
 	                 ASTNode *unibangs):
-		SimpleNode(result_, type_, left_, right_, unibangs) {
+	SimpleNode(result_, type_, left_, right_, unibangs) {
+		if (exact_) {
+			exact = true;
+			delete exact_;
+		}
 		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
 	}
 
 // RemNode
 
-	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
 	                 ASTNode *unibangs):
-		SimpleNode(result_, type_, left_, right_, unibangs) {
+	SimpleNode(result_, type_, left_, right_, unibangs) {
+		if (exact_) {
+			exact = true;
+			delete exact_;
+		}
 		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
 	}
 
@@ -1034,7 +1042,7 @@ namespace LL2W {
 
 	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_,
 	                     ASTNode *unibangs):
-		SimpleNode(result_, type_, left_, right_, unibangs) {
+	SimpleNode(result_, type_, left_, right_, unibangs) {
 		if (*logic->lexerInfo == "and") logicType = LogicType::And;
 		else if (*logic->lexerInfo == "or") logicType = LogicType::Or;
 		else if (*logic->lexerInfo == "xor") logicType = LogicType::Xor;

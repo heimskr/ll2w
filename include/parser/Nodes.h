@@ -352,7 +352,9 @@ namespace LL2W {
 	struct DivNode: public SimpleNode {
 		enum class DivType {Sdiv, Udiv};
 		DivType divType;
-		DivNode(ASTNode *result_, ASTNode *div, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+		bool exact = false;
+		DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+		        ASTNode *unibangs);
 		const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
 		NodeType nodeType() const override { return NodeType::Div; }
 	};
@@ -360,7 +362,9 @@ namespace LL2W {
 	struct RemNode: public SimpleNode {
 		enum class RemType {Srem, Urem};
 		RemType remType;
-		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+		bool exact = false;
+		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
+		        ASTNode *unibangs);
 		const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
 		NodeType nodeType() const override { return NodeType::Rem; }
 	};

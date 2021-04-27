@@ -491,11 +491,11 @@ i_phi: result "phi" fastmath_flags type_any phi_list unibangs
 phi_list: phi_list "," phi_pair { $1->adopt($3); D($2); } | phi_pair { $$ = new AN(llvmParser, LLVM_PHI_PAIR, $1); };
 phi_pair: "[" value "," LLVMTOK_PVAR "]" { $1->adopt({$2, $4}); D($3, $5); };
 
-i_div: result LLVMTOK_DIV type_any value "," value unibangs
-       { $$ = new DivNode($1, $2, $3, $4, $6, $7); D($5); };
+i_div: result LLVMTOK_DIV _exact type_any value "," value unibangs
+       { $$ = new DivNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 
-i_rem: result LLVMTOK_REM type_any value "," value unibangs
-       { $$ = new RemNode($1, $2, $3, $4, $6, $7); D($5); };
+i_rem: result LLVMTOK_REM _exact type_any value "," value unibangs
+       { $$ = new RemNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 
 i_logic: result LLVMTOK_LOGIC type_any value "," value unibangs
          { $$ = new LogicNode($1, $2, $3, $4, $6, $7); D($5); };
