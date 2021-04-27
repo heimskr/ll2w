@@ -218,7 +218,7 @@ namespace LL2W::Passes {
 		} else if (constant->conversionSource) {
 			pushCallValue(function, instruction, constant->conversionSource);
 		} else {
-			std::cout << "Not sure what to do with " << *constant << "\n";
+			warn() << "Not sure what to do with " << *constant << "\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}
@@ -242,8 +242,8 @@ namespace LL2W::Passes {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-		} else if (value_type == ValueType::Null) {
-			// If it's a null constant, just use zero.
+		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
+			// If it's a null or undef constant, just use zero.
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.

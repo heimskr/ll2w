@@ -548,7 +548,7 @@ retattr: LLVMTOK_RETATTR
        | "align" "(" LLVMTOK_DECIMAL ")"       { $$ = $1->adopt($3); D($2, $4); }
        | "align" LLVMTOK_DECIMAL               { $$ = $1->adopt($2); };
 operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct | bare_array
-       | LLVMTOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer";
+       | LLVMTOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer" | "undef";
 conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
                | LLVMTOK_CONV_OP "(" constant LLVMTOK_TO type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
