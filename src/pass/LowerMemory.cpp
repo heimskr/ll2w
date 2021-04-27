@@ -52,7 +52,13 @@ namespace LL2W::Passes {
 		ConstantPtr converted = node->constant->convert();
 		if (!converted->value)
 			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
-		const int size = getLoadStoreSize(converted);
+		int size;
+		try {
+			size = getLoadStoreSize(converted);
+		} catch (std::exception &) {
+			node->debug();
+			throw;
+		}
 		const ValueType value_type = converted->value->valueType();
 
 		if (value_type == ValueType::Local) {
@@ -101,7 +107,13 @@ namespace LL2W::Passes {
 				"instruction");
 		}
 
-		const int size = getLoadStoreSize(converted);
+		int size;
+		try {
+			size = getLoadStoreSize(converted);
+		} catch (std::exception &) {
+			node->debug();
+			throw;
+		}
 		ValuePtr source_value = node->source->convert()->value;
 		const ValueType value_type = source_value->valueType();
 
