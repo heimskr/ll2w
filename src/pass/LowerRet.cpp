@@ -42,9 +42,19 @@ namespace LL2W::Passes {
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
 				function.extraVariables.push_back(var);
-				function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
+				if (var->multireg()) {
+					if (WhyInfo::returnValueCount < var->registers.size())
+						throw std::runtime_error("Too many registers for " + var->plainString() + " in LowerRet");
+					auto iter = var->registers.begin();
+					for (size_t i = 0; i < var->registers.size(); ++i) {
+						auto subvar = function.makePrecoloredVariable(*iter++, block);
+						auto retreg = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, block);
+						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false);
+					}
+				} else {
+					function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
+				}
 			}
-
 
 			// Pop all the general-purpose registers that were saved in the prologue.
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
