@@ -207,6 +207,14 @@ namespace LL2W::Passes {
 				auto sub = std::make_shared<SubIInstruction>(left_var, right->intValue(), node->variable);
 				function.insertBefore(instruction, sub);
 				sub->extract();
+			} else if (right->isGlobal()) {
+				VariablePtr right_var = function.newVariable(node->type);
+				auto set = std::make_shared<SetInstruction>(right_var, dynamic_cast<GlobalValue *>(right.get())->name);
+				function.insertBefore(instruction, set);
+				auto sub = std::make_shared<SubRInstruction>(left_var, right_var, node->variable);
+				function.insertBefore(instruction, sub);
+				set->extract();
+				sub->extract();
 			} else {
 				throw std::runtime_error("Unexpected value type in sub instruction: " +
 					value_map.at(right->valueType()));
