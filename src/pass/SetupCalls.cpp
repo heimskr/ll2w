@@ -179,8 +179,8 @@ namespace LL2W::Passes {
 			std::shared_ptr<GlobalValue> global = std::dynamic_pointer_cast<GlobalValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, global->name);
-			function.insertBefore(instruction, set);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			function.insertBefore(instruction, set);
 			function.insertBefore(instruction, sspush);
 			set->extract();
 			sspush->extract();
@@ -188,19 +188,31 @@ namespace LL2W::Passes {
 			// Integer-like values
 			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
+			auto set = std::make_shared<SetInstruction>(new_var, ival->value);
+			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			function.insertBefore(instruction, set);
+			function.insertBefore(instruction, sspush);
+			set->extract();
+			sspush->extract();
 		} else if (value_type == ValueType::Bool) {
 			// Booleans
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
+			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
+			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			function.insertBefore(instruction, set);
+			function.insertBefore(instruction, sspush);
+			set->extract();
+			sspush->extract();
 		} else if (value_type == ValueType::Null) {
 			// Null values
 			VariablePtr new_var = function.newVariable(constant->type);
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
+			auto set = std::make_shared<SetInstruction>(new_var, 0);
+			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			function.insertBefore(instruction, set);
+			function.insertBefore(instruction, sspush);
+			set->extract();
+			sspush->extract();
 		} else if (value_type == ValueType::Getelementptr) {
 			// Getelementptr expressions
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
@@ -219,8 +231,12 @@ namespace LL2W::Passes {
 				if (offset != 0) {
 					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
 					function.insertAfter(setsym, addi);
+					addi->extract();
 				}
-				function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(new_var, size, -1));
+				auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+				function.insertBefore(instruction, sspush);
+				setsym->extract();
+				sspush->extract();
 			}
 		} else if (constant->conversionSource) {
 			pushCallValue(function, instruction, constant->conversionSource);
@@ -240,18 +256,26 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			// If it's a variable, move it into the argument register.
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<MoveInstruction>(local->variable, new_var));
+			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
+			function.insertBefore(instruction, move);
+			move->extract();
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
 			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, ival->value));
+			auto set = std::make_shared<SetInstruction>(new_var, ival->value);
+			function.insertBefore(instruction, set);
+			set->extract();
 		} else if (value_type == ValueType::Bool) {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, bval->value + 0));
+			auto set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
+			function.insertBefore(instruction, set);
+			set->extract();
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
 			// If it's a null or undef constant, just use zero.
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, 0));
+			auto set = std::make_shared<SetInstruction>(new_var, 0);
+			function.insertBefore(instruction, set);
+			set->extract();
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
@@ -259,7 +283,6 @@ namespace LL2W::Passes {
 			// TODO, maybe: reduce duplication
 			if (!gep_global) {
 				std::shared_ptr<LocalValue> local;
-
 				if (LocalValue *gep_local = dynamic_cast<LocalValue *>(gep->variable.get()))
 					local = std::make_shared<LocalValue>(gep_local->getVariable(function));
 				else if (auto subgep = std::dynamic_pointer_cast<GetelementptrValue>(gep->variable))
