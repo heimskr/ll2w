@@ -67,6 +67,9 @@ namespace LL2W {
 		return out.str();
 	}
 
+	LocalValue::LocalValue(std::shared_ptr<Variable> variable_):
+		VariableValue(StringSet::intern(std::to_string(variable_->id))), variable(variable_) {}
+
 	LocalValue::LocalValue(const ASTNode *node): VariableValue(nullptr) {
 		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
 	}

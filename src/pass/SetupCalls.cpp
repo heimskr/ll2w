@@ -247,14 +247,42 @@ namespace LL2W::Passes {
 			// If it's a getelementptr expression, things are a little more difficult.
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
 			GlobalValue *gep_global = dynamic_cast<GlobalValue *>(gep->variable.get());
+			// TODO, maybe: reduce duplication
 			if (!gep_global) {
-				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+				std::shared_ptr<LocalValue> local;
+
+				if (LocalValue *gep_local = dynamic_cast<LocalValue *>(gep->variable.get()))
+					local = std::make_shared<LocalValue>(gep_local->getVariable(function));
+				else if (auto subgep = std::dynamic_pointer_cast<GetelementptrValue>(gep->variable))
+					local = function.replaceGetelementptrValue(subgep, instruction);
+				else {
+					warn() << "Not sure what to do when the argument of getelementptr isn't a global or getelementptr."
+					       << "\n    " << std::string(*gep->variable);
+					if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
+						std::cerr << " (" << llvm->node->location << ")";
+					std::cerr << "\n";
+					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+					return;
+				}
+
+				std::list<int> indices;
+				for (const std::pair<int, long> &decimal_pair: gep->decimals)
+					indices.push_back(decimal_pair.second);
+				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				if (offset == 0) {
+					auto move = std::make_shared<MoveInstruction>(local->getVariable(function), new_var);
+					function.insertBefore(instruction, move);
+					move->extract();
+				} else {
+					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), offset, new_var);
+					function.insertBefore(instruction, addi);
+					addi->extract();
+				}
 			} else {
 				std::list<int> indices;
 				for (const std::pair<int, long> &decimal_pair: gep->decimals)
 					indices.push_back(decimal_pair.second);
-				int  offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
 				function.insertBefore(instruction, setsym);
 				setsym->extract();

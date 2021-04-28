@@ -301,6 +301,11 @@ namespace LL2W {
 			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);
 
+			/** Computes a getelementptr value, places the result in a variable before the given instruction and returns
+			 *  the variable as a value. */
+			std::shared_ptr<LocalValue> replaceGetelementptrValue(std::shared_ptr<GetelementptrValue>,
+			                                                      std::shared_ptr<Instruction>);
+
 			/** Through questionable methods, this function ensures that all variables with the same numeric ID share
 			 *  the same register assignment. */
 			void hackVariables();

@@ -20,11 +20,14 @@
 
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
+#include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
+#include "instruction/AddIInstruction.h"
 #include "instruction/Comment.h"
 #include "instruction/Label.h"
+#include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "options.h"
@@ -1095,6 +1098,47 @@ namespace LL2W {
 		}
 
 		throw std::out_of_range("Couldn't find an alloca location for " + variable->plainString());
+	}
+
+	std::shared_ptr<LocalValue> Function::replaceGetelementptrValue(std::shared_ptr<GetelementptrValue> gep,
+	InstructionPtr instruction) {
+		std::list<int> indices;
+		for (const std::pair<int, long> &decimal_pair: gep->decimals)
+			indices.push_back(decimal_pair.second);
+		TypePtr out_type;
+		int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
+		switch (gep->variable->valueType()) {
+			case ValueType::Global: {
+				VariablePtr var1(newVariable(std::make_shared<IntType>(32))), var2(newVariable(out_type));
+				auto set =
+					std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
+				auto addi = std::make_shared<AddIInstruction>(var1, offset, var2);
+				insertBefore(instruction, set);
+				insertBefore(instruction, addi);
+				set->extract();
+				addi->extract();
+				return std::make_shared<LocalValue>(var2);
+			}
+			case ValueType::Local: {
+				VariablePtr new_var(newVariable(out_type));
+				auto addi = std::make_shared<AddIInstruction>(
+					dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this), offset, new_var);
+				insertBefore(instruction, addi);
+				addi->extract();
+				return std::make_shared<LocalValue>(new_var);
+			}
+			default:;
+		}
+
+		if (gep->variable->isIntLike()) {
+			VariablePtr new_var(newVariable(out_type));
+			auto set = std::make_shared<SetInstruction>(new_var, gep->variable->intValue() + offset);
+			insertBefore(instruction, set);
+			set->extract();
+			return std::make_shared<LocalValue>(new_var);
+		}
+
+		throw std::invalid_argument("Expected a global, local or intlike value in Function::replaceGetelementptrValue");
 	}
 
 	void Function::hackVariables() {
