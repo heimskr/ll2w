@@ -323,6 +323,10 @@ namespace LL2W {
 		return count;
 	}
 
+	bool Variable::allRegistersSpecial() const {
+		return !registers.empty() && !hasNonSpecialRegister();
+	}
+
 	bool Variable::compareRegisters(const Variable &other) const {
 		if (registers.size() != other.registers.size())
 			return false;

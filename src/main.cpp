@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
@@ -128,10 +129,20 @@ void mergetest2() {
 LL2W::Program *prog = nullptr;
 
 void parsertest(const std::string &filename) {
-	LL2W::llvmParser.open(filename);
+	std::ifstream file(filename);
+	if (!file.is_open())
+		throw std::runtime_error("Couldn't open file for reading");
+	std::string text;
+	file.seekg(0, std::ios::end);
+	text.reserve(file.tellg());
+	file.seekg(0, std::ios::beg);
+	text.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+	LL2W::llvmParser.in(text);
 	LL2W::llvmParser.debug(false, false);
 	LL2W::llvmParser.parse();
 	prog = new LL2W::Program(*LL2W::llvmParser.root);
+	std::cout << __FILE__ << ":" << __LINE__ << "\n";
 #ifdef INTERACTIVE
 	LL2W::interactive(*prog);
 	std::cout << "Done.\n";

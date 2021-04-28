@@ -82,6 +82,8 @@ namespace LL2W {
 			bool hasNonSpecialRegister() const;
 			/** Returns the number of non-special-purpose registers. */
 			int nonSpecialCount() const;
+			/** Returns true if the variable has at least one register and all registers are special-purpose. */
+			bool allRegistersSpecial() const;
 			/** Returns true if this variable has the same set of registers as the argument. */
 			bool compareRegisters(const Variable &) const;
 			/** Returns the number of registers required to contain all the variable's data. Not useful if the variable

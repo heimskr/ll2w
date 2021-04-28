@@ -61,6 +61,7 @@ namespace LL2W::Passes {
 
 				TypePtr out_type;
 				const int offset = Util::updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
+				node->variable->type = out_type;
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr: struct-type");
 				add->extract();

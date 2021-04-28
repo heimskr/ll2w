@@ -9,6 +9,7 @@
 
 #include "graph/Graph.h"
 #include "graph/UncolorableError.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	Graph::Graph() {}
@@ -320,8 +321,10 @@ namespace LL2W {
 				for (Node *neighbor: node->in())
 					for (const int color: neighbor->colors)
 						available.erase(color);
-				if (available.size() < static_cast<size_t>(node->colorsNeeded))
+				if (available.size() < static_cast<size_t>(node->colorsNeeded)) {
+					error() << available.size() << " < " << static_cast<size_t>(node->colorsNeeded) << "\n";
 					throw UncolorableError();
+				}
 				auto iter = available.begin();
 				for (int i = 0; i < node->colorsNeeded; ++i)
 					node->colors.insert(*iter++);

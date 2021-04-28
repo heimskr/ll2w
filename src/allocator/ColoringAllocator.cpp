@@ -45,7 +45,7 @@ namespace LL2W {
 				std::terminate();
 			}
 #ifdef DEBUG_COLORING
-			std::cerr << "Going to spill " << *to_spill << ". " << function->variableStore.size() << "\n";
+			std::cerr << "Going to spill " << *to_spill << ". Likely name: " << function->variableStore.size() << "\n";
 #endif
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
@@ -89,13 +89,13 @@ namespace LL2W {
 		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 #ifdef DEBUG_COLORING
-			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> "
-			          << pair.second->color << "\n";
-			if (ptr->id == 8)
-				ptr->debug();
+			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> ( ";
+			for (const int color: pair.second->colors) std::cerr << color << " ";
+			std::cerr << ")\n";
 #endif
-			if (ptr->reg == -1)
-				ptr->setRegister(pair.second->color);
+			if (ptr->registers.empty())
+				for (const int color: pair.second->colors)
+					ptr->registers.insert(color);
 		}
 
 		return Result::Success;
@@ -121,7 +121,7 @@ namespace LL2W {
 		int lowest = -1;
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 			const VariablePtr &var = pair.second;
-			if (var->reg != -1 && WhyInfo::isSpecialPurpose(var->reg))
+			if (var->allRegistersSpecial())
 				continue;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
@@ -151,6 +151,12 @@ namespace LL2W {
 				if (!interference.hasLabel(id)) { // Use only one variable from a set of aliases.
 					Node &node = interference.addNode(id);
 					node.data = pair.second;
+#ifdef DEBUG_COLORING
+					info() << *pair.second << ": " << pair.second->registersRequired() << " required.";
+					if (pair.second->type)
+						std::cerr << " " << std::string(*pair.second->type);
+					std::cerr << "\n";
+#endif
 					node.colorsNeeded = pair.second->registersRequired();
 				}
 			}
@@ -232,7 +238,7 @@ namespace LL2W {
 		std::unordered_map<int, std::unordered_set<int>> sets;
 
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
-			if (pair.second->reg != -1)
+			if (!pair.second->registers.empty())
 				continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
 				const int index = bptr.lock()->index;
@@ -250,10 +256,10 @@ namespace LL2W {
 			std::vector<int> &vec = vecs[block->index];
 			std::unordered_set<int> &set = sets[block->index];
 			for (const VariablePtr &var: block->liveIn)
-				if (var->reg == -1 && set.count(var->id) == 0)
+				if (var->registers.empty() && set.count(var->id) == 0)
 					vec.push_back(var->id);
 			for (const VariablePtr &var: block->liveOut)
-				if (var->reg == -1 && set.count(var->id) == 0)
+				if (var->registers.empty() && set.count(var->id) == 0)
 					vec.push_back(var->id);
 		}
 
