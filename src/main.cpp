@@ -142,7 +142,6 @@ void parsertest(const std::string &filename) {
 	LL2W::llvmParser.debug(false, false);
 	LL2W::llvmParser.parse();
 	prog = new LL2W::Program(*LL2W::llvmParser.root);
-	std::cout << __FILE__ << ":" << __LINE__ << "\n";
 #ifdef INTERACTIVE
 	LL2W::interactive(*prog);
 	std::cout << "Done.\n";

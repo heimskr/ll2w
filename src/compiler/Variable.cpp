@@ -62,6 +62,8 @@ namespace LL2W {
 			out << "\e[32m%" << id << "\e[39m";
 		else {
 			out << "\e[92m";
+			if (1 < registers.size())
+				out << "(";
 			bool first = false;
 			for (int reg: registers) {
 				if (first)
@@ -70,6 +72,8 @@ namespace LL2W {
 					out << " ";
 				out << "$" << WhyInfo::registerName(reg);
 			}
+			if (1 < registers.size())
+				out << ")";
 			out << "\e[39;2m:\e[32m" << id << "\e[39;22m";
 		}
 #ifdef VARIABLE_EXTRA
@@ -84,7 +88,7 @@ namespace LL2W {
 			out << "]\e[22m";
 		}
 		out << "\e[2m<" << definingBlocks.size() << "." << definitions.size() << ":" << usingBlocks.size() << "."
-		    << uses.size() << ">\e[22m";
+		    << uses.size() << "/" << registersRequired() << ">\e[22m";
 #endif
 		return out.str();
 	}

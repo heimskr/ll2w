@@ -52,4 +52,5 @@ PVS-Studio.log
 report.tasks
 strace_out
 callgrind.*
+pvs.log
 
