@@ -7,7 +7,15 @@
 #include "parser/Values.h"
 
 namespace LL2W::Getelementptr {
-	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type) {
+	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type, bool first = true) {
+		if (first && indices.size() == 1 && type->typeType() == TypeType::Pointer) {
+			// If there's only one index, we're not "dereferencing" anything but instead getting a pointer that's before
+			// or after a given pointer. This is pretty hackish and may be wrong.
+			if (out_type)
+				*out_type = type->copy();
+			return indices.front() * dynamic_cast<PointerType *>(type.get())->subtype->width();
+		}
+
 		if (indices.empty()) {
 			if (out_type)
 				*out_type = type->copy();
@@ -18,12 +26,12 @@ namespace LL2W::Getelementptr {
 		indices.pop_front();
 		switch (type->typeType()) {
 			case TypeType::Pointer: {
-				TypePtr subtype = std::dynamic_pointer_cast<PointerType>(type)->subtype;
-				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
+				TypePtr subtype = dynamic_cast<PointerType *>(type.get())->subtype;
+				return front * subtype->width() + compute_mutating(subtype, indices, out_type, false);
 			}
 			case TypeType::Array: {
-				TypePtr subtype = std::dynamic_pointer_cast<ArrayType>(type)->subtype;
-				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
+				TypePtr subtype = dynamic_cast<ArrayType *>(type.get())->subtype;
+				return front * subtype->width() + compute_mutating(subtype, indices, out_type, false);
 			}
 			case TypeType::Struct: {
 				std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
@@ -44,7 +52,7 @@ namespace LL2W::Getelementptr {
 					offset += width + ((width - (offset % width)) % width);
 				}
 #endif
-				return offset + compute_mutating(snode->types.at(front), indices, out_type);
+				return offset + compute_mutating(snode->types.at(front), indices, out_type, false);
 			}
 			default: throw TypeError("Getelementptr::compute encountered an invalid type", type);
 		}

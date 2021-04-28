@@ -10,6 +10,8 @@
 #include "pass/LowerGetelementptr.h"
 #include "util/Util.h"
 
+// #define DEBUG_GETELEMENTPTR
+
 namespace LL2W::Passes {
 	int lowerGetelementptr(Function &function) {
 		using IndexTuple = std::tuple<int, int, bool, bool>;
@@ -60,10 +62,17 @@ namespace LL2W::Passes {
 				}
 
 				TypePtr out_type;
+#ifdef DEBUG_GETELEMENTPTR
+				TypePtr old_type = node->variable->type;
+#endif
 				const int offset = Util::updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
 				node->variable->type = out_type;
+				node->type = out_type;
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr: struct-type");
+#ifdef DEBUG_GETELEMENTPTR
+				function.comment(add, "Type: " + std::string(*old_type) + " -> " + std::string(*out_type));
+#endif
 				add->extract();
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
@@ -76,7 +85,7 @@ namespace LL2W::Passes {
 				auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult);
+				function.insertBefore(instruction, mult, "LowerGetelementptr: pointer-type");
 				function.insertBefore(instruction, movelo);
 				function.insertBefore(instruction, add);
 				mult->extract();
