@@ -92,6 +92,12 @@ namespace LL2W {
 			/** Maps basic blocks to their corresponding CFG nodes. */
 			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
 
+			/** Used by passes to indicate which instructions they produced so that later passes can pick up where they
+			 *  left off after other things have occurred. For example, SetupCalls uses this to record the moves from
+			 *  result registers into variables in case the variable is larger than one physical register and the move
+			 *  needs to be split up after register allocation. */
+			std::unordered_map<std::string, std::list<std::shared_ptr<Instruction>>> categories;
+
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
 
