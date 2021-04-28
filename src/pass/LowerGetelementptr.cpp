@@ -43,9 +43,7 @@ namespace LL2W::Passes {
 			else {
 				GlobalValue *global = dynamic_cast<GlobalValue *>(node->ptrValue.get());
 				pointer = function.newVariable(node->ptrType);
-				warn() << "global[" << *global->name << "]\n";
-				throw std::runtime_error("Globals not supported in LowerGetelementptr yet");
-				// function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name));
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name));
 			}
 
 			const TypeType tt = node->ptrType->typeType();
