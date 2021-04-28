@@ -209,8 +209,9 @@ namespace LL2W::Passes {
 		} else if (dynamic_cast<PointerType *>(subtype) || dynamic_cast<FunctionType *>(subtype)) {
 			return WhyInfo::pointerWidth;
 		} else {
-			throw std::runtime_error("Unexpected pointer subtype in load/store instruction: "
-				+ std::string(*constant_ptr->subtype));
+			return -1;
+			// throw std::runtime_error("Unexpected pointer subtype in load/store instruction: "
+			// 	+ std::string(*constant_ptr->subtype));
 		}
 	}
 }
