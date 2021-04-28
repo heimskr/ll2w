@@ -349,6 +349,10 @@ namespace LL2W {
 		return Util::updiv(type->width(), 64);
 	}
 
+	bool Variable::multireg() const {
+		return 1 < registers.size();
+	}
+
 	std::string Variable::registersString() const {
 		std::string out = 1 < registers.size()? "(" : "";
 		bool first = true;

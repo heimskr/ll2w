@@ -1,5 +1,4 @@
-#ifndef PASS_SPLITBLOCKS_H_
-#define PASS_SPLITBLOCKS_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  Returns the number of times a block was split. */
 	int splitBlocks(Function &);
 }
-
-#endif

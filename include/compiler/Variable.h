@@ -89,6 +89,10 @@ namespace LL2W {
 			/** Returns the number of registers required to contain all the variable's data. Not useful if the variable
 			 *  has no type information. */
 			int registersRequired() const;
+			/** Returns true if the variable has been assigned more than one register. */
+			bool multireg() const;
+			/** Returns a string containing all the assigned registers.
+			 *  The string is of the form "$reg" or "($reg1 $reg2 ...)". */
 			std::string registersString() const;
 
 			std::string toString() const;

@@ -151,7 +151,7 @@ namespace LL2W::Passes {
 					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
 						block), function.getVariable(*call->result));
 				function.insertBefore(instruction, move, "SetupCalls: move result from $r0");
-				function.categories["SetupCalls"].push_back(move);
+				function.categories["SetupCalls:MoveFromResult"].push_back(move);
 				move->extract();
 			}
 
