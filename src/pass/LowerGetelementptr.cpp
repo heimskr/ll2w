@@ -67,7 +67,8 @@ namespace LL2W::Passes {
 				node->variable->type = out_type;
 				node->type = out_type;
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
-				function.insertBefore(instruction, add, "LowerGetelementptr: struct-type");
+				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
+					"): struct-type");
 #ifdef DEBUG_GETELEMENTPTR
 				function.comment(add, "Type: " + std::string(*old_type) + " -> " + std::string(*out_type));
 #endif

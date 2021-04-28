@@ -8,17 +8,9 @@
 
 namespace LL2W::Getelementptr {
 	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type, bool first = true) {
-		if (first && indices.size() == 1 && type->typeType() == TypeType::Pointer) {
-			// If there's only one index, we're not "dereferencing" anything but instead getting a pointer that's before
-			// or after a given pointer. This is pretty hackish and may be wrong.
-			if (out_type)
-				*out_type = type->copy();
-			return indices.front() * dynamic_cast<PointerType *>(type.get())->subtype->width();
-		}
-
 		if (indices.empty()) {
 			if (out_type)
-				*out_type = type->copy();
+				*out_type = std::make_shared<PointerType>(type->copy());
 			return 0;
 		}
 

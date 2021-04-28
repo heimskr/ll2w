@@ -761,9 +761,7 @@ namespace LL2W {
 				llvmerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
 					ptr_value->location);
 			}
-		} else if (ptr_value->symbol == LLVMTOK_GVAR) {
-			llvmerror("TODO: support global variables in getelementptr instructions", ptr_value->location);
-		} else {
+		} else if (ptr_value->symbol != LLVMTOK_GVAR) {
 			llvmerror("Invalid pointer symbol in getelementptr instruction: " +
 				std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
 		}
