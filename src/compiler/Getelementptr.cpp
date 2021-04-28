@@ -7,7 +7,7 @@
 #include "parser/Values.h"
 
 namespace LL2W::Getelementptr {
-	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type, bool first = true) {
+	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type) {
 		if (indices.empty()) {
 			if (out_type)
 				*out_type = std::make_shared<PointerType>(type->copy());
@@ -19,11 +19,11 @@ namespace LL2W::Getelementptr {
 		switch (type->typeType()) {
 			case TypeType::Pointer: {
 				TypePtr subtype = dynamic_cast<PointerType *>(type.get())->subtype;
-				return front * subtype->width() + compute_mutating(subtype, indices, out_type, false);
+				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
 			}
 			case TypeType::Array: {
 				TypePtr subtype = dynamic_cast<ArrayType *>(type.get())->subtype;
-				return front * subtype->width() + compute_mutating(subtype, indices, out_type, false);
+				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
 			}
 			case TypeType::Struct: {
 				std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
@@ -44,7 +44,7 @@ namespace LL2W::Getelementptr {
 					offset += width + ((width - (offset % width)) % width);
 				}
 #endif
-				return offset + compute_mutating(snode->types.at(front), indices, out_type, false);
+				return offset + compute_mutating(snode->types.at(front), indices, out_type);
 			}
 			default: throw TypeError("Getelementptr::compute encountered an invalid type", type);
 		}
