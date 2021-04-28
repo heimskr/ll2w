@@ -285,7 +285,7 @@ comdat_def: LLVMTOK_IDENT "=" "comdat" LLVMTOK_COMDATTYPE { $$ = $3->adopt({$1, 
 
 type_any: type_nonvoid | LLVMTOK_VOID;
 type_nonvoid: LLVMTOK_INTTYPE | LLVMTOK_FLOATTYPE | type_array | type_vector | type_ptr | type_function | type_struct | LLVMTOK_STRUCTVAR | LLVMTOK_CLASSVAR | LLVMTOK_UNIONVAR;
-type_nonfnptr: LLVMTOK_INTTYPE | LLVMTOK_FLOATTYPE | type_array | type_vector | type_ptr | type_struct | LLVMTOK_STRUCTVAR | LLVMTOK_CLASSVAR | LLVMTOK_UNIONVAR | LLVMTOK_VOID;
+type_nonfn: LLVMTOK_INTTYPE | LLVMTOK_FLOATTYPE | type_array | type_vector | type_ptr | type_struct | LLVMTOK_STRUCTVAR | LLVMTOK_CLASSVAR | LLVMTOK_UNIONVAR | LLVMTOK_VOID;
 type_array:  "[" LLVMTOK_DECIMAL "x" type_any    "]" { $$ = (new AN(llvmParser, LLVM_ARRAYTYPE,  ""))->adopt({$2, $4}); D($1, $3, $5); };
 type_vector: "<" LLVMTOK_DECIMAL "x" vector_type ">" { $$ = (new AN(llvmParser, LLVM_VECTORTYPE))->adopt({$2, $4}); D($1, $3, $5); };
 vector_type: LLVMTOK_INTTYPE | type_ptr | LLVMTOK_FLOATTYPE;
@@ -438,9 +438,9 @@ i_br_uncond: "br" "label" LLVMTOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4)
 i_br_cond: "br" LLVMTOK_INTTYPE operand "," label "," label unibangs { $$ = (new BrCondNode($2, $3, $5, $7, $8))->locate($1); D($1, $4, $6); };
 label: "label" LLVMTOK_PVAR { $$ = $2; D($1); };
 
-i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfnptr _args function_name "(" _constants ")" call_attrs unibangs
+i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args function_name "(" _constants ")" call_attrs unibangs
         { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
-      | _result "call" _retattrs type_nonfnptr _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
+      | _result "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
         { auto loc = L({$1, $2, $3}); $$ = (new AsmNode($1, $3, $4, $5, $7, $8, $9, $10, $12, $14, $16, $17, $18))->locate(loc); D($2, $6, $11, $13, $15); };
 _result: result | { $$ = nullptr; };
 result: LLVMTOK_PVAR "=" { D($2); };

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <ostream>
+#include <set>
 
 namespace LL2W {
 	class BasicBlock;
@@ -11,13 +12,13 @@ namespace LL2W {
 	struct Interval {
 		std::weak_ptr<BasicBlock> firstDefinition, lastUse;
 		std::weak_ptr<Variable> variable;
-		int reg = -1;
+		std::set<int> registers;
 
 		Interval(std::shared_ptr<Variable>);
 		int startpoint() const;
 		int endpoint() const;
 
-		int setRegister(int);
+		std::set<int> & setRegisters(const std::set<int> &);
 
 		operator std::string() const;
 	};

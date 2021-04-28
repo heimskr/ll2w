@@ -57,10 +57,20 @@ namespace LL2W {
 	Variable::operator std::string() const {
 		std::stringstream out;
 		const std::string base;
-		if (reg == -1)
+		if (registers.empty())
 			out << "\e[32m%" << id << "\e[39m";
-		else
-			out << "\e[92m$" << WhyInfo::registerName(reg) << "\e[39;2m:\e[32m" << id << "\e[39;22m";
+		else {
+			out << "\e[92m";
+			bool first = false;
+			for (int reg: registers) {
+				if (first)
+					first = false;
+				else
+					out << " ";
+				out << "$" << WhyInfo::registerName(reg);
+			}
+			out << "\e[39;2m:\e[32m" << id << "\e[39;22m";
+		}
 #ifdef VARIABLE_EXTRA
 		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
 		if (!alias_set.empty()) {
@@ -79,13 +89,42 @@ namespace LL2W {
 	}
 
 	std::string Variable::toString() const {
-		return reg != -1? "$" + WhyInfo::registerName(reg) : *this;
+		if (1 < registers.size()) {
+			std::string out("(");
+			bool first = true;
+			for (const int reg: registers) {
+				if (first)
+					first = false;
+				else
+					out += " ";
+				out += "$" + WhyInfo::registerName(reg);
+			}
+			out += ")";
+			return out;
+		} else if (registers.size() == 1)
+			return "$" + WhyInfo::registerName(*registers.begin());
+		else
+			return *this;
 	}
 
 	std::string Variable::plainString() const {
-		if (reg == -1)
+		if (registers.empty())
 			return "%" + std::to_string(id);
-		return "$" + WhyInfo::registerName(reg) + ":" + std::to_string(id);
+		else if (registers.size() == 1)
+			return "$" + WhyInfo::registerName(*registers.begin()) + ":" + std::to_string(id);
+		else {
+			std::string out = "(";
+			bool first = true;
+			for (const int reg: registers) {
+				if (first)
+					first = false;
+				else
+					out += " ";
+				out += "$" + WhyInfo::registerName(reg);
+			}
+			out += "):" + std::to_string(id);
+			return out;
+		}
 	}
 
 	std::string Variable::functionName() const {
@@ -128,7 +167,7 @@ namespace LL2W {
 		usingBlocks = new_parent.usingBlocks;
 		definitions = new_parent.definitions;
 		uses = new_parent.uses;
-		reg = new_parent.reg; // ???
+		registers = new_parent.registers; // ???
 	}
 
 	void Variable::addDefiner(std::shared_ptr<BasicBlock> block) {
@@ -259,7 +298,14 @@ namespace LL2W {
 	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)
 	VARSETTER(UsingBlocks, const decltype(Variable::usingBlocks) &, blocks, usingBlocks)
 	VARSETTER(LastUse, decltype(Variable::lastUse), use, lastUse);
-	VARSETTER(Register, int, new_reg, reg);
+	VARSETTER(Registers, const decltype(Variable::registers) &, new_registers, registers);
+
+	bool Variable::hasSpecialRegister() const {
+		for (const int reg: registers)
+			if (WhyInfo::isSpecialPurpose(reg))
+				return true;
+		return false;
+	}
 
 	std::ostream & operator<<(std::ostream &os, const LL2W::Variable &var) {
 		return os << std::string(var);

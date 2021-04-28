@@ -27,10 +27,10 @@ namespace LL2W {
 		return lastUse.lock()->index;
 	}
 
-	int Interval::setRegister(int new_reg) {
+	std::set<int> & Interval::setRegisters(const std::set<int> &new_registers) {
 		if (variable.lock())
-			variable.lock()->setRegister(new_reg);
-		return reg = new_reg;
+			variable.lock()->setRegisters(new_registers);
+		return registers = new_registers;
 	}
 
 	Interval::operator std::string() const {

@@ -597,11 +597,15 @@ namespace LL2W {
 	void Function::resetRegisters(bool respectful) {
 		if (!respectful) {
 			for (const std::pair<const int, VariablePtr> &pair: variableStore)
-				pair.second->setRegister(-1);
+				pair.second->setRegisters({});
 		} else {
 			for (const std::pair<const int, VariablePtr> &pair: variableStore) {
-				if (!WhyInfo::isSpecialPurpose(pair.second->reg))
-					pair.second->setRegister(-1);
+				std::unordered_set<int> to_remove;
+				for (const int reg: pair.second->registers)
+					if (!WhyInfo::isSpecialPurpose(reg))
+						to_remove.insert(reg);
+				for (const int reg: to_remove)
+					pair.second->registers.erase(reg);
 			}
 		}
 	}

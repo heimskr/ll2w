@@ -28,7 +28,7 @@ namespace LL2W {
 			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
 			WeakSet<Instruction> definitions, uses;
 			std::weak_ptr<Instruction> lastUse;
-			int reg = -1;
+			std::set<int> registers;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
@@ -74,7 +74,9 @@ namespace LL2W {
 			void setUses(const decltype(uses) &);
 			void setUsingBlocks(const decltype(usingBlocks) &);
 			void setLastUse(decltype(lastUse));
-			void setRegister(int);
+			void setRegisters(const decltype(registers) &);
+
+			bool hasSpecialRegister() const;
 
 			std::string toString() const;
 			std::string plainString() const;
