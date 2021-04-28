@@ -7,6 +7,11 @@
 namespace LL2W {
 	Node::Node(Graph *owner_, const std::string &label__): owner(owner_), label_(label__) {}
 
+	Node & Node::setColorsNeeded(int count) {
+		colorsNeeded = count;
+		return *this;
+	}
+
 	const std::string & Node::label() const {
 		return label_;
 	}

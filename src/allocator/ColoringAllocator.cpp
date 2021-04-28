@@ -89,7 +89,8 @@ namespace LL2W {
 		for (const std::pair<const std::string, Node *> &pair: interference) {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 #ifdef DEBUG_COLORING
-			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->reg << " -> " << pair.second->color << "\n";
+			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> "
+			          << pair.second->color << "\n";
 			if (ptr->id == 8)
 				ptr->debug();
 #endif
@@ -145,11 +146,12 @@ namespace LL2W {
 			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
 			std::cerr << "\n";
 #endif
-			if (pair.second->reg == -1) {
+			if (pair.second->registers.empty()) {
 				const std::string id = std::to_string(pair.second->id);
 				if (!interference.hasLabel(id)) { // Use only one variable from a set of aliases.
 					Node &node = interference.addNode(id);
 					node.data = pair.second;
+					node.colorsNeeded = pair.second->registersRequired();
 				}
 			}
 		}

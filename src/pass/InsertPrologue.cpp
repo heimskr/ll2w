@@ -26,12 +26,11 @@ namespace LL2W::Passes {
 
 		// Next, we need to push any variables that are written to.
 		std::set<int> written;
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			for (const VariablePtr &variable: instruction->written) {
-				if (variable->reg != -1 && !WhyInfo::isSpecialPurpose(variable->reg))
-					written.insert(variable->reg);
-			}
-		}
+		for (InstructionPtr &instruction: function.linearInstructions)
+			for (const VariablePtr &variable: instruction->written)
+				for (const int reg: variable->registers)
+					if (!WhyInfo::isSpecialPurpose(reg))
+						written.insert(reg);
 
 		function.savedRegisters.clear();
 		for (int reg: written) {

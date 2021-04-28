@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Program.h"
@@ -97,7 +95,7 @@ namespace LL2W::Passes {
 			for (i = 0; i < reg_max && i < arg_count; ++i) {
 				// Make a precolored dummy variable.
 				VariablePtr new_var = function.newVariable(argument_types[i]);
-				new_var->reg = WhyInfo::argumentOffset + i;
+				new_var->registers = {WhyInfo::argumentOffset + i};
 				setupCallValue(function, new_var, instruction, call->constants[i]);
 			}
 
@@ -199,7 +197,7 @@ namespace LL2W::Passes {
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 			if (!gep_global) {
-				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 			} else {
 				std::list<int> indices;
@@ -250,7 +248,7 @@ namespace LL2W::Passes {
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
 			GlobalValue *gep_global = dynamic_cast<GlobalValue *>(gep->variable.get());
 			if (!gep_global) {
-				std::cerr << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 			} else {
 				std::list<int> indices;

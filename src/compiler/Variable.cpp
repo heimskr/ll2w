@@ -7,6 +7,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
 #include "options.h"
+#include "util/Util.h"
 
 // #define DEBUG_ALIASES
 #define VARIABLE_EXTRA
@@ -305,6 +306,54 @@ namespace LL2W {
 			if (WhyInfo::isSpecialPurpose(reg))
 				return true;
 		return false;
+	}
+
+	bool Variable::hasNonSpecialRegister() const {
+		for (const int reg: registers)
+			if (!WhyInfo::isSpecialPurpose(reg))
+				return true;
+		return false;
+	}
+
+	int Variable::nonSpecialCount() const {
+		int count = 0;
+		for (const int reg: registers)
+			if (!WhyInfo::isSpecialPurpose(reg))
+				++count;
+		return count;
+	}
+
+	bool Variable::compareRegisters(const Variable &other) const {
+		if (registers.size() != other.registers.size())
+			return false;
+		auto this_iter = registers.begin(), that_iter = other.registers.begin();
+		for (; this_iter != registers.end(); ++this_iter, ++that_iter)
+			if (*this_iter != *that_iter)
+				return false;
+		return true;
+	}
+
+	int Variable::registersRequired() const {
+		if (!type) {
+			warn() << "Variable " << *this << " has no type.\n";
+			return 1;
+		}
+		return Util::updiv(type->width(), 64);
+	}
+
+	std::string Variable::registersString() const {
+		std::string out = 1 < registers.size()? "(" : "";
+		bool first = true;
+		for (const int reg: registers) {
+			if (first)
+				first = false;
+			else
+				out += " ";
+			out += "$" + WhyInfo::registerName(reg);
+		}
+		if (1 < registers.size())
+			out += ")";
+		return out;
 	}
 
 	std::ostream & operator<<(std::ostream &os, const LL2W::Variable &var) {

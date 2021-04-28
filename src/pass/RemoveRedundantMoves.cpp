@@ -10,7 +10,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (auto *move = dynamic_cast<MoveInstruction *>(instruction.get())) {
-				if (move->rs->reg != -1 && move->rs->reg == move->rd->reg)
+				if (move->rs->compareRegisters(*move->rd))
 					to_remove.push_back(instruction);
 			}
 		}

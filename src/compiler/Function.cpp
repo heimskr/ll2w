@@ -702,7 +702,7 @@ namespace LL2W {
 		if (WhyInfo::totalRegisters <= index)
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
 		VariablePtr new_var = newVariable(std::make_shared<IntType>(64), block);
-		new_var->setRegister(index);
+		new_var->setRegisters({index});
 		return new_var;
 
 	}
@@ -718,7 +718,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (Interval &interval: intervals)
 				if (interval.variable.lock()->id < max)
-					interval.setRegister(++reg);
+					interval.setRegisters({++reg});
 		}
 	}
 
@@ -727,7 +727,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (const std::pair<const int, VariablePtr> &pair: variableStore)
 				if (pair.second->id < max)
-					pair.second->reg = ++reg;
+					pair.second->setRegisters({++reg});
 		}
 	}
 
@@ -1103,31 +1103,29 @@ namespace LL2W {
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
 			Variable *parent = var->getParent();
-			if (var->reg == -1 && parent)
-				var->reg = parent->reg;
-			if (var->reg == -1) {
+			if (var->registers.empty() && parent)
+				var->registers = parent->registers;
+			if (var->registers.empty()) {
 				for (Variable *alias: var->getAliases())
-					if (alias->reg != -1) {
-						var->reg = alias->reg;
+					if (!alias->registers.empty()) {
+						var->registers = alias->registers;
 						break;
 					}
 				// As a last resort, if this variable *still* has no register assigned, check all other known variables
 				// for a variable with the same id and try to absorb its register assignment.
-				if (var->reg == -1) {
+				if (var->registers.empty()) {
 					for (VariablePtr &other: all_vars)
-						if (other != var && other->id == var->id && other->reg != -1) {
-							var->reg = other->reg;
+						if (other != var && other->id == var->id && !other->registers.empty()) {
+							var->registers = other->registers;
 							break;
 						}
-					if (var->reg == -1)
+					if (var->registers.empty())
 						std::cerr << "hackVariables: last resort failed\n";
 				}
-			} else {
-				for (Variable *alias: var->getAliases()) {
-					if (alias->reg == -1)
-						alias->reg = var->reg;
-				}
-			}
+			} else
+				for (Variable *alias: var->getAliases())
+					if (alias->registers.empty())
+						alias->registers = var->registers;
 		}
 	}
 

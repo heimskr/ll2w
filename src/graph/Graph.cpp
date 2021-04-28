@@ -301,8 +301,11 @@ namespace LL2W {
 			if (color_max != -1 && total_colors < static_cast<int>(nodes_.size()))
 				throw UncolorableError();
 			int color = color_min - 1;
-			for (Node *node: nodes_)
-				node->color = ++color;
+			for (Node *node: nodes_) {
+				node->colors.clear();
+				for (int i = 0; i < node->colorsNeeded; ++i)
+					node->colors.insert(++color);
+			}
 		} else if (algo == Graph::ColoringAlgorithm::Greedy) {
 			std::set<int> all_colors;
 			const int max = color_max == -1? static_cast<int>(color_min + size() - 1) : color_max;
@@ -312,14 +315,16 @@ namespace LL2W {
 			for (Node *node: nodes_) {
 				std::set<int> available = all_colors;
 				for (Node *neighbor: node->out())
-					if (neighbor->color != -1)
-						available.erase(neighbor->color);
+					for (const int color: neighbor->colors)
+						available.erase(color);
 				for (Node *neighbor: node->in())
-					if (neighbor->color != -1)
-						available.erase(neighbor->color);
-				if (available.empty())
+					for (const int color: neighbor->colors)
+						available.erase(color);
+				if (available.size() < static_cast<size_t>(node->colorsNeeded))
 					throw UncolorableError();
-				node->color = *available.begin();
+				auto iter = available.begin();
+				for (int i = 0; i < node->colorsNeeded; ++i)
+					node->colors.insert(*iter++);
 			}
 		} else {
 			throw std::invalid_argument("Unknown graph coloring algorithm: " + std::to_string(static_cast<int>(algo)));
@@ -369,8 +374,8 @@ namespace LL2W {
 		out << "\n";
 
 		for (Node *node: nodes_)
-			if (0 <= node->color && static_cast<size_t>(node->color) < colors.size())
-				out << "\t" << node->label() << " [fillcolor=" << colors.at(node->color) << "];\n";
+			if (node->colors.size() == 1 && static_cast<size_t>(*node->colors.begin()) < colors.size())
+				out << "\t" << node->label() << " [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
 
 		for (const Node *node: nodes_)
 			for (const Node *neighbor: node->out())

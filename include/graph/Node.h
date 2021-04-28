@@ -36,7 +36,8 @@ namespace LL2W {
 			using Map = std::map<Node *, Set, Node_less>;
 
 			std::any data;
-			int color = -1;
+			std::set<int> colors;
+			int colorsNeeded = 1;
 
 			Node() = delete;
 			Node(Node &&) = delete;
@@ -51,6 +52,8 @@ namespace LL2W {
 			T get() const {
 				return std::any_cast<T>(data);
 			}
+
+			Node & setColorsNeeded(int);
 
 			/** Returns a const reference to the node's label. */
 			const std::string & label() const;

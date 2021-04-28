@@ -20,10 +20,8 @@ namespace LL2W::Passes {
 				std::shared_ptr<Instruction> prev_instruction;
 				for (InstructionPtr &instruction: block->instructions) {
 					int regular_written_count = 0;
-					for (const VariablePtr &variable: instruction->written) {
-						if (!WhyInfo::isSpecialPurpose(variable->reg))
-							++regular_written_count;
-					}
+					for (const VariablePtr &variable: instruction->written)
+						regular_written_count += variable->nonSpecialCount();
 
 					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
 						function.splitBlock(block, prev_instruction);
