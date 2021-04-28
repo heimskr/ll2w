@@ -175,6 +175,15 @@ namespace LL2W::Passes {
 			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable, size, -1));
+		} else if (value_type == ValueType::Global) {
+			std::shared_ptr<GlobalValue> global = std::dynamic_pointer_cast<GlobalValue>(constant->value);
+			VariablePtr new_var = function.newVariable(constant->type);
+			auto set = std::make_shared<SetInstruction>(new_var, global->name);
+			function.insertBefore(instruction, set);
+			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			function.insertBefore(instruction, sspush);
+			set->extract();
+			sspush->extract();
 		} else if (value_type == ValueType::Int) {
 			// Integer-like values
 			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
