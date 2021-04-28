@@ -209,6 +209,7 @@ namespace LL2W {
 	ValuePtr getValue(ASTNode *);
 	ValuePtr convertConversion(ASTNode *);
 	std::ostream & operator<<(std::ostream &, Value &);
+	std::string getName(ValueType);
 }
 
 #endif

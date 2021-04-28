@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
 #include "compiler/Function.h"
 #include "compiler/Variable.h"
@@ -241,5 +242,17 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &os, Value &value) {
 		return os << std::string(value);
+	}
+
+	static std::unordered_map<ValueType, std::string> value_names {
+		{ValueType::Double, "Double"}, {ValueType::Int, "Int"}, {ValueType::Null, "Null"},
+		{ValueType::Vector, "Vector"}, {ValueType::Bool, "Bool"}, {ValueType::Local, "Local"},
+		{ValueType::Global, "Global"}, {ValueType::Getelementptr, "Getelementptr"}, {ValueType::Void, "Void"},
+		{ValueType::Struct, "Struct"}, {ValueType::Array, "Array"}, {ValueType::CString, "CString"},
+		{ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Undef, "Undef"},
+	};
+
+	std::string getName(ValueType type) {
+		return value_names.at(type);
 	}
 }

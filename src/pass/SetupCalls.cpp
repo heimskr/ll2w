@@ -216,7 +216,7 @@ namespace LL2W::Passes {
 		} else if (constant->conversionSource) {
 			pushCallValue(function, instruction, constant->conversionSource);
 		} else {
-			warn() << "Not sure what to do with " << *constant << "\n";
+			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}
@@ -298,7 +298,7 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, setsym);
 			setsym->extract();
 		} else {
-			warn() << "Not sure what to do with " << *constant << "\n";
+			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}
