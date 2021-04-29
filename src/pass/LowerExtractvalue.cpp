@@ -50,6 +50,7 @@ namespace LL2W::Passes {
 			// 	std::cerr << pair.first << " => " << pair.second << "\n";
 
 			auto result = PackedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
+			to_remove.push_back(instruction);
 			info() << "Result: " << result << "\n";
 		}
 

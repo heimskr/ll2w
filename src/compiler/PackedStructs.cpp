@@ -9,52 +9,6 @@
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "parser/StructNode.h"
 
-/**
- * Example struct: {i8*, i8, i32, {i16, i64}, i8*, i32} (total width: 64 + 8 + 32 + 80 + 64 + 32 = 280)
- * Target index: 3 ({i16, i64})
- * Physical input registers: ($t0 $t1 $t2 $t3 $t4)
- * Target output registers: ($s0 $s1)
- * Contents:
- * 	i8*: 0x1234567890abcdef
- * 	i8:  0x66
- * 	i32: 0xaabbccdd
- * 	{i16, i64}: 0x1234, 0x1122334455667788
- * 	i8*: 0x1f2e3d4c5b6a7988
- * 	i32: 0x1a2a3a4a
- * 
- * 	$t0: 0x1234567890abcdef
- * 	$t1: 0x66aabbccdd123411
- * 	$t2: 0x223344556677881f
- * 	$t3: 0x2e3d4c5b6a79881a
- * 	$t4: 0x2a3a4a0000000000
- * 
- * 	$s0: 0x1234112233445566
- * 	$s1: 0x7788000000000000
- * 
- * Add up widths of preceding types (64 + 8 + 32 = 104)
- * Calculate total width remaining = width of target index (16 + 64 = 80)
- * Set width remaining for current register to 16???
- * 
- * While width sum > 64, subtract 64 and skip a physical register
- * (104, $t0) => (40, $t1)
- * 
- * - Skip 40 bits of $t1 and take min(64 - 40, 64 [rem. bits in $t1], 64 [rem. bits in $s1], 80) = 24 bits from $t1 and
- *   put them in the left of $s0
- * - $s0 = 0x1234110000000000
- *   (40, $t1) => (0,  $t2)
- *   (64, $s0) => (40, $s0)
- *   Total remaining: 80 - 24 = 56
- * - Skip 0 bits of $t2 and take min(64 - 0, 64 [rem. bits in $t2], 40 [rem. bits in $s1], 56) = 40 bits from $t2 and
- *   put them in the left + (64 - 40) bits of $s0
- * - $s0 = 0x1234112233445566
- *   (0,  $t2) => (40, $t2)
- *   (40, $s0) => (64, $s1)
- *   Total remaining: 56 - 40 = 16
- * - Skip 40 bits of $t2 and take min(64 - 40, 24 [rem. bits in $t2], 64 [rem. bits in $s1], 16) = 16 bits from $t2 and
- *   put them in the left + (64 - 64) bits of $s1
- * - $s1 = 0x7788000000000000
- */
-
 namespace LL2W::PackedStructs {
 	VariablePtr extract(VariablePtr source, int index, Function &function, InstructionPtr instruction) {
 		std::list<int> source_regs(source->registers.begin(), source->registers.end());
@@ -90,19 +44,17 @@ namespace LL2W::PackedStructs {
 
 		info() << "Skip: " << skip << ", source register index: " << source_reg_index << "\n";
 
-		int target_remaining = 64;
-
 		auto extracted_type = struct_type->node->types.at(index);
-
 		int width_remaining = extracted_type->width();
-
+		int target_remaining = 64;
 
 		VariablePtr out_var = function.newVariable(extracted_type);
 		info() << "outvar: " << *out_var << " (registers required: " << out_var->registersRequired() << ")\n";
 		info() << "width_remaining: " << width_remaining << "\n";
 
+		int target_reg_index = 0;
 
-		for (int i = 0, required = out_var->registersRequired(); i < required; ++i) {
+		while (0 < width_remaining) {
 			int to_take = std::min({64 - skip, target_remaining, width_remaining});
 			auto from_pack = function.newVariable();
 			auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
@@ -137,23 +89,28 @@ namespace LL2W::PackedStructs {
 				left->extract();
 			}
 
-			auto move = std::make_shared<DeferredDestinationMoveInstruction>(from_pack, out_var, i);
+			auto move = std::make_shared<DeferredDestinationMoveInstruction>(from_pack, out_var, target_reg_index);
 			function.insertBefore(instruction, move, false);
 			move->extract();
 
 			target_remaining -= to_take;
+			width_remaining -= to_take;
 			if (target_remaining < 0)
 				warn() << "target_remaining (" << target_remaining << ") is less than zero!\n";
 
 			if (target_remaining <= 0) {
 				target_remaining = 64;
+				++target_reg_index;
 			}
 
 			skip = 0;
+
+			// I think this is valid. If the size of the extracted element is less than 64, then all the width is taken
+			// care of in one iteration of this loop and this increment doesn't matter. Otherwise, the struct element
+			// will be 64-byte aligned and we'll be taking 64 bits at a time (at least until the last iteration,
+			// possibly).
+			++source_reg_index;
 		}
-
-
-
 
 		function.reindexInstructions();
 		return nullptr;
