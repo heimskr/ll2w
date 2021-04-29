@@ -17,19 +17,19 @@ namespace LL2W::PaddedStructs {
 
 		TypePtr type = source->type;
 		if (!type)
-			throw std::runtime_error("PackedStructs::extract: source variable has no type");
+			throw std::runtime_error("PaddedStructs::extract: source variable has no type");
 		
 		StructType *initial_struct_type = dynamic_cast<StructType *>(type.get());
 		if (!initial_struct_type)
-			throw std::runtime_error("PackedStruct::extract: source variable type isn't StructType");
+			throw std::runtime_error("PaddedStructs::extract: source variable type isn't StructType");
 
 		LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 		if (!llvm)
-			throw std::runtime_error("PackedStructs::extract not called on an LLVM instruction");
+			throw std::runtime_error("PaddedStructs::extract not called on an LLVM instruction");
 
 		ExtractValueNode *evnode = dynamic_cast<ExtractValueNode *>(llvm->node);
 		if (!evnode)
-			throw std::runtime_error("PackedStructs::extract not called on an extractvalue node");
+			throw std::runtime_error("PaddedStructs::extract not called on an extractvalue node");
 
 		if (!evnode->variable->type)
 			throw std::runtime_error("ExtractValueNode output variable has no type");
@@ -62,7 +62,7 @@ namespace LL2W::PaddedStructs {
 			auto from_pack = function.newVariable();
 			auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
 			function.insertBefore(instruction, move_from_pack, false);
-			function.comment(move_from_pack, "PackedStructs(out = " + out_var->type->toString() + "): move from pack");
+			function.comment(move_from_pack, "PaddedStructs(out = " + out_var->type->toString() + "): move from pack");
 			move_from_pack->extract();
 
 			if (skip != 0) {
