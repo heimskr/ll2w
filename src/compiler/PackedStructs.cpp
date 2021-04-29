@@ -2,6 +2,11 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
+#include "instruction/DeferredDestinationMoveInstruction.h"
+#include "instruction/DeferredSourceMoveInstruction.h"
+#include "instruction/SetInstruction.h"
+#include "instruction/ShiftRightLogicalIInstruction.h"
+#include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "parser/StructNode.h"
 
 /**
@@ -67,9 +72,51 @@ namespace LL2W::PackedStructs {
 		int width_sum = 0;
 
 		for (int i = 0; i < index; ++i) {
-			width_sum += struct_type->node->types.at(index)->width();
+			width_sum += struct_type->node->types.at(i)->width();
 		}
 
+		int skip, source_reg_index = 0;
+
+		info() << "Width sum: " << width_sum << "\n";
+
+		// While 64 <= width sum, subtract 64 and skip a source register.
+		// The result will be the number of bits to skip in the first used source register.
+		for (skip = width_sum; 64 <= skip; skip -= 64)
+			++source_reg_index;
+
+		info() << "Skip: " << skip << ", source register index: " << source_reg_index << "\n";
+
+		int target_remaining = 64;
+
+		auto extracted_type = struct_type->node->types.at(index);
+
+		const int extracted_width = extracted_type->width();
+
+		int to_take = std::min({64 - skip, target_remaining, extracted_width});
+
+		VariablePtr out_var = function.newVariable(extracted_type);
+
+		info() << "outvar: " << *out_var << " (registers required: " << out_var->registersRequired() << ")\n";
+
+		auto from_pack = function.newVariable();
+		auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
+		function.insertBefore(instruction, move_from_pack, false);
+		function.comment(move_from_pack, "PackedStructs: move from pack");
+		move_from_pack->extract();
+		// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits allowed
+		// in an I-type instruction's immediate value.
+		auto destination = function.newVariable();
+		auto right_shift = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - to_take, destination);
+		function.insertBefore(instruction, right_shift, false);
+		right_shift->extract();
+		auto left_shift = std::make_shared<ShiftLeftLogicalIInstruction>(destination, 64 - to_take, destination);
+		function.insertBefore(instruction, left_shift, false);
+		left_shift->extract();
+
+
+
+
+		function.reindexInstructions();
 		return nullptr;
 	}
 }

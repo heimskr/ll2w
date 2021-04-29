@@ -88,7 +88,7 @@ namespace LL2W {
 			out << "]\e[22m";
 		}
 		out << "\e[2m<" << definingBlocks.size() << "." << definitions.size() << ":" << usingBlocks.size() << "."
-		    << uses.size() << "/" << registersRequired() << ">\e[22m";
+		    << uses.size() << "/" << registersRequired(false) << ">\e[22m";
 #endif
 		return out.str();
 	}
@@ -341,9 +341,10 @@ namespace LL2W {
 		return true;
 	}
 
-	int Variable::registersRequired() const {
+	int Variable::registersRequired(bool may_warn) const {
 		if (!type) {
-			warn() << "Variable " << *this << " has no type.\n";
+			if (may_warn)
+				warn() << "Variable " << *this << " has no type.\n";
 			return 1;
 		}
 		return Util::updiv(type->width(), 64);

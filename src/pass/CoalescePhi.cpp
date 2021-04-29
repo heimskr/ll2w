@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 						// parameters specify a constant.
 						if (pair.first->isIntLike()) {
 							BasicBlockPtr block = function.bbMap.at(pair.second);
-							auto new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue(), -1);
+							auto new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue());
 							new_instr->parent = block;
 							if (block->instructions.empty()) {
 								block->insertBeforeTerminal(new_instr);

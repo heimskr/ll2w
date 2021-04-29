@@ -45,11 +45,12 @@ namespace LL2W::Passes {
 			info() << "Unpadded: " << *struct_type << "\n";
 			auto padded = struct_type->pad();
 			info() << "Padded: " << *padded << "\n";
-			
-			for (const std::pair<const int, int> &pair: padded->paddingMap)
-				std::cerr << pair.first << " => " << pair.second << "\n";
 
-			// info() << PackedStructs::extract(ev->aggregateValue, ev->decimals.front(), function, instruction) << "\n";
+			// for (const std::pair<const int, int> &pair: padded->paddingMap)
+			// 	std::cerr << pair.first << " => " << pair.second << "\n";
+
+			auto result = PackedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
+			info() << "Result: " << result << "\n";
 		}
 
 		for (InstructionPtr &instruction: to_remove)

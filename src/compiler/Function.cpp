@@ -396,7 +396,7 @@ namespace LL2W {
 	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
-			std::cerr << "\e[31;1m!\e[0m " << base->debugExtra() << "\n";
+			error() << base->debugExtra() << "\n";
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
 
@@ -408,10 +408,9 @@ namespace LL2W {
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		linearInstructions.insert(linearIter, new_instruction);
 		block->instructions.insert(blockIter, new_instruction);
-		if (reindex) {
+		if (reindex)
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
 				++(*linearIter)->index;
-		}
 	}
 
 	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,

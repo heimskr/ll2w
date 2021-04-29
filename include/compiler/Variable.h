@@ -88,7 +88,7 @@ namespace LL2W {
 			bool compareRegisters(const Variable &) const;
 			/** Returns the number of registers required to contain all the variable's data. Not useful if the variable
 			 *  has no type information. */
-			int registersRequired() const;
+			int registersRequired(bool may_warn = true) const;
 			/** Returns true if the variable has been assigned more than one register. */
 			bool multireg() const;
 			/** Returns a string containing all the assigned registers.

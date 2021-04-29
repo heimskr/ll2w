@@ -6,7 +6,6 @@
 #include "parser/Types.h"
 
 namespace LL2W {
-
 	class Function;
 	class Instruction;
 	class Variable;
