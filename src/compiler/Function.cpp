@@ -36,6 +36,7 @@
 #include "parser/FunctionHeader.h"
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
+#include "pass/FinishMoves.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
 #include "pass/InsertLabels.h"
@@ -661,6 +662,7 @@ namespace LL2W {
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::splitMultireg(*this);
+		Passes::finishMoves(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
