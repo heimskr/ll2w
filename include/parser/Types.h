@@ -172,6 +172,19 @@ namespace LL2W {
 		bool operator==(const Type &) const override;
 	};
 
+	/** During padded struct extraction, it's necessary to read one register from a register pack representing a struct.
+	 *  This register may contain data from multiple members or from only a fraction of member, and as such has no
+	 *  specific type. However, it's always one register in size. */
+	struct OpaqueType: public Type {
+		TypeType typeType() const override { return TypeType::Opaque; }
+		OpaqueType() {}
+		operator std::string() override { return "\e[1mopaque\e[22m"; }
+		std::string toString() override { return "opaque"; }
+		TypePtr copy() const override { return std::make_shared<OpaqueType>(); }
+		int width() const override { return 64; }
+		bool operator==(const Type &type) const override { return dynamic_cast<const OpaqueType *>(&type) != nullptr; }
+	};
+
 	TypePtr getType(const ASTNode *);
 	std::ostream & operator<<(std::ostream &os, Type &type);
 }

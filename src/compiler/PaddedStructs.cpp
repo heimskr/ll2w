@@ -59,7 +59,7 @@ namespace LL2W::PaddedStructs {
 
 		while (0 < width_remaining) {
 			int to_take = std::min({64 - skip, target_remaining, width_remaining});
-			auto from_pack = function.newVariable();
+			auto from_pack = function.newVariable(std::make_shared<OpaqueType>());
 			auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
 			function.insertBefore(instruction, move_from_pack, false);
 			function.comment(move_from_pack, "PaddedStructs(out = " + out_var->type->toString() + "): move from pack");
