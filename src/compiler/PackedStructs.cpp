@@ -108,16 +108,25 @@ namespace LL2W::PackedStructs {
 		function.comment(move_from_pack, "PackedStructs: move from pack");
 		move_from_pack->extract();
 
-		if (to_take != 64) {
+		if (skip != 0) {
 			// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits
 			// allowed in an I-type instruction's immediate value.
-			auto destination = function.newVariable();
-			auto right_shift = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - to_take, destination);
-			function.insertBefore(instruction, right_shift, false);
-			right_shift->extract();
-			auto left_shift = std::make_shared<ShiftLeftLogicalIInstruction>(destination, 64 - to_take, destination);
-			function.insertBefore(instruction, left_shift, false);
-			left_shift->extract();
+			auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
+			function.insertBefore(instruction, left, false);
+			left->extract();
+			auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, skip, from_pack);
+			function.insertBefore(instruction, right, false);
+			right->extract();
+		}
+
+		if (skip + to_take < 64) {
+			// Same applies here; instead of masking, we have to use two shifts.
+			auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
+			function.insertBefore(instruction, right, false);
+			right->extract();
+			auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
+			function.insertBefore(instruction, left, false);
+			left->extract();
 		}
 
 
