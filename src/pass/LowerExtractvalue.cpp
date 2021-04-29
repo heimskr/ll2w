@@ -51,7 +51,7 @@ namespace LL2W::Passes {
 
 			auto result = PackedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
 			to_remove.push_back(instruction);
-			info() << "Result: " << result << "\n";
+			success() << "Result: " << *result << "\n";
 		}
 
 		for (InstructionPtr &instruction: to_remove)

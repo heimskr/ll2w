@@ -40,7 +40,7 @@ namespace LL2W {
 		}
 	}
 
-	std::string StructNode::typeStr() const {
+	std::string StructNode::typeString() const {
 		std::stringstream out;
 		out << "\e[2m{\e[0m";
 		auto begin = types.begin(), end = types.end();
@@ -53,6 +53,19 @@ namespace LL2W {
 		return out.str();
 	}
 
+	std::string StructNode::typeStringPlain() const {
+		std::stringstream out;
+		out << "{";
+		auto begin = types.begin(), end = types.end();
+		for (auto iter = begin; iter != end; ++iter) {
+			if (iter != begin)
+				out << ", ";
+			out << (*iter)->toString();
+		}
+		out << "}";
+		return out.str();
+	}
+
 	std::string StructNode::debugExtra() const {
 		std::stringstream out;
 		if (shape == StructShape::Opaque) {
@@ -60,7 +73,7 @@ namespace LL2W {
 		} else {
 			if (shape == StructShape::Packed)
 				out << " packed";
-			out << " " << typeStr();
+			out << " " << typeString();
 		}
 
 		return out.str();

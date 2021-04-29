@@ -19,6 +19,10 @@ namespace LL2W {
 		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}
 
+	std::string IntType::toString() {
+		return "i" + std::to_string(intWidth);
+	}
+
 	bool IntType::operator==(const Type &other) const {
 		return this == &other ||
 			(other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth);
@@ -26,6 +30,10 @@ namespace LL2W {
 
 	ArrayType::operator std::string() {
 		return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
+	}
+
+	std::string ArrayType::toString() {
+		return "[" + std::to_string(count) + " x " + subtype->toString() + "]";
 	}
 
 	bool ArrayType::operator==(const Type &other) const {
@@ -39,7 +47,11 @@ namespace LL2W {
 	}
 
 	VectorType::operator std::string() {
-		return "\e[2m<\e[0m" + std::to_string(this->count) + " \e[2mx\e[0m " + std::string(*this->subtype) + "\e[2m>\e[0m";
+		return "\e[2m<\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m>\e[0m";
+	}
+
+	std::string VectorType::toString() {
+		return "<" + std::to_string(count) + " x " + subtype->toString() + ">";
 	}
 
 	bool VectorType::operator==(const Type &other) const {
@@ -62,6 +74,10 @@ namespace LL2W {
 			case FloatType::Type::PPC_FP128: return "ppc_fp128";
 			default: throw std::runtime_error("Unrecognized float type: " + std::to_string(static_cast<int>(type)));
 		}
+	}
+
+	std::string FloatType::toString() {
+		return std::string(*this);
 	}
 
 	FloatType::Type FloatType::getType(const std::string &str) {
@@ -90,6 +106,10 @@ namespace LL2W {
 
 	PointerType::operator std::string() {
 		return std::string(*subtype) + "\e[1;2m*\e[0m";
+	}
+
+	std::string PointerType::toString() {
+		return subtype->toString() + "*";
 	}
 
 	bool PointerType::operator==(const Type &other) const {
@@ -131,6 +151,30 @@ namespace LL2W {
 
 		out << ") *";
 		return cached = out.str();
+	}
+
+	std::string FunctionType::toString() {
+		if (!cachedPlain.empty())
+			return cachedPlain;
+
+		std::stringstream out;
+		out << returnType->toString() << " (";
+
+		if (!argumentTypes.empty()) {
+			for (size_t i = 0, l = argumentTypes.size(); i < l; ++i) {
+				if (i)
+					out << ", ";
+				out << argumentTypes.at(i)->toString();
+			}
+
+			if (ellipsis)
+				out << ", ...";
+		} else if (ellipsis) {
+			out << "...";
+		}
+
+		out << ") *";
+		return cachedPlain = out.str();
 	}
 
 	TypePtr FunctionType::copy() const {
@@ -181,10 +225,18 @@ namespace LL2W {
 
 	StructType::operator std::string() {
 		if (*name == "[anon]" && node)
-			return node->typeStr();
+			return node->typeString();
 		if (name->at(1) == '"')
-			return "\e[32m%\e[33m" + name->substr(1) + "\e[0m";
-		return "\e[32m" + *name + "\e[0m";
+			return "\e[32m%\e[33m" + name->substr(1) + "\e[39m";
+		return "\e[32m" + *name + "\e[39m";
+	}
+
+	std::string StructType::toString() {
+		if (*name == "[anon]" && node)
+			return node->typeStringPlain();
+		if (name->at(1) == '"')
+			return "%" + name->substr(1);
+		return *name;
 	}
 
 	TypePtr StructType::copy() const {

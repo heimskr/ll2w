@@ -153,6 +153,10 @@ namespace LL2W {
 		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;36mi\e[39;2m]\e[22m ";
 	}
 
+	inline std::ostream & success(bool cout = false) {
+		return (cout? std::cout : std::cerr) << "\e[2m[\e[22;32m🗸\e[39;2m]\e[22m ";
+	}
+
 	inline void debugger() {
 		raise(SIGTRAP);
 	}

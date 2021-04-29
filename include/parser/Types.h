@@ -21,7 +21,10 @@ namespace LL2W {
 	class Type {
 		public:
 			virtual TypeType typeType() const { return TypeType::None; }
+			/** Returns an LLVM-style string representation of the type with ANSI styling. */
 			virtual operator std::string() = 0;
+			/** Returns an LLVM-style string representation of the type without ANSI styling. */
+			virtual std::string toString() = 0;
 			virtual ~Type() {}
 			virtual TypePtr copy() const = 0;
 			/** Returns the width of the type in bits. */
@@ -34,7 +37,8 @@ namespace LL2W {
 	struct VoidType: public Type {
 		TypeType typeType() const override { return TypeType::Void; }
 		VoidType() {}
-		virtual operator std::string() override { return "void"; }
+		operator std::string() override { return "void"; }
+		std::string toString() override { return "void"; }
 		TypePtr copy() const override { return std::make_shared<VoidType>(); }
 		int width() const override { return 0; }
 	};
@@ -45,6 +49,7 @@ namespace LL2W {
 		int intWidth;
 		IntType(int width_): intWidth(width_) {}
 		operator std::string() override;
+		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
 		int width() const override { return Util::upalign(intWidth, 8); }
 		bool operator==(const Type &other) const override;
@@ -63,6 +68,7 @@ namespace LL2W {
 		TypePtr subtype;
 		ArrayType(int count_, TypePtr subtype_): count(count_), subtype(subtype_) {}
 		operator std::string() override;
+		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<ArrayType>(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
 		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
@@ -73,6 +79,7 @@ namespace LL2W {
 		TypeType typeType() const override { return TypeType::Vector; }
 		using ArrayType::ArrayType;
 		operator std::string() override;
+		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<VectorType>(count, subtype->copy()); }
 		bool operator==(const Type &) const override;
 	};
@@ -83,6 +90,7 @@ namespace LL2W {
 		FloatType::Type type;
 		FloatType(FloatType::Type type_): type(type_) {}
 		operator std::string() override;
+		std::string toString() override;
 		LL2W::TypePtr copy() const override { return std::make_shared<FloatType>(type); }
 		static Type getType(const std::string &);
 		int width() const override;
@@ -94,6 +102,7 @@ namespace LL2W {
 		TypePtr subtype;
 		PointerType(TypePtr subtype_): subtype(subtype_) {}
 		operator std::string() override;
+		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
 		int width() const override { return WhyInfo::pointerWidth * 8; }
 		bool operator==(const Type &) const override;
@@ -102,7 +111,7 @@ namespace LL2W {
 	class FunctionType: public Type {
 		private:
 			TypeType typeType() const override { return TypeType::Function; }
-			std::string cached = "";
+			std::string cached, cachedPlain;
 
 		public:
 			TypePtr returnType;
@@ -114,6 +123,7 @@ namespace LL2W {
 				returnType(return_type), argumentTypes(std::move(argument_types)), ellipsis(ellipsis_) {}
 			void uncache() { cached.clear(); }
 			operator std::string() override;
+			std::string toString() override;
 			TypePtr copy() const override;
 			int width() const override { return WhyInfo::pointerWidth; }
 			bool operator==(const Type &) const override;
@@ -136,6 +146,7 @@ namespace LL2W {
 		StructType(std::shared_ptr<StructNode>);
 		StructType(const StructNode *);
 		operator std::string() override;
+		std::string toString() override;
 		TypePtr copy() const override;
 		int width() const override;
 		TypePtr extractType(std::list<int> indices) const override;
@@ -155,6 +166,7 @@ namespace LL2W {
 		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}
 		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(StringSet::intern(node->extractName())) {}
 		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
+		std::string toString() override { return "@" + *globalName; }
 		TypePtr copy() const override { return std::make_shared<GlobalTemporaryType>(globalName); }
 		int width() const override { throw std::runtime_error("Calling GlobalTemporaryType::width() is invalid"); }
 		bool operator==(const Type &) const override;

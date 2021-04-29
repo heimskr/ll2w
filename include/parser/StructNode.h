@@ -26,7 +26,8 @@ namespace LL2W {
 			StructNode(StructShape, ASTNode *left, ASTNode *types_);
 			StructNode(StructShape, ASTNode *types_);
 
-			std::string typeStr() const;
+			std::string typeString() const;
+			std::string typeStringPlain() const;
 			virtual std::string debugExtra() const override;
 			virtual std::string style() const override { return "\e[33m"; }
 			std::shared_ptr<StructNode> copy() const;
