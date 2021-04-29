@@ -1,7 +1,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
-#include "compiler/PackedStructs.h"
+#include "compiler/PaddedStructs.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/SetInstruction.h"
 #include "parser/StructNode.h"
@@ -44,7 +44,7 @@ namespace LL2W::Passes {
 			// for (const std::pair<const int, int> &pair: padded->paddingMap)
 			// 	std::cerr << pair.first << " => " << pair.second << "\n";
 
-			auto result = PackedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
+			auto result = PaddedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
 			to_remove.push_back(instruction);
 		}
 

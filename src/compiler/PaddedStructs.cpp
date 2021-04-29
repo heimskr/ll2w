@@ -1,7 +1,7 @@
-#include "compiler/PackedStructs.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
+#include "compiler/PaddedStructs.h"
 #include "compiler/Variable.h"
 #include "instruction/DeferredDestinationMoveInstruction.h"
 #include "instruction/DeferredSourceMoveInstruction.h"
@@ -11,7 +11,7 @@
 #include "parser/Nodes.h"
 #include "parser/StructNode.h"
 
-namespace LL2W::PackedStructs {
+namespace LL2W::PaddedStructs {
 	VariablePtr extract(VariablePtr source, int index, Function &function, InstructionPtr instruction) {
 		std::list<int> source_regs(source->registers.begin(), source->registers.end());
 

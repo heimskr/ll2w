@@ -10,7 +10,7 @@ namespace LL2W {
 	class Instruction;
 	class Variable;
 
-	namespace PackedStructs {
+	namespace PaddedStructs {
 		/** Inserts instructions to extract a value from a struct packed inside registers. */
 		std::shared_ptr<Variable> extract(std::shared_ptr<Variable>, int index, Function &,
 			std::shared_ptr<Instruction>);
