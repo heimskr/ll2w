@@ -2,10 +2,10 @@
 #include "compiler/Instruction.h"
 #include "compiler/WhyInfo.h"
 #include "instruction/MoveInstruction.h"
-#include "pass/SplitMultireg.h"
+#include "pass/SplitResultMoves.h"
 
 namespace LL2W::Passes {
-	int splitMultireg(Function &function) {
+	int splitResultMoves(Function &function) {
 		int changed = 0;
 
 		std::list<InstructionPtr> to_remove;
