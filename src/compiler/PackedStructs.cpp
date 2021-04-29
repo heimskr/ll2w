@@ -63,9 +63,13 @@ namespace LL2W::PackedStructs {
 		if (!type)
 			throw std::runtime_error("PackedStructs::extract: source variable has no type");
 		
-		StructType *struct_type = dynamic_cast<StructType *>(type.get());
-		if (!struct_type)
+		StructType *initial_struct_type = dynamic_cast<StructType *>(type.get());
+		if (!initial_struct_type)
 			throw std::runtime_error("PackedStruct::extract: source variable type isn't StructType");
+
+		auto struct_type = initial_struct_type->pad();
+
+		index = struct_type->paddingMap.at(index);
 
 		// TODO: support ArrayType
 
@@ -103,15 +107,18 @@ namespace LL2W::PackedStructs {
 		function.insertBefore(instruction, move_from_pack, false);
 		function.comment(move_from_pack, "PackedStructs: move from pack");
 		move_from_pack->extract();
-		// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits allowed
-		// in an I-type instruction's immediate value.
-		auto destination = function.newVariable();
-		auto right_shift = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - to_take, destination);
-		function.insertBefore(instruction, right_shift, false);
-		right_shift->extract();
-		auto left_shift = std::make_shared<ShiftLeftLogicalIInstruction>(destination, 64 - to_take, destination);
-		function.insertBefore(instruction, left_shift, false);
-		left_shift->extract();
+
+		if (to_take != 64) {
+			// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits
+			// allowed in an I-type instruction's immediate value.
+			auto destination = function.newVariable();
+			auto right_shift = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - to_take, destination);
+			function.insertBefore(instruction, right_shift, false);
+			right_shift->extract();
+			auto left_shift = std::make_shared<ShiftLeftLogicalIInstruction>(destination, 64 - to_take, destination);
+			function.insertBefore(instruction, left_shift, false);
+			left_shift->extract();
+		}
 
 
 
