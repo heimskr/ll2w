@@ -94,39 +94,62 @@ namespace LL2W::PackedStructs {
 
 		auto extracted_type = struct_type->node->types.at(index);
 
-		const int extracted_width = extracted_type->width();
+		int width_remaining = extracted_type->width();
 
-		int to_take = std::min({64 - skip, target_remaining, extracted_width});
 
 		VariablePtr out_var = function.newVariable(extracted_type);
-
 		info() << "outvar: " << *out_var << " (registers required: " << out_var->registersRequired() << ")\n";
+		info() << "width_remaining: " << width_remaining << "\n";
 
-		auto from_pack = function.newVariable();
-		auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
-		function.insertBefore(instruction, move_from_pack, false);
-		function.comment(move_from_pack, "PackedStructs: move from pack");
-		move_from_pack->extract();
 
-		if (skip != 0) {
-			// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits
-			// allowed in an I-type instruction's immediate value.
-			auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
-			function.insertBefore(instruction, left, false);
-			left->extract();
-			auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, skip, from_pack);
-			function.insertBefore(instruction, right, false);
-			right->extract();
-		}
+		for (int i = 0, required = out_var->registersRequired(); i < required; ++i) {
+			int to_take = std::min({64 - skip, target_remaining, width_remaining});
+			auto from_pack = function.newVariable();
+			auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
+			function.insertBefore(instruction, move_from_pack, false);
+			function.comment(move_from_pack, "PackedStructs: move from pack");
+			move_from_pack->extract();
 
-		if (skip + to_take < 64) {
-			// Same applies here; instead of masking, we have to use two shifts.
-			auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
-			function.insertBefore(instruction, right, false);
-			right->extract();
-			auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
-			function.insertBefore(instruction, left, false);
-			left->extract();
+			if (skip != 0) {
+				// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits
+				// allowed in an I-type instruction's immediate value.
+				auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
+				function.insertBefore(instruction, left, false);
+				left->extract();
+				auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, skip, from_pack);
+				function.insertBefore(instruction, right, false);
+				right->extract();
+			}
+
+			if (skip + to_take < 64) {
+				// Same applies here; instead of masking, we have to use two shifts.
+				auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
+				function.insertBefore(instruction, right, false);
+				right->extract();
+				auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
+				function.insertBefore(instruction, left, false);
+				left->extract();
+			}
+
+			if (skip != 0) {
+				auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
+				function.insertBefore(instruction, left, false);
+				left->extract();
+			}
+
+			auto move = std::make_shared<DeferredDestinationMoveInstruction>(from_pack, out_var, i);
+			function.insertBefore(instruction, move, false);
+			move->extract();
+
+			target_remaining -= to_take;
+			if (target_remaining < 0)
+				warn() << "target_remaining (" << target_remaining << ") is less than zero!\n";
+
+			if (target_remaining <= 0) {
+				target_remaining = 64;
+			}
+
+			skip = 0;
 		}
 
 
