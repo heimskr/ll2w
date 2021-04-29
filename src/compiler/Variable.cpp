@@ -64,7 +64,7 @@ namespace LL2W {
 			out << "\e[92m";
 			if (1 < registers.size())
 				out << "(";
-			bool first = false;
+			bool first = true;
 			for (int reg: registers) {
 				if (first)
 					first = false;

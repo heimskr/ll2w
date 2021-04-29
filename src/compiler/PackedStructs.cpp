@@ -1,0 +1,75 @@
+#include "compiler/PackedStructs.h"
+#include "compiler/Function.h"
+#include "compiler/Instruction.h"
+#include "compiler/Variable.h"
+#include "parser/StructNode.h"
+
+/**
+ * Example struct: {i8*, i8, i32, {i16, i64}, i8*, i32} (total width: 64 + 8 + 32 + 80 + 64 + 32 = 280)
+ * Target index: 3 ({i16, i64})
+ * Physical input registers: ($t0 $t1 $t2 $t3 $t4)
+ * Target output registers: ($s0 $s1)
+ * Contents:
+ * 	i8*: 0x1234567890abcdef
+ * 	i8:  0x66
+ * 	i32: 0xaabbccdd
+ * 	{i16, i64}: 0x1234, 0x1122334455667788
+ * 	i8*: 0x1f2e3d4c5b6a7988
+ * 	i32: 0x1a2a3a4a
+ * 
+ * 	$t0: 0x1234567890abcdef
+ * 	$t1: 0x66aabbccdd123411
+ * 	$t2: 0x223344556677881f
+ * 	$t3: 0x2e3d4c5b6a79881a
+ * 	$t4: 0x2a3a4a0000000000
+ * 
+ * 	$s0: 0x1234112233445566
+ * 	$s1: 0x7788000000000000
+ * 
+ * Add up widths of preceding types (64 + 8 + 32 = 104)
+ * Calculate total width remaining = width of target index (16 + 64 = 80)
+ * Set width remaining for current register to 16???
+ * 
+ * While width sum > 64, subtract 64 and skip a physical register
+ * (104, $t0) => (40, $t1)
+ * 
+ * - Skip 40 bits of $t1 and take min(64 - 40, 64 [rem. bits in $t1], 64 [rem. bits in $s1], 80) = 24 bits from $t1 and
+ *   put them in the left of $s0
+ * - $s0 = 0x1234110000000000
+ *   (40, $t1) => (0,  $t2)
+ *   (64, $s0) => (40, $s0)
+ *   Total remaining: 80 - 24 = 56
+ * - Skip 0 bits of $t2 and take min(64 - 0, 64 [rem. bits in $t2], 40 [rem. bits in $s1], 56) = 40 bits from $t2 and
+ *   put them in the left + (64 - 40) bits of $s0
+ * - $s0 = 0x1234112233445566
+ *   (0,  $t2) => (40, $t2)
+ *   (40, $s0) => (64, $s1)
+ *   Total remaining: 56 - 40 = 16
+ * - Skip 40 bits of $t2 and take min(64 - 40, 24 [rem. bits in $t2], 64 [rem. bits in $s1], 16) = 16 bits from $t2 and
+ *   put them in the left + (64 - 64) bits of $s1
+ * - $s1 = 0x7788000000000000
+ */
+
+namespace LL2W::PackedStructs {
+	VariablePtr extract(VariablePtr source, int index, Function &function, InstructionPtr instruction) {
+		std::list<int> source_regs(source->registers.begin(), source->registers.end());
+
+		TypePtr type = source->type;
+		if (!type)
+			throw std::runtime_error("PackedStructs::extract: source variable has no type");
+		
+		StructType *struct_type = dynamic_cast<StructType *>(type.get());
+		if (!struct_type)
+			throw std::runtime_error("PackedStruct::extract: source variable type isn't StructType");
+
+		// TODO: support ArrayType
+
+		int width_sum = 0;
+
+		for (int i = 0; i < index; ++i) {
+			width_sum += struct_type->node->types.at(index)->width();
+		}
+
+		return nullptr;
+	}
+}

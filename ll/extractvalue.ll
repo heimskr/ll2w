@@ -1,5 +1,7 @@
 define void @main() {
 	; Implicit block %0
-
-	ret void
+	%1 = alloca {i8*, i8, i32, {i16, i64}, i8*, i32}
+	%2 = load {i8*, i8, i32, {i16, i64}, i8*, i32}, {i8*, i8, i32, {i16, i64}, i8*, i32}* %1
+	%3 = extractvalue {i8*, i8, i32, {i16, i64}, i8*, i32} %2, 3
+	ret {i16, i64} %3
 }

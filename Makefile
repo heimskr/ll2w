@@ -5,13 +5,14 @@ STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
-TESTFILE		?= ~/src/mal/combined.strprint.ll
+# TESTFILE		?= ~/src/mal/combined.strprint.ll
 # TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
 # TESTFILE		?= ll/mal.ll
 # TESTFILE		?= ll/mintf.ll
 # TESTFILE		?= ll/inline_asm.ll
 # TESTFILE		?= ll/paging.ll
 # TESTFILE		?= ~/ll2w.wasm
+TESTFILE		?= ll/extractvalue.ll
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp

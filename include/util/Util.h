@@ -18,7 +18,10 @@ namespace LL2W::Util {
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);
 
-	long roundUp(long, long);
+	template <typename T>
+	inline T upalign(T num, long alignment) {
+		return num + ((alignment - (num % alignment)) % alignment);
+	}
 
 	bool isNumeric(const std::string &);
 	bool isNumeric(const std::string *);

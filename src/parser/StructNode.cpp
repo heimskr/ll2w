@@ -8,14 +8,16 @@
 
 namespace LL2W {
 	StructNode::StructNode(std::initializer_list<TypePtr>  types_, StructShape shape_):
-		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), shape(shape_), types(types_) {}
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types(types_) {}
 
 	StructNode::StructNode(const std::vector<TypePtr> &types_, StructShape shape_):
-		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), shape(shape_), types(types_) {}
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types(types_) {}
+
+	StructNode::StructNode(StructShape shape_):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types{} {}
 
 	StructNode::StructNode(StructShape shape_, ASTNode *left, ASTNode *types_):
-	                      ASTNode(llvmParser, LLVM_STRUCTDEF, left->lexerInfo), shape(shape_) {
-		name = StringSet::intern(left->extractName());
+	ASTNode(llvmParser, LLVM_STRUCTDEF, left->lexerInfo), name(StringSet::intern(left->extractName())), shape(shape_) {
 		if (left->symbol == LLVMTOK_CLASSVAR)
 			form = StructForm::Class;
 		else if (left->symbol == LLVMTOK_UNIONVAR)
@@ -24,8 +26,8 @@ namespace LL2W {
 		addTypes(types_);
 	}
 
-	StructNode::StructNode(StructShape shape_, ASTNode *types_): ASTNode(llvmParser, LLVM_STRUCTDEF, "[anon]"), shape(shape_) {
-		name = StringSet::intern("[anon]");
+	StructNode::StructNode(StructShape shape_, ASTNode *types_):
+	ASTNode(llvmParser, LLVM_STRUCTDEF, "[anon]"), name(StringSet::intern("[anon]")), shape(shape_) {
 		addTypes(types_);
 	}
 

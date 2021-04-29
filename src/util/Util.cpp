@@ -21,10 +21,6 @@ namespace LL2W::Util {
 		return parseLong(std::string(str), base);
 	}
 
-	long roundUp(long num, long to) {
-		return num + ((to - (num % to)) % to);
-	}
-
 	bool isNumeric(const std::string &str) {
 		if (str.empty())
 			return false;

@@ -44,6 +44,7 @@
 #include "pass/LowerAlloca.h"
 #include "pass/LowerBranches.h"
 #include "pass/LowerConversions.h"
+#include "pass/LowerExtractvalue.h"
 #include "pass/LowerGetelementptr.h"
 #include "pass/LowerIcmp.h"
 #include "pass/LowerInlineAsm.h"
@@ -643,6 +644,7 @@ namespace LL2W {
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
 		Passes::lowerInlineAsm(*this);
+		Passes::lowerExtractvalue(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
@@ -742,7 +744,7 @@ namespace LL2W {
 				return pair.second;
 
 		if (width == -1) {
-			width = !variable || !variable->type? 8 : Util::roundUp(variable->type->width() < 8? 1 :
+			width = !variable || !variable->type? 8 : Util::upalign(variable->type->width() < 8? 1 :
 				variable->type->width() / 8, 8);
 		}
 
@@ -1083,6 +1085,8 @@ namespace LL2W {
 			warn() << "Function::isNaked(): parent is null\n";
 			return false;
 		}
+		if (header->fnattrsIndex == -1)
+			return false;
 		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 

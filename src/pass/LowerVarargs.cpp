@@ -60,7 +60,7 @@ namespace LL2W::Passes {
 		auto m2 = function.makeAssemblerVariable(2, entry);
 		int skip = 0;
 		for (FunctionArgument &argument: *function.arguments)
-			skip += Util::roundUp(argument.type->width() / 8, 8); // Stack parameters are aligned to 8-byte boundaries.
+			skip += Util::upalign(argument.type->width() / 8, 8); // Stack parameters are aligned to 8-byte boundaries.
 		function.insertBefore(first, std::make_shared<AddIInstruction>(sp, skip, m2));
 	}
 }

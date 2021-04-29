@@ -187,6 +187,13 @@ namespace LL2W {
 		return "\e[32m" + *name + "\e[0m";
 	}
 
+	TypePtr StructType::copy() const {
+		auto out = node? std::make_shared<StructType>(node) : std::make_shared<StructType>(name, form, shape);
+		out->padded = padded;
+		out->paddingMap = paddingMap;
+		return out;
+	}
+
 	int StructType::width() const {
 		int out = 0;
 		if (!node) {
@@ -205,8 +212,8 @@ namespace LL2W {
 			if (largest < width)
 				largest = width;
 		}
-		if (largest != 0)
-			out += out % largest;
+		if (largest != 0 && out % largest != 0)
+			out += largest - (out % largest);
 #endif
 		return out;
 	}
@@ -244,8 +251,8 @@ namespace LL2W {
 	}
 
 	std::string StructType::barename() const {
-		std::string out = name->at(0) == '%'? name->substr(1) : *name;
-		return out.at(0) == '"'? out.substr(1, out.size() - 2) : out;
+		const std::string out = name->front() == '%'? name->substr(1) : *name;
+		return out.front() == '"'? out.substr(1, out.size() - 2) : out;
 	}
 
 	bool StructType::operator==(const Type &other) const {
@@ -265,6 +272,42 @@ namespace LL2W {
 					return false;
 		}
 		return true;
+	}
+
+	std::shared_ptr<StructType> StructType::pad() const {
+		if (padded)
+			return std::dynamic_pointer_cast<StructType>(copy());
+
+		auto out = std::make_shared<StructType>(
+			*name == "[anon]"? name : StringSet::intern(*name + "$padded"), form, StructShape::Default);
+
+		out->node = std::make_shared<StructNode>(StructShape::Default);
+
+		int largest = 1, current_width = 0, padding_items_added = 0;
+		for (TypePtr &subtype: node->types)
+			largest = std::max(largest, subtype->width());
+
+		for (size_t i = 0; i < node->types.size(); ++i) {
+			TypePtr &subtype = node->types[i];
+			const int type_width = subtype->width();
+			current_width += type_width;
+			const int next_width = (i == node->types.size() - 1)? largest : node->types[i + 1]->width();
+			if (subtype->typeType() == TypeType::Struct)
+				out->node->types.push_back(dynamic_cast<StructType *>(subtype.get())->pad());
+			else
+				out->node->types.push_back(subtype->copy());
+			out->paddingMap.emplace(i, i + padding_items_added);
+			int remaining = (next_width - current_width % next_width) % next_width;
+			while (0 < remaining) {
+				out->node->types.push_back(std::make_shared<IntType>(8));
+				++padding_items_added;
+				remaining -= 8;
+				current_width += 8;
+			}
+		}
+
+		out->padded = true;
+		return out;
 	}
 
 	bool GlobalTemporaryType::operator==(const Type &other) const {

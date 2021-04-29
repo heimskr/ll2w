@@ -1,5 +1,4 @@
-#ifndef COMPILER_EXTRACTIONRESULT_H_
-#define COMPILER_EXTRACTIONRESULT_H_
+#pragma once
 
 #include <list>
 #include <memory>
@@ -8,5 +7,3 @@
 namespace LL2W {
 	using ExtractionResult = std::pair<char, char>;
 }
-
-#endif

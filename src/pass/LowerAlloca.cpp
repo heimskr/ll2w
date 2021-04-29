@@ -31,7 +31,7 @@ namespace LL2W::Passes {
 
 			// Move the stack pointer down to get the alignment right.
 			if (0 < alloca->align) {
-				int align = Util::roundUp(alloca->align, 8);
+				int align = Util::upalign(alloca->align, 8);
 				auto m0 = function.m0(instruction);
 				auto mod = std::make_shared<ModIInstruction>(stack_pointer, align, m0);
 				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
@@ -85,7 +85,7 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
 				function.insertBefore(instruction, move);
 				move->extract();
-				const int to_sub = Util::roundUp(num_elements * width, 8);
+				const int to_sub = Util::upalign(num_elements * width, 8);
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
 					function.insertBefore(move, sub, "LowerAlloca: $sp -= to_sub");

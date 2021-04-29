@@ -1,6 +1,6 @@
-#ifndef PARSER_TYPES_H_
-#define PARSER_TYPES_H_
+#pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -10,6 +10,7 @@
 #include "parser/Enums.h"
 #include "parser/StringSet.h"
 #include "compiler/WhyInfo.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	class StructNode;
@@ -45,7 +46,7 @@ namespace LL2W {
 		IntType(int width_): intWidth(width_) {}
 		operator std::string() override;
 		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
-		int width() const override { return intWidth; }
+		int width() const override { return Util::upalign(intWidth, 8); }
 		bool operator==(const Type &other) const override;
 	};
 
@@ -120,6 +121,10 @@ namespace LL2W {
 	};
 
 	struct StructType: public AggregateType {
+		bool padded = false;
+		/** Maps indices in the struct before padding to the corresponding indices after padding has been inserted.
+		 *  If padded is false, this is empty. */
+		std::map<int, int> paddingMap;
 		static std::unordered_map<std::string, std::shared_ptr<StructType>> knownStructs;
 		TypeType typeType() const override { return TypeType::Struct; }
 		const std::string *name;
@@ -127,17 +132,17 @@ namespace LL2W {
 		StructShape shape = StructShape::Default;
 		std::shared_ptr<StructNode> node;
 		StructType(const std::string *name_, StructForm form_ = StructForm::Struct,
-		StructShape shape_ = StructShape::Default): name(name_), form(form_), shape(shape_) {}
+			StructShape shape_ = StructShape::Default): name(name_), form(form_), shape(shape_) {}
 		StructType(std::shared_ptr<StructNode>);
 		StructType(const StructNode *);
 		operator std::string() override;
-		TypePtr copy() const override {
-			return node? std::make_shared<StructType>(node) : std::make_shared<StructType>(name, form, shape);
-		}
+		TypePtr copy() const override;
 		int width() const override;
 		TypePtr extractType(std::list<int> indices) const override;
 		std::string barename() const;
 		bool operator==(const Type &) const override;
+		/** Assumes that each member in a struct has a width that's a multiple of 8. */
+		std::shared_ptr<StructType> pad() const;
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we
@@ -158,5 +163,3 @@ namespace LL2W {
 	TypePtr getType(const ASTNode *);
 	std::ostream & operator<<(std::ostream &os, Type &type);
 }
-
-#endif
