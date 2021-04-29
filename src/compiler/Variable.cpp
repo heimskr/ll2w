@@ -344,7 +344,7 @@ namespace LL2W {
 	int Variable::registersRequired(bool may_warn) const {
 		if (!type) {
 			if (may_warn)
-				warn() << "Variable " << *this << " has no type.\n";
+				warn() << "Variable::registersRequired: " << *this << " has no type.\n";
 			return 1;
 		}
 		return Util::updiv(type->width(), 64);

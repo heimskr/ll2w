@@ -20,14 +20,11 @@ namespace LL2W::Passes {
 				continue;
 
 			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->node);
-			info() << ev->debugExtra() << "\n";
 
 			if (ev->decimals.size() != 1 || ev->aggregateValue->valueType() != ValueType::Local)
 				continue;
 
 			LocalValue *local = dynamic_cast<LocalValue *>(ev->aggregateValue.get());
-
-			info() << getName(ev->aggregateValue->valueType()) << "\n";
 
 			if (!local->variable->type) {
 				warn() << "Variable " << *local->variable << " has no type.\n";
@@ -42,16 +39,13 @@ namespace LL2W::Passes {
 
 			StructType *struct_type = dynamic_cast<StructType *>(local->variable->type.get());
 
-			info() << "Unpadded: " << *struct_type << "\n";
 			auto padded = struct_type->pad();
-			info() << "Padded: " << *padded << "\n";
 
 			// for (const std::pair<const int, int> &pair: padded->paddingMap)
 			// 	std::cerr << pair.first << " => " << pair.second << "\n";
 
 			auto result = PackedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
 			to_remove.push_back(instruction);
-			success() << "Result: " << *result << "\n";
 		}
 
 		for (InstructionPtr &instruction: to_remove)

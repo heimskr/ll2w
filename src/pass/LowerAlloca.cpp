@@ -26,8 +26,6 @@ namespace LL2W::Passes {
 				continue;
 			AllocaNode *alloca = dynamic_cast<AllocaNode *>(llvm->node);
 
-			info() << "alloca variable type: " << (alloca->variable->type? std::string(*alloca->variable->type) : "nullptr") << "\n";
-
 			// First, mark the alloca instruction for removal.
 			to_remove.push_back(instruction);
 

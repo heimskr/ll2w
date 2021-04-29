@@ -35,37 +35,27 @@ namespace LL2W::PackedStructs {
 			throw std::runtime_error("ExtractValueNode output variable has no type");
 
 		auto struct_type = initial_struct_type->pad();
-
 		index = struct_type->paddingMap.at(index);
 
 		// TODO: support ArrayType
 
 		int width_sum = 0;
-
-		for (int i = 0; i < index; ++i) {
+		for (int i = 0; i < index; ++i)
 			width_sum += struct_type->node->types.at(i)->width();
-		}
 
 		int skip, source_reg_index = 0;
-
-		info() << "Width sum: " << width_sum << "\n";
 
 		// While 64 <= width sum, subtract 64 and skip a source register.
 		// The result will be the number of bits to skip in the first used source register.
 		for (skip = width_sum; 64 <= skip; skip -= 64)
 			++source_reg_index;
 
-		info() << "Skip: " << skip << ", source register index: " << source_reg_index << "\n";
-
 		auto extracted_type = struct_type->node->types.at(index);
 		int width_remaining = extracted_type->width();
 		int target_remaining = 64;
+		int target_reg_index = 0;
 
 		VariablePtr out_var = evnode->variable;
-		info() << "outvar: " << *out_var << " (registers required: " << out_var->registersRequired() << ")\n";
-		info() << "width_remaining: " << width_remaining << "\n";
-
-		int target_reg_index = 0;
 
 		while (0 < width_remaining) {
 			int to_take = std::min({64 - skip, target_remaining, width_remaining});
