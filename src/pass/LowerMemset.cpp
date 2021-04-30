@@ -6,10 +6,9 @@
 #include "compiler/Variable.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
-#include "instruction/LoadSymbolInstruction.h"
+#include "instruction/LoadIInstruction.h"
 #include "instruction/MemsetInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "instruction/SetSymbolInstruction.h"
 #include "pass/LowerMemset.h"
 #include "util/Util.h"
 
@@ -79,11 +78,11 @@ namespace LL2W::Passes {
 			GlobalValue &global = dynamic_cast<GlobalValue &>(value);
 			variable = function.mx(assemblerIndex, instruction->parent.lock());
 			if (shouldLoad) {
-				auto load = std::make_shared<LoadSymbolInstruction>(*global.name, variable,
+				auto load = std::make_shared<LoadIInstruction>(global.name, variable,
 					function.parent->symbolSize("@" + *global.name) / 8);
 				function.insertBefore(instruction, load);
 			} else {
-				function.insertBefore(instruction, std::make_shared<SetSymbolInstruction>(variable, *global.name));
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name));
 			}
 		} else if (value.isGetelementptr()) {
 			if (shouldLoad)
@@ -100,7 +99,7 @@ namespace LL2W::Passes {
 			TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 			VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 			function.comment(instruction, "Getelementptr in LowerMemset");
-			function.insertBefore(instruction, std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name));
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, gep_global->name));
 			if (offset == 0) {
 				variable = new_var;
 			} else {

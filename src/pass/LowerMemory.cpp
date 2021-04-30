@@ -8,14 +8,12 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/LoadIInstruction.h"
 #include "instruction/LoadRInstruction.h"
-#include "instruction/LoadSymbolInstruction.h"
 #include "instruction/ModIInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/StoreIInstruction.h"
 #include "instruction/StoreRInstruction.h"
-#include "instruction/StoreSymbolInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "parser/Enums.h"
 #include "pass/LowerMemory.h"
@@ -70,7 +68,7 @@ namespace LL2W::Passes {
 			load->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(converted->value.get());
-			auto load = std::make_shared<LoadSymbolInstruction>(*global->name, node->variable, size);
+			auto load = std::make_shared<LoadIInstruction>(global->name, node->variable, size);
 			function.insertBefore(instruction, load, "LowerMemory(load): [global] -> %var");
 			load->extract();
 		} else if (value_type == ValueType::Null) { // In case you're feeling silly.
@@ -140,9 +138,9 @@ namespace LL2W::Passes {
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
 				// $m1 -> [global]
-				std::shared_ptr<StoreSymbolInstruction> store;
+				std::shared_ptr<StoreIInstruction> store;
 				try {
-					store = std::make_shared<StoreSymbolInstruction>(m1, *global->name,
+					store = std::make_shared<StoreIInstruction>(m1, global->name,
 						function.parent->symbolSize("@" + *global->name) / 8);
 				} catch (const std::out_of_range &) {
 					throw std::runtime_error("Couldn't find global variable @" + *global->name);
@@ -178,7 +176,7 @@ namespace LL2W::Passes {
 				// %src -> [global]
 				int symsize = function.parent->symbolSize("@" + *global->name);
 				symsize = symsize / 8 + (symsize % 8? 1 : 0);
-				auto store = std::make_shared<StoreSymbolInstruction>(svar, *global->name, symsize);
+				auto store = std::make_shared<StoreIInstruction>(svar, global->name, symsize);
 				function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [global]");
 				store->extract();
 			} else if (converted->value->isIntLike()) {
