@@ -3,10 +3,10 @@
 
 namespace LL2W {
 	std::string SetInstruction::debugExtra() {
-		return "\e[91m" + colorize(imm) + " \e[0;2m->\e[0;32m " + std::string(*rd) + "\e[0m";
+		return "\e[91m" + colorize(imm, true) + " \e[0;2m->\e[0;32m " + std::string(*rd) + "\e[0m";
 	}
 
 	std::string SetInstruction::toString() const {
-		return LL2W::toString(imm) + " -> " + rd->toString();
+		return LL2W::toString(imm, true) + " -> " + rd->toString();
 	}
 }
