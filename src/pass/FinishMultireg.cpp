@@ -1,7 +1,10 @@
 #include "compiler/Function.h"
+#include "instruction/AddIInstruction.h"
 #include "instruction/DeferredDestinationMoveInstruction.h"
 #include "instruction/DeferredSourceMoveInstruction.h"
+#include "instruction/LoadRInstruction.h"
 #include "instruction/MoveInstruction.h"
+
 #include "pass/FinishMultireg.h"
 
 namespace LL2W::Passes {
@@ -25,8 +28,28 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(defdest->rs, var);
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);
-			// } else if (auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
-				// if (
+			} else if (auto *load = dynamic_cast<LoadRInstruction *>(instruction.get())) {
+				if (load->rd->registers.size() < 2)
+					continue;
+				if (load->size % 8)
+					throw std::runtime_error("Load into register pack has a size that isn't divisible by 8");
+				auto m4 = function.mx(4, instruction);
+				auto move = std::make_shared<MoveInstruction>(load->rs, m4);
+				function.insertBefore(instruction, move);
+				move->extract();
+				auto iter = load->rd->registers.begin();
+				for (int i = 0; i < load->size / 8; ++i) {
+					if (i != 0) {
+						auto addi = std::make_shared<AddIInstruction>(m4, 8, m4);
+						function.insertBefore(instruction, addi);
+						addi->extract();
+					}
+					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
+					auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, 8);
+					function.insertBefore(instruction, new_load);
+					new_load->extract();
+				}
+				to_remove.push_back(instruction);
 			}
 		}
 

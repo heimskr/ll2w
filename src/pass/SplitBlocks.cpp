@@ -27,9 +27,6 @@ namespace LL2W::Passes {
 							regular_written_count += variable->nonSpecialCount();
 					}
 
-					// info() << WhyInfo::allocatableRegisters << " ?< " << defs << " + " << regular_written_count << " (" << (defs + regular_written_count) << ") for "
-					//        << instruction->debugExtra() << "\n";
-
 					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
 						function.splitBlock(block, prev_instruction);
 						any_changed = true;

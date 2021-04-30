@@ -2,3 +2,4 @@ $m0: Used in LoadArguments, LowerAlloca, LowerConversions, LowerMath, LowerMemse
 $m1: Used in LowerMemory and LowerMemset
 $m2: Used in LowerMemset, LowerVarargs and SetupCalls
 $m3: Used in LowerIcmp
+$m4: Used in FinishMultireg
