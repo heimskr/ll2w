@@ -171,7 +171,7 @@ namespace LL2W {
 		std::map<int, std::unordered_set<int>> live;
 
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
-			if (pair.second->reg != -1)
+			if (!pair.second->registers.empty())
 				continue;
 #ifdef DEBUG_COLORING
 			std::cerr << "Variable " << *pair.second << ":\n";
@@ -196,14 +196,14 @@ namespace LL2W {
 				std::cerr << "block is null?\n";
 #endif
 			for (const VariablePtr &var: block->liveIn)
-				if (var->reg == -1) {
+				if (var->registers.empty()) {
 #ifdef DEBUG_COLORING
 					std::cerr << "Variable " << *var << " is live-in at block " << *block->label << "\n";
 #endif
 					live[var->id].insert(block->index);
 				}
 			for (const VariablePtr &var: block->liveOut)
-				if (var->reg == -1) {
+				if (var->registers.empty()) {
 #ifdef DEBUG_COLORING
 					std::cerr << "Variable " << *var << " is live-out at block " << *block->label << "\n";
 #endif

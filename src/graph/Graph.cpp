@@ -322,7 +322,7 @@ namespace LL2W {
 					for (const int color: neighbor->colors)
 						available.erase(color);
 				if (available.size() < static_cast<size_t>(node->colorsNeeded)) {
-					error() << available.size() << " < " << static_cast<size_t>(node->colorsNeeded) << "\n";
+					// error() << available.size() << " < " << static_cast<size_t>(node->colorsNeeded) << "\n";
 					throw UncolorableError();
 				}
 				auto iter = available.begin();

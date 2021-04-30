@@ -1,5 +1,4 @@
-#ifndef PASS_REPLACESTORESANDLOADS_H_
-#define PASS_REPLACESTORESANDLOADS_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  This function replaces them with a register-to-register move. */
 	void replaceStoresAndLoads(Function &);
 }
-
-#endif

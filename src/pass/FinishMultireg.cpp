@@ -2,10 +2,10 @@
 #include "instruction/DeferredDestinationMoveInstruction.h"
 #include "instruction/DeferredSourceMoveInstruction.h"
 #include "instruction/MoveInstruction.h"
-#include "pass/FinishMoves.h"
+#include "pass/FinishMultireg.h"
 
 namespace LL2W::Passes {
-	void finishMoves(Function &function) {
+	void finishMultireg(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -25,6 +25,8 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(defdest->rs, var);
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);
+			// } else if (auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
+				// if (
 			}
 		}
 

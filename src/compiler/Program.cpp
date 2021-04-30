@@ -12,6 +12,7 @@
 #include "util/Util.h"
 
 // #define SINGLE_FUNCTION "@find_free_block"
+// #define SINGLE_FUNCTION "@_ZNKSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE7compareINS_17basic_string_viewIwS2_EEEENS_9_MetaBaseIXaasr33__can_be_converted_to_string_viewIwS2_T_EE5valuentsr17__is_same_uncvrefISA_S5_EE5valueEE13_EnableIfImplIiEEmmRKSA_mm"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
