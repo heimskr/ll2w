@@ -12,7 +12,8 @@ OUTPUT			?= ll2w
 # TESTFILE		?= ll/inline_asm.ll
 # TESTFILE		?= ll/paging.ll
 # TESTFILE		?= ~/ll2w.wasm
-TESTFILE		?= ll/extractvalue.ll
+# TESTFILE		?= ll/extractvalue.ll
+TESTFILE		?= ll/mal_inline.ll
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp

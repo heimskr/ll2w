@@ -60,33 +60,37 @@ namespace LL2W::Passes {
 
 				VarMap map;
 
-				// Scan the extractvalue instructions after the asm node and insert their defined variables into the
-				// VarMap as output variables.
 				int i = 0;
-				auto copy = iter;
-				for (++copy; copy != function.linearInstructions.end(); ++copy) {
-					LLVMInstruction *inner_llvm = dynamic_cast<LLVMInstruction *>(copy->get());
-					if (!inner_llvm || inner_llvm->node->nodeType() != NodeType::ExtractValue)
-						break;
+				if (1 < output_count) {
+					// Scan the extractvalue instructions after the asm node and insert their defined variables into the
+					// VarMap as output variables.
+					auto copy = iter;
+					for (++copy; copy != function.linearInstructions.end(); ++copy) {
+						LLVMInstruction *inner_llvm = dynamic_cast<LLVMInstruction *>(copy->get());
+						if (!inner_llvm || inner_llvm->node->nodeType() != NodeType::ExtractValue)
+							break;
 
-					ExtractValueNode *extract = dynamic_cast<ExtractValueNode *>(inner_llvm->node);
-					if (*extract->aggregateType != *asm_node->returnType)
-						break;
+						ExtractValueNode *extract = dynamic_cast<ExtractValueNode *>(inner_llvm->node);
+						if (*extract->aggregateType != *asm_node->returnType)
+							break;
 
-					if (extract->decimals.size() != 1) {
-						error() << extract->debugExtra() << "\n";
-						throw std::runtime_error("Invalid number of decimals in extractvalue node: " +
-							std::to_string(extract->decimals.size()));
+						if (extract->decimals.size() != 1) {
+							error() << extract->debugExtra() << "\n";
+							throw std::runtime_error("Invalid number of decimals in extractvalue node: " +
+								std::to_string(extract->decimals.size()));
+						}
+
+						if (!extract->variable) {
+							error() << extract->debugExtra() << "\n";
+							throw std::runtime_error("Variable is null in extractvalue node");
+						}
+
+						const int decimal = extract->decimals.front();
+						map.emplace(StringSet::intern("$" + std::to_string(decimal)), extract->variable);
+						to_remove.push_back(*copy);
 					}
-
-					if (!extract->variable) {
-						error() << extract->debugExtra() << "\n";
-						throw std::runtime_error("Variable is null in extractvalue node");
-					}
-
-					const int decimal = extract->decimals.front();
-					map.emplace(StringSet::intern("$" + std::to_string(decimal)), extract->variable);
-					to_remove.push_back(*copy);
+				} else if (output_count == 1) {
+					map.emplace(StringSet::intern("$0"), asm_node->variable);
 				}
 
 				std::list<InstructionPtr> init_instructions;
