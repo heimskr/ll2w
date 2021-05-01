@@ -76,10 +76,9 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, load, "LowerMemory(load): [null] -> %var");
 			load->extract();
 		} else if (value_type == ValueType::Int) {
-			IntValue *intval = dynamic_cast<IntValue *>(converted->value.get());
-			auto load = std::make_shared<LoadIInstruction>(intval->value, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval->value) +
-				"] -> %var");
+			int intval = converted->value->intValue();
+			auto load = std::make_shared<LoadIInstruction>(intval, node->variable, size);
+			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval) + "] -> %var");
 			load->extract();
 		} else if (value_type == ValueType::Bool) {
 			BoolValue *boolval = dynamic_cast<BoolValue *>(converted->value.get());

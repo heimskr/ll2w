@@ -229,7 +229,7 @@ namespace LL2W::Passes {
 
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			VariablePtr zero = function.makePrecoloredVariable(WhyInfo::zeroOffset, instruction->parent.lock());
-			if (left->intValue() == 0) {
+			if (left->longValue() == 0) {
 				// In cases where the LHS is zero, we can use the convenient zero register and use just one instruction.
 				auto sub = std::make_shared<SubRInstruction>(zero, right_var, node->variable);
 				function.insertBefore(instruction, sub);

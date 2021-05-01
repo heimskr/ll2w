@@ -51,7 +51,7 @@ namespace LL2W::Passes {
 				Value *value = alloca->numelementsValue.get();
 				if (value->isInt()) {
 					// If there's an integer constant, things are easy.
-					num_elements = value->intValue();
+					num_elements = value->longValue();
 				} else if (value->isLocal()) {
 					// If it's a local variable instead, we can't do the multiplication at compile time.
 					LocalValue *local = dynamic_cast<LocalValue *>(value);

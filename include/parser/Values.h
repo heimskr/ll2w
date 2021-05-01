@@ -33,7 +33,8 @@ namespace LL2W {
 		bool isGlobal() const;
 		bool isGetelementptr() const;
 		virtual bool isIntLike() const { return false; }
-		virtual int intValue() const { throw std::runtime_error("Value isn't int-like"); }
+		virtual long longValue() const { throw std::runtime_error("Value isn't int-like"); }
+		int intValue();
 		/* Stringifies the Value into something that can be put in a #data section. */
 		virtual std::string compile() const = 0;
 	};
@@ -52,8 +53,8 @@ namespace LL2W {
 	};
 
 	struct IntValue: public Value {
-		int value;
-		IntValue(int value_): value(value_) {}
+		long value;
+		IntValue(long value_): value(value_) {}
 		IntValue(const std::string &);
 		IntValue(const std::string *value_): IntValue(*value_) {}
 		IntValue(const ASTNode *node): IntValue(node->lexerInfo) {}
@@ -61,17 +62,17 @@ namespace LL2W {
 		ValuePtr copy() const override { return std::make_shared<IntValue>(value); }
 		operator std::string() override { return "\e[92m" + std::to_string(value) + "\e[0m"; }
 		bool isIntLike() const override { return true; }
-		int intValue() const override { return value; }
+		long longValue() const override { return value; }
 		std::string compile() const override { return std::to_string(value); }
 	};
 
 	struct NullValue: public IntValue {
-		NullValue(): IntValue(0) {}
+		NullValue(): IntValue((long) 0) {}
 		ValueType valueType() const override { return ValueType::Null; }
 		ValuePtr copy() const override { return std::make_shared<NullValue>(); }
 		operator std::string() override { return "null"; }
 		bool isIntLike() const override { return true; }
-		int intValue() const override { return 0; }
+		long longValue() const override { return 0; }
 		std::string compile() const override { return "0"; }
 	};
 
@@ -95,8 +96,8 @@ namespace LL2W {
 		ValuePtr copy() const override { return std::make_shared<BoolValue>(value); }
 		operator std::string() override { return value? "true" : "false"; }
 		bool isIntLike() const override { return true; }
-		int intValue() const override { return value? 1 : 0; }
-		std::string compile() const override { return std::to_string(intValue()); }
+		long longValue() const override { return value? 1 : 0; }
+		std::string compile() const override { return std::to_string(longValue()); }
 	};
 
 	struct VariableValue: public Value {

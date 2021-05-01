@@ -1,3 +1,4 @@
+#include <bits/stdc++.h>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
@@ -36,6 +37,13 @@ namespace LL2W {
 
 	bool Value::isGetelementptr() const {
 		return valueType() == ValueType::Getelementptr;
+	}
+
+	int Value::intValue() {
+		long val = longValue();
+		if (INT_MAX < val)
+			warn() << "Value " << val << " is larger than INT_MAX\n";
+		return static_cast<int>(val);
 	}
 
 	IntValue::IntValue(const std::string &value_) {

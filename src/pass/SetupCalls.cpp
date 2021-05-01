@@ -187,9 +187,8 @@ namespace LL2W::Passes {
 			sspush->extract();
 		} else if (value_type == ValueType::Int) {
 			// Integer-like values
-			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
-			auto set = std::make_shared<SetInstruction>(new_var, ival->value);
+			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 			function.insertBefore(instruction, set);
 			function.insertBefore(instruction, sspush);
@@ -262,8 +261,7 @@ namespace LL2W::Passes {
 			move->extract();
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
-			std::shared_ptr<IntValue> ival = std::dynamic_pointer_cast<IntValue>(constant->value);
-			auto set = std::make_shared<SetInstruction>(new_var, ival->value);
+			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
 			function.insertBefore(instruction, set);
 			set->extract();
 		} else if (value_type == ValueType::Bool) {
