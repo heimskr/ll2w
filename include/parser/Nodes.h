@@ -67,9 +67,9 @@ namespace LL2W {
 	};
 
 	struct Reader {
-		virtual std::vector<ValuePtr> allValues() const = 0;
+		virtual std::vector<ValuePtr> allValues() = 0;
 		virtual std::vector<ValuePtr *> allValuePointers() = 0;
-		std::vector<std::shared_ptr<LocalValue>> allLocals() const;
+		std::vector<std::shared_ptr<LocalValue>> allLocals();
 		void replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var);
 		virtual std::vector<ConstantPtr> allConstants() const { return {}; }
 	};
@@ -89,7 +89,7 @@ namespace LL2W {
 		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Select; }
-		std::vector<ValuePtr> allValues() const override { return {conditionValue, firstValue, secondValue}; }
+		std::vector<ValuePtr> allValues() override { return {conditionValue, firstValue, secondValue}; }
 		std::vector<ValuePtr *> allValuePointers() override {
 			return {&conditionValue, &firstValue, &secondValue};
 		}
@@ -107,7 +107,7 @@ namespace LL2W {
 		           ASTNode *addrspace_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Alloca; }
-		std::vector<ValuePtr> allValues() const override { return {numelementsValue}; }
+		std::vector<ValuePtr> allValues() override { return {numelementsValue}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&numelementsValue}; }
 	};
 
@@ -128,7 +128,7 @@ namespace LL2W {
 					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
 			std::string debugExtra() const override;
 			NodeType nodeType() const override { return NodeType::Store; }
-			std::vector<ValuePtr> allValues() const override;
+			std::vector<ValuePtr> allValues() override;
 			std::vector<ValuePtr *> allValuePointers() override;
 			std::vector<ConstantPtr> allConstants() const override { return {source, destination}; }
 	};
@@ -153,21 +153,26 @@ namespace LL2W {
 					ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 			std::string debugExtra() const override;
 			NodeType nodeType() const override { return NodeType::Load; }
-			std::vector<ValuePtr> allValues() const override { return {constant->value}; }
+			std::vector<ValuePtr> allValues() override { return {constant->value}; }
 			std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
 			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
 	};
 
-	struct IcmpNode: public InstructionNode, public Writer, public Reader {
-		IcmpCond cond;
-		TypePtr type;
-		ValuePtr value1, value2;
+	class IcmpNode: public InstructionNode, public Writer, public Reader {
+		private:
+			ValuePtr cachedConstantValue;
 
-		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2, ASTNode *unibangs);
-		std::string debugExtra() const override;
-		NodeType nodeType() const override { return NodeType::Icmp; }
-		std::vector<ValuePtr> allValues() const override { return {value1, value2}; }
-		std::vector<ValuePtr *> allValuePointers() override { return {&value1, &value2}; }
+		public:
+			IcmpCond cond;
+			TypePtr type;
+			ValuePtr left;
+			ConstantPtr right;
+
+			IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_, ASTNode *unibangs);
+			std::string debugExtra() const override;
+			NodeType nodeType() const override { return NodeType::Icmp; }
+			std::vector<ValuePtr> allValues() override;
+			std::vector<ValuePtr *> allValuePointers() override;
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -186,7 +191,7 @@ namespace LL2W {
 		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BrCond; }
-		std::vector<ValuePtr> allValues() const override { return {condition}; }
+		std::vector<ValuePtr> allValues() override { return {condition}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&condition}; }
 	};
 
@@ -212,7 +217,7 @@ namespace LL2W {
 			TypePtr returnType;
 			ValuePtr name;
 
-			std::vector<ValuePtr> allValues() const override;
+			std::vector<ValuePtr> allValues() override;
 			std::vector<ValuePtr *> allValuePointers() override;
 			std::vector<ConstantPtr> allConstants() const override { return constants; }
 	};
@@ -263,7 +268,7 @@ namespace LL2W {
 		                  ASTNode *indices_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Getelementptr; }
-		std::vector<ValuePtr> allValues() const override { return {ptrValue}; }
+		std::vector<ValuePtr> allValues() override { return {ptrValue}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&ptrValue}; }
 	};
 
@@ -275,7 +280,7 @@ namespace LL2W {
 		RetNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Ret; }
-		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr> allValues() override { return {value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
@@ -296,7 +301,7 @@ namespace LL2W {
 		LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs, bool cleanup_);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Landingpad; }
-		std::vector<ValuePtr> allValues() const override;
+		std::vector<ValuePtr> allValues() override;
 		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
@@ -308,7 +313,7 @@ namespace LL2W {
 		               ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Conversion; }
-		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr> allValues() override { return {value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
@@ -322,7 +327,7 @@ namespace LL2W {
 		              ASTNode *right_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BasicMath; }
-		std::vector<ValuePtr> allValues() const override { return {left, right}; }
+		std::vector<ValuePtr> allValues() override { return {left, right}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
@@ -335,7 +340,7 @@ namespace LL2W {
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Phi; }
-		std::vector<ValuePtr> allValues() const override;
+		std::vector<ValuePtr> allValues() override;
 		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
@@ -345,7 +350,7 @@ namespace LL2W {
 		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const = 0;
 		std::string debugExtra() const override;
-		std::vector<ValuePtr> allValues() const override { return {left, right}; }
+		std::vector<ValuePtr> allValues() override { return {left, right}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
@@ -407,7 +412,7 @@ namespace LL2W {
 		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Switch; }
-		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr> allValues() override { return {value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
@@ -419,7 +424,7 @@ namespace LL2W {
 		                 ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::ExtractValue; }
-		std::vector<ValuePtr> allValues() const override { return {aggregateValue}; }
+		std::vector<ValuePtr> allValues() override { return {aggregateValue}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue}; }
 	};
 
@@ -431,7 +436,7 @@ namespace LL2W {
 		                ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::InsertValue; }
-		std::vector<ValuePtr> allValues() const override { return {aggregateValue, value}; }
+		std::vector<ValuePtr> allValues() override { return {aggregateValue, value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue, &value}; }
 	};
 
@@ -441,7 +446,7 @@ namespace LL2W {
 		ResumeNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Resume; }
-		std::vector<ValuePtr> allValues() const override { return {value}; }
+		std::vector<ValuePtr> allValues() override { return {value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 

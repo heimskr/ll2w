@@ -4,7 +4,7 @@
 
 namespace LL2W {
 	class Function;
-	struct IcmpNode;
+	class IcmpNode;
 	class Instruction;
 }
 

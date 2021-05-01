@@ -12,12 +12,40 @@ namespace LL2W {
 		type(type_), value(value_), parattrs(parattrs_), conversion(conversion_),
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
-	Constant::Constant(const ASTNode *node) {
-		if (node->symbol != LLVM_CONSTANT)
-			throw std::runtime_error("Constant::Constant: node doesn't have symbol CONSTANT");
-
-		if (node->size() == 1) {
-			// Just a GVAR here.
+	Constant::Constant(const ASTNode *node, TypePtr type_hint) {
+		if (node->symbol == LLVMTOK_DECIMAL) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for decimal node");
+			type = type_hint;
+			value = std::make_shared<IntValue>(node);
+		} else if (node->symbol == LLVMTOK_NULL) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for null node");
+			type = type_hint;
+			value = std::make_shared<NullValue>();
+		} else if (node->symbol == LLVMTOK_PVAR) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for pvar node");
+			type = type_hint;
+			value = std::make_shared<LocalValue>(node);
+		} else if (node->symbol == LLVM_CONVERSION_EXPR) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for conversion expression node");
+			type = type_hint;
+			value = nullptr;
+			for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
+				if (*node->lexerInfo == pair.second) {
+					conversion = pair.first;
+					break;
+				}
+			}
+			conversionSource = std::make_shared<Constant>(node->at(0));
+			conversionType = getType(node->at(1));
+		} else if (node->symbol != LLVM_CONSTANT) {
+			node->debug();
+			throw std::runtime_error("Constant::Constant: node doesn't have symbol LLVM_CONSTANT");
+		} else if (node->size() == 1) {
+			// Just a gvar here.
 			type = getType(node->at(0));
 			value = getValue(node->at(0));
 		} else {

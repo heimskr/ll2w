@@ -9,7 +9,7 @@
 #define IFLV(x, t) do { if (std::shared_ptr<LocalValue> local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
 	readname(local_value, (t)); } while (0)
 #define FORV(x...) for (ValuePtr value: {x})
-#define CAST(t) const t *cast = dynamic_cast<const t *>(node); if (!cast) break
+#define CAST(t) t *cast = dynamic_cast<t *>(node); if (!cast) break
 
 namespace LL2W {
 	LLVMInstruction::~LLVMInstruction() {
@@ -74,8 +74,8 @@ namespace LL2W {
 			case NodeType::Icmp: {
 				CAST(IcmpNode);
 				write(cast->result, cast->type);
-				FORV(cast->value1, cast->value2)
-					IFLV(value, cast->type);
+				for (ValuePtr *value: cast->allValuePointers())
+					IFLV(*value, cast->type);
 				break;
 			}
 

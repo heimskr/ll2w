@@ -121,7 +121,7 @@ namespace LL2W {
 
 // Reader
 
-	std::vector<std::shared_ptr<LocalValue>> Reader::allLocals() const {
+	std::vector<std::shared_ptr<LocalValue>> Reader::allLocals() {
 		std::vector<ValuePtr> values = allValues();
 		std::vector<std::shared_ptr<LocalValue>> out;
 		out.reserve(values.size());
@@ -313,7 +313,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	std::vector<ValuePtr> StoreNode::allValues() const {
+	std::vector<ValuePtr> StoreNode::allValues() {
 		return {source->convert()->value, destination->convert()->value};
 	}
 
@@ -430,7 +430,7 @@ namespace LL2W {
 
 // IcmpNode
 
-	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op1, ASTNode *op2,
+	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_,
 	                   ASTNode *unibangs) {
 		handleUnibangs(unibangs);
 		delete unibangs;
@@ -444,21 +444,33 @@ namespace LL2W {
 		}
 
 		type = getType(type_);
-		value1 = getValue(op1);
-		value2 = getValue(op2);
+		left = getValue(op);
+		right = std::make_shared<Constant>(const_, type);
 
 		delete result_;
 		delete cond_;
 		delete type_;
-		delete op1;
-		delete op2;
+		delete op;
+		delete const_;
 	}
 
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *type << " "
-		    << *value1 << ", " << *value2;
+		    << *left << ", " << *right;
 		return out.str();
+	}
+
+	std::vector<ValuePtr> IcmpNode::allValues() {
+		if (cachedConstantValue)
+			return {left, cachedConstantValue};
+		return {left, cachedConstantValue = right->convert()->value};
+	}
+
+	std::vector<ValuePtr *> IcmpNode::allValuePointers() {
+		if (!cachedConstantValue)
+			cachedConstantValue = right->convert()->value;
+		return {&left, &cachedConstantValue};
 	}
 
 // BrUncondNode
@@ -583,7 +595,7 @@ namespace LL2W {
 		}
 	}
 
-	std::vector<ValuePtr> CallInvokeNode::allValues() const {
+	std::vector<ValuePtr> CallInvokeNode::allValues() {
 		std::vector<ValuePtr> out;
 		out.reserve(constants.size() + 1);
 		for (ConstantPtr constant: constants)
@@ -870,7 +882,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	std::vector<ValuePtr> LandingpadNode::allValues() const {
+	std::vector<ValuePtr> LandingpadNode::allValues() {
 		std::vector<ValuePtr> out;
 		out.reserve(clauses.size());
 		for (std::shared_ptr<Clause> clause: clauses)
@@ -974,7 +986,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	std::vector<ValuePtr> PhiNode::allValues() const {
+	std::vector<ValuePtr> PhiNode::allValues() {
 		std::vector<ValuePtr> out;
 		for (const std::pair<ValuePtr, const std::string *> &pair: pairs)
 			out.push_back(pair.first);

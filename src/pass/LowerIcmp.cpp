@@ -32,7 +32,8 @@ namespace LL2W::Passes {
 
 		IcmpCond cond = node->cond;
 
-		ValuePtr value1 = node->value1, value2 = node->value2;
+		auto values = node->allValuePointers();
+		ValuePtr &value1 = *values[0], &value2 = *values[1];
 
 		if (value1->valueType() != ValueType::Local) {
 			if (value2->valueType() == ValueType::Local) {

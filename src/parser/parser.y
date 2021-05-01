@@ -430,7 +430,7 @@ bang_align:              "," "!align"                   metabang    { $$ = $2->a
 i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope LLVMTOK_ORDERING align load_bangs
                { auto loc = $1->location; $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate(loc); D($2, $3, $6); };
 
-i_icmp: result "icmp" LLVMTOK_ICMP_COND type_any operand "," operand unibangs
+i_icmp: result "icmp" LLVMTOK_ICMP_COND type_any operand "," constant_right unibangs
         { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7, $8))->locate(loc); D($2, $6); };
 
 i_br_uncond: "br" "label" LLVMTOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4))->locate($1); D($1, $2); };
@@ -547,8 +547,8 @@ retattr: LLVMTOK_RETATTR
        | LLVMTOK_DEREF "(" LLVMTOK_DECIMAL ")" { $$ = $1->adopt($3); D($2, $4); }
        | "align" "(" LLVMTOK_DECIMAL ")"       { $$ = $1->adopt($3); D($2, $4); }
        | "align" LLVMTOK_DECIMAL               { $$ = $1->adopt($2); };
-operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct | bare_array
-       | LLVMTOK_CSTRING | getelementptr_expr | "null" | "zeroinitializer" | "undef";
+operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct
+       | bare_array   | LLVMTOK_CSTRING | getelementptr_expr  | "null" | "zeroinitializer"  | "undef";
 conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
                | LLVMTOK_CONV_OP "(" constant LLVMTOK_TO type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 

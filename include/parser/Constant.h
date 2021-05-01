@@ -26,7 +26,7 @@ namespace LL2W {
 		Constant() = delete;
 		Constant(const Constant &) = delete;
 		Constant(TypePtr, ValuePtr, const ParAttrs &, Conversion, ConstantPtr, TypePtr);
-		Constant(const ASTNode *);
+		Constant(const ASTNode *, TypePtr type_hint = nullptr);
 
 		ConstantPtr copy() const;
 		/** Applies ptrtoint/inttoptr conversions and returns a new Constant. */
