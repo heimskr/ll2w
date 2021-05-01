@@ -13,22 +13,25 @@ namespace LL2W::Passes {
 		// replaced with a branch to the added block.
 		bool any_changed;
 		int split_count = 0;
+
 		for (;;) {
+			warn() << *function.name << ": split_count = " << split_count << "\n";
 			any_changed = false;
 			for (BasicBlockPtr &block: function.blocks) {
 				int defs = 0;
 				std::shared_ptr<Instruction> prev_instruction;
 				for (InstructionPtr &instruction: block->instructions) {
 					int regular_written_count = 0;
-					for (const VariablePtr &variable: instruction->written) {
+					for (const VariablePtr &variable: instruction->written)
 						if (variable->registers.empty())
 							regular_written_count += variable->registersRequired();
 						else
 							regular_written_count += variable->nonSpecialCount();
-					}
 
 					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
-						function.splitBlock(block, prev_instruction);
+						function.splitBlock(block, prev_instruction)->extract();
+						function.reindexBlocks();
+						block->extract();
 						any_changed = true;
 						++split_count;
 						goto next;

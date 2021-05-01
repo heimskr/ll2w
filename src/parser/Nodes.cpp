@@ -756,8 +756,8 @@ namespace LL2W {
 
 // GetelementptrNode
 
-	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type,
-	                                     ASTNode *ptr_value, ASTNode *indices_, ASTNode *unibangs) {
+	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_,
+	                                     ASTNode *indices_, ASTNode *unibangs) {
 		handleUnibangs(unibangs);
 		delete unibangs;
 		result = StringSet::intern(pvar->extractName());
@@ -766,21 +766,25 @@ namespace LL2W {
 			delete _inbounds;
 		}
 		type = getType(type_);
-		ptrType = getType(ptr_type);
-		if (ptr_value->symbol == LLVMTOK_PVAR) {
-			const std::string extracted = ptr_value->extractName();
-			if (!Util::isNumeric(extracted)) {
-				llvmerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
-					ptr_value->location);
-			}
-		} else if (ptr_value->symbol != LLVMTOK_GVAR) {
-			llvmerror("Invalid pointer symbol in getelementptr instruction: " +
-				std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
-		}
+		constant = std::make_shared<Constant>(constant_);
 
-		ptrValue = getValue(ptr_value);
-		if (!std::dynamic_pointer_cast<LocalValue>(ptrValue) && !std::dynamic_pointer_cast<GlobalValue>(ptrValue))
-			llvmerror("Expected LocalValue or GlobalValue in getelementptr instruction", ptr_value->location);
+
+
+		// ptrType = getType(ptr_type);
+		// if (ptr_value->symbol == LLVMTOK_PVAR) {
+		// 	const std::string extracted = ptr_value->extractName();
+		// 	if (!Util::isNumeric(extracted)) {
+		// 		llvmerror("Non-numeric pointer encountered in getelementptr instruction: " + extracted,
+		// 			ptr_value->location);
+		// 	}
+		// } else if (ptr_value->symbol != LLVMTOK_GVAR) {
+		// 	llvmerror("Invalid pointer symbol in getelementptr instruction: " +
+		// 		std::string(llvmParser.getName(ptr_value->symbol)), ptr_value->location);
+		// }
+
+		// ptrValue = getValue(ptr_value);
+		// if (!std::dynamic_pointer_cast<LocalValue>(ptrValue) && !std::dynamic_pointer_cast<GlobalValue>(ptrValue))
+		// 	llvmerror("Expected LocalValue or GlobalValue in getelementptr instruction", ptr_value->location);
 
 		for (ASTNode *comma: *indices_) {
 			indices.push_back({
@@ -792,8 +796,7 @@ namespace LL2W {
 
 		delete pvar;
 		delete type_;
-		delete ptr_type;
-		delete ptr_value;
+		delete constant_;
 		delete indices_;
 	}
 
@@ -802,7 +805,7 @@ namespace LL2W {
 		out << getResult() << " \e[2m= \e[0;91mgetelementptr\e[0m ";
 		if (inbounds)
 			out << "\e[34minbounds\e[0m ";
-		out << *type << "\e[2m,\e[0m " << *ptrType << " " << *ptrValue << "\e[0m";
+		out << *type << "\e[2m,\e[0m " << *constant << "\e[0m";
 		for (auto [width, value, minrange, pvar]: indices) {
 			out << "\e[2m,\e[0m ";
 			if (minrange)
@@ -813,6 +816,18 @@ namespace LL2W {
 			out << value << "\e[0m";
 		}
 		return out.str();
+	}
+
+	std::vector<ValuePtr> GetelementptrNode::allValues() {
+		if (!cachedConstantValue)
+			cachedConstantValue = constant->convert()->value;
+		return {cachedConstantValue};
+	}
+
+	std::vector<ValuePtr *> GetelementptrNode::allValuePointers() {
+		if (!cachedConstantValue)
+			cachedConstantValue = constant->convert()->value;
+		return {&cachedConstantValue};
 	}
 
 // RetNode

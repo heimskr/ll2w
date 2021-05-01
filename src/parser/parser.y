@@ -459,8 +459,8 @@ _inteldialect: LLVMTOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
-i_getelementptr: result "getelementptr" _inbounds type_any "," type_ptr variable gep_indices unibangs
-               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8, $9))->locate(loc); D($2, $5); };
+i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
+               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(llvmParser, LLVM_INDEX_LIST); }
            | gep_indices "," _inrange type_any gep_index { $1->adopt($2->adopt({$4, $5, $3})); };

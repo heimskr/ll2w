@@ -80,6 +80,10 @@ namespace LL2W {
 		std::string getResult() const;
 	};
 
+	struct CachedConstantValue {
+		ValuePtr cachedConstantValue;
+	};
+
 	struct SelectNode: public InstructionNode, public Reader, public Writer {
 		std::unordered_set<Fastmath> fastmath;
 		TypePtr conditionType, firstType, secondType;
@@ -158,21 +162,17 @@ namespace LL2W {
 			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
 	};
 
-	class IcmpNode: public InstructionNode, public Writer, public Reader {
-		private:
-			ValuePtr cachedConstantValue;
+	struct IcmpNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
+		IcmpCond cond;
+		TypePtr type;
+		ValuePtr left;
+		ConstantPtr right;
 
-		public:
-			IcmpCond cond;
-			TypePtr type;
-			ValuePtr left;
-			ConstantPtr right;
-
-			IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_, ASTNode *unibangs);
-			std::string debugExtra() const override;
-			NodeType nodeType() const override { return NodeType::Icmp; }
-			std::vector<ValuePtr> allValues() override;
-			std::vector<ValuePtr *> allValuePointers() override;
+		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_, ASTNode *unibangs);
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Icmp; }
+		std::vector<ValuePtr> allValues() override;
+		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -257,19 +257,19 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Invoke; }
 	};
 
-	struct GetelementptrNode: public InstructionNode, public Writer, public Reader {
+	struct GetelementptrNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
 		bool inbounds = false;
-		TypePtr type = nullptr, ptrType = nullptr;
-		ValuePtr ptrValue;
+		TypePtr type;
+		ConstantPtr constant;
 		// width, value/index, has minrange, is pvar
 		std::vector<std::tuple<int, int, bool, bool>> indices;
 
-		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *ptr_type, ASTNode *ptr_value,
-		                  ASTNode *indices_, ASTNode *unibangs);
+		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_, ASTNode *indices_,
+						ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Getelementptr; }
-		std::vector<ValuePtr> allValues() override { return {ptrValue}; }
-		std::vector<ValuePtr *> allValuePointers() override { return {&ptrValue}; }
+		std::vector<ValuePtr> allValues() override;
+		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
 	struct RetNode: public InstructionNode, public Reader {

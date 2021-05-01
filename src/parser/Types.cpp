@@ -260,6 +260,8 @@ namespace LL2W {
 		int largest = 0;
 		for (const TypePtr &type: node->types) {
 			const int width = type->width();
+			if (width == 0)
+				continue;
 			out += width + ((width - (out % width)) % width);
 			if (largest < width)
 				largest = width;
@@ -271,14 +273,9 @@ namespace LL2W {
 	}
 
 	TypePtr StructType::extractType(std::list<int> indices) const {
-		// TODO!: Implement.
-		// node->debug();
-		// for (int index: indices) std::cout << index << " "; std::cout << "\n";
 		TypePtr type = node->types.at(indices.front())->copy();
-		if (indices.size() == 1) {
-			// std::cout << "[1] Returning " << std::string(*type) << "\n";
+		if (indices.size() == 1)
 			return type;
-		}
 
 		std::shared_ptr<AggregateType> aggregate = std::dynamic_pointer_cast<AggregateType>(type);
 		if (!aggregate)
@@ -287,19 +284,8 @@ namespace LL2W {
 		indices.pop_front();
 		type = aggregate->extractType(indices);
 
-		// while (!indices.empty()) {
-		// 	AggregateType *aggregate = dynamic_cast<AggregateType *>(type);
-		// 	if (!aggregate)
-		// 		throw std::runtime_error("Expected an AggregateType in StructType::extractType");
-		// 	indices.pop_front();
-		// 	Type *new_type = aggregate->extractType(std::list<int> {indices.front()});
-		// 	delete type;
-		// 	type = new_type;
-		// }
-
 		std::cout << "Returning " << std::string(*type) << "\n";
 		return type;
-		// throw std::runtime_error("StructType::extractType is unimplemented.");
 	}
 
 	std::string StructType::barename() const {
@@ -340,21 +326,24 @@ namespace LL2W {
 			largest = std::max(largest, subtype->width());
 
 		for (size_t i = 0; i < node->types.size(); ++i) {
+			const bool is_last = i == node->types.size() - 1;
 			TypePtr &subtype = node->types[i];
 			const int type_width = subtype->width();
 			current_width += type_width;
-			const int next_width = (i == node->types.size() - 1)? largest : node->types[i + 1]->width();
+			const int next_width = is_last? largest : node->types[i + 1]->width();
 			if (subtype->typeType() == TypeType::Struct)
 				out->node->types.push_back(dynamic_cast<StructType *>(subtype.get())->pad());
 			else
 				out->node->types.push_back(subtype->copy());
 			out->paddingMap.emplace(i, i + padding_items_added);
-			int remaining = (next_width - current_width % next_width) % next_width;
-			while (0 < remaining) {
-				out->node->types.push_back(std::make_shared<IntType>(8));
-				++padding_items_added;
-				remaining -= 8;
-				current_width += 8;
+			if (next_width) {
+				int remaining = (next_width - current_width % next_width) % next_width;
+				while (0 < remaining) {
+					out->node->types.push_back(std::make_shared<IntType>(8));
+					++padding_items_added;
+					remaining -= 8;
+					current_width += 8;
+				}
 			}
 		}
 

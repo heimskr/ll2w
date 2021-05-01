@@ -34,19 +34,22 @@ namespace LL2W::Passes {
 			// Update: I've since encountered a gvar as a source argument:
 			//     %9 = getelementptr inbounds [200 x i8], [200 x i8]* @_ZNSt3__16__itoaL10cDigitsLutE, i64 0, i64 %8
 
-			if (!node->ptrValue->isLocal() && !node->ptrValue->isGlobal())
+			ValuePtr constant_value = node->allValues().front();
+			TypePtr constant_type = node->constant->convert()->type;
+
+			if (!constant_value->isLocal() && !constant_value->isGlobal())
 				throw std::runtime_error("Expected a pvar or gvar as the pointer value in a getelementptr instruction");
 
 			VariablePtr pointer;
-			if (node->ptrValue->isLocal())
-				pointer = dynamic_cast<LocalValue *>(node->ptrValue.get())->variable;
+			if (constant_value->isLocal())
+				pointer = dynamic_cast<LocalValue *>(constant_value.get())->variable;
 			else {
-				GlobalValue *global = dynamic_cast<GlobalValue *>(node->ptrValue.get());
-				pointer = function.newVariable(node->ptrType);
+				GlobalValue *global = dynamic_cast<GlobalValue *>(constant_value.get());
+				pointer = function.newVariable(constant_type);
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name));
 			}
 
-			const TypeType tt = node->ptrType->typeType();
+			const TypeType tt = constant_type->typeType();
 			const bool one_pvar = node->indices.size() == 1 && std::get<3>(node->indices.at(0));
 			if (tt == TypeType::Struct || ((tt == TypeType::Array || tt == TypeType::Pointer) && !one_pvar)) {
 				// Gather all the indices while making sure they're all decimals.
@@ -63,7 +66,7 @@ namespace LL2W::Passes {
 #ifdef DEBUG_GETELEMENTPTR
 				TypePtr old_type = node->variable->type;
 #endif
-				const int offset = Util::updiv(Getelementptr::compute(node->ptrType, indices, &out_type), 8);
+				const int offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8);
 				node->variable->type = out_type;
 				node->type = out_type;
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
