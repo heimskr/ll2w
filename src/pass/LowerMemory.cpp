@@ -96,12 +96,19 @@ namespace LL2W::Passes {
 		if (!converted->value)
 			throw std::runtime_error("Constant lacks value in lowerStore: " + std::string(*converted));
 
-		LocalValue *local = dynamic_cast<LocalValue *>(converted->value.get());
-		GlobalValue *global = local? nullptr : dynamic_cast<GlobalValue *>(converted->value.get());
-		if (!local && !global && !converted->value->isIntLike()) {
-			error() << std::string(*node->destination) << "\n";
-			throw std::runtime_error("Expected a LocalValue, GlobalValue or intlike in the constant of a store "
-				"instruction");
+		std::shared_ptr<LocalValue> local;
+		GlobalValue *global;
+
+		if (converted->value->isGetelementptr()) {
+			local = function.replaceGetelementptrValue(std::dynamic_pointer_cast<GetelementptrValue>(converted->value),
+				instruction);
+		} else {
+			local = std::dynamic_pointer_cast<LocalValue>(converted->value);
+			global = local? nullptr : dynamic_cast<GlobalValue *>(converted->value.get());
+			if (!local && !global && !converted->value->isIntLike()) {
+				node->debug();
+				throw std::runtime_error("Expected a pvar, gvar or intlike in the constant of a store instruction");
+			}
 		}
 
 		int size;
