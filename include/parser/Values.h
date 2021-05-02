@@ -188,7 +188,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
 		// Replaces LLVM-style escapes (e.g., "\1B") with WASM-style escapes (e.g., "\x1B").
 		std::string reescape() const;
-		std::string compile() const override { return "\"" + *value + "\""; }
+		std::string compile() const override { return "\"" + reescape() + "\""; }
 	};
 
 	struct ZeroinitializerValue: public Value {
