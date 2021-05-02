@@ -15,7 +15,6 @@ namespace LL2W::Passes {
 		int split_count = 0;
 
 		for (;;) {
-			warn() << *function.name << ": split_count = " << split_count << "\n";
 			any_changed = false;
 			for (BasicBlockPtr &block: function.blocks) {
 				int defs = 0;

@@ -74,8 +74,12 @@ namespace LL2W {
 		}
 	}
 
-	const char * LL2W::Parser::getName(int symbol) {
+	const char * Parser::getName(int symbol) {
 		return mode == Mode::LLVM? getNameLLVM(symbol) : getNameWASM(symbol);
+	}
+
+	std::string Parser::getBuffer() const {
+		return buffer? buffer : "";
 	}
 
 	Parser llvmParser(Parser::Mode::LLVM), wasmParser(Parser::Mode::WASM);

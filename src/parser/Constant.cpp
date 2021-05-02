@@ -81,12 +81,19 @@ namespace LL2W {
 	ConstantPtr Constant::convert() const {
 		if (value)
 			return copy();
-		if (!conversionSource)
+		if (!conversionSource) {
+			std::cerr << *this << "\n";
 			throw std::runtime_error("Constant has neither a value nor a conversion source in Constant::convert()");
-		if (conversion != Conversion::Ptrtoint && conversion != Conversion::Inttoptr)
+		}
+		if (conversion != Conversion::Ptrtoint && conversion != Conversion::Inttoptr &&
+		    conversion != Conversion::Bitcast) {
+			std::cerr << *this << "\n";
 			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map[conversion]);
-		if (!conversionSource->value)
+		}
+		if (!conversionSource->value) {
+			std::cerr << *this << "\n";
 			throw std::runtime_error("Conversion source has no value in Constant::convert()");
+		}
 		return std::make_shared<Constant>(conversionType->copy(), conversionSource->value->copy(), parattrs,
 			Conversion::None, nullptr, nullptr);
 	}

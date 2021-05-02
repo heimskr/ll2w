@@ -33,6 +33,7 @@ namespace LL2W {
 			void done();
 
 			const char * getName(int symbol);
+			std::string getBuffer() const;
 	};
 
 	extern Parser llvmParser, wasmParser;
