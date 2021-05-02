@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_SHIFTLEFTLOGICALIINSTRUCTION_H_
-#define INSTRUCTION_SHIFTLEFTLOGICALIINSTRUCTION_H_
+#pragma once
 
 #include "instruction/IType.h"
 
@@ -10,5 +9,3 @@ namespace LL2W {
 		std::string toString() const override;
 	};
 }
-
-#endif

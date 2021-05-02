@@ -24,10 +24,13 @@
 #include "instruction/OrRInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
+#include "instruction/ShiftLeftLogicalInverseIInstruction.h"
 #include "instruction/ShiftLeftLogicalRInstruction.h"
 #include "instruction/ShiftRightArithmeticIInstruction.h"
+#include "instruction/ShiftRightArithmeticInverseIInstruction.h"
 #include "instruction/ShiftRightArithmeticRInstruction.h"
 #include "instruction/ShiftRightLogicalIInstruction.h"
+#include "instruction/ShiftRightLogicalInverseIInstruction.h"
 #include "instruction/ShiftRightLogicalRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
@@ -122,8 +125,10 @@ namespace LL2W::Passes {
 	template <typename R, typename I, typename N>
 	void lowerNoncommutative(Function &function, InstructionPtr &instruction, N *node) {
 		ValuePtr left = node->left, right = node->right;
-		if (!left->isLocal())
+		if (!left->isLocal()) {
+			node->debug();
 			throw std::runtime_error("Intlikes are unsupported on the LHS of a " + getName(node) + " instruction");
+		}
 
 		VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
 		if (right->isLocal()) {
@@ -141,6 +146,39 @@ namespace LL2W::Passes {
 		}
 	}
 
+	template <typename R, typename I, typename II, typename N>
+	void lowerNoncommutativeOrInverse(Function &function, InstructionPtr &instruction, N *node) {
+		ValuePtr left = node->left, right = node->right;
+		if (left->isLocal()) {
+			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+				function.insertBefore(instruction, new_instruction);
+				new_instruction->extract();
+			} else if (right->isIntLike()) {
+				auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
+				function.insertBefore(instruction, new_instruction);
+				new_instruction->extract();
+			} else {
+				throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
+					value_map.at(right->valueType()));
+			}
+		} else if (left->isIntLike()) {
+			if (!right->isLocal())
+				throw std::runtime_error("RHS must be a pvar when the LHS is intlike in a " + getName(node) +
+					" instruction.");
+			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+			auto new_instruction = std::make_shared<II>(right_var, left->intValue(), node->variable);
+			function.insertBefore(instruction, new_instruction);
+			new_instruction->extract();
+		} else {
+			node->debug();
+			throw std::runtime_error("Only pvars and intlikes are unsupported on the LHS of a " + getName(node) +
+				" instruction");
+		}
+	}
+
 	void lowerMath(Function &function, InstructionPtr &instruction, BasicMathNode *node) {
 		if (*node->oper == "add") {
 			lowerCommutative<AddRInstruction, AddIInstruction>(function, instruction, node);
@@ -149,8 +187,8 @@ namespace LL2W::Passes {
 		} else if (*node->oper == "mul") {
 			lowerMult(function, instruction, node);
 		} else if (*node->oper == "shl") {
-			lowerNoncommutative<ShiftLeftLogicalRInstruction, ShiftLeftLogicalIInstruction>(function, instruction,
-				node);
+			lowerNoncommutativeOrInverse<ShiftLeftLogicalRInstruction, ShiftLeftLogicalIInstruction,
+				ShiftLeftLogicalInverseIInstruction>(function, instruction, node);
 		} else {
 			throw std::runtime_error("Unknown math operation: " + *node->oper);
 		}
@@ -327,11 +365,11 @@ namespace LL2W::Passes {
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
-					lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
-						instruction, shr);
+					lowerNoncommutativeOrInverse<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction,
+						ShiftRightLogicalInverseIInstruction>(function, instruction, shr);
 				} else {
-					lowerNoncommutative<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction>(function,
-						instruction, shr);
+					lowerNoncommutativeOrInverse<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction,
+						ShiftRightLogicalInverseIInstruction>(function, instruction, shr);
 				}
 			} else {
 				continue;
