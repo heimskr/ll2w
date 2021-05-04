@@ -16,6 +16,7 @@
 // #define DEBUG_ESTIMATIONS
 // #define DEBUG_BLOCK_LIVENESS
 // #define DEBUG_VAR_LIVENESS
+// #define DEBUG_ALIASES
 #define STRICT_READ_CHECK
 
 #include "allocator/ColoringAllocator.h"
@@ -683,7 +684,7 @@ namespace LL2W {
 	void Function::compile() {
 		initialCompile();
 
-#ifdef DEBUG_SPILL
+#ifdef DEBUG_ALIASES
 		debug();
 #endif
 
@@ -961,6 +962,11 @@ namespace LL2W {
 			false,
 #endif
 #ifdef DEBUG_ESTIMATIONS
+			true,
+#else
+			false,
+#endif
+#ifdef DEBUG_ALIASES
 			true
 #else
 			false
@@ -968,8 +974,8 @@ namespace LL2W {
 		);
 	}
 
-	void Function::debug(const bool doBlocks, const bool linear, const bool vars, const bool blockLiveness,
-	                     const bool readWritten, const bool varLiveness, const bool render, const bool estimations) {
+	void Function::debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
+	                     bool render, bool estimations, bool aliases) {
 		if (doBlocks || linear || vars)
 			std::cerr << headerString() + " \e[94m{\e[39m\n";
 		if (doBlocks) {
@@ -1054,6 +1060,19 @@ namespace LL2W {
 		}
 		if (doBlocks || linear || vars)
 			std::cerr << "\e[94m}\e[39m\n\n";
+		if (aliases) {
+			std::cerr << "<Aliases>\n";
+			for (auto &[id, var]: variableStore) {
+				std::cerr << id << " = " << *var;
+				if (Variable *vparent = var->getParent())
+					std::cerr << "(parent = " << *vparent << ")";
+				std::cerr << ":";
+				for (Variable *alias: var->getAliases())
+					std::cerr << " " << *alias;
+				std::cerr << "\n";
+			}
+			std::cerr << "</Aliases>\n";
+		}
 		if (render) {
 			std::cerr << "Rendering.\n";
 			if (estimations)

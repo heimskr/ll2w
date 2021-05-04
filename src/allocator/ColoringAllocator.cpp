@@ -93,9 +93,12 @@ namespace LL2W {
 			for (const int color: pair.second->colors) std::cerr << color << " ";
 			std::cerr << ")\n";
 #endif
-			if (ptr->registers.empty())
+			if (ptr->registers.empty()) {
+				std::set<int> assigned;
 				for (const int color: pair.second->colors)
-					ptr->registers.insert(color);
+					assigned.insert(color);
+				ptr->setRegisters(assigned);
+			}
 		}
 
 		return Result::Success;

@@ -9,6 +9,7 @@
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
 		std::list<InstructionPtr> to_remove;
+		std::unordered_set<Variable *> vars_to_erase;
 		bool should_relinearize = false;
 
 		// Scan through each instruction in order.
@@ -66,9 +67,9 @@ namespace LL2W::Passes {
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
 							function.extraVariables.push_back(to_rename);
-							function.variableStore.erase(to_rename->id);
+							vars_to_erase.insert(to_rename.get());
 							to_rename->makeAliasOf(*target);
-						} catch (const std::out_of_range &) {
+						} catch (const std::out_of_range &err) {
 							// Sometimes, the same variable will appear multiple times in the table, e.g.
 							//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]
 							// We do nothing if we've already aliased the variable and removed it from the variable
@@ -82,6 +83,9 @@ namespace LL2W::Passes {
 				target->removeDefinition(instruction);
 			}
 		}
+
+		for (Variable *var: vars_to_erase)
+			function.variableStore.erase(var->id);
 
 		for (InstructionPtr &ptr: to_remove)
 			function.remove(ptr);

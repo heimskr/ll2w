@@ -174,7 +174,9 @@ namespace LL2W {
 				const bool varLiveness   =  Util::contains(split, "vlive");
 				const bool render        =  Util::contains(split, "render");
 				const bool estimations   =  Util::contains(split, "estimations") || Util::contains(split, "est");
-				function->debug(doBlocks, linear, vars, blockLiveness, readWritten, varLiveness, render, estimations);
+				const bool aliases       =  Util::contains(split, "aliases") || Util::contains(split, "al");
+				function->debug(doBlocks, linear, vars, blockLiveness, readWritten, varLiveness, render, estimations,
+					aliases);
 			} else if (Util::isAny(first, {"st", "status"})) {
 				GET_FN();
 				info() << "Initial:    " << (function->initialDone? "done" : "not done") << "\n";

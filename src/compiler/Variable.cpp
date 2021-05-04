@@ -10,7 +10,7 @@
 #include "util/Util.h"
 
 // #define DEBUG_ALIASES
-#define VARIABLE_EXTRA
+// #define VARIABLE_EXTRA
 
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
