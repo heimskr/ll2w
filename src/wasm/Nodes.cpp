@@ -81,6 +81,7 @@
 #include "instruction/Label.h"
 #include "instruction/SetptRInstruction.h"
 #include "instruction/SvpgInstruction.h"
+#include "instruction/QueryInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1089,5 +1090,22 @@ namespace LL2W {
 	std::unique_ptr<WhyInstruction> WASMSvpgNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
 		return std::make_unique<SvpgInstruction>(conv(rd));
+	}
+
+	WASMQueryNode::WASMQueryNode(QueryType type_, ASTNode *rd_):
+	WASMInstructionNode(WASM_QUERYNODE), type(type_), rd(rd_->lexerInfo) {
+		delete rd_;
+	}
+
+	std::string WASMQueryNode::debugExtra() const {
+		return "? " + blue(query_map.at(type)) + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMQueryNode::operator std::string() const {
+		return "? mem -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMQueryNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<QueryInstruction>(type, convertVariable(function, map, rd));
 	}
 }

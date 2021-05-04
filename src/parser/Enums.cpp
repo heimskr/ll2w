@@ -107,4 +107,7 @@ namespace LL2W {
 		{Conversion::Fptoui,  "fptoui"},  {Conversion::Fptosi,   "fptosi"},   {Conversion::Uitofp,   "uitofp"},
 		{Conversion::Sitofp,  "sitofp"},  {Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"},
 		{Conversion::Bitcast, "bitcast"}, {Conversion::Addrspacecast, "addrspacecast"}};
+
+	std::unordered_map<QueryType, std::string> query_map {
+		{QueryType::Memory, "mem"}};
 }

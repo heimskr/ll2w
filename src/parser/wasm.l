@@ -63,6 +63,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "prd"						{ WASMRTOKEN(PRD) }
 "prb"						{ WASMRTOKEN(PRB) }
 "off"						{ WASMRTOKEN(OFF) }
+"mem"						{ WASMRTOKEN(MEM) }
 ">>>"						{ WASMRTOKEN(RL) }
 "!&&"						{ WASMRTOKEN(LNAND) }
 "!||"						{ WASMRTOKEN(LNOR) }
@@ -113,6 +114,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 ":"							{ WASMRTOKEN(COLON) }
 "+"							{ WASMRTOKEN(PLUS) }
 "-"							{ WASMRTOKEN(MINUS) }
+"?"							{ WASMRTOKEN(QUESTION) }
 
 {WASM_NUMBER}				{ WASMRTOKEN(NUMBER) }
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }

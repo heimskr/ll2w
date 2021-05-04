@@ -45,6 +45,7 @@ namespace LL2W {
 		Addrspacecast};
 	enum class Condition {Positive, Negative, Zero, Nonzero, None};
 	enum class PrintType {Dec, Bin, Hex, Char, Full};
+	enum class QueryType {Memory};
 
 	extern std::unordered_map<TypeType,   std::string> type_map;
 	extern std::unordered_map<ValueType,  std::string> value_map;
@@ -60,6 +61,7 @@ namespace LL2W {
 	extern std::unordered_map<IcmpCond,   std::string> cond_op_map;
 	extern std::unordered_map<IcmpCond,   IcmpCond>    cond_rev_map;
 	extern std::unordered_map<Conversion, std::string> conversion_map;
+	extern std::unordered_map<QueryType,  std::string> query_map;
 }
 
 #endif
