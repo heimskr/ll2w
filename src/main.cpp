@@ -12,7 +12,7 @@
 #include "util/Util.h"
 #include "Interactive.h"
 
-#define DEBUGMODE
+// #define DEBUGMODE
 // #define INTERACTIVE
 
 void compile(const std::string &);

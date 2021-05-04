@@ -5,10 +5,14 @@ namespace LL2W {
 		JType(nullptr, addr_, link_, index_), Conditional(condition_) {}
 
 	std::string JumpInstruction::debugExtra() {
-		return "\e[2m" + std::string(link? "::" : ":") + "\e[0m " + colorize(addr);
+		return "\e[2m" + conditionPrefix() + (link? "::" : ":") + "\e[0m " + colorize(addr);
 	}
 
 	std::string JumpInstruction::toString() const {
-		return std::string(link? "::" : ":") + " " + LL2W::toString(addr);
+		return conditionPrefix() + std::string(link? "::" : ":") + " " + LL2W::toString(addr);
+	}
+
+	bool JumpInstruction::alwaysTerminal() const {
+		return condition == Condition::None;
 	}
 }

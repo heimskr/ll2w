@@ -1,5 +1,6 @@
 #include "util/CompilerUtil.h"
 #include "compiler/LLVMInstruction.h"
+#include "instruction/WhyInstruction.h"
 #include "parser/Nodes.h"
 
 namespace LL2W::CompilerUtil {
@@ -13,6 +14,8 @@ namespace LL2W::CompilerUtil {
 				case NodeType::Unreachable: return true;
 				default: return false;
 			}
+		} else if (WhyInstruction *why = dynamic_cast<WhyInstruction *>(instruction.get())) {
+			return why->alwaysTerminal();
 		}
 
 		return false;

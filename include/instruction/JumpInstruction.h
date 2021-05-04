@@ -1,5 +1,4 @@
-#ifndef INSTRUCTIONS_JUMPINSTRUCTION_H_
-#define INSTRUCTIONS_JUMPINSTRUCTION_H_
+#pragma once
 
 #include "instruction/Conditional.h"
 #include "instruction/JType.h"
@@ -10,7 +9,6 @@ namespace LL2W {
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+		bool alwaysTerminal() const override;
 	};
 }
-
-#endif

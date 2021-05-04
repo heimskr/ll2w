@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string JumpRegisterInstruction::toString() const {
 		return conditionPrefix() + std::string(link? "::" : ":") + " " + rd->toString();
 	}
+
+	bool JumpRegisterInstruction::alwaysTerminal() const {
+		return condition == Condition::None;
+	}
 }

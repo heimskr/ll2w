@@ -11,6 +11,7 @@ namespace LL2W {
 		public:
 			bool isTerminal() const override { return false; }
 			std::pair<char, char> extract(bool = false) override { return {0, 0}; }
+			virtual bool alwaysTerminal() const { return false; }
 	};
 }
 
