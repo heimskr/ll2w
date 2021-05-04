@@ -4,7 +4,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
-#include "instruction/SetSymbolInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "pass/ReplaceConstants.h"
 #include "util/Util.h"
 
@@ -32,7 +32,7 @@ namespace LL2W::Passes {
 					const int offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8);
 					TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 					VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
-					auto setsym = std::make_shared<SetSymbolInstruction>(new_var, *gep_global->name);
+					auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
 					function.insertBefore(instruction, setsym);
 					setsym->extract();
 					if (offset != 0) {
