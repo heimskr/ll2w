@@ -118,6 +118,7 @@ namespace LL2W::Passes {
 			node->debug();
 			throw;
 		}
+
 		ValuePtr source_value = node->source->convert()->value;
 		const ValueType value_type = source_value->valueType();
 
@@ -168,9 +169,18 @@ namespace LL2W::Passes {
 				set->extract();
 				store->extract();
 			}
-		} else if (value_type == ValueType::Local) {
-			LocalValue *source = dynamic_cast<LocalValue *>(source_value.get());
-			auto svar = source->getVariable(function);
+		} else if (value_type == ValueType::Local || value_type == ValueType::Global) {
+			VariablePtr svar;
+			if (value_type == ValueType::Global) {
+				svar = function.newVariable(node->source->type);
+				auto set = std::make_shared<SetInstruction>(svar,
+					dynamic_cast<GlobalValue *>(source_value.get())->name);
+				function.insertBefore(instruction, set, "LowerMemory: load global");
+				set->extract();
+			} else {
+				svar = dynamic_cast<LocalValue *>(source_value.get())->getVariable(function);
+			}
+
 			if (local) {
 				auto lvar = local->getVariable(function);
 				// %src -> [%dest]
@@ -195,8 +205,10 @@ namespace LL2W::Passes {
 			} else
 				throw std::runtime_error("Unexpected destination ValueType in store instruction: " +
 					value_map.at(converted->value->valueType()));
-		} else
+		} else {
+			node->debug();
 			throw std::runtime_error("Unexpected source ValueType in store instruction: " + value_map.at(value_type));
+		}
 	}
 
 	int getLoadStoreSize(ConstantPtr &constant) {
