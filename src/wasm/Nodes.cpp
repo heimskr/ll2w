@@ -82,6 +82,8 @@
 #include "instruction/SetptRInstruction.h"
 #include "instruction/SvpgInstruction.h"
 #include "instruction/QueryInstruction.h"
+#include "instruction/NotRInstruction.h"
+#include "instruction/PrintPseudoinstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -132,6 +134,24 @@ namespace LL2W {
 			return dynamic_cast<WASMImmediateNode *>(node)->imm;
 		if (node->symbol == WASMTOK_NUMBER)
 			return static_cast<int>(node->atoi());
+		if (node->symbol == WASMTOK_CHAR) {
+			const std::string middle = node->lexerInfo->substr(1, node->lexerInfo->size() - 2);
+			if (middle.size() == 1)
+				return middle.front();
+			if (middle.front() != '\\')
+				throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
+			size_t pos = middle.find_first_not_of("\\");
+			if (pos == std::string::npos)
+				return '\\';
+			switch (middle[pos]) {
+				case 'n': return '\n';
+				case 'r': return '\r';
+				case 'a': return '\a';
+				case 't': return '\t';
+				case 'b': return '\b';
+				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
+			}
+		}
 		return node->lexerInfo;
 	}
 
@@ -250,6 +270,8 @@ namespace LL2W {
 				return std::make_unique<AddRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_MINUS:
 				return std::make_unique<SubRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_NOT:
+				return std::make_unique<NotRInstruction>(conv(rs), conv(rd));
 			default:
 				throw std::invalid_argument("Unknown operator: " + *oper);
 		}
@@ -1107,5 +1129,22 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMQueryNode::convert(Function &function, VarMap &map) {
 		return std::make_unique<QueryInstruction>(type, convertVariable(function, map, rd));
+	}
+
+	WASMPseudoPrintNode::WASMPseudoPrintNode(ASTNode *imm_):
+	WASMInstructionNode(WASM_PSEUDOPRINTNODE), imm(getImmediate(imm_)) {
+		delete imm_;
+	}
+
+	std::string WASMPseudoPrintNode::debugExtra() const {
+		return "<" + blue("p") + " " + colorize(imm) + ">";
+	}
+
+	WASMPseudoPrintNode::operator std::string() const {
+		return "<p " + toString(imm) + ">";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMPseudoPrintNode::convert(Function &, VarMap &) {
+		return std::make_unique<PrintPseudoinstruction>(imm);
 	}
 }

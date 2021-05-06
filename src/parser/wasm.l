@@ -26,6 +26,7 @@ WASM_LETTER				[A-Za-z_]
 WASM_DIGIT				[0-9]
 WASM_DECIMAL			("-"?{WASM_DIGIT}+)
 WASM_HEXADECIMAL		("-"?0x[a-fA-F0-9]+)
+WASM_CHAR				('([^'\\\n]|("\\""\\"?[nratb]))')
 WASM_NUMBER				({WASM_DECIMAL}|{WASM_HEXADECIMAL})
 WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
 WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
@@ -45,6 +46,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 
 {WASM_DOUBLE_REG}			{ WASMRTOKEN(REG) }
 {WASM_SINGLE_REG}			{ WASMRTOKEN(REG) }
+{WASM_CHAR}					{ WASMRTOKEN(CHAR) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
 "print"						{ WASMRTOKEN(PRINT) }
@@ -115,6 +117,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "+"							{ WASMRTOKEN(PLUS) }
 "-"							{ WASMRTOKEN(MINUS) }
 "?"							{ WASMRTOKEN(QUESTION) }
+"p"							{ WASMRTOKEN(P) }
 
 {WASM_NUMBER}				{ WASMRTOKEN(NUMBER) }
 {WASM_IDENT}				{ WASMRTOKEN(IDENT) }

@@ -124,15 +124,17 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_INIT "*init"
 %token WASMTOK_QUESTION "?"
 %token WASMTOK_MEM "mem"
+%token WASMTOK_P "p"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
+%token WASMTOK_CHAR
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE
 
 %start start
 
@@ -238,12 +240,15 @@ op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1
 
 op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
-op_ext: op_print | op_sleep | op_halt;
+op_ext: op_print | op_pprint | op_sleep | op_halt;
 
 op_sleep: "<" "sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 
 op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
-printop: "print" | "prx" | "prd" | "prc" | "prb"
+printop: "print" | "prx" | "prd" | "prc" | "prb";
+
+op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
+         | "<" "p"   immediate ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 
@@ -257,15 +262,16 @@ op_svpg: "page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
-_immediate: number | ident;
+_immediate: number | ident | character;
 
 ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | "setpt" | "sleep" | "page"
-     | printop  | WASMTOK_IDENT;
+     | printop  | "p"    | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
 reg: WASMTOK_REG;
 number: WASMTOK_NUMBER;
+character: WASMTOK_CHAR;
 
 %%
 
