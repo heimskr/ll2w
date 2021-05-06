@@ -138,8 +138,13 @@ namespace LL2W {
 			const std::string middle = node->lexerInfo->substr(1, node->lexerInfo->size() - 2);
 			if (middle.size() == 1)
 				return middle.front();
-			if (middle.front() != '\\')
+			if (middle.front() != '\\') {
+				if (middle == "$(")
+					return '{';
+				if (middle == "$)")
+					return '}';
 				throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
+			}
 			size_t pos = middle.find_first_not_of("\\");
 			if (pos == std::string::npos)
 				return '\\';

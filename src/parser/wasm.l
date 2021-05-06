@@ -26,7 +26,7 @@ WASM_LETTER				[A-Za-z_]
 WASM_DIGIT				[0-9]
 WASM_DECIMAL			("-"?{WASM_DIGIT}+)
 WASM_HEXADECIMAL		("-"?0x[a-fA-F0-9]+)
-WASM_CHAR				('([^'\\\n]|("\\""\\"?[nratb]))')
+WASM_CHAR				('([^'\\\n]|("\\""\\"?[nratb])|\$[()])')
 WASM_NUMBER				({WASM_DECIMAL}|{WASM_HEXADECIMAL})
 WASM_IDENT				([-a-zA-Z._][-a-zA-Z._0-9]*)
 WASM_STRING				(\"([^\\"\n]|\\([\\'"nt]|[0-9a-fA-F][0-9a-fA-F]))*\")
