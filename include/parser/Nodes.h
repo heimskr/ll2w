@@ -47,7 +47,8 @@ namespace LL2W {
 		int index;
 		int allocsizeSize = -1;
 		int allocsizeCount = -1;
-		std::unordered_set<FnAttr> basicAttributes;
+		std::unordered_set<ParAttr> parameterAttributes;
+		std::unordered_set<FnAttr> functionAttributes;
 		std::unordered_map<const std::string *, const std::string *> stringAttributes;
 		AttributesNode(ASTNode *);
 		std::string style() const override { return "\e[31m"; }

@@ -19,6 +19,7 @@ namespace LL2W {
 			std::unordered_map<std::string, FunctionHeader *> declarations;
 			std::map<std::string, GlobalVarDef *> globals; // keys include the "@"
 			std::map<int, std::unordered_set<FnAttr>> fnattrs;
+			std::map<int, std::unordered_set<ParAttr>> parattrs;
 			std::unordered_map<const std::string *, AliasDef *> aliases;
 
 			Program(const ASTNode &);

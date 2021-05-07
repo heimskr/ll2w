@@ -49,7 +49,8 @@ namespace LL2W {
 					break;
 				case LLVMTOK_ATTRIBUTES: {
 					AttributesNode *attrnode = dynamic_cast<AttributesNode *>(node);
-					fnattrs.emplace(attrnode->index, attrnode->basicAttributes);
+					fnattrs.emplace(attrnode->index, attrnode->functionAttributes);
+					parattrs.emplace(attrnode->index, attrnode->parameterAttributes);
 					break;
 				}
 				case LLVM_ALIAS_DEF:

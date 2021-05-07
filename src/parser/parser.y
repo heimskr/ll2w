@@ -223,15 +223,27 @@ attribute_list: attribute_list attribute { $$ = $1->adopt($2); }
               | { $$ = new AN(llvmParser, LLVM_ATTRIBUTE_LIST); };
 attribute: LLVMTOK_STRING "=" LLVMTOK_STRING { $$ = $2->adopt({$1, $3}); }
          | LLVMTOK_STRING
-         | fnattr;
+         | attribute_fnattr
+         | attribute_parattr
+         | "writeonly"
+         | "readnone"
+         | "readonly";
 
 basic_fnattr: LLVMTOK_FNATTR_BASIC | convertible_fnattr { $1->symbol = LLVMTOK_FNATTR_BASIC; };
 convertible_fnattr: LLVMTOK_WRITEONLY | LLVMTOK_READONLY | LLVMTOK_READNONE | LLVMTOK_PATCHABLE_PROLOGUE;
-fnattr: basic_fnattr
-      | "alignstack" "(" LLVMTOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     }
-      | "allocsize"  "(" LLVMTOK_DECIMAL "," LLVMTOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); }
-      | "allocsize"  "(" LLVMTOK_DECIMAL ")"                 { $$ = $1->adopt($3);       D($2, $4);     };
 
+attribute_basic_fnattr: LLVMTOK_FNATTR_BASIC | attribute_convertible_fnattr { $1->symbol = LLVMTOK_FNATTR_BASIC; };
+attribute_convertible_fnattr: LLVMTOK_PATCHABLE_PROLOGUE;
+attribute_fnattr: attribute_basic_fnattr
+      | "alignstack" "(" LLVMTOK_DECIMAL ")"                     { $$ = $1->adopt($3);       D($2, $4);     }
+      | "allocsize"  "(" LLVMTOK_DECIMAL "," LLVMTOK_DECIMAL ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); }
+      | "allocsize"  "(" LLVMTOK_DECIMAL ")"                     { $$ = $1->adopt($3);       D($2, $4);     };
+
+attribute_parattr: LLVMTOK_PARATTR
+                 | attribute_parattr_simple                 { $1->symbol = LLVMTOK_PARATTR;  }
+                 | LLVMTOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
+                 | retattr | LLVMTOK_BYVAL;
+attribute_parattr_simple: LLVMTOK_INALLOCA;
 
 
 // Miscellaneous
@@ -540,7 +552,7 @@ constant_right: operand | conversion_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
             | parattr              { $$ = (new AN(llvmParser, LLVM_PARATTR_LIST))->adopt($1, true); };
 parattr: LLVMTOK_PARATTR
-       | parattr_simple             { $1->symbol = LLVMTOK_PARATTR; }
+       | parattr_simple                 { $1->symbol = LLVMTOK_PARATTR;  }
        | LLVMTOK_BYVAL "(" type_any ")" { $$ = $1->adopt($3); D($2, $4); }
        | retattr | LLVMTOK_BYVAL | LLVMTOK_WRITEONLY;
 parattr_simple: LLVMTOK_INALLOCA | LLVMTOK_READONLY | LLVMTOK_READNONE;

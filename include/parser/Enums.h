@@ -27,7 +27,7 @@ namespace LL2W {
 	enum class RetAttr {Zeroext, Signext, Inreg, Noalias, Nonnull};
 	enum class ParAttr {
 		Byval, Inalloca, Sret, Nocapture, Readonly, Swiftself, Swifterror, Immarg, Nonnull, Returned, Nest, Nofree,
-		Zeroext, Signext, Inreg, Noalias};
+		Zeroext, Signext, Inreg, Noalias, Writeonly, Readnone};
 	enum class Deref {Default, Dereferenceable, DereferenceableOrNull};
 	enum class FnAttr {
 		alwaysinline, noredzone, convergent, norecurse, inlinehint, inaccessiblemem_or_argmemonly, sspreq,

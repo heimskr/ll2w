@@ -67,24 +67,48 @@ namespace LL2W {
 	AttributesNode::AttributesNode(ASTNode *node): BaseNode(llvmParser, LLVMTOK_ATTRIBUTES, "") {
 		index = node->at(0)->atoi();
 		for (ASTNode *child: *node->at(1)) {
-			if (child->symbol == LLVMTOK_FNATTR_BASIC) {
-				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
-					if (*child->lexerInfo == pair.second) {
-						basicAttributes.insert(pair.first);
-						break;
-					}
-				}
-			} else if (child->symbol == LLVMTOK_STRING) {
-				stringAttributes.insert({child->extracted(), StringSet::intern("")});
-			} else if (child->symbol == LLVMTOK_EQUALS) {
-				stringAttributes.insert({child->at(0)->extracted(), child->at(1)->extracted()});
-			} else if (child->symbol == LLVMTOK_ALLOCSIZE) {
-				allocsizeSize = child->at(0)->atoi();
-				if (1 < child->size())
-					allocsizeCount = child->at(1)->atoi();
-			} else {
-				node->at(1)->debug();
-				throw std::runtime_error("Invalid child of ATTRIBUTE_LIST: " + std::string(child->getName()));
+			switch (child->symbol) {
+				case LLVMTOK_FNATTR_BASIC:
+					for (const std::pair<const FnAttr, std::string> &pair: fnattr_map)
+						if (*child->lexerInfo == pair.second) {
+							functionAttributes.insert(pair.first);
+							break;
+						}
+					break;
+				case LLVMTOK_PARATTR:
+					for (const std::pair<const ParAttr, std::string> &pair: parattr_map)
+						if (*child->lexerInfo == pair.second) {
+							parameterAttributes.insert(pair.first);
+							break;
+						}
+					break;
+				case LLVMTOK_STRING:
+					stringAttributes.insert({child->extracted(), StringSet::intern("")});
+					break;
+				case LLVMTOK_EQUALS:
+					stringAttributes.insert({child->at(0)->extracted(), child->at(1)->extracted()});
+					break;
+				case LLVMTOK_ALLOCSIZE:
+					allocsizeSize = child->at(0)->atoi();
+					if (1 < child->size())
+						allocsizeCount = child->at(1)->atoi();
+					break;
+				// Why oh why do these have to be ambiguous?
+				case LLVMTOK_WRITEONLY:
+					parameterAttributes.insert(ParAttr::Writeonly);
+					functionAttributes.insert(FnAttr::writeonly);
+					break;
+				case LLVMTOK_READNONE:
+					parameterAttributes.insert(ParAttr::Readnone);
+					functionAttributes.insert(FnAttr::readnone);
+					break;
+				case LLVMTOK_READONLY:
+					parameterAttributes.insert(ParAttr::Readonly);
+					functionAttributes.insert(FnAttr::readonly);
+					break;
+				default:
+					node->at(1)->debug();
+					throw std::runtime_error("Invalid child of ATTRIBUTE_LIST: " + std::string(child->getName()));
 			}
 		}
 		delete node;
@@ -93,7 +117,7 @@ namespace LL2W {
 	std::string AttributesNode::debugExtra() const {
 		std::stringstream out;
 		out << "attributes #\e[92m" << index << "\e[0m \e[2m= { \e[0m";
-		for (FnAttr attr: basicAttributes)
+		for (FnAttr attr: functionAttributes)
 			out << "\e[34m" << fnattr_map.at(attr) << "\e[0m ";
 		for (const std::pair<const std::string * const, const std::string *> &pair: stringAttributes) {
 			out << "\e[93m\"" << *pair.first << "\"\e[0m";
