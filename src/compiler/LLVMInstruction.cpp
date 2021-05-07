@@ -91,9 +91,11 @@ namespace LL2W {
 			}
 
 			case NodeType::Call:
+			case NodeType::Asm:
 			case NodeType::Invoke: {
 				CAST(CallInvokeNode);
 				write(cast->result, cast->returnType);
+				IFLV(cast->name, nullptr);
 				for (ConstantPtr constant: cast->constants)
 					IFLV(constant->value, constant->type);
 				break;

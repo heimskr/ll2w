@@ -31,6 +31,7 @@ namespace LL2W::Passes {
 			} else if (select->firstValue->isLocal()) {
 				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
 			} else {
+				select->debug();
 				throw std::runtime_error("Invalid true-value in select instruction: " +
 					std::string(*select->firstValue));
 			}
