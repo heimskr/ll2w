@@ -659,6 +659,7 @@ namespace LL2W {
 	}
 
 	void Function::finalCompile() {
+		Passes::readjustStackSkip(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
