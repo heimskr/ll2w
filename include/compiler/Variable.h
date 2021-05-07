@@ -29,6 +29,7 @@ namespace LL2W {
 			WeakSet<Instruction> definitions, uses;
 			std::weak_ptr<Instruction> lastUse;
 			std::set<int> registers;
+			std::unordered_set<Variable *> phiParents, phiChildren;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.

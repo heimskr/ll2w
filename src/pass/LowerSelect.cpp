@@ -30,6 +30,12 @@ namespace LL2W::Passes {
 				set->extract();
 			} else if (select->firstValue->isLocal()) {
 				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
+			} else if (select->firstValue->isGlobal()) {
+				left_var = function.newVariable(select->firstType, instruction->parent.lock());
+				auto set = std::make_shared<SetInstruction>(left_var,
+					dynamic_cast<GlobalValue *>(select->firstValue.get())->name);
+				function.insertBefore(instruction, set);
+				set->extract();
 			} else {
 				select->debug();
 				throw std::runtime_error("Invalid true-value in select instruction: " +

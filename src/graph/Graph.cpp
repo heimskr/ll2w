@@ -215,8 +215,8 @@ namespace LL2W {
 	}
 
 	DFSResult Graph::DFS(Node *start) {
-		DFSResult::parent_map parents;
-		DFSResult::time_map discovered, finished;
+		DFSResult::ParentMap parents;
+		DFSResult::TimeMap discovered, finished;
 		int time = 0;
 
 		std::function<void(Node *)> visit = [&](Node *node) {
@@ -345,8 +345,8 @@ namespace LL2W {
 	std::string Graph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes_) {
-			node->rename("\"" + node->label() + "_i" + std::to_string(node->in().size()) + "_o" +
-				std::to_string(node->out().size()) + "\"");
+			// node->rename("\"" + node->label() + "_i" + std::to_string(node->in().size()) + "_o" +
+			// 	std::to_string(node->out().size()) + "\"");
 			if (node->reflexive())
 				reflexives.push_back(node);
 		}
@@ -388,10 +388,10 @@ namespace LL2W {
 		return out.str();
 	}
 
-	void Graph::renderTo(const std::string &png_path, const std::string &direction) {
+	void Graph::renderTo(const std::string &out_path, const std::string &direction) {
 		std::ofstream out;
 		std::string path = "/tmp/ll2w_graph_";
-		for (char ch: png_path)
+		for (const char ch: out_path)
 			if (std::isdigit(ch) || std::isalpha(ch) || ch == '_')
 				path += ch;
 		path += ".dot";
@@ -399,11 +399,25 @@ namespace LL2W {
 		out << toDot(direction);
 		out.close();
 
+		std::string type = "png";
+		const size_t pos = out_path.find_last_of(".");
+		if (pos != std::string::npos && pos != out_path.size() - 1) {
+			type = out_path.substr(pos + 1);
+			for (const char ch: type)
+				if (!std::isalpha(ch)) {
+					type = "png";
+					break;
+				}
+		}
+
+		type.insert(0, "-T");
+		const char *typearg = type.c_str();
+
 		if (fork() == 0) {
 			if (4096 <= allEdges().size())
-				execlp("dot", "dot", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
+				execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 			else
-				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", "-Tpng", path.c_str(), "-o", png_path.c_str(), nullptr);
+				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 		}
 
 	}

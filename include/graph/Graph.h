@@ -1,5 +1,4 @@
-#ifndef GRAPH_H_
-#define GRAPH_H_
+#pragma once
 
 #include <functional>
 #include <list>
@@ -136,12 +135,11 @@ namespace LL2W {
 			/** Returns a representation of the graph in graphviz dot syntax. */
 			virtual std::string toDot(const std::string &direction = "TB");
 
-			/** Renders a PNG representation of the graph to an output file. */
+			/** Renders a representation (PNG by default; changeable by changing the file extension) of the graph to an
+			 *  output file. */
 			void renderTo(const std::string &png_path, const std::string &direction = "TB");
 
 			decltype(labelMap)::iterator begin();
 			decltype(labelMap)::iterator end();
 	};
 }
-
-#endif

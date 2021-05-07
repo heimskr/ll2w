@@ -151,9 +151,12 @@ namespace LL2W {
 #ifdef DEBUG_ALIASES
 		std::cerr << "\n";
 #endif
+		info() << "\e[36m" << functionName() << "\e[39m: " << *this << "[\e[1m" << this << "\e[22m].makeAliasOf("
+		       << new_parent << "[\e[1m" << &new_parent << "\e[22m])\n";
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {
+			info() << "Alias " << alias << "->parent = " << &new_parent << "\n";
 			alias->parent = &new_parent;
 			new_parent.aliases.insert(alias);
 		}

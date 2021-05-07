@@ -10,14 +10,14 @@ namespace LL2W {
 	class Node;
 
 	struct DFSResult {
-		using parent_map = std::unordered_map<Node *, Node *>;
-		using time_map   = std::unordered_map<Node *, int>;
+		using ParentMap = std::unordered_map<Node *, Node *>;
+		using TimeMap   = std::unordered_map<Node *, int>;
 
 		Graph *graph;
-		parent_map parents;
-		time_map discovered, finished;
+		ParentMap parents;
+		TimeMap discovered, finished;
 
-		DFSResult(Graph *graph_, const parent_map &parents_, const time_map &discovered_, const time_map &finished_);
+		DFSResult(Graph *graph_, const ParentMap &parents_, const TimeMap &discovered_, const TimeMap &finished_);
 
 		DFSResult(Graph *graph_,
 		          const std::vector<Node *> &parents_,

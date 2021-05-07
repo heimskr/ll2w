@@ -3,9 +3,9 @@
 
 namespace LL2W {
 	DFSResult::DFSResult(Graph *graph_,
-	                     const DFSResult::parent_map &parents_,
-	                     const DFSResult::time_map &discovered_,
-	                     const DFSResult::time_map &finished_):
+	                     const DFSResult::ParentMap &parents_,
+	                     const DFSResult::TimeMap &discovered_,
+	                     const DFSResult::TimeMap &finished_):
 		graph(graph_), parents(parents_), discovered(discovered_), finished(finished_) {}
 
 	DFSResult::DFSResult(Graph *graph_,

@@ -1,5 +1,4 @@
-#ifndef NODE_H_
-#define NODE_H_
+#pragma once
 
 #include <any>
 #include <map>
@@ -128,5 +127,3 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &, const Node &);
 }
-
-#endif

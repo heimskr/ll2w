@@ -688,7 +688,8 @@ namespace LL2W {
 		debug();
 #endif
 
-		while (allocator->attempt() != Allocator::Result::Success);
+		while (allocator->attempt() != Allocator::Result::Success)
+			warn() << "Allocation failed.\n";
 
 		finalCompile();
 
