@@ -71,7 +71,7 @@ namespace LL2W::Passes {
 							VariablePtr to_rename = function.getVariable(*local->name);
 							function.extraVariables.push_back(to_rename);
 							vars_to_erase.insert(to_rename.get());
-							to_rename->makeAliasOf(*target);
+							// to_rename->makeAliasOf(*target);
 						} catch (const std::out_of_range &err) {
 							// Sometimes, the same variable will appear multiple times in the table, e.g.
 							//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]
@@ -87,41 +87,37 @@ namespace LL2W::Passes {
 			}
 		}
 
-		if (variablesOnly) {
-			// Create a dependency graph. It's bidirectional for ease of traversal.
-			Graph dependencies;
-			auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
-			for (const auto &[id, var]: function.variableStore)
-				dependencies.addNode(get_string(*var)).data = var.get();
-			for (const auto &[id, var]: function.variableStore) {
-				for (Variable *parent: var->phiParents)
-					dependencies[get_string(*parent)].link(dependencies[get_string(*var)], true);
-				for (Variable *child: var->phiChildren)
-					dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
-			}
-
-			dependencies.renderTo("/home/kai/graph_" + *function.name + ".pdf");
-
-			// Iterate over the graph component by component, choosing one node arbitrarily from each component, running
-			// a breadth-first search from that node and making the variables corresponding to each node reachable from
-			// the source node an alias of the variable corresponding to the chosen node.
-			std::unordered_set<std::string> visited;
-			for (const auto &[id, var]: function.variableStore) {
-				const std::string name = get_string(*var);
-				if (visited.count(name) != 0)
-					continue;
-				visited.insert(name);
-				for (Node *node: dependencies.BFS(name)) {
-					Variable *nodevar = node->get<Variable *>();
-					if (nodevar == var.get())
-						continue;
-					visited.insert(get_string(*nodevar));
-					nodevar->makeAliasOf(*var);
-				}
-			}
+		// Create a dependency graph. It's bidirectional for ease of traversal.
+		Graph dependencies;
+		auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
+		for (const auto &[id, var]: function.variableStore)
+			dependencies.addNode(get_string(*var)).data = var.get();
+		for (const auto &[id, var]: function.variableStore) {
+			for (Variable *parent: var->phiParents)
+				dependencies[get_string(*parent)].link(dependencies[get_string(*var)], true);
+			for (Variable *child: var->phiChildren)
+				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
 		}
 
+		dependencies.renderTo("/home/kai/graph_" + *function.name + ".pdf");
 
+		// Iterate over the graph component by component, choosing one node arbitrarily from each component, running
+		// a breadth-first search from that node and making the variables corresponding to each node reachable from
+		// the source node an alias of the variable corresponding to the chosen node.
+		std::unordered_set<std::string> visited;
+		for (const auto &[id, var]: function.variableStore) {
+			const std::string name = get_string(*var);
+			if (visited.count(name) != 0)
+				continue;
+			visited.insert(name);
+			for (Node *node: dependencies.BFS(name)) {
+				Variable *nodevar = node->get<Variable *>();
+				if (nodevar == var.get())
+					continue;
+				visited.insert(get_string(*nodevar));
+				nodevar->makeAliasOf(*var);
+			}
+		}
 
 		for (Variable *var: vars_to_erase)
 			function.variableStore.erase(var->id);

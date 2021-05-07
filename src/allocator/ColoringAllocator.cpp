@@ -11,7 +11,7 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-// #define DEBUG_COLORING
+#define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 
@@ -39,10 +39,8 @@ namespace LL2W {
 #endif
 
 			if (!to_spill) {
-#ifdef DEBUG_COLORING
-				std::cerr << "to_spill is null!\n";
-#endif
-				std::terminate();
+				error() << "to_spill is null!\n";
+				throw std::runtime_error("to_spill is null");
 			}
 #ifdef DEBUG_COLORING
 			std::cerr << "Going to spill " << *to_spill << ". Likely name: " << function->variableStore.size() << "\n";

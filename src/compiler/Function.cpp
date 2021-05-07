@@ -688,8 +688,16 @@ namespace LL2W {
 		debug();
 #endif
 
-		while (allocator->attempt() != Allocator::Result::Success)
+		bool first = true;
+
+		while (allocator->attempt() != Allocator::Result::Success) {
 			warn() << "Allocation failed.\n";
+
+			if (first) {
+				first = false;
+				debug();
+			}
+		}
 
 		finalCompile();
 
@@ -857,6 +865,7 @@ namespace LL2W {
 			for (const auto &pair: bbNodeMap)
 				std::cerr << " " << *pair.first->label;
 			std::cerr << "\n";
+			debug();
 			throw;
 		}
 	}
