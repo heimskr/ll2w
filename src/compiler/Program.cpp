@@ -16,6 +16,7 @@
 // #define SINGLE_FUNCTION "@_Z8mem_initi"
 // #define SINGLE_FUNCTION "@_ZL11alloc_groupim"
 #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcP13__va_list_tag"
+// #define SINGLE_FUNCTION "@_ZN9P0Wrapper6getP4EEPvRm"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {

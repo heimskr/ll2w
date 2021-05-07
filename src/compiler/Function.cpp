@@ -40,8 +40,6 @@
 #include "pass/FinishMultireg.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
-#include "pass/InsertLabels.h"
-#include "pass/LinearScan.h"
 #include "pass/LoadArguments.h"
 #include "pass/LowerAlloca.h"
 #include "pass/LowerBranches.h"
@@ -71,6 +69,7 @@
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
 #include "pass/SplitResultMoves.h"
+#include "pass/StackSkip.h"
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
@@ -618,6 +617,7 @@ namespace LL2W {
 
 	void Function::initialCompile() {
 		extractBlocks();
+		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
@@ -694,7 +694,7 @@ namespace LL2W {
 			warn() << "Allocation failed.\n";
 
 			if (first) {
-				first = false;
+				// first = false;
 				debug();
 			}
 		}
@@ -728,7 +728,9 @@ namespace LL2W {
 	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr block) {
 		if (WhyInfo::assemblerCount <= index)
 			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
-		return makePrecoloredVariable(WhyInfo::assemblerOffset + index, block);
+		if (assemblerVariables.count(index) == 0)
+			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, block));
+		return assemblerVariables.at(index);
 	}
 
 	void Function::precolorArguments(std::list<Interval> &intervals) {
@@ -761,6 +763,8 @@ namespace LL2W {
 
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
+		if (purpose == StackLocation::Purpose::Spill)
+			spillSize += width;
 		return added;
 	}
 

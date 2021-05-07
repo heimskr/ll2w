@@ -48,6 +48,8 @@ namespace LL2W {
 			/** Maps variables to their stack locations. */
 			std::map<VariablePtr, StackLocation *> variableLocations;
 
+			std::unordered_map<unsigned char, VariablePtr> assemblerVariables;
+
 			void upAndMark(BasicBlockPtr, VariablePtr);
 
 			std::unordered_set<std::shared_ptr<BasicBlock>> getLive(std::shared_ptr<Variable>,
@@ -113,6 +115,9 @@ namespace LL2W {
 			/** The number of bytes reserved on the stack for variables and spills. */
 			int stackSize = 0;
 
+			/** The number of bytes reserved on the stack for spills. */
+			int spillSize = 0;
+
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
 			int initialPushedBytes = -1;
 
@@ -123,12 +128,10 @@ namespace LL2W {
 			Allocator::Result lastAllocationResult;
 
 			Function(const Function &) = delete;
-			// Function(Function &&) = delete;
+			Function(Function &&) = delete;
 			Function(Program &, const ASTNode &);
 
 			~Function();
-
-			void initAllocator();
 
 			Allocator::Result attemptAllocation();
 

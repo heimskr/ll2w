@@ -11,13 +11,15 @@
 #include "pass/LowerAlloca.h"
 #include "util/Util.h"
 
+// #define ADD_ALLOCA_TO_STACK
+
 namespace LL2W::Passes {
 	int lowerAlloca(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
 		int replaced_count = 0;
 		VariablePtr frame_pointer = function.fp(function.getEntry());
-		VariablePtr stack_pointer = function.sp(function.getEntry());
+		VariablePtr m5 = function.mx(5, function.getEntry());
 
 		// Loop over all instructions, ignoring everything except allocas.
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -33,8 +35,8 @@ namespace LL2W::Passes {
 			if (0 < alloca->align) {
 				int align = Util::upalign(alloca->align, 8);
 				auto m0 = function.m0(instruction);
-				auto mod = std::make_shared<ModIInstruction>(stack_pointer, align, m0);
-				auto sub = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
+				auto mod = std::make_shared<ModIInstruction>(m5, align, m0);
+				auto sub = std::make_shared<SubRInstruction>(m5, m0, m5);
 				function.insertBefore(instruction, mod, "LowerAlloca: align stack pointer");
 				function.insertAfter(mod, sub);
 				mod->extract();
@@ -56,7 +58,7 @@ namespace LL2W::Passes {
 					// If it's a local variable instead, we can't do the multiplication at compile time.
 					LocalValue *local = dynamic_cast<LocalValue *>(value);
 					auto m0 = function.m0(instruction);
-					auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
+					auto move = std::make_shared<MoveInstruction>(m5, alloca->variable);
 					function.insertBefore(instruction, move, "LowerAlloca: $sp -> %var");
 					move->extract();
 					if (width != 0) {
@@ -66,7 +68,7 @@ namespace LL2W::Passes {
 						// $lo -> $m0
 						auto movelo = std::make_shared<MoveInstruction>(lo, m0);
 						// $sp -= $m0
-						auto sub  = std::make_shared<SubRInstruction>(stack_pointer, m0, stack_pointer);
+						auto sub  = std::make_shared<SubRInstruction>(m5, m0, m5);
 						function.insertBefore(instruction, mult,   "LowerAlloca: %var * width");
 						function.insertBefore(instruction, movelo);
 						function.insertBefore(instruction, sub, "LowerAlloca: move stack pointer");
@@ -82,19 +84,21 @@ namespace LL2W::Passes {
 
 			if (num_elements != -1) {
 				// $sp -> %var
-				auto move = std::make_shared<MoveInstruction>(stack_pointer, alloca->variable);
+				auto move = std::make_shared<MoveInstruction>(m5, alloca->variable);
 				function.insertBefore(instruction, move);
 				move->extract();
 				const int to_sub = Util::upalign(num_elements * width, 8);
 				if (0 < to_sub) {
-					auto sub = std::make_shared<SubIInstruction>(stack_pointer, to_sub, stack_pointer);
+					auto sub = std::make_shared<SubIInstruction>(m5, to_sub, m5);
 					function.insertBefore(move, sub, "LowerAlloca: $sp -= to_sub");
 					sub->extract();
 				}
 				function.comment(move, "LowerAlloca: $sp -> %" + std::to_string(alloca->variable->id));
 			}
 
+#ifdef ADD_ALLOCA_TO_STACK
 			function.addToStack(alloca->variable, StackLocation::Purpose::Alloca);
+#endif
 
 			++replaced_count;
 		}
@@ -104,10 +108,9 @@ namespace LL2W::Passes {
 			function.remove(instruction);
 
 		if (replaced_count == 0) {
-			// If we never ended up finding and replacing any alloca instructions, erase the precolored frame and stack
-			// pointer variables.
+			// If we never ended up finding and replacing any alloca instructions, erase the precolored frame pointer
+			// variable.
 			function.variableStore.erase(frame_pointer->id);
-			function.variableStore.erase(stack_pointer->id);
 		} else {
 			// If we replaced any alloca instructions, we added a bunch of instructions in its place. This makes it
 			// necessary to reindex all instructions.

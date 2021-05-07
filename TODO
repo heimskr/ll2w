@@ -2,4 +2,4 @@
 [2020/04/08 20:35:19] Figure out signed/unsigned remainders.
 [2021/04/27 23:20:30] Split up memory instructions on large structs after register allocation.
 [2021/04/06 23:53:18] LowerAlloca assumes that each alloca instruction is called once per function call. This isn't
-                      correct, as allocas can occur inside a loop. I'm not sure how to fix this.
+                      correct, as allocas can occur inside a loop.
