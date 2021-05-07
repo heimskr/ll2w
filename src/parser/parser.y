@@ -27,10 +27,9 @@ void D(Args && ...args) {
 
 template <typename T>
 const LL2W::Location & L(std::initializer_list<const T *> nodes) {
-	for (const T *node: nodes) {
+	for (const T *node: nodes)
 		if (node)
 			return node->location;
-	}
 	throw std::runtime_error("Couldn't find location: all nodes are null");
 }
 
@@ -440,8 +439,8 @@ label: "label" LLVMTOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args function_name "(" _constants ")" call_attrs unibangs
         { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
-      | _result "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
-        { auto loc = L({$1, $2, $3}); $$ = (new AsmNode($1, $3, $4, $5, $7, $8, $9, $10, $12, $14, $16, $17, $18))->locate(loc); D($2, $6, $11, $13, $15); };
+      | _result _tail "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
+        { auto loc = L({$1, $3, $4}); $$ = (new AsmNode($1, $4, $5, $6, $8, $9, $10, $11, $13, $15, $17, $18, $19))->locate(loc); D($3, $7, $12, $14, $16); };
 _result: result | { $$ = nullptr; };
 result: LLVMTOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
