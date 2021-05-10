@@ -6,6 +6,8 @@
 
 #include "options.h"
 
+// #define REGISTER_PRESSURE 4
+
 namespace LL2W {
 	/** Contains constants pertaining to the Why.js architecture. */
 	struct WhyInfo {

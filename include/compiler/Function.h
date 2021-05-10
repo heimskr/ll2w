@@ -305,7 +305,7 @@ namespace LL2W {
 			bool isNaked() const;
 
 			/** Finds a spill stack location for a variable. */
-			StackLocation & getSpill(VariablePtr);
+			StackLocation & getSpill(VariablePtr, bool create = false);
 
 			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);
@@ -318,6 +318,8 @@ namespace LL2W {
 			/** Through questionable methods, this function ensures that all variables with the same numeric ID share
 			 *  the same register assignment. */
 			void hackVariables();
+
+			Graph makeDependencyGraph() const;
 
 			/** Convenience method for creating a precolored assembler register. */
 			VariablePtr mx(unsigned char, BasicBlockPtr);

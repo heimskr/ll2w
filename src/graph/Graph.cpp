@@ -414,9 +414,9 @@ namespace LL2W {
 		const char *typearg = type.c_str();
 
 		if (fork() == 0) {
-			if (4096 <= allEdges().size())
-				execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
-			else
+			// if (4096 <= allEdges().size())
+			// 	execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
+			// else
 				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 		}
 

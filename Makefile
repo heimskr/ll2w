@@ -14,8 +14,9 @@ OUTPUT			?= ll2w
 # TESTFILE		?= ~/ll2w.wasm
 # TESTFILE		?= ll/extractvalue.ll
 # TESTFILE		?= ll/mal_inline.ll
-TESTFILE		?= ~/src/thurisaz/main.ll
+# TESTFILE		?= ~/src/thurisaz/main.ll
 # TESTFILE		?= ll/doublephi.ll
+TESTFILE		?= ll/20args.ll
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp
