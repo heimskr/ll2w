@@ -32,10 +32,14 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 			std::cerr << "Coloring failed.\n";
 #endif
+			int highest_degree = -1;
 #ifdef SELECT_LOWEST_COST
 			VariablePtr to_spill = selectLowestSpillCost();
+			(void) highest_degree;
 #else
-			VariablePtr to_spill = selectHighestDegree();
+			VariablePtr to_spill = selectHighestDegree(&highest_degree);
+			if (highest_degree == -1)
+				throw std::runtime_error("highest_degree is -1");
 #endif
 
 			if (!to_spill) {
@@ -43,12 +47,15 @@ namespace LL2W {
 				throw std::runtime_error("to_spill is null");
 			}
 #ifdef DEBUG_COLORING
-			std::cerr << "Going to spill " << *to_spill << ". Likely name: " << function->variableStore.size() << "\n";
+			std::cerr << "Going to spill " << *to_spill;
+#ifndef SELECT_LOWEST_COST
+			std::cerr << " (degree: " << highest_degree << ")";
+#endif
+			std::cerr << ". Likely name: " << function->variableStore.size() << "\n";
 #endif
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
 			triedLabels.insert(std::to_string(to_spill->id));
-			function->addToStack(to_spill, StackLocation::Purpose::Spill);
 			if (function->spill(to_spill)) {
 #ifdef DEBUG_COLORING
 				std::cerr << "Spilled " << *to_spill << ". Variables: " << function->variableStore.size()
@@ -71,6 +78,12 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 				else std::cerr << "No blocks were split.\n";
 #endif
+				if (highest_degree == 397) {
+					info() << "Edge count: " << interference.allEdges().size() << "\n";
+					info() << "Vertex count: " << interference.size() << "\n";
+					// interference.renderTo("/home/kai/interference.pdf");
+					// function->debug();
+				}
 				return Result::Spilled;
 			}
 #ifdef DEBUG_COLORING
@@ -102,17 +115,33 @@ namespace LL2W {
 		return Result::Success;
 	}
 
-	VariablePtr ColoringAllocator::selectHighestDegree() const {
-		Node *highest_node;
+	VariablePtr ColoringAllocator::selectHighestDegree(int *degree_out) const {
+		const Node *highest_node = nullptr;
 		int highest = -1;
 		// std::cerr << "Avoid["; for (const std::string &s: triedLabels) std::cerr << " " << s; std::cerr << " ]\n";
-		for (Node *node: interference.nodes()) {
+		for (const Node *node: interference.nodes()) {
 			const int degree = node->degree();
 			if (highest < degree && triedLabels.count(node->label()) == 0) {
 				highest_node = node;
 				highest = degree;
 			}
 		}
+
+		if (highest_node == nullptr)
+			throw std::runtime_error("Couldn't find node with highest degree out of " +
+				std::to_string(interference.nodes().size()) + " node(s)");
+
+		std::vector<const Node *> all_highest;
+		for (const Node *node: interference.nodes())
+			if (node->degree() == static_cast<size_t>(highest))
+				all_highest.push_back(node);
+
+		if (degree_out)
+			*degree_out = highest;
+
+		// srand(time(nullptr));
+
+		// return all_highest[rand() % all_highest.size()]->get<VariablePtr>();
 
 		return highest_node->get<VariablePtr>();
 	}
@@ -135,7 +164,7 @@ namespace LL2W {
 		return ptr;
 	}
 
-#undef DEBUG_COLORING
+// #undef DEBUG_COLORING
 
 	void ColoringAllocator::makeInterferenceGraph() {
 		interference.clear();
@@ -143,9 +172,9 @@ namespace LL2W {
 
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 #ifdef DEBUG_COLORING
-			std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
-			for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
-			std::cerr << "\n";
+			// std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
+			// for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
+			// std::cerr << "\n";
 #endif
 			if (pair.second->registers.empty()) {
 				const std::string id = std::to_string(pair.second->id);
@@ -153,10 +182,10 @@ namespace LL2W {
 					Node &node = interference.addNode(id);
 					node.data = pair.second;
 #ifdef DEBUG_COLORING
-					info() << *pair.second << ": " << pair.second->registersRequired() << " required.";
-					if (pair.second->type)
-						std::cerr << " " << std::string(*pair.second->type);
-					std::cerr << "\n";
+					// info() << *pair.second << ": " << pair.second->registersRequired() << " required.";
+					// if (pair.second->type)
+					// 	std::cerr << " " << std::string(*pair.second->type);
+					// std::cerr << "\n";
 #endif
 					node.colorsNeeded = pair.second->registersRequired();
 				}
@@ -169,6 +198,7 @@ namespace LL2W {
 			labels.push_back(pair.first);
 
 #ifndef CONSTRUCT_BY_BLOCK
+		// Maps a variable ID to a set of blocks in which the variable is live-in or live-out.
 		std::map<int, std::unordered_set<int>> live;
 
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
@@ -243,13 +273,17 @@ namespace LL2W {
 				continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
 				const int index = bptr.lock()->index;
-				if (sets[index].count(pair.second->id) == 0)
+				if (sets[index].count(pair.second->id) == 0) {
 					vecs[index].push_back(pair.second->id);
+					sets[index].insert(pair.second->id);
+				}
 			}
 			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
 				const int index = bptr.lock()->index;
-				if (sets[index].count(pair.second->id) == 0)
+				if (sets[index].count(pair.second->id) == 0) {
 					vecs[index].push_back(pair.second->id);
+					sets[index].insert(pair.second->id);
+				}
 			}
 		}
 
@@ -257,11 +291,15 @@ namespace LL2W {
 			std::vector<int> &vec = vecs[block->index];
 			std::unordered_set<int> &set = sets[block->index];
 			for (const VariablePtr &var: block->liveIn)
-				if (var->registers.empty() && set.count(var->id) == 0)
+				if (var->registers.empty() && set.count(var->id) == 0) {
 					vec.push_back(var->id);
+					set.insert(var->id);
+				}
 			for (const VariablePtr &var: block->liveOut)
-				if (var->registers.empty() && set.count(var->id) == 0)
+				if (var->registers.empty() && set.count(var->id) == 0) {
 					vec.push_back(var->id);
+					set.insert(var->id);
+				}
 		}
 
 #ifdef DEBUG_COLORING

@@ -28,7 +28,7 @@ namespace LL2W {
 			void makeInterferenceGraph();
 
 			/** Selects the variable whose corresponding node in the interference graph has the highest degree. */
-			std::shared_ptr<Variable> selectHighestDegree() const;
+			std::shared_ptr<Variable> selectHighestDegree(int *degree_out = nullptr) const;
 
 			/** Selects the variable with the lowest spill cost. */
 			std::shared_ptr<Variable> selectLowestSpillCost() const;
