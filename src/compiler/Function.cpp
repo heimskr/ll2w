@@ -8,10 +8,9 @@
 // #define DEBUG_LINEAR
 // #define DEBUG_VARS
 // #define DEBUG_RENDER
-// #define DEBUG_SPILL
-// #define DEBUG_SPLIT
-// #define DEBUG_READ_WRITTEN
-// #define REGISTER_PRESSURE 4
+#define DEBUG_SPILL
+#define DEBUG_SPLIT
+#define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
 // #define DEBUG_BLOCK_LIVENESS
@@ -220,7 +219,7 @@ namespace LL2W {
 			throw std::runtime_error("Cannot spill variable: no definitions");
 		}
 
-		const StackLocation &location = getSpill(variable);
+		const StackLocation &location = getSpill(variable, true);
 
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
@@ -470,17 +469,24 @@ namespace LL2W {
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
 		const std::string *label = StringSet::intern(std::to_string(newLabel()));
 #ifdef DEBUG_SPLIT
-		std::cerr << "Splitting " << block->label << " (" << block->instructions.size() << ") into " << block->label
-		          << " & " << label << "\n";
+		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label
+		          << " & " << *label << "\n";
 #endif
+		auto end = block->instructions.end();
+		auto iter = std::find(block->instructions.begin(), end, instruction);
+		if (iter == end) {
+#ifdef DEBUGS_SPLIT
+			warn() << "Can't split " << *block->label << ": instruction is at end of block\n";
+#endif
+			return nullptr;
+		}
+
 		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *> {block->label},
 			std::list<InstructionPtr>());
 		new_block->parent = this;
 		bbLabels.insert(label);
 		bbMap.emplace(label, new_block);
 
-		auto end = block->instructions.end();
-		auto iter = std::find(block->instructions.begin(), end, instruction);
 		for (++iter; iter != end;) {
 			for (const VariablePtr &var: (*iter)->written) {
 				var->removeDefiner(block);
@@ -694,9 +700,11 @@ namespace LL2W {
 		while (allocator->attempt() != Allocator::Result::Success) {
 			warn() << "Allocation failed.\n";
 
+			Passes::splitBlocks(*this);
+
 			if (first) {
 				// first = false;
-				debug();
+				// debug();
 			}
 		}
 
@@ -1125,10 +1133,12 @@ namespace LL2W {
 		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
-	StackLocation & Function::getSpill(VariablePtr variable) {
+	StackLocation & Function::getSpill(VariablePtr variable, bool create) {
 		for (std::pair<const int, StackLocation> &pair: stack)
 			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
+		if (create)
+			return addToStack(variable, StackLocation::Purpose::Spill);
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
 	}
 
@@ -1212,6 +1222,20 @@ namespace LL2W {
 					if (alias->registers.empty())
 						alias->registers = var->registers;
 		}
+	}
+
+	Graph Function::makeDependencyGraph() const {
+		Graph dependencies;
+		const auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
+		for (const auto &[id, var]: variableStore)
+			dependencies.addNode(get_string(*var)).data = var.get();
+		for (const auto &[id, var]: variableStore) {
+			for (Variable *parent: var->phiParents)
+				dependencies[get_string(*parent)].link(dependencies[get_string(*var)], true);
+			for (Variable *child: var->phiChildren)
+				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
+		}
+		return dependencies;
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {

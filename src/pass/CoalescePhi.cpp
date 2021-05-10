@@ -88,18 +88,10 @@ namespace LL2W::Passes {
 		}
 
 		// Create a dependency graph. It's bidirectional for ease of traversal.
-		Graph dependencies;
-		auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
-		for (const auto &[id, var]: function.variableStore)
-			dependencies.addNode(get_string(*var)).data = var.get();
-		for (const auto &[id, var]: function.variableStore) {
-			for (Variable *parent: var->phiParents)
-				dependencies[get_string(*parent)].link(dependencies[get_string(*var)], true);
-			for (Variable *child: var->phiChildren)
-				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
-		}
+		Graph dependencies = function.makeDependencyGraph();
+		const auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
 
-		dependencies.renderTo("/home/kai/graph_" + *function.name + ".pdf");
+		// dependencies.renderTo("/home/kai/graph_" + *function.name + ".pdf");
 
 		// Iterate over the graph component by component, choosing one node arbitrarily from each component, running
 		// a breadth-first search from that node and making the variables corresponding to each node reachable from
