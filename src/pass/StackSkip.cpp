@@ -1,5 +1,5 @@
 #include "compiler/Function.h"
-#include "instruction/AddIInstruction.h"
+#include "instruction/SubIInstruction.h"
 #include "pass/InsertLabels.h"
 
 namespace LL2W::Passes {
@@ -7,7 +7,7 @@ namespace LL2W::Passes {
 		if (function.isNaked())
 			return;
 		BasicBlockPtr entry = function.getEntry();
-		auto add = std::make_shared<AddIInstruction>(function.sp(entry), 0, function.mx(5, entry));
+		auto add = std::make_shared<SubIInstruction>(function.sp(entry), 0, function.mx(5, entry));
 		function.insertBefore(function.linearInstructions.front(), add, "InsertStackSkip");
 		function.categories["StackSkip"].push_back(add);
 		add->extract();
@@ -22,7 +22,6 @@ namespace LL2W::Passes {
 		if (list.size() != 1)
 			throw std::runtime_error("Expected size of StackSkip list to be exactly one, but it's " +
 				std::to_string(list.size()));
-		auto add = dynamic_cast<AddIInstruction *>(list.front().get());
-		add->imm = function.spillSize;
+		dynamic_cast<SubIInstruction *>(list.front().get())->imm = function.spillSize;
 	}
 }
