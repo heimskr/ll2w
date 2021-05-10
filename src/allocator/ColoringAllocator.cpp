@@ -14,6 +14,7 @@
 #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
+#define SELECT_MOST_LIVE
 
 namespace LL2W {
 	ColoringAllocator::Result ColoringAllocator::attempt() {
@@ -36,6 +37,9 @@ namespace LL2W {
 #ifdef SELECT_LOWEST_COST
 			VariablePtr to_spill = selectLowestSpillCost();
 			(void) highest_degree;
+#elif defined(SELECT_MOST_LIVE)
+			VariablePtr to_spill = selectMostLive();
+			(void) highest_degree;
 #else
 			VariablePtr to_spill = selectHighestDegree(&highest_degree);
 			if (highest_degree == -1)
@@ -48,7 +52,7 @@ namespace LL2W {
 			}
 #ifdef DEBUG_COLORING
 			std::cerr << "Going to spill " << *to_spill;
-#ifndef SELECT_LOWEST_COST
+#if !defined(SELECT_LOWEST_COST) && !defined(SELECT_MOST_LIVE)
 			std::cerr << " (degree: " << highest_degree << ")";
 #endif
 			std::cerr << ". Likely name: " << function->variableStore.size() << "\n";
@@ -78,10 +82,10 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 				else std::cerr << "No blocks were split.\n";
 #endif
-				if (highest_degree == 397) {
-					info() << "Edge count: " << interference.allEdges().size() << "\n";
-					info() << "Vertex count: " << interference.size() << "\n";
-					// interference.renderTo("/home/kai/interference.pdf");
+				if (highest_degree == 399) {
+					// info() << "Edge count: " << interference.allEdges().size() << "\n";
+					// info() << "Vertex count: " << interference.size() << "\n";
+					// interference.renderTo("/home/kai/interference2.pdf");
 					// function->debug();
 				}
 				return Result::Spilled;
@@ -139,10 +143,6 @@ namespace LL2W {
 		if (degree_out)
 			*degree_out = highest;
 
-		// srand(time(nullptr));
-
-		// return all_highest[rand() % all_highest.size()]->get<VariablePtr>();
-
 		return highest_node->get<VariablePtr>();
 	}
 
@@ -160,6 +160,28 @@ namespace LL2W {
 				ptr = var;
 			}
 		}
+
+		return ptr;
+	}
+
+	VariablePtr ColoringAllocator::selectMostLive(int *liveness_out) const {
+		VariablePtr ptr;
+		int highest = -1;
+		for (const auto &[id, var]: function->variableStore) {
+			if (var->allRegistersSpecial() || triedIDs.count(var->id) != 0)
+				continue;
+			const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
+			if (highest < sum) {
+				highest = sum;
+				ptr = var;
+			}
+		}
+
+		if (!ptr)
+			throw std::runtime_error("Couldn't select variable with highest liveness");
+
+		if (liveness_out)
+			*liveness_out = highest;
 
 		return ptr;
 	}
@@ -290,16 +312,18 @@ namespace LL2W {
 		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
 			std::vector<int> &vec = vecs[block->index];
 			std::unordered_set<int> &set = sets[block->index];
-			for (const VariablePtr &var: block->liveIn)
+			for (const VariablePtr &var: block->liveIn) {
 				if (var->registers.empty() && set.count(var->id) == 0) {
 					vec.push_back(var->id);
 					set.insert(var->id);
 				}
-			for (const VariablePtr &var: block->liveOut)
+			}
+			for (const VariablePtr &var: block->liveOut) {
 				if (var->registers.empty() && set.count(var->id) == 0) {
 					vec.push_back(var->id);
 					set.insert(var->id);
 				}
+			}
 		}
 
 #ifdef DEBUG_COLORING

@@ -53,7 +53,8 @@ namespace LL2W {
 			void upAndMark(BasicBlockPtr, VariablePtr);
 
 			std::unordered_set<std::shared_ptr<BasicBlock>> getLive(std::shared_ptr<Variable>,
-				std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)>);
+				std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)>)
+				const;
 
 		public:
 			Program *parent = nullptr;
@@ -281,10 +282,10 @@ namespace LL2W {
 			void resetLiveness();
 
 			/** Returns a set of all blocks where a given variable or any of its aliases are live-in. */
-			std::unordered_set<std::shared_ptr<BasicBlock>> getLiveIn(std::shared_ptr<Variable>);
+			std::unordered_set<std::shared_ptr<BasicBlock>> getLiveIn(std::shared_ptr<Variable>) const;
 
 			/** Returns a set of all blocks where a given variable or any of its aliases are live-out. */
-			std::unordered_set<std::shared_ptr<BasicBlock>> getLiveOut(std::shared_ptr<Variable>);
+			std::unordered_set<std::shared_ptr<BasicBlock>> getLiveOut(std::shared_ptr<Variable>) const;
 
 			/** Returns the compiled assembly code. */
 			std::string toString();

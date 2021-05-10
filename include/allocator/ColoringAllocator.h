@@ -33,6 +33,8 @@ namespace LL2W {
 			/** Selects the variable with the lowest spill cost. */
 			std::shared_ptr<Variable> selectLowestSpillCost() const;
 
+			std::shared_ptr<Variable> selectMostLive(int *liveness_out = nullptr) const;
+
 			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
 			 *  colorable, it returns Success. */

@@ -4,9 +4,9 @@
 #include <iostream>
 #include <unistd.h>
 
-#define DEBUG_BLOCKS
+// #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-// #define DEBUG_VARS
+#define DEBUG_VARS
 // #define DEBUG_RENDER
 #define DEBUG_SPILL
 #define DEBUG_SPLIT
@@ -14,7 +14,7 @@
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
 // #define DEBUG_BLOCK_LIVENESS
-// #define DEBUG_VAR_LIVENESS
+#define DEBUG_VAR_LIVENESS
 // #define DEBUG_ALIASES
 #define STRICT_READ_CHECK
 
@@ -691,16 +691,20 @@ namespace LL2W {
 	void Function::compile() {
 		initialCompile();
 
-#ifdef DEBUG_ALIASES
+// #ifdef DEBUG_ALIASES
 		debug();
-#endif
+// #endif
 
 		bool first = true;
 
+		int tries = 0;
 		while (allocator->attempt() != Allocator::Result::Success) {
 			warn() << "Allocation failed.\n";
 
 			Passes::splitBlocks(*this);
+
+			if (++tries % 10 == 0)
+				debug();
 
 			if (first) {
 				// first = false;
@@ -891,9 +895,9 @@ namespace LL2W {
 	}
 
 	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
-	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) {
+	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) const {
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
-		std::unordered_set<Variable *> alias_pointers = var->getAliases();
+		const std::unordered_set<Variable *> &alias_pointers = var->getAliases();
 		std::unordered_set<std::shared_ptr<Variable>> aliases;
 		for (const std::pair<const int, std::shared_ptr<Variable>> &pair: variableStore)
 			if (alias_pointers.count(pair.second.get()) != 0)
@@ -906,13 +910,13 @@ namespace LL2W {
 		return out;
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(std::shared_ptr<Variable> var) {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(std::shared_ptr<Variable> var) const {
 		return getLive(var, [&](const auto &block) -> auto & {
 			return block->liveIn;
 		});
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(std::shared_ptr<Variable> var) {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(std::shared_ptr<Variable> var) const {
 		return getLive(var, [&](const auto &block) -> auto & {
 			return block->liveOut;
 		});
