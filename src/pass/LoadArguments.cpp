@@ -4,6 +4,7 @@
 #include "compiler/Immediate.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/LoadRInstruction.h"
+#include "instruction/SubIInstruction.h"
 #include "pass/LoadArguments.h"
 #include "util/Util.h"
 
@@ -41,14 +42,14 @@ namespace LL2W::Passes {
 						to_skip += function.arguments->at(i).type->width() / 8;
 				}
 
-				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, m0);
-				add->meta.insert(InstructionMeta::LoadArgumentsSkip);
+				auto sub  = std::make_shared<SubIInstruction> (sp, to_skip, m0);
+				sub->meta.insert(InstructionMeta::LoadArgumentsSkip);
 				auto load = std::make_shared<LoadRInstruction>(m0, arg_var, arg_var->type->width() / 8);
 				if (!first_load)
 					first_load = load;
 
-				function.insertBefore(entry->instructions.front(), add, "LoadArguments: $sp + to_skip -> %temp", false);
-				function.insertAfter(add, load, false);
+				function.insertBefore(entry->instructions.front(), sub, "LoadArguments: $sp - to_skip -> %temp", false);
+				function.insertAfter(sub, load, false);
 				function.comment(load, "LoadArguments: [%temp] -> %var", false);
 			}
 
