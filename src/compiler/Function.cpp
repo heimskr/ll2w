@@ -15,7 +15,7 @@
 // #define DEBUG_ESTIMATIONS
 // #define DEBUG_BLOCK_LIVENESS
 #define DEBUG_VAR_LIVENESS
-#define DEBUG_ALIASES
+// #define DEBUG_ALIASES
 #define DEBUG_STACK
 #define STRICT_READ_CHECK
 
@@ -174,10 +174,16 @@ namespace LL2W {
 		}
 
 		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
 			if (pair.second->definingBlocks.empty()) {
-				pair.second->addDefiner(blocks.front());
-				blocks.front()->written.insert(pair.second);
+				// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
+				if (pair.first < getArity()) {
+					pair.second->addDefiner(blocks.front());
+					blocks.front()->written.insert(pair.second);
+				} else if (!pair.second->usingBlocks.empty()) {
+					BasicBlockPtr block = pair.second->usingBlocks.begin()->lock();
+					pair.second->addDefiner(block);
+					block->written.insert(pair.second);
+				}
 			}
 		}
 	}
@@ -314,6 +320,7 @@ namespace LL2W {
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
 				          << load->debugExtra() << "\n";
 #endif
+					markSpilled(new_var);
 				} else {
 #ifdef DEBUG_SPILL
 					std::cerr << "      Removing variable " << *new_var << "\n";
@@ -333,12 +340,20 @@ namespace LL2W {
 			block->extract(true);
 		extractVariables(true); // Reset stale use/define data.
 		computeLiveness();
-		spilledVariables.insert(variable->id);
+		markSpilled(variable);
 		return out;
 	}
 
+	void Function::markSpilled(VariablePtr variable) {
+		spilledVariables.insert(variable->originalID);
+	}
+
+	bool Function::isSpilled(VariablePtr variable) const {
+		return spilledVariables.count(variable->originalID) != 0;
+	}
+
 	bool Function::canSpill(VariablePtr variable) {
-		if (variable->definitions.empty() || spilledVariables.count(variable->id) != 0)
+		if (variable->definitions.empty() || isSpilled(variable))
 			return false;
 
 		// If the only definition is a stack store, the variable can't be spilled.

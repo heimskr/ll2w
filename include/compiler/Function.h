@@ -157,6 +157,10 @@ namespace LL2W {
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
 			bool spill(VariablePtr, bool doDebug = false);
 
+			void markSpilled(VariablePtr);
+
+			bool isSpilled(VariablePtr) const;
+
 			bool canSpill(VariablePtr);
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
