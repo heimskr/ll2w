@@ -213,6 +213,10 @@ namespace LL2W {
 		return false;
 	}
 
+	bool LLVMInstruction::canReplaceRead(std::shared_ptr<Variable>) const {
+		return dynamic_cast<Reader *>(node) != nullptr;
+	}
+
 	bool LLVMInstruction::isPhi() const {
 		return node && node->nodeType() == NodeType::Phi;
 	}

@@ -81,6 +81,8 @@ namespace LL2W {
 			 *  aren't in variableStore but need to be processed by hackVariables. */
 			std::list<VariablePtr> extraVariables;
 
+			std::unordered_set<int> spilledVariables;
+
 			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by
 			 *  InsertPrologue. */
 			std::list<int> savedRegisters;
@@ -154,6 +156,8 @@ namespace LL2W {
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
 			bool spill(VariablePtr, bool doDebug = false);
+
+			bool canSpill(VariablePtr);
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
 			std::shared_ptr<Instruction> firstInstruction(bool includeComments = false);
@@ -298,7 +302,7 @@ namespace LL2W {
 
 			/** Prints debug information about the function. */
 			void debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-			           bool render, bool estimations, bool aliases);
+			           bool render, bool estimations, bool aliases, bool stack);
 
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack() const;
@@ -306,7 +310,7 @@ namespace LL2W {
 			bool isNaked() const;
 
 			/** Finds a spill stack location for a variable. */
-			StackLocation & getSpill(VariablePtr, bool create = false);
+			StackLocation & getSpill(VariablePtr, bool create = false, bool *created = nullptr);
 
 			/** Finds an alloca stack location for a variable. */
 			StackLocation & getAlloca(VariablePtr);

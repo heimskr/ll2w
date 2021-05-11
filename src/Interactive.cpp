@@ -175,8 +175,9 @@ namespace LL2W {
 				const bool render        =  Util::contains(split, "render");
 				const bool estimations   =  Util::contains(split, "estimations") || Util::contains(split, "est");
 				const bool aliases       =  Util::contains(split, "aliases") || Util::contains(split, "al");
+				const bool stack         =  Util::contains(split, "stack") || Util::contains(split, "st");
 				function->debug(doBlocks, linear, vars, blockLiveness, readWritten, varLiveness, render, estimations,
-					aliases);
+					aliases, stack);
 			} else if (Util::isAny(first, {"st", "status"})) {
 				GET_FN();
 				info() << "Initial:    " << (function->initialDone? "done" : "not done") << "\n";
@@ -319,13 +320,13 @@ namespace LL2W {
 						if (!variable->getAliases().empty()) {
 							std::ostream &stream = info() << "Aliases:";
 							for (Variable *alias: variable->getAliases())
-								stream << " " << *alias;
+								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
 							stream << "\n";
 						} else if (variable->getParent() && !variable->getParent()->getAliases().empty()) {
 							// TODO: reduce code duplication
 							std::ostream &stream = info() << "Aliases:";
 							for (Variable *alias: variable->getParent()->getAliases())
-								stream << " " << *alias;
+								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
 							stream << "\n";
 						}
 						info() << "Defining blocks:\n";

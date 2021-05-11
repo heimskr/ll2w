@@ -7,6 +7,7 @@ namespace LL2W {
 			return {read.size(), written.size()};
 
 		read.clear();
+		// TODO: verify.
 		written = {result};
 		extracted = true;
 		return {read.size(), written.size()};

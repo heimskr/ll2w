@@ -14,7 +14,7 @@
 #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
-#define SELECT_MOST_LIVE
+// #define SELECT_MOST_LIVE
 
 namespace LL2W {
 	ColoringAllocator::Result ColoringAllocator::attempt() {
@@ -56,6 +56,7 @@ namespace LL2W {
 			std::cerr << " (degree: " << highest_degree << ")";
 #endif
 			std::cerr << ". Likely name: " << function->variableStore.size() << "\n";
+			std::cerr << "Can spill: " << std::boolalpha << function->canSpill(to_spill) << "\n";
 #endif
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
@@ -125,7 +126,8 @@ namespace LL2W {
 		// std::cerr << "Avoid["; for (const std::string &s: triedLabels) std::cerr << " " << s; std::cerr << " ]\n";
 		for (const Node *node: interference.nodes()) {
 			const int degree = node->degree();
-			if (highest < degree && triedLabels.count(node->label()) == 0) {
+			// if (highest < degree && triedLabels.count(node->label()) == 0) {
+			if (highest < degree && function->canSpill(node->get<VariablePtr>())) {
 				highest_node = node;
 				highest = degree;
 			}
@@ -168,10 +170,10 @@ namespace LL2W {
 		VariablePtr ptr;
 		int highest = -1;
 		for (const auto &[id, var]: function->variableStore) {
-			if (var->allRegistersSpecial() || triedIDs.count(var->id) != 0)
+			if (var->allRegistersSpecial() || !function->canSpill(var))
 				continue;
 			const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
-			if (highest < sum) {
+			if (highest < sum && function->canSpill(var)) {
 				highest = sum;
 				ptr = var;
 			}
@@ -182,6 +184,9 @@ namespace LL2W {
 
 		if (liveness_out)
 			*liveness_out = highest;
+
+		if (!function->canSpill(ptr))
+			warn() << "Impossibility detected: can't spill " << *ptr << "\n";
 
 		return ptr;
 	}

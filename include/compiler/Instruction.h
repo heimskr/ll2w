@@ -49,6 +49,10 @@ namespace LL2W {
 				return false;
 			}
 
+			virtual bool canReplaceRead(std::shared_ptr<Variable>) const {
+				return false;
+			}
+
 			virtual bool maySpill() const { return true; }
 
 			virtual bool isPhi() const { return false; }

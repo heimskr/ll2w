@@ -37,5 +37,9 @@ namespace LL2W {
 
 			return false;
 		}
+
+		bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
+			return rs == to_replace;
+		}
 	};
 }

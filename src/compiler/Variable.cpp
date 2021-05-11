@@ -52,7 +52,13 @@ namespace LL2W {
 	}
 
 	bool Variable::operator==(const Variable &other) const {
-		return id == other.id && (type == other.type || *type == *other.type);
+		if (id != other.id)
+			return false;
+		if (type == other.type)
+			return true;
+		if ((type == nullptr) != (other.type == nullptr))
+			return false;
+		return *type == *other.type;
 	}
 
 	Variable::operator std::string() const {
@@ -151,8 +157,8 @@ namespace LL2W {
 #ifdef DEBUG_ALIASES
 		std::cerr << "\n";
 #endif
-		// info() << "\e[36m" << functionName() << "\e[39m: " << *this << "[\e[1m" << this << "\e[22m].makeAliasOf("
-		//        << new_parent << "[\e[1m" << &new_parent << "\e[22m])\n";
+		info() << "\e[36m" << functionName() << "\e[39m: " << *this << "[\e[1m" << this << "\e[22m].makeAliasOf("
+		       << new_parent << "[\e[1m" << &new_parent << "\e[22m])\n";
 		parent = &new_parent;
 		new_parent.aliases.insert(this);
 		for (Variable *alias: aliases) {

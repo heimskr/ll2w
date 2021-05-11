@@ -13,7 +13,7 @@
 #include "Interactive.h"
 
 // #define DEBUGMODE
-// #define INTERACTIVE
+#define INTERACTIVE
 
 void compile(const std::string &);
 void wasmparsertest(const std::string &);

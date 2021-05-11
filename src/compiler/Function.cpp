@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-// #define DEBUG_BLOCKS
+#define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
 // #define DEBUG_RENDER
@@ -15,7 +15,8 @@
 // #define DEBUG_ESTIMATIONS
 // #define DEBUG_BLOCK_LIVENESS
 #define DEBUG_VAR_LIVENESS
-// #define DEBUG_ALIASES
+#define DEBUG_ALIASES
+#define DEBUG_STACK
 #define STRICT_READ_CHECK
 
 #include "allocator/ColoringAllocator.h"
@@ -229,7 +230,7 @@ namespace LL2W {
 				continue;
 #ifdef DEBUG_SPILL
 			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
-			          << definition->index << ")\n";
+			          << definition->index << ", OID: " << variable->originalID << ")\n";
 #endif
 			auto store = std::make_shared<StackStoreInstruction>(location, variable);
 			auto next = after(definition);
@@ -240,8 +241,7 @@ namespace LL2W {
 				next = after(next);
 
 			if (next) {
-				std::shared_ptr<StackStoreInstruction> other_store =
-					std::dynamic_pointer_cast<StackStoreInstruction>(next);
+				auto other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
 				if (other_store && *other_store == *store) {
 					should_insert = false;
 #ifdef DEBUG_SPILL
@@ -289,9 +289,12 @@ namespace LL2W {
 				const bool replaced = instruction->replaceRead(variable, new_var);
 #endif
 #ifdef DEBUG_SPILL
+				BasicBlockPtr par = instruction->parent.lock();
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
 				          << " in " << old_extra;
+				if (par)
+					std::cerr << " in block " << *par->label;
 				if (replaced)
 					std::cerr << " (now " << instruction->debugExtra() << ")";
 				std::cerr << "\n";
@@ -330,7 +333,71 @@ namespace LL2W {
 			block->extract(true);
 		extractVariables(true); // Reset stale use/define data.
 		computeLiveness();
+		spilledVariables.insert(variable->id);
 		return out;
+	}
+
+	bool Function::canSpill(VariablePtr variable) {
+		if (variable->definitions.empty() || spilledVariables.count(variable->id) != 0)
+			return false;
+
+		// If the only definition is a stack store, the variable can't be spilled.
+		if (variable->definitions.size() == 1) {
+			InstructionPtr single_def = variable->definitions.begin()->lock();
+			auto *store = dynamic_cast<StackStoreInstruction *>(single_def.get());
+			if (store && store->variable == variable)
+				return false;
+		}
+
+		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
+			InstructionPtr definition = weak_definition.lock();
+			// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
+			// definition here.
+			if (definition->isPhi())
+				continue;
+
+			bool created;
+			const StackLocation &location = getSpill(variable, true, &created);
+			auto store = std::make_shared<StackStoreInstruction>(location, variable);
+			auto next = after(definition);
+			bool should_insert = true;
+
+			// Skip comments.
+			while (next && dynamic_cast<Comment *>(next.get()) != nullptr)
+				next = after(next);
+
+			if (next) {
+				auto other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
+				if (other_store && *other_store == *store)
+					should_insert = false;
+			}
+
+			if (created) {
+				// Undo addToStack
+				stack.erase(location.offset);
+				if (location.width != -1) {
+					stackSize -= location.width;
+					spillSize -= location.width;
+				}
+			}
+
+			if (should_insert)
+				return true;
+		}
+
+		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
+			InstructionPtr &instruction = *iter;
+#ifdef STRICT_READ_CHECK
+			if (std::shared_ptr<Variable> read = instruction->doesRead(variable))
+				if (instruction->canReplaceRead(read))
+					return true;
+#else
+			if (instruction->read.count(variable) != 0 && instruction->canReplaceRead(variable))
+				return true;
+#endif
+		}
+
+		return false;
 	}
 
 	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
@@ -766,7 +833,7 @@ namespace LL2W {
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
 		for (std::pair<const int, StackLocation> &pair: stack)
-			if (pair.second.variable == variable && pair.second.purpose == purpose)
+			if (*pair.second.variable == *variable && pair.second.purpose == purpose)
 				return pair.second;
 
 		if (width == -1) {
@@ -994,6 +1061,11 @@ namespace LL2W {
 			false,
 #endif
 #ifdef DEBUG_ALIASES
+			true,
+#else
+			false,
+#endif
+#ifdef DEBUG_STACK
 			true
 #else
 			false
@@ -1002,7 +1074,7 @@ namespace LL2W {
 	}
 
 	void Function::debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-	                     bool render, bool estimations, bool aliases) {
+	                     bool render, bool estimations, bool aliases, bool stack) {
 		if (doBlocks || linear || vars)
 			std::cerr << headerString() + " \e[94m{\e[39m\n";
 		if (doBlocks) {
@@ -1057,8 +1129,9 @@ namespace LL2W {
 		if (vars) {
 			std::cerr << "    \e[2m; Variables:\e[0m\n";
 			for (std::pair<const int, VariablePtr> &pair: variableStore) {
-				std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "\e[0;2m  defs ("
-						<< pair.second->definitions.size() << ") =";
+				std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "/" << pair.second->id
+				          << "/" << pair.second->originalID << "\e[0;2m  defs (" << pair.second->definitions.size()
+				          << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
 					std::cerr << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
 				std::cerr << "  \e[0;2muses =";
@@ -1116,6 +1189,8 @@ namespace LL2W {
 			if (djGraph.has_value())
 				djGraph->renderTo("graph_DJ_" + *name + ".png");
 		}
+		if (stack)
+			debugStack();
 	}
 
 	void Function::debugStack() const {
@@ -1137,12 +1212,17 @@ namespace LL2W {
 		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
-	StackLocation & Function::getSpill(VariablePtr variable, bool create) {
+	StackLocation & Function::getSpill(VariablePtr variable, bool create, bool *created) {
+		if (created)
+			*created = false;
 		for (std::pair<const int, StackLocation> &pair: stack)
 			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
-		if (create)
+		if (create) {
+			if (created)
+				*created = true;
 			return addToStack(variable, StackLocation::Purpose::Spill);
+		}
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
 	}
 
