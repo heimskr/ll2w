@@ -35,6 +35,8 @@ namespace LL2W {
 
 			std::shared_ptr<Variable> selectMostLive(int *liveness_out = nullptr) const;
 
+			std::shared_ptr<Variable> selectChaitin() const;
+
 			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
 			 *  colorable, it returns Success. */

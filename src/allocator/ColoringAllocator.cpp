@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <climits>
 #include <fstream>
 #include <optional>
 
@@ -14,7 +15,8 @@
 #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
-// #define SELECT_MOST_LIVE
+#define SELECT_MOST_LIVE
+// #define SELECT_CHAITIN
 
 namespace LL2W {
 	ColoringAllocator::Result ColoringAllocator::attempt() {
@@ -37,6 +39,9 @@ namespace LL2W {
 #ifdef SELECT_LOWEST_COST
 			VariablePtr to_spill = selectLowestSpillCost();
 			(void) highest_degree;
+#elif defined(SELECT_CHAITIN)
+			VariablePtr to_spill = selectChaitin();
+			(void) highest_degree;
 #elif defined(SELECT_MOST_LIVE)
 			VariablePtr to_spill = selectMostLive();
 			(void) highest_degree;
@@ -52,7 +57,7 @@ namespace LL2W {
 			}
 #ifdef DEBUG_COLORING
 			std::cerr << "Going to spill " << *to_spill;
-#if !defined(SELECT_LOWEST_COST) && !defined(SELECT_MOST_LIVE)
+#if !defined(SELECT_LOWEST_COST) && !defined(SELECT_MOST_LIVE) && !defined(SELECT_CHAITIN)
 			std::cerr << " (degree: " << highest_degree << ")";
 #endif
 			std::cerr << ". Likely name: " << function->variableStore.size() << "\n";
@@ -150,14 +155,14 @@ namespace LL2W {
 
 	VariablePtr ColoringAllocator::selectLowestSpillCost() const {
 		VariablePtr ptr;
-		int lowest = -1;
+		int lowest = INT_MAX;
 		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
 			const VariablePtr &var = pair.second;
 			if (var->allRegistersSpecial())
 				continue;
 			var->clearSpillCost();
 			const int cost = var->spillCost();
-			if (cost != -1 && triedIDs.count(var->id) == 0 && (lowest == -1 || (cost < lowest && !var->isSimple()))) {
+			if (cost != -1 && triedIDs.count(var->id) == 0 && (cost < lowest && !var->isSimple())) {
 				lowest = cost;
 				ptr = var;
 			}
@@ -189,6 +194,31 @@ namespace LL2W {
 			warn() << "Impossibility detected: can't spill " << *ptr << "\n";
 
 		return ptr;
+	}
+
+	VariablePtr ColoringAllocator::selectChaitin() const {
+		VariablePtr out;
+		long lowest = LONG_MAX;
+		for (const Node *node: interference.nodes()) {
+			VariablePtr var = node->get<VariablePtr>();
+			if (var->allRegistersSpecial() || !function->canSpill(var))
+				continue;
+			var->clearSpillCost();
+			const int cost = var->spillCost();
+			if (cost == INT_MAX)
+				continue;
+			const int degree = node->degree();
+			const long chaitin = cost * 10000L / degree;
+			if (chaitin < lowest) {
+				lowest = chaitin;
+				out = var;
+			}
+		}
+
+		if (!out)
+			throw std::runtime_error("Couldn't select a variable in ColoringAllocator::selectChaitin.");
+
+		return out;
 	}
 
 // #undef DEBUG_COLORING
