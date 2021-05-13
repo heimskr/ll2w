@@ -15,18 +15,17 @@
 #define DASH "\e[2m-\e[22m"
 
 #define GET_FN_SEL() Function *function; if (rest.empty()) { if (!selected) { error() << "No function is selected.\n"; \
-	std::cout << PROMPT; continue; } function = selected; } else { if (!checkRest()) { std::cout << \
+	std::cerr << PROMPT; continue; } function = selected; } else { if (!checkRest()) { std::cerr << \
 	PROMPT; continue; } if (program.functions.count(rest) == 0) { error() << "Function \e[1m" << rest << \
-	"\e[22m not found.\n"; std::cout << PROMPT; continue; } function = program.functions.at(rest); }
+	"\e[22m not found.\n"; std::cerr << PROMPT; continue; } function = program.functions.at(rest); }
 
-#define GET_FN() if (!selected) { error() << "No function is selected.\n"; std::cout << PROMPT; continue; } Function \
+#define GET_FN() if (!selected) { error() << "No function is selected.\n"; std::cerr << PROMPT; continue; } Function \
 	*function = selected;
 
 namespace LL2W {
-	void interactive(Program &program) {
+	void interactive(Program &program, Function *selected) {
 		std::string line;
-		std::cout << PROMPT;
-		Function *selected = nullptr;
+		std::cerr << PROMPT;
 
 		while (std::getline(std::cin, line)) {
 			const size_t space = line.find(' ');
@@ -74,15 +73,15 @@ namespace LL2W {
 					{"tried                 ", "Prints the selected function's tried IDs/labels."},
 					{"var <id>              ", "Prints information about a variable in the selected function."},
 				}) {
-					std::cout << "    " DASH " \e[1m" << first << "\e[22m " << second << "\n";
+					std::cerr << "    " DASH " \e[1m" << first << "\e[22m " << second << "\n";
 				}
 			} else if (Util::isAny(first, {"l", "ls", "list"})) {
 				if (Util::isAny(rest, {"", "f", "fn", "func", "function"})) {
 					for (const std::pair<const std::string, LL2W::Function *> &pair: Util::mapnsort(program.functions))
-						std::cout << DASH " " << pair.second->headerString() << "\n";
+						std::cerr << DASH " " << pair.second->headerString() << "\n";
 				} else if (Util::isAny(rest, {"g", "gl", "global", "globals"})) {
 					for (const std::pair<const std::string, GlobalVarDef *> &pair: Util::mapnsort(program.globals))
-						std::cout << DASH " " << pair.first << "\n";
+						std::cerr << DASH " " << pair.first << "\n";
 				} else error() << "ls: Not sure what \"" << rest << "\" is.\n";
 			} else if (Util::isAny(first, {"c", "comp", "compile"})) {
 				if (rest.empty()) {
@@ -104,11 +103,11 @@ namespace LL2W {
 			} else if (Util::isAny(first, {"i", "info"})) {
 				if (rest.empty() && selected) {
 					info() << "Function \e[1m" << rest << "\e[22m: " << selected->headerString() << "\n";
-					std::cout << PROMPT;
+					std::cerr << PROMPT;
 					continue;
 				}
 				if (!checkRest()) {
-					std::cout << PROMPT;
+					std::cerr << PROMPT;
 					continue;
 				}
 				if (program.functions.count(rest) != 0) {
@@ -186,7 +185,7 @@ namespace LL2W {
 				info() << "Final:      " << (function->finalDone? "done" : "not done") << "\n";
 			} else if (Util::isAny(first, {"s", "sel", "select"})) {
 				if (!checkRest()) {
-					std::cout << PROMPT;
+					std::cerr << PROMPT;
 					continue;
 				}
 				if (program.functions.count(rest) == 0)
@@ -198,12 +197,12 @@ namespace LL2W {
 				info() << "Tried IDs:   ";
 				const std::unordered_set<int> &ids = function->allocator->getTriedIDs();
 				for (int tried: std::set<int>(ids.begin(), ids.end()))
-					std::cout << " " << tried;
-				std::cout << "\n";
+					std::cerr << " " << tried;
+				std::cerr << "\n";
 				info() << "Tried labels:";
 				for (const std::string &tried: Util::nsort(function->allocator->getTriedLabels()))
-					std::cout << " " << tried;
-				std::cout << "\n";
+					std::cerr << " " << tried;
+				std::cerr << "\n";
 			} else if (Util::isAny(first, {"stk", "stack"})) {
 				GET_FN();
 				if (function->stack.empty()) {
@@ -211,7 +210,7 @@ namespace LL2W {
 				} else {
 					info() << "Stack locations for \e[1m" << *function->name << "\e[22m:\n";
 					for (const std::pair<const int, StackLocation> &pair: function->stack) {
-						std::cout << "    " DASH;
+						std::cerr << "    " DASH;
 						printStackLocation(pair.second);
 					}
 				}
@@ -259,7 +258,7 @@ namespace LL2W {
 					if (!rest.empty()) {
 						if (!Util::isNumeric(rest)) {
 							error() << "Invalid limit specified.\n";
-							std::cout << PROMPT;
+							std::cerr << PROMPT;
 							continue;
 						}
 						max = Util::parseLong(rest);
@@ -274,7 +273,7 @@ namespace LL2W {
 					if (nodes.size() < max)
 						max = nodes.size();
 					for (size_t i = 0; i < max; ++i)
-						std::cout << DASH " %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
+						std::cerr << DASH " %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
 				}
 			} else if (Util::isAny(first, {"m", "make", "mig"})) {
 				GET_FN();
@@ -296,12 +295,12 @@ namespace LL2W {
 						bool first = true;
 						for (Node *neighbor: interference[rest].allEdges()) {
 							if (!first)
-								std::cout << " ";
+								std::cerr << " ";
 							else
 								first = false;
-							std::cout << neighbor->label();
+							std::cerr << neighbor->label();
 						}
-						std::cout << "\n";
+						std::cerr << "\n";
 					}
 				}
 			} else if (Util::isAny(first, {"v", "var", "variable"})) {
@@ -333,10 +332,10 @@ namespace LL2W {
 						}
 						info() << "Defining blocks:\n";
 						for (const std::weak_ptr<BasicBlock> &def: variable->definingBlocks)
-							std::cout << DASH " %" << *def.lock()->label << "\n";
+							std::cerr << DASH " %" << *def.lock()->label << "\n";
 						info() << "Using blocks:\n";
 						for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
-							std::cout << DASH " %" << *use.lock()->label << "\n";
+							std::cerr << DASH " %" << *use.lock()->label << "\n";
 						const int spill_cost = variable->spillCost();
 						info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
 						       << "\e[22m\n";
@@ -359,13 +358,13 @@ namespace LL2W {
 							info() << "Live-in at:\n";
 							for (const BasicBlockPtr &block: sorted_blocks)
 								if (block->isLiveIn(variable))
-									std::cout << DASH " %" << *block->label << "\n";
+									std::cerr << DASH " %" << *block->label << "\n";
 						}
 						if (live_out_anywhere) {
 							info() << "Live-out at:\n";
 							for (const BasicBlockPtr &block: sorted_blocks)
 								if (block->isLiveOut(variable))
-									std::cout << DASH " %" << *block->label << "\n";
+									std::cerr << DASH " %" << *block->label << "\n";
 						}
 					}
 				}
@@ -378,12 +377,12 @@ namespace LL2W {
 				function->computeLiveness();
 				info() << "Recomputed liveness data for \e[1m" << *function->name << "\e[22m.\n";
 			} else error() << "Unknown command: \"" << line << "\"\n";
-			std::cout << PROMPT;
+			std::cerr << PROMPT;
 		}
 	}
 
 	void printStackLocation(const StackLocation &location) {
-		std::cout << "\e[1m" << std::right << std::setw(4) << location.offset << "\e[22m: "
+		std::cerr << "\e[1m" << std::right << std::setw(4) << location.offset << "\e[22m: "
 		          << (location.purpose == StackLocation::Purpose::Alloca? "alloca" : "spill ") << " (width="
 		          << location.width << ", align=" << location.align << ") for " << *location.variable << "\n";
 	}

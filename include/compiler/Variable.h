@@ -48,7 +48,12 @@ namespace LL2W {
 			 *  defining block. */
 			bool isSimple() const;
 
+			/** Returns the name of the function in which this variable occurs. */
 			std::string functionName() const;
+
+			/** If this variable has a parent, the parent's ID is returned. Otherwise, this variable's ID is returned.
+			 */
+			int parentID() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(std::shared_ptr<Variable>);

@@ -11,6 +11,7 @@
 
 // #define DEBUG_ALIASES
 // #define VARIABLE_EXTRA
+// #define ADOPT_PARENT_ID
 
 namespace LL2W {
 	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
@@ -144,6 +145,11 @@ namespace LL2W {
 		                             : definingBlocks.begin()->lock()->parent->name->substr(1);
 	}
 
+	int Variable::parentID() const {
+		auto sparent = parent.lock();
+		return sparent? sparent->id : id;
+	}
+
 	void Variable::makeAliasOf(std::shared_ptr<Variable> new_parent) {
 #ifdef DEBUG_ALIASES
 		std::cerr << *this << "{o" << originalID << "}.makeAliasOf(" << new_parent << "{o" << new_parent.originalID
@@ -176,7 +182,9 @@ namespace LL2W {
 			new_parent->definitions.insert(def.lock());
 		for (const std::weak_ptr<Instruction> &use: uses)
 			new_parent->uses.insert(use.lock());
+#ifdef ADOPT_PARENT_ID
 		id = new_parent->id;
+#endif
 		type = new_parent->type;
 		lastUse = new_parent->lastUse;
 		definingBlocks = new_parent->definingBlocks;

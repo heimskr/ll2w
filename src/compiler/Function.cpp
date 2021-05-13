@@ -18,6 +18,7 @@
 // #define DEBUG_ALIASES
 #define DEBUG_STACK
 #define STRICT_READ_CHECK
+// #define FN_CATCH_EXCEPTIONS
 
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
@@ -787,7 +788,9 @@ namespace LL2W {
 		bool first = true;
 
 		int tries = 0;
+#ifdef FN_CATCH_EXCEPTIONS
 		try {
+#endif
 			while (allocator->attempt() != Allocator::Result::Success) {
 				warn() << "Allocation failed.\n";
 
@@ -801,12 +804,14 @@ namespace LL2W {
 					// debug();
 				}
 			}
+#ifdef FN_CATCH_EXCEPTIONS
 		} catch (std::exception &err) {
 			error() << err.what() << "\n";
 			if (parent)
-				LL2W::interactive(*parent);
+				LL2W::interactive(*parent, this);
 			throw;
 		}
+#endif
 
 		finalCompile();
 
@@ -1175,18 +1180,27 @@ namespace LL2W {
 				all_vars.insert(pair);
 
 			for (std::pair<const int, VariablePtr> &pair: all_vars) {
-				std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "/" << pair.second->id
+				if (extraVariables.count(pair.first) != 0)
+					std::cerr << "\e[31m[e]\e[39m";
+				else
+					std::cerr << "   ";
+				std::cerr << " \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "/" << pair.second->id
 				          << "/" << pair.second->originalID << "\e[0;2m  defs (" << pair.second->definitions.size()
 				          << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
-					std::cerr << " \e[1;2m%" << std::setw(2) << *def.lock()->label << "\e[0m";
+					std::cerr << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
 				std::cerr << "  \e[0;2muses =";
 				for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
-					std::cerr << " \e[1;2m%" << std::setw(2) << *use.lock()->label << "\e[0m";
+					std::cerr << " \e[1;2m" << std::setw(2) << *use.lock()->label << "\e[0m";
 				const int spill_cost = pair.second->spillCost();
-				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost)) + "\e[0;2m";
+				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
+				          << "\e[0;2m";
 				if (pair.second->definingBlocks.size() > 1)
 					std::cerr << " (multiple defs)";
+				std::cerr << "  pid = \e[1m" << pair.second->parentID() << "\e[22;2m";
+				std::cerr << "  aliases =\e[1m";
+				for (Variable *alias: pair.second->getAliases())
+					std::cerr << " " << alias->id;
 				std::cerr << "\e[0m\n";
 				if (varLiveness) {
 					std::cerr << "    \e[2m;      \e[32min  =\e[1m";
