@@ -182,16 +182,16 @@ namespace LL2W {
 	VariablePtr ColoringAllocator::selectMostLive(int *liveness_out) const {
 		VariablePtr ptr;
 		int highest = -1;
-		for (const auto &[id, var]: function->variableStore) {
-			if (var->allRegistersSpecial() || !function->canSpill(var))
-				continue;
-			const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
-			// if (highest < sum && function->canSpill(var)) {
-			if (highest < sum && triedIDs.count(var->originalID) == 0 && function->canSpill(var)) {
-				highest = sum;
-				ptr = var;
+		for (auto &map: {function->variableStore, function->extraVariables})
+			for (const auto &[id, var]: map) {
+				if (var->allRegistersSpecial() || !function->canSpill(var))
+					continue;
+				const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
+				if (highest < sum && triedIDs.count(var->originalID) == 0 && function->canSpill(var)) {
+					highest = sum;
+					ptr = var;
+				}
 			}
-		}
 
 		if (!ptr)
 			throw std::runtime_error("Couldn't select variable with highest liveness");

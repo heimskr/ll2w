@@ -25,6 +25,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
+#include "exception/NoChoiceError.h"
 #include "instruction/AddIInstruction.h"
 #include "instruction/Comment.h"
 #include "instruction/Label.h"
@@ -74,6 +75,7 @@
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/Util.h"
+#include "Interactive.h"
 
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
@@ -149,13 +151,14 @@ namespace LL2W {
 
 	void Function::extractVariables(bool reset) {
 		if (reset) {
-			for (const std::pair<const int, VariablePtr> &pair: variableStore) {
-				pair.second->setUsingBlocks({});
-				pair.second->setDefiningBlocks({});
-				pair.second->setDefinitions({});
-				pair.second->setUses({});
-				pair.second->setLastUse({});
-			}
+			for (auto &map: {variableStore, extraVariables})
+				for (const auto &[id, var]: map) {
+					var->setUsingBlocks({});
+					var->setDefiningBlocks({});
+					var->setDefinitions({});
+					var->setUses({});
+					var->setLastUse({});
+				}
 		}
 
 		for (BasicBlockPtr &block: blocks) {
@@ -173,19 +176,21 @@ namespace LL2W {
 			}
 		}
 
-		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			if (pair.second->definingBlocks.empty()) {
-				// Function arguments aren't defined by any instruction. They're implicitly defined in the first block.
-				if (pair.first < getArity()) {
-					pair.second->addDefiner(blocks.front());
-					blocks.front()->written.insert(pair.second);
-				} else if (!pair.second->usingBlocks.empty()) {
-					BasicBlockPtr block = pair.second->usingBlocks.begin()->lock();
-					pair.second->addDefiner(block);
-					block->written.insert(pair.second);
+		for (auto &map: {variableStore, extraVariables})
+			for (const std::pair<const int, VariablePtr> &pair: map) {
+				if (pair.second->definingBlocks.empty()) {
+					// Function arguments aren't defined by any instruction.
+					// They're implicitly defined in the first block.
+					if (pair.first < getArity()) {
+						pair.second->addDefiner(blocks.front());
+						blocks.front()->written.insert(pair.second);
+					} else if (!pair.second->usingBlocks.empty()) {
+						BasicBlockPtr block = pair.second->usingBlocks.begin()->lock();
+						pair.second->addDefiner(block);
+						block->written.insert(pair.second);
+					}
 				}
 			}
-		}
 	}
 
 	void Function::relinearize() {
@@ -208,6 +213,7 @@ namespace LL2W {
 		}
 
 		for (; bbLabels.count(StringSet::intern(std::to_string(label))) == 1; ++label);
+		for (; extraVariables.count(label) != 0; ++label);
 		return label;
 	}
 
@@ -781,18 +787,25 @@ namespace LL2W {
 		bool first = true;
 
 		int tries = 0;
-		while (allocator->attempt() != Allocator::Result::Success) {
-			warn() << "Allocation failed.\n";
+		try {
+			while (allocator->attempt() != Allocator::Result::Success) {
+				warn() << "Allocation failed.\n";
 
-			Passes::splitBlocks(*this);
+				Passes::splitBlocks(*this);
 
-			if (++tries % 10 == 0)
-				debug();
+				if (++tries % 10 == 0)
+					debug();
 
-			if (first) {
-				// first = false;
-				// debug();
+				if (first) {
+					// first = false;
+					// debug();
+				}
 			}
+		} catch (std::exception &err) {
+			error() << err.what() << "\n";
+			if (parent)
+				LL2W::interactive(*parent);
+			throw;
 		}
 
 		finalCompile();

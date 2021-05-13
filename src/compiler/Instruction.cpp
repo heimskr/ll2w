@@ -22,6 +22,9 @@ namespace LL2W {
 		if (read.count(var) != 0)
 			return var;
 		std::shared_ptr<BasicBlock> block = parent.lock();
+		for (const VariablePtr &read_var: read)
+			if (read_var->id == var->id)
+				return read_var;
 		for (Variable *alias: var->getAliases()) {
 			std::shared_ptr<Variable> shared_alias = block->parent->getVariable(alias->id);
 			if (read.count(shared_alias) != 0)

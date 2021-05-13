@@ -58,7 +58,8 @@ namespace LL2W {
 					{"attempt               ", "Attempts register allocation on the selected function."},
 					{"compile               ", "Compiles the selected function."},
 					{"debug                 ", "Prints the selected function's compiled code in its current state. "
-					                           "Options: -blocks, linear, vars, blive, vlive, rw, render, estimations"},
+					                           "Options: -blocks, linear, vars, blive, vlive, rw, render, estimations"
+											   ", aliases, stack"},
 					{"edges <id>            ", "Prints the edges for a given node in the selected function's "
 					                           "interference graph."},
 					{"final                 ", "Performs final compilation on the selected function."},
