@@ -88,12 +88,6 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 				else std::cerr << "No blocks were split.\n";
 #endif
-				if (highest_degree == 399) {
-					// info() << "Edge count: " << interference.allEdges().size() << "\n";
-					// info() << "Vertex count: " << interference.size() << "\n";
-					// interference.renderTo("/home/kai/interference2.pdf");
-					// function->debug();
-				}
 				return Result::Spilled;
 			}
 #ifdef DEBUG_COLORING

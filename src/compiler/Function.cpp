@@ -389,11 +389,12 @@ namespace LL2W {
 
 			if (created) {
 				// Undo addToStack
-				stack.erase(location.offset);
+				warn() << "Undo addToStack for " << *variable << "\n";
 				if (location.width != -1) {
 					stackSize -= location.width;
 					spillSize -= location.width;
 				}
+				stack.erase(location.offset);
 			}
 
 			if (should_insert)
@@ -1231,7 +1232,7 @@ namespace LL2W {
 		if (created)
 			*created = false;
 		for (std::pair<const int, StackLocation> &pair: stack)
-			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Spill)
+			if (pair.second.variable->id == variable->id && pair.second.purpose == StackLocation::Purpose::Spill)
 				return pair.second;
 		if (create) {
 			if (created)

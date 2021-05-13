@@ -111,8 +111,10 @@ namespace LL2W::Passes {
 			}
 		}
 
-		for (Variable *var: vars_to_erase)
+		for (Variable *var: vars_to_erase) {
+			// warn() << "Erasing " << *var << " (OID: " << var->originalID << ")\n";
 			function.variableStore.erase(var->id);
+		}
 
 		for (InstructionPtr &ptr: to_remove)
 			function.remove(ptr);
