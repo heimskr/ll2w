@@ -22,6 +22,7 @@ namespace LL2W::Passes {
 		if (list.size() != 1)
 			throw std::runtime_error("Expected size of StackSkip list to be exactly one, but it's " +
 				std::to_string(list.size()));
-		dynamic_cast<SubIInstruction *>(list.front().get())->imm = function.spillSize;
+		// We need to add an offset of 8 because spush subtracts and then writes to memory.
+		dynamic_cast<SubIInstruction *>(list.front().get())->imm = function.spillSize + 8;
 	}
 }
