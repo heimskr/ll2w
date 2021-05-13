@@ -66,6 +66,7 @@ namespace LL2W {
 					{"init                  ", "Performs initial compilation on the selected function."},
 					{"mig                   ", "Makes an interference graph for the selected function."},
 					{"pig                   ", "Renders the selected function's interference graph."},
+					{"pcfg                  ", "Renders the selected function's control flow graph."},
 					{"reset                 ", "Resets the selected function's compilation status flags."},
 					{"spill <variable>      ", "Spills a variable in the selected function."},
 					{"stack                 ", "Prints the selected function's stack allocations."},
@@ -246,8 +247,16 @@ namespace LL2W {
 					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
 				} else {
 					function->allocator->interference.renderTo("interference_" + Util::escape(*function->name)
-						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".png");
+						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".pdf");
 					info() << "Rendering the interference graph in the background.\n";
+				}
+			} else if (Util::isAny(first, {"pcfg"})) {
+				GET_FN();
+				if (function->cfg.empty()) {
+					warn() << "The control flow graph is empty. Try \e[1minit\e[22m.\n";
+				} else {
+					function->cfg.renderTo("./cfg_" + Util::escape(*function->name) + ".pdf");
+					info() << "Rendering the CFG in the background.\n";
 				}
 			} else if (Util::isAny(first, {"hd", "highest"})) {
 				GET_FN();

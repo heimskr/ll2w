@@ -1,5 +1,4 @@
-#ifndef COMPILER_CFG_H_
-#define COMPILER_CFG_H_
+#pragma once
 
 #include "graph/Graph.h"
 
@@ -8,5 +7,3 @@ namespace LL2W {
 		/** Node data: shared_ptr<BasicBlock> */
 	};
 }
-
-#endif

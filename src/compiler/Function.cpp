@@ -8,8 +8,8 @@
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
 // #define DEBUG_RENDER
-#define DEBUG_SPILL
-#define DEBUG_SPLIT
+// #define DEBUG_SPILL
+// #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
@@ -18,6 +18,7 @@
 // #define DEBUG_ALIASES
 #define DEBUG_STACK
 #define STRICT_READ_CHECK
+#define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 
 #include "allocator/ColoringAllocator.h"
@@ -265,6 +266,9 @@ namespace LL2W {
 
 			if (should_insert) {
 				insertAfter(definition, store, "Spill: stack store");
+				VariablePtr new_var = mx(6, definition);
+				definition->replaceWritten(variable, new_var);
+				store->variable = new_var;
 				store->extract();
 				out = true;
 #ifdef DEBUG_SPILL
@@ -781,29 +785,15 @@ namespace LL2W {
 	void Function::compile() {
 		initialCompile();
 
-// #ifdef DEBUG_ALIASES
+#ifdef DEBUG_ALIASES
 		debug();
-// #endif
+#endif
 
-		bool first = true;
 
-		int tries = 0;
 #ifdef FN_CATCH_EXCEPTIONS
 		try {
 #endif
-			while (allocator->attempt() != Allocator::Result::Success) {
-				warn() << "Allocation failed.\n";
-
-				Passes::splitBlocks(*this);
-
-				if (++tries % 10 == 0)
-					debug();
-
-				if (first) {
-					// first = false;
-					// debug();
-				}
-			}
+			while (allocator->attempt() != Allocator::Result::Success);
 #ifdef FN_CATCH_EXCEPTIONS
 		} catch (std::exception &err) {
 			error() << err.what() << "\n";
@@ -815,36 +805,30 @@ namespace LL2W {
 
 		finalCompile();
 
-		// for (const auto &[id, ptr]: variableStore) {
-		// 	std::cerr << id << "(o" << ptr->originalID << " r" << ptr->reg << ")";
-		// 	if (Variable *parent = ptr->getParent())
-		// 		std::cerr << ", parent = " << std::string(*parent);
-		// 	std::cerr << ":";
-		// 	for (Variable *var: ptr->getAliases())
-		// 		std::cerr << " " << var->id << "(o" << var->originalID << " r" << var->reg << ")";
-		// 	std::cerr << "\n";
-		// }
-
-// #ifdef DEBUG_SPILL
-// 		std::cerr << "Spills in last scan: \e[1m" << spilled << "\e[0m. Finished \e[1m" << *name << "\e[0m.\n\n";
-// #endif
+#ifdef DEBUG_SPILL
+		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
+		       << "\e[0m.\n\n";
+#endif
 	}
 
-	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr block) {
+	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr definer) {
 		if (WhyInfo::totalRegisters <= index)
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
-		VariablePtr new_var = newVariable(std::make_shared<IntType>(64), block);
+		VariablePtr new_var = newVariable(std::make_shared<IntType>(64), definer);
 		new_var->setRegisters({index});
 		return new_var;
 
 	}
 
-	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr block) {
+	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr definer) {
 		if (WhyInfo::assemblerCount <= index)
 			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
 		if (assemblerVariables.count(index) == 0)
-			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, block));
-		return assemblerVariables.at(index);
+			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, definer));
+		VariablePtr &found = assemblerVariables.at(index);
+		if (definer)
+			found->addDefiner(definer);
+		return found;
 	}
 
 	void Function::precolorArguments(std::list<Interval> &intervals) {

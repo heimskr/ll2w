@@ -33,4 +33,20 @@ namespace LL2W {
 
 		return nullptr;
 	}
+
+	std::shared_ptr<Variable> Instruction::doesWrite(std::shared_ptr<Variable> var) const {
+		if (written.count(var) != 0)
+			return var;
+		std::shared_ptr<BasicBlock> block = parent.lock();
+		for (const VariablePtr &written_var: written)
+			if (written_var->id == var->id)
+				return written_var;
+		for (Variable *alias: var->getAliases()) {
+			std::shared_ptr<Variable> shared_alias = block->parent->getVariable(alias->id);
+			if (written.count(shared_alias) != 0)
+				return shared_alias;
+		}
+
+		return nullptr;
+	}
 }

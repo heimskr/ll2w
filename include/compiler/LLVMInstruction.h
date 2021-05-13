@@ -23,6 +23,9 @@ namespace LL2W {
 
 			bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override;
 			bool canReplaceRead(std::shared_ptr<Variable>) const override;
+			bool replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override;
+			bool canReplaceWritten(std::shared_ptr<Variable>) const override;
+
 			bool isPhi() const override;
 	};
 }

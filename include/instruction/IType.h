@@ -55,6 +55,19 @@ namespace LL2W {
 			bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
 				return rs == to_replace;
 			}
+
+			bool replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
+				if (rd == to_replace) {
+					rd = new_var;
+					return true;
+				}
+
+				return false;
+			}
+
+			bool canReplaceWritten(std::shared_ptr<Variable> to_replace) const override {
+				return rd == to_replace;
+			}
 	};
 }
 

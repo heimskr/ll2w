@@ -53,11 +53,22 @@ namespace LL2W {
 				return false;
 			}
 
+			/** Attempts to replace a variable written by the instruction with another variable. Should be overridden by
+			 *  any instruction that writes to a variable. */
+			virtual bool replaceWritten(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
+				return false;
+			}
+
+			virtual bool canReplaceWritten(std::shared_ptr<Variable>) const {
+				return false;
+			}
+
 			virtual bool maySpill() const { return true; }
 
 			virtual bool isPhi() const { return false; }
 
 			virtual std::shared_ptr<Variable> doesRead(std::shared_ptr<Variable>) const;
+			virtual std::shared_ptr<Variable> doesWrite(std::shared_ptr<Variable>) const;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

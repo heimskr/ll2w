@@ -78,6 +78,7 @@ namespace LL2W {
 	struct Writer {
 		const std::string *result = nullptr;
 		std::shared_ptr<Variable> variable = nullptr;
+		void replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var);
 		std::string getResult() const;
 	};
 

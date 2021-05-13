@@ -17,5 +17,7 @@ namespace LL2W {
 			ExtractionResult extract(bool force = false) override;
 			bool replaceRead(VariablePtr, VariablePtr) override;
 			bool canReplaceRead(VariablePtr) const override;
+			bool replaceWritten(VariablePtr, VariablePtr) override;
+			bool canReplaceWritten(VariablePtr) const override;
 	};
 }

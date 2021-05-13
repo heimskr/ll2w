@@ -19,6 +19,7 @@ namespace LL2W {
 	}
 
 	bool StackStoreInstruction::operator==(const StackStoreInstruction &other) const {
-		return location == other.location && variable->id == other.variable->id;
+		return location == other.location && (variable->equivalent(*other.variable) ||
+			originalVariable->equivalent(*other.originalVariable));
 	}
 }

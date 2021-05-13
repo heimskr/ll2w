@@ -217,6 +217,19 @@ namespace LL2W {
 		return dynamic_cast<Reader *>(node) != nullptr;
 	}
 
+	bool LLVMInstruction::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		if (Writer *writer = dynamic_cast<Writer *>(node)) {
+			writer->replaceWritten(to_replace, new_var);
+			return true;
+		}
+
+		return false;
+	}
+
+	bool LLVMInstruction::canReplaceWritten(std::shared_ptr<Variable>) const {
+		return dynamic_cast<Writer *>(node) != nullptr;
+	}
+
 	bool LLVMInstruction::isPhi() const {
 		return node && node->nodeType() == NodeType::Phi;
 	}

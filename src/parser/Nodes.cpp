@@ -169,6 +169,13 @@ namespace LL2W {
 		return "\e[32m" + (variable? std::string(*variable) : "%" + *result) + "\e[0m";
 	}
 
+	void Writer::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		// TODO!: use Variable::equivalent instead?
+		if (!variable || variable->id != to_replace->id)
+			return;
+		variable = new_var;
+	}
+
 // SelectNode
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,

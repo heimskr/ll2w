@@ -10,10 +10,11 @@ namespace LL2W {
 	class StackStoreInstruction: public IntermediateInstruction {
 		public:
 			StackLocation location;
-			std::shared_ptr<Variable> variable;
+			std::shared_ptr<Variable> variable, originalVariable;
 
 			StackStoreInstruction(const StackLocation &location_, std::shared_ptr<Variable> variable_, int index_ = -1):
-				IntermediateInstruction(index_), location(location_), variable(variable_) {}
+				IntermediateInstruction(index_),
+				location(location_), variable(variable_), originalVariable(variable_) {}
 
 			ExtractionResult extract(bool force = false) override;
 			std::string debugExtra() override;

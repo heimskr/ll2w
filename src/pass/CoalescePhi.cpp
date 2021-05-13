@@ -69,9 +69,13 @@ namespace LL2W::Passes {
 						// temporary.
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
-							function.extraVariables.emplace(to_rename->id, to_rename);
-							vars_to_erase.insert(to_rename.get());
-							// to_rename->makeAliasOf(*target);
+							if (to_rename->id != to_rename->parentID()) {
+								// info() << "Retiring " << *to_rename << " (pid = " << to_rename->parentID() << ")\n";
+								function.extraVariables.emplace(to_rename->id, to_rename);
+								vars_to_erase.insert(to_rename.get());
+								// TODO: verify whether this is unneeded.
+								// to_rename->makeAliasOf(*target);
+							}
 						} catch (const std::out_of_range &err) {
 							// Sometimes, the same variable will appear multiple times in the table, e.g.
 							//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]
@@ -91,7 +95,7 @@ namespace LL2W::Passes {
 		Graph dependencies = function.makeDependencyGraph();
 		const auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
 
-		// dependencies.renderTo("/home/kai/graph_" + *function.name + ".pdf");
+		// dependencies.renderTo("./graph_" + *function.name + ".pdf");
 
 		// Iterate over the graph component by component, choosing one node arbitrarily from each component, running
 		// a breadth-first search from that node and making the variables corresponding to each node reachable from

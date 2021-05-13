@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cctype>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -388,7 +389,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	void Graph::renderTo(const std::string &out_path, const std::string &direction) {
+	void Graph::renderTo(std::string out_path, const std::string &direction) {
 		std::ofstream out;
 		std::string path = "/tmp/ll2w_graph_";
 		for (const char ch: out_path)
@@ -398,6 +399,9 @@ namespace LL2W {
 		out.open(path);
 		out << toDot(direction);
 		out.close();
+
+		if (out_path.substr(0, 2) == "./")
+			out_path = (std::filesystem::current_path() / out_path.substr(2)).string();
 
 		std::string type = "png";
 		const size_t pos = out_path.find_last_of(".");
@@ -414,9 +418,9 @@ namespace LL2W {
 		const char *typearg = type.c_str();
 
 		if (fork() == 0) {
-			// if (4096 <= allEdges().size())
-			// 	execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
-			// else
+			if (4096 <= allEdges().size())
+				execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
+			else
 				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 		}
 

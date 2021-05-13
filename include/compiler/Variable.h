@@ -106,6 +106,10 @@ namespace LL2W {
 			operator std::string() const;
 			bool operator==(const Variable &) const;
 
+			/** Returns whether the variables are same (with operator==) or whether they're both precolored with
+			 *  matching register sets. */
+			bool equivalent(const Variable &) const;
+
 			void debug();
 	};
 

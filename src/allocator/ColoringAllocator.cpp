@@ -13,7 +13,7 @@
 #include "pass/SplitBlocks.h"
 #include "util/Util.h"
 
-#define DEBUG_COLORING
+// #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 #define SELECT_MOST_LIVE
@@ -66,10 +66,14 @@ namespace LL2W {
 #endif
 			triedIDs.insert(to_spill->originalID);
 			triedLabels.insert(std::to_string(to_spill->originalID));
+#ifdef DEBUG_COLORING
 			info() << "Variable before climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
+#endif
 			while (auto sparent = to_spill->getParent().lock())
 				to_spill = sparent;
+#ifdef DEBUG_COLORING
 			info() << "Variable after climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
+#endif
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
 			triedLabels.insert(std::to_string(to_spill->id));
@@ -243,7 +247,7 @@ namespace LL2W {
 			// std::cerr << "\n";
 #endif
 			if (pair.second->registers.empty()) {
-				const std::string id = std::to_string(pair.second->id);
+				const std::string id = std::to_string(pair.second->parentID());
 				if (!interference.hasLabel(id)) { // Use only one variable from a set of aliases.
 					Node &node = interference.addNode(id);
 					node.data = pair.second;
@@ -334,21 +338,22 @@ namespace LL2W {
 		std::unordered_map<int, std::vector<int>> vecs;
 		std::unordered_map<int, std::unordered_set<int>> sets;
 
-		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
-			if (!pair.second->registers.empty())
+		for (const auto &[id, var]: function->variableStore) {
+			const int pid = var->parentID();
+			if (!var->registers.empty())
 				continue;
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
+			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
 				const int index = bptr.lock()->index;
-				if (sets[index].count(pair.second->id) == 0) {
-					vecs[index].push_back(pair.second->id);
-					sets[index].insert(pair.second->id);
+				if (sets[index].count(pid) == 0) {
+					vecs[index].push_back(pid);
+					sets[index].insert(pid);
 				}
 			}
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
+			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
 				const int index = bptr.lock()->index;
-				if (sets[index].count(pair.second->id) == 0) {
-					vecs[index].push_back(pair.second->id);
-					sets[index].insert(pair.second->id);
+				if (sets[index].count(pid) == 0) {
+					vecs[index].push_back(pid);
+					sets[index].insert(pid);
 				}
 			}
 		}
@@ -357,15 +362,17 @@ namespace LL2W {
 			std::vector<int> &vec = vecs[block->index];
 			std::unordered_set<int> &set = sets[block->index];
 			for (const VariablePtr &var: block->liveIn) {
-				if (var->registers.empty() && set.count(var->id) == 0) {
-					vec.push_back(var->id);
-					set.insert(var->id);
+				const int pid = var->parentID();
+				if (var->registers.empty() && set.count(pid) == 0) {
+					vec.push_back(pid);
+					set.insert(pid);
 				}
 			}
 			for (const VariablePtr &var: block->liveOut) {
-				if (var->registers.empty() && set.count(var->id) == 0) {
-					vec.push_back(var->id);
-					set.insert(var->id);
+				const int pid = var->parentID();
+				if (var->registers.empty() && set.count(pid) == 0) {
+					vec.push_back(pid);
+					set.insert(pid);
 				}
 			}
 		}

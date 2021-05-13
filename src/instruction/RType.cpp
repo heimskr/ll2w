@@ -52,4 +52,17 @@ namespace LL2W {
 	bool RType::canReplaceRead(std::shared_ptr<Variable> to_replace) const {
 		return rs == to_replace || rt == to_replace;
 	}
+
+	bool RType::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		if (rd == to_replace) {
+			rd = new_var;
+			return true;
+		}
+
+		return false;
+	}
+
+	bool RType::canReplaceWritten(std::shared_ptr<Variable> to_replace) const {
+		return rd == to_replace;
+	}
 }

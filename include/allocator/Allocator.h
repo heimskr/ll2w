@@ -25,6 +25,7 @@ namespace LL2W {
 
 			virtual Result attempt() = 0;
 			int getAttempts() const { return attempts; }
+			int getSpillCount() const { return spillCount; }
 
 			static std::string stringify(Result result) {
 				return result == Result::Spilled? "Spilled" : (result == Result::NotSpilled? "NotSpilled" :

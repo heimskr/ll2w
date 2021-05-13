@@ -137,7 +137,7 @@ namespace LL2W {
 
 			/** Renders a representation (PNG by default; changeable by changing the file extension) of the graph to an
 			 *  output file. */
-			void renderTo(const std::string &png_path, const std::string &direction = "TB");
+			void renderTo(std::string png_path, const std::string &direction = "TB");
 
 			decltype(labelMap)::iterator begin();
 			decltype(labelMap)::iterator end();
