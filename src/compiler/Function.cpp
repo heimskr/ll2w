@@ -1169,7 +1169,12 @@ namespace LL2W {
 			}
 		if (vars) {
 			std::cerr << "    \e[2m; Variables:\e[0m\n";
-			for (std::pair<const int, VariablePtr> &pair: variableStore) {
+
+			auto all_vars = variableStore;
+			for (const auto &pair: extraVariables)
+				all_vars.insert(pair);
+
+			for (std::pair<const int, VariablePtr> &pair: all_vars) {
 				std::cerr << "    \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "/" << pair.second->id
 				          << "/" << pair.second->originalID << "\e[0;2m  defs (" << pair.second->definitions.size()
 				          << ") =";
