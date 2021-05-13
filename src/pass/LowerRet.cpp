@@ -41,7 +41,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false);
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
-				function.extraVariables.push_back(var);
+				function.extraVariables.emplace(var->id, var);
 				if (var->multireg()) {
 					if (WhyInfo::returnValueCount < var->registers.size())
 						throw std::runtime_error("Too many registers for " + var->plainString() + " in LowerRet");

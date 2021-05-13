@@ -83,7 +83,8 @@ namespace LL2W {
 			out << "\e[39;2m:\e[32m" << id << "\e[39;22m";
 		}
 #ifdef VARIABLE_EXTRA
-		std::unordered_set<Variable *> alias_set = parent? parent->aliases : aliases;
+		auto sparent = parent.lock();
+		std::unordered_set<Variable *> alias_set = sparent? sparent->aliases : aliases;
 		if (!alias_set.empty()) {
 			out << "\e[2m[";
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
@@ -143,12 +144,13 @@ namespace LL2W {
 		                             : definingBlocks.begin()->lock()->parent->name->substr(1);
 	}
 
-	void Variable::makeAliasOf(Variable &new_parent) {
+	void Variable::makeAliasOf(std::shared_ptr<Variable> new_parent) {
 #ifdef DEBUG_ALIASES
 		std::cerr << *this << "{o" << originalID << "}.makeAliasOf(" << new_parent << "{o" << new_parent.originalID
 		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << &new_parent;
 #endif
-		if (&new_parent == this || new_parent.parent == this || new_parent.aliases.count(this) != 0) {
+		if (new_parent.get() == this || new_parent->parent.lock().get() == this
+		    || new_parent->aliases.count(this) != 0) {
 #ifdef DEBUG_ALIASES
 			std::cerr << " \e[2m...\e[22;31mnope\e[39m\n";
 #endif
@@ -158,35 +160,35 @@ namespace LL2W {
 		std::cerr << "\n";
 #endif
 		info() << "\e[36m" << functionName() << "\e[39m: " << *this << "[\e[1m" << this << "\e[22m].makeAliasOf("
-		       << new_parent << "[\e[1m" << &new_parent << "\e[22m])\n";
-		parent = &new_parent;
-		new_parent.aliases.insert(this);
+		       << new_parent << "[\e[1m" << new_parent.get() << "\e[22m])\n";
+		parent = new_parent;
+		new_parent->aliases.insert(this);
 		for (Variable *alias: aliases) {
 			info() << "Alias " << alias << "->parent = " << &new_parent << "\n";
-			alias->parent = &new_parent;
-			new_parent.aliases.insert(alias);
+			alias->parent = new_parent;
+			new_parent->aliases.insert(alias);
 		}
 		for (const std::weak_ptr<BasicBlock> &def: definingBlocks)
-			new_parent.definingBlocks.insert(def);
+			new_parent->definingBlocks.insert(def);
 		for (const std::weak_ptr<BasicBlock> &use: usingBlocks)
-			new_parent.usingBlocks.insert(use);
+			new_parent->usingBlocks.insert(use);
 		for (const std::weak_ptr<Instruction> &def: definitions)
-			new_parent.definitions.insert(def.lock());
+			new_parent->definitions.insert(def.lock());
 		for (const std::weak_ptr<Instruction> &use: uses)
-			new_parent.uses.insert(use.lock());
-		id = new_parent.id;
-		type = new_parent.type;
-		lastUse = new_parent.lastUse;
-		definingBlocks = new_parent.definingBlocks;
-		usingBlocks = new_parent.usingBlocks;
-		definitions = new_parent.definitions;
-		uses = new_parent.uses;
-		registers = new_parent.registers; // ???
+			new_parent->uses.insert(use.lock());
+		id = new_parent->id;
+		type = new_parent->type;
+		lastUse = new_parent->lastUse;
+		definingBlocks = new_parent->definingBlocks;
+		usingBlocks = new_parent->usingBlocks;
+		definitions = new_parent->definitions;
+		uses = new_parent->uses;
+		registers = new_parent->registers; // ???
 	}
 
 	void Variable::addDefiner(std::shared_ptr<BasicBlock> block) {
-		if (parent) {
-			parent->addDefiner(block);
+		if (auto sparent = parent.lock()) {
+			sparent->addDefiner(block);
 		} else {
 			definingBlocks.insert(block);
 			for (Variable *alias: aliases)
@@ -195,8 +197,8 @@ namespace LL2W {
 	}
 
 	void Variable::removeDefiner(std::shared_ptr<BasicBlock> block) {
-		if (parent) {
-			parent->removeDefiner(block);
+		if (auto sparent = parent.lock()) {
+			sparent->removeDefiner(block);
 		} else {
 			definingBlocks.erase(block);
 			for (Variable *alias: aliases)
@@ -205,8 +207,8 @@ namespace LL2W {
 	}
 
 	void Variable::addUsingBlock(std::shared_ptr<BasicBlock> block) {
-		if (parent) {
-			parent->addUsingBlock(block);
+		if (auto sparent = parent.lock()) {
+			sparent->addUsingBlock(block);
 		} else {
 			usingBlocks.insert(block);
 			for (Variable *alias: aliases)
@@ -215,8 +217,8 @@ namespace LL2W {
 	}
 
 	void Variable::removeUsingBlock(std::shared_ptr<BasicBlock> block) {
-		if (parent) {
-			parent->removeUsingBlock(block);
+		if (auto sparent = parent.lock()) {
+			sparent->removeUsingBlock(block);
 		} else {
 			usingBlocks.erase(block);
 			for (Variable *alias: aliases)
@@ -225,8 +227,8 @@ namespace LL2W {
 	}
 
 	void Variable::addDefinition(std::shared_ptr<Instruction> instruction) {
-		if (parent) {
-			parent->addDefinition(instruction);
+		if (auto sparent = parent.lock()) {
+			sparent->addDefinition(instruction);
 		} else {
 			definitions.insert(instruction);
 			for (Variable *alias: aliases)
@@ -235,8 +237,8 @@ namespace LL2W {
 	}
 
 	void Variable::removeDefinition(std::shared_ptr<Instruction> instruction) {
-		if (parent) {
-			parent->removeDefinition(instruction);
+		if (auto sparent = parent.lock()) {
+			sparent->removeDefinition(instruction);
 		} else {
 			definitions.erase(instruction);
 			for (Variable *alias: aliases)
@@ -245,8 +247,8 @@ namespace LL2W {
 	}
 
 	void Variable::addUse(std::shared_ptr<Instruction> instruction) {
-		if (parent) {
-			parent->addUse(instruction);
+		if (auto sparent = parent.lock()) {
+			sparent->addUse(instruction);
 		} else {
 			uses.insert(instruction);
 			for (Variable *alias: aliases)
@@ -255,8 +257,8 @@ namespace LL2W {
 	}
 
 	void Variable::removeUse(std::shared_ptr<Instruction> instruction) {
-		if (parent) {
-			parent->removeUse(instruction);
+		if (auto sparent = parent.lock()) {
+			sparent->removeUse(instruction);
 		} else {
 			uses.erase(instruction);
 			for (Variable *alias: aliases)
@@ -286,8 +288,8 @@ namespace LL2W {
 	}
 
 	void Variable::setType(TypePtr new_type) {
-		if (parent) {
-			parent->setType(new_type);
+		if (auto sparent = parent.lock()) {
+			sparent->setType(new_type);
 		} else {
 			type = new_type? new_type->copy() : nullptr;
 			for (Variable *alias: aliases)
@@ -297,8 +299,8 @@ namespace LL2W {
 
 #define VARSETTER(method, type, param, field) \
 	void Variable::set##method(type param) { \
-		if (parent) { \
-			parent->set##method(param); \
+		if (auto sparent = parent.lock()) { \
+			sparent->set##method(param); \
 		} else { \
 			field = param; \
 			for (Variable *alias: aliases) \

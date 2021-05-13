@@ -64,9 +64,17 @@ namespace LL2W {
 			std::cerr << ". Likely name: " << function->variableStore.size() << "\n";
 			std::cerr << "Can spill: " << std::boolalpha << function->canSpill(to_spill) << "\n";
 #endif
+			triedIDs.insert(to_spill->originalID);
+			triedLabels.insert(std::to_string(to_spill->originalID));
+			info() << "Variable before climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
+			while (auto sparent = to_spill->getParent().lock())
+				to_spill = sparent;
+			info() << "Variable after climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
 			triedLabels.insert(std::to_string(to_spill->id));
+
+
 			if (function->spill(to_spill)) {
 #ifdef DEBUG_COLORING
 				std::cerr << "Spilled " << *to_spill << ". Variables: " << function->variableStore.size()
@@ -127,7 +135,9 @@ namespace LL2W {
 		for (const Node *node: interference.nodes()) {
 			const int degree = node->degree();
 			// if (highest < degree && triedLabels.count(node->label()) == 0) {
-			if (highest < degree && function->canSpill(node->get<VariablePtr>())) {
+			// if (highest < degree && function->canSpill(node->get<VariablePtr>())) {
+			if (highest < degree && triedLabels.count(node->label()) == 0
+					&& function->canSpill(node->get<VariablePtr>())) {
 				highest_node = node;
 				highest = degree;
 			}
@@ -176,7 +186,8 @@ namespace LL2W {
 			if (var->allRegistersSpecial() || !function->canSpill(var))
 				continue;
 			const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
-			if (highest < sum && function->canSpill(var)) {
+			// if (highest < sum && function->canSpill(var)) {
+			if (highest < sum && triedIDs.count(var->originalID) == 0 && function->canSpill(var)) {
 				highest = sum;
 				ptr = var;
 			}

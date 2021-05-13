@@ -18,7 +18,7 @@ namespace LL2W {
 		private:
 			std::list<Instruction *> useOrder;
 			std::unordered_set<Variable *> aliases;
-			Variable *parent = nullptr;
+			std::weak_ptr<Variable> parent;
 			std::optional<int> spillCost_;
 
 		public:
@@ -51,9 +51,9 @@ namespace LL2W {
 			std::string functionName() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
-			void makeAliasOf(Variable &);
+			void makeAliasOf(std::shared_ptr<Variable>);
 
-			Variable * getParent() const { return parent; }
+			std::weak_ptr<Variable> getParent() const { return parent; }
 			const std::unordered_set<Variable *> & getAliases() const { return aliases; }
 
 			void addDefiner(std::shared_ptr<BasicBlock>);

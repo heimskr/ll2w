@@ -389,7 +389,7 @@ namespace LL2W {
 
 			if (created) {
 				// Undo addToStack
-				warn() << "Undo addToStack for " << *variable << "\n";
+				// warn() << "Undo addToStack for " << *variable << "\n";
 				if (location.width != -1) {
 					stackSize -= location.width;
 					spillSize -= location.width;
@@ -890,25 +890,37 @@ namespace LL2W {
 		remove(substitute);
 	}
 
-	VariablePtr Function::getVariable(int label) {
-		return variableStore.at(label);
+	VariablePtr Function::getVariable(int id) {
+		if (variableStore.count(id) != 0)
+			return variableStore.at(id);
+		return extraVariables.at(id);
 	}
 
 	VariablePtr Function::getVariable(const std::string &label) {
 		return getVariable(Util::parseLong(label));
 	}
 
-	VariablePtr Function::getVariable(int label, const TypePtr type, BasicBlockPtr definer) {
-		if (variableStore.count(label) == 0)
-			variableStore.insert({label, std::make_shared<Variable>(label, type? type->copy() : nullptr)});
-		VariablePtr out = variableStore.at(label);
+	VariablePtr Function::getVariable(int id, const TypePtr type, BasicBlockPtr definer) {
+		const size_t vcount = variableStore.count(id), ecount = extraVariables.count(id);
+		if (vcount == 0 && ecount == 0) {
+			auto out =
+				variableStore.emplace(id, std::make_shared<Variable>(id, type? type->copy() : nullptr)).first->second;
+			if (definer)
+				out->addDefiner(definer);
+			return out;
+		}
+		VariablePtr out;
+		if (ecount)
+			out = extraVariables.at(id);
+		else
+			out = variableStore.at(id);
 		if (definer)
 			out->addDefiner(definer);
 		return out;
 	}
 
-	VariablePtr Function::getVariable(const std::string &label, const TypePtr type, BasicBlockPtr definer) {
-		return getVariable(Util::parseLong(label), type, definer);
+	VariablePtr Function::getVariable(const std::string &id, const TypePtr type, BasicBlockPtr definer) {
+		return getVariable(Util::parseLong(id), type, definer);
 	}
 
 	BasicBlockPtr Function::getEntry() {
@@ -1180,7 +1192,7 @@ namespace LL2W {
 			std::cerr << "<Aliases>\n";
 			for (auto &[id, var]: variableStore) {
 				std::cerr << id << " = " << *var;
-				if (Variable *vparent = var->getParent())
+				if (auto vparent = var->getParent().lock())
 					std::cerr << "(parent = " << *vparent << ")";
 				std::cerr << ":";
 				for (Variable *alias: var->getAliases())
@@ -1293,11 +1305,13 @@ namespace LL2W {
 	}
 
 	void Function::hackVariables() {
-		std::list<VariablePtr> all_vars = extraVariables;
+		std::list<VariablePtr> all_vars;
+		for (auto &pair: extraVariables)
+			all_vars.push_back(pair.second);
 		for (auto &pair: variableStore)
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
-			Variable *parent = var->getParent();
+			auto parent = var->getParent().lock();
 			if (var->registers.empty() && parent)
 				var->registers = parent->registers;
 			if (var->registers.empty()) {

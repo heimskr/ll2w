@@ -69,7 +69,7 @@ namespace LL2W::Passes {
 						// temporary.
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
-							function.extraVariables.push_back(to_rename);
+							function.extraVariables.emplace(to_rename->id, to_rename);
 							vars_to_erase.insert(to_rename.get());
 							// to_rename->makeAliasOf(*target);
 						} catch (const std::out_of_range &err) {
@@ -107,7 +107,7 @@ namespace LL2W::Passes {
 				if (nodevar == var.get())
 					continue;
 				visited.insert(get_string(*nodevar));
-				nodevar->makeAliasOf(*var);
+				nodevar->makeAliasOf(var);
 			}
 		}
 

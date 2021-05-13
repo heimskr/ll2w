@@ -315,17 +315,18 @@ namespace LL2W {
 						error() << "Variable \e[1m%" << id << "\e[22m not found.\n";
 					} else {
 						VariablePtr variable = function->variableStore.at(id);
-						if (variable->getParent())
-							info() << "Parent: " << *variable->getParent() << "\n";
+						auto sparent = variable->getParent().lock();
+						if (sparent)
+							info() << "Parent: " << *sparent << "\n";
 						if (!variable->getAliases().empty()) {
 							std::ostream &stream = info() << "Aliases:";
 							for (Variable *alias: variable->getAliases())
 								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
 							stream << "\n";
-						} else if (variable->getParent() && !variable->getParent()->getAliases().empty()) {
+						} else if (sparent && !sparent->getAliases().empty()) {
 							// TODO: reduce code duplication
 							std::ostream &stream = info() << "Aliases:";
-							for (Variable *alias: variable->getParent()->getAliases())
+							for (Variable *alias: sparent->getAliases())
 								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
 							stream << "\n";
 						}
