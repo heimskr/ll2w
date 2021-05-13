@@ -7,6 +7,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
+#include "exception/NoChoiceError.h"
 #include "graph/UncolorableError.h"
 #include "pass/MakeCFG.h"
 #include "pass/SplitBlocks.h"
@@ -132,8 +133,8 @@ namespace LL2W {
 			}
 		}
 
-		if (highest_node == nullptr)
-			throw std::runtime_error("Couldn't find node with highest degree out of " +
+		if (!highest_node)
+			throw NoChoiceError("Couldn't find node with highest degree out of " +
 				std::to_string(interference.nodes().size()) + " node(s)");
 
 		std::vector<const Node *> all_highest;
@@ -161,6 +162,9 @@ namespace LL2W {
 				ptr = var;
 			}
 		}
+
+		if (!ptr)
+			throw NoChoiceError("Couldn't select lowest spill cost variable");
 
 		return ptr;
 	}
@@ -210,7 +214,7 @@ namespace LL2W {
 		}
 
 		if (!out)
-			throw std::runtime_error("Couldn't select a variable in ColoringAllocator::selectChaitin.");
+			throw NoChoiceError("Couldn't select a variable in ColoringAllocator::selectChaitin.");
 
 		return out;
 	}

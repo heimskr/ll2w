@@ -61,7 +61,8 @@ namespace LL2W {
 			size_t size() const { return instructions.size(); }
 
 			/** Inserts an instruction right before the basic block's terminal instruction.
-			 *  This function assumes that every basic block has exactly one terminal instruction. */
+			 *  This function assumes that every basic block has exactly one terminal instruction, but this assumption
+			 *  is false after lowering of terminal instructions. */
 			void insertBeforeTerminal(std::shared_ptr<Instruction>);
 
 			/** Returns the number of instructions in the basic block that define a variable. */

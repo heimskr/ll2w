@@ -1,5 +1,4 @@
-#ifndef EXCEPTION_TYPEERROR_H_
-#define EXCEPTION_TYPEERROR_H_
+#pragma once
 
 #include <stdexcept>
 #include "parser/Types.h"
@@ -15,5 +14,3 @@ namespace LL2W {
 			const char * what() const throw();
 	};
 }
-
-#endif
