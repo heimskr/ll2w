@@ -41,6 +41,7 @@
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
+#include "pass/IgnoreIntrinsics.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
 #include "pass/LoadArguments.h"
@@ -729,6 +730,7 @@ namespace LL2W {
 		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
+		Passes::ignoreIntrinsics(*this);
 		Passes::lowerObjectsize(*this);
 		Passes::lowerIcmp(*this);
 		Passes::lowerMath(*this);
