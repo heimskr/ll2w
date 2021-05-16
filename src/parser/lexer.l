@@ -143,6 +143,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!llvm.loop"				{ LLVMRTOKEN(LLVMLOOP) }
 "!dbg"						{ LLVMRTOKEN(DBG) }
 "!DIExpression"				{ LLVMRTOKEN(DIEXPRESSION) }
+"!DIGlobalVariable"			{ LLVMRTOKEN(DIGV) }
+"!DIGlobalVariableExpression" { LLVMRTOKEN(DIGVE) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -247,6 +249,14 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "dso_local"					{ LLVMRTOKEN(DSO_LOCAL) }
 "dso_preemptable"			{ LLVMRTOKEN(DSO_PREEMPTABLE) }
 "alias"						{ LLVMRTOKEN(ALIAS) }
+"var"						{ LLVMRTOKEN(VAR) }
+"expr"						{ LLVMRTOKEN(EXPR) }
+"name"						{ LLVMRTOKEN(NAME) }
+"scope"						{ LLVMRTOKEN(SCOPE) }
+"file"						{ LLVMRTOKEN(FILE) }
+"line"						{ LLVMRTOKEN(LINE) }
+"isLocal"					{ LLVMRTOKEN(ISLOCAL) }
+"isDefinition"				{ LLVMRTOKEN(ISDEFINITION) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 

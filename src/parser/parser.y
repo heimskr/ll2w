@@ -179,6 +179,16 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DBG_DECLARE "@llvm.dbg.declare"
 %token LLVMTOK_METADATA "metadata"
 %token LLVMTOK_DIEXPRESSION "!DIExpression"
+%token LLVMTOK_VAR "var"
+%token LLVMTOK_EXPR "expr"
+%token LLVMTOK_DIGV "!DIGlobalVariable"
+%token LLVMTOK_DIGVE "!DIGlobalVariableExpression"
+%token LLVMTOK_NAME "name"
+%token LLVMTOK_SCOPE "scope"
+%token LLVMTOK_FILE "file"
+%token LLVMTOK_LINE "line"
+%token LLVMTOK_ISLOCAL "isLocal"
+%token LLVMTOK_ISDEFINITION "isDefinition"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -260,7 +270,17 @@ source_filename: "source_filename" "=" LLVMTOK_STRING { D($1, $2); $$ = new AN(l
 target: LLVMTOK_TARGET target_type "=" LLVMTOK_STRING { $$ = $1->adopt({$2, $4}); }
 target_type: "datalayout" | "triple";
 
-metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}" { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); };
+metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
+              { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); }
+            | metabang "=" metadata_distinct "!DIGlobalVariableExpression" "(" "var" ":" LLVMTOK_INTBANG "," "expr" ":" diexpression ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
+            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG
+              "," "line" ":" LLVMTOK_DECIMAL "," "type" ":" LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33); }
+            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG
+              "," "line" ":" LLVMTOK_DECIMAL "," "type" ":" LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL "," "align" ":"
+              LLVMTOK_DECIMAL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }
