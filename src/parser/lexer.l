@@ -138,6 +138,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!prof"						{ LLVMRTOKEN(PROF) }
 "!callees"					{ LLVMRTOKEN(CALLEES) }
 "!llvm.loop"				{ LLVMRTOKEN(LLVMLOOP) }
+"!dbg"						{ LLVMRTOKEN(DBG) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }

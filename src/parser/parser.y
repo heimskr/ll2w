@@ -174,6 +174,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DSO_PREEMPTABLE "dso_preemptable"
 %token LLVMTOK_ALIAS "alias"
 %token LLVMTOK_LLVMLOOP "!llvm.loop"
+%token LLVMTOK_DBG "!dbg"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -291,6 +292,11 @@ fastmath_flags: fastmath_flags LLVMTOK_FASTMATH { $1->adopt($2); } | { $$ = new 
 
 comdat_def: LLVMTOK_IDENT "=" "comdat" LLVMTOK_COMDATTYPE { $$ = $3->adopt({$1, $4}); D($2); };
 
+debug: "!dbg" LLVMTOK_INTBANG { $$ = $1->adopt($2); };
+cdebug: "," debug { $$ = $2; D($1); };
+_debug: debug | { $$ = nullptr; };
+_cdebug: cdebug | { $$ = nullptr; };
+
 
 
 // Types
@@ -332,6 +338,7 @@ global_or_constant: "global" | "constant";
 gdef_extras: gdef_extras "," section { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," comdat  { $$ = $1->adopt($3); D($2); }
            | gdef_extras "," LLVMTOK_ALIGN LLVMTOK_DECIMAL { $$ = $1->adopt($3->adopt($4)); D($2); }
+           | gdef_extras cdebug { $$ = $1->adopt($2); }
            | { $$ = new AN(llvmParser, LLVM_GDEF_EXTRAS); };
 section: LLVMTOK_SECTION LLVMTOK_STRING       { $$ = $1->adopt($2); };
 comdat:  LLVMTOK_COMDAT "(" LLVMTOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }

@@ -24,10 +24,9 @@ void D(Args && ...args) {
 
 template <typename T>
 const LL2W::Location & L(std::initializer_list<const T *> nodes) {
-	for (const T *node: nodes) {
+	for (const T *node: nodes)
 		if (node)
 			return node->location;
-	}
 	throw std::runtime_error("Couldn't find location: all nodes are null");
 }
 

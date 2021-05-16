@@ -1,5 +1,4 @@
-#ifndef PARSER_STRINGSET_H_
-#define PARSER_STRINGSET_H_
+#pragma once
 
 #include <string>
 #include <unordered_set>
@@ -13,5 +12,3 @@ namespace LL2W {
 		static const std::string * intern(const std::string &);
 	};
 }
-
-#endif
