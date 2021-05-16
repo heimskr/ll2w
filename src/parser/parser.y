@@ -176,6 +176,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_LLVMLOOP "!llvm.loop"
 %token LLVMTOK_DBG "!dbg"
 %token LLVMTOK_DBG_VALUE "@llvm.dbg.value"
+%token LLVMTOK_DBG_DECLARE "@llvm.dbg.declare"
 %token LLVMTOK_METADATA "metadata"
 %token LLVMTOK_DIEXPRESSION "!DIExpression"
 
@@ -206,7 +207,7 @@ program: program source_filename { $1->adopt($2); }
        | { $$ = LL2W::llvmParser.root; };
 
 declaration: "declare" function_header { $1->adopt($2); }
-           | "declare" "void" "@llvm.dbg.value" "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
+           | "declare" "void" dbg_type "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); };
 
 
@@ -405,12 +406,13 @@ _alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
            | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable
-           | i_dbgvalue;
+           | i_dbg;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); }; // applicable to all instructions
 unibang: "," "!prof"      LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!callees"   LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
-       | "," "!llvm.loop" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
+       | "," "!llvm.loop" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | cdebug;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs
           { auto loc = $1->location; $$ = (new SelectNode($1, $3, $4, $5, $7, $8, $10, $11, $12))->locate(loc); D($2, $6, $9); };
@@ -430,7 +432,6 @@ store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); }
            | store_bangs tbaa            { $$ = $1->adopt($2); }
            | store_bangs nontemporal     { $$ = $1->adopt($2); }
            | store_bangs unibang         { $$ = $1->adopt($2); }
-           | store_bangs cdebug          { $$ = $1->setDebug($2); }
            | { $$ = new AN(llvmParser, LLVM_BANGS); };
 nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
@@ -447,8 +448,7 @@ load_bangs: load_bangs invariant_load  { $$ = $1->adopt($2); } | load_bangs nonn
           | load_bangs dereferenceable { $$ = $1->adopt($2); } | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
           | load_bangs bang_align      { $$ = $1->adopt($2); } | load_bangs tbaa                    { $$ = $1->adopt($2); }
           | load_bangs nontemporal     { $$ = $1->adopt($2); } | load_bangs invariant_group         { $$ = $1->adopt($2); }
-          | load_bangs unibang         { $$ = $1->adopt($2); } | load_bangs cdebug                  { $$ = $1->setDebug($2); }
-          | { $$ = new AN(llvmParser, LLVM_BANGS); };
+          | load_bangs unibang         { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); };
 invariant_load:          "," "!invariant.load"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 nonnull:                 "," "!nonnull"                 LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $2->adopt($3); D($1); };
@@ -468,8 +468,8 @@ label: "label" LLVMTOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args function_name "(" _constants ")" call_attrs unibangs
         { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
-      | _result _tail "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _srcloc unibangs
-        { auto loc = L({$1, $3, $4}); $$ = (new AsmNode($1, $4, $5, $6, $8, $9, $10, $11, $13, $15, $17, $18, $19))->locate(loc); D($3, $7, $12, $14, $16); };
+      | _result _tail "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _cdebug _srcloc unibangs
+        { auto loc = L({$1, $3, $4}); $$ = (new AsmNode($1, $4, $5, $6, $8, $9, $10, $11, $13, $15, $17, $19, $20))->locate(loc)->setDebug($18); D($3, $7, $12, $14, $16); };
 _result: result | { $$ = nullptr; };
 result: LLVMTOK_PVAR "=" { D($2); };
 _args: args | { $$ = nullptr; };
@@ -487,8 +487,9 @@ _inteldialect: LLVMTOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
-i_dbgvalue: "call" "void" "@llvm.dbg.value" "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" cdebug
+i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" cdebug
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14); };
+dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
        | "!" LLVMTOK_IDENT { $$ = $1->adopt($2); }
        | diexpression;
@@ -499,16 +500,16 @@ diexpression_list: diexpression_list "," diexpression_item { $$ = $1->adopt($3);
                  | diexpression_item { $$ = (new AN(llvmParser, LLVM_DIEXPRESSION_LIST))->adopt($1); };
 diexpression_item: LLVMTOK_IDENT | LLVMTOK_DECIMAL;
 
-i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs _cdebug
-               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc)->setDebug($9); D($2, $5); };
+i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
+               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(llvmParser, LLVM_INDEX_LIST); }
            | gep_indices "," _inrange type_any gep_index { $1->adopt($2->adopt({$4, $5, $3})); };
 gep_index: LLVMTOK_DECIMAL | LLVMTOK_PVAR;
 _inrange: LLVMTOK_INRANGE | { $$ = nullptr; };
 
-i_ret: "ret" type_nonvoid value unibangs _cdebug { $$ = (new RetNode($2, $3, $4))->locate($1)->setDebug($5); D($1); }
-     | "ret" "void" unibangs _cdebug { $$ = (new RetNode($3))->setDebug($4); D($1, $2); };
+i_ret: "ret" type_nonvoid value unibangs { $$ = (new RetNode($2, $3, $4))->locate($1); D($1); }
+     | "ret" "void" unibangs { $$ = new RetNode($3); D($1, $2); };
 
 i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
           /* TODO: operand bundles */ "to" label "unwind" label
@@ -568,8 +569,8 @@ i_insertvalue: result "insertvalue" type_any value "," type_any value decimals u
 i_resume: "resume" type_any value unibangs
           { $$ = new ResumeNode($2, $3, $4); D($1); };
 
-i_unreachable: "unreachable"
-               { $$ = new UnreachableNode(); D($1); };
+i_unreachable: "unreachable" _cdebug
+               { $$ = (new UnreachableNode())->setDebug($2); D($1); };
 
 // Constants
 

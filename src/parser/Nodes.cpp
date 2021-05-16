@@ -137,9 +137,11 @@ namespace LL2W {
 	void InstructionNode::handleUnibangs(ASTNode *unibangs) {
 		for (const ASTNode *sub: *unibangs) {
 			if (sub->symbol == LLVMTOK_PROF)
-				prof = sub->at(0)->atoi();
+				prof = sub->front()->atoi();
 			else if (sub->symbol == LLVMTOK_CALLEES)
-				callees = sub->at(0)->atoi();
+				callees = sub->front()->atoi();
+			else if (sub->symbol == LLVMTOK_DBG)
+				debugIndex = sub->front()->atoi();
 		}
 	}
 
