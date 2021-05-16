@@ -151,6 +151,19 @@ namespace LL2W {
 		return this;
 	}
 
+	ASTNode * ASTNode::setDebug(int new_index) {
+		debugIndex = new_index;
+		return this;
+	}
+
+	ASTNode * ASTNode::setDebug(ASTNode *node) {
+		if (node) {
+			debugIndex = node->front()->atoi();
+			delete node;
+		}
+		return this;
+	}
+
 	std::string ASTNode::concatenate() const {
 		if (symbol == LLVM_VECTOR) {
 			std::stringstream out;

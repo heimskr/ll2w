@@ -494,8 +494,8 @@ diexpression_list: diexpression_list "," diexpression_item { $$ = $1->adopt($3);
                  | diexpression_item { $$ = (new AN(llvmParser, LLVM_DIEXPRESSION_LIST))->adopt($1); };
 diexpression_item: LLVMTOK_IDENT | LLVMTOK_DECIMAL;
 
-i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
-               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
+i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs _cdebug
+               { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc)->setDebug($9); D($2, $5); };
 // TODO: vectors. <result> = getelementptr <ty>, <ptr vector> <ptrval>, [inrange] <vector index type> <idx>
 gep_indices: { $$ = new AN(llvmParser, LLVM_INDEX_LIST); }
            | gep_indices "," _inrange type_any gep_index { $1->adopt($2->adopt({$4, $5, $3})); };

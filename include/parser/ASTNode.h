@@ -56,6 +56,9 @@ namespace LL2W {
 			/** Copies the location from the first node in the list that isn't null. */
 			ASTNode * locate(std::initializer_list<const ASTNode *>);
 			ASTNode * locate(const Location &);
+			ASTNode * setDebug(int);
+			/** Copies the debug index from and deletes the given "!dbg" node. */
+			ASTNode * setDebug(ASTNode *);
 			/** Concatenates the lexerInfo fields of every element of the children vector. */
 			std::string concatenate() const;
 			long atoi() const;
