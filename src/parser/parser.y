@@ -424,8 +424,11 @@ _alloca_addrspace: "," "addrspace" "(" LLVMTOK_DECIMAL ")" { $$ = $4; D($1, $2, 
 i_store: "store" _volatile constant "," constant _align store_bangs
          { $$ = (new StoreNode($2, $3, $5, $6, $7))->locate($1); D($1, $4); };
 _volatile: LLVMTOK_VOLATILE | { $$ = nullptr; };
-store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); } | store_bangs tbaa    { $$ = $1->adopt($2); }
-           | store_bangs nontemporal     { $$ = $1->adopt($2); } | store_bangs unibang { $$ = $1->adopt($2); }
+store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); }
+           | store_bangs tbaa            { $$ = $1->adopt($2); }
+           | store_bangs nontemporal     { $$ = $1->adopt($2); }
+           | store_bangs unibang         { $$ = $1->adopt($2); }
+           | store_bangs cdebug          { $$ = $1->setDebug($2); }
            | { $$ = new AN(llvmParser, LLVM_BANGS); };
 nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
@@ -502,7 +505,8 @@ gep_indices: { $$ = new AN(llvmParser, LLVM_INDEX_LIST); }
 gep_index: LLVMTOK_DECIMAL | LLVMTOK_PVAR;
 _inrange: LLVMTOK_INRANGE | { $$ = nullptr; };
 
-i_ret: "ret" type_nonvoid value unibangs { $$ = (new RetNode($2, $3, $4))->locate($1); D($1); } | "ret" "void" unibangs { $$ = new RetNode($3); D($1, $2); };
+i_ret: "ret" type_nonvoid value unibangs _cdebug { $$ = (new RetNode($2, $3, $4))->locate($1)->setDebug($5); D($1); }
+     | "ret" "void" unibangs _cdebug { $$ = (new RetNode($3))->setDebug($4); D($1, $2); };
 
 i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
           /* TODO: operand bundles */ "to" label "unwind" label

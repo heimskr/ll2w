@@ -277,6 +277,8 @@ namespace LL2W {
 			delete align_;
 		}
 
+		debugIndex = bangs->debugIndex;
+
 		handleBangs(bangs);
 	}
 
