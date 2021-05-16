@@ -97,6 +97,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 [ \t]+						{ }
 \n							{ LL2W::llvmLexer.newline(); }
 
+"@llvm.dbg.value"           { LLVMRTOKEN(DBG_VALUE) }
+
 {LLVM_UNIONVAR}				{ LLVMRTOKEN(UNIONVAR) }
 {LLVM_CLASSVAR}				{ LLVMRTOKEN(CLASSVAR) }
 {LLVM_STRUCTVAR}			{ LLVMRTOKEN(STRUCTVAR) }
@@ -139,6 +141,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!callees"					{ LLVMRTOKEN(CALLEES) }
 "!llvm.loop"				{ LLVMRTOKEN(LLVMLOOP) }
 "!dbg"						{ LLVMRTOKEN(DBG) }
+"!DIExpression"				{ LLVMRTOKEN(DIEXPRESSION) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -150,6 +153,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "="							{ LLVMRTOKEN(EQUALS) }
 "source_filename"			{ LLVMRTOKEN(SOURCE_FILENAME) }
 "patchable-function=\"prologue-short-redirect\"" { LLVMRTOKEN(PATCHABLE_PROLOGUE) }
+"metadata"					{ LLVMRTOKEN(METADATA) }
 {LLVM_CSTRING}				{ LLVMRTOKEN(CSTRING) }
 {LLVM_STRING}				{ LLVMRTOKEN(STRING) }
 "target"					{ LLVMRTOKEN(TARGET) }

@@ -12,7 +12,7 @@
 namespace LL2W {
 	FunctionHeader::FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv,
 	                               N _retattrs, N type, N function_name, N function_args, N unnamed_addr, N _fnattrs,
-	                               N _section, N _comdat, N _align, N _personality):
+	                               N _section, N _comdat, N _align, N _personality, N debug):
 	ASTNode(llvmParser, LLVM_FUNCTION_HEADER, function_name->lexerInfo),
 	arguments(dynamic_cast<FunctionArgs *>(function_args)) {
 		name = StringSet::intern(function_name->extractName());
@@ -88,6 +88,11 @@ namespace LL2W {
 				}
 			}
 			delete _retattrs;
+		}
+
+		if (debug) {
+			debugIndex = debug->front()->atoi();
+			delete debug;
 		}
 
 		returnType = getType(type);

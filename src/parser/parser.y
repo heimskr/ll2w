@@ -54,7 +54,7 @@ using AN = LL2W::ASTNode;
 }
 
 %token LLVMTOK_ROOT LLVMTOK_STRING LLVMTOK_PERCENTID LLVMTOK_INTTYPE LLVMTOK_DECIMAL LLVMTOK_FLOATING LLVMTOK_IDENT
-%token LLVMTOK_METABANG LLVMTOK_PARATTR LLVMTOK_METADATA LLVMTOK_CSTRING LLVMTOK_PVAR LLVMTOK_GVAR LLVMTOK_FLOATTYPE
+%token LLVMTOK_METABANG LLVMTOK_PARATTR LLVMTOK_CSTRING LLVMTOK_PVAR LLVMTOK_GVAR LLVMTOK_FLOATTYPE
 %token LLVMTOK_DLLPORT LLVMTOK_BOOL LLVMTOK_RETATTR LLVMTOK_UNNAMED_ADDR_TYPE LLVMTOK_DEREF LLVMTOK_LINKAGE
 %token LLVMTOK_FNATTR_BASIC LLVMTOK_CCONV LLVMTOK_VISIBILITY LLVMTOK_FASTMATH LLVMTOK_STRUCTVAR LLVMTOK_CLASSVAR
 %token LLVMTOK_UNIONVAR LLVMTOK_INTBANG LLVMTOK_ORDERING LLVMTOK_ICMP_COND LLVMTOK_LABEL_COMMENT LLVMTOK_PREDS_COMMENT
@@ -175,6 +175,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_ALIAS "alias"
 %token LLVMTOK_LLVMLOOP "!llvm.loop"
 %token LLVMTOK_DBG "!dbg"
+%token LLVMTOK_DBG_VALUE "@llvm.dbg.value"
+%token LLVMTOK_METADATA "metadata"
+%token LLVMTOK_DIEXPRESSION "!DIExpression"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -182,7 +185,7 @@ using AN = LL2W::ASTNode;
 %token LLVM_FUNCTION_DEF LLVM_STATEMENTS LLVM_LABEL LLVM_INSTRUCTION LLVM_FASTMATH_FLAGS LLVM_VECTOR LLVM_METADATA_LIST
 %token LLVM_PREDS_LIST LLVM_FNTYPE LLVM_CONSTANT_LIST LLVM_GETELEMENTPTR_EXPR LLVM_DECIMAL_LIST LLVM_INDEX_LIST
 %token LLVM_STRUCT_VALUE LLVM_VALUE_LIST LLVM_ARRAY_VALUE LLVM_CLAUSES LLVM_GLOBAL_DEF LLVM_PHI_PAIR LLVM_SWITCH_LIST
-%token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF
+%token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF LLVM_METADATA LLVM_DIEXPRESSION_LIST
 
 %start start
 
@@ -349,8 +352,8 @@ comdat:  LLVMTOK_COMDAT "(" LLVMTOK_IDENT ")" { $$ = $1->adopt($3); D($2, $4); }
 // Functions
 
 function_header: _linkage _preemption _visibility _dll_storage_class _cconv _retattrs type_any function_name "("
-                 function_args ")" _unnamed_addr _fnattrs _header_section _header_comdat _header_align _personality
-                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15, $16, $17); D($9, $11); };
+                 function_args ")" _unnamed_addr _fnattrs _header_section _header_comdat _header_align _personality _debug
+                 { $$ = new FunctionHeader($1, $2, $3, $4, $5, $6, $7, $8, $10, $12, $13, $14, $15, $16, $17, $18); D($9, $11); };
 _preemption: preemption | { $$ = nullptr; };
 preemption: "dso_preemptable" | "dso_local";
 _retattrs: _retattrs retattr { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_RETATTR_LIST); };
@@ -386,7 +389,6 @@ preds_list: preds_list LLVMTOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(llvmParser, LLVM_PREDS_LIST); };
 
 
-
 // Aliases
 
 alias_def: LLVMTOK_GVAR "=" _alias_linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr
@@ -400,7 +402,8 @@ _alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
-           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable;
+           | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable
+           | i_dbgvalue;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); }; // applicable to all instructions
 unibang: "," "!prof"      LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
@@ -478,6 +481,18 @@ _alignstack:   LLVMTOK_ALIGNSTACK   | { $$ = nullptr; };
 _inteldialect: LLVMTOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
+
+i_dbgvalue: "call" "void" "@llvm.dbg.value" "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" cdebug
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14); };
+anybang: LLVMTOK_INTBANG
+       | "!" LLVMTOK_IDENT { $$ = $1->adopt($2); }
+       | diexpression;
+
+diexpression: "!DIExpression" "(" diexpression_list ")" { $$ = $1->adopt($3); D($2, $4); }
+            | "!DIExpression" "(" ")" { $$ = $1; D($2, $3); };
+diexpression_list: diexpression_list "," diexpression_item { $$ = $1->adopt($3); D($2); }
+                 | diexpression_item { $$ = (new AN(llvmParser, LLVM_DIEXPRESSION_LIST))->adopt($1); };
+diexpression_item: LLVMTOK_IDENT | LLVMTOK_DECIMAL;
 
 i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };

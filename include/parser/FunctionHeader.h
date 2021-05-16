@@ -1,5 +1,4 @@
-#ifndef PARSER_FUNCTIONHEADER_H_
-#define PARSER_FUNCTIONHEADER_H_
+#pragma once
 
 #include <memory>
 #include <unordered_set>
@@ -28,15 +27,12 @@ namespace LL2W {
 		ConstantPtr personality;
 		const std::string *section = nullptr, *comdat = nullptr;
 
-		
 		using N = ASTNode *;
 		FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
 		               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _section, N _comdat, N _align,
-		               N _personality);
+		               N _personality, N debug);
 
 		std::string debugExtra() const override;
 		virtual std::string style() const override { return "\e[38;5;202m"; }
 	};
 }
-
-#endif

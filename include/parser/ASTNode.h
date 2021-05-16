@@ -29,6 +29,7 @@ namespace LL2W {
 			const std::string *lexerInfo;
 			ASTNode *parent = nullptr;
 			std::list<ASTNode *> children;
+			int debugIndex = -1;
 
 			ASTNode(Parser &, int sym, const Location &loc, const char *info);
 			ASTNode(Parser &, int sym, const Location &loc, const std::string *info);
