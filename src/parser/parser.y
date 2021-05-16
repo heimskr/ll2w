@@ -189,6 +189,19 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_LINE "line"
 %token LLVMTOK_ISLOCAL "isLocal"
 %token LLVMTOK_ISDEFINITION "isDefinition"
+%token LLVMTOK_DICU "!DICompileUnit"
+%token LLVMTOK_LANGUAGE "language"
+%token LLVMTOK_PRODUCER "producer"
+%token LLVMTOK_ISOPTIMIZED "isOptimized"
+%token LLVMTOK_RUNTIMEVERSION "runtimeVersion"
+%token LLVMTOK_EMISSIONKIND "emissionKind"
+%token LLVMTOK_ENUMS "enums"
+%token LLVMTOK_RETAINEDTYPES "retainedTypes"
+%token LLVMTOK_GLOBALS "globals"
+%token LLVMTOK_IMPORTS "imports"
+%token LLVMTOK_SPLITDEBUGINLINING "splitDebugInlining"
+%token LLVMTOK_NAMETABLEKIND "nameTableKind"
+%token LLVMTOK_NONE "None"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -272,15 +285,30 @@ target_type: "datalayout" | "triple";
 
 metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); }
-            | metabang "=" metadata_distinct "!DIGlobalVariableExpression" "(" "var" ":" LLVMTOK_INTBANG "," "expr" ":" diexpression ")"
+            | metabang "=" metadata_distinct "!DIGlobalVariableExpression" "(" "var" ":" LLVMTOK_INTBANG "," "expr" ":"
+              diexpression ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
-            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG
-              "," "line" ":" LLVMTOK_DECIMAL "," "type" ":" LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL ")"
+            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":"
+              LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL "," "type" ":"
+              LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33); }
-            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG
-              "," "line" ":" LLVMTOK_DECIMAL "," "type" ":" LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL "," "align" ":"
+            | metabang "=" metadata_distinct "!DIGlobalVariable" "(" "name" ":" LLVMTOK_STRING "," "scope" ":"
+              LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL "," "type" ":"
+              LLVMTOK_INTBANG "," "isLocal" ":" LLVMTOK_BOOL "," "isDefinition" ":" LLVMTOK_BOOL "," "align" ":"
               LLVMTOK_DECIMAL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37); };
+            | metabang "=" metadata_distinct "!DICompileUnit" "(" "language" ":" LLVMTOK_IDENT "," "file" ":"
+              LLVMTOK_INTBANG "," "producer" ":" LLVMTOK_STRING "," "isOptimized" ":" LLVMTOK_BOOL "," "runtimeVersion"
+              ":" LLVMTOK_DECIMAL "," "emissionKind" ":" LLVMTOK_IDENT "," "enums" ":" LLVMTOK_INTBANG ","
+              "retainedTypes" ":" LLVMTOK_INTBANG "," "globals" ":" LLVMTOK_INTBANG "," "imports" ":" LLVMTOK_INTBANG
+              "," "splitDebugInlining" ":" LLVMTOK_BOOL "," "nameTableKind" ":" "None" ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53); };
+
+
+// !2 = distinct !DICompileUnit(language: DW_LANG_C_plus_plus_14, file: !3, producer: "Ubuntu clang version 11.0.0-2",
+// isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, retainedTypes: !5, globals: !9, imports: !10,
+// splitDebugInlining: false, nameTableKind: None)
+
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }

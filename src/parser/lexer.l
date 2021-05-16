@@ -145,6 +145,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DIExpression"				{ LLVMRTOKEN(DIEXPRESSION) }
 "!DIGlobalVariable"			{ LLVMRTOKEN(DIGV) }
 "!DIGlobalVariableExpression" { LLVMRTOKEN(DIGVE) }
+"!DICompileUnit"			{ LLVMRTOKEN(DICU) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -257,6 +258,18 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "line"						{ LLVMRTOKEN(LINE) }
 "isLocal"					{ LLVMRTOKEN(ISLOCAL) }
 "isDefinition"				{ LLVMRTOKEN(ISDEFINITION) }
+"language"					{ LLVMRTOKEN(LANGUAGE) }
+"producer"					{ LLVMRTOKEN(PRODUCER) }
+"isOptimized"				{ LLVMRTOKEN(ISOPTIMIZED) }
+"runtimeVersion"			{ LLVMRTOKEN(RUNTIMEVERSION) }
+"emissionKind"				{ LLVMRTOKEN(EMISSIONKIND) }
+"enums"						{ LLVMRTOKEN(ENUMS) }
+"retainedTypes"				{ LLVMRTOKEN(RETAINEDTYPES) }
+"globals"					{ LLVMRTOKEN(GLOBALS) }
+"imports"					{ LLVMRTOKEN(IMPORTS) }
+"splitDebugInlining"		{ LLVMRTOKEN(SPLITDEBUGINLINING) }
+"nameTableKind"				{ LLVMRTOKEN(NAMETABLEKIND) }
+"None"						{ LLVMRTOKEN(NONE) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
