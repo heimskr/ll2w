@@ -31,6 +31,8 @@ namespace LL2W {
 		}
 
 		for (ASTNode *node: root) {
+			if (!node)
+				continue;
 			switch (node->symbol) {
 				case LLVM_FUNCTION_DEF:
 					functions.emplace(*node->lexerInfo, new Function(*this, *node));

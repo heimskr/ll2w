@@ -277,8 +277,6 @@ namespace LL2W {
 			delete align_;
 		}
 
-		debugIndex = bangs->debugIndex;
-
 		handleBangs(bangs);
 	}
 
@@ -314,6 +312,7 @@ namespace LL2W {
 	}
 
 	void StoreNode::handleBangs(ASTNode *bangs) {
+		debugIndex = bangs->debugIndex;
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
 			if (sub->symbol == LLVMTOK_NONTEMPORAL)
@@ -417,6 +416,7 @@ namespace LL2W {
 	}
 
 	void LoadNode::handleBangs(ASTNode *bangs) {
+		debugIndex = bangs->debugIndex;
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
 			if (sub->symbol == LLVMTOK_NONTEMPORAL)

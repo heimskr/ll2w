@@ -205,7 +205,9 @@ program: program source_filename { $1->adopt($2); }
        | program alias_def       { $1->adopt($2); }
        | { $$ = LL2W::llvmParser.root; };
 
-declaration: "declare" function_header { $1->adopt($2); };
+declaration: "declare" function_header { $1->adopt($2); }
+           | "declare" "void" "@llvm.dbg.value" "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
+             { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); };
 
 
 
@@ -445,7 +447,7 @@ load_bangs: load_bangs invariant_load  { $$ = $1->adopt($2); } | load_bangs nonn
           | load_bangs dereferenceable { $$ = $1->adopt($2); } | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
           | load_bangs bang_align      { $$ = $1->adopt($2); } | load_bangs tbaa                    { $$ = $1->adopt($2); }
           | load_bangs nontemporal     { $$ = $1->adopt($2); } | load_bangs invariant_group         { $$ = $1->adopt($2); }
-          | load_bangs unibang         { $$ = $1->adopt($2); }
+          | load_bangs unibang         { $$ = $1->adopt($2); } | load_bangs cdebug                  { $$ = $1->setDebug($2); }
           | { $$ = new AN(llvmParser, LLVM_BANGS); };
 invariant_load:          "," "!invariant.load"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 nonnull:                 "," "!nonnull"                 LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
