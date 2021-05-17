@@ -151,6 +151,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DIBasicType"				{ LLVMRTOKEN(DIBT) }
 "!DIImportedEntity"			{ LLVMRTOKEN(DIIE) }
 "!DINamespace"				{ LLVMRTOKEN(DINAMESPACE) }
+"!DICompositeType"			{ LLVMRTOKEN(DICT) }
+"!DISubroutineType"			{ LLVMRTOKEN(DIST) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -192,6 +194,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "#"							{ LLVMRTOKEN(HASH) }
 ":"							{ LLVMRTOKEN(COLON) }
 "undef"						{ LLVMRTOKEN(UNDEF) }
+"|"							{ LLVMRTOKEN(PIPE) }
 
 "select"					{ LLVMRTOKEN(SELECT) }
 "alloca"					{ LLVMRTOKEN(ALLOCA) }
@@ -282,6 +285,10 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "size"						{ LLVMRTOKEN(SIZE) }
 "encoding"					{ LLVMRTOKEN(ENCODING) }
 "entity"					{ LLVMRTOKEN(ENTITY) }
+"flags"						{ LLVMRTOKEN(FLAGS) }
+"elements"					{ LLVMRTOKEN(ELEMENTS) }
+"identifier"				{ LLVMRTOKEN(IDENTIFIER) }
+"types"						{ LLVMRTOKEN(TYPES) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
