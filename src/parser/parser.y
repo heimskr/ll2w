@@ -205,6 +205,10 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DIFILE "!DIFile"
 %token LLVMTOK_FILENAME "filename"
 %token LLVMTOK_DIRECTORY "directory"
+%token LLVMTOK_DIDT "!DIDerivedType"
+%token LLVMTOK_TAG "tag"
+%token LLVMTOK_BASETYPE "baseType"
+%token LLVMTOK_SIZE "size"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -308,7 +312,11 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53); }
             | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":"
               LLVMTOK_STRING ")"
-              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); };
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); }
+            | metabang "=" metadata_distinct "!DIDerivedType" "(" "tag" ":" LLVMTOK_IDENT "," "baseType" ":" LLVMTOK_INTBANG _didt_size ")"
+              { D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $14); };
+
+_didt_size: "," "size" ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3, $4); } | { $$ = nullptr; };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }

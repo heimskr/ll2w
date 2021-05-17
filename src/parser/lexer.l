@@ -147,6 +147,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DIGlobalVariableExpression" { LLVMRTOKEN(DIGVE) }
 "!DICompileUnit"			{ LLVMRTOKEN(DICU) }
 "!DIFile"					{ LLVMRTOKEN(DIFILE) }
+"!DIDerivedType"			{ LLVMRTOKEN(DIDT) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -273,6 +274,9 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "None"						{ LLVMRTOKEN(NONE) }
 "filename"					{ LLVMRTOKEN(FILENAME) }
 "directory"					{ LLVMRTOKEN(DIRECTORY) }
+"tag"						{ LLVMRTOKEN(TAG) }
+"baseType"					{ LLVMRTOKEN(BASETYPE) }
+"size"						{ LLVMRTOKEN(SIZE) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 

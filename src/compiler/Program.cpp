@@ -59,6 +59,9 @@ namespace LL2W {
 				case LLVM_ALIAS_DEF:
 					aliases.emplace(node->lexerInfo, dynamic_cast<AliasDef *>(node));
 					break;
+				case LLVMTOK_DIFILE:
+					// TODO!
+					break;
 			}
 		}
 	}
