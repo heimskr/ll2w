@@ -63,7 +63,7 @@ namespace LL2W {
 				case LLVMTOK_DIFILE:
 					files.emplace(node->front()->atoi(), File(node->at(1)->unquote(), node->at(2)->unquote()));
 					break;
-				case LLVMTOK_DILOCATION:
+				case LLVMTOK_DILOCATION: {
 					int index = node->front()->atoi(), line = -1, column = 0, scope = -1;
 					for (ASTNode *item: *node->at(1))
 						switch (item->symbol) {
@@ -76,6 +76,7 @@ namespace LL2W {
 						}
 					locations.emplace(index, Location(line, column, scope));
 					break;
+				}
 			}
 		}
 	}
