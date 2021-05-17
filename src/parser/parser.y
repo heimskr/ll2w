@@ -234,6 +234,8 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_EXTRADATA "extraData"
 %token LLVMTOK_DILV "!DILocalVariable"
 %token LLVMTOK_ARG "arg"
+%token LLVMTOK_DILOCATION "!DILocation"
+%token LLVMTOK_COLUMN "column"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -243,6 +245,7 @@ using AN = LL2W::ASTNode;
 %token LLVM_STRUCT_VALUE LLVM_VALUE_LIST LLVM_ARRAY_VALUE LLVM_CLAUSES LLVM_GLOBAL_DEF LLVM_PHI_PAIR LLVM_SWITCH_LIST
 %token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF LLVM_METADATA LLVM_DIEXPRESSION_LIST
 %token LLVM_DIDT_LIST LLVM_PIPE_LIST LLVM_DICT_LIST LLVM_DICU_LIST LLVM_DISUBPROGRAM_LIST LLVM_DILV_LIST
+%token LLVM_DILOCATION_LIST
 
 %start start
 
@@ -355,7 +358,9 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DISubprogram" "(" disubprogram_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DILocalVariable" "(" dilv_list ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); };
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
+            | metabang "=" metadata_distinct "!DILocation" "(" dilocation_list ")"
+              { $$ = $4->adopt($6); D($1, $2, $3, $5, $7); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
@@ -420,6 +425,11 @@ dilv_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
          | "flags" ":" pipe_list       { $$ = $1->adopt($3); D($2); };
 dilv_list: dilv_list "," dilv_item { $$ = $1->adopt($3); D($2); }
          | dilv_item { $$ = (new AN(llvmParser, LLVM_DILV_LIST))->adopt($1); };
+dilocation_item: "line"   ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+               | "scope"  ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+               | "column" ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
+dilocation_list: dilocation_list "," dilocation_item { $$ = $1->adopt($3); D($2); }
+         | dilocation_item { $$ = (new AN(llvmParser, LLVM_DILOCATION_LIST))->adopt($1); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }
