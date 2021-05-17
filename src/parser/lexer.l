@@ -291,6 +291,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "identifier"				{ LLVMRTOKEN(IDENTIFIER) }
 "types"						{ LLVMRTOKEN(TYPES) }
 "count"						{ LLVMRTOKEN(COUNT) }
+"offset"					{ LLVMRTOKEN(OFFSET) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
