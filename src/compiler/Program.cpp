@@ -77,6 +77,10 @@ namespace LL2W {
 					locations.emplace(index, Location(line, column, scope));
 					break;
 				}
+				case LLVMTOK_DISUBPROGRAM: {
+					subprograms.emplace(node->front()->atoi(), Subprogram(*node->at(1)));
+					break;
+				}
 			}
 		}
 	}
