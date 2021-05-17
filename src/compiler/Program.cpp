@@ -60,7 +60,7 @@ namespace LL2W {
 					aliases.emplace(node->lexerInfo, dynamic_cast<AliasDef *>(node));
 					break;
 				case LLVMTOK_DIFILE:
-					// TODO!
+					files.emplace(node->front()->atoi(), File(node->at(1)->unquote(), node->at(2)->unquote()));
 					break;
 			}
 		}

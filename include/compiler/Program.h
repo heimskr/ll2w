@@ -1,10 +1,10 @@
-#ifndef COMPILER_PROGRAM_H_
-#define COMPILER_PROGRAM_H_
+#pragma once
 
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
 
+#include "compiler/File.h"
 #include "compiler/Function.h"
 #include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
@@ -21,6 +21,7 @@ namespace LL2W {
 			std::map<int, std::unordered_set<FnAttr>> fnattrs;
 			std::map<int, std::unordered_set<ParAttr>> parattrs;
 			std::unordered_map<const std::string *, AliasDef *> aliases;
+			std::map<int, File> files;
 
 			Program(const ASTNode &);
 			~Program();
@@ -42,5 +43,3 @@ namespace LL2W {
 			void debug();
 	};
 }
-
-#endif

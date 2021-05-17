@@ -63,6 +63,7 @@ namespace LL2W {
 			std::string concatenate() const;
 			long atoi() const;
 			long atoi(int offset) const;
+			std::string unquote() const;
 			bool isType() const;
 			bool isValue() const;
 			const char * getName() const;

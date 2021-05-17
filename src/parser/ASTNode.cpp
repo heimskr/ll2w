@@ -196,7 +196,7 @@ namespace LL2W {
 	}
 
 	long ASTNode::atoi() const {
-		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_INTBANG)
+		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_INTBANG || symbol == LLVMTOK_METABANG)
 			return atoi(1);
 		if (lexerInfo->substr(0, 2) == "0x")
 			return Util::parseLong(lexerInfo->substr(2), 16);
@@ -205,6 +205,12 @@ namespace LL2W {
 
 	long ASTNode::atoi(int offset) const {
 		return Util::parseLong(lexerInfo->substr(offset));
+	}
+
+	std::string ASTNode::unquote() const {
+		if (lexerInfo->size() < 2 || lexerInfo->front() != '"' || lexerInfo->back() != '"')
+			throw std::runtime_error("Not a quoted string: " + *lexerInfo);
+		return lexerInfo->substr(1, lexerInfo->size() - 2);
 	}
 
 	bool ASTNode::isType() const {
