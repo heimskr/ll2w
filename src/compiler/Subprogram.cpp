@@ -4,7 +4,7 @@
 
 namespace LL2W {
 	Subprogram::Subprogram(const ASTNode &node) {
-		for (const ASTNode *subnode: node) {
+		for (const ASTNode *subnode: node)
 			switch (subnode->symbol) {
 				case LLVMTOK_NAME:
 					name = *subnode->front()->lexerInfo;
@@ -37,7 +37,6 @@ namespace LL2W {
 					retainedNodes = parseBang(*subnode->front());
 					break;
 			}
-		}
 	}
 
 	int Subprogram::parseBang(const ASTNode &node) {
