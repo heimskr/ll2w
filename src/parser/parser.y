@@ -221,6 +221,8 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_PIPE "|"
 %token LLVMTOK_DIST "!DISubroutineType"
 %token LLVMTOK_TYPES "types"
+%token LLVMTOK_DISUBRANGE "!DISubrange"
+%token LLVMTOK_COUNT "count"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -340,6 +342,8 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DICompositeType" "(" dict_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DISubroutineType" "(" "types" ":" LLVMTOK_INTBANG ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
+            | metabang "=" metadata_distinct "!DISubrange" "(" "count" ":" LLVMTOK_DECIMAL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); };
 
 didt_item: "size"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
