@@ -9,23 +9,23 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	Location::operator std::string() const {
+	ASTLocation::operator std::string() const {
 		return std::to_string(line + 1) + ":" + std::to_string(column);
 	}
 
-	std::ostream & operator<<(std::ostream &os, const Location &location) {
+	std::ostream & operator<<(std::ostream &os, const ASTLocation &location) {
 		os << std::string(location);
 		return os;
 	}
 
-	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc, const char *info) {
+	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const char *info) {
 		parser = &parser_;
 		symbol = sym;
 		location = loc;
 		lexerInfo = StringSet::intern(info);
 	}
 
-	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc, const std::string *info):
+	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const std::string *info):
 		parser(&parser_), symbol(sym), location(loc), lexerInfo(info) {}
 
 	ASTNode::ASTNode(Parser &parser_, int sym, const std::string *info):
@@ -38,7 +38,7 @@ namespace LL2W {
 		lexerInfo = StringSet::intern(info);
 	}
 
-	ASTNode::ASTNode(Parser &parser_, int sym, const Location &loc): ASTNode(parser_, sym, loc, "") {}
+	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc): ASTNode(parser_, sym, loc, "") {}
 
 	ASTNode::ASTNode(Parser &parser_, int sym): ASTNode(parser_, sym, "") {}
 
@@ -146,7 +146,7 @@ namespace LL2W {
 		return this;
 	}
 
-	ASTNode * ASTNode::locate(const Location &loc) {
+	ASTNode * ASTNode::locate(const ASTLocation &loc) {
 		location = loc;
 		return this;
 	}

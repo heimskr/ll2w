@@ -60,7 +60,7 @@ void llvmerror(const char *message) {
 	llvmerror(std::string(message), LL2W::llvmLexer.location);
 }
 
-void llvmerror(const std::string &message, const LL2W::Location &location) {
+void llvmerror(const std::string &message, const LL2W::ASTLocation &location) {
 	std::cerr << "\e[31mLLVM IR error at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
 	++LL2W::llvmParser.errorCount;
 	LL2W::llvmLexer.errors.push_back({message, location});
@@ -74,7 +74,7 @@ void wasmerror(const std::string &message) {
 	wasmerror(message, LL2W::wasmLexer.location);
 }
 
-void wasmerror(const std::string &message, const LL2W::Location &location) {
+void wasmerror(const std::string &message, const LL2W::ASTLocation &location) {
 	std::cerr << LL2W::wasmParser.getBuffer() << "\n";
 	std::cerr << "\e[31mWASM error at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
 	++LL2W::wasmParser.errorCount;

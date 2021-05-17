@@ -46,12 +46,12 @@ namespace LL2W {
 			ASTNode **lval;
 
 		public:
-			Location location = {0, 1};
+			ASTLocation location = {0, 1};
 			std::string line;
 			yysize lastYylength = 0;
 			std::unordered_map<int, std::string> lines;
 			bool failed = false;
-			std::vector<std::pair<std::string, Location>> errors;
+			std::vector<std::pair<std::string, ASTLocation>> errors;
 
 			Lexer(Parser &, yysize &, ASTNode *&);
 			const std::string * filename(int fileno);
@@ -71,9 +71,9 @@ int wasmlex();
 int wasmlex_destroy();
 int wasmparse();
 void llvmerror(const char *);
-void llvmerror(const std::string &, const LL2W::Location &);
+void llvmerror(const std::string &, const LL2W::ASTLocation &);
 void wasmerror(const char *);
 void wasmerror(const std::string &);
-void wasmerror(const std::string &, const LL2W::Location &);
+void wasmerror(const std::string &, const LL2W::ASTLocation &);
 
 #endif

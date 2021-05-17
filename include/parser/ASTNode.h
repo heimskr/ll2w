@@ -7,14 +7,14 @@
 #include <string>
 
 namespace LL2W {
-	struct Location {
+	struct ASTLocation {
 		size_t line;
 		size_t column;
 
 		operator std::string() const;
 	};
 
-	std::ostream & operator<<(std::ostream &, const Location &);
+	std::ostream & operator<<(std::ostream &, const ASTLocation &);
 
 	class Parser;
 
@@ -25,17 +25,17 @@ namespace LL2W {
 		public:
 			Parser *parser;
 			int symbol;
-			Location location;
+			ASTLocation location;
 			const std::string *lexerInfo;
 			ASTNode *parent = nullptr;
 			std::list<ASTNode *> children;
 			int debugIndex = -1;
 
-			ASTNode(Parser &, int sym, const Location &loc, const char *info);
-			ASTNode(Parser &, int sym, const Location &loc, const std::string *info);
+			ASTNode(Parser &, int sym, const ASTLocation &loc, const char *info);
+			ASTNode(Parser &, int sym, const ASTLocation &loc, const std::string *info);
 			ASTNode(Parser &, int sym, const char *info);
 			ASTNode(Parser &, int sym, const std::string *info);
-			ASTNode(Parser &, int sym, const Location &loc);
+			ASTNode(Parser &, int sym, const ASTLocation &loc);
 			ASTNode(Parser &, int sym);
 			/** Constructs an ASTNode that adopts another node and copies its location. */
 			ASTNode(Parser &, int sym, ASTNode *, const char *info = "");
@@ -55,7 +55,7 @@ namespace LL2W {
 			ASTNode * locate(const ASTNode *);
 			/** Copies the location from the first node in the list that isn't null. */
 			ASTNode * locate(std::initializer_list<const ASTNode *>);
-			ASTNode * locate(const Location &);
+			ASTNode * locate(const ASTLocation &);
 			ASTNode * setDebug(int);
 			/** Copies the debug index from and deletes the given "!dbg" node. */
 			ASTNode * setDebug(ASTNode *);

@@ -8,6 +8,7 @@
 #include "compiler/BasicBlock.h"
 #include "compiler/Program.h"
 #include "parser/ASTNode.h"
+#include "parser/Parser.h"
 #include "parser/StructNode.h"
 #include "util/Util.h"
 
@@ -61,6 +62,19 @@ namespace LL2W {
 					break;
 				case LLVMTOK_DIFILE:
 					files.emplace(node->front()->atoi(), File(node->at(1)->unquote(), node->at(2)->unquote()));
+					break;
+				case LLVMTOK_DILOCATION:
+					int index = node->front()->atoi(), line = -1, column = 0, scope = -1;
+					for (ASTNode *item: *node->at(1))
+						switch (item->symbol) {
+							case LLVMTOK_LINE:   line   = item->front()->atoi(); break;
+							case LLVMTOK_COLUMN: column = item->front()->atoi(); break;
+							case LLVMTOK_SCOPE:  scope  = item->front()->atoi(); break;
+							default:
+								throw std::runtime_error("Invalid symbol in DILocation item: " +
+									std::string(llvmParser.getName(item->symbol)));
+						}
+					locations.emplace(index, Location(line, column, scope));
 					break;
 			}
 		}

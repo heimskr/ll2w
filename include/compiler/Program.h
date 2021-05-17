@@ -6,6 +6,7 @@
 
 #include "compiler/File.h"
 #include "compiler/Function.h"
+#include "compiler/Location.h"
 #include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
 
@@ -22,6 +23,7 @@ namespace LL2W {
 			std::map<int, std::unordered_set<ParAttr>> parattrs;
 			std::unordered_map<const std::string *, AliasDef *> aliases;
 			std::map<int, File> files;
+			std::map<int, Location> locations;
 
 			Program(const ASTNode &);
 			~Program();

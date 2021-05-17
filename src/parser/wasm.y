@@ -23,7 +23,7 @@ void D(Args && ...args) {
 }
 
 template <typename T>
-const LL2W::Location & L(std::initializer_list<const T *> nodes) {
+const LL2W::ASTLocation & L(std::initializer_list<const T *> nodes) {
 	for (const T *node: nodes)
 		if (node)
 			return node->location;
