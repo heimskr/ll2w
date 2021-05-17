@@ -231,6 +231,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DECLARATION "declaration"
 %token LLVMTOK_RETAINEDNODES "retainedNodes"
 %token LLVMTOK_DISUBPROGRAM "!DISubprogram"
+%token LLVMTOK_EXTRADATA "extraData"
+%token LLVMTOK_DILV "!DILocalVariable"
+%token LLVMTOK_ARG "arg"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -239,7 +242,7 @@ using AN = LL2W::ASTNode;
 %token LLVM_PREDS_LIST LLVM_FNTYPE LLVM_CONSTANT_LIST LLVM_GETELEMENTPTR_EXPR LLVM_DECIMAL_LIST LLVM_INDEX_LIST
 %token LLVM_STRUCT_VALUE LLVM_VALUE_LIST LLVM_ARRAY_VALUE LLVM_CLAUSES LLVM_GLOBAL_DEF LLVM_PHI_PAIR LLVM_SWITCH_LIST
 %token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF LLVM_METADATA LLVM_DIEXPRESSION_LIST
-%token LLVM_DIDT_LIST LLVM_PIPE_LIST LLVM_DICT_LIST LLVM_DICU_LIST LLVM_DISUBPROGRAM_LIST
+%token LLVM_DIDT_LIST LLVM_PIPE_LIST LLVM_DICT_LIST LLVM_DICU_LIST LLVM_DISUBPROGRAM_LIST LLVM_DILV_LIST
 
 %start start
 
@@ -350,60 +353,73 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DISubrange" "(" "count" ":" LLVMTOK_DECIMAL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
             | metabang "=" metadata_distinct "!DISubprogram" "(" disubprogram_list ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
+            | metabang "=" metadata_distinct "!DILocalVariable" "(" dilv_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); };
 
-didt_item: "size"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-         | "tag"      ":" LLVMTOK_IDENT   { $$ = nullptr; D($1, $2, $3); }
-         | "baseType" ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-         | "name"     ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-         | "file"     ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "line"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-         | "scope"    ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "offset"   ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); };
+didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
+         | "baseType"  ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+         | "name"      ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "file"      ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "line"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "scope"     ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "offset"    ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "flags"     ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+         | "extraData" ":" constant        { $$ = $1->adopt($3); D($2); };
 didt_list: didt_list "," didt_item { $$ = $1->adopt($3); D($2); }
          | didt_item { $$ = (new AN(llvmParser, LLVM_DIDT_LIST))->adopt($1); };
 intnullbang: LLVMTOK_INTBANG | "null";
 pipe_list: pipe_list "|" LLVMTOK_IDENT { $$ = $1->adopt($3); D($2); }
          | LLVMTOK_IDENT               { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); };
-dict_item: "tag"        ":" LLVMTOK_IDENT   { $$ = nullptr; D($1, $2, $3); }
-         | "name"       ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-         | "file"       ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "line"       ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-         | "size"       ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-         | "flags"      ":" pipe_list       { $$ = nullptr; D($1, $2, $3); }
-         | "elements"   ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "identifier" ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-         | "baseType"   ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); };
+dict_item: "tag"        ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
+         | "name"       ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "file"       ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "line"       ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "size"       ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "flags"      ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+         | "elements"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "identifier" ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "baseType"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
 dict_list: dict_list "," dict_item { $$ = $1->adopt($3); D($2); }
          | dict_item { $$ = (new AN(llvmParser, LLVM_DICT_LIST))->adopt($1); };
-dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = nullptr; D($1, $2, $3); }
-         | "file"               ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "producer"           ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-         | "isOptimized"        ":" LLVMTOK_BOOL    { $$ = nullptr; D($1, $2, $3); }
-         | "runtimeVersion"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-         | "emissionKind"       ":" LLVMTOK_IDENT   { $$ = nullptr; D($1, $2, $3); }
-         | "enums"              ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "retainedTypes"      ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "globals"            ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "imports"            ":" LLVMTOK_INTBANG { $$ = nullptr; D($1, $2, $3); }
-         | "splitDebugInlining" ":" LLVMTOK_BOOL    { $$ = nullptr; D($1, $2, $3); }
-         | "nameTableKind"      ":" "None"          { $$ = nullptr; D($1, $2, $3); };
+dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
+         | "file"               ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "producer"           ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "isOptimized"        ":" LLVMTOK_BOOL    { $$ = $1->adopt($3); D($2); }
+         | "runtimeVersion"     ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "emissionKind"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
+         | "enums"              ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "retainedTypes"      ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "globals"            ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "imports"            ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "splitDebugInlining" ":" LLVMTOK_BOOL    { $$ = $1->adopt($3); D($2); }
+         | "nameTableKind"      ":" "None"          { $$ = $1->adopt($3); D($2); };
 dicu_list: dicu_list "," dicu_item { $$ = $1->adopt($3); D($2); }
          | dicu_item { $$ = (new AN(llvmParser, LLVM_DICU_LIST))->adopt($1); };
-disubprogram_item: "name"          ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-                 | "linkageName"   ":" LLVMTOK_STRING  { $$ = nullptr; D($1, $2, $3); }
-                 | "scope"         ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-                 | "file"          ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-                 | "line"          ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-                 | "type"          ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-                 | "scopeLine"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
-                 | "flags"         ":" pipe_list       { $$ = nullptr; D($1, $2, $3); }
-                 | "spFlags"       ":" pipe_list       { $$ = nullptr; D($1, $2, $3); }
-                 | "unit"          ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-                 | "declaration"   ":" intnullbang     { $$ = nullptr; D($1, $2, $3); }
-                 | "retainedNodes" ":" intnullbang     { $$ = nullptr; D($1, $2, $3); };
+disubprogram_item: "name"          ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+                 | "linkageName"   ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+                 | "scope"         ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "file"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "line"          ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+                 | "type"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "scopeLine"     ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+                 | "flags"         ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+                 | "spFlags"       ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+                 | "unit"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "declaration"   ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "retainedNodes" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
 disubprogram_list: disubprogram_list "," disubprogram_item { $$ = $1->adopt($3); D($2); }
          | disubprogram_item { $$ = (new AN(llvmParser, LLVM_DISUBPROGRAM_LIST))->adopt($1); };
+dilv_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
+         | "arg"   ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
+         | "scope" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
+         | "file"  ":" intnullbang     { $$ = $1->adopt($3); D($2); };
+         | "line"  ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
+         | "type"  ":" intnullbang     { $$ = $1->adopt($3); D($2); };
+         | "flags" ":" pipe_list       { $$ = $1->adopt($3); D($2); };
+dilv_list: dilv_list "," dilv_item { $$ = $1->adopt($3); D($2); }
+         | dilv_item { $$ = (new AN(llvmParser, LLVM_DILV_LIST))->adopt($1); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }

@@ -155,6 +155,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DISubroutineType"			{ LLVMRTOKEN(DIST) }
 "!DISubrange"				{ LLVMRTOKEN(DISUBRANGE) }
 "!DISubprogram"				{ LLVMRTOKEN(DISUBPROGRAM) }
+"!DILocalVariable"			{ LLVMRTOKEN(DILV) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -299,6 +300,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "unit"						{ LLVMRTOKEN(UNIT) }
 "declaration"				{ LLVMRTOKEN(DECLARATION) }
 "retainedNodes"				{ LLVMRTOKEN(RETAINEDNODES) }
+"extraData"					{ LLVMRTOKEN(EXTRADATA) }
+"arg"						{ LLVMRTOKEN(ARG) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
