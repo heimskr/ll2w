@@ -211,6 +211,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_SIZE "size"
 %token LLVMTOK_DIBT "!DIBasicType"
 %token LLVMTOK_ENCODING "encoding"
+%token LLVMTOK_DIIE "!DIImportedEntity"
+%token LLVMTOK_ENTITY "entity"
+%token LLVMTOK_DINAMESPACE "!DINamespace"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -320,7 +323,13 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DIBasicType" "(" "name" ":" LLVMTOK_STRING "," "size" ":" LLVMTOK_DECIMAL
               "," "encoding" ":" LLVMTOK_IDENT ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); };
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); }
+            | metabang "=" "!DIImportedEntity" "(" "tag" ":" LLVMTOK_IDENT "," "scope" ":" LLVMTOK_INTBANG "," "entity"
+              ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24); }
+            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang
+              ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 didt_item: "size"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
          | "tag"      ":" LLVMTOK_IDENT   { $$ = nullptr; D($1, $2, $3); }
@@ -330,6 +339,7 @@ didt_item: "size"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); }
          | "line"     ":" LLVMTOK_DECIMAL { $$ = nullptr; D($1, $2, $3); };
 didt_list: didt_list "," didt_item { $$ = $1->adopt($3); D($2); }
          | didt_item { $$ = (new AN(llvmParser, LLVM_DIDT_LIST))->adopt($1); };
+intnullbang: LLVMTOK_INTBANG | "null";
 
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
