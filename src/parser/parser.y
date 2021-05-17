@@ -236,6 +236,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_ARG "arg"
 %token LLVMTOK_DILOCATION "!DILocation"
 %token LLVMTOK_COLUMN "column"
+%token LLVMTOK_DILB "!DILexicalBlock"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -360,7 +361,10 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DILocalVariable" "(" dilv_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DILocation" "(" dilocation_list ")"
-              { $$ = $4->adopt($6); D($1, $2, $3, $5, $7); };
+              { $$ = $4->adopt($6); D($1, $2, $3, $5, $7); }
+            | metabang "=" metadata_distinct "!DILexicalBlock" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
+              "," "line" ":" LLVMTOK_DECIMAL "," "column" ":" LLVMTOK_DECIMAL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }

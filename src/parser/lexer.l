@@ -157,6 +157,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DISubprogram"				{ LLVMRTOKEN(DISUBPROGRAM) }
 "!DILocalVariable"			{ LLVMRTOKEN(DILV) }
 "!DILocation"				{ LLVMRTOKEN(DILOCATION) }
+"!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
