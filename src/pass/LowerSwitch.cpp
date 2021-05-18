@@ -33,16 +33,13 @@ namespace LL2W::Passes {
 				const std::string *transformed = StringSet::intern(function.transformLabel(*label));
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
 				auto jump = std::make_shared<JumpConditionalInstruction>(m0, transformed, false);
-				function.insertBefore(instruction, comp, false);
-				function.insertBefore(instruction, jump, false);
-				comp->extract();
-				jump->extract();
+				function.insertBefore(instruction, comp, false)->setDebug(llvm)->extract();
+				function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();
 			}
 
 			auto jump = std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*sw->label)),
 				false);
-			function.insertBefore(instruction, jump, false);
-			jump->extract();
+			function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();
 			to_remove.push_back(instruction);
 		}
 

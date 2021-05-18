@@ -86,7 +86,8 @@ namespace LL2W::Passes {
 			if (convention == CallingConvention::Reg16) {
 				for (i = 0; i < function.getArity() && i < WhyInfo::argumentCount; ++i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false);
+					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false)
+						->setDebug(*llvm)->extract();
 				}
 			}
 
@@ -111,7 +112,8 @@ namespace LL2W::Passes {
 
 			if (function.isVariadic()) {
 				m2 = function.makeAssemblerVariable(2, instruction->parent.lock());
-				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2));
+				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2))
+					->setDebug(*llvm)->extract();
 			}
 
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
@@ -120,20 +122,21 @@ namespace LL2W::Passes {
 
 			// At this point, we're ready to insert the jump.
 			if (global_uptr) {
-				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_uptr->name, true));
+				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_uptr->name, true))
+					->setDebug(*llvm)->extract();
 			} else {
 				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
 				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);
-				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer");
-				jump->extract();
+				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer")
+					->setDebug(*llvm)->extract();
 			}
 
 			// Move the stack pointer up past the variables that were pushed onto the stack with pushCallValue.
 			if (0 < bytes_pushed) {
 				VariablePtr sp = function.sp(block);
 				auto sub = std::make_shared<AddIInstruction>(sp, bytes_pushed, sp);
-				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer");
-				sub->extract();
+				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer")
+					->setDebug(*llvm)->extract();
 			}
 
 			if (function.isVariadic())
@@ -144,7 +147,8 @@ namespace LL2W::Passes {
 				// Pop the argument registers from the stack.
 				for (i = std::min(15, function.getArity() - 1); 0 <= i; --i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false);
+					function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false)
+						->setDebug(*llvm)->extract();
 				}
 			}
 
@@ -153,9 +157,9 @@ namespace LL2W::Passes {
 				auto move =
 					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
 						block), function.getVariable(*call->result));
-				function.insertBefore(instruction, move, "SetupCalls: move result from $r0");
+				function.insertBefore(instruction, move, "SetupCalls: move result from $r0")
+					->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].push_back(move);
-				move->extract();
 			}
 
 			to_remove.push_back(instruction);
@@ -178,27 +182,24 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable, size, -1));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable, size, -1))
+				->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Global) {
 			std::shared_ptr<GlobalValue> global = std::dynamic_pointer_cast<GlobalValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, global->name);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-			function.insertBefore(instruction, set);
-			function.insertBefore(instruction, sspush);
-			set->extract();
-			sspush->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Int) {
 			// Integer-like values
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-			function.insertBefore(instruction, set);
-			function.insertBefore(instruction, sspush);
-			set->extract();
-			sspush->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Bool) {
 			// Booleans
@@ -206,20 +207,16 @@ namespace LL2W::Passes {
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-			function.insertBefore(instruction, set);
-			function.insertBefore(instruction, sspush);
-			set->extract();
-			sspush->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Null) {
 			// Null values
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-			function.insertBefore(instruction, set);
-			function.insertBefore(instruction, sspush);
-			set->extract();
-			sspush->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Getelementptr) {
 			// Getelementptr expressions
@@ -236,16 +233,13 @@ namespace LL2W::Passes {
 				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				VariablePtr new_var = function.newVariable(constant->type);
 				auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
-				function.insertBefore(instruction, setsym);
+				function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
 				if (offset != 0) {
 					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
-					function.insertAfter(setsym, addi);
-					addi->extract();
+					function.insertAfter(setsym, addi)->setDebug(*instruction)->extract();
 				}
 				auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-				function.insertBefore(instruction, sspush);
-				setsym->extract();
-				sspush->extract();
+				function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 				return size;
 			}
 		} else if (constant->conversionSource) {
@@ -268,24 +262,20 @@ namespace LL2W::Passes {
 			// If it's a variable, move it into the argument register.
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
-			function.insertBefore(instruction, move);
-			move->extract();
+			function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
-			function.insertBefore(instruction, set);
-			set->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Bool) {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
-			function.insertBefore(instruction, set);
-			set->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
 			// If it's a null or undef constant, just use zero.
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
-			function.insertBefore(instruction, set);
-			set->extract();
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
@@ -313,12 +303,10 @@ namespace LL2W::Passes {
 				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				if (offset == 0) {
 					auto move = std::make_shared<MoveInstruction>(local->getVariable(function), new_var);
-					function.insertBefore(instruction, move);
-					move->extract();
+					function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
 				} else {
 					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), offset, new_var);
-					function.insertBefore(instruction, addi);
-					addi->extract();
+					function.insertBefore(instruction, addi)->setDebug(*instruction)->extract();
 				}
 			} else {
 				std::list<int> indices;
@@ -326,19 +314,15 @@ namespace LL2W::Passes {
 					indices.push_back(decimal_pair.second);
 				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
 				auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
-				function.insertBefore(instruction, setsym);
-				setsym->extract();
-				if (offset != 0) {
-					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
-					function.insertAfter(setsym, addi);
-					addi->extract();
-				}
+				function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
+				if (offset != 0)
+					function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, offset, new_var))
+						->setDebug(*instruction)->extract();
 			}
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(constant->value.get());
-			auto setsym = std::make_shared<SetInstruction>(new_var, global->name);
-			function.insertBefore(instruction, setsym);
-			setsym->extract();
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name))
+				->setDebug(*instruction)->extract();
 		} else {
 			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());

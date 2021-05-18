@@ -63,7 +63,7 @@ namespace LL2W::PaddedStructs {
 			auto move_from_pack = std::make_shared<DeferredSourceMoveInstruction>(source, from_pack, source_reg_index);
 			function.insertBefore(instruction, move_from_pack, false);
 			function.comment(move_from_pack, "PaddedStructs(out = " + out_var->type->toString() + "): move from pack");
-			move_from_pack->extract();
+			move_from_pack->setDebug(*instruction)->extract();
 
 			if (skip != 0) {
 				// Normally I'd use a mask and an AndIInstruction, but our mask would often be larger than the 32 bits
@@ -71,10 +71,10 @@ namespace LL2W::PaddedStructs {
 				// skipped in the source register.
 				auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
 				function.insertBefore(instruction, left, false);
-				left->extract();
+				left->setDebug(*instruction)->extract();
 				auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, skip, from_pack);
 				function.insertBefore(instruction, right, false);
-				right->extract();
+				right->setDebug(*instruction)->extract();
 			}
 
 			if (skip + to_take < 64) {
@@ -82,7 +82,7 @@ namespace LL2W::PaddedStructs {
 				// bits to the right of the data we want.
 				auto right = std::make_shared<ShiftRightLogicalIInstruction>(from_pack, 64 - skip - to_take, from_pack);
 				function.insertBefore(instruction, right, false);
-				right->extract();
+				right->setDebug(*instruction)->extract();
 
 				// If the output is, say, an i16 type, then we want the data to be right-aligned without the left
 				// alignment we use for structs. We can accomplish that by simply not shifting it back to the left here.
@@ -90,19 +90,19 @@ namespace LL2W::PaddedStructs {
 					auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, 64 - skip - to_take,
 						from_pack);
 					function.insertBefore(instruction, left, false);
-					left->extract();
+					left->setDebug(*instruction)->extract();
 				}
 			}
 
 			if (skip != 0) {
 				auto left = std::make_shared<ShiftLeftLogicalIInstruction>(from_pack, skip, from_pack);
 				function.insertBefore(instruction, left, false);
-				left->extract();
+				left->setDebug(*instruction)->extract();
 			}
 
 			auto move = std::make_shared<DeferredDestinationMoveInstruction>(from_pack, out_var, target_reg_index);
 			function.insertBefore(instruction, move, false);
-			move->extract();
+			move->setDebug(*instruction)->extract();
 
 			target_remaining -= to_take;
 			width_remaining -= to_take;

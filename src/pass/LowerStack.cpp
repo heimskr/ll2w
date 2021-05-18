@@ -21,37 +21,32 @@ namespace LL2W::Passes {
 					// %var -> [$fp]
 					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, fp);
 					function.insertBefore(instruction, store, "LowerStack: %var -> [$fp] for " +
-						stack_store->location.variable->plainString());
-					store->extract();
+						stack_store->location.variable->plainString())->setDebug(stack_store)->extract();
 				} else {
 					// $fp - offset -> $m2
 					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m2);
 					// %var -> [$m2]
 					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m2);
 					function.insertBefore(instruction, sub,   "LowerStack: $fp - offset -> $m2 for " +
-						stack_store->location.variable->plainString());
-					function.insertBefore(instruction, store, "LowerStack: %var -> [$m2]");
-					sub->extract();
-					store->extract();
+						stack_store->location.variable->plainString())->setDebug(stack_store)->extract();
+					function.insertBefore(instruction, store, "LowerStack: %var -> [$m2]")
+						->setDebug(stack_store)->extract();
 				}
 			} else if (StackLoadInstruction *stack_load = dynamic_cast<StackLoadInstruction *>(instruction.get())) {
 				if (stack_load->location.offset == 0) {
 					// [$fp] -> %var
 					auto load = std::make_shared<LoadRInstruction>(fp, stack_load->result);
 					function.insertBefore(instruction, load, "LowerStack: [$fp] -> %var for " +
-						stack_load->location.variable->plainString());
-					load->extract();
+						stack_load->location.variable->plainString())->setDebug(stack_load)->extract();
 				} else {
 					// $fp - offset -> $m2
 					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m2);
 					// [$m2] -> %var
 					auto load = std::make_shared<LoadRInstruction>(m2, stack_load->result);
 					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m2 for " +
-						stack_load->location.variable->plainString());
+						stack_load->location.variable->plainString())->setDebug(stack_load)->extract();
 					function.insertBefore(instruction, load, "LowerStack: [$m2] -> " +
-						stack_load->result->plainString());
-					sub->extract();
-					load->extract();
+						stack_load->result->plainString())->setDebug(stack_load)->extract();
 				}
 			} else continue;
 

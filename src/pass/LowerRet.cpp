@@ -34,11 +34,14 @@ namespace LL2W::Passes {
 			VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, block);
 			VariablePtr r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
 
-			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp), false); // $fp -> $sp
+			// $fp -> $sp
+			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp), false)
+				->setDebug(llvm)->extract();
 
 			// Put the return value into $r0.
 			if (ret->value->isIntLike()) {
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false);
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false)
+					->setDebug(llvm)->extract();
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
 				function.extraVariables.emplace(var->id, var);
@@ -49,10 +52,12 @@ namespace LL2W::Passes {
 					for (size_t i = 0; i < var->registers.size(); ++i) {
 						auto subvar = function.makePrecoloredVariable(*iter++, block);
 						auto retreg = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, block);
-						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false);
+						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false)
+							->setDebug(llvm)->extract();
 					}
 				} else {
-					function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false);
+					function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false)
+						->setDebug(llvm)->extract();
 				}
 			}
 
@@ -60,15 +65,19 @@ namespace LL2W::Passes {
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
 			     iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
-				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(variable), false);
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(variable), false)
+					->setDebug(llvm)->extract();
 			}
 
 			// Insert the epilogue (minus the jump).
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false); // ] $fp
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false); // ] $rt
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false)
+				->setDebug(llvm)->extract(); // ] $fp
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false)
+				->setDebug(llvm)->extract(); // ] $rt
 
 			// Jump to the return address.
-			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false), false);
+			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false), false)
+				->setDebug(llvm)->extract();
 			to_remove.push_back(instruction);
 		}
 

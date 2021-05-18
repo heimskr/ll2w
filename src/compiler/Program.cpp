@@ -63,16 +63,29 @@ namespace LL2W {
 				case LLVMTOK_DIFILE:
 					files.emplace(node->front()->atoi(), File(node->at(1)->unquote(), node->at(2)->unquote()));
 					break;
-				case LLVMTOK_DILOCATION: {
+				case LLVMTOK_DILOCATION:
 					locations.emplace(node->front()->atoi(), Location(*node->at(1)));
 					break;
-				}
-				case LLVMTOK_DISUBPROGRAM: {
+				case LLVMTOK_DISUBPROGRAM:
 					subprograms.emplace(node->front()->atoi(), Subprogram(*node->at(1)));
 					break;
-				}
+				case LLVMTOK_DILB:
+					lexicalBlocks.emplace(node->front()->atoi(),
+						LexicalBlock(node->at(2)->atoi(), node->at(1)->atoi()));
+					break;
 			}
 		}
+
+		for (auto &[index, location]: locations)
+			if (subprograms.count(location.scope) != 0)
+				location.file = subprograms.at(location.scope).file;
+			else if (lexicalBlocks.count(location.scope) != 0) {
+				location.file = lexicalBlocks.at(location.scope).file;
+				do {
+					location.scope = lexicalBlocks.at(location.scope).scope;
+				} while (lexicalBlocks.count(location.scope) != 0);
+			} else
+				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
 	}
 
 	Program::~Program() {
@@ -109,6 +122,8 @@ namespace LL2W {
 		out << "name: \"" << Util::escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
 		out << "\n#data\n";
 		dataSection(out);
+		out << "\n#debug\n";
+		debugSection(out);
 		out << "\n#code\n\n";
 		if (functions.count("@main") == 1)
 			out << ":: main\n<halt>\n\n";
@@ -174,7 +189,33 @@ namespace LL2W {
 			} else {
 				out << name << "\n";
 			}
+		}
+	}
 
+	void Program::debugSection(std::ostream &out) {
+		int i = 0;
+		for (auto &[index, file]: files) {
+			out << "1 \"" << Util::escape(file.filename) << "\"\n";
+			file.index = i++;
+		}
+		for (auto &[index, subprogram]: subprograms) {
+			out << "2 \"" << Util::escape(subprogram.name.substr(1, subprogram.name.size() - 2)) << "\"\n";
+			subprogram.index = i++;
+		}
+		for (auto &[index, location]: locations) {
+			if (files.count(location.file) == 0) {
+				warn() << "Couldn't find file " << location.file << " from location " << index << ".\n";
+			} else if (subprograms.count(location.scope) != 0) {
+				out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column << " "
+				    << subprograms.at(location.scope).index << "\n";
+				location.index = i++;
+			} else if (lexicalBlocks.count(location.scope) != 0) {
+				out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column << " "
+				    << subprograms.at(location.scope).index << "\n";
+				location.index = i++;
+			} else {
+				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
+			}
 		}
 	}
 

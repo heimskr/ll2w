@@ -53,10 +53,13 @@ namespace LL2W::Passes {
 			// Because WhySA lacks a not-equals comparison, we have to do an equals comparison and invert it.
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
-				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, m3, IcmpCond::Eq));
-				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd));
+				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, m3, IcmpCond::Eq))
+					->setDebug(node)->extract();
+				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
+					->setDebug(node)->extract();
 			} else {
-				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, cond));
+				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, cond))
+					->setDebug(node)->extract();
 			}
 		} else {
 			int imm;
@@ -68,10 +71,13 @@ namespace LL2W::Passes {
 
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.makeAssemblerVariable(3, instruction->parent.lock());
-				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, m3, IcmpCond::Eq));
-				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd));
+				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, m3, IcmpCond::Eq))
+					->setDebug(node)->extract();
+				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
+					->setDebug(node)->extract();
 			} else {
-				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, cond));
+				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, cond))
+					->setDebug(node)->extract();
 			}
 		}
 	}

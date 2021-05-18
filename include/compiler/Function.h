@@ -172,21 +172,23 @@ namespace LL2W {
 			/** Returns a pointer to the basic block following a given basic block. */
 			BasicBlockPtr after(BasicBlockPtr);
 
-			/** Inserts one instruction after another. */
-			void insertAfter(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
-				bool reindex = true);
+			/** Inserts one instruction after another. Returns the inserted instructin=on. */
+			std::shared_ptr<Instruction> insertAfter(std::shared_ptr<Instruction> base,
+				std::shared_ptr<Instruction> new_instruction, bool reindex = true);
 
-			/** Inserts one instruction before another. */
-			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
-				bool reindex = true);
+			/** Inserts one instruction before another. Returns the inserted instruction. */
+			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
+				std::shared_ptr<Instruction> new_instruction, bool reindex = true);
 
-			/** Inserts one instruction before another and adds a comment before the inserted instruction. */
-			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
-				const std::string &, bool reindex = true);
+			/** Inserts one instruction before another and adds a comment before the inserted instruction.
+			 *  Returns the inserted instruction. */
+			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
+				std::shared_ptr<Instruction> new_instruction, const std::string &, bool reindex = true);
 
-			/** Inserts one instruction before another and adds a comment before the inserted instruction. */
-			void insertBefore(std::shared_ptr<Instruction> base, std::shared_ptr<Instruction> new_instruction,
-				const char *, bool reindex = true);
+			/** Inserts one instruction before another and adds a comment before the inserted instruction.
+			 *  Returns the inserted instruction. */
+			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
+				std::shared_ptr<Instruction> new_instruction, const char *, bool reindex = true);
 
 			/** Inserts a comment before an instruction. */
 			std::shared_ptr<Instruction> comment(std::shared_ptr<Instruction>, const std::string &,

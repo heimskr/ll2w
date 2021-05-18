@@ -46,7 +46,8 @@ namespace LL2W::Passes {
 			else {
 				GlobalValue *global = dynamic_cast<GlobalValue *>(constant_value.get());
 				pointer = function.newVariable(constant_type);
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name));
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name))
+					->setDebug(node);
 			}
 
 			const TypeType tt = constant_type->typeType();
@@ -71,11 +72,10 @@ namespace LL2W::Passes {
 				node->type = out_type;
 				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
-					"): struct-type");
+					"): struct-type")->setDebug(node)->extract();
 #ifdef DEBUG_GETELEMENTPTR
 				function.comment(add, "Type: " + std::string(*old_type) + " -> " + std::string(*out_type));
 #endif
-				add->extract();
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
 				VariablePtr index = function.getVariable(std::get<1>(node->indices.at(0)));
@@ -88,11 +88,9 @@ namespace LL2W::Passes {
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
 				function.insertBefore(instruction, mult, "LowerGetelementptr: pointer-type");
-				function.insertBefore(instruction, movelo);
-				function.insertBefore(instruction, add);
-				mult->extract();
-				movelo->extract();
-				add->extract();
+				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
+				function.insertBefore(instruction, add)->setDebug(node)->extract();
+				mult->setDebug(node)->extract();
 			} else throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
 
 			to_remove.push_back(instruction);

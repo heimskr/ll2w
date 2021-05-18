@@ -39,8 +39,8 @@ namespace LL2W::Passes {
 				auto sub = std::make_shared<SubRInstruction>(m5, m0, m5);
 				function.insertBefore(instruction, mod, "LowerAlloca: align stack pointer");
 				function.insertAfter(mod, sub);
-				mod->extract();
-				sub->extract();
+				mod->setDebug(alloca->debugIndex)->extract();
+				sub->setDebug(alloca->debugIndex)->extract();
 			}
 
 			const int width = alloca->type->width() / 8;
@@ -60,7 +60,7 @@ namespace LL2W::Passes {
 					auto m0 = function.m0(instruction);
 					auto move = std::make_shared<MoveInstruction>(m5, alloca->variable);
 					function.insertBefore(instruction, move, "LowerAlloca: $sp -> %var");
-					move->extract();
+					move->setDebug(alloca->debugIndex)->extract();
 					if (width != 0) {
 						auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 						// %var * width
@@ -72,9 +72,9 @@ namespace LL2W::Passes {
 						function.insertBefore(instruction, mult,   "LowerAlloca: %var * width");
 						function.insertBefore(instruction, movelo);
 						function.insertBefore(instruction, sub, "LowerAlloca: move stack pointer");
-						mult->extract();
-						movelo->extract();
-						sub->extract();
+						mult->setDebug(alloca->debugIndex)->extract();
+						movelo->setDebug(alloca->debugIndex)->extract();
+						sub->setDebug(alloca->debugIndex)->extract();
 					}
 				} else throw std::runtime_error("Unsupported value for numelementsValue: " + std::string(*value));
 			} else {
@@ -86,12 +86,12 @@ namespace LL2W::Passes {
 				// $sp -> %var
 				auto move = std::make_shared<MoveInstruction>(m5, alloca->variable);
 				function.insertBefore(instruction, move);
-				move->extract();
+				move->setDebug(alloca->debugIndex)->extract();
 				const int to_sub = Util::upalign(num_elements * width, 8);
 				if (0 < to_sub) {
 					auto sub = std::make_shared<SubIInstruction>(m5, to_sub, m5);
 					function.insertBefore(move, sub, "LowerAlloca: $sp -= to_sub");
-					sub->extract();
+					sub->setDebug(alloca->debugIndex)->extract();
 				}
 				function.comment(move, "LowerAlloca: $sp -> %" + std::to_string(alloca->variable->id));
 			}

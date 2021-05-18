@@ -18,6 +18,7 @@ namespace LL2W::Passes {
 				int reg = *std::next(defsource->rs->registers.begin(), defsource->registerIndex);
 				auto var = function.makePrecoloredVariable(reg, defsource->parent.lock());
 				auto move = std::make_shared<MoveInstruction>(var, defsource->rd);
+				move->setDebug(defsource->debugIndex);
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);
 			} else if (auto *defdest = dynamic_cast<DeferredDestinationMoveInstruction *>(instruction.get())) {
@@ -26,6 +27,7 @@ namespace LL2W::Passes {
 				int reg = *std::next(defdest->rd->registers.begin(), defdest->registerIndex);
 				auto var = function.makePrecoloredVariable(reg, defdest->parent.lock());
 				auto move = std::make_shared<MoveInstruction>(defdest->rs, var);
+				move->setDebug(defdest->debugIndex);
 				function.insertBefore(instruction, move);
 				to_remove.push_back(instruction);
 			} else if (auto *load = dynamic_cast<LoadRInstruction *>(instruction.get())) {
@@ -35,17 +37,20 @@ namespace LL2W::Passes {
 					throw std::runtime_error("Load into register pack has a size that isn't divisible by 8");
 				auto m4 = function.mx(4, instruction);
 				auto move = std::make_shared<MoveInstruction>(load->rs, m4);
+				move->setDebug(load->debugIndex);
 				function.insertBefore(instruction, move);
 				move->extract();
 				auto iter = load->rd->registers.begin();
 				for (int i = 0; i < load->size / 8; ++i) {
 					if (i != 0) {
 						auto addi = std::make_shared<AddIInstruction>(m4, 8, m4);
+						addi->setDebug(load->debugIndex);
 						function.insertBefore(instruction, addi);
 						addi->extract();
 					}
 					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
 					auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, 8);
+					new_load->setDebug(load->debugIndex);
 					function.insertBefore(instruction, new_load);
 					new_load->extract();
 				}

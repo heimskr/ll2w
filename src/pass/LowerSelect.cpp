@@ -26,16 +26,14 @@ namespace LL2W::Passes {
 			if (select->firstValue->isIntLike()) {
 				left_var = function.newVariable(select->firstType, instruction->parent.lock());
 				auto set = std::make_shared<SetInstruction>(left_var, select->firstValue->intValue());
-				function.insertBefore(instruction, set);
-				set->extract();
+				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else if (select->firstValue->isLocal()) {
 				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
 			} else if (select->firstValue->isGlobal()) {
 				left_var = function.newVariable(select->firstType, instruction->parent.lock());
 				auto set = std::make_shared<SetInstruction>(left_var,
 					dynamic_cast<GlobalValue *>(select->firstValue.get())->name);
-				function.insertBefore(instruction, set);
-				set->extract();
+				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else {
 				select->debug();
 				throw std::runtime_error("Invalid true-value in select instruction: " +
@@ -46,8 +44,7 @@ namespace LL2W::Passes {
 			if (select->secondValue->isIntLike()) {
 				right_var = function.newVariable(select->firstType, instruction->parent.lock());
 				auto set = std::make_shared<SetInstruction>(right_var, select->secondValue->intValue());
-				function.insertBefore(instruction, set);
-				set->extract();
+				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else if (select->secondValue->isLocal()) {
 				right_var = dynamic_cast<LocalValue *>(select->secondValue.get())->variable;
 			} else {
@@ -70,12 +67,10 @@ namespace LL2W::Passes {
 					std::string(*select->conditionValue));
 			}
 
-			function.insertBefore(instruction, comp);
-			comp->extract();
+			function.insertBefore(instruction, comp)->setDebug(llvm)->extract();
 
 			auto sel = std::make_shared<SelectInstruction>(left_var, right_var, select->variable, Condition::Nonzero);
-			function.insertBefore(instruction, sel);
-			sel->extract();
+			function.insertBefore(instruction, sel)->setDebug(llvm)->extract();
 
 			to_remove.push_back(instruction);
 		}

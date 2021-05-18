@@ -364,7 +364,7 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DILexicalBlock" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
               "," "line" ":" LLVMTOK_DECIMAL "," "column" ":" LLVMTOK_DECIMAL ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21); };
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }

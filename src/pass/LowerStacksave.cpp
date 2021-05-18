@@ -20,7 +20,7 @@ namespace LL2W::Passes {
 			if (*dynamic_cast<GlobalValue *>(call->name.get())->name == "llvm.stacksave") {
 				auto move = std::make_shared<MoveInstruction>(function.sp(instruction->parent.lock()),
 					function.getVariable(*call->result));
-				function.insertBefore(instruction, move);
+				function.insertBefore(instruction, move)->setDebug(llvm)->extract();
 				to_remove.push_back(instruction);
 			}
 		}

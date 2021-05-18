@@ -11,8 +11,7 @@ namespace LL2W {
 			InstructionNode *node;
 			bool ownsNode = false;
 
-			LLVMInstruction(InstructionNode *node_, int index_, bool owns_node = false):
-				Instruction(index_), node(node_), ownsNode(owns_node) {}
+			LLVMInstruction(InstructionNode *node_, int index_, bool owns_node = false);
 
 			virtual ~LLVMInstruction();
 

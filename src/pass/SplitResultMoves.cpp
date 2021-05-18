@@ -23,10 +23,9 @@ namespace LL2W::Passes {
 			auto iter = move->rd->registers.begin();
 			for (size_t i = 0; i < register_count; ++i) {
 				auto rx = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, instruction->parent.lock());
-				auto new_move = std::make_shared<MoveInstruction>(
-					rx, function.makePrecoloredVariable(*iter++, instruction->parent.lock()));
-				function.insertBefore(instruction, new_move);
-				new_move->extract();
+				auto new_move = std::make_shared<MoveInstruction>(rx,
+					function.makePrecoloredVariable(*iter++, instruction->parent.lock()));
+				function.insertBefore(instruction, new_move)->setDebug(move)->extract();
 			}
 
 			to_remove.push_back(instruction);

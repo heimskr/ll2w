@@ -5,7 +5,7 @@
 
 namespace LL2W {
 	Location::Location(const ASTNode &node) {
-		for (ASTNode *item: node)
+		for (const ASTNode *item: node)
 			switch (item->symbol) {
 				case LLVMTOK_LINE:   line   = item->front()->atoi(); break;
 				case LLVMTOK_COLUMN: column = item->front()->atoi(); break;

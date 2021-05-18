@@ -44,7 +44,7 @@ namespace LL2W::Passes {
 					setupMemsetValue(function, *call->constants[1]->value, instruction, value_arg, true,  1);
 					setupMemsetValue(function, *call->constants[2]->value, instruction, count_arg, true,  2);
 					auto memset = std::make_shared<MemsetInstruction>(count_arg, value_arg, dest_arg);
-					function.insertBefore(instruction, memset);
+					function.insertBefore(instruction, memset)->setDebug(llvm)->extract();
 					++iter;
 					function.remove(instruction);
 					continue;
@@ -70,7 +70,8 @@ namespace LL2W::Passes {
 				intval = 0;
 			else throw std::runtime_error("Unknown int-like value in LowerMemset: " + std::string(value));
 			variable = function.mx(assemblerIndex, instruction->parent.lock());
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, intval));
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, intval))
+				->setDebug(*instruction)->extract();
 		} else if (value.isLocal()) {
 			LocalValue &local = dynamic_cast<LocalValue &>(value);
 			variable = local.variable;
@@ -80,9 +81,10 @@ namespace LL2W::Passes {
 			if (shouldLoad) {
 				auto load = std::make_shared<LoadIInstruction>(global.name, variable,
 					function.parent->symbolSize("@" + *global.name) / 8);
-				function.insertBefore(instruction, load);
+				function.insertBefore(instruction, load)->setDebug(*instruction)->extract();
 			} else {
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name));
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name))
+					->setDebug(*instruction)->extract();
 			}
 		} else if (value.isGetelementptr()) {
 			if (shouldLoad)
@@ -91,7 +93,8 @@ namespace LL2W::Passes {
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep.variable);
 			if (!gep_global) {
 				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+				function.insertBefore(instruction, std::make_shared<InvalidInstruction>())
+					->setDebug(*instruction)->extract();
 				return;
 			}
 			TypePtr out_type;
@@ -99,12 +102,14 @@ namespace LL2W::Passes {
 			TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 			VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 			function.comment(instruction, "Getelementptr in LowerMemset");
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, gep_global->name));
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, gep_global->name))
+				->setDebug(*instruction)->extract();
 			if (offset == 0) {
 				variable = new_var;
 			} else {
 				variable = function.newVariable(ptr_type, instruction->parent.lock());
-				function.insertBefore(instruction, std::make_shared<AddIInstruction>(new_var, offset, variable));
+				function.insertBefore(instruction, std::make_shared<AddIInstruction>(new_var, offset, variable))
+					->setDebug(*instruction)->extract();
 			}
 		} else throw std::runtime_error("Unhandled value in LowerMemset: " + std::string(value));
 	}

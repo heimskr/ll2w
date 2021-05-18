@@ -49,11 +49,11 @@ namespace LL2W::Passes {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 				auto div = std::make_shared<R>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, div);
-				div->extract();
+				div->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				auto div = std::make_shared<I>(left_var, right->intValue(), node->variable);
 				function.insertBefore(instruction, div);
-				div->extract();
+				div->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
 					value_map.at(right->valueType()));
@@ -63,7 +63,7 @@ namespace LL2W::Passes {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 				auto divi = std::make_shared<Inv>(right_var, left->intValue(), node->variable);
 				function.insertBefore(instruction, divi);
-				divi->extract();
+				divi->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
 					std::string(*right));
@@ -110,12 +110,10 @@ namespace LL2W::Passes {
 		if (right->isLocal()) {
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
-			function.insertBefore(instruction, new_instruction);
-			new_instruction->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
 			auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
-			function.insertBefore(instruction, new_instruction);
-			new_instruction->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else {
 			throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
 				value_map.at(right->valueType()));
@@ -134,12 +132,10 @@ namespace LL2W::Passes {
 		if (right->isLocal()) {
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
-			function.insertBefore(instruction, new_instruction);
-			new_instruction->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
 			auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
-			function.insertBefore(instruction, new_instruction);
-			new_instruction->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else {
 			throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
 				value_map.at(right->valueType()));
@@ -154,12 +150,10 @@ namespace LL2W::Passes {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 				auto new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
-				function.insertBefore(instruction, new_instruction);
-				new_instruction->extract();
+				function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				auto new_instruction = std::make_shared<I>(left_var, right->intValue(), node->variable);
-				function.insertBefore(instruction, new_instruction);
-				new_instruction->extract();
+				function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " +
 					value_map.at(right->valueType()));
@@ -170,8 +164,7 @@ namespace LL2W::Passes {
 					" instruction.");
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			auto new_instruction = std::make_shared<II>(right_var, left->intValue(), node->variable);
-			function.insertBefore(instruction, new_instruction);
-			new_instruction->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else {
 			node->debug();
 			throw std::runtime_error("Only pvars and intlikes are unsupported on the LHS of a " + getName(node) +
@@ -213,17 +206,13 @@ namespace LL2W::Passes {
 			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			auto new_instruction = std::make_shared<MultRInstruction>(left_var, right_var);
 			auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
-			function.insertBefore(instruction, new_instruction);
-			function.insertBefore(instruction, movelo);
-			new_instruction->extract();
-			movelo->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
+			function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
 			auto new_instruction = std::make_shared<MultIInstruction>(left_var, right->intValue());
 			auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
-			function.insertBefore(instruction, new_instruction);
-			function.insertBefore(instruction, movelo);
-			new_instruction->extract();
-			movelo->extract();
+			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
+			function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 		} else {
 			throw std::runtime_error("Unexpected value type in mult instruction: " +
 				value_map.at(right->valueType()));
@@ -239,20 +228,16 @@ namespace LL2W::Passes {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 				auto sub = std::make_shared<SubRInstruction>(left_var, right_var, node->variable);
-				function.insertBefore(instruction, sub);
-				sub->extract();
+				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				auto sub = std::make_shared<SubIInstruction>(left_var, right->intValue(), node->variable);
-				function.insertBefore(instruction, sub);
-				sub->extract();
+				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else if (right->isGlobal()) {
 				VariablePtr right_var = function.newVariable(node->type);
 				auto set = std::make_shared<SetInstruction>(right_var, dynamic_cast<GlobalValue *>(right.get())->name);
-				function.insertBefore(instruction, set);
+				function.insertBefore(instruction, set)->setDebug(node)->extract();
 				auto sub = std::make_shared<SubRInstruction>(left_var, right_var, node->variable);
-				function.insertBefore(instruction, sub);
-				set->extract();
-				sub->extract();
+				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Unexpected value type in sub instruction: " +
 					value_map.at(right->valueType()));
@@ -270,18 +255,15 @@ namespace LL2W::Passes {
 			if (left->longValue() == 0) {
 				// In cases where the LHS is zero, we can use the convenient zero register and use just one instruction.
 				auto sub = std::make_shared<SubRInstruction>(zero, right_var, node->variable);
-				function.insertBefore(instruction, sub);
-				sub->extract();
+				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else {
 				// If the LHS is a non-zero integer, we need to use the property a-b = -(b-a) and then subtract the
 				// result from the zero register to fix the sign.
 				auto m0 = function.m0(instruction);
 				auto reverse = std::make_shared<SubIInstruction>(right_var, left->intValue(), m0);
 				auto fix = std::make_shared<SubRInstruction>(zero, m0, node->variable);
-				function.insertBefore(instruction, reverse);
-				function.insertBefore(instruction, fix);
-				reverse->extract();
-				fix->extract();
+				function.insertBefore(instruction, reverse)->setDebug(node)->extract();
+				function.insertBefore(instruction, fix)->setDebug(node)->extract();
 			}
 		} else throw std::runtime_error("At least one operand of sub instruction expected to be a local variable");
 	}
@@ -310,12 +292,10 @@ namespace LL2W::Passes {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 				auto mod = std::make_shared<ModRInstruction>(left_var, right_var, node->variable);
-				function.insertBefore(instruction, mod);
-				mod->extract();
+				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				auto mod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
-				function.insertBefore(instruction, mod);
-				mod->extract();
+				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
 					value_map.at(right->valueType()));
@@ -328,10 +308,8 @@ namespace LL2W::Passes {
 				VariablePtr m0 = function.m0(instruction);
 				auto set = std::make_shared<SetInstruction>(m0, left->intValue());
 				auto mod = std::make_shared<ModRInstruction>(m0, right_var, node->variable);
-				function.insertBefore(instruction, set);
-				function.insertBefore(instruction, mod);
-				set->extract();
-				mod->extract();
+				function.insertBefore(instruction, set)->setDebug(node)->extract();
+				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
 					std::string(*right));

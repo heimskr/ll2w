@@ -122,15 +122,15 @@ namespace LL2W::Passes {
 						function.insertAfter(last, comment);
 						last = comment;
 						for (InstructionPtr &to_add: init_instructions) {
-							function.insertAfter(last, to_add);
+							function.insertAfter(last, to_add)->setDebug(asm_node)->extract();
 							last = to_add;
 						}
 						comment = std::make_shared<Comment>("*init end");
-						function.insertAfter(last, comment);
+						function.insertAfter(last, comment)->setDebug(asm_node)->extract();
 						last = comment;
 					} else if (WASMInstructionNode *wasm_instruction = dynamic_cast<WASMInstructionNode *>(child)) {
 						InstructionPtr new_instruction = wasm_instruction->convert(function, map);
-						function.insertAfter(last, new_instruction);
+						function.insertAfter(last, new_instruction)->setDebug(asm_node)->extract();
 						last = new_instruction;
 					}
 				}

@@ -2,6 +2,7 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
+#include "parser/ASTNode.h"
 
 namespace LL2W {
 	Instruction::~Instruction() {}
@@ -48,5 +49,15 @@ namespace LL2W {
 		}
 
 		return nullptr;
+	}
+
+	Instruction * Instruction::setDebug(const ASTNode &node) {
+		debugIndex = node.debugIndex;
+		return this;
+	}
+
+	Instruction * Instruction::setDebug(const ASTNode *node) {
+		debugIndex = node->debugIndex;
+		return this;
 	}
 }

@@ -57,6 +57,7 @@ namespace LL2W::Passes {
 		node->variable->setType(node->to);
 		auto move = std::make_shared<MoveInstruction>(source, node->variable);
 		function.insertBefore(instruction, move);
+		move->setDebug(node)->extract();
 	}
 
 	void lowerTrunc(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
@@ -78,10 +79,13 @@ namespace LL2W::Passes {
 			auto right = std::make_shared<ShiftRightLogicalIInstruction>(destination, 64 - to, destination);
 			function.insertBefore(instruction, left,  "LowerTrunc: " + tag + ", left shift");
 			function.insertBefore(instruction, right, "LowerTrunc: " + tag + ", right shift");
+			left->setDebug(conversion)->extract();
+			right->setDebug(conversion)->extract();
 		} else {
 			const int mask = static_cast<int>((1L << conversion->to->width()) - 1);
 			auto andi = std::make_shared<AndIInstruction>(source, mask, destination);
 			function.insertBefore(instruction, andi, "LowerTrunc: " + tag + ", apply mask");
+			andi->setDebug(conversion)->extract();
 		}
 	}
 
@@ -108,15 +112,12 @@ namespace LL2W::Passes {
 			auto xorr = std::make_shared<XorRInstruction>(source, m0, destination);
 			// $dst -= $m0
 			auto sub = std::make_shared<SubRInstruction>(destination, m0, destination);
-			for (const InstructionPtr &inst: std::initializer_list<InstructionPtr> {set1, shift, xorr, sub}) {
-				function.insertBefore(instruction, inst);
-				inst->extract();
-			}
+			for (const InstructionPtr &inst: std::initializer_list<InstructionPtr> {set1, shift, xorr, sub})
+				function.insertBefore(instruction, inst)->setDebug(conversion)->extract();
 
 			if (to == 32) {
 				auto andi = std::make_shared<AndIInstruction>(destination, static_cast<int>(0xffffffff), destination);
-				function.insertBefore(instruction, andi, "LowerSext: to == 32");
-				andi->extract();
+				function.insertBefore(instruction, andi, "LowerSext: to == 32")->setDebug(conversion)->extract();
 			}
 		} else throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported");
 		// TODO: support other destination widths

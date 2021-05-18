@@ -33,12 +33,10 @@ namespace LL2W::Passes {
 					TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 					VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 					auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
-					function.insertBefore(instruction, setsym);
-					setsym->extract();
+					function.insertBefore(instruction, setsym)->setDebug(*llvm)->extract();
 					if (offset != 0) {
 						auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
-						function.insertAfter(setsym, addi);
-						addi->extract();
+						function.insertAfter(setsym, addi)->setDebug(*llvm)->extract();
 					}
 
 					auto new_value = std::make_shared<LocalValue>(std::to_string(new_var->id));

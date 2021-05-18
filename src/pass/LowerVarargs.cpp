@@ -31,7 +31,8 @@ namespace LL2W::Passes {
 						VariablePtr var = dynamic_cast<LocalValue *>(call->constants[0]->value.get())->variable;
 						// function.insertBefore(instruction, std::make_shared<MoveInstruction>(m2, var));
 						function.insertBefore(instruction,
-							std::make_shared<StoreRInstruction>(m2, var, var->type->width() / 8));
+							std::make_shared<StoreRInstruction>(m2, var, var->type->width() / 8))
+							->setDebug(llvm)->extract();
 						any_changed = true;
 						to_remove.push_back(instruction);
 						continue;

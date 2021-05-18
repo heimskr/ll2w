@@ -12,6 +12,12 @@
 #define CAST(t) t *cast = dynamic_cast<t *>(node); if (!cast) break
 
 namespace LL2W {
+	LLVMInstruction::LLVMInstruction(InstructionNode *node_, int index_, bool owns_node):
+	Instruction(index_), node(node_), ownsNode(owns_node) {
+		if (node_)
+			debugIndex = node_->debugIndex;
+	}
+
 	LLVMInstruction::~LLVMInstruction() {
 		if (ownsNode)
 			delete node;

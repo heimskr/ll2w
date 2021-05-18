@@ -453,12 +453,15 @@ namespace LL2W {
 		return iter == blocks.end()? nullptr : *iter;
 	}
 
-	void Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
+	InstructionPtr Function::insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
 			std::cerr << "\e[31;1m!\e[0m " << base->debugExtra() << "\n";
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
+
+		if (new_instruction->debugIndex == -1)
+			new_instruction->debugIndex = base->debugIndex;
 
 		if (reindex)
 			new_instruction->index = base->index + 1;
@@ -486,14 +489,19 @@ namespace LL2W {
 					++(*iter)->index;
 			}
 		}
+
+		return new_instruction;
 	}
 
-	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
 			error() << base->debugExtra() << "\n";
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
+
+		if (new_instruction->debugIndex == -1)
+			new_instruction->debugIndex = base->debugIndex;
 
 		if (reindex)
 			new_instruction->index = base->index + 1;
@@ -506,17 +514,20 @@ namespace LL2W {
 		if (reindex)
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
 				++(*linearIter)->index;
+		return new_instruction;
 	}
 
-	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,
 	                            bool reindex) {
 		insertBefore(base, new_instruction, false);
 		comment(new_instruction, text, reindex);
+		return new_instruction;
 	}
 
-	void Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text,
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text,
 	                            bool reindex) {
 		insertBefore(base, new_instruction, std::string(text), reindex);
+		return new_instruction;
 	}
 
 	InstructionPtr Function::comment(InstructionPtr instruction, const std::string &text, bool reindex) {
@@ -1030,7 +1041,15 @@ namespace LL2W {
 #else
 			out << "\t";
 #endif
-			out << instruction->toString() << "\n";
+			out << instruction->toString();
+			const int dbg = instruction->debugIndex;
+			if (dbg != -1) {
+				if (parent->locations.count(dbg) != 0)
+					out << " !" << parent->locations.at(dbg).index;
+				else
+					warn() << "Couldn't find location for !" << dbg << "\n";
+			}
+			out << "\n";
 		}
 		out << "}\n";
 		return out.str();

@@ -64,28 +64,24 @@ namespace LL2W::Passes {
 			VariablePtr localvar = local->getVariable(function);
 			auto load = std::make_shared<LoadRInstruction>(localvar, node->variable, size);
 			function.insertBefore(instruction, load, "LowerMemory(load): [" + localvar->plainString() + "] -> "
-				+ node->variable->plainString());
-			load->extract();
+				+ node->variable->plainString())->setDebug(llvm)->extract();
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(converted->value.get());
 			auto load = std::make_shared<LoadIInstruction>(global->name, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory(load): [global] -> %var");
-			load->extract();
+			function.insertBefore(instruction, load, "LowerMemory(load): [global] -> %var")->setDebug(llvm)->extract();
 		} else if (value_type == ValueType::Null) { // In case you're feeling silly.
 			auto load = std::make_shared<LoadIInstruction>(0, node->variable, size);
-			function.insertBefore(instruction, load, "LowerMemory(load): [null] -> %var");
-			load->extract();
+			function.insertBefore(instruction, load, "LowerMemory(load): [null] -> %var")->setDebug(llvm)->extract();
 		} else if (value_type == ValueType::Int) {
 			int intval = converted->value->intValue();
 			auto load = std::make_shared<LoadIInstruction>(intval, node->variable, size);
 			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval) + "] -> %var");
-			load->extract();
+			load->setDebug(llvm)->extract();
 		} else if (value_type == ValueType::Bool) {
 			BoolValue *boolval = dynamic_cast<BoolValue *>(converted->value.get());
 			auto load = std::make_shared<LoadIInstruction>(boolval->value? 1 : 0, node->variable, size);
 			function.insertBefore(instruction, load, "LowerMemory(load): [bool " + std::to_string(boolval->value? 1 : 0)
-				+ "] -> %var");
-			load->extract();
+				+ "] -> %var")->setDebug(llvm)->extract();
 		} else throw std::runtime_error("Unexpected ValueType in load instruction: " + value_map.at(value_type));
 	}
 

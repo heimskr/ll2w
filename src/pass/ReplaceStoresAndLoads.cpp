@@ -43,7 +43,8 @@ namespace LL2W::Passes {
 						if (check_unique_load(start, store->location))
 							to_remove.push_back(start);
 						to_remove.push_back(next);
-						function.insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result));
+						function.insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result))
+							->setDebug(store)->extract();
 						any_changed = true;
 						goto remove_instructions;
 					}

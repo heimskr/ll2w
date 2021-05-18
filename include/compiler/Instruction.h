@@ -1,5 +1,4 @@
-#ifndef COMPILER_INSTRUCTION_H_
-#define COMPILER_INSTRUCTION_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -9,6 +8,7 @@
 #include "instruction/InstructionMeta.h"
 
 namespace LL2W {
+	class ASTNode;
 	class BasicBlock;
 	class Variable;
 
@@ -24,6 +24,8 @@ namespace LL2W {
 
 			/** The order of the instruction within the entire function in its linearized representation. */
 			int index;
+
+			int debugIndex = -1;
 
 			std::unordered_set<InstructionMeta> meta;
 
@@ -69,9 +71,25 @@ namespace LL2W {
 
 			virtual std::shared_ptr<Variable> doesRead(std::shared_ptr<Variable>) const;
 			virtual std::shared_ptr<Variable> doesWrite(std::shared_ptr<Variable>) const;
+
+			Instruction * setDebug(int debug_index) {
+				debugIndex = debug_index;
+				return this;
+			}
+
+			Instruction * setDebug(const Instruction &other) {
+				debugIndex = other.debugIndex;
+				return this;
+			}
+
+			Instruction * setDebug(const Instruction *other) {
+				debugIndex = other->debugIndex;
+				return this;
+			}
+
+			Instruction * setDebug(const ASTNode &);
+			Instruction * setDebug(const ASTNode *);
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;
 }
-
-#endif

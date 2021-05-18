@@ -21,7 +21,7 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(
 					dynamic_cast<LocalValue *>(call->constants[0]->value.get())->variable,
 					function.sp(instruction->parent.lock()));
-				function.insertBefore(instruction, move);
+				function.insertBefore(instruction, move)->setDebug(llvm)->extract();
 				to_remove.push_back(instruction);
 			}
 		}
