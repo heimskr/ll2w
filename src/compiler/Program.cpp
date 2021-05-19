@@ -60,19 +60,31 @@ namespace LL2W {
 				case LLVM_ALIAS_DEF:
 					aliases.emplace(node->lexerInfo, dynamic_cast<AliasDef *>(node));
 					break;
-				case LLVMTOK_DIFILE:
-					files.emplace(node->front()->atoi(), File(node->at(1)->unquote(), node->at(2)->unquote()));
+				case LLVMTOK_DIFILE: {
+					const int index = node->front()->atoi();
+					files.emplace(index, File(node->at(1)->unquote(), node->at(2)->unquote()));
+					highestIndex = std::max(index, highestIndex);
 					break;
-				case LLVMTOK_DILOCATION:
-					locations.emplace(node->front()->atoi(), Location(*node->at(1)));
+				}
+				case LLVMTOK_DILOCATION: {
+					const int index = node->front()->atoi();
+					locations.emplace(index, Location(*node->at(1)));
+					highestIndex = std::max(index, highestIndex);
 					break;
-				case LLVMTOK_DISUBPROGRAM:
-					subprograms.emplace(node->front()->atoi(), Subprogram(*node->at(1)));
+				}
+				case LLVMTOK_DISUBPROGRAM: {
+					const int index = node->front()->atoi();
+					subprograms.emplace(index, Subprogram(*node->at(1)));
+					highestIndex = std::max(index, highestIndex);
 					break;
-				case LLVMTOK_DILB:
-					lexicalBlocks.emplace(node->front()->atoi(),
+				}
+				case LLVMTOK_DILB: {
+					const int index = node->front()->atoi();
+					lexicalBlocks.emplace(index,
 						LexicalBlock(node->at(2)->atoi(), node->at(1)->atoi()));
+					highestIndex = std::max(index, highestIndex);
 					break;
+				}
 			}
 		}
 
@@ -206,10 +218,8 @@ namespace LL2W {
 			if (files.count(location.file) == 0) {
 				warn() << "Couldn't find file " << location.file << " from location " << index << ".\n";
 			} else if (subprograms.count(location.scope) != 0) {
-				out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column << " "
-				    << subprograms.at(location.scope).index << "\n";
-				location.index = i++;
-			} else if (lexicalBlocks.count(location.scope) != 0) {
+				// TODO: Originally, I had the or'd condition above split into two else if blocks with identical
+				// contents, but then I merged them. Were they supposed to be separate with different contents?
 				out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column << " "
 				    << subprograms.at(location.scope).index << "\n";
 				location.index = i++;
@@ -238,5 +248,9 @@ namespace LL2W {
 #endif
 				pair.second->debug();
 		}
+	}
+
+	int Program::newDebugIndex() {
+		return ++highestIndex;
 	}
 }

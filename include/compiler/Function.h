@@ -124,6 +124,8 @@ namespace LL2W {
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
 			int initialPushedBytes = -1;
 
+			int debugIndex = -1;
+
 			ColoringAllocator *allocator = nullptr;
 
 			bool initialDone = false, allocationDone = false, finalDone = false;

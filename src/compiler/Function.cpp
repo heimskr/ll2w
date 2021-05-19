@@ -84,7 +84,7 @@ namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node) {
 		parent = &program;
 		name = node.lexerInfo;
-		FunctionHeader *header = dynamic_cast<FunctionHeader *>(node[0]);
+		FunctionHeader *header = dynamic_cast<FunctionHeader *>(node.front());
 		if (!header)
 			throw std::runtime_error("header is null in Function::Function");
 		argumentsNode = header->arguments;
@@ -92,6 +92,7 @@ namespace LL2W {
 		astnode = &node;
 		returnType = header->returnType;
 		allocator = new ColoringAllocator(*this);
+		debugIndex = header->debugIndex;
 	}
 
 	Function::~Function() {

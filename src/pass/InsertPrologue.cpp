@@ -1,4 +1,5 @@
 #include "compiler/Function.h"
+#include "compiler/Program.h"
 #include "instruction/Comment.h"
 #include "instruction/Label.h"
 #include "instruction/MoveInstruction.h"
@@ -12,6 +13,17 @@ namespace LL2W::Passes {
 	void insertPrologue(Function &function) {
 		BasicBlockPtr front_block = function.blocks.front();
 		InstructionPtr first = function.firstInstruction(true);
+
+		if (!function.parent)
+			throw std::runtime_error("Function " + *function.name + " is missing a parent");
+		Program &program = *function.parent;
+		if (first->debugIndex == -1) {
+			first->debugIndex = program.newDebugIndex();
+			Subprogram &subprogram = program.subprograms.at(function.debugIndex);
+			Location location(subprogram.line, 0, function.debugIndex);
+			location.file = subprogram.file;
+			program.locations.emplace(first->debugIndex, std::move(location));
+		}
 
 		if (!first)
 			throw std::runtime_error("Couldn't find a non-label instruction in the initial block of " + *function.name);

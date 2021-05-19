@@ -16,6 +16,9 @@ namespace LL2W {
 	class ASTNode;
 
 	class Program {
+		private:
+			int highestIndex = -1;
+
 		public:
 			std::unordered_map<std::string, Function *> functions;
 			std::string sourceFilename;
@@ -50,5 +53,7 @@ namespace LL2W {
 
 			/** Prints debug information for all the functions in the program. */
 			void debug();
+
+			int newDebugIndex();
 	};
 }
