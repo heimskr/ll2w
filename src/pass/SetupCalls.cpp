@@ -28,7 +28,6 @@ namespace LL2W::Passes {
 			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
 			BasicBlockPtr block = instruction->parent.lock();
 
-			// Right now, calls to function pointers are unsupported. This might change once I come across an example.
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
 			std::unique_ptr<GlobalValue> global_uptr;
@@ -91,6 +90,19 @@ namespace LL2W::Passes {
 				}
 			}
 
+			// Next, if applicable, we account for the situation where the jump is to an argument register. Because it
+			// may be overwritten right before the jump, we'd need to copy it to a temporary variable and jump to that.
+			VariablePtr jump_var;
+			if (!global_uptr) {
+				jump_var = dynamic_cast<LocalValue *>(name_value)->variable;
+				if (jump_var->id < arg_count) {
+					VariablePtr new_var = function.newVariable(jump_var->type);
+					auto move = std::make_shared<MoveInstruction>(jump_var, new_var);
+					function.insertBefore(instruction, move, "jump_var -> new_var")->setDebug(*llvm)->extract();
+					jump_var = new_var;
+				}
+			}
+
 			// Next, move variables into the argument registers.
 			for (i = 0; i < reg_max && i < arg_count; ++i) {
 				// Make a precolored dummy variable.
@@ -125,8 +137,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_uptr->name, true))
 					->setDebug(*llvm)->extract();
 			} else {
-				LocalValue *local = dynamic_cast<LocalValue *>(name_value);
-				auto jump = std::make_shared<JumpRegisterInstruction>(local->variable, true);
+				auto jump = std::make_shared<JumpRegisterInstruction>(jump_var, true);
 				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer")
 					->setDebug(*llvm)->extract();
 			}

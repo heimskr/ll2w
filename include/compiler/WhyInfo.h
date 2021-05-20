@@ -42,6 +42,7 @@ namespace LL2W {
 #endif
 		static std::set<int> makeRegisterPool();
 		static bool isSpecialPurpose(int);
+		static bool isArgumentRegister(int);
 		static std::string registerName(int);
 	};
 }

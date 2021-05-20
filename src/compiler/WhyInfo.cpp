@@ -17,6 +17,10 @@ namespace LL2W {
 		return 0 <= reg && reg < 128 && (reg < temporaryOffset || savedOffset + savedCount <= reg);
 	}
 
+	bool WhyInfo::isArgumentRegister(int reg) {
+		return argumentOffset <= reg && reg < argumentOffset + argumentCount;
+	}
+
 	std::string WhyInfo::registerName(int reg) {
 		switch (reg) {
 			case              zeroOffset: return "0";
