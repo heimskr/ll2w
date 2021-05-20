@@ -42,14 +42,14 @@ namespace LL2W::Passes {
 						to_skip += function.arguments->at(i).type->width() / 8;
 				}
 
-				auto sub  = std::make_shared<SubIInstruction> (sp, to_skip, m0);
-				sub->meta.insert(InstructionMeta::LoadArgumentsSkip);
+				auto add  = std::make_shared<AddIInstruction> (sp, to_skip, m0);
+				add->meta.insert(InstructionMeta::LoadArgumentsSkip);
 				auto load = std::make_shared<LoadRInstruction>(m0, arg_var, arg_var->type->width() / 8);
 				if (!first_load)
 					first_load = load;
 
-				function.insertBefore(entry->instructions.front(), sub, "LoadArguments: $sp - to_skip -> %temp", false);
-				function.insertAfter(sub, load, false);
+				function.insertBefore(entry->instructions.front(), add, "LoadArguments: $sp + to_skip -> %temp", false);
+				function.insertAfter(add, load, false);
 				function.comment(load, "LoadArguments: [%temp] -> %var", false);
 			}
 
@@ -68,7 +68,7 @@ namespace LL2W::Passes {
 				else if (auto *itype = dynamic_cast<IType<Immediate> *>(instruction.get()))
 					if (std::holds_alternative<int>(itype->imm))
 						std::get<int>(itype->imm) += function.initialPushedBytes;
-				function.comment(instruction, "Increased by " + std::to_string(function.initialPushedBytes) + " bytes");
+				function.comment(instruction, "Augmented by " + std::to_string(function.initialPushedBytes) + " bytes");
 			}
 		}
 	}
