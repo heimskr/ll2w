@@ -125,6 +125,7 @@ namespace LL2W {
 			int initialPushedBytes = -1;
 
 			int debugIndex = -1;
+			int initialDebugIndex = -1;
 
 			ColoringAllocator *allocator = nullptr;
 
@@ -333,6 +334,8 @@ namespace LL2W {
 			void hackVariables();
 
 			Graph makeDependencyGraph() const;
+
+			void makeInitialDebugIndex();
 
 			/** Convenience method for creating a precolored assembler register. */
 			VariablePtr mx(unsigned char, BasicBlockPtr);

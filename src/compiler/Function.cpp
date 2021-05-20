@@ -730,6 +730,7 @@ namespace LL2W {
 
 	void Function::initialCompile() {
 		extractBlocks();
+		makeInitialDebugIndex();
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -1388,6 +1389,16 @@ namespace LL2W {
 				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
 		}
 		return dependencies;
+	}
+
+	void Function::makeInitialDebugIndex() {
+		if (!parent)
+			throw std::runtime_error("Function " + *name + " is missing a parent");
+		initialDebugIndex = parent->newDebugIndex();
+		Subprogram &subprogram = parent->subprograms.at(debugIndex);
+		Location location(subprogram.line, 1, debugIndex);
+		location.file = subprogram.file;
+		parent->locations.emplace(initialDebugIndex, location);
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {

@@ -14,19 +14,11 @@ namespace LL2W::Passes {
 		BasicBlockPtr front_block = function.blocks.front();
 		InstructionPtr first = function.firstInstruction(true);
 
-		if (!function.parent)
-			throw std::runtime_error("Function " + *function.name + " is missing a parent");
-		Program &program = *function.parent;
-		if (first->debugIndex == -1) {
-			first->debugIndex = program.newDebugIndex();
-			Subprogram &subprogram = program.subprograms.at(function.debugIndex);
-			Location location(subprogram.line, 0, function.debugIndex);
-			location.file = subprogram.file;
-			program.locations.emplace(first->debugIndex, std::move(location));
-		}
-
 		if (!first)
 			throw std::runtime_error("Couldn't find a non-label instruction in the initial block of " + *function.name);
+
+		if (first->debugIndex == -1)
+			first->debugIndex = function.initialDebugIndex;
 
 		// Start by pushing a few special registers to the stack.
 		VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, front_block);
