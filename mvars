@@ -5,3 +5,4 @@ $m3: Used in LowerIcmp
 $m4: Used in FinishMultireg
 $m5: Used in InsertStackSkip
 $m6: Used for spilled variables
+$m7: Not used; reserved for pseudoinstruction expansion by wasmc
