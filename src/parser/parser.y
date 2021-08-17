@@ -237,6 +237,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DILOCATION "!DILocation"
 %token LLVMTOK_COLUMN "column"
 %token LLVMTOK_DILB "!DILexicalBlock"
+%token LLVMTOK_ASSUME "@llvm.assume"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -579,7 +580,7 @@ _alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
            | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable
-           | i_dbg;
+           | i_dbg | i_assume;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); }; // applicable to all instructions
 unibang: "," "!prof"      LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
@@ -666,6 +667,10 @@ dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
        | "!" LLVMTOK_IDENT { $$ = $1->adopt($2); }
        | diexpression;
+
+// Example: call void @llvm.assume(i1 true) [ "align"(i8* %10, i64 %9) ]
+i_assume: "call" "void" "@llvm.assume" "(" LLVMTOK_INTTYPE LLVMTOK_BOOL ")" "[" LLVMTOK_STRING "(" constants ")" "]"
+          { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); };
 
 diexpression: "!DIExpression" "(" diexpression_list ")" { $$ = $1->adopt($3); D($2, $4); }
             | "!DIExpression" "(" ")" { $$ = $1; D($2, $3); };

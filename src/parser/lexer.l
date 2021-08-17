@@ -99,6 +99,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 
 "@llvm.dbg.value"			{ LLVMRTOKEN(DBG_VALUE) }
 "@llvm.dbg.declare"			{ LLVMRTOKEN(DBG_DECLARE) }
+"@llvm.assume"				{ LLVMRTOKEN(ASSUME) }
 
 {LLVM_UNIONVAR}				{ LLVMRTOKEN(UNIONVAR) }
 {LLVM_CLASSVAR}				{ LLVMRTOKEN(CLASSVAR) }
