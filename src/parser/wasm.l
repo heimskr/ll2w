@@ -49,16 +49,23 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
+"%%sleep"					{ WASMRTOKEN(SLEEP) }
 "%sleep"					{ WASMRTOKEN(SLEEP) }
+"%%setpt"					{ WASMRTOKEN(SETPT) }
 "%setpt"					{ WASMRTOKEN(SETPT) }
 "print"						{ WASMRTOKEN(PRINT) }
 "*init"						{ WASMRTOKEN(INIT) }
+"%%time"					{ WASMRTOKEN(TIME) }
+"%%ring"					{ WASMRTOKEN(RING) }
+"%%page"					{ WASMRTOKEN(PAGE) }
 "%time"						{ WASMRTOKEN(TIME) }
 "%ring"						{ WASMRTOKEN(RING) }
 "%page"						{ WASMRTOKEN(PAGE) }
-"halt"						{ WASMRTOKEN(HALT) }
+"%%int"						{ WASMRTOKEN(INT) }
+"%%rit"						{ WASMRTOKEN(RIT) }
 "%int"						{ WASMRTOKEN(INT) }
 "%rit"						{ WASMRTOKEN(RIT) }
+"halt"						{ WASMRTOKEN(HALT) }
 "lui"						{ WASMRTOKEN(LUI) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }
