@@ -1394,6 +1394,8 @@ namespace LL2W {
 	void Function::makeInitialDebugIndex() {
 		if (!parent)
 			throw std::runtime_error("Function " + *name + " is missing a parent");
+		if (debugIndex == -1) // TODO: verify
+			return;
 		initialDebugIndex = parent->newDebugIndex();
 		Subprogram &subprogram = parent->subprograms.at(debugIndex);
 		Location location(subprogram.line, 1, debugIndex);
