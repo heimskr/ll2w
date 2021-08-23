@@ -69,6 +69,9 @@ namespace LL2W {
 
 			virtual bool isPhi() const { return false; }
 
+			/** Whether it's valid for this instruction to have a debug intbang inserted after it. */
+			virtual bool showDebug() const { return true; }
+
 			virtual std::shared_ptr<Variable> doesRead(std::shared_ptr<Variable>) const;
 			virtual std::shared_ptr<Variable> doesWrite(std::shared_ptr<Variable>) const;
 

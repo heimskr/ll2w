@@ -11,6 +11,7 @@ namespace LL2W {
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+		bool showDebug() const override { return false; }
 	};
 }
 

@@ -1045,7 +1045,7 @@ namespace LL2W {
 #endif
 			out << instruction->toString();
 			const int dbg = instruction->debugIndex;
-			if (dbg != -1) {
+			if (dbg != -1 && instruction->showDebug()) {
 				if (parent->locations.count(dbg) != 0)
 					out << " !" << parent->locations.at(dbg).index;
 				else
