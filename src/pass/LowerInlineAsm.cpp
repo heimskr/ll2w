@@ -26,9 +26,16 @@ namespace LL2W::Passes {
 			++count;
 			AsmNode *asm_node = dynamic_cast<AsmNode *>(llvm->node);
 
+			wasmParser.errorCount = 0;
 			wasmParser.in(asm_node->contents->substr(1, asm_node->contents->size() - 2));
 			wasmParser.debug(false, false);
 			wasmParser.parse();
+
+			if (wasmParser.errorCount != 0) {
+				std::cerr << "\e[31mWASM parsing failed for ASM node at " << asm_node->location << "\e[39m\n";
+				std::cerr << "\e[31mFull text: [\e[1m" << asm_node->contents->substr(1, asm_node->contents->size() - 2)
+					<< "\e[22m]\e[39m\n";
+			}
 
 			if (wasmParser.errorCount == 0 && !wasmLexer.failed) {
 				bool init_found = false;
