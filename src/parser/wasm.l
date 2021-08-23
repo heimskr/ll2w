@@ -49,17 +49,17 @@ WASM_SINGLE_REG			("$"[0-9]+)
 {WASM_CHAR}					{ WASMRTOKEN(CHAR) }
 
 "memset"					{ WASMRTOKEN(MEMSET) }
+"%sleep"					{ WASMRTOKEN(SLEEP) }
+"%setpt"					{ WASMRTOKEN(SETPT) }
 "print"						{ WASMRTOKEN(PRINT) }
-"sleep"						{ WASMRTOKEN(SLEEP) }
-"setpt"						{ WASMRTOKEN(SETPT) }
 "*init"						{ WASMRTOKEN(INIT) }
-"time"						{ WASMRTOKEN(TIME) }
-"ring"						{ WASMRTOKEN(RING) }
+"%time"						{ WASMRTOKEN(TIME) }
+"%ring"						{ WASMRTOKEN(RING) }
+"%page"						{ WASMRTOKEN(PAGE) }
 "halt"						{ WASMRTOKEN(HALT) }
-"page"						{ WASMRTOKEN(PAGE) }
+"%int"						{ WASMRTOKEN(INT) }
+"%rit"						{ WASMRTOKEN(RIT) }
 "lui"						{ WASMRTOKEN(LUI) }
-"int"						{ WASMRTOKEN(INT) }
-"rit"						{ WASMRTOKEN(RIT) }
 "prc"						{ WASMRTOKEN(PRC) }
 "prx"						{ WASMRTOKEN(PRX) }
 "prd"						{ WASMRTOKEN(PRD) }

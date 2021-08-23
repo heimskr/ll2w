@@ -101,10 +101,10 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_NOTEQUAL "!="
 %token WASMTOK_IF "if"
 %token WASMTOK_NOP "<>"
-%token WASMTOK_INT "int"
-%token WASMTOK_RIT "rit"
-%token WASMTOK_TIME "time"
-%token WASMTOK_RING "ring"
+%token WASMTOK_INT "%int"
+%token WASMTOK_RIT "%rit"
+%token WASMTOK_TIME "%time"
+%token WASMTOK_RING "%ring"
 %token WASMTOK_LL "<<"
 %token WASMTOK_RL ">>>"
 %token WASMTOK_RA ">>"
@@ -114,11 +114,11 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_PRD "prd"
 %token WASMTOK_PRB "prb"
 %token WASMTOK_HALT "halt"
-%token WASMTOK_SLEEP "sleep"
+%token WASMTOK_SLEEP "%sleep"
 %token WASMTOK_ON "on"
 %token WASMTOK_OFF "off"
-%token WASMTOK_PAGE "page"
-%token WASMTOK_SETPT "setpt"
+%token WASMTOK_PAGE "%page"
+%token WASMTOK_SETPT "%setpt"
 %token WASMTOK_SHORT "/s"
 %token WASMTOK_INIT "*init"
 %token WASMTOK_QUESTION "?"
@@ -223,17 +223,17 @@ op_spop: "]" reg { $$ = new WASMStackNode($2, false); D($1); };
 
 op_nop: "<>" { $$ = new WASMNopNode(); D($1); };
 
-op_int: "int" immediate { $$ = new WASMIntINode($2); D($1); };
+op_int: "%int" immediate { $$ = new WASMIntINode($2); D($1); };
 
-op_rit: "rit" immediate { $$ = new WASMRitINode($2); D($1); };
+op_rit: "%rit" immediate { $$ = new WASMRitINode($2); D($1); };
 
-op_time: "time" reg { $$ = new WASMTimeRNode($2); D($1); };
+op_time: "%time" reg { $$ = new WASMTimeRNode($2); D($1); };
 
-op_timei: "time" immediate { $$ = new WASMTimeINode($2); D($1); };
+op_timei: "%time" immediate { $$ = new WASMTimeINode($2); D($1); };
 
-op_ring: "ring" reg { $$ = new WASMRingRNode($2); D($1); };
+op_ring: "%ring" reg { $$ = new WASMRingRNode($2); D($1); };
 
-op_ringi: "ring" immediate { $$ = new WASMRingINode($2); D($1); };
+op_ringi: "%ring" immediate { $$ = new WASMRingINode($2); D($1); };
 
 op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
 
@@ -241,7 +241,7 @@ op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1
 
 op_ext: op_print | op_pprint | op_sleep | op_halt;
 
-op_sleep: "<" "sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
+op_sleep: "<" "%sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 
 op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
 printop: "print" | "prx" | "prd" | "prc" | "prb";
@@ -251,20 +251,19 @@ op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2,
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 
-op_page: "page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
-       | "page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
+op_page: "%page" "on"  { $$ = new WASMPageNode(true);  D($1, $2); };
+       | "%page" "off" { $$ = new WASMPageNode(false); D($1, $2); };
 
-op_setpt: "setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
+op_setpt: "%setpt" reg { $$ = new WASMSetptRNode($2); D($1); };
 
-op_svpg: "page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
+op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
-ident: "memset" | "time" | "ring" | "lui" | "int" | "rit" | "if" | "halt" | "on" | "off" | "setpt" | "sleep" | "page"
-     | printop  | "p"    | WASMTOK_IDENT;
+ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | printop | "p" | WASMTOK_IDENT;
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

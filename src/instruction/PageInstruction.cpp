@@ -6,10 +6,10 @@ namespace LL2W {
 		RType(nullptr, nullptr, nullptr, index_), on(on_) {}
 
 	std::string PageInstruction::debugExtra() {
-		return "\e[36mpage\e[39m " + std::string(on? "on" : "off");
+		return "\e[36m%page\e[39m " + std::string(on? "on" : "off");
 	}
 
 	std::string PageInstruction::toString() const {
-		return "page " + std::string(on? "on" : "off");
+		return "%page " + std::string(on? "on" : "off");
 	}
 }

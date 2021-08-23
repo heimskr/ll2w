@@ -6,10 +6,10 @@ namespace LL2W {
 		RType(rs_, nullptr, nullptr, index_) {}
 
 	std::string TimeRInstruction::debugExtra() {
-		return "\e[36mtime\e[39m " + std::string(*rs);
+		return "\e[36m%time\e[39m " + std::string(*rs);
 	}
 
 	std::string TimeRInstruction::toString() const {
-		return "time " + rs->toString();
+		return "%time " + rs->toString();
 	}
 }

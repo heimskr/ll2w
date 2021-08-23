@@ -6,10 +6,10 @@ namespace LL2W {
 		RType(rs_, nullptr, nullptr, index_) {}
 
 	std::string RingRInstruction::debugExtra() {
-		return "\e[36mring\e[39m " + std::string(*rs);
+		return "\e[36m%ring\e[39m " + std::string(*rs);
 	}
 
 	std::string RingRInstruction::toString() const {
-		return "ring " + rs->toString();
+		return "%ring " + rs->toString();
 	}
 }

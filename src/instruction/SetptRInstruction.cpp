@@ -3,10 +3,10 @@
 
 namespace LL2W {
 	std::string SetptRInstruction::debugExtra() {
-		return "\e[36msetpt\e[39m " + std::string(*rs);
+		return "\e[36m%setpt\e[39m " + std::string(*rs);
 	}
 
 	std::string SetptRInstruction::toString() const {
-		return "setpt " + rs->toString();
+		return "%setpt " + rs->toString();
 	}
 }
