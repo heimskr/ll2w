@@ -382,7 +382,8 @@ didt_list: didt_list "," didt_item { $$ = $1->adopt($3); D($2); }
 intnullbang: LLVMTOK_INTBANG | "null";
 pipe_list: pipe_list "|" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
          | pipe_list "|" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-         | LLVMTOK_IDENT                 { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); };
+         | LLVMTOK_IDENT                 { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); }
+         | LLVMTOK_DECIMAL               { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); };
 dict_item: "tag"        ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
          | "name"       ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
          | "file"       ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
