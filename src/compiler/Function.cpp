@@ -1036,7 +1036,7 @@ namespace LL2W {
 
 	std::string Function::toString() {
 		std::stringstream out;
-		out << "sub " << name->substr(1) << "() {\n";
+		out << *name << "\n";
 		for (InstructionPtr &instruction: linearInstructions) {
 #ifdef SPACE_COUNT
 			out << std::string(' ', SPACE_COUNT);
@@ -1053,7 +1053,7 @@ namespace LL2W {
 			}
 			out << "\n";
 		}
-		out << "}\n";
+		out << "\t: $rt\n";
 		return out.str();
 	}
 
