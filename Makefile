@@ -1,6 +1,6 @@
 COMPILER		?= clang++
 DEBUGGER		?= lldb
-OPTIMIZATION	?= -O3
+OPTIMIZATION	?= -O0 -g
 STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
