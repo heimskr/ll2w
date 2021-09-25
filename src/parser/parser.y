@@ -238,6 +238,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_COLUMN "column"
 %token LLVMTOK_DILB "!DILexicalBlock"
 %token LLVMTOK_ASSUME "@llvm.assume"
+%token LLVMTOK_SYSROOT "sysroot"
+%token LLVMTOK_SDK "sdk"
+%token LLVMTOK_EXPORTSYMBOLS "exportSymbols"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -345,12 +348,18 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DIBasicType" "(" "name" ":" LLVMTOK_STRING "," "size" ":" LLVMTOK_DECIMAL
               "," "encoding" ":" LLVMTOK_IDENT ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); }
+            | metabang "=" metadata_distinct "!DIBasicType" "(" "tag" ":" LLVMTOK_IDENT "," "name" ":" LLVMTOK_STRING
+              ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
             | metabang "=" "!DIImportedEntity" "(" "tag" ":" LLVMTOK_IDENT "," "scope" ":" LLVMTOK_INTBANG "," "entity"
               ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24); }
             | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang
               ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
+            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang
+              "," "exportSymbols" ":" LLVMTOK_BOOL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); }
             | metabang "=" metadata_distinct "!DICompositeType" "(" dict_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DISubroutineType" "(" "types" ":" LLVMTOK_INTBANG ")"
@@ -406,7 +415,9 @@ dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2);
          | "globals"            ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "imports"            ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "splitDebugInlining" ":" LLVMTOK_BOOL    { $$ = $1->adopt($3); D($2); }
-         | "nameTableKind"      ":" "None"          { $$ = $1->adopt($3); D($2); };
+         | "nameTableKind"      ":" "None"          { $$ = $1->adopt($3); D($2); }
+         | "sysroot"            ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "sdk"                ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
 dicu_list: dicu_list "," dicu_item { $$ = $1->adopt($3); D($2); }
          | dicu_item { $$ = (new AN(llvmParser, LLVM_DICU_LIST))->adopt($1); };
 disubprogram_item: "name"          ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }

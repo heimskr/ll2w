@@ -159,6 +159,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DILocalVariable"			{ LLVMRTOKEN(DILV) }
 "!DILocation"				{ LLVMRTOKEN(DILOCATION) }
 "!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
+"exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
 "define"					{ LLVMRTOKEN(DEFINE) }
@@ -283,6 +284,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "imports"					{ LLVMRTOKEN(IMPORTS) }
 "splitDebugInlining"		{ LLVMRTOKEN(SPLITDEBUGINLINING) }
 "nameTableKind"				{ LLVMRTOKEN(NAMETABLEKIND) }
+"sysroot"					{ LLVMRTOKEN(SYSROOT) }
+"sdk"						{ LLVMRTOKEN(SDK) }
 "None"						{ LLVMRTOKEN(NONE) }
 "filename"					{ LLVMRTOKEN(FILENAME) }
 "directory"					{ LLVMRTOKEN(DIRECTORY) }
