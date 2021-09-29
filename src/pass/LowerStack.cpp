@@ -9,41 +9,51 @@
 #include "pass/LowerStack.h"
 
 namespace LL2W::Passes {
+	static int getOffset(const Function &function, const StackLocation &location) {
+		int offset = location.offset;
+		if (location.purpose != StackLocation::Purpose::Spill)
+			offset += function.spillSize; // TODO: verify "+ 8"
+		return offset;
+	}
+
 	int lowerStack(Function &function) {
 		std::list<InstructionPtr> to_remove;
 
-		VariablePtr fp = function.fp(function.getEntry());
+		VariablePtr base = function.fp(function.getEntry());
+		// VariablePtr base = function.mx(8, function.getEntry());
 		VariablePtr m2 = function.mx(2, function.getEntry());
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (StackStoreInstruction *stack_store = dynamic_cast<StackStoreInstruction *>(instruction.get())) {
-				if (stack_store->location.offset == 0) {
-					// %var -> [$fp]
-					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, fp);
-					function.insertBefore(instruction, store, "LowerStack: %var -> [$fp] for " +
+				const int offset = getOffset(function, stack_store->location);
+				if (offset == 0) {
+					// %var -> [base]
+					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, base);
+					function.insertBefore(instruction, store, "LowerStack: %var -> [base] for " +
 						stack_store->location.variable->plainString())->setDebug(stack_store)->extract();
 				} else {
-					// $fp - offset -> $m2
-					auto sub = std::make_shared<SubIInstruction>(fp, stack_store->location.offset, m2);
+					// base - offset -> $m2
+					auto sub = std::make_shared<SubIInstruction>(base, offset, m2);
 					// %var -> [$m2]
 					auto store = std::make_shared<StoreRInstruction>(stack_store->variable, m2);
-					function.insertBefore(instruction, sub,   "LowerStack: $fp - offset -> $m2 for " +
+					function.insertBefore(instruction, sub,   "LowerStack: base - offset -> $m2 for " +
 						stack_store->location.variable->plainString())->setDebug(stack_store)->extract();
 					function.insertBefore(instruction, store, "LowerStack: %var -> [$m2]")
 						->setDebug(stack_store)->extract();
 				}
 			} else if (StackLoadInstruction *stack_load = dynamic_cast<StackLoadInstruction *>(instruction.get())) {
-				if (stack_load->location.offset == 0) {
-					// [$fp] -> %var
-					auto load = std::make_shared<LoadRInstruction>(fp, stack_load->result);
-					function.insertBefore(instruction, load, "LowerStack: [$fp] -> %var for " +
+				const int offset = getOffset(function, stack_load->location);
+				if (offset == 0) {
+					// [base] -> %var
+					auto load = std::make_shared<LoadRInstruction>(base, stack_load->result);
+					function.insertBefore(instruction, load, "LowerStack: [base] -> %var for " +
 						stack_load->location.variable->plainString())->setDebug(stack_load)->extract();
 				} else {
-					// $fp - offset -> $m2
-					auto sub = std::make_shared<SubIInstruction>(fp, stack_load->location.offset, m2);
+					// base - offset -> $m2
+					auto sub = std::make_shared<SubIInstruction>(base, offset, m2);
 					// [$m2] -> %var
 					auto load = std::make_shared<LoadRInstruction>(m2, stack_load->result);
-					function.insertBefore(instruction, sub,  "LowerStack: $fp - offset -> $m2 for " +
+					function.insertBefore(instruction, sub,  "LowerStack: base - offset -> $m2 for " +
 						stack_load->location.variable->plainString())->setDebug(stack_load)->extract();
 					function.insertBefore(instruction, load, "LowerStack: [$m2] -> " +
 						stack_load->result->plainString())->setDebug(stack_load)->extract();

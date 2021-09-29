@@ -83,7 +83,7 @@ namespace LL2W::Passes {
 
 			// First, push the current values of the argument registers to the stack.
 			if (convention == CallingConvention::Reg16) {
-				for (i = 0; i < function.getArity() && i < WhyInfo::argumentCount; ++i) {
+				for (i = 0; i < arg_count && i < WhyInfo::argumentCount; ++i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
 					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false)
 						->setDebug(*llvm)->extract();
@@ -120,13 +120,17 @@ namespace LL2W::Passes {
 				for (i = arg_count - 1; reg_max <= i; --i)
 					bytes_pushed += pushCallValue(function, instruction, call->constants[i]);
 
-			VariablePtr m2;
+			VariablePtr m2, m5 = function.mx(5, instruction->parent.lock());
 
 			if (function.isVariadic()) {
-				m2 = function.makeAssemblerVariable(2, instruction->parent.lock());
+				m2 = function.mx(2, instruction->parent.lock());
 				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2))
 					->setDebug(*llvm)->extract();
 			}
+
+			// Push $m5.
+			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m5))
+				->setDebug(*llvm)->extract();
 
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
@@ -150,13 +154,16 @@ namespace LL2W::Passes {
 					->setDebug(*llvm)->extract();
 			}
 
+			// Pop $m5.
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m5));
+
 			if (function.isVariadic())
 				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2));
 
 			// TODO: Verify. Previously, this was done regardless of calling convention.
 			if (convention == CallingConvention::Reg16) {
 				// Pop the argument registers from the stack.
-				for (i = std::min(15, function.getArity() - 1); 0 <= i; --i) {
+				for (i = std::min(15, arg_count - 1); 0 <= i; --i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
 					function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false)
 						->setDebug(*llvm)->extract();
