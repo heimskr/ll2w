@@ -260,14 +260,22 @@ namespace LL2W {
 	};
 
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
+		struct Index {
+			long width;
+			long value;
+			bool hasMinrange;
+			bool isPvar;
+			Index(long width_, long value_, bool has_minrange, bool is_pvar):
+				width(width_), value(value_), hasMinrange(has_minrange), isPvar(is_pvar) {}
+		};
+
 		bool inbounds = false;
 		TypePtr type;
 		ConstantPtr constant;
-		// width, value/index, has minrange, is pvar
-		std::vector<std::tuple<int, int, bool, bool>> indices;
+		std::vector<Index> indices;
 
 		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_, ASTNode *indices_,
-						ASTNode *unibangs);
+		                  ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Getelementptr; }
 		std::vector<ValuePtr> allValues() override;

@@ -221,7 +221,7 @@ namespace LL2W::Passes {
 		} else if (dynamic_cast<PointerType *>(subtype) || dynamic_cast<FunctionType *>(subtype)) {
 			return WhyInfo::pointerWidth;
 		} else {
-			// warn() << "getLoadStoreSize: Unexpected pointer subtype: " + std::string(*constant_ptr->subtype) << "\n";
+			warn() << "getLoadStoreSize: Unexpected pointer subtype: " + std::string(*constant_ptr->subtype) << "\n";
 			return constant_ptr->subtype->width() / 8;
 			// return -1;
 		}

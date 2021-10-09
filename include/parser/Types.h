@@ -62,11 +62,16 @@ namespace LL2W {
 		}
 	};
 
-	struct ArrayType: public AggregateType {
+	struct HasSubtype {
+		TypePtr subtype;
+		HasSubtype() = delete;
+		HasSubtype(const TypePtr &subtype_): subtype(subtype_) {}
+	};
+
+	struct ArrayType: public AggregateType, public HasSubtype {
 		TypeType typeType() const override { return TypeType::Array; }
 		int count;
-		TypePtr subtype;
-		ArrayType(int count_, TypePtr subtype_): count(count_), subtype(subtype_) {}
+		ArrayType(int count_, TypePtr subtype_): HasSubtype(subtype_), count(count_) {}
 		operator std::string() override;
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<ArrayType>(count, subtype->copy()); }
@@ -97,10 +102,9 @@ namespace LL2W {
 		bool operator==(const LL2W::Type &) const override;
 	};
 
-	struct PointerType: public Type {
+	struct PointerType: public Type, public HasSubtype {
 		TypeType typeType() const override { return TypeType::Pointer; }
-		TypePtr subtype;
-		PointerType(TypePtr subtype_): subtype(subtype_) {}
+		PointerType(TypePtr subtype_): HasSubtype(subtype_) {}
 		operator std::string() override;
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }

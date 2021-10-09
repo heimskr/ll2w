@@ -17,12 +17,9 @@ namespace LL2W::Getelementptr {
 		int front = indices.front();
 		indices.pop_front();
 		switch (type->typeType()) {
-			case TypeType::Pointer: {
-				TypePtr subtype = dynamic_cast<PointerType *>(type.get())->subtype;
-				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
-			}
+			case TypeType::Pointer:
 			case TypeType::Array: {
-				TypePtr subtype = dynamic_cast<ArrayType *>(type.get())->subtype;
+				TypePtr subtype = dynamic_cast<HasSubtype *>(type.get())->subtype;
 				return front * subtype->width() + compute_mutating(subtype, indices, out_type);
 			}
 			case TypeType::Struct: {

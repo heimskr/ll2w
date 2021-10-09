@@ -1,3 +1,5 @@
+#include <deque>
+
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
@@ -7,14 +9,21 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "parser/StructNode.h"
 #include "pass/LowerGetelementptr.h"
 #include "util/Util.h"
 
 // #define DEBUG_GETELEMENTPTR
 
 namespace LL2W::Passes {
+	static bool anyPvarInIndices(const std::vector<GetelementptrNode::Index> &indices) {
+		for (const auto &index: indices)
+			if (index.isPvar)
+				return true;
+		return false;
+	}
+
 	int lowerGetelementptr(Function &function) {
-		using IndexTuple = std::tuple<int, int, bool, bool>;
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -51,16 +60,104 @@ namespace LL2W::Passes {
 			}
 
 			const TypeType tt = constant_type->typeType();
-			const bool one_pvar = node->indices.size() == 1 && std::get<3>(node->indices.at(0));
-			if (tt == TypeType::Struct || ((tt == TypeType::Array || tt == TypeType::Pointer) && !one_pvar)) {
+			const bool one_pvar = node->indices.size() == 1 && node->indices.at(0).isPvar;
+			const bool any_pvar = anyPvarInIndices(node->indices);
+			const bool dynamic_index = node->indices.size() == 2 && !node->indices[0].isPvar && node->indices[1].isPvar;
+
+			if (tt == TypeType::Struct && any_pvar) {
+				// If there are any pvars in the index list, we can't combine all the indices into a single constant and
+				// have to break the offset addition into separate steps for each index. Sequential constant (non-pvar)
+				// indices could be combined into one addition, but I'm too lazy for that as of this writing.
+				std::deque<GetelementptrNode::Index> indices(node->indices.begin(), node->indices.end());
+				TypePtr type = constant_type;
+				VariablePtr var = node->variable;
+				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+				auto move = std::make_shared<MoveInstruction>(pointer, var);
+				function.insertBefore(instruction, move, "LowerGetelementptr: initial move")->setDebug(node)->extract();
+				while (!indices.empty()) {
+					const auto &index = indices.front();
+					indices.pop_front();
+					const TypeType tt = type->typeType();
+					if (index.isPvar) {
+						VariablePtr pvar = function.getVariable(index.value);
+						if (tt == TypeType::Pointer || tt == TypeType::Array) {
+							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
+							auto mult = std::make_shared<MultIInstruction>(pvar, type->width());
+							auto add = std::make_shared<AddRInstruction>(var, lo, var);
+							function.insertBefore(instruction, mult, "LowerGetelementptr: pointer/array, pvar")
+								->setDebug(node)->extract();
+							function.insertBefore(instruction, add)->setDebug(node)->extract();
+						} else if (tt == TypeType::Struct) {
+							throw std::runtime_error("pvar indices are invalid for struct types @ " +
+								std::string(node->location));
+						}
+					} else if (tt == TypeType::Pointer || tt == TypeType::Array) {
+						type = dynamic_cast<HasSubtype *>(type.get())->subtype;
+						auto add = std::make_shared<AddIInstruction>(var, int(type->width() * index.value), var);
+						function.insertBefore(instruction, add, "LowerGetelementptr: pointer/array, number")
+							->setDebug(node)->extract();
+					} else if (tt == TypeType::Struct) {
+						std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
+						std::shared_ptr<StructNode> snode = stype->node;
+						if (!snode) {
+							stype = StructType::knownStructs.at(stype->barename());
+							snode = stype->node;
+						}
+
+						int offset = 0;
+#ifndef STRUCT_PAD_X86
+						for (int i = 0; i < index.value; ++i)
+							offset += snode->types.at(i)->width();
+#else
+						int width;
+						for (int i = 0; i < index.value; ++i) {
+							width = snode->types.at(i)->width();
+							offset += width + ((width - (offset % width)) % width);
+						}
+#endif
+						auto add = std::make_shared<AddIInstruction>(var, offset, var);
+						function.insertBefore(instruction, add, "LowerGetelementptr: struct, number")
+							->setDebug(node)->extract();
+						type = snode->types.at(index.value);
+					} else
+						throw std::runtime_error("Invalid type in GetelementPtr: " + std::string(*type));
+				}
+
+				node->type = var->type = std::make_shared<PointerType>(type->copy());
+			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && dynamic_index) {
+				// result = (base pointer) + (width * first index value) + (subwidth * second index variable)
+				const int skip = Util::updiv(node->type->width(), 8) * node->indices[0].value;
+				VariablePtr index = function.getVariable(node->indices[1].value);
+				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+
+				int subwidth;
+				if (HasSubtype *has_subtype = dynamic_cast<HasSubtype *>(node->type.get())) {
+					subwidth = Util::updiv(has_subtype->subtype->width(), 8);
+				} else
+					throw std::runtime_error("Type " + std::string(*node->type) + " has no subtype");
+
+				// index * width
+				auto mult = std::make_shared<MultIInstruction>(index, subwidth);
+				// $lo -> result
+				auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
+				// result += skip
+				auto addskip = std::make_shared<AddIInstruction>(node->variable, skip, node->variable);
+				// result += base pointer
+				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
+				function.insertBefore(instruction, mult, "LowerGetelementptr: array/pointer-type, dynamic index");
+				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
+				function.insertBefore(instruction, addskip)->setDebug(node)->extract();
+				function.insertBefore(instruction, add)->setDebug(node)->extract();
+				mult->setDebug(node)->extract();
+			} else if (tt == TypeType::Struct || ((tt == TypeType::Array || tt == TypeType::Pointer) && !one_pvar)) {
 				// Gather all the indices while making sure they're all decimals.
 				std::list<int> indices;
-				for (const IndexTuple &tuple: node->indices) {
-					if (std::get<3>(tuple) && tt == TypeType::Struct) {
+				for (const auto &index: node->indices) {
+					if (index.isPvar && tt == TypeType::Struct) {
 						node->debug();
 						throw std::runtime_error("Unable to index a struct with a pvar");
 					}
-					indices.push_back(std::get<1>(tuple));
+					indices.push_back(index.value);
 				}
 
 				TypePtr out_type;
@@ -78,7 +175,7 @@ namespace LL2W::Passes {
 #endif
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
-				VariablePtr index = function.getVariable(std::get<1>(node->indices.at(0)));
+				VariablePtr index = function.getVariable(node->indices.at(0).value);
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 				const int width = Util::updiv(node->type->width(), 8);
 				// index * width
