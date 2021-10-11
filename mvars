@@ -3,6 +3,6 @@ $m1: Used in LowerMemory and LowerMemset
 $m2: Used in LowerMemset, LowerVarargs and SetupCalls
 $m3: Used in LowerIcmp
 $m4: Used in FinishMultireg
-$m5: Used in InsertStackSkip
+$m5: Unused
 $m6: Used for spilled variables
 $m7: Not used; reserved for pseudoinstruction expansion by wasmc

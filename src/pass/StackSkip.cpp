@@ -8,15 +8,10 @@ namespace LL2W::Passes {
 		if (function.isNaked())
 			return;
 		BasicBlockPtr entry = function.getEntry();
-		auto sp = function.sp(entry), m5 = function.mx(5, entry);
+		auto sp = function.sp(entry);
 		auto add = std::make_shared<SubIInstruction>(sp, 0, sp);
 		function.insertBefore(function.linearInstructions.front(), add, "InsertStackSkip")
 			->setDebug(function.initialDebugIndex)->extract();
-
-		// TODO: verify! I added this just to see whether it would fix the printf bug.
-		// function.insertAfter(add, std::make_shared<MoveInstruction>(m5, sp))
-		// 	->setDebug(function.initialDebugIndex)->extract();
-
 		function.categories["StackSkip"].push_back(add);
 	}
 

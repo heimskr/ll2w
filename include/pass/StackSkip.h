@@ -5,11 +5,11 @@ namespace LL2W {
 }
 
 namespace LL2W::Passes {
-	/** Stores $sp plus an offset into $m5 at the beginning of the function. This ends up being after the prologue,
-	 *  where the altered registers are pushed and the stack pointer is moved to the frame pointer. */
+	/** Adds an offset to $sp at the beginning of the function. This ends up being after the prologue, where the altered
+	 *  registers are pushed and the stack pointer is moved to the frame pointer. */
 	void insertStackSkip(Function &);
 
-	/** After all spills have been recorded, change the immediate value in the previously inserted "$sp + 0 -> $m5"
+	/** After all spills have been recorded, change the immediate value in the previously inserted "$sp + 0 -> $sp"
 	 *  instruction to the sum of the widths of all spills. */
 	void readjustStackSkip(Function &);
 }

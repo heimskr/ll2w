@@ -19,7 +19,6 @@ namespace LL2W::Passes {
 
 		int replaced_count = 0;
 		VariablePtr frame_pointer = function.fp(function.getEntry());
-		VariablePtr m5 = function.mx(5, function.getEntry());
 		VariablePtr sp = function.sp(function.getEntry());
 
 		VariablePtr alloca_reg = sp;

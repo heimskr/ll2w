@@ -120,17 +120,13 @@ namespace LL2W::Passes {
 				for (i = arg_count - 1; reg_max <= i; --i)
 					bytes_pushed += pushCallValue(function, instruction, call->constants[i]);
 
-			VariablePtr m2, m5 = function.mx(5, instruction->parent.lock());
+			VariablePtr m2;
 
 			if (function.isVariadic()) {
 				m2 = function.mx(2, instruction->parent.lock());
 				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2))
 					->setDebug(*llvm)->extract();
 			}
-
-			// Push $m5.
-			// function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m5))
-			// 	->setDebug(*llvm)->extract();
 
 			// Once we're done putting the arguments in the proper place, remove the variables from the call
 			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
@@ -153,9 +149,6 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer")
 					->setDebug(*llvm)->extract();
 			}
-
-			// Pop $m5.
-			// function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m5));
 
 			if (function.isVariadic())
 				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2));
