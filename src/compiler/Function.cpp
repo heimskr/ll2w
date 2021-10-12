@@ -267,7 +267,8 @@ namespace LL2W {
 			}
 
 			if (should_insert) {
-				insertAfter(definition, store, "Spill: stack store");
+				insertAfter(definition, store, false);
+				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString()));
 				VariablePtr new_var = mx(6, definition);
 				definition->replaceWritten(variable, new_var);
 				store->variable = new_var;
