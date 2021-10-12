@@ -1,6 +1,7 @@
 #pragma once
 
 #include "compiler/Immediate.h"
+#include "compiler/Variable.h"
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
@@ -30,7 +31,7 @@ namespace LL2W {
 		}
 
 		bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
-			if (rs == to_replace) {
+			if (rs->isAliasOf(*to_replace)) {
 				rs = new_var;
 				return true;
 			}
@@ -39,7 +40,7 @@ namespace LL2W {
 		}
 
 		bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
-			return rs == to_replace;
+			return rs->isAliasOf(*to_replace);
 		}
 	};
 }

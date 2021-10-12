@@ -75,6 +75,11 @@ namespace LL2W {
 		return true;
 	}
 
+	bool Variable::isAliasOf(const Variable &other) const {
+		return *this == other || aliases.count(const_cast<Variable *>(&other)) != 0
+			|| other.aliases.count(const_cast<Variable *>(this)) != 0;
+	}
+
 	Variable::operator std::string() const {
 		std::stringstream out;
 		const std::string base;
@@ -153,9 +158,14 @@ namespace LL2W {
 		}
 	}
 
+	Function * Variable::getFunction() const {
+		return definingBlocks.empty()? (usingBlocks.empty()? nullptr : usingBlocks.begin()->lock()->parent)
+		                             : definingBlocks.begin()->lock()->parent;
+	}
+
 	std::string Variable::functionName() const {
-		return definingBlocks.empty()? (usingBlocks.empty()? "?" : usingBlocks.begin()->lock()->parent->name->substr(1))
-		                             : definingBlocks.begin()->lock()->parent->name->substr(1);
+		const Function *function = getFunction();
+		return function? function->name->substr(1) : "?";
 	}
 
 	int Variable::parentID() const {

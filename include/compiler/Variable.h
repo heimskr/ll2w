@@ -10,9 +10,10 @@
 #include "util/WeakCompare.h"
 
 namespace LL2W {
-	class Node;
 	class BasicBlock;
+	class Function;
 	class Instruction;
+	class Node;
 
 	class Variable {
 		private:
@@ -47,6 +48,10 @@ namespace LL2W {
 			/** Returns whether the variable has only one using block and whose single using block is the same as its
 			 *  defining block. */
 			bool isSimple() const;
+
+			/** Returns a pointer to the function in which this variable occurs if it can be found in either the
+			 *  defining blocks or the using blocks, or nullptr otherwise. */
+			Function * getFunction() const;
 
 			/** Returns the name of the function in which this variable occurs. */
 			std::string functionName() const;
@@ -109,6 +114,10 @@ namespace LL2W {
 			/** Returns whether the variables are same (with operator==) or whether they're both precolored with
 			 *  matching register sets. */
 			bool equivalent(const Variable &) const;
+
+			/** Returns whether this variable is an alias of the other variable. Variables are considered aliases of
+			 *  themselves for the purposes of this function. */
+			bool isAliasOf(const Variable &) const;
 
 			void debug();
 	};
