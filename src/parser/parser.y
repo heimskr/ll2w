@@ -241,6 +241,8 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_SYSROOT "sysroot"
 %token LLVMTOK_SDK "sdk"
 %token LLVMTOK_EXPORTSYMBOLS "exportSymbols"
+%token LLVMTOK_TEMPLATEPARAMS "templateParams"
+%token LLVMTOK_DITTP "!DITemplateTypeParameter"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -374,7 +376,10 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DILexicalBlock" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
               "," "line" ":" LLVMTOK_DECIMAL "," "column" ":" LLVMTOK_DECIMAL ")"
-              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); };
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); }
+            | metabang "=" metadata_distinct "!DITemplateTypeParameter" "(" "name" ":" LLVMTOK_STRING "," "type" ":"
+              intnullbang ")"
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
@@ -420,18 +425,19 @@ dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2);
          | "sdk"                ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
 dicu_list: dicu_list "," dicu_item { $$ = $1->adopt($3); D($2); }
          | dicu_item { $$ = (new AN(llvmParser, LLVM_DICU_LIST))->adopt($1); };
-disubprogram_item: "name"          ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-                 | "linkageName"   ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-                 | "scope"         ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "file"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "line"          ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-                 | "type"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "scopeLine"     ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-                 | "flags"         ":" pipe_list       { $$ = $1->adopt($3); D($2); }
-                 | "spFlags"       ":" pipe_list       { $$ = $1->adopt($3); D($2); }
-                 | "unit"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "declaration"   ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "retainedNodes" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
+disubprogram_item: "name"           ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+                 | "linkageName"    ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+                 | "scope"          ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "file"           ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "line"           ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+                 | "type"           ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "scopeLine"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+                 | "flags"          ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+                 | "spFlags"        ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+                 | "unit"           ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "declaration"    ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "retainedNodes"  ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "templateParams" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
 disubprogram_list: disubprogram_list "," disubprogram_item { $$ = $1->adopt($3); D($2); }
          | disubprogram_item { $$ = (new AN(llvmParser, LLVM_DISUBPROGRAM_LIST))->adopt($1); };
 dilv_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
