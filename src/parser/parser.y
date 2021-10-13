@@ -639,7 +639,6 @@ store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); }
 nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
 tbaa:  "," "!tbaa"  LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
-range: "," "!range" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
 i_store_atomic: "store" "atomic" _volatile constant "," constant _syncscope LLVMTOK_ORDERING _align store_bangs
                 { $$ = (new StoreNode($3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $2, $5); };
@@ -696,8 +695,8 @@ _inteldialect: LLVMTOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
-i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" cdebug
-       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14); };
+i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs cdebug
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); };
 dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
        | "!" LLVMTOK_IDENT { $$ = $1->adopt($2); }
