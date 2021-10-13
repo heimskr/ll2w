@@ -249,6 +249,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "landingpad"				{ LLVMRTOKEN(LANDINGPAD) }
 "extractvalue"				{ LLVMRTOKEN(EXTRACTVALUE) }
 "insertvalue"				{ LLVMRTOKEN(INSERTVALUE) }
+"freeze"					{ LLVMRTOKEN(FREEZE) }
 "resume"					{ LLVMRTOKEN(RESUME) }
 "filter"					{ LLVMRTOKEN(FILTER) }
 "byval"						{ LLVMRTOKEN(BYVAL) }

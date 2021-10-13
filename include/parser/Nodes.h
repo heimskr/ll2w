@@ -18,7 +18,7 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
 		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
-		Switch, ExtractValue, InsertValue, Resume, Unreachable, Asm
+		Switch, ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze
 	};
 
 	struct BaseNode: public ASTNode {
@@ -464,6 +464,16 @@ namespace LL2W {
 		UnreachableNode() {}
 		std::string debugExtra() const override { return "\e[91munreachable\e[39m"; }
 		NodeType nodeType() const override { return NodeType::Unreachable; }
+	};
+
+	struct FreezeNode: public InstructionNode, public Writer, public Reader {
+		TypePtr type;
+		ValuePtr operand;
+		FreezeNode(ASTNode *result_, ASTNode *type_, ASTNode *operand_, ASTNode *unibangs);
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Freeze; }
+		std::vector<ValuePtr> allValues() override { return {operand}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&operand}; }
 	};
 }
 

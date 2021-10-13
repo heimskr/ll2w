@@ -1213,7 +1213,7 @@ namespace LL2W {
 
 	std::string ExtractValueNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[34m%" << *result << " \e[0;2m= \e[0;91mextractvalue\e[0m " << *aggregateType << " "
+		out << "\e[34m%" << *result << " \e[39;2m= \e[22;91mextractvalue\e[39m " << *aggregateType << " "
 		    << *aggregateValue;
 		for (int decimal: decimals)
 			out << "\e[2m,\e[0m " << decimal;
@@ -1261,5 +1261,23 @@ namespace LL2W {
 
 	std::string ResumeNode::debugExtra() const {
 		return "\e[91mresume\e[0m " + std::string(*type) + " " + std::string(*value);
+	}
+
+// FreezeNode
+
+	FreezeNode::FreezeNode(ASTNode *result_, ASTNode *type_, ASTNode *operand_, ASTNode *unibangs) {
+		handleUnibangs(unibangs);
+		delete unibangs;
+		result = result_->extracted();
+		delete result_;
+		type = getType(type_);
+		delete type_;
+		operand = getValue(operand_);
+		delete operand_;
+	}
+
+	std::string FreezeNode::debugExtra() const {
+		return "\e[34m%" + std::string(*result) + " \e[39;2m= \e[22;91mfreeze\e[39m " + std::string(*type) + " " +
+			std::string(*operand) + "\n";
 	}
 }
