@@ -160,6 +160,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DILocation"				{ LLVMRTOKEN(DILOCATION) }
 "!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
 "!DITemplateTypeParameter"	{ LLVMRTOKEN(DITTP) }
+"!DILexicalBlockFile"		{ LLVMRTOKEN(DILBF) }
 "exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
@@ -311,6 +312,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "arg"						{ LLVMRTOKEN(ARG) }
 "column"					{ LLVMRTOKEN(COLUMN) }
 "templateParams"			{ LLVMRTOKEN(TEMPLATEPARAMS) }
+"discriminator"				{ LLVMRTOKEN(DISCRIMINATOR) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 

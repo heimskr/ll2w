@@ -78,10 +78,10 @@ namespace LL2W {
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
-				case LLVMTOK_DILB: {
+				case LLVMTOK_DILB:
+				case LLVMTOK_DILBF: {
 					const int index = node->front()->atoi();
-					lexicalBlocks.emplace(index,
-						LexicalBlock(node->at(2)->atoi(), node->at(1)->atoi()));
+					lexicalBlocks.try_emplace(index, node->at(2)->atoi(), node->at(1)->atoi());
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}

@@ -243,6 +243,8 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_EXPORTSYMBOLS "exportSymbols"
 %token LLVMTOK_TEMPLATEPARAMS "templateParams"
 %token LLVMTOK_DITTP "!DITemplateTypeParameter"
+%token LLVMTOK_DILBF "!DILexicalBlockFile"
+%token LLVMTOK_DISCRIMINATOR "discriminator"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -379,7 +381,10 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); }
             | metabang "=" metadata_distinct "!DITemplateTypeParameter" "(" "name" ":" LLVMTOK_STRING "," "type" ":"
               intnullbang ")"
-              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); };
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); }
+            | metabang "=" metadata_distinct "!DILexicalBlockFile" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
+              "," "discriminator" ":" LLVMTOK_DECIMAL ")"
+              { $$ = $4->adopt({$1, $8, $12, $16}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
@@ -406,7 +411,8 @@ dict_item: "tag"        ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
          | "flags"      ":" pipe_list       { $$ = $1->adopt($3); D($2); }
          | "elements"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "identifier" ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-         | "baseType"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
+         | "baseType"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "scope"      ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
 dict_list: dict_list "," dict_item { $$ = $1->adopt($3); D($2); }
          | dict_item { $$ = (new AN(llvmParser, LLVM_DICT_LIST))->adopt($1); };
 dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
