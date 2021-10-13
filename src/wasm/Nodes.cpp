@@ -84,6 +84,7 @@
 #include "instruction/QueryInstruction.h"
 #include "instruction/NotRInstruction.h"
 #include "instruction/PrintPseudoinstruction.h"
+#include "instruction/MemsetInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -277,6 +278,8 @@ namespace LL2W {
 				return std::make_unique<SubRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_NOT:
 				return std::make_unique<NotRInstruction>(conv(rs), conv(rd));
+			case WASMTOK_MEMSET:
+				return std::make_unique<MemsetInstruction>(conv(rs), conv(rt), conv(rd));
 			default:
 				throw std::invalid_argument("Unknown operator: " + *oper);
 		}
