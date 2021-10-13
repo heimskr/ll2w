@@ -246,6 +246,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DILBF "!DILexicalBlockFile"
 %token LLVMTOK_DISCRIMINATOR "discriminator"
 %token LLVMTOK_HEAPALLOCSITE "!heapallocsite"
+%token LLVMTOK_RANGE "!range"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -636,7 +637,8 @@ store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); }
            | { $$ = new AN(llvmParser, LLVM_BANGS); };
 nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
-tbaa: "," "!tbaa" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
+tbaa:  "," "!tbaa"  LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
+range: "," "!range" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
 i_store_atomic: "store" "atomic" _volatile constant "," constant _syncscope LLVMTOK_ORDERING _align store_bangs
                 { $$ = (new StoreNode($3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $2, $5); };
@@ -645,11 +647,17 @@ _syncscope: "syncscope" "(" LLVMTOK_STRING ")" { $$ = $3; D($1, $2, $4); } | { $
 i_load: result "load" _volatile type_any "," constant _align load_bangs
         { auto loc = $1->location; $$ = (new LoadNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };
 // TODO: what is the actual form of the arguments for these?
-load_bangs: load_bangs invariant_load  { $$ = $1->adopt($2); } | load_bangs nonnull                 { $$ = $1->adopt($2); }
-          | load_bangs dereferenceable { $$ = $1->adopt($2); } | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
-          | load_bangs bang_align      { $$ = $1->adopt($2); } | load_bangs tbaa                    { $$ = $1->adopt($2); }
-          | load_bangs nontemporal     { $$ = $1->adopt($2); } | load_bangs invariant_group         { $$ = $1->adopt($2); }
-          | load_bangs unibang         { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); };
+load_bangs: load_bangs invariant_load          { $$ = $1->adopt($2); }
+          | load_bangs nonnull                 { $$ = $1->adopt($2); }
+          | load_bangs dereferenceable         { $$ = $1->adopt($2); }
+          | load_bangs dereferenceable_or_null { $$ = $1->adopt($2); }
+          | load_bangs bang_align              { $$ = $1->adopt($2); }
+          | load_bangs tbaa                    { $$ = $1->adopt($2); }
+          | load_bangs nontemporal             { $$ = $1->adopt($2); }
+          | load_bangs invariant_group         { $$ = $1->adopt($2); }
+          | load_bangs unibang                 { $$ = $1->adopt($2); }
+          | load_bangs range                   { $$ = $1->adopt($2); }
+          | { $$ = new AN(llvmParser, LLVM_BANGS); };
 invariant_load:          "," "!invariant.load"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 nonnull:                 "," "!nonnull"                 LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 dereferenceable:         "," "!dereferenceable"         metabang    { $$ = $2->adopt($3); D($1); };
