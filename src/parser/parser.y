@@ -245,6 +245,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_DITTP "!DITemplateTypeParameter"
 %token LLVMTOK_DILBF "!DILexicalBlockFile"
 %token LLVMTOK_DISCRIMINATOR "discriminator"
+%token LLVMTOK_HEAPALLOCSITE "!heapallocsite"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -608,9 +609,10 @@ instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_at
            | i_dbg | i_assume;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); }; // applicable to all instructions
-unibang: "," "!prof"      LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
-       | "," "!callees"   LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
-       | "," "!llvm.loop" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+unibang: "," "!prof"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!callees"       LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!llvm.loop"     LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!heapallocsite" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | cdebug;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs

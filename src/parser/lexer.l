@@ -161,6 +161,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
 "!DITemplateTypeParameter"	{ LLVMRTOKEN(DITTP) }
 "!DILexicalBlockFile"		{ LLVMRTOKEN(DILBF) }
+"!heapallocsite"			{ LLVMRTOKEN(HEAPALLOCSITE) }
 "exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }
