@@ -62,19 +62,19 @@ namespace LL2W {
 					break;
 				case LLVMTOK_DIFILE: {
 					const int index = node->front()->atoi();
-					files.emplace(index, File(node->at(1)->unquote(), node->at(2)->unquote()));
+					files.try_emplace(index, node->at(1)->unquote(), node->at(2)->unquote());
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DILOCATION: {
 					const int index = node->front()->atoi();
-					locations.emplace(index, Location(*node->at(1)));
+					locations.try_emplace(index, *node->at(1));
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DISUBPROGRAM: {
 					const int index = node->front()->atoi();
-					subprograms.emplace(index, Subprogram(*node->at(1)));
+					subprograms.try_emplace(index, *node->at(1));
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
@@ -211,7 +211,7 @@ namespace LL2W {
 			file.index = i++;
 		}
 		for (auto &[index, subprogram]: subprograms) {
-			out << "2 \"" << Util::escape(subprogram.name.substr(1, subprogram.name.size() - 2)) << "\"\n";
+			out << "2 \"" << Util::escape(subprogram.getName()) << "\"\n";
 			subprogram.index = i++;
 		}
 		for (auto &[index, location]: locations) {

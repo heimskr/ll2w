@@ -39,6 +39,11 @@ namespace LL2W {
 			}
 	}
 
+	std::string Subprogram::getName() const {
+		const std::string &nonempty = name.empty()? linkageName : name;
+		return nonempty.substr(1, nonempty.size() - 2);
+	}
+
 	int Subprogram::parseBang(const ASTNode &node) {
 		return node.symbol == LLVMTOK_INTBANG? node.atoi() : -1;
 	}

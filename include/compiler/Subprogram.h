@@ -14,6 +14,10 @@ namespace LL2W {
 
 			Subprogram(const ASTNode &);
 
+			/** This function returns the regular name if it isn't empty or the linkage name otherwise.
+			 *  Removes quotes. */
+			std::string getName() const;
+
 		private:
 			int parseBang(const ASTNode &);
 	};
