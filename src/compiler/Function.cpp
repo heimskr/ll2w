@@ -49,6 +49,7 @@
 #include "pass/LowerBranches.h"
 #include "pass/LowerConversions.h"
 #include "pass/LowerExtractvalue.h"
+#include "pass/LowerFreeze.h"
 #include "pass/LowerGetelementptr.h"
 #include "pass/LowerIcmp.h"
 #include "pass/LowerInlineAsm.h"
@@ -750,6 +751,7 @@ namespace LL2W {
 		Passes::lowerMath(*this);
 		Passes::lowerConversions(*this);
 		Passes::lowerGetelementptr(*this);
+		Passes::lowerFreeze(*this);
 		Passes::lowerSelect(*this);
 		Passes::lowerSwitch(*this);
 		initialStackSize = stackSize;
