@@ -248,6 +248,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_HEAPALLOCSITE "!heapallocsite"
 %token LLVMTOK_RANGE "!range"
 %token LLVMTOK_FREEZE "freeze"
+%token LLVMTOK_INLINEDAT "inlinedAt"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -458,9 +459,10 @@ dilv_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
          | "flags" ":" pipe_list       { $$ = $1->adopt($3); D($2); };
 dilv_list: dilv_list "," dilv_item { $$ = $1->adopt($3); D($2); }
          | dilv_item { $$ = (new AN(llvmParser, LLVM_DILV_LIST))->adopt($1); };
-dilocation_item: "line"   ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-               | "scope"  ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-               | "column" ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
+dilocation_item: "line"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+               | "scope"     ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+               | "column"    ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+               | "inlinedAt" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
 dilocation_list: dilocation_list "," dilocation_item { $$ = $1->adopt($3); D($2); }
          | dilocation_item { $$ = (new AN(llvmParser, LLVM_DILOCATION_LIST))->adopt($1); };
 

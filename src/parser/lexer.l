@@ -316,6 +316,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "column"					{ LLVMRTOKEN(COLUMN) }
 "templateParams"			{ LLVMRTOKEN(TEMPLATEPARAMS) }
 "discriminator"				{ LLVMRTOKEN(DISCRIMINATOR) }
+"inlinedAt"					{ LLVMRTOKEN(INLINEDAT) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
