@@ -11,6 +11,7 @@
 #include "parser/Parser.h"
 #include "parser/StructNode.h"
 #include "util/Util.h"
+#include "main.h"
 
 // #define SINGLE_FUNCTION "@find_free_block"
 // #define SINGLE_FUNCTION "@_ZNKSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE7compareINS_17basic_string_viewIwS2_EEEENS_9_MetaBaseIXaasr33__can_be_converted_to_string_viewIwS2_T_EE5valuentsr17__is_same_uncvrefISA_S5_EE5valueEE13_EnableIfImplIiEEmmRKSA_mm"
@@ -137,7 +138,7 @@ namespace LL2W {
 		out << "\n#debug\n";
 		debugSection(out);
 		out << "\n#code\n\n";
-		if (functions.count("@main") == 1)
+		if (functions.count("@main") == 1 || hasArg("-main"))
 			out << ":: main\n<halt>\n\n";
 		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef HIDE_PRINTS

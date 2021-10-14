@@ -11,20 +11,30 @@
 #include "parser/Lexer.h"
 #include "util/Util.h"
 #include "Interactive.h"
+#include "main.h"
 
 // #define DEBUGMODE
 // #define INTERACTIVE
+
+int global_argc = -1;
+char **global_argv = nullptr;
 
 void compile(const std::string &);
 void wasmparsertest(const std::string &);
 void interactive(LL2W::Program &);
 
 int main(int argc, char **argv) {
-	if (1 < argc) {
-		compile(argv[1]);
-	} else {
-		compile("ll/fat.ll");
-	}
+	global_argc = argc;
+	global_argv = argv;
+	compile(1 < argc? argv[1] : "ll/fat.ll");
+}
+
+bool hasArg(const char *arg) {
+	if (global_argv)
+		for (int i = 0; i < global_argc; ++i)
+			if (strcmp(global_argv[i], arg) == 0)
+				return true;
+	return false;
 }
 
 LL2W::Program *prog = nullptr;
