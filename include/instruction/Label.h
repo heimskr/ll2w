@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_LABEL_H_
-#define INSTRUCTION_LABEL_H_
+#pragma once
 
 #include "instruction/WhyInstruction.h"
 
@@ -14,5 +13,3 @@ namespace LL2W {
 		bool showDebug() const override { return false; }
 	};
 }
-
-#endif

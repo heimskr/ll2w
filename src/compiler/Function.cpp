@@ -690,7 +690,11 @@ namespace LL2W {
 	}
 
 	std::string Function::transformLabel(const std::string &str) const {
-		return "__" + name->substr(1) + "_label" + (str.front() == '%'? str.substr(1) : str);
+		const std::string end = str.front() == '%'? str.substr(1) : str;
+		// Some lambdas will have names like "@\"_ZZ11kernel_mainENK3$_0clEm\""
+		if (1 < name->size() && (*name)[1] == '"')
+			return "\"__" + name->substr(2, name->size() - 3) + "_label" + end + "\"";
+		return "__" + name->substr(1) + "_label" + end;
 	}
 
 	void Function::updateInstructionNodes() {
