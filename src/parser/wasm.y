@@ -127,6 +127,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 %token WASMTOK_CHAR
+%token WASMTOK_STRING
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -246,8 +247,9 @@ op_sleep: "<" "%sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
 printop: "print" | "prx" | "prd" | "prc" | "prb";
 
-op_pprint: "<" "prc" character ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
-         | "<" "p"   immediate ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
+op_pprint: "<" "prc" character      ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
+         | "<" "p"   immediate      ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); }
+         | "<" "p"   WASMTOK_STRING ">" { $$ = new WASMPseudoPrintNode($3); D($1, $2, $4); };
 
 op_halt: "<" "halt" ">" { $$ = new WASMHaltNode(); D($1, $2, $3); };
 

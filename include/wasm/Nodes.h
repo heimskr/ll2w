@@ -493,8 +493,10 @@ namespace LL2W {
 
 	struct WASMPseudoPrintNode: public WASMInstructionNode {
 		Immediate imm;
+		const std::string *text = nullptr;
 
 		WASMPseudoPrintNode(ASTNode *imm_);
+		WASMPseudoPrintNode(const std::string *text_);
 		WASMNodeType nodeType() const override { return WASMNodeType::PseudoPrint; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

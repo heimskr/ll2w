@@ -26,8 +26,35 @@ namespace LL2W::Passes {
 			++count;
 			AsmNode *asm_node = dynamic_cast<AsmNode *>(llvm->node);
 
+			std::string text;
+			text.reserve(asm_node->contents->size() - 2);
+			auto begin = asm_node->contents->begin() + 1, end = asm_node->contents->end() - 1;
+			for (; begin != end; ++begin) {
+				const char ch = *begin;
+				if (ch == '\\') {
+					if (begin == end - 1)
+						throw std::runtime_error("Backslash encountered at end of string");
+					const char next = *++begin;
+					if (ishexnumber(next)) {
+						if (begin == end - 1)
+							throw std::runtime_error("Encountered hex escape near end of string");
+						text.push_back(static_cast<char>(Util::parseLong(std::string {next, *++begin}, 16)));
+					} else if (next == '\\')
+						text.push_back('\\');
+					else if (next == 'n')
+						text.push_back('\n');
+					else if (next == 'r')
+						text.push_back('\r');
+					else if (next == 't')
+						text.push_back('\t');
+					else
+						throw std::runtime_error("Unknown escape: \\" + std::string(1, next));
+				} else
+					text.push_back(ch);
+			}
+
 			wasmParser.errorCount = 0;
-			wasmParser.in(asm_node->contents->substr(1, asm_node->contents->size() - 2));
+			wasmParser.in(text);
 			wasmParser.debug(false, false);
 			wasmParser.parse();
 

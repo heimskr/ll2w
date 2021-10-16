@@ -1144,15 +1144,20 @@ namespace LL2W {
 		delete imm_;
 	}
 
+	WASMPseudoPrintNode::WASMPseudoPrintNode(const std::string *text_):
+		WASMInstructionNode(WASM_PSEUDOPRINTNODE), imm(0), text(text_) {}
+
 	std::string WASMPseudoPrintNode::debugExtra() const {
-		return "<" + blue("p") + " " + colorize(imm) + ">";
+		return "<" + blue("p") + " " + (text? *text : colorize(imm)) + ">";
 	}
 
 	WASMPseudoPrintNode::operator std::string() const {
-		return "<p " + toString(imm) + ">";
+		return "<p " + (text? *text : toString(imm)) + ">";
 	}
 
 	std::unique_ptr<WhyInstruction> WASMPseudoPrintNode::convert(Function &, VarMap &) {
-		return std::make_unique<PrintPseudoinstruction>(imm);
+		if (text)
+			return std::make_unique<PrintPseudoinstruction>(text, true, -1);
+		return std::make_unique<PrintPseudoinstruction>(imm, -1);
 	}
 }

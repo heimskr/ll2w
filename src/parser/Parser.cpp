@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstring>
 #include <fstream>
 #include <sstream>
@@ -13,6 +14,8 @@ extern YY_BUFFER_STATE llvm_scan_buffer(char *, size_t);
 extern YY_BUFFER_STATE wasm_scan_buffer(char *, size_t);
 extern void llvm_delete_buffer(YY_BUFFER_STATE);
 extern void wasm_delete_buffer(YY_BUFFER_STATE);
+void llvm_flush_buffer(YY_BUFFER_STATE);
+void wasm_flush_buffer(YY_BUFFER_STATE);
 
 namespace LL2W {
 	void Parser::open(const std::string &filename_) {
