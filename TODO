@@ -5,3 +5,4 @@
                       correct, as allocas can occur inside a loop.
 [2021/05/17 18:35:06] Support debug data for function prologues and epilogues by referencing the !dbg data from the
                       function header. Do the same for LoadArguments.
+[2021/10/16 02:43:20] Add a pass to break up sets with an argument larger than INT_MAX into a set and a lui.
