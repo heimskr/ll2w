@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "instruction/SetInstruction.h"
@@ -17,14 +15,10 @@ namespace LL2W::Passes {
 
 			ValuePtr value = set->originalValue;
 
-			if (value)
-				std::cerr << value->longValue() << "\n";
-
 			if (value && value->valueType() == ValueType::Int) {
 				const long long_value = value->longValue();
 				if (long_value < INT_MIN || INT_MAX < long_value) {
 					auto lui = std::make_shared<LuiInstruction>(set->rd, static_cast<int>(long_value >> 32));
-					std::cerr << "=)\n";
 					function.insertAfter(instruction, lui, false)->setDebug(set)->extract();
 					function.comment(lui, "BreakUpBigSets", false);
 					any_inserted = true;
