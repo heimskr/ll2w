@@ -1,3 +1,5 @@
+#include <climits>
+
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "instruction/SetInstruction.h"

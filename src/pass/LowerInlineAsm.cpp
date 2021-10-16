@@ -35,7 +35,7 @@ namespace LL2W::Passes {
 					if (begin == end - 1)
 						throw std::runtime_error("Backslash encountered at end of string");
 					const char next = *++begin;
-					if (ishexnumber(next)) {
+					if (Util::isHex(next)) {
 						if (begin == end - 1)
 							throw std::runtime_error("Encountered hex escape near end of string");
 						text.push_back(static_cast<char>(Util::parseLong(std::string {next, *++begin}, 16)));

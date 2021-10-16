@@ -67,7 +67,7 @@ namespace LL2W {
 	Node & Graph::operator[](const std::string &label) const {
 		auto iter = labelMap.find(label);
 		if (iter == labelMap.end()) {
-			std::cout << name << "\n";
+			std::cerr << name << "\n";
 			const_cast<Graph *>(this)->renderTo("graph_error.png");
 			throw std::out_of_range("No node with label \"" + label + "\" found");
 		}
