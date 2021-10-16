@@ -87,6 +87,12 @@ namespace LL2W {
 					semi[w] = semi[u];
 			}
 
+			if (!w)
+				throw std::runtime_error("w is null (1)");
+
+			if (!vertex[semi[w]])
+				throw std::runtime_error("vertex[semi[w]] is null");
+
 			bucket[vertex[semi[w]]].insert(w);
 			link_(parent[w], w);
 
@@ -95,14 +101,19 @@ namespace LL2W {
 				Node *v = *iter;
 				iter = pwbucket.erase(iter);
 				Node *u = eval(v);
+				if (!v)
+					throw std::runtime_error("v is null");
 				dom[v] = semi[u] < semi[v]? u : parent[w];
 			}
 		}
 
 		for (size_t i = 1; i < gsize; ++i) {
 			Node *w = vertex[i];
-			if (dom[w] != vertex[semi[w]])
+			if (dom[w] != vertex[semi[w]]) {
+				if (!w)
+					throw std::runtime_error("w is null (2)");
 				dom[w] = dom[dom[w]];
+			}
 		}
 
 		dom[&start] = &start;
