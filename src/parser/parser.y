@@ -249,6 +249,8 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_RANGE "!range"
 %token LLVMTOK_FREEZE "freeze"
 %token LLVMTOK_INLINEDAT "inlinedAt"
+%token LLVMTOK_DILABEL "!DILabel"
+%token LLVMTOK_DBG_LABEL "@llvm.dbg.label"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -280,7 +282,9 @@ program: program source_filename { $1->adopt($2); }
 
 declaration: "declare" function_header { $1->adopt($2); }
            | "declare" "void" dbg_type "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
-             { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); };
+             { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); }
+           | "declare" "void" "@llvm.dbg.label" "(" "metadata" ")" _fnattrs
+             { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); };
 
 
 
@@ -386,9 +390,12 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DITemplateTypeParameter" "(" "name" ":" LLVMTOK_STRING "," "type" ":"
               intnullbang ")"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); }
-            | metabang "=" metadata_distinct "!DILexicalBlockFile" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
-              "," "discriminator" ":" LLVMTOK_DECIMAL ")"
-              { $$ = $4->adopt({$1, $8, $12, $16}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17); };
+            | metabang "=" metadata_distinct "!DILexicalBlockFile" "(" "scope" ":" intnullbang "," "file" ":"
+              intnullbang "," "discriminator" ":" LLVMTOK_DECIMAL ")"
+              { $$ = $4->adopt({$1, $8, $12, $16}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17); }
+            | metabang "=" metadata_distinct "!DILabel" "(" "scope" ":" intnullbang "," "name" ":" LLVMTOK_STRING ","
+              "file" ":" intnullbang "," "line" ":" LLVMTOK_DECIMAL ")"
+              { $$ = $4->adopt({$1, $8, $12, $16, $20}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17, $18, $19, $21); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "tag"       ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
@@ -699,7 +706,9 @@ _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
 i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs cdebug
-       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); };
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
+     | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs cdebug
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9); };
 dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
        | "!" LLVMTOK_IDENT { $$ = $1->adopt($2); }

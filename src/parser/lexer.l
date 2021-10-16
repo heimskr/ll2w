@@ -99,6 +99,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 
 "@llvm.dbg.value"			{ LLVMRTOKEN(DBG_VALUE) }
 "@llvm.dbg.declare"			{ LLVMRTOKEN(DBG_DECLARE) }
+"@llvm.dbg.label"			{ LLVMRTOKEN(DBG_LABEL) }
 "@llvm.assume"				{ LLVMRTOKEN(ASSUME) }
 
 {LLVM_UNIONVAR}				{ LLVMRTOKEN(UNIONVAR) }
@@ -161,6 +162,7 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
 "!DITemplateTypeParameter"	{ LLVMRTOKEN(DITTP) }
 "!DILexicalBlockFile"		{ LLVMRTOKEN(DILBF) }
+"!DILabel"					{ LLVMRTOKEN(DILABEL) }
 "!heapallocsite"			{ LLVMRTOKEN(HEAPALLOCSITE) }
 "!range"					{ LLVMRTOKEN(RANGE) }
 "exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
