@@ -2,10 +2,13 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AndIInstruction.h"
+#include "instruction/AndRInstruction.h"
+#include "instruction/LuiInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftRightLogicalIInstruction.h"
+#include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorRInstruction.h"
 #include "pass/LowerConversions.h"
@@ -116,8 +119,13 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, inst)->setDebug(conversion)->extract();
 
 			if (to == 32) {
-				auto andi = std::make_shared<AndIInstruction>(destination, static_cast<int>(0xffffffff), destination);
-				function.insertBefore(instruction, andi, "LowerSext: to == 32")->setDebug(conversion)->extract();
+				auto zero = function.makePrecoloredVariable(WhyInfo::zeroOffset, instruction->parent.lock());
+				auto subi = std::make_shared<SubIInstruction>(zero, 1, m0);
+				auto lui  = std::make_shared<LuiInstruction>(m0, 0);
+				auto andi = std::make_shared<AndRInstruction>(destination, m0, destination);
+				function.insertBefore(instruction, subi, "LowerSext: to == 32")->setDebug(conversion)->extract();
+				function.insertBefore(instruction, lui)->setDebug(conversion)->extract();
+				function.insertBefore(instruction, andi)->setDebug(conversion)->extract();
 			}
 		} else throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported");
 		// TODO: support other destination widths
