@@ -58,7 +58,7 @@ namespace LL2W::Passes {
 		InstructionPtr first = function.firstInstruction(true);
 		BasicBlockPtr entry = function.getEntry();
 		auto sp = function.sp(entry);
-		auto m2 = function.makeAssemblerVariable(2, entry);
+		auto m2 = function.mx(2, entry);
 		int skip = 0;
 		for (FunctionArgument &argument: *function.arguments)
 			skip += Util::upalign(argument.type->width() / 8, 8); // Stack parameters are aligned to 8-byte boundaries.

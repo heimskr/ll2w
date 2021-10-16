@@ -23,7 +23,7 @@ namespace LL2W::Passes {
 			for (int arg = arity - 1; min <= arg; --arg) {
 				const FunctionArgument &fn_arg = function.arguments->at(arg - min);
 				VariablePtr arg_var = function.getVariable(arg, fn_arg.type, entry);
-				VariablePtr m0 = function.makeAssemblerVariable(0, entry);
+				VariablePtr m0 = function.mx(0, entry);
 				VariablePtr sp = function.sp(entry);
 
 				// The stack frame looks like [ argN-1 | ... | arg16 | $rt | $fp | var1 | var2 | ... ] (if Reg16)

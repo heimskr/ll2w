@@ -102,7 +102,7 @@ namespace LL2W::Passes {
 		if (to == 64 || to == 32) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
-			auto m0 = function.makeAssemblerVariable(0, instruction->parent.lock());
+			auto m0 = function.mx(0, instruction->parent.lock());
 			// 1 -> $m0
 			auto set1 = std::make_shared<SetInstruction>(m0, 1);
 			// $m0 << (from - 1) -> $m0
