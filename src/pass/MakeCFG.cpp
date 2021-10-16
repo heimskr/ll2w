@@ -37,8 +37,21 @@ namespace LL2W::Passes {
 				}
 			}
 
-			if (!block->instructions.empty() && block->instructions.back()->isTerminal())
-				function.cfg.link(*label, "exit");
+			if (!block->instructions.empty()) {
+				InstructionPtr &back = block->instructions.back();
+				if (back->isTerminal()) {
+					function.cfg.link(*label, "exit");
+				} else if (const LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
+					if (llvm->node->nodeType() == NodeType::BrUncond) {
+						const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->node);
+						if (uncond->destination->substr(1) == *label) {
+							// The block unconditionally branches to itself, meaning it's an infinite loop.
+							// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
+							function.cfg.link(*label, "exit");
+						}
+					}
+				}
+			}
 		}
 
 		function.dTree.emplace(function.cfg, function.cfg[0]);
