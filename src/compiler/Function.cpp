@@ -38,6 +38,7 @@
 #include "parser/ASTNode.h"
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
+#include "pass/BreakUpBigSets.h"
 #include "pass/CoalescePhi.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
@@ -800,6 +801,7 @@ namespace LL2W {
 			Passes::lowerRet(*this);
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
+		Passes::breakUpBigSets(*this);
 		hackVariables();
 		finalDone = true;
 	}

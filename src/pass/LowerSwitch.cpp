@@ -32,6 +32,7 @@ namespace LL2W::Passes {
 					throw TypeError("Expected int constant in table of switch instruction", type);
 				const std::string *transformed = StringSet::intern(function.transformLabel(*label));
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
+				comp->setOriginalValue(value);
 				auto jump = std::make_shared<JumpConditionalInstruction>(m0, transformed, false);
 				function.insertBefore(instruction, comp, false)->setDebug(llvm)->extract();
 				function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();

@@ -75,6 +75,7 @@ namespace LL2W::Passes {
 		} else if (value_type == ValueType::Int) {
 			int intval = converted->value->intValue();
 			auto load = std::make_shared<LoadIInstruction>(intval, node->variable, size);
+			load->setOriginalValue(converted->value);
 			function.insertBefore(instruction, load, "LowerMemory(load): [int " + std::to_string(intval) + "] -> %var");
 			load->setDebug(llvm)->extract();
 		} else if (value_type == ValueType::Bool) {
@@ -120,14 +121,18 @@ namespace LL2W::Passes {
 
 		if (value_type == ValueType::Int || value_type == ValueType::Null || value_type == ValueType::Bool) {
 			int int_value = 0;
-			if (value_type == ValueType::Int || value_type == ValueType::Bool)
-				int_value = source_value->intValue();
+			ValuePtr value;
+			if (value_type == ValueType::Int || value_type == ValueType::Bool) {
+				int_value = source_value->intValue(false);
+				value = source_value;
+			}
 			if (local) {
 				auto m1 = function.mx(1, instruction);
 				auto lvar = local->getVariable(function);
 				// Because there's no single instruction of the form imm -> [$reg], we have to use a set+store pair.
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				set->setOriginalValue(value);
 				// $m1 -> [%var]
 				auto store = std::make_shared<StoreRInstruction>(m1, lvar, size);
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
@@ -140,6 +145,7 @@ namespace LL2W::Passes {
 				// because there are two immediate values. As such, we use two instructions by necessity.
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				set->setOriginalValue(value);
 				// $m1 -> [global]
 				std::shared_ptr<StoreIInstruction> store;
 				try {
@@ -158,8 +164,10 @@ namespace LL2W::Passes {
 				const int intptr = converted->value->intValue();
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
+				set->setOriginalValue(value);
 				// $m1 -> [intptr]
 				auto store = std::make_shared<StoreIInstruction>(m1, intptr, size);
+				store->setOriginalValue(converted->value);
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1");
 				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [" + std::to_string(intptr) + "]");
 				set->extract();
@@ -195,6 +203,7 @@ namespace LL2W::Passes {
 				const int intptr = converted->value->intValue();
 				// %src -> [intptr]
 				auto store = std::make_shared<StoreIInstruction>(svar, intptr, size);
+				store->setOriginalValue(converted->value);
 				function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [" +
 					std::to_string(intptr) + "]");
 				store->extract();

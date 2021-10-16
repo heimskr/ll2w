@@ -34,7 +34,7 @@ namespace LL2W {
 		bool isGetelementptr() const;
 		virtual bool isIntLike() const { return false; }
 		virtual long longValue() const { throw std::runtime_error("Value isn't int-like"); }
-		int intValue();
+		int intValue(bool can_warn = true);
 		/* Stringifies the Value into something that can be put in a #data section. */
 		virtual std::string compile() const = 0;
 	};

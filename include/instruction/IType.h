@@ -1,8 +1,10 @@
-#ifndef INSTRUCTION_ITYPE_H_
-#define INSTRUCTION_ITYPE_H_
+#pragma once
+
+#include <optional>
 
 #include "compiler/Immediate.h"
 #include "compiler/Variable.h"
+#include "parser/Values.h"
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
@@ -21,11 +23,17 @@ namespace LL2W {
 		public:
 			using ValueType = T;
 
+			ValuePtr originalValue;
 			std::shared_ptr<Variable> rs, rd;
 			T imm;
 
 			IType(std::shared_ptr<Variable> rs_, T imm_, std::shared_ptr<Variable> rd_, int index_ = -1):
 				WhyInstruction(index_), rs(rs_), rd(rd_), imm(imm_) {}
+
+			IType * setOriginalValue(const ValuePtr &value) {
+				originalValue = value;
+				return this;
+			}
 
 			ExtractionResult extract(bool force = false) override {
 				if (extracted && !force)
@@ -70,5 +78,3 @@ namespace LL2W {
 			}
 	};
 }
-
-#endif

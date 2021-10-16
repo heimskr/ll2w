@@ -40,8 +40,9 @@ namespace LL2W::Passes {
 
 			// Put the return value into $r0.
 			if (ret->value->isIntLike()) {
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(r0, ret->value->intValue()), false)
-					->setDebug(llvm)->extract();
+				auto set = std::make_shared<SetInstruction>(r0, ret->value->intValue(false));
+				set->setOriginalValue(ret->value);
+				function.insertBefore(instruction, set, false)->setDebug(llvm)->extract();
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
 				function.extraVariables.emplace(var->id, var);

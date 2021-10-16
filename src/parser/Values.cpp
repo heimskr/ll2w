@@ -39,9 +39,9 @@ namespace LL2W {
 		return valueType() == ValueType::Getelementptr;
 	}
 
-	int Value::intValue() {
+	int Value::intValue(bool can_warn) {
 		long val = longValue();
-		if (INT_MAX < val)
+		if (can_warn && INT_MAX < val)
 			warn() << "Value " << val << " is larger than INT_MAX\n";
 		return static_cast<int>(val);
 	}

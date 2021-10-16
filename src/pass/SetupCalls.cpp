@@ -207,7 +207,8 @@ namespace LL2W::Passes {
 		} else if (value_type == ValueType::Int) {
 			// Integer-like values
 			VariablePtr new_var = function.newVariable(constant->type);
-			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
+			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
+			set->setOriginalValue(constant->value);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
@@ -276,7 +277,8 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
-			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue());
+			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
+			set->setOriginalValue(constant->value);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Bool) {
 			// If it's a boolean constant, convert it to an integer and do the same.

@@ -25,7 +25,8 @@ namespace LL2W::Passes {
 			// If the true-condition is an integer-like constant, we need to put it in a register.
 			if (select->firstValue->isIntLike()) {
 				left_var = function.newVariable(select->firstType, instruction->parent.lock());
-				auto set = std::make_shared<SetInstruction>(left_var, select->firstValue->intValue());
+				auto set = std::make_shared<SetInstruction>(left_var, select->firstValue->intValue(false));
+				set->setOriginalValue(select->firstValue);
 				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else if (select->firstValue->isLocal()) {
 				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
@@ -43,7 +44,8 @@ namespace LL2W::Passes {
 			// If the false-condition is an integer-like constant, we need to put it in a register.
 			if (select->secondValue->isIntLike()) {
 				right_var = function.newVariable(select->firstType, instruction->parent.lock());
-				auto set = std::make_shared<SetInstruction>(right_var, select->secondValue->intValue());
+				auto set = std::make_shared<SetInstruction>(right_var, select->secondValue->intValue(false));
+				set->setOriginalValue(select->secondValue);
 				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else if (select->secondValue->isLocal()) {
 				right_var = dynamic_cast<LocalValue *>(select->secondValue.get())->variable;
@@ -59,6 +61,7 @@ namespace LL2W::Passes {
 				// We can compare backwards because the select instruction following the comparison isn't checking for
 				// greater-than or less-than conditions; it's checking for inequality.
 				comp = std::make_shared<CompareIInstruction>(zero, select->conditionValue->intValue());
+				comp->setOriginalValue(select->conditionValue);
 			} else if (select->conditionValue->isLocal()) {
 				VariablePtr cond_var = dynamic_cast<LocalValue *>(select->conditionValue.get())->variable;
 				comp = std::make_shared<CompareIInstruction>(cond_var, 0);
