@@ -86,6 +86,7 @@
 #include "instruction/PrintPseudoinstruction.h"
 #include "instruction/MemsetInstruction.h"
 #include "instruction/RestInstruction.h"
+#include "instruction/IOInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1174,5 +1175,19 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMRestNode::convert(Function &, VarMap &) {
 		return std::make_unique<RestInstruction>();
+	}
+
+	WASMIONode::WASMIONode(const std::string *ident_): WASMInstructionNode(WASM_IONODE), ident(ident_) {}
+
+	std::string WASMIONode::debugExtra() const {
+		return ident? "<" + blue("io") + " " + *ident + ">" : "<" + blue("io") + ">";
+	}
+
+	WASMIONode::operator std::string() const {
+		return ident? "<io " + *ident + ">" : "<io>";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMIONode::convert(Function &, VarMap &) {
+		return std::make_unique<IOInstruction>(ident);
 	}
 }

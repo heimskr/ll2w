@@ -99,6 +99,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "<>"						{ WASMRTOKEN(NOP) }
 "<<"						{ WASMRTOKEN(LL) }
 ">>"						{ WASMRTOKEN(RA) }
+"io"						{ WASMRTOKEN(IO) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }

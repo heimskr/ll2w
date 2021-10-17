@@ -125,6 +125,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_MEM "mem"
 %token WASMTOK_P "p"
 %token WASMTOK_REST "rest"
+%token WASMTOK_IO "io"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 %token WASMTOK_CHAR
@@ -135,7 +136,7 @@ using AN = LL2W::ASTNode;
 %token WASM_JCNODE WASM_JRNODE WASM_JRCNODE WASM_IMMEDIATE WASM_SSNODE WASM_MULTRNODE WASM_MULTINODE WASM_DIVIINODE
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
-%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_RESTNODE
+%token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_RESTNODE WASM_IONODE
 
 %start start
 
@@ -241,11 +242,13 @@ op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1
 
 op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
-op_ext: op_print | op_pprint | op_sleep | op_halt | op_rest;
+op_ext: op_print | op_pprint | op_sleep | op_halt | op_rest | op_io;
 
 op_sleep: "<" "sleep" reg ">" { $$ = new WASMSleepRNode($3); D($1, $2, $4); };
 
 op_rest: "<" "rest" ">" { $$ = new WASMRestNode; D($1, $2, $3); };
+
+op_io: "<" "io" ident ">" { $$ = new WASMIONode($3->lexerInfo); D($1, $2, $3, $4); };
 
 op_print: "<" printop reg ">" { $$ = new WASMPrintNode($3, $2); D($1, $4); };
 printop: "print" | "prx" | "prd" | "prc" | "prb";
@@ -268,7 +271,7 @@ op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
-ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | printop | "p" | WASMTOK_IDENT | "sleep" | "rest";
+ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | printop | "p" | WASMTOK_IDENT | "sleep" | "rest" | "io";
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 
