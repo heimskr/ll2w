@@ -85,6 +85,7 @@
 #include "instruction/NotRInstruction.h"
 #include "instruction/PrintPseudoinstruction.h"
 #include "instruction/MemsetInstruction.h"
+#include "instruction/RestInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1159,5 +1160,19 @@ namespace LL2W {
 		if (text)
 			return std::make_unique<PrintPseudoinstruction>(text, true, -1);
 		return std::make_unique<PrintPseudoinstruction>(imm, -1);
+	}
+
+	WASMRestNode::WASMRestNode(): WASMInstructionNode(WASM_RESTNODE) {}
+
+	std::string WASMRestNode::debugExtra() const {
+		return "<" + blue("rest") + ">";
+	}
+
+	WASMRestNode::operator std::string() const {
+		return "<rest>";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMRestNode::convert(Function &, VarMap &) {
+		return std::make_unique<RestInstruction>();
 	}
 }

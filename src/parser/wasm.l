@@ -54,6 +54,7 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "%sleep"					{ WASMRTOKEN(SLEEP) }
 "%%setpt"					{ WASMRTOKEN(SETPT) }
 "%setpt"					{ WASMRTOKEN(SETPT) }
+"rest"						{ WASMRTOKEN(REST) }
 "print"						{ WASMRTOKEN(PRINT) }
 "*init"						{ WASMRTOKEN(INIT) }
 "%%time"					{ WASMRTOKEN(TIME) }
