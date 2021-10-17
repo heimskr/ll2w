@@ -5,18 +5,6 @@ STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
-# TESTFILE		?= ~/src/mal/combined.strprint.ll
-# TESTFILE		?= ~/src/ir_examples/varargs_simple.ll
-# TESTFILE		?= ll/mal.ll
-# TESTFILE		?= ll/mintf.ll
-# TESTFILE		?= ll/inline_asm.ll
-# TESTFILE		?= ll/paging.ll
-# TESTFILE		?= ~/ll2w.wasm
-# TESTFILE		?= ll/extractvalue.ll
-# TESTFILE		?= ll/mal_inline.ll
-# TESTFILE		?= ~/src/thurisaz/main.ll
-# TESTFILE		?= ll/doublephi.ll
-TESTFILE		?= ll/20args.ll
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp
@@ -36,7 +24,7 @@ BISON_OPTIONS	:= --color=always
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 
-.PHONY: all clean count countbf declutter test
+.PHONY: all clean count countbf declutter
 
 all: $(OUTPUT)
 
@@ -69,12 +57,6 @@ $(WASMPARSECPP:.cpp=.o): $(WASMPARSECPP) $(WASMPARSEHDR)
 
 %.o: %.cpp include/yyparse.h include/wasmparse.h
 	$(COMPILER) $(CFLAGS) -c $< -o $@
-
-test: $(OUTPUT)
-	./$< $(TESTFILE)
-
-dbg: $(OUTPUT)
-	$(DEBUGGER) $< -- $(TESTFILE)
 
 clean:
 	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png \
