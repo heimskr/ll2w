@@ -251,6 +251,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_INLINEDAT "inlinedAt"
 %token LLVMTOK_DILABEL "!DILabel"
 %token LLVMTOK_DBG_LABEL "@llvm.dbg.label"
+%token LLVMTOK_VTABLEHOLDER "vtableHolder"
+%token LLVMTOK_CONTAININGTYPE "containingType"
+%token LLVMTOK_VIRTUALINDEX "virtualIndex"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -414,16 +417,17 @@ pipe_list: pipe_list "|" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
          | pipe_list "|" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | LLVMTOK_IDENT                 { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); }
          | LLVMTOK_DECIMAL               { $$ = (new AN(llvmParser, LLVM_PIPE_LIST))->adopt($1); };
-dict_item: "tag"        ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
-         | "name"       ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-         | "file"       ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-         | "line"       ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-         | "size"       ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
-         | "flags"      ":" pipe_list       { $$ = $1->adopt($3); D($2); }
-         | "elements"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-         | "identifier" ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-         | "baseType"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-         | "scope"      ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
+dict_item: "tag"          ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
+         | "name"         ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "file"         ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "line"         ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "size"         ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
+         | "flags"        ":" pipe_list       { $$ = $1->adopt($3); D($2); }
+         | "elements"     ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "identifier"   ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
+         | "baseType"     ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "scope"        ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "vtableHolder" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
 dict_list: dict_list "," dict_item { $$ = $1->adopt($3); D($2); }
          | dict_item { $$ = (new AN(llvmParser, LLVM_DICT_LIST))->adopt($1); };
 dicu_item: "language"           ":" LLVMTOK_IDENT   { $$ = $1->adopt($3); D($2); }
@@ -454,7 +458,9 @@ disubprogram_item: "name"           ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D(
                  | "unit"           ":" intnullbang     { $$ = $1->adopt($3); D($2); }
                  | "declaration"    ":" intnullbang     { $$ = $1->adopt($3); D($2); }
                  | "retainedNodes"  ":" intnullbang     { $$ = $1->adopt($3); D($2); }
-                 | "templateParams" ":" intnullbang     { $$ = $1->adopt($3); D($2); };
+                 | "templateParams" ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "containingType" ":" intnullbang     { $$ = $1->adopt($3); D($2); }
+                 | "virtualIndex"   ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
 disubprogram_list: disubprogram_list "," disubprogram_item { $$ = $1->adopt($3); D($2); }
          | disubprogram_item { $$ = (new AN(llvmParser, LLVM_DISUBPROGRAM_LIST))->adopt($1); };
 dilv_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); };
@@ -823,7 +829,7 @@ conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (ne
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: LLVMTOK_INBOUNDS | { $$ = nullptr; };
-decimal_pairs: decimal_pairs "," LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$3, $4})); }
+decimal_pairs: decimal_pairs "," _inrange LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$4, $5})); }
              | { $$ = new AN(llvmParser, LLVM_DECIMAL_PAIR_LIST); };
 gepexpr_operand: variable | getelementptr_expr;
 

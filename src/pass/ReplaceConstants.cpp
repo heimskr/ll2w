@@ -19,10 +19,18 @@ namespace LL2W::Passes {
 			if (!reader)
 				continue;
 
+			for (ConstantPtr constant: reader->allConstants())
+				if (constant->conversion == Conversion::Bitcast) {
+					constant->type = constant->conversionType;
+					constant->value = constant->conversionSource->value;
+					constant->conversion = Conversion::None;
+				}
+
 			for (ValuePtr *value: reader->allValuePointers()) {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get());
 				if (!gep)
 					continue;
+				std::cerr << "gep: " << *gep << "\n";
 				std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 				if (!gep_global) {
 					warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
@@ -42,14 +50,6 @@ namespace LL2W::Passes {
 					auto new_value = std::make_shared<LocalValue>(std::to_string(new_var->id));
 					new_value->variable = new_var;
 					*value = new_value;
-				}
-			}
-
-			for (ConstantPtr constant: reader->allConstants()) {
-				if (constant->conversion == Conversion::Bitcast) {
-					constant->type = constant->conversionType;
-					constant->value = constant->conversionSource->value;
-					constant->conversion = Conversion::None;
 				}
 			}
 

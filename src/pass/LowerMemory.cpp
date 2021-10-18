@@ -20,8 +20,8 @@
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	int lowerMemory(Function &function) {
-		int replaced_count = 0;
+	size_t lowerMemory(Function &function) {
+		size_t replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

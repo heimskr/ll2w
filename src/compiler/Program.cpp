@@ -198,7 +198,8 @@ namespace LL2W {
 						}
 					}
 				} else
-					error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ")\n";
+					error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
+					        << global->location << "\n";
 			} else {
 				out << name << "\n";
 			}

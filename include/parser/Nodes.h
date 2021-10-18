@@ -73,6 +73,7 @@ namespace LL2W {
 		std::vector<std::shared_ptr<LocalValue>> allLocals();
 		void replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var);
 		virtual std::vector<ConstantPtr> allConstants() const { return {}; }
+		virtual std::vector<ConstantPtr *> allConstantPointers() { return {}; }
 	};
 
 	struct Writer {
@@ -120,7 +121,6 @@ namespace LL2W {
 	class StoreNode: public InstructionNode, public Reader {
 		private:
 			void handleBangs(ASTNode *);
-			ValuePtr cachedSourceValue = nullptr, cachedDestinationValue = nullptr;
 
 		public:
 			bool volatile_ = false, atomic = false;
@@ -137,6 +137,7 @@ namespace LL2W {
 			std::vector<ValuePtr> allValues() override;
 			std::vector<ValuePtr *> allValuePointers() override;
 			std::vector<ConstantPtr> allConstants() const override { return {source, destination}; }
+			std::vector<ConstantPtr *> allConstantPointers() override { return {&source, &destination}; }
 	};
 
 	class LoadNode: public InstructionNode, public Writer, public Reader {
@@ -162,6 +163,7 @@ namespace LL2W {
 			std::vector<ValuePtr> allValues() override { return {constant->value}; }
 			std::vector<ValuePtr *> allValuePointers() override { return {&constant->value}; }
 			std::vector<ConstantPtr> allConstants() const override { return {constant}; }
+			std::vector<ConstantPtr *> allConstantPointers() override { return {&constant}; }
 	};
 
 	struct IcmpNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
@@ -222,6 +224,7 @@ namespace LL2W {
 			std::vector<ValuePtr> allValues() override;
 			std::vector<ValuePtr *> allValuePointers() override;
 			std::vector<ConstantPtr> allConstants() const override { return constants; }
+			std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
 	struct CallNode: public CallInvokeNode {

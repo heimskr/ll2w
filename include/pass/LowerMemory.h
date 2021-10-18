@@ -11,7 +11,7 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Replaces loads and stores with Why instructions. */
-	int lowerMemory(Function &);
+	size_t lowerMemory(Function &);
 
 	/** Replaces a load instruction with a Why instruction. */
 	void lowerLoad(Function &, std::shared_ptr<Instruction> &, LLVMInstruction &);

@@ -352,11 +352,9 @@ namespace LL2W {
 	}
 
 	std::vector<ValuePtr *> StoreNode::allValuePointers() {
-		if (!cachedSourceValue)
-			cachedSourceValue = source->convert()->value;
-		if (!cachedDestinationValue)
-			cachedDestinationValue = destination->convert()->value;
-		return {&cachedSourceValue, &cachedDestinationValue};
+		source = source->convert();
+		destination = destination->convert();
+		return {&source->value, &destination->value};
 	}
 
 // LoadNode
@@ -647,6 +645,13 @@ namespace LL2W {
 			out.push_back(&constant->value);
 		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
 			out.push_back(&name);
+		return out;
+	}
+
+	std::vector<ConstantPtr *> CallInvokeNode::allConstantPointers() {
+		std::vector<ConstantPtr *> out;
+		for (ConstantPtr &ptr: constants)
+			out.push_back(&ptr);
 		return out;
 	}
 

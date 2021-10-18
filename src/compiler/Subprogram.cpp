@@ -36,6 +36,7 @@ namespace LL2W {
 				case LLVMTOK_RETAINEDNODES:
 					retainedNodes = parseBang(*subnode->front());
 					break;
+				default: break;
 			}
 	}
 
