@@ -30,7 +30,6 @@ namespace LL2W::Passes {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get());
 				if (!gep)
 					continue;
-				std::cerr << "gep: " << *gep << "\n";
 				std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 				if (!gep_global) {
 					warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
