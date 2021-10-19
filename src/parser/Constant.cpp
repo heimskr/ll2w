@@ -74,8 +74,9 @@ namespace LL2W {
 	}
 
 	ConstantPtr Constant::copy() const {
-		return std::make_shared<Constant>(type->copy(), value->copy(), parattrs, conversion,
-			conversionSource? conversionSource->copy() : nullptr, conversionType? conversionType->copy() : nullptr);
+		return std::make_shared<Constant>(type? type->copy() : nullptr, value? value->copy() : nullptr, parattrs,
+			conversion, conversionSource? conversionSource->copy() : nullptr,
+			conversionType? conversionType->copy() : nullptr);
 	}
 
 	ConstantPtr Constant::convert() const {
@@ -91,6 +92,7 @@ namespace LL2W {
 			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map[conversion]);
 		}
 		if (!conversionSource->value) {
+			// TODO: recursive conversion?
 			std::cerr << *this << "\n";
 			throw std::runtime_error("Conversion source has no value in Constant::convert()");
 		}
