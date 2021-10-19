@@ -23,7 +23,7 @@ namespace LL2W {
 
 			void outputStruct(std::ostream &, const StructValue &, int indentation = 0);
 			void outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation = 0);
-			void outputArrayType(std::ostream &, const ArrayType &);
+			void outputType(std::ostream &, const TypePtr &);
 			void outputArray(std::ostream &, const TypePtr &, const ArrayValue &, int indentation = 0);
 
 		public:

@@ -237,33 +237,47 @@ namespace LL2W {
 		}
 	}
 
-	void Program::outputArrayType(std::ostream &out, const ArrayType &type) {
-		out << "(" << type.count << " # ";
-		TypePtr subtype = type.subtype;
-		switch (subtype->typeType()) {
-			case TypeType::Array:
-				outputArrayType(out, *dynamic_cast<ArrayType *>(subtype.get()));
+	void Program::outputType(std::ostream &out, const TypePtr &type) {
+		switch (type->typeType()) {
+			case TypeType::Array: {
+				ArrayType &array = *dynamic_cast<ArrayType *>(type.get());
+				out << "(" << array.count << " # ";
+				outputType(out, array.subtype);
+				out << ")";
 				break;
+			}
 			case TypeType::Int:
-				out << "#i" << dynamic_cast<IntType *>(subtype.get())->intWidth;
+				out << "#i" << dynamic_cast<IntType *>(type.get())->intWidth;
 				break;
 			case TypeType::Pointer:
+				outputType(out, dynamic_cast<PointerType *>(type.get())->subtype);
 				out << "*";
 				break;
-			case TypeType::Struct:
-				out << "{}";
+			case TypeType::Struct: {
+				out << "{";
+				bool first = true;
+				for (const TypePtr &subtype: dynamic_cast<StructType *>(type.get())->node->types) {
+					if (first)
+						first = false;
+					else
+						out << ", ";
+					outputType(out, subtype);
+				}
+				out << "}";
+				break;
+			}
+			case TypeType::Function:
+				out << "#fn";
 				break;
 			default:
-				throw std::runtime_error("Unhandled TypeType in Program::outputArrayType: " +
-					std::to_string(int(subtype->typeType())));
+				throw std::runtime_error("Unhandled TypeType in Program::outputType: " +
+					std::to_string(int(type->typeType())));
 		}
-		out << ")";
 	}
 
 	void Program::outputArray(std::ostream &out, const TypePtr &type, const ArrayValue &array, int indentation) {
-		ArrayType &array_type = *dynamic_cast<ArrayType *>(type.get());
-		outputArrayType(out, array_type);
-		out << " {";
+		outputType(out, type);
+		out << " [";
 		bool first = true;
 		for (const ConstantPtr &constant: array.constants) {
 			if (first)
@@ -273,7 +287,7 @@ namespace LL2W {
 			ConstantPtr converted = constant->convert();
 			outputValue(out, converted->type, converted->value, indentation);
 		}
-		out << "}";
+		out << "]";
 	}
 
 	void Program::debugSection(std::ostream &out) {
