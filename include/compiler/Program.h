@@ -13,11 +13,18 @@
 #include "parser/FunctionHeader.h"
 
 namespace LL2W {
-	class ASTNode;
+	struct ArrayValue;
+	class  ASTNode;
+	struct StructValue;
 
 	class Program {
 		private:
 			int highestIndex = -1;
+
+			void outputStruct(std::ostream &, const StructValue &, int indentation = 0);
+			void outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation = 0);
+			void outputArrayType(std::ostream &, const ArrayType &);
+			void outputArray(std::ostream &, const TypePtr &, const ArrayValue &, int indentation = 0);
 
 		public:
 			std::unordered_map<std::string, Function *> functions;
@@ -43,6 +50,9 @@ namespace LL2W {
 
 			/** Outputs the data section (excluding the #data header) to a stream. */
 			void dataSection(std::ostream &);
+
+			/** Outputs a single value with a name in the data section. */
+			void outputNamedValue(std::ostream &, const std::string &name, ConstantPtr, ValuePtr, const ASTLocation &);
 
 			/** Outputs the debug data section (excluding the #debug header) to a stream. */
 			void debugSection(std::ostream &);

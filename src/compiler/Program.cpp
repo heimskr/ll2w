@@ -10,6 +10,7 @@
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
 #include "parser/StructNode.h"
+#include "parser/Values.h"
 #include "util/Util.h"
 #include "main.h"
 
@@ -164,46 +165,115 @@ namespace LL2W {
 			}
 
 			ValuePtr value = constant->value;
-			if (value) {
-				ValueType type = value->valueType();
-				if (type == ValueType::CString)
-					out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
-				else if (type == ValueType::Zeroinitializer || type == ValueType::Null)
-					out << name << ": (" << (constant->type->width() / 8) << ")\n";
-				else if (type == ValueType::Int)
-					out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << "\n";
-				else if (type == ValueType::Array) {
-					ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
-					if (array->constants.empty())
-						out << name << ": (8)\n";
-					else {
-						for (size_t i = 0; i < array->constants.size(); ++i) {
-							if (i == 0)
-								out << name << ": ";
-							else
-								out << name << "__" << i << ": ";
-							ConstantPtr subconstant = array->constants[i];
-							do {
-								if (subconstant->value) {
-									out << subconstant->value->compile();
-									subconstant = nullptr;
-								} else if (subconstant->conversionSource) {
-									subconstant = subconstant->conversionSource;	
-								} else {
-									out << "???";
-									subconstant = nullptr;
-								}
-							} while (subconstant);
-							out << "\n";
-						}
-					}
-				} else
-					error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
-					        << global->location << "\n";
-			} else {
+			if (value)
+				outputNamedValue(out, name, constant, value, global->location);
+			else
 				out << name << "\n";
-			}
 		}
+	}
+
+	void Program::outputNamedValue(std::ostream &out, const std::string &name, ConstantPtr constant, ValuePtr value,
+	                          const ASTLocation &location) {
+		ValueType type = value->valueType();
+		if (type == ValueType::CString)
+			out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
+		else if (type == ValueType::Zeroinitializer || type == ValueType::Null)
+			out << name << ": (" << (constant->type->width() / 8) << ")\n";
+		else if (type == ValueType::Int)
+			out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << '\n';
+		else if (type == ValueType::Array) {
+			ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
+			out << name << ": ";
+			if (array->constants.empty())
+				out << "(8)";
+			else if (!constant->type)
+				throw std::runtime_error("constant->type is null in Program::outputNamedValue");
+			else
+				outputArray(out, constant->type, *array);
+			out << '\n';
+		} else if (type == ValueType::Struct) {
+			out << name << ": ";
+			outputStruct(out, *dynamic_cast<StructValue *>(value.get()));
+			out << '\n';
+		} else
+			error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
+					<< location << '\n';
+	}
+
+	void Program::outputStruct(std::ostream &out, const StructValue &structval, int indentation) {
+		const std::string tabs(indentation, '\t');
+		out << "{\n";
+		for (const ConstantPtr &constant: structval.constants) {
+			ConstantPtr converted = constant->convert();
+			out << tabs << '\t';
+			outputValue(out, converted->type, converted->value, indentation + 1);
+			out << '\n';
+		}
+		out << tabs << "}";
+	}
+
+	void Program::outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation) {
+		switch (value->valueType()) {
+			case ValueType::Array:
+				outputArray(out, type, *dynamic_cast<ArrayValue *>(value.get()), indentation);
+				break;
+			case ValueType::Int:
+				out << "#i" << dynamic_cast<IntType *>(type.get())->intWidth << ' '
+					<< dynamic_cast<IntValue *>(value.get())->longValue();
+					break;
+			case ValueType::Null:
+			case ValueType::Undef:
+				out << "#i8 0";
+				break;
+			case ValueType::Struct:
+				outputStruct(out, *dynamic_cast<StructValue *>(value.get()), indentation);
+				break;
+			case ValueType::Global:
+				out << "&" << *dynamic_cast<GlobalValue *>(value.get())->name;
+				break;
+			default:
+				throw std::runtime_error("Unhandled ValueType in Program::outputValue: " +
+					std::to_string(int(value->valueType())));
+		}
+	}
+
+	void Program::outputArrayType(std::ostream &out, const ArrayType &type) {
+		out << "(" << type.count << " # ";
+		TypePtr subtype = type.subtype;
+		switch (subtype->typeType()) {
+			case TypeType::Array:
+				outputArrayType(out, *dynamic_cast<ArrayType *>(subtype.get()));
+				break;
+			case TypeType::Int:
+				out << "#i" << dynamic_cast<IntType *>(subtype.get())->intWidth;
+				break;
+			case TypeType::Pointer:
+				out << "*";
+				break;
+			case TypeType::Struct:
+				out << "{}";
+				break;
+			default:
+				throw std::runtime_error("Unhandled TypeType in Program::outputArrayType: " +
+					std::to_string(int(subtype->typeType())));
+		}
+		out << ")";
+	}
+
+	void Program::outputArray(std::ostream &out, const TypePtr &type, const ArrayValue &array, int indentation) {
+		ArrayType &array_type = *dynamic_cast<ArrayType *>(type.get());
+		outputArrayType(out, array_type);
+		out << " {";
+		bool first = true;
+		for (const ConstantPtr &constant: array.constants) {
+			if (first)
+				first = false;
+			else
+				out << ", ";
+			ConstantPtr converted = constant->convert();
+			outputValue(out, converted->type, converted->value, indentation);
+		}
+		out << "}";
 	}
 
 	void Program::debugSection(std::ostream &out) {
