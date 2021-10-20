@@ -164,8 +164,10 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "!DILocation"				{ LLVMRTOKEN(DILOCATION) }
 "!DILexicalBlock"			{ LLVMRTOKEN(DILB) }
 "!DITemplateTypeParameter"	{ LLVMRTOKEN(DITTP) }
+"!DITemplateValueParameter"	{ LLVMRTOKEN(DITVP) }
 "!DILexicalBlockFile"		{ LLVMRTOKEN(DILBF) }
 "!DILabel"					{ LLVMRTOKEN(DILABEL) }
+"!DIEnumerator"				{ LLVMRTOKEN(DIENUMERATOR) }
 "!heapallocsite"			{ LLVMRTOKEN(HEAPALLOCSITE) }
 "!range"					{ LLVMRTOKEN(RANGE) }
 "exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
@@ -324,6 +326,9 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "vtableHolder"				{ LLVMRTOKEN(VTABLEHOLDER) }
 "containingType"			{ LLVMRTOKEN(CONTAININGTYPE) }
 "virtualIndex"				{ LLVMRTOKEN(VIRTUALINDEX) }
+"value"						{ LLVMRTOKEN(VALUE) }
+"isUnsigned"				{ LLVMRTOKEN(ISUNSIGNED) }
+"defaulted"					{ LLVMRTOKEN(DEFAULTED) }
 
 {LLVM_IDENT}				{ LLVMRTOKEN(IDENT) }
 
