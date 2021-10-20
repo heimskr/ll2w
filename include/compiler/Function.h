@@ -263,6 +263,9 @@ namespace LL2W {
 			/** Replaces the first instruction with the second. Not safe to call while iterating. */
 			void replace(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>);
 
+			/** Loads a 64-bit value into a new variable before an instruction by means of set and lui. */
+			VariablePtr get64(std::shared_ptr<Instruction> before, unsigned long, bool reindex = false);
+
 			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
 			 *  is responsible for recreating the CFG and reindexing all blocks. */
 			void mergeBlocks(BasicBlockPtr before, BasicBlockPtr after);
@@ -320,9 +323,6 @@ namespace LL2W {
 
 			/** Finds a spill stack location for a variable. */
 			StackLocation & getSpill(VariablePtr, bool create = false, bool *created = nullptr);
-
-			/** Finds an alloca stack location for a variable. */
-			StackLocation & getAlloca(VariablePtr);
 
 			/** Computes a getelementptr value, places the result in a variable before the given instruction and returns
 			 *  the variable as a value. */

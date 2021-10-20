@@ -31,6 +31,7 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/Comment.h"
 #include "instruction/Label.h"
+#include "instruction/LuiInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
@@ -916,6 +917,17 @@ namespace LL2W {
 		remove(substitute);
 	}
 
+	VariablePtr Function::get64(std::shared_ptr<Instruction> before, unsigned long value, bool reindex) {
+		VariablePtr var = newVariable(std::make_shared<IntType>(64), before->parent.lock());
+		auto set = std::make_shared<SetInstruction>(var, int(value & 0xffffffff));
+		auto lui = std::make_shared<LuiInstruction>(var, int(value >> 32));
+		insertBefore(before, set, false)->setDebug(before->debugIndex)->extract();
+		insertBefore(before, lui, false)->setDebug(before->debugIndex)->extract();
+		if (reindex)
+			reindexInstructions();
+		return var;
+	}
+
 	VariablePtr Function::getVariable(int id) {
 		if (variableStore.count(id) != 0)
 			return variableStore.at(id);
@@ -1300,15 +1312,6 @@ namespace LL2W {
 			return addToStack(variable, StackLocation::Purpose::Spill);
 		}
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
-	}
-
-	StackLocation & Function::getAlloca(VariablePtr variable) {
-		for (std::pair<const int, StackLocation> &pair: stack) {
-			if (pair.second.variable == variable && pair.second.purpose == StackLocation::Purpose::Alloca)
-				return pair.second;
-		}
-
-		throw std::out_of_range("Couldn't find an alloca location for " + variable->plainString());
 	}
 
 	std::shared_ptr<LocalValue> Function::replaceGetelementptrValue(std::shared_ptr<GetelementptrValue> gep,

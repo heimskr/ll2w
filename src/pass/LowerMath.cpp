@@ -51,8 +51,15 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, div);
 				div->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
-				auto div = std::make_shared<I>(left_var, right->intValue(), node->variable);
-				div->setOriginalValue(right);
+				std::shared_ptr<WhyInstruction> div;
+				if (right->overflows()) {
+					VariablePtr overflow_var = function.get64(instruction, right->longValue());
+					div = std::make_shared<R>(left_var, overflow_var, node->variable);
+				} else {
+					auto idiv = std::make_shared<I>(left_var, right->intValue(), node->variable);
+					idiv->setOriginalValue(right);
+					div = std::move(idiv);
+				}
 				function.insertBefore(instruction, div);
 				div->setDebug(node)->extract();
 			} else {
@@ -303,8 +310,15 @@ namespace LL2W::Passes {
 				auto mod = std::make_shared<ModRInstruction>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
-				auto mod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
-				mod->setOriginalValue(right);
+				std::shared_ptr<WhyInstruction> mod;
+				if (right->overflows()) {
+					VariablePtr overflow_var = function.get64(instruction, right->longValue(), false);
+					mod = std::make_shared<ModRInstruction>(left_var, overflow_var, node->variable);
+				} else {
+					auto imod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
+					imod->setOriginalValue(right);
+					mod = std::move(imod);
+				}
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
