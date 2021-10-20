@@ -46,7 +46,7 @@ LLVM_FLOATING			("-"?[0-9]+"."[0-9]+("e"[+\-][0-9]+)?)
 LLVM_FLOATTYPE			("half"|"float"|"double"|"fp128"|"x86_fp80"|"ppc_fp128")
 LLVM_DLLPORT			("dllimport"|"dllexport")
 LLVM_THREAD_LOCAL_TYPE	("localdynamic"|"initialexec"|"localexec")
-LLVM_PARATTR			("sret"|"nocapture"|"swiftself"|"swifterror"|"immarg"|"returned"|"nest"|"nofree")
+LLVM_PARATTR			("nocapture"|"swiftself"|"swifterror"|"immarg"|"returned"|"nest"|"nofree"|"noundef")
 LLVM_RETATTR			("zeroext"|"signext"|"inreg"|"noalias"|"nonnull")
 LLVM_DEREF				("dereferenceable"|"dereferenceable_or_null")
 LLVM_STRUCTVAR			(("%struct."{LLVM_IDENT})|("%\"struct."([^\\"\n]|\\[\\’"0nt])+\"))
@@ -69,6 +69,7 @@ LLVM_LOGIC				("and"|"or"|"xor")
 LLVM_SHR				("lshr"|"ashr")
 LLVM_FMATH				("fadd"|"fsub"|"fmul"|"fdiv"|"frem")
 LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
+LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 
 %%
 
@@ -131,6 +132,8 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 {LLVM_SHR}					{ LLVMRTOKEN(SHR) }
 {LLVM_FMATH}				{ LLVMRTOKEN(FMATH) }
 {LLVM_COMDATTYPE}			{ LLVMRTOKEN(COMDATTYPE) }
+{LLVM_TYPED_PARATTR}		{ LLVMRTOKEN(TYPED_PARATTR) }
+
 
 "!invariant.group"			{ LLVMRTOKEN(INVARIANT_GROUP) }
 "!invariant.load"			{ LLVMRTOKEN(INVARIANT_LOAD) }
@@ -254,7 +257,6 @@ LLVM_COMDATTYPE			("any"|"exactmatch"|"largest"|"noduplicates"|"samesize")
 "freeze"					{ LLVMRTOKEN(FREEZE) }
 "resume"					{ LLVMRTOKEN(RESUME) }
 "filter"					{ LLVMRTOKEN(FILTER) }
-"byval"						{ LLVMRTOKEN(BYVAL) }
 "writeonly"					{ LLVMRTOKEN(WRITEONLY) }
 "nuw"						{ LLVMRTOKEN(NUW) }
 "nsw"						{ LLVMRTOKEN(NSW) }

@@ -24,10 +24,10 @@ namespace LL2W {
 				orNull = *child->lexerInfo == "dereferenceable_or_null";
 			} else if (child->symbol == LLVMTOK_ALIGN) {
 				align = atoi(child->at(0)->lexerInfo->c_str());
-			} else if (child->symbol == LLVMTOK_BYVAL) {
-				attributes.insert(ParAttr::Byval);
-				if (child->size() == 1)
-					byvalType = getType(child->at(0));
+			// } else if (child->symbol == LLVMTOK_BYVAL) {
+			// 	attributes.insert(ParAttr::Byval);
+			// 	if (child->size() == 1)
+			// 		byvalType = getType(child->at(0));
 			} else {
 				for (const std::pair<const ParAttr, std::string> &pair: parattr_map) {
 					if (*child->lexerInfo == pair.second) {
