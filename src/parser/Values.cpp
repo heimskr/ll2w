@@ -46,6 +46,11 @@ namespace LL2W {
 		return static_cast<int>(val);
 	}
 
+	bool Value::overflows() const {
+		const long long_value = longValue();
+		return INT_MAX <= long_value || long_value <= INT_MIN;
+	}
+
 	IntValue::IntValue(const std::string &value_) {
 		value = Util::parseLong(value_, value_.substr(0, 2) == "0x"? 16 : 10);
 	}

@@ -244,8 +244,15 @@ namespace LL2W::Passes {
 				auto sub = std::make_shared<SubRInstruction>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
-				auto sub = std::make_shared<SubIInstruction>(left_var, right->intValue(), node->variable);
-				sub->setOriginalValue(right);
+				std::shared_ptr<WhyInstruction> sub;
+				if (right->overflows()) {
+					VariablePtr overflow_var = function.get64(instruction, right->longValue());
+					sub = std::make_shared<SubRInstruction>(left_var, overflow_var, node->variable);
+				} else {
+					auto isub = std::make_shared<SubIInstruction>(left_var, right->intValue(), node->variable);
+					isub->setOriginalValue(right);
+					sub = std::move(isub);
+				}
 				function.insertBefore(instruction, sub)->setDebug(node)->extract();
 			} else if (right->isGlobal()) {
 				VariablePtr right_var = function.newVariable(node->type);
