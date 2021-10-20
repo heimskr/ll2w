@@ -43,13 +43,19 @@ namespace LL2W::Passes {
 					const std::shared_ptr<LocalValue> local = pair.first->isLocal()?
 						std::dynamic_pointer_cast<LocalValue>(pair.first) : nullptr;
 					if (!local) {
-						// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
-						// In these cases, we can't eliminate the phi instruction by merging alone. We have to insert
-						// instructions in the penultimate slots of the predicate labels for which the phi function
-						// parameters specify a constant.
-						if (pair.first->isIntLike()) {
+						if (pair.first->isIntLike() || pair.first->isGlobal()) {
+							// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
+							// In these cases, we can't eliminate the phi instruction by merging alone. We have to
+							// insert instructions in the penultimate slots of the predicate labels for which the phi
+							// function parameters specify a constant.
+							// On even rarer occasions, the operands can be global variables.
 							BasicBlockPtr block = function.bbMap.at(pair.second);
-							auto new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue());
+							InstructionPtr new_instr;
+							if (pair.first->isIntLike())
+								new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue());
+							else
+								new_instr = std::make_shared<SetInstruction>(target,
+									dynamic_cast<GlobalValue *>(pair.first.get())->name);
 							new_instr->parent = block;
 							if (block->instructions.empty()) {
 								block->insertBeforeTerminal(new_instr);
@@ -61,8 +67,8 @@ namespace LL2W::Passes {
 							target->addDefiner(block);
 							new_instr->extract();
 						} else {
-							std::cerr << "pair.first (" << std::string(*pair.first) << ") isn't intlike in  "
-							          << phi_node->debugExtra() << "\n";
+							std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
+							          << phi_node->debugExtra() << '\n';
 						}
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
