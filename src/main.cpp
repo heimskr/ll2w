@@ -78,8 +78,9 @@ void compile(const std::string &filename, bool show_debug) {
 		prog->debugSection(nullptr);
 		for (const int index: prog->debugIndices) {
 			const auto &location = prog->locations.at(index);
-			std::cout << location.index << " \e[2m->\e[22m " << prog->files.at(location.file).filename << "\e[2m:\e[22m"
-			          << location.line << "\e[2m:\e[22m" << location.column;
+			std::cout << "\e[33m" << index << " \e[39;2m->\e[22m \e[32m" << location.index << " \e[39;2m->\e[22m "
+			          << prog->files.at(location.file).filename << "\e[2m:\e[22m" << location.line << "\e[2m:\e[22m"
+			          << location.column;
 			if (prog->subprograms.count(location.scope) != 0)
 				std::cout << " \e[2m(\e[22m" << prog->subprograms.at(location.scope).name << "\e[2m)\e[22m";
 			std::cout << '\n';
