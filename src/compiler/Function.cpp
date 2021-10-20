@@ -78,6 +78,7 @@
 #include "pass/SplitBlocks.h"
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
+#include "pass/TransformInstructions.h"
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
@@ -772,6 +773,7 @@ namespace LL2W {
 		Passes::lowerMemory(*this);
 		Passes::lowerInlineAsm(*this);
 		Passes::lowerExtractvalue(*this);
+		Passes::transformInstructions(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();

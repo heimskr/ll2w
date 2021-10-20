@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "pass/TrimBlocks.h"
 
