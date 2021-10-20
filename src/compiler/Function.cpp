@@ -808,6 +808,9 @@ namespace LL2W {
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		hackVariables();
+		for (InstructionPtr &instruction: linearInstructions)
+			if (instruction->debugIndex != -1)
+				parent->debugIndices.insert(instruction->debugIndex);
 		finalDone = true;
 	}
 

@@ -137,7 +137,7 @@ namespace LL2W {
 		out << "\n#data\n";
 		dataSection(out);
 		out << "\n#debug\n";
-		debugSection(out);
+		debugSection(&out);
 		out << "\n#code\n\n";
 		if (functions.count("@main") == 1 || hasArg("-main"))
 			out << ":: main\n<halt>\n\n";
@@ -325,14 +325,16 @@ namespace LL2W {
 		out << "]";
 	}
 
-	void Program::debugSection(std::ostream &out) {
+	void Program::debugSection(std::ostream * const out) {
 		int i = 0;
 		for (auto &[index, file]: files) {
-			out << "1 \"" << Util::escape(file.filename) << "\"\n";
+			if (out)
+				*out << "1 \"" << Util::escape(file.filename) << "\"\n";
 			file.index = i++;
 		}
 		for (auto &[index, subprogram]: subprograms) {
-			out << "2 \"" << Util::escape(subprogram.getName()) << "\"\n";
+			if (out)
+				*out << "2 \"" << Util::escape(subprogram.getName()) << "\"\n";
 			subprogram.index = i++;
 		}
 		for (auto &[index, location]: locations) {
@@ -341,12 +343,12 @@ namespace LL2W {
 			} else if (subprograms.count(location.scope) != 0) {
 				// TODO: Originally, I had the or'd condition above split into two else if blocks with identical
 				// contents, but then I merged them. Were they supposed to be separate with different contents?
-				out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column << " "
-				    << subprograms.at(location.scope).index << "\n";
+				if (out)
+					*out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column
+					     << " " << subprograms.at(location.scope).index << "\n";
 				location.index = i++;
-			} else {
+			} else
 				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
-			}
 		}
 	}
 

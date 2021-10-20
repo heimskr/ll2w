@@ -74,14 +74,17 @@ void compile(const std::string &filename, bool show_debug) {
 #ifdef DEBUGMODE
 	prog->debug();
 #else
-	if (show_debug)
-		for (const auto &[llvm_debug, location]: prog->locations) {
-			std::cout << llvm_debug << " \e[2m->\e[22m " << prog->files.at(location.file).filename << "\e[2m:\e[22m"
+	if (show_debug) {
+		prog->debugSection(nullptr);
+		for (const int index: prog->debugIndices) {
+			const auto &location = prog->locations.at(index);
+			std::cout << location.index << " \e[2m->\e[22m " << prog->files.at(location.file).filename << "\e[2m:\e[22m"
 			          << location.line << "\e[2m:\e[22m" << location.column;
 			if (prog->subprograms.count(location.scope) != 0)
 				std::cout << " \e[2m(\e[22m" << prog->subprograms.at(location.scope).name << "\e[2m)\e[22m";
 			std::cout << '\n';
 		}
+	}
 	else
 		std::cout << prog->toString();
 #endif

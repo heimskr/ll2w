@@ -38,6 +38,8 @@ namespace LL2W {
 			std::map<int, Location> locations;
 			std::map<int, Subprogram> subprograms;
 			std::map<int, LexicalBlock> lexicalBlocks;
+			/** A set of all LLVM debug indices found in the program. */
+			std::set<int> debugIndices;
 
 			Program(const ASTNode &);
 			~Program();
@@ -55,7 +57,7 @@ namespace LL2W {
 			void outputNamedValue(std::ostream &, const std::string &name, ConstantPtr, ValuePtr, const ASTLocation &);
 
 			/** Outputs the debug data section (excluding the #debug header) to a stream. */
-			void debugSection(std::ostream &);
+			void debugSection(std::ostream *);
 
 			/** Returns the size (in bits) of the global variable with a given name.
 			 *  The name should include an initial "@". */
