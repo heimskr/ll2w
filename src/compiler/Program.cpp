@@ -195,6 +195,17 @@ namespace LL2W {
 			out << name << ": ";
 			outputStruct(out, *dynamic_cast<StructValue *>(value.get()));
 			out << '\n';
+		} else if (type == ValueType::Getelementptr) {
+			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
+			for (const auto &[width, index]: gep->decimals)
+				if (index != 0) {
+					error() << "Unsupported getelementptr value (invalid indices): " << *gep << '\n';
+					return;
+				}
+			if (gep->variable->valueType() != ValueType::Global)
+				error() << "Invalid getelementptrvalue variable: " << *gep->variable << '\n';
+			else
+				out << name << ": &" << *dynamic_cast<GlobalValue *>(gep->variable.get())->name << '\n';
 		} else
 			error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
 					<< location << '\n';
