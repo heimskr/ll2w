@@ -268,7 +268,7 @@ using AN = LL2W::ASTNode;
 %token LLVM_STRUCT_VALUE LLVM_VALUE_LIST LLVM_ARRAY_VALUE LLVM_CLAUSES LLVM_GLOBAL_DEF LLVM_PHI_PAIR LLVM_SWITCH_LIST
 %token LLVM_BLOCKHEADER LLVM_DECIMAL_PAIR_LIST LLVM_BANGS LLVM_ALIAS_DEF LLVM_METADATA LLVM_DIEXPRESSION_LIST
 %token LLVM_DIDT_LIST LLVM_PIPE_LIST LLVM_DICT_LIST LLVM_DICU_LIST LLVM_DISUBPROGRAM_LIST LLVM_DILV_LIST
-%token LLVM_DILOCATION_LIST LLVM_DIGV_LIST LLVM_DITVP_LIST LLVM_DIE_LIST LLVM_DITTP_LIST
+%token LLVM_DILOCATION_LIST LLVM_DIGV_LIST LLVM_DITVP_LIST LLVM_DIE_LIST LLVM_DITTP_LIST LLVM_DIST_LIST
 
 %start start
 
@@ -380,9 +380,11 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
             | metabang "=" metadata_distinct "!DICompositeType" "(" dict_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
-            | metabang "=" metadata_distinct "!DISubroutineType" "(" "types" ":" LLVMTOK_INTBANG ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
+            | metabang "=" metadata_distinct "!DISubroutineType" "(" dist_list ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DISubrange" "(" "count" ":" LLVMTOK_DECIMAL ")"
+              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
+            | metabang "=" metadata_distinct "!DISubrange" "(" "count" ":" LLVMTOK_INTBANG ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
             | metabang "=" metadata_distinct "!DISubprogram" "(" disubprogram_list ")"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
@@ -415,7 +417,8 @@ didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "scope"     ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "offset"    ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "flags"     ":" pipe_list       { $$ = $1->adopt($3); D($2); }
-         | "extraData" ":" constant        { $$ = $1->adopt($3); D($2); };
+         | "extraData" ":" constant        { $$ = $1->adopt($3); D($2); }
+         | "align"     ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
 didt_list: didt_list "," didt_item { $$ = $1->adopt($3); D($2); }
          | didt_item { $$ = (new AN(llvmParser, LLVM_DIDT_LIST))->adopt($1); };
 intnullbang: LLVMTOK_INTBANG | "null";
@@ -434,7 +437,8 @@ dict_item: "tag"            ":" any_ident       { $$ = $1->adopt($3); D($2); }
          | "baseType"       ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "scope"          ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "vtableHolder"   ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-         | "templateParams" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); };
+         | "templateParams" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "align"          ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
 dict_list: dict_list "," dict_item { $$ = $1->adopt($3); D($2); }
          | dict_item { $$ = (new AN(llvmParser, LLVM_DICT_LIST))->adopt($1); };
 dicu_item: "language"           ":" any_ident       { $$ = $1->adopt($3); D($2); }
@@ -519,6 +523,11 @@ dittp_item: "name"      ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
           | "defaulted" ":" LLVMTOK_BOOL    { $$ = $1->adopt($3); D($2); };
 dittp_list: dittp_list "," dittp_item { $$ = $1->adopt($3); D($2); }
           | dittp_item { $$ = (new AN(llvmParser, LLVM_DITTP_LIST))->adopt($1); };
+
+dist_item: "types" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
+         | "flags" ":" pipe_list       { $$ = $1->adopt($3); D($2); };
+dist_list: dist_list "," dist_item { $$ = $1->adopt($3); D($2); }
+          | dist_item { $$ = (new AN(llvmParser, LLVM_DIST_LIST))->adopt($1); };
 
 metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
              | metadata_listitem { $$ = (new AN(llvmParser, LLVM_METADATA_LIST))->adopt($1); }
