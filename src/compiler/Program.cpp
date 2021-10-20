@@ -243,6 +243,7 @@ namespace LL2W {
 				out << "&" << *dynamic_cast<GlobalValue *>(value.get())->name;
 				break;
 			default:
+				std::cerr << *value << '\n';
 				throw std::runtime_error("Unhandled ValueType in Program::outputValue: " +
 					std::to_string(int(value->valueType())));
 		}
