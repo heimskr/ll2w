@@ -20,14 +20,26 @@
 int global_argc = -1;
 char **global_argv = nullptr;
 
-void compile(const std::string &);
+void compile(const std::string &, bool show_debug);
 void wasmparsertest(const std::string &);
 void interactive(LL2W::Program &);
 
 int main(int argc, char **argv) {
 	global_argc = argc;
 	global_argv = argv;
-	compile(1 < argc? argv[1] : "ll/fat.ll");
+	auto usage = [] { std::cerr << "Usage: ll2w [-d] <input>\n"; exit(1); };
+	if (argc < 2)
+		usage();
+	if (argc == 3) {
+		if (strcmp(argv[1], "-d") == 0)
+			compile(argv[2], true);
+		else
+			compile(argv[1], false);
+	} else if (argc == 2) {
+		compile(argv[1], false);
+	} else {
+		usage();
+	}
 }
 
 bool hasArg(const char *arg) {
@@ -40,7 +52,7 @@ bool hasArg(const char *arg) {
 
 LL2W::Program *prog = nullptr;
 
-void compile(const std::string &filename) {
+void compile(const std::string &filename, bool show_debug) {
 	std::ifstream file(filename);
 	if (!file.is_open())
 		throw std::runtime_error("Couldn't open file for reading");
@@ -62,7 +74,16 @@ void compile(const std::string &filename) {
 #ifdef DEBUGMODE
 	prog->debug();
 #else
-	std::cout << prog->toString();
+	if (show_debug)
+		for (const auto &[llvm_debug, location]: prog->locations) {
+			std::cout << llvm_debug << " \e[2m->\e[22m " << prog->files.at(location.file).filename << "\e[2m:\e[22m"
+			          << location.line << "\e[2m:\e[22m" << location.column;
+			if (prog->subprograms.count(location.scope) != 0)
+				std::cout << " \e[2m(\e[22m" << prog->subprograms.at(location.scope).name << "\e[2m)\e[22m";
+			std::cout << '\n';
+		}
+	else
+		std::cout << prog->toString();
 #endif
 #endif
 	LL2W::llvmParser.done();
