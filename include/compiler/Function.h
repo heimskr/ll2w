@@ -343,6 +343,12 @@ namespace LL2W {
 			/** Convenience method for creating a precolored assembler register. */
 			VariablePtr mx(unsigned char, std::shared_ptr<Instruction>);
 
+			/** Convenience method for creating a precolored argument register. */
+			VariablePtr ax(unsigned char, BasicBlockPtr);
+
+			/** Convenience method for creating a precolored argument register. */
+			VariablePtr ax(unsigned char, std::shared_ptr<Instruction>);
+
 			/** Convenience method for creating a precolored $m0 register. */
 			VariablePtr m0(BasicBlockPtr);
 

@@ -56,6 +56,7 @@
 #include "pass/LowerIcmp.h"
 #include "pass/LowerInlineAsm.h"
 #include "pass/LowerMath.h"
+#include "pass/LowerMemcpy.h"
 #include "pass/LowerMemory.h"
 #include "pass/LowerMemset.h"
 #include "pass/LowerObjectsize.h"
@@ -765,6 +766,7 @@ namespace LL2W {
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
 		Passes::lowerVarargsFirst(*this);
+		Passes::lowerMemcpy(*this);
 		Passes::lowerMemset(*this);
 		Passes::setupCalls(*this);
 		Passes::lowerMemory(*this);
@@ -1421,6 +1423,14 @@ namespace LL2W {
 
 	VariablePtr Function::mx(unsigned char index, InstructionPtr instruction) {
 		return mx(index, instruction->parent.lock());
+	}
+
+	VariablePtr Function::ax(unsigned char index, BasicBlockPtr block) {
+		return makePrecoloredVariable(WhyInfo::argumentOffset + index, block);
+	}
+
+	VariablePtr Function::ax(unsigned char index, InstructionPtr instruction) {
+		return ax(index, instruction->parent.lock());
 	}
 
 	VariablePtr Function::m0(BasicBlockPtr block) {
