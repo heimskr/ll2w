@@ -242,10 +242,31 @@ namespace LL2W {
 			case ValueType::Global:
 				out << "&" << *dynamic_cast<GlobalValue *>(value.get())->name;
 				break;
+			case ValueType::Getelementptr: {
+				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
+				GlobalValue *global = dynamic_cast<GlobalValue *>(gep->variable.get());
+
+				if (!global) {
+					std::cerr << *value << '\n';
+					std::cerr << *gep->variable << '\n';
+					throw std::runtime_error("Expected a global value in getelementptr expression in "
+						"Program::outputValue");
+				}
+
+				for (const auto &[width, decimal]: gep->decimals)
+					if (decimal != 0) {
+						std::cerr << *value << '\n';
+						throw std::runtime_error("Found a non-zero decimal in a getelementptr expression in "
+							"Program::outputValue");
+					}
+
+				out << "&" << *global->name;
+				break;
+			}
 			default:
 				std::cerr << *value << '\n';
 				throw std::runtime_error("Unhandled ValueType in Program::outputValue: " +
-					std::to_string(int(value->valueType())));
+					value_map.at(value->valueType()));
 		}
 	}
 
