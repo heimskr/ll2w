@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "parser/ASTNode.h"
+
 namespace LL2W {
 	struct Constant;
 	class Function;
@@ -19,5 +21,5 @@ namespace LL2W::Passes {
 	/** Replaces a store instruction with a Why instruction. */
 	void lowerStore(Function &, std::shared_ptr<Instruction> &, LLVMInstruction &);
 
-	int getLoadStoreSize(std::shared_ptr<Constant> &);
+	int getLoadStoreSize(std::shared_ptr<Constant> &, const std::shared_ptr<Instruction> &);
 }

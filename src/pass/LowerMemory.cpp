@@ -52,7 +52,7 @@ namespace LL2W::Passes {
 			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
 		int size;
 		try {
-			size = getLoadStoreSize(converted);
+			size = getLoadStoreSize(converted, instruction);
 		} catch (std::exception &) {
 			node->debug();
 			throw;
@@ -110,7 +110,7 @@ namespace LL2W::Passes {
 
 		int size;
 		try {
-			size = getLoadStoreSize(converted);
+			size = getLoadStoreSize(converted, instruction);
 		} catch (std::exception &) {
 			node->debug();
 			throw;
@@ -216,7 +216,7 @@ namespace LL2W::Passes {
 		}
 	}
 
-	int getLoadStoreSize(ConstantPtr &constant) {
+	int getLoadStoreSize(ConstantPtr &constant, const InstructionPtr &instruction) {
 		PointerType *constant_ptr = dynamic_cast<PointerType *>(constant->type.get());
 		if (!constant_ptr)
 			throw std::runtime_error("Expected a PointerType in the constant of a load/store instruction");
@@ -229,8 +229,11 @@ namespace LL2W::Passes {
 			return constant_int->width() / 8;
 		} else if (dynamic_cast<PointerType *>(subtype) || dynamic_cast<FunctionType *>(subtype)) {
 			return WhyInfo::pointerWidth;
+		} else if (StructType *constant_struct = dynamic_cast<StructType *>(subtype)) {
+			return constant_struct->width() / 8;
 		} else {
-			warn() << "getLoadStoreSize: Unexpected pointer subtype: " + std::string(*constant_ptr->subtype) << "\n";
+			warn() << "getLoadStoreSize: Unexpected pointer subtype " + std::string(*constant_ptr->subtype)
+			       << " in " << instruction->debugExtra() << "\n";
 			return constant_ptr->subtype->width() / 8;
 			// return -1;
 		}

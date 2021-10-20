@@ -42,12 +42,9 @@ namespace LL2W::Passes {
 				move->extract();
 				auto iter = load->rd->registers.begin();
 				for (int i = 0; i < load->size / 8; ++i) {
-					if (i != 0) {
-						auto addi = std::make_shared<AddIInstruction>(m4, 8, m4);
-						addi->setDebug(load->debugIndex);
-						function.insertBefore(instruction, addi);
-						addi->extract();
-					}
+					if (i != 0)
+						function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, 8, m4))
+							->setDebug(load->debugIndex)->extract();
 					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
 					auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, 8);
 					new_load->setDebug(load->debugIndex);
