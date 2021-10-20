@@ -222,8 +222,15 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, mult)->setDebug(node)->extract();
 			function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
-			auto mult = std::make_shared<MultIInstruction>(left_var, right->intValue());
-			mult->setOriginalValue(right);
+			std::shared_ptr<WhyInstruction> mult;
+			if (right->overflows()) {
+				mult = std::make_shared<MultRInstruction>(left_var, function.get64(instruction, right->longValue()));
+			} else {
+				auto imult = std::make_shared<MultIInstruction>(left_var, right->intValue());
+				imult->setOriginalValue(right);
+				mult = imult;
+			}
+
 			auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
 			function.insertBefore(instruction, mult)->setDebug(node)->extract();
 			function.insertBefore(instruction, movelo)->setDebug(node)->extract();
