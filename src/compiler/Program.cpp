@@ -175,13 +175,15 @@ namespace LL2W {
 	void Program::outputNamedValue(std::ostream &out, const std::string &name, ConstantPtr constant, ValuePtr value,
 	                          const ASTLocation &location) {
 		ValueType type = value->valueType();
-		if (type == ValueType::CString)
+		if (type == ValueType::CString) {
 			out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
-		else if (type == ValueType::Zeroinitializer || type == ValueType::Null)
+		} else if (type == ValueType::Zeroinitializer || type == ValueType::Null) {
 			out << name << ": (" << (constant->type->width() / 8) << ")\n";
-		else if (type == ValueType::Int)
-			out << name << ": " << dynamic_cast<IntValue *>(value.get())->value << '\n';
-		else if (type == ValueType::Array) {
+		} else if (value->isIntLike()) {
+			out << name << ": " << value->longValue() << '\n';
+		} else if (type == ValueType::Undef) {
+			out << name << ": 0\n";
+		} else if (type == ValueType::Array) {
 			ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
 			out << name << ": ";
 			if (array->constants.empty())
