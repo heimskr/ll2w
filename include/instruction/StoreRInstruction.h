@@ -9,9 +9,6 @@ namespace LL2W {
 	 * $rs -> [$rd]
 	 */
 	struct StoreRInstruction: public RType, public SizedInstruction {
-		/** The size of the store in bytes. */
-		int size;
-
 		StoreRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, int size_ = 8, int index_ = -1);
 
 		std::string debugExtra() override;

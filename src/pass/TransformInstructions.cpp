@@ -1,9 +1,12 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
+#include "instruction/AddIInstruction.h"
 #include "instruction/AndIInstruction.h"
 #include "instruction/LoadIInstruction.h"
 #include "instruction/LoadRInstruction.h"
+#include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/ShiftRightLogicalIInstruction.h"
 #include "instruction/StoreIInstruction.h"
 #include "instruction/StoreRInstruction.h"
 #include "pass/TransformInstructions.h"
@@ -29,8 +32,6 @@ namespace LL2W::Passes {
 					// which normally translates to something like
 					//     [$t9] -> $ta /3
 					// Why has no instructions for 24-bit loads, so we have to apply a mask here.
-					// For stores, which I'm too lazy to do now because I mercifully see no 24-bit stores in Thurisaz,
-					// we'd have to break the store into multiple byte-sized stores, and that would be kind of a pain.
 					li->size = 4;
 					auto andi = std::make_shared<AndIInstruction>(li->rd, 0xffffff, li->rd);
 					// I don't use insertAfter all that often. Neat.
@@ -43,15 +44,39 @@ namespace LL2W::Passes {
 					function.insertAfter(l, andi)->setDebug(l->debugIndex)->extract();
 				}
 			} else if (auto si = std::dynamic_pointer_cast<StoreIInstruction>(instruction)) {
-				if (si->size != 4)
-					continue;
-				auto var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(64)),
-					si->parent.lock());
-				auto set = std::make_shared<SetInstruction>(var, si->imm);
-				auto s = std::make_shared<StoreRInstruction>(si->rs, var, si->size);
-				function.insertBefore(instruction, set)->setDebug(si->debugIndex)->extract();
-				function.insertBefore(instruction, s)->setDebug(si->debugIndex)->extract();
-				to_remove.push_back(si);
+				if (si->size == 4) {
+					auto var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(64)),
+						si->parent.lock());
+					auto set = std::make_shared<SetInstruction>(var, si->imm);
+					auto s = std::make_shared<StoreRInstruction>(si->rs, var, si->size);
+					function.insertBefore(instruction, set)->setDebug(si->debugIndex)->extract();
+					function.insertBefore(instruction, s)->setDebug(si->debugIndex)->extract();
+					to_remove.push_back(si);
+				}
+			} else if (auto s = std::dynamic_pointer_cast<StoreRInstruction>(instruction)) {
+				if (s->size == 3 || s->size == 5 || s->size == 7) {
+					// We have to break stores of strange sizes into multiple byte-sized stores.
+					// TODO: verify.
+					auto ptr_var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(s->size
+						* 8)), s->parent.lock());
+					auto value_var = function.newVariable(std::make_shared<IntType>(s->size * 8), s->parent.lock());
+					auto ptr_move = std::make_shared<MoveInstruction>(s->rt, ptr_var);
+					auto value_move = std::make_shared<MoveInstruction>(s->rs, value_var);
+					function.insertBefore(s, ptr_move)->setDebug(*s)->extract();
+					function.insertBefore(s, value_move)->setDebug(*s)->extract();
+					for (int i = 0; i < s->size; ++i) {
+						auto new_s = std::make_shared<StoreRInstruction>(value_var, ptr_var, 1);
+						function.insertBefore(s, new_s)->setDebug(*s)->extract();
+						if (i != s->size - 1) {
+							auto add = std::make_shared<AddIInstruction>(ptr_var, 1, ptr_var);
+							auto shift = std::make_shared<ShiftRightLogicalIInstruction>(value_var, 8, value_var);
+							function.insertBefore(s, add)->setDebug(*s)->extract();
+							function.insertBefore(s, shift)->setDebug(*s)->extract();
+						}
+					}
+
+					to_remove.push_back(s);
+				}
 			 }
 		}
 
