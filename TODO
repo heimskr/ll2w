@@ -1,8 +1,4 @@
 [2020/01/18 02:38:25] Add union support.
-[2020/04/08 20:35:19] Figure out signed/unsigned remainders.
 [2021/04/27 23:20:30] Split up memory instructions on large structs after register allocation.
-[2021/04/06 23:53:18] LowerAlloca assumes that each alloca instruction is called once per function call. This isn't
-                      correct, as allocas can occur inside a loop.
 [2021/05/17 18:35:06] Support debug data for function prologues and epilogues by referencing the !dbg data from the
                       function header. Do the same for LoadArguments.
-[2021/10/16 02:43:20] Add a pass to break up sets with an argument larger than INT_MAX into a set and a lui.
