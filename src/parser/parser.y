@@ -260,6 +260,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_ISUNSIGNED "isUnsigned"
 %token LLVMTOK_DIENUMERATOR "!DIEnumerator"
 %token LLVMTOK_DEFAULTED "defaulted"
+%token LLVMTOK_NOALIAS_SCOPE_DECL "@llvm.experimental.noalias.scope.decl"
+%token LLVMTOK_NOALIAS "!noalias"
+%token LLVMTOK_ALIAS_SCOPE "!alias.scope"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -293,6 +296,8 @@ declaration: "declare" function_header { $1->adopt($2); }
            | "declare" "void" dbg_type "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); }
            | "declare" "void" "@llvm.dbg.label" "(" "metadata" ")" _fnattrs
+             { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
+           | "declare" "void" "@llvm.experimental.noalias.scope.decl" "(" "metadata" ")" _fnattrs
              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
            | "declare" "void" "@llvm.assume" "(" function_args ")" _fnattrs
              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); };
@@ -695,6 +700,8 @@ unibang: "," "!prof"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!heapallocsite" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!range"         LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!tbaa.struct"   LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!noalias"       LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!alias.scope"   LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | cdebug;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs
@@ -718,7 +725,7 @@ store_bangs: store_bangs invariant_group { $$ = $1->adopt($2); }
            | { $$ = new AN(llvmParser, LLVM_BANGS); };
 nontemporal: "," "!nontemporal" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 invariant_group: "," "!invariant.group" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
-tbaa:  "," "!tbaa"  LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
+tbaa:  "," "!tbaa" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); };
 
 i_store_atomic: "store" "atomic" _volatile constant "," constant _syncscope LLVMTOK_ORDERING _align store_bangs
                 { $$ = (new StoreNode($3, $4, $6, $7, $8, $9, $10))->locate($1); D($1, $2, $5); };
@@ -775,9 +782,13 @@ _inteldialect: LLVMTOK_INTELDIALECT | { $$ = nullptr; };
 _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
-i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs cdebug
+i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs _cdebug
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
-     | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs cdebug
+     | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs _cdebug
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9); }
+     | LLVMTOK_TAIL "call" "void" "@llvm.experimental.noalias.scope.decl" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs _cdebug
+       { $$ = $4; D($1, $2, $3, $5, $6, $7, $8, $9, $10); }
+     | "call" "void" "@llvm.experimental.noalias.scope.decl" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs _cdebug
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9); };
 dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
@@ -785,8 +796,10 @@ anybang: LLVMTOK_INTBANG
        | diexpression;
 
 // Example: call void @llvm.assume(i1 true) [ "align"(i8* %10, i64 %9) ]
-i_assume: "call" "void" "@llvm.assume" "(" LLVMTOK_INTTYPE LLVMTOK_BOOL ")" "[" LLVMTOK_STRING "(" constants ")" "]" cdebug
-          { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14); };
+i_assume: "call" "void" "@llvm.assume" "(" LLVMTOK_INTTYPE LLVMTOK_BOOL ")" "[" assume_list "]" _cdebug
+          { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11); };
+assume_list: assume_list "," LLVMTOK_STRING "(" constants ")" { $$ = nullptr; D($1, $2, $3, $4, $5, $6); }
+           | LLVMTOK_STRING "(" constants ")"                 { $$ = nullptr; D($1, $2, $3, $4); };
 
 diexpression: "!DIExpression" "(" diexpression_list ")" { $$ = $1->adopt($3); D($2, $4); }
             | "!DIExpression" "(" ")" { $$ = $1; D($2, $3); };

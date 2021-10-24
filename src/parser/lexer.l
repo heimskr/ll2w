@@ -102,6 +102,7 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "@llvm.dbg.declare"			{ LLVMRTOKEN(DBG_DECLARE) }
 "@llvm.dbg.label"			{ LLVMRTOKEN(DBG_LABEL) }
 "@llvm.assume"				{ LLVMRTOKEN(ASSUME) }
+"@llvm.experimental.noalias.scope.decl" { LLVMRTOKEN(NOALIAS_SCOPE_DECL) }
 
 {LLVM_UNIONVAR}				{ LLVMRTOKEN(UNIONVAR) }
 {LLVM_CLASSVAR}				{ LLVMRTOKEN(CLASSVAR) }
@@ -171,6 +172,8 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "!DIEnumerator"				{ LLVMRTOKEN(DIENUMERATOR) }
 "!heapallocsite"			{ LLVMRTOKEN(HEAPALLOCSITE) }
 "!range"					{ LLVMRTOKEN(RANGE) }
+"!noalias"					{ LLVMRTOKEN(NOALIAS) }
+"!alias.scope"				{ LLVMRTOKEN(ALIAS_SCOPE) }
 "exportSymbols"				{ LLVMRTOKEN(EXPORTSYMBOLS) }
 {LLVM_INTBANG}				{ LLVMRTOKEN(INTBANG) }
 {LLVM_METABANG}				{ LLVMRTOKEN(METABANG) }

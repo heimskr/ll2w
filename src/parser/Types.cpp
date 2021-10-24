@@ -357,6 +357,9 @@ namespace LL2W {
 	}
 
 	TypePtr getType(const ASTNode *node) {
+		if (!node)
+			throw std::runtime_error("node is null in getType");
+
 		switch (node->symbol) {
 			case LLVM_FUNCTIONTYPE: return std::make_shared<FunctionType>(node);
 			case LLVMTOK_INTTYPE:   return std::make_shared<IntType>(atoi(node->lexerInfo->substr(1).c_str()));
@@ -372,8 +375,10 @@ namespace LL2W {
 				return std::make_shared<ArrayType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
 			case LLVM_VECTORTYPE:
 				return std::make_shared<VectorType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
-			default: throw std::invalid_argument("Couldn't create Type from a node with symbol " +
-			                                     std::string(llvmParser.getName(node->symbol)));
+			default:
+				throw std::invalid_argument("Couldn't create Type from a node with symbol " +
+				                            std::string(llvmParser.getName(node->symbol)) + " (" +
+				                            std::to_string(node->symbol) + ")");
 		}
 	}
 

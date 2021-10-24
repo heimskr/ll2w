@@ -270,8 +270,10 @@ namespace LL2W {
 			 *  is responsible for recreating the CFG and reindexing all blocks. */
 			void mergeBlocks(BasicBlockPtr before, BasicBlockPtr after);
 
-			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
-			VariablePtr getVariable(int);
+			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown,
+			 *  unless the second argument is true and the variable is one of the argument variables, in which case
+			 *  it'll be added to the variable store and returned. */
+			VariablePtr getVariable(int, bool add_arguments = true);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			VariablePtr getVariable(const std::string &);

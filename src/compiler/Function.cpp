@@ -937,9 +937,11 @@ namespace LL2W {
 		return var;
 	}
 
-	VariablePtr Function::getVariable(int id) {
+	VariablePtr Function::getVariable(int id, bool add_arguments) {
 		if (variableStore.count(id) != 0)
 			return variableStore.at(id);
+		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && id < getArity())
+			return getVariable(id, arguments->at(id).type, getEntry());
 		return extraVariables.at(id);
 	}
 

@@ -68,7 +68,9 @@ namespace LL2W::Passes {
 					} else if (function.parent->aliases.count(StringSet::intern("@" + *global_uptr->name)) != 0) {
 						// In rare cases, there may be an alias.
 						AliasDef *alias = function.parent->aliases.at(StringSet::intern("@" + *global_uptr->name));
-						global_uptr = std::make_unique<GlobalValue>(StringSet::intern(alias->aliasTo->substr(1)));
+						const std::string *alias_to = alias->aliasTo->front() == '@'?
+							StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
+						global_uptr = std::make_unique<GlobalValue>(alias_to);
 					} else throw std::runtime_error("Couldn't find signature for function " + *global_uptr->name);
 				} while (true);
 			} else {

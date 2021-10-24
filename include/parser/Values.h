@@ -205,6 +205,8 @@ namespace LL2W {
 		ValueType valueType() const override { return ValueType::Undef; }
 		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }
 		operator std::string() override { return "undef"; }
+		bool isIntLike() const override { return true; }
+		long longValue() const override { return 0; }
 		std::string compile() const override { return "0"; }
 	};
 
