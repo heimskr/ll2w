@@ -5,5 +5,5 @@ namespace LL2W {
 }
 
 namespace LL2W::Passes {
-	int lowerExtractvalue(Function &);
+	size_t lowerExtractvalue(Function &);
 }

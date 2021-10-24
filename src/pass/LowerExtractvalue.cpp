@@ -9,8 +9,8 @@
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	int lowerExtractvalue(Function &function) {
-		int changed = 0;
+	size_t lowerExtractvalue(Function &function) {
+		size_t changed = 0;
 
 		std::list<InstructionPtr> to_remove;
 
@@ -21,8 +21,10 @@ namespace LL2W::Passes {
 
 			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->node);
 
-			if (ev->decimals.size() != 1 || ev->aggregateValue->valueType() != ValueType::Local)
+			if (ev->decimals.size() != 1 || ev->aggregateValue->valueType() != ValueType::Local) {
+				warn() << "Skipping unsupported extractvalue node: " << ev->debugExtra() << '\n';
 				continue;
+			}
 
 			LocalValue *local = dynamic_cast<LocalValue *>(ev->aggregateValue.get());
 
@@ -37,15 +39,9 @@ namespace LL2W::Passes {
 				continue;
 			}
 
-			StructType *struct_type = dynamic_cast<StructType *>(local->variable->type.get());
-
-			auto padded = struct_type->pad();
-
-			// for (const std::pair<const int, int> &pair: padded->paddingMap)
-			// 	std::cerr << pair.first << " => " << pair.second << "\n";
-
 			auto result = PaddedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
 			to_remove.push_back(instruction);
+			++changed;
 		}
 
 		for (InstructionPtr &instruction: to_remove)
