@@ -1,13 +1,15 @@
 #include <sstream>
 
 #include "parser/AliasDef.h"
+#include "parser/Constant.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
 
 namespace LL2W {
 	AliasDef::AliasDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
 	                   ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *type_,
-	                   ASTNode *ptr_type, ASTNode *alias_to):
+	                   ASTNode *value_node_):
+	                //    ASTNode *ptr_type, ASTNode *alias_to):
 	ASTNode(llvmParser, LLVM_ALIAS_DEF, gvar->lexerInfo) {
 		name = gvar->lexerInfo;
 		delete gvar;
@@ -67,11 +69,27 @@ namespace LL2W {
 		type = getType(type_);
 		delete type_;
 
-		ptrType = getType(ptr_type);
-		delete ptr_type;
 
-		aliasTo = alias_to->lexerInfo;
-		delete alias_to;
+		std::unique_ptr<ASTNode> value_node(value_node_);
+
+		if (value_node->symbol == LLVM_CONSTANT) {
+			ConstantPtr constant = std::make_shared<Constant>(value_node.get())->convert();
+			ptrType = constant->type;
+			if (constant->value->valueType() != ValueType::Global)
+				throw std::runtime_error("Expected a global value in AliasDef");
+			aliasTo = dynamic_cast<GlobalValue *>(constant->value.get())->name;
+		} else if (value_node->symbol == LLVM_CONVERSION_EXPR) {
+			if (*value_node->lexerInfo != "bitcast")
+				throw std::runtime_error("Unexpected conversion type in AliasDef: " + *value_node->lexerInfo);
+			ConstantPtr constant = std::make_shared<Constant>(value_node->front())->convert();
+			ptrType = getType(value_node->at(1));
+			if (constant->value->valueType() != ValueType::Global)
+				throw std::runtime_error("Expected a global value in AliasDef");
+			aliasTo = dynamic_cast<GlobalValue *>(constant->value.get())->name;
+		} else {
+			value_node->debug();
+			throw std::runtime_error("Unexpected value node in AliasDef");
+		}
 	}
 
 	std::string AliasDef::debugExtra() const {

@@ -29,16 +29,15 @@ namespace LL2W {
 			type = type_hint;
 			value = std::make_shared<LocalValue>(node);
 		} else if (node->symbol == LLVM_CONVERSION_EXPR) {
-			if (!type_hint)
-				throw std::runtime_error("Constant::Constant: type hint expected for conversion expression node");
+			// if (!type_hint)
+			// 	throw std::runtime_error("Constant::Constant: type hint expected for conversion expression node");
 			type = type_hint;
 			value = nullptr;
-			for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
+			for (const std::pair<const Conversion, std::string> &pair: conversion_map)
 				if (*node->lexerInfo == pair.second) {
 					conversion = pair.first;
 					break;
 				}
-			}
 			conversionSource = std::make_shared<Constant>(node->at(0));
 			conversionType = getType(node->at(1));
 		} else if (node->symbol != LLVM_CONSTANT) {

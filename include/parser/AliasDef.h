@@ -18,7 +18,7 @@ namespace LL2W {
 
 		AliasDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
 		         ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *type_,
-		         ASTNode *ptr_type, ASTNode *alias_to);
+		         ASTNode *value_node);
 
 		std::string debugExtra() const override;
 	};

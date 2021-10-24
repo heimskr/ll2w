@@ -673,8 +673,9 @@ preds_list: preds_list LLVMTOK_PVAR { $1->adopt($2); }
 // Aliases
 
 alias_def: LLVMTOK_GVAR "=" _alias_linkage _preemption _visibility _dll_storage_class _thread_local _unnamed_addr
-           "alias" type_any "," type_ptr LLVMTOK_GVAR
-           { $$ = new AliasDef($1, $3, $4, $5, $6, $7, $8, $10, $12, $13); D($2, $9, $11); };
+           "alias" type_any "," alias_def_right
+           { $$ = new AliasDef($1, $3, $4, $5, $6, $7, $8, $10, $12); D($2, $9, $11); };
+alias_def_right: constant | conversion_expr;
 _alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 
 
