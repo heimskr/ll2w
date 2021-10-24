@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <mutex>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -20,6 +21,7 @@ namespace LL2W {
 	class Program {
 		private:
 			int highestIndex = -1;
+			std::mutex mutex;
 
 			void outputStruct(std::ostream &, const StructValue &, int indentation = 0);
 			void outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation = 0);
@@ -67,5 +69,7 @@ namespace LL2W {
 			void debug();
 
 			int newDebugIndex();
+
+			std::unique_lock<std::mutex> getLock() { return std::unique_lock(mutex); }
 	};
 }

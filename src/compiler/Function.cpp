@@ -809,8 +809,10 @@ namespace LL2W {
 		Passes::breakUpBigSets(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions)
-			if (instruction->debugIndex != -1)
+			if (instruction->debugIndex != -1) {
+				auto lock = parent->getLock();
 				parent->debugIndices.insert(instruction->debugIndex);
+			}
 		finalDone = true;
 	}
 
@@ -1074,6 +1076,7 @@ namespace LL2W {
 			out << instruction->toString();
 			const int dbg = instruction->debugIndex;
 			if (dbg != -1 && instruction->showDebug()) {
+				auto lock = parent->getLock();
 				if (parent->locations.count(dbg) != 0)
 					out << " !" << parent->locations.at(dbg).index;
 				else
@@ -1304,6 +1307,7 @@ namespace LL2W {
 		}
 		if (header->fnattrsIndex == -1)
 			return false;
+		auto lock = parent->getLock();
 		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
@@ -1369,9 +1373,9 @@ namespace LL2W {
 		for (auto &pair: variableStore)
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
-			auto parent = var->getParent().lock();
-			if (var->registers.empty() && parent)
-				var->registers = parent->registers;
+			auto var_parent = var->getParent().lock();
+			if (var->registers.empty() && var_parent)
+				var->registers = var_parent->registers;
 			if (var->registers.empty()) {
 				for (Variable *alias: var->getAliases())
 					if (!alias->registers.empty()) {
@@ -1402,8 +1406,8 @@ namespace LL2W {
 		for (const auto &[id, var]: variableStore)
 			dependencies.addNode(get_string(*var)).data = var.get();
 		for (const auto &[id, var]: variableStore) {
-			for (Variable *parent: var->phiParents)
-				dependencies[get_string(*parent)].link(dependencies[get_string(*var)], true);
+			for (Variable *phi_parent: var->phiParents)
+				dependencies[get_string(*phi_parent)].link(dependencies[get_string(*var)], true);
 			for (Variable *child: var->phiChildren)
 				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
 		}
@@ -1415,6 +1419,7 @@ namespace LL2W {
 			throw std::runtime_error("Function " + *name + " is missing a parent");
 		if (debugIndex == -1) // TODO: verify
 			return;
+		auto lock = parent->getLock();
 		initialDebugIndex = parent->newDebugIndex();
 		Subprogram &subprogram = parent->subprograms.at(debugIndex);
 		Location location(subprogram.line, 1, debugIndex);

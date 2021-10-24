@@ -2,7 +2,7 @@
 #include <sstream>
 #include <thread>
 
-// #define COMPILE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 
 #include "compiler/BasicBlock.h"
