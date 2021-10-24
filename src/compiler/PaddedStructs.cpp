@@ -18,7 +18,7 @@ namespace LL2W::PaddedStructs {
 		TypePtr type = source->type;
 		if (!type)
 			throw std::runtime_error("PaddedStructs::extract: source variable has no type");
-
+		
 		StructType *initial_struct_type = dynamic_cast<StructType *>(type.get());
 		if (!initial_struct_type)
 			throw std::runtime_error("PaddedStructs::extract: source variable type isn't StructType");
@@ -122,54 +122,6 @@ namespace LL2W::PaddedStructs {
 			// possibly).
 			++source_reg_index;
 		}
-
-		function.reindexInstructions();
-		return out_var;
-	}
-
-	VariablePtr insert(VariablePtr source, int index, Function &function, InstructionPtr instruction) {
-		std::list<int> source_regs(source->registers.begin(), source->registers.end());
-
-		TypePtr type = source->type;
-		if (!type)
-			throw std::runtime_error("PaddedStructs::insert: source variable has no type");
-
-		StructType *initial_struct_type = dynamic_cast<StructType *>(type.get());
-		if (!initial_struct_type)
-			throw std::runtime_error("PaddedStructs::insert: source variable type isn't StructType");
-
-		LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-		if (!llvm)
-			throw std::runtime_error("PaddedStructs::insert not called on an LLVM instruction");
-
-		InsertValueNode *ivnode = dynamic_cast<InsertValueNode *>(llvm->node);
-		if (!ivnode)
-			throw std::runtime_error("PaddedStructs::insert not called on an insertvalue node");
-
-		if (!ivnode->variable->type)
-			throw std::runtime_error("InsertValueNode output variable has no type");
-
-		auto struct_type = initial_struct_type->pad();
-		index = struct_type->paddingMap.at(index);
-
-		// TODO: support ArrayType
-
-		int width_sum = 0;
-		for (int i = 0; i < index; ++i)
-			width_sum += struct_type->node->types.at(i)->width();
-
-		int skip, source_reg_index = 0;
-
-		// While 64 <= width sum, subtract 64 and skip a source register.
-		// The result will be the number of bits to skip in the first used source register.
-		for (skip = width_sum; 64 <= skip; skip -= 64)
-			++source_reg_index;
-
-		auto inserted_type = ivnode->type;
-
-		VariablePtr out_var = ivnode->variable;
-
-		// ...
 
 		function.reindexInstructions();
 		return out_var;

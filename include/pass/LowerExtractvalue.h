@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstddef>
-
 namespace LL2W {
 	class Function;
 }
 
 namespace LL2W::Passes {
-	size_t lowerExtractvalue(Function &);
+	int lowerExtractvalue(Function &);
 }

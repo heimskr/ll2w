@@ -9,8 +9,8 @@
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	size_t lowerExtractvalue(Function &function) {
-		size_t changed = 0;
+	int lowerExtractvalue(Function &function) {
+		int changed = 0;
 
 		std::list<InstructionPtr> to_remove;
 
@@ -41,9 +41,11 @@ namespace LL2W::Passes {
 
 			auto padded = struct_type->pad();
 
+			// for (const std::pair<const int, int> &pair: padded->paddingMap)
+			// 	std::cerr << pair.first << " => " << pair.second << "\n";
+
 			auto result = PaddedStructs::extract(local->variable, ev->decimals.front(), function, instruction);
 			to_remove.push_back(instruction);
-			++changed;
 		}
 
 		for (InstructionPtr &instruction: to_remove)
