@@ -17,6 +17,8 @@
 #include "instruction/DivuRInstruction.h"
 #include "instruction/ModIInstruction.h"
 #include "instruction/ModRInstruction.h"
+#include "instruction/ModuIInstruction.h"
+#include "instruction/ModuRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
@@ -314,6 +316,7 @@ namespace LL2W::Passes {
 		}
 	}
 
+	template <typename R, typename I>
 	void lowerRem(Function &function, InstructionPtr &instruction, RemNode *node) {
 		ValuePtr left = node->left, right = node->right;
 
@@ -321,21 +324,21 @@ namespace LL2W::Passes {
 			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto mod = std::make_shared<ModRInstruction>(left_var, right_var, node->variable);
+				auto mod = std::make_shared<R>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				std::shared_ptr<WhyInstruction> mod;
 				if (right->overflows()) {
 					VariablePtr overflow_var = function.get64(instruction, right->longValue(), false);
-					mod = std::make_shared<ModRInstruction>(left_var, overflow_var, node->variable);
+					mod = std::make_shared<R>(left_var, overflow_var, node->variable);
 				} else {
-					auto imod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
+					auto imod = std::make_shared<I>(left_var, right->intValue(), node->variable);
 					imod->setOriginalValue(right);
 					mod = std::move(imod);
 				}
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else {
-				throw std::runtime_error("Unexpected RHS value type in division instruction: " +
+				throw std::runtime_error("Unexpected RHS value type in remainder instruction: " +
 					value_map.at(right->valueType()));
 			}
 		} else if (left->isIntLike()) {
@@ -346,14 +349,14 @@ namespace LL2W::Passes {
 				VariablePtr m0 = function.m0(instruction);
 				auto set = std::make_shared<SetInstruction>(m0, left->intValue(false));
 				set->setOriginalValue(left);
-				auto mod = std::make_shared<ModRInstruction>(m0, right_var, node->variable);
+				auto mod = std::make_shared<R>(m0, right_var, node->variable);
 				function.insertBefore(instruction, set)->setDebug(node)->extract();
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else {
-				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
+				throw std::runtime_error("Invalid RHS value type with constant LHS in remainder instruction: " +
 					std::string(*right));
 			}
-		} else throw std::runtime_error("Unrecognized LHS value type in division instruction: " + std::string(*left));
+		} else throw std::runtime_error("Unrecognized LHS value type in remainder instruction: " + std::string(*left));
 	}
 
 	int lowerMath(Function &function) {
@@ -377,8 +380,11 @@ namespace LL2W::Passes {
 					lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, div);
 				}
 			} else if (type == NodeType::Rem) {
-				// TODO: differentiate between signed and unsigned remainder
-				lowerRem(function, instruction, dynamic_cast<RemNode *>(llvm->node));
+				RemNode *rem = dynamic_cast<RemNode *>(llvm->node);
+				if (rem->remType == RemNode::RemType::Srem)
+					lowerRem<ModRInstruction, ModIInstruction>(function, instruction, rem);
+				else
+					lowerRem<ModuRInstruction, ModuIInstruction>(function, instruction, rem);
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
