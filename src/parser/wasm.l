@@ -51,9 +51,12 @@ WASM_SINGLE_REG			("$"[0-9]+)
 
 "memset"					{ WASMRTOKEN(MEMSET) }
 "sleep"						{ WASMRTOKEN(SLEEP) }
-"sleep"						{ WASMRTOKEN(SLEEP) }
 "%%setpt"					{ WASMRTOKEN(SETPT) }
 "%setpt"					{ WASMRTOKEN(SETPT) }
+"%%di"						{ WASMRTOKEN(DI) }
+"%di"						{ WASMRTOKEN(DI) }
+"%%ei"						{ WASMRTOKEN(EI) }
+"%ei"						{ WASMRTOKEN(EI) }
 "rest"						{ WASMRTOKEN(REST) }
 "print"						{ WASMRTOKEN(PRINT) }
 "*init"						{ WASMRTOKEN(INIT) }

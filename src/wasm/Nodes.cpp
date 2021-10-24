@@ -87,6 +87,7 @@
 #include "instruction/MemsetInstruction.h"
 #include "instruction/RestInstruction.h"
 #include "instruction/IOInstruction.h"
+#include "instruction/InterruptsInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1189,5 +1190,19 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMIONode::convert(Function &, VarMap &) {
 		return std::make_unique<IOInstruction>(ident);
+	}
+
+	WASMInterruptsNode::WASMInterruptsNode(bool enable_): WASMInstructionNode(WASM_INTERRUPTSNODE), enable(enable_) {}
+
+	std::string WASMInterruptsNode::debugExtra() const {
+		return blue(enable? "%ei" : "%di");
+	}
+
+	WASMInterruptsNode::operator std::string() const {
+		return enable? "%ei" : "%di";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMInterruptsNode::convert(Function &, VarMap &) {
+		return std::make_unique<InterruptsInstruction>(enable);
 	}
 }
