@@ -8,6 +8,7 @@
 
 #include "compiler/Function.h"
 #include "instruction/ModRInstruction.h"
+#include "instruction/ModuRInstruction.h"
 #include "instruction/DivRInstruction.h"
 #include "instruction/DivuRInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
@@ -26,6 +27,7 @@
 #include "instruction/AddRInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/ModIInstruction.h"
+#include "instruction/ModuIInstruction.h"
 #include "instruction/DivuIInstruction.h"
 #include "instruction/DivIInstruction.h"
 #include "instruction/ComparisonIInstruction.h"
@@ -233,7 +235,9 @@ namespace LL2W {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
 
 		switch (operToken) {
-			case WASMTOK_PERCENT: return std::make_unique<ModRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_PERCENT:
+				if (isUnsigned) return std::make_unique<ModuRInstruction>(conv(rs), conv(rt), conv(rd));
+				return std::make_unique<ModRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_SLASH:
 				if (isUnsigned) return std::make_unique<DivuRInstruction>(conv(rs), conv(rt), conv(rd));
 				return std::make_unique<DivRInstruction>(conv(rs), conv(rt), conv(rd));
@@ -311,7 +315,9 @@ namespace LL2W {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
 
 		switch (operToken) {
-			case WASMTOK_PERCENT: return std::make_unique<ModIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_PERCENT:
+				if (isUnsigned) return std::make_unique<ModuIInstruction>(conv(rs), imm, conv(rd));
+				return std::make_unique<ModIInstruction>(conv(rs), imm, conv(rd));
 			case WASMTOK_SLASH:
 				if (isUnsigned) return std::make_unique<DivuIInstruction>(conv(rs), imm, conv(rd));
 				return std::make_unique<DivIInstruction>(conv(rs), imm, conv(rd));

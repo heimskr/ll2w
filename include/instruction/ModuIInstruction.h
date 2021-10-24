@@ -1,10 +1,10 @@
 #pragma once
 
-#include "instruction/RType.h"
+#include "instruction/IType.h"
 
 namespace LL2W {
-	struct ModRInstruction: public RType {
-		using RType::RType;
+	struct ModuIInstruction: public IType<> {
+		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

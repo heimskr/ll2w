@@ -3,7 +3,7 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct ModRInstruction: public RType {
+	struct ModuRInstruction: public RType {
 		using RType::RType;
 		std::string debugExtra() override;
 		std::string toString() const override;
