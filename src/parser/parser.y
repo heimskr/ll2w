@@ -133,6 +133,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_BANGALIGN "!align"
 %token LLVMTOK_SRCLOC "!srcloc"
 %token LLVMTOK_TBAA "!tbaa"
+%token LLVMTOK_TBAA_STRUCT "!tbaa.struct"
 %token LLVMTOK_PROF "!prof"
 %token LLVMTOK_CALLEES "!callees"
 %token LLVMTOK_SYNCSCOPE "syncscope"
@@ -693,6 +694,7 @@ unibang: "," "!prof"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!llvm.loop"     LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!heapallocsite" LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | "," "!range"         LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
+       | "," "!tbaa.struct"   LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
        | cdebug;
 
 i_select: result "select" fastmath_flags type_any value "," type_any value "," type_any value unibangs

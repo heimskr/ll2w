@@ -142,6 +142,7 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "!dereferenceable"			{ LLVMRTOKEN(DEREFERENCEABLE) }
 "!align"					{ LLVMRTOKEN(BANGALIGN) }
 "!srcloc"					{ LLVMRTOKEN(SRCLOC) }
+"!tbaa.struct"				{ LLVMRTOKEN(TBAA_STRUCT) }
 "!tbaa"						{ LLVMRTOKEN(TBAA) }
 "!prof"						{ LLVMRTOKEN(PROF) }
 "!callees"					{ LLVMRTOKEN(CALLEES) }
