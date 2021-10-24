@@ -2,3 +2,4 @@
 [2021/04/27 23:20:30] Split up memory instructions on large structs after register allocation.
 [2021/05/17 18:35:06] Support debug data for function prologues and epilogues by referencing the !dbg data from the
                       function header. Do the same for LoadArguments.
+[2021/10/24 15:26:30] Support multiple decimals in PaddedStructs::extract and PaddedStructs::insert.

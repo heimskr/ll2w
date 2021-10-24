@@ -7,5 +7,5 @@ namespace LL2W {
 }
 
 namespace LL2W::Passes {
-	size_t lowerExtractvalue(Function &);
+	size_t lowerInsertvalue(Function &);
 }

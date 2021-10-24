@@ -313,6 +313,7 @@ namespace LL2W {
 	}
 
 	std::shared_ptr<StructType> StructType::pad() const {
+#ifdef STRUCT_PAD_X86
 		if (padded)
 			return std::dynamic_pointer_cast<StructType>(copy());
 
@@ -349,6 +350,12 @@ namespace LL2W {
 
 		out->padded = true;
 		return out;
+#else
+		auto copied = std::dynamic_pointer_cast<StructType>(copy());
+		for (size_t i = 0; i < copied->node->types.size(); ++i)
+			copied->paddingMap.emplace(i, i);
+		return copied;
+#endif
 	}
 
 	bool GlobalTemporaryType::operator==(const Type &other) const {
