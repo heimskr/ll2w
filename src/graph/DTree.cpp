@@ -3,6 +3,7 @@
 #include <unordered_set>
 
 #include "graph/DTree.h"
+#include "util/Util.h"
 
 namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
@@ -87,8 +88,10 @@ namespace LL2W {
 					semi[w] = semi[u];
 			}
 
-			if (!w)
+			if (!w) {
+				graph.renderTo("w_null_" + Util::hex(&graph) + ".png");
 				throw std::runtime_error("w is null (1)");
+			}
 
 			if (!vertex[semi[w]])
 				throw std::runtime_error("vertex[semi[w]] is null");

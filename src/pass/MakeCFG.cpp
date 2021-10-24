@@ -25,6 +25,8 @@ namespace LL2W::Passes {
 
 		function.cfg += "exit";
 
+		bool exit_linked = false;
+
 		// Second pass: connect all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
 			const std::string *label = block->label;
@@ -41,6 +43,7 @@ namespace LL2W::Passes {
 				InstructionPtr &back = block->instructions.back();
 				if (back->isTerminal()) {
 					function.cfg.link(*label, "exit");
+					exit_linked = true;
 				} else if (const LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
 					if (llvm->node->nodeType() == NodeType::BrUncond) {
 						const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->node);
@@ -48,13 +51,25 @@ namespace LL2W::Passes {
 							// The block unconditionally branches to itself, meaning it's an infinite loop.
 							// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
 							function.cfg.link(*label, "exit");
+							exit_linked = true;
 						}
 					}
 				}
 			}
 		}
 
-		function.dTree.emplace(function.cfg, function.cfg[0]);
+		if (!exit_linked)
+			// Sometimes there's an infinite loop without a block unconditionally branching to itself. The CFG might
+			// look like ([Start, A, B, C, Exit] : [Start -> A, A -> B, B -> C, C -> A]). In this case, we just pretend
+			// that the final block links to the exit node.
+			function.cfg.link(*function.blocks.back()->label, "exit");
+
+		try {
+			function.dTree.emplace(function.cfg, function.cfg[0]);
+		} catch (std::exception &err) {
+			std::cerr << "Constructing DTree failed in function " << *function.name << ": " << err.what() << std::endl;
+			throw;
+		}
 		function.dTree->name = "DTree";
 		function.djGraph.emplace(function.cfg, function.cfg[0]);
 		function.djGraph->name = "DJ Graph";
