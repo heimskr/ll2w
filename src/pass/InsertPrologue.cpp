@@ -24,9 +24,12 @@ namespace LL2W::Passes {
 		VariablePtr rt = function.makePrecoloredVariable(WhyInfo::returnAddressOffset, front_block);
 		VariablePtr fp = function.fp(front_block);
 		VariablePtr sp = function.sp(front_block);
-		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false);
-		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false);
-		function.initialPushedBytes = 16;
+		VariablePtr m5 = function.mx(5, front_block);
+		function.insertBefore(first, std::make_shared<StackPushInstruction>(rt), false)->setDebug(*first)->extract();
+		function.insertBefore(first, std::make_shared<StackPushInstruction>(fp), false)->setDebug(*first)->extract();
+		function.insertBefore(first, std::make_shared<StackPushInstruction>(m5), false)->setDebug(*first)->extract();
+		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, m5), false)->setDebug(*first)->extract();
+		function.initialPushedBytes = 24;
 
 		// Next, we need to push any variables that are written to.
 		std::set<int> written;
@@ -40,11 +43,12 @@ namespace LL2W::Passes {
 		for (int reg: written) {
 			function.savedRegisters.push_back(reg);
 			VariablePtr variable = function.makePrecoloredVariable(reg, front_block);
-			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false);
+			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false)
+				->setDebug(*first)->extract();
 			function.initialPushedBytes += 8;
 		}
 
-		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false);
+		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false)->setDebug(*first)->extract();
 
 #ifdef MOVE_STACK_POINTER
 		int to_skip = 0;
@@ -52,7 +56,8 @@ namespace LL2W::Passes {
 			to_skip += pair.second.width;
 
 		if (to_skip != 0)
-			function.insertBefore(first, std::make_shared<SubIInstruction>(sp, to_skip, sp), false);
+			function.insertBefore(first, std::make_shared<SubIInstruction>(sp, to_skip, sp), false)
+				->setDebug(*first)->extract();
 #endif
 
 		function.reindexInstructions();

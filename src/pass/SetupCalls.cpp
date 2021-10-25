@@ -148,12 +148,12 @@ namespace LL2W::Passes {
 			if (0 < bytes_pushed) {
 				VariablePtr sp = function.sp(block);
 				auto sub = std::make_shared<AddIInstruction>(sp, bytes_pushed, sp);
-				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer")
+				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer", false)
 					->setDebug(*llvm)->extract();
 			}
 
 			if (function.isVariadic())
-				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2));
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2), false);
 
 			// TODO: Verify. Previously, this was done regardless of calling convention.
 			if (convention == CallingConvention::Reg16) {
@@ -170,12 +170,13 @@ namespace LL2W::Passes {
 				auto move =
 					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
 						block), function.getVariable(*call->result));
-				function.insertBefore(instruction, move, "SetupCalls: move result from $r0")
+				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)
 					->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].push_back(move);
 			}
 
 			to_remove.push_back(instruction);
+			function.reindexInstructions();
 		}
 
 		for (InstructionPtr &instruction: to_remove)

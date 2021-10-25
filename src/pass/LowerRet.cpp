@@ -71,6 +71,9 @@ namespace LL2W::Passes {
 			}
 
 			// Insert the epilogue (minus the jump).
+			VariablePtr m5 = function.mx(5, block);
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m5), false)
+				->setDebug(llvm)->extract(); // ] $m5
 			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false)
 				->setDebug(llvm)->extract(); // ] $fp
 			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false)
