@@ -95,7 +95,7 @@ namespace LL2W::Passes {
 					function.insertBefore(move, sub, "LowerAlloca: $sp -= to_sub");
 					sub->setDebug(alloca->debugIndex)->extract();
 				}
-				function.comment(move, "LowerAlloca: $sp -> " + std::string(*alloca->variable));
+				function.comment(move, "LowerAlloca: $sp -> " + alloca->variable->plainString());
 			}
 
 #ifdef ADD_ALLOCA_TO_STACK
