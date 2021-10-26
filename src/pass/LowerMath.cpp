@@ -1,5 +1,6 @@
 // Sorry for all the repetition.
 
+#include <climits>
 #include <iostream>
 
 #include "compiler/Function.h"
@@ -15,6 +16,7 @@
 #include "instruction/DivuiIInstruction.h"
 #include "instruction/DivuIInstruction.h"
 #include "instruction/DivuRInstruction.h"
+#include "instruction/LuiInstruction.h"
 #include "instruction/ModIInstruction.h"
 #include "instruction/ModRInstruction.h"
 #include "instruction/ModuIInstruction.h"
@@ -155,6 +157,50 @@ namespace LL2W::Passes {
 		}
 	}
 
+	static void insertCarefully(Function &function, InstructionPtr &instruction, VariablePtr &variable, long value) {
+		if (value < 0 || INT_MAX < value) {
+			const int low = ((unsigned long) value) & 0xffffffff;
+			const int high = (((unsigned long) value) >> 32) & 0xffffffff;
+			auto set = std::make_shared<SetInstruction>(variable, low);
+			auto lui = std::make_shared<LuiInstruction>(variable, high);
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, lui)->setDebug(*instruction)->extract();
+		} else {
+			auto set = std::make_shared<SetInstruction>(variable, int(value));
+			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+		}
+	}
+
+	static void lowerNoncommutativeOrInverseBothIntlike(Function &function, InstructionPtr &instruction,
+	                                                    ShrNode *node) {
+		const long left = node->left->longValue(), right = node->right->longValue();
+
+		long shifted;
+		if (node->shrType == ShrNode::ShrType::Ashr)
+			shifted = left >> right;
+		else
+			shifted = (unsigned long) left >> (unsigned long) right;
+
+		insertCarefully(function, instruction, node->variable, shifted);
+	}
+
+	static void lowerNoncommutativeOrInverseBothIntlike(Function &function, InstructionPtr &instruction,
+	                                                    BasicMathNode *node) {
+		const long left = node->left->longValue(), right = node->right->longValue();
+		long computed;
+
+		switch (node->operSymbol) {
+			case LLVMTOK_SHL:
+				computed = left << right;
+				break;
+			default:
+				throw std::runtime_error("lowerNoncommutativeOrInverseBothIntlike not implemented for " + *node->oper +
+					".");
+		}
+
+		insertCarefully(function, instruction, node->variable, computed);
+	}
+
 	template <typename R, typename I, typename II, typename N>
 	void lowerNoncommutativeOrInverse(Function &function, InstructionPtr &instruction, N *node) {
 		ValuePtr left = node->left, right = node->right;
@@ -173,13 +219,18 @@ namespace LL2W::Passes {
 					value_map.at(right->valueType()));
 			}
 		} else if (left->isIntLike()) {
-			if (!right->isLocal())
-				throw std::runtime_error("RHS must be a pvar when the LHS is intlike in a " + getName(node) +
+			if (right->isLocal()) {
+				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				auto new_instruction = std::make_shared<II>(right_var, left->intValue(), node->variable);
+				new_instruction->setOriginalValue(left);
+				function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
+			} else if (right->isIntLike()) {
+				lowerNoncommutativeOrInverseBothIntlike(function, instruction, node);
+			} else {
+				node->debug();
+				throw std::runtime_error("RHS must be a pvar or intlike when the LHS is intlike in a " + getName(node) +
 					" instruction.");
-			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-			auto new_instruction = std::make_shared<II>(right_var, left->intValue(), node->variable);
-			new_instruction->setOriginalValue(left);
-			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
+			}
 		} else {
 			node->debug();
 			throw std::runtime_error("Only pvars and intlikes are unsupported on the LHS of a " + getName(node) +
@@ -297,7 +348,15 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, reverse)->setDebug(node)->extract();
 				function.insertBefore(instruction, fix)->setDebug(node)->extract();
 			}
-		} else throw std::runtime_error("At least one operand of sub instruction expected to be a local variable");
+		} else if (left->isIntLike() && right->isIntLike()) {
+			// Sometimes I've seen things like
+			//     %13 = sub i64 23, 1
+			// after running mem2reg.
+			insertCarefully(function, instruction, node->variable, left->longValue() - right->longValue());
+		} else {
+			std::cerr << instruction->debugExtra() << '\n';
+			throw std::runtime_error("At least one operand of sub instruction expected to be a local variable");
+		}
 	}
 
 	void lowerLogic(Function &function, InstructionPtr &instruction, LogicNode *node) {
@@ -388,8 +447,8 @@ namespace LL2W::Passes {
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
-					lowerNoncommutativeOrInverse<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction,
-						ShiftRightLogicalInverseIInstruction>(function, instruction, shr);
+					lowerNoncommutativeOrInverse<ShiftRightArithmeticRInstruction, ShiftRightArithmeticIInstruction,
+						ShiftRightArithmeticInverseIInstruction>(function, instruction, shr);
 				} else {
 					lowerNoncommutativeOrInverse<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction,
 						ShiftRightLogicalInverseIInstruction>(function, instruction, shr);
