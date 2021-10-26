@@ -754,9 +754,9 @@ namespace LL2W {
 		Passes::lowerStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
-		Passes::copyArguments(*this);
 		Passes::trimBlocks(*this);
 		Passes::splitBlocks(*this);
+		Passes::copyArguments(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		Passes::replaceConstants(*this);

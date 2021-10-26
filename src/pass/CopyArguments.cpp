@@ -20,6 +20,10 @@ namespace LL2W::Passes {
 		for (int i = 0; i < arity; ++i) {
 			VariablePtr source = function.ax(i, entry);
 			VariablePtr destination = function.getVariable(std::to_string(i));
+			if (!function.arguments)
+				warn() << "Function " << *function.name << " has no arguments information.\n";
+			else
+				source->type = destination->type = function.arguments->at(i).type;
 			auto move = std::make_shared<MoveInstruction>(source, destination);
 			function.insertBefore(first, move, false)->setDebug(debug_index)->extract();
 		}
