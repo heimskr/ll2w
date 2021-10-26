@@ -415,6 +415,19 @@ namespace LL2W {
 		return os << std::string(var);
 	}
 
+	bool Variable::isLess(long max) const {
+		return isLess(id, max);
+	}
+
+	bool Variable::isLess(Variable::ID id, long max) {
+		try {
+			long parsed = Util::parseLong(id);
+			return parsed < max;
+		} catch (const std::invalid_argument &) {
+			return false;
+		}
+	}
+
 	void Variable::debug() {
 		std::cerr << "Debug information for " << *this << " in function \e[1m";
 		if (!definingBlocks.empty()) {

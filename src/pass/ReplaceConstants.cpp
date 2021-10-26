@@ -36,17 +36,19 @@ namespace LL2W::Passes {
 					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				} else {
 					TypePtr out_type;
-					const int offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8);
+					const long offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8l);
+					if (Util::outOfRange(offset))
+						warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 					TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 					VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 					auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
 					function.insertBefore(instruction, setsym)->setDebug(*llvm)->extract();
 					if (offset != 0) {
-						auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+						auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
 						function.insertAfter(setsym, addi)->setDebug(*llvm)->extract();
 					}
 
-					auto new_value = std::make_shared<LocalValue>(std::to_string(new_var->id));
+					auto new_value = std::make_shared<LocalValue>(new_var->id);
 					new_value->variable = new_var;
 					*value = new_value;
 				}

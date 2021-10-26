@@ -99,29 +99,26 @@ namespace LL2W::Passes {
 
 		// Create a dependency graph. It's bidirectional for ease of traversal.
 		Graph dependencies = function.makeDependencyGraph();
-		const auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
-
-		// dependencies.renderTo("./graph_" + *function.name + ".pdf");
 
 		// Iterate over the graph component by component, choosing one node arbitrarily from each component, running
 		// a breadth-first search from that node and making the variables corresponding to each node reachable from
 		// the source node an alias of the variable corresponding to the chosen node.
-		std::unordered_set<std::string> visited;
+		std::unordered_set<Variable::ID> visited;
 		for (const auto &[id, var]: function.variableStore) {
-			const std::string name = get_string(*var);
+			Variable::ID name = var->originalID;
 			if (visited.count(name) != 0)
 				continue;
 			visited.insert(name);
-			for (Node *node: dependencies.BFS(name)) {
+			for (Node *node: dependencies.BFS(*name)) {
 				Variable *nodevar = node->get<Variable *>();
 				if (nodevar == var.get())
 					continue;
-				visited.insert(get_string(*nodevar));
+				visited.insert(nodevar->originalID);
 				nodevar->makeAliasOf(var);
 			}
 		}
 
-		for (Variable *var: vars_to_erase) {
+		for (const Variable *var: vars_to_erase) {
 			// warn() << "Erasing " << *var << " (OID: " << var->originalID << ")\n";
 			function.variableStore.erase(var->id);
 		}

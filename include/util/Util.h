@@ -29,6 +29,9 @@ namespace LL2W::Util {
 
 	bool isHex(const char);
 
+	/** Returns true if the argument is lower than INT_MIN or higher than INT_MAX. */
+	bool outOfRange(long);
+
 	std::vector<std::string> split(const std::string &str, const std::string &delimiter, bool condense = true);
 
 	std::string escape(const std::string &);

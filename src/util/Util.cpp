@@ -1,3 +1,4 @@
+#include <climits>
 #include <cstdlib>
 #include <stdexcept>
 
@@ -41,6 +42,10 @@ namespace LL2W::Util {
 
 	bool isHex(const char ch) {
 		return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');
+	}
+
+	bool outOfRange(long value) {
+		return value < INT_MIN || INT_MAX < value;
 	}
 
 	std::string escape(const std::string &str) {

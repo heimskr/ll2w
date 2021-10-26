@@ -7,14 +7,14 @@
 #include "parser/Values.h"
 
 namespace LL2W::Getelementptr {
-	int compute_mutating(TypePtr type, std::list<int> &indices, TypePtr *out_type) {
+	long compute_mutating(TypePtr type, std::list<long> &indices, TypePtr *out_type) {
 		if (indices.empty()) {
 			if (out_type)
 				*out_type = std::make_shared<PointerType>(type->copy());
 			return 0;
 		}
 
-		int front = indices.front();
+		auto front = indices.front();
 		indices.pop_front();
 		switch (type->typeType()) {
 			case TypeType::Pointer:
@@ -30,13 +30,13 @@ namespace LL2W::Getelementptr {
 					snode = stype->node;
 				}
 
-				int offset = 0;
+				long offset = 0;
 #ifndef STRUCT_PAD_X86
-				for (int i = 0; i < front; ++i)
+				for (long i = 0; i < front; ++i)
 					offset += snode->types.at(i)->width();
 #else
-				int width;
-				for (int i = 0; i < front; ++i) {
+				long width;
+				for (long i = 0; i < front; ++i) {
 					width = snode->types.at(i)->width();
 					offset += width + ((width - (offset % width)) % width);
 				}
@@ -47,14 +47,23 @@ namespace LL2W::Getelementptr {
 		}
 	}
 
-	int compute(TypePtr type, std::list<int> indices, TypePtr *out_type) {
+	long compute(TypePtr type, std::list<long> indices, TypePtr *out_type) {
 		return compute_mutating(type, indices, out_type);
 	}
 
-	int compute(const GetelementptrValue *value, TypePtr *out_type) {
-		std::list<int> indices;
-		for (const std::pair<int, long> &decimal_pair: value->decimals)
-			indices.push_back(decimal_pair.second);
+	long compute(const GetelementptrValue *value, TypePtr *out_type) {
+		std::list<long> indices = Getelementptr::getIndices(*value);
 		return compute_mutating(value->ptrType, indices, out_type);
+	}
+
+	std::list<long> getIndices(const GetelementptrValue &value) {
+		std::list<long> indices;
+		for (const auto &decimal_pair: value.decimals)
+			if (!std::holds_alternative<long>(decimal_pair.second)) {
+				warn() << "GetelementptrValue decimal's second item is a pvar. Incorrect code will be produced.\n";
+				indices.push_back(0);
+			} else
+				indices.push_back(std::get<long>(decimal_pair.second));
+		return indices;
 	}
 }

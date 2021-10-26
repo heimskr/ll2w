@@ -1,10 +1,11 @@
-#ifndef PARSER_NODES_H_
-#define PARSER_NODES_H_
+#pragma once
 
 #include <memory>
 #include <tuple>
 #include <unordered_set>
+#include <variant>
 
+#include "compiler/Variable.h"
 #include "parser/ASTNode.h"
 #include "parser/Enums.h"
 #include "parser/Types.h"
@@ -265,10 +266,10 @@ namespace LL2W {
 	struct GetelementptrNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
 		struct Index {
 			long width;
-			long value;
+			std::variant<long, Variable::ID> value;
 			bool hasMinrange;
 			bool isPvar;
-			Index(long width_, long value_, bool has_minrange, bool is_pvar):
+			Index(long width_, const decltype(value) &value_, bool has_minrange, bool is_pvar):
 				width(width_), value(value_), hasMinrange(has_minrange), isPvar(is_pvar) {}
 		};
 
@@ -479,5 +480,3 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&operand}; }
 	};
 }
-
-#endif

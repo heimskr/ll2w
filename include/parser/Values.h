@@ -1,10 +1,10 @@
-#ifndef PARSER_VALUES_H_
-#define PARSER_VALUES_H_
+#pragma once
 
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "ASTNode.h"
@@ -137,12 +137,13 @@ namespace LL2W {
 		bool inbounds = false;
 		TypePtr type, ptrType;
 		ValuePtr variable;
-		std::vector<std::pair<int, long>> decimals {}; // the ints represent the width of the integer type
+		// The first element represents the width of the integer type
+		std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals {};
 
 		GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
 							ASTNode *decimal_list);
 		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
-							const std::vector<std::pair<int, long>> &decimals_);
+							const decltype(decimals) &decimals_);
 		GetelementptrValue(ASTNode *node);
 		ValueType valueType() const override { return ValueType::Getelementptr; }
 		ValuePtr copy() const override {
@@ -215,5 +216,3 @@ namespace LL2W {
 	std::ostream & operator<<(std::ostream &, Value &);
 	std::string getName(ValueType);
 }
-
-#endif

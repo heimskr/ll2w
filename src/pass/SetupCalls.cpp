@@ -97,7 +97,7 @@ namespace LL2W::Passes {
 			VariablePtr jump_var;
 			if (!global_uptr) {
 				jump_var = dynamic_cast<LocalValue *>(name_value)->variable;
-				if (jump_var->id < arg_count) {
+				if (jump_var->isLess(arg_count)) {
 					VariablePtr new_var = function.newVariable(jump_var->type);
 					auto move = std::make_shared<MoveInstruction>(jump_var, new_var);
 					function.insertBefore(instruction, move, "jump_var -> new_var")->setDebug(*llvm)->extract();
@@ -242,15 +242,15 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				return 0;
 			} else {
-				std::list<int> indices;
-				for (const std::pair<int, long> &decimal_pair: gep->decimals)
-					indices.push_back(decimal_pair.second);
-				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				const std::list<long> indices = Getelementptr::getIndices(*gep);
+				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
+				if (Util::outOfRange(offset))
+					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 				VariablePtr new_var = function.newVariable(constant->type);
 				auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
 				function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
 				if (offset != 0) {
-					auto addi = std::make_shared<AddIInstruction>(new_var, offset, new_var);
+					auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
 					function.insertAfter(setsym, addi)->setDebug(*instruction)->extract();
 				}
 				auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
@@ -313,26 +313,30 @@ namespace LL2W::Passes {
 					return;
 				}
 
-				std::list<int> indices;
-				for (const std::pair<int, long> &decimal_pair: gep->decimals)
-					indices.push_back(decimal_pair.second);
-				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				const std::list<long> indices = Getelementptr::getIndices(*gep);
+
+				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
+				if (Util::outOfRange(offset))
+					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+
 				if (offset == 0) {
 					auto move = std::make_shared<MoveInstruction>(local->getVariable(function), new_var);
 					function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
 				} else {
-					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), offset, new_var);
+					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), int(offset), new_var);
 					function.insertBefore(instruction, addi)->setDebug(*instruction)->extract();
 				}
 			} else {
-				std::list<int> indices;
-				for (const std::pair<int, long> &decimal_pair: gep->decimals)
-					indices.push_back(decimal_pair.second);
-				const int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8);
+				const std::list<long> indices = Getelementptr::getIndices(*gep);
+
+				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
+				if (Util::outOfRange(offset))
+					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+
 				auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
 				function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
 				if (offset != 0)
-					function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, offset, new_var))
+					function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, int(offset), new_var))
 						->setDebug(*instruction)->extract();
 			}
 		} else if (value_type == ValueType::Global) {

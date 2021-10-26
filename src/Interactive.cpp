@@ -197,8 +197,8 @@ namespace LL2W {
 				GET_FN();
 				info() << "Tried IDs:   ";
 				const auto &ids = function->allocator->getTriedIDs();
-				for (int tried: std::set<decltype(ids)::key_type>(ids.begin(), ids.end()))
-					std::cerr << " " << tried;
+				for (const Variable::ID tried: std::set<Variable::ID>(ids.begin(), ids.end()))
+					std::cerr << " " << *tried;
 				std::cerr << "\n";
 				info() << "Tried labels:";
 				for (const std::string &tried: Util::nsort(function->allocator->getTriedLabels()))
@@ -222,22 +222,18 @@ namespace LL2W {
 				} else {
 					if (rest.front() == '%')
 						rest.erase(0, 1);
-					if (!Util::isNumeric(rest)) {
-						error() << "Expected a numeric variable name.\n";
+					const std::string *id = StringSet::intern(rest);
+					if (function->variableStore.count(id) == 0) {
+						error() << "Variable not found: \e[1m%" << *id << "\e[22m." << (function->initialDone? "\n" :
+							" Did you remember to run \e[1minit\e[22m?\n");
 					} else {
-						int id = Util::parseLong(rest);
-						if (function->variableStore.count(id) == 0) {
-							error() << "Variable not found: \e[1m%" << id << "\e[22m." << (function->initialDone? "\n" :
-								" Did you remember to run \e[1minit\e[22m?\n");
-						} else {
-							VariablePtr variable = function->variableStore.at(id);
-							function->addToStack(variable, StackLocation::Purpose::Spill);
-							const bool result = function->spill(variable);
-							info() << "Spill result: " << (result? "" : "no ") << "instructions were inserted.\n";
-							if (result) {
-								info() << "Stack location: ";
-								printStackLocation(function->getSpill(variable));
-							}
+						VariablePtr variable = function->variableStore.at(id);
+						function->addToStack(variable, StackLocation::Purpose::Spill);
+						const bool result = function->spill(variable);
+						info() << "Spill result: " << (result? "" : "no ") << "instructions were inserted.\n";
+						if (result) {
+							info() << "Stack location: ";
+							printStackLocation(function->getSpill(variable));
 						}
 					}
 				}
@@ -316,65 +312,61 @@ namespace LL2W {
 				GET_FN();
 				if (!rest.empty() && rest.front() == '%')
 					rest.erase(0, 1);
-				if (!Util::isNumeric(rest)) {
-					error() << "Expected a numeric identifier.\n";
+				Variable::ID id = StringSet::intern(rest);
+				if (function->variableStore.count(id) == 0) {
+					error() << "Variable \e[1m%" << *id << "\e[22m not found.\n";
 				} else {
-					int id = Util::parseLong(rest);
-					if (function->variableStore.count(id) == 0) {
-						error() << "Variable \e[1m%" << id << "\e[22m not found.\n";
-					} else {
-						VariablePtr variable = function->variableStore.at(id);
-						auto sparent = variable->getParent().lock();
-						if (sparent)
-							info() << "Parent: " << *sparent << "\n";
-						if (!variable->getAliases().empty()) {
-							std::ostream &stream = info() << "Aliases:";
-							for (Variable *alias: variable->getAliases())
-								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
-							stream << "\n";
-						} else if (sparent && !sparent->getAliases().empty()) {
-							// TODO: reduce code duplication
-							std::ostream &stream = info() << "Aliases:";
-							for (Variable *alias: sparent->getAliases())
-								stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
-							stream << "\n";
+					VariablePtr variable = function->variableStore.at(id);
+					auto sparent = variable->getParent().lock();
+					if (sparent)
+						info() << "Parent: " << *sparent << "\n";
+					if (!variable->getAliases().empty()) {
+						std::ostream &stream = info() << "Aliases:";
+						for (Variable *alias: variable->getAliases())
+							stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
+						stream << "\n";
+					} else if (sparent && !sparent->getAliases().empty()) {
+						// TODO: reduce code duplication
+						std::ostream &stream = info() << "Aliases:";
+						for (Variable *alias: sparent->getAliases())
+							stream << " " << *alias << " \e[2m" << alias->originalID << "\e[22m";
+						stream << "\n";
+					}
+					info() << "Defining blocks:\n";
+					for (const std::weak_ptr<BasicBlock> &def: variable->definingBlocks)
+						std::cerr << DASH " %" << *def.lock()->label << "\n";
+					info() << "Using blocks:\n";
+					for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
+						std::cerr << DASH " %" << *use.lock()->label << "\n";
+					const int spill_cost = variable->spillCost();
+					info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
+							<< "\e[22m\n";
+					bool live_in_anywhere = false, live_out_anywhere = false;
+					const std::vector<BasicBlockPtr> sorted_blocks = Util::nsort(function->blocks,
+						[](const BasicBlockPtr &block) -> const std::string & {
+							return *block->label;
+						}, true);
+					for (const BasicBlockPtr &block: sorted_blocks)
+						if (block->isLiveIn(variable)) {
+							live_in_anywhere = true;
+							break;
 						}
-						info() << "Defining blocks:\n";
-						for (const std::weak_ptr<BasicBlock> &def: variable->definingBlocks)
-							std::cerr << DASH " %" << *def.lock()->label << "\n";
-						info() << "Using blocks:\n";
-						for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
-							std::cerr << DASH " %" << *use.lock()->label << "\n";
-						const int spill_cost = variable->spillCost();
-						info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
-						       << "\e[22m\n";
-						bool live_in_anywhere = false, live_out_anywhere = false;
-						const std::vector<BasicBlockPtr> sorted_blocks = Util::nsort(function->blocks,
-							[](const BasicBlockPtr &block) -> const std::string & {
-								return *block->label;
-							}, true);
+					for (const BasicBlockPtr &block: sorted_blocks)
+						if (block->isLiveOut(variable)) {
+							live_out_anywhere = true;
+							break;
+						}
+					if (live_in_anywhere) {
+						info() << "Live-in at:\n";
 						for (const BasicBlockPtr &block: sorted_blocks)
-							if (block->isLiveIn(variable)) {
-								live_in_anywhere = true;
-								break;
-							}
+							if (block->isLiveIn(variable))
+								std::cerr << DASH " %" << *block->label << "\n";
+					}
+					if (live_out_anywhere) {
+						info() << "Live-out at:\n";
 						for (const BasicBlockPtr &block: sorted_blocks)
-							if (block->isLiveOut(variable)) {
-								live_out_anywhere = true;
-								break;
-							}
-						if (live_in_anywhere) {
-							info() << "Live-in at:\n";
-							for (const BasicBlockPtr &block: sorted_blocks)
-								if (block->isLiveIn(variable))
-									std::cerr << DASH " %" << *block->label << "\n";
-						}
-						if (live_out_anywhere) {
-							info() << "Live-out at:\n";
-							for (const BasicBlockPtr &block: sorted_blocks)
-								if (block->isLiveOut(variable))
-									std::cerr << DASH " %" << *block->label << "\n";
-						}
+							if (block->isLiveOut(variable))
+								std::cerr << DASH " %" << *block->label << "\n";
 					}
 				}
 			} else if (Util::isAny(first, {"rl", "resetlive"})) {

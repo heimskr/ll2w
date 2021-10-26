@@ -121,6 +121,12 @@ namespace LL2W {
 			bool isAliasOf(const Variable &) const;
 
 			void debug();
+
+			/** Returns true if the variable's ID is numeric and less than the given number. */
+			bool isLess(long) const;
+
+			/** Returns true if the given variable ID is numeric and less than the given number. */
+			static bool isLess(Variable::ID, long);
 	};
 
 	std::ostream & operator<<(std::ostream &, const LL2W::Variable &);

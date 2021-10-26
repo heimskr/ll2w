@@ -201,7 +201,7 @@ namespace LL2W {
 		} else if (type == ValueType::Getelementptr) {
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
 			for (const auto &[width, index]: gep->decimals)
-				if (index != 0) {
+				if (!std::holds_alternative<long>(index) || std::get<long>(index) != 0) {
 					error() << "Unsupported getelementptr value (invalid indices): " << *gep << '\n';
 					return;
 				}
@@ -257,7 +257,7 @@ namespace LL2W {
 				}
 
 				for (const auto &[width, decimal]: gep->decimals)
-					if (decimal != 0) {
+					if (!std::holds_alternative<long>(decimal) || std::get<long>(decimal) != 0) {
 						std::cerr << *value << '\n';
 						throw std::runtime_error("Found a non-zero decimal in a getelementptr expression in "
 							"Program::outputValue");

@@ -853,7 +853,10 @@ namespace LL2W {
 			out << "\e[33mi" << width << "\e[0m ";
 			if (pvar)
 				out << "\e[32m%";
-			out << value << "\e[0m";
+			if (std::holds_alternative<long>(value))
+				out << std::get<long>(value) << "\e[0m";
+			else
+				out << *std::get<Variable::ID>(value) << "\e[0m";
 		}
 		return out.str();
 	}

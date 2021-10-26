@@ -82,7 +82,7 @@ namespace LL2W {
 	}
 
 	LocalValue::LocalValue(std::shared_ptr<Variable> variable_):
-		VariableValue(StringSet::intern(std::to_string(variable_->id))), variable(variable_) {}
+		VariableValue(variable_->id), variable(variable_) {}
 
 	LocalValue::LocalValue(const ASTNode *node): VariableValue(nullptr) {
 		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
@@ -103,7 +103,7 @@ namespace LL2W {
 	}
 
 	GetelementptrValue::GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
-	                                       const std::vector<std::pair<int, long>> &decimals_):
+	                                       const decltype(decimals) &decimals_):
 		inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_), decimals(decimals_) {}
 
 	GetelementptrValue::GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
@@ -150,8 +150,14 @@ namespace LL2W {
 			out << " \e[91minbounds\e[0m";
 		out << " \e[2m(\e[0m" << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType) << " "
 		    << std::string(*variable);
-		for (const std::pair<int, long> &decimal: decimals)
-			out << "\e[2m,\e[0m \e[33mi" << decimal.first << " \e[32m" << decimal.second << "\e[0m";
+		for (const auto &decimal: decimals) {
+			out << "\e[2m,\e[0m \e[33mi" << decimal.first << " \e[32m";
+			if (std::holds_alternative<Variable::ID>(decimal.second))
+				out << *std::get<Variable::ID>(decimal.second);
+			else
+				out << std::get<long>(decimal.second);
+			out << "\e[0m";
+		}
 		out << "\e[2m)\e[0m";
 		return out.str();
 	}

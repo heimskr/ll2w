@@ -79,7 +79,9 @@ namespace LL2W::Passes {
 					indices.pop_front();
 					const TypeType tt = type->typeType();
 					if (index.isPvar) {
-						VariablePtr pvar = function.getVariable(index.value);
+						VariablePtr pvar = std::holds_alternative<Variable::ID>(index.value)?
+							  function.getVariable(std::get<Variable::ID>(index.value))
+							: function.getVariable(std::to_string(std::get<long>(index.value)));
 						if (tt == TypeType::Pointer || tt == TypeType::Array) {
 							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
 							auto mult = std::make_shared<MultIInstruction>(pvar, type->width());
@@ -93,7 +95,8 @@ namespace LL2W::Passes {
 						}
 					} else if (tt == TypeType::Pointer || tt == TypeType::Array) {
 						type = dynamic_cast<HasSubtype *>(type.get())->subtype;
-						auto add = std::make_shared<AddIInstruction>(var, int(type->width() * index.value), var);
+						auto add = std::make_shared<AddIInstruction>(var,
+							int(type->width() * std::get<long>(index.value)), var);
 						function.insertBefore(instruction, add, "LowerGetelementptr: pointer/array, number")
 							->setDebug(node)->extract();
 					} else if (tt == TypeType::Struct) {
@@ -106,11 +109,11 @@ namespace LL2W::Passes {
 
 						int offset = 0;
 #ifndef STRUCT_PAD_X86
-						for (int i = 0; i < index.value; ++i)
+						for (long i = 0; i < std::get<long>(index.value); ++i)
 							offset += snode->types.at(i)->width();
 #else
 						int width;
-						for (int i = 0; i < index.value; ++i) {
+						for (long i = 0; i < std::get<long>(index.value); ++i) {
 							width = snode->types.at(i)->width();
 							offset += width + ((width - (offset % width)) % width);
 						}
@@ -118,7 +121,7 @@ namespace LL2W::Passes {
 						auto add = std::make_shared<AddIInstruction>(var, offset, var);
 						function.insertBefore(instruction, add, "LowerGetelementptr: struct, number")
 							->setDebug(node)->extract();
-						type = snode->types.at(index.value);
+						type = snode->types.at(std::get<long>(index.value));
 					} else
 						throw std::runtime_error("Invalid type in GetelementPtr: " + std::string(*type));
 				}
@@ -126,8 +129,8 @@ namespace LL2W::Passes {
 				node->type = var->type = std::make_shared<PointerType>(type->copy());
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && dynamic_index) {
 				// result = (base pointer) + (width * first index value) + (subwidth * second index variable)
-				const int skip = Util::updiv(node->type->width(), 8) * node->indices[0].value;
-				VariablePtr index = function.getVariable(node->indices[1].value);
+				const int skip = Util::updiv(node->type->width(), 8) * std::get<long>(node->indices[0].value);
+				VariablePtr index = function.getVariable(std::get<Variable::ID>(node->indices[1].value));
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 
 				int subwidth;
@@ -151,23 +154,25 @@ namespace LL2W::Passes {
 				mult->setDebug(node)->extract();
 			} else if (tt == TypeType::Struct || ((tt == TypeType::Array || tt == TypeType::Pointer) && !one_pvar)) {
 				// Gather all the indices while making sure they're all decimals.
-				std::list<int> indices;
+				std::list<long> indices;
 				for (const auto &index: node->indices) {
 					if (index.isPvar && tt == TypeType::Struct) {
 						node->debug();
 						throw std::runtime_error("Unable to index a struct with a pvar");
 					}
-					indices.push_back(index.value);
+					indices.push_back(std::get<long>(index.value));
 				}
 
 				TypePtr out_type;
 #ifdef DEBUG_GETELEMENTPTR
 				TypePtr old_type = node->variable->type;
 #endif
-				const int offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8);
+				const long offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8l);
+				if (Util::outOfRange(offset))
+					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 				node->variable->type = out_type;
 				node->type = out_type;
-				auto add = std::make_shared<AddIInstruction>(pointer, offset, node->variable);
+				auto add = std::make_shared<AddIInstruction>(pointer, int(offset), node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
 					"): struct-type: " + constant_type->toString())->setDebug(node)->extract();
 #ifdef DEBUG_GETELEMENTPTR
@@ -175,7 +180,7 @@ namespace LL2W::Passes {
 #endif
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && one_pvar) {
 				// result = (base pointer) + (width * index value)
-				VariablePtr index = function.getVariable(node->indices.at(0).value);
+				VariablePtr index = function.getVariable(std::get<Variable::ID>(node->indices.at(0).value));
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 				const int width = Util::updiv(node->type->width(), 8);
 				// index * width

@@ -438,17 +438,8 @@ namespace LL2W {
 		return false;
 	}
 
-	static bool isLess(Variable::ID id, long max) {
-		try {
-			long parsed = Util::parseLong(id);
-			return parsed < max;
-		} catch (const std::invalid_argument &) {
-			return false;
-		}
-	}
-
 	bool Function::isArgument(Variable::ID id) const {
-		return isLess(id, getArity());
+		return Variable::isLess(id, getArity());
 	}
 
 	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
@@ -885,7 +876,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (Interval &interval: intervals)
 				// TODO: change to support non-numeric argument variables
-				if (isLess(interval.variable.lock()->id, max))
+				if (interval.variable.lock()->isLess(max))
 					interval.setRegisters({++reg});
 		}
 	}
@@ -895,7 +886,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (const auto &[id, var]: variableStore)
 				// TODO: change to support non-numeric argument variables
-				if (isLess(var->id, max))
+				if (var->isLess(max))
 					var->setRegisters({++reg});
 		}
 	}
@@ -1345,17 +1336,20 @@ namespace LL2W {
 
 	std::shared_ptr<LocalValue> Function::replaceGetelementptrValue(std::shared_ptr<GetelementptrValue> gep,
 	InstructionPtr instruction) {
-		std::list<int> indices;
-		for (const std::pair<int, long> &decimal_pair: gep->decimals)
-			indices.push_back(decimal_pair.second);
 		TypePtr out_type;
-		int offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8);
+
+		const std::list<long> indices = Getelementptr::getIndices(*gep);
+
+		const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8l);
+		if (Util::outOfRange(offset))
+			warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+
 		switch (gep->variable->valueType()) {
 			case ValueType::Global: {
 				VariablePtr var1(newVariable(std::make_shared<IntType>(32))), var2(newVariable(out_type));
 				auto set =
 					std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
-				auto addi = std::make_shared<AddIInstruction>(var1, offset, var2);
+				auto addi = std::make_shared<AddIInstruction>(var1, int(offset), var2);
 				insertBefore(instruction, set);
 				insertBefore(instruction, addi);
 				set->extract();
@@ -1365,7 +1359,7 @@ namespace LL2W {
 			case ValueType::Local: {
 				VariablePtr new_var(newVariable(out_type));
 				auto addi = std::make_shared<AddIInstruction>(
-					dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this), offset, new_var);
+					dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this), int(offset), new_var);
 				insertBefore(instruction, addi);
 				addi->extract();
 				return std::make_shared<LocalValue>(new_var);
@@ -1375,7 +1369,7 @@ namespace LL2W {
 
 		if (gep->variable->isIntLike()) {
 			VariablePtr new_var(newVariable(out_type));
-			auto set = std::make_shared<SetInstruction>(new_var, gep->variable->intValue() + offset);
+			auto set = std::make_shared<SetInstruction>(new_var, gep->variable->intValue() + int(offset));
 			insertBefore(instruction, set);
 			set->extract();
 			return std::make_shared<LocalValue>(new_var);
