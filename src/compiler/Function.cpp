@@ -20,6 +20,7 @@
 #define STRICT_READ_CHECK
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
+#define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
 
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
@@ -40,7 +41,6 @@
 #include "parser/FunctionArgs.h"
 #include "parser/FunctionHeader.h"
 #include "pass/BreakUpBigSets.h"
-#include "pass/CoalescePhi.h"
 #include "pass/CopyArguments.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
@@ -70,6 +70,7 @@
 #include "pass/LowerVarargs.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
+#include "pass/Phi.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUnreachable.h"
 #include "pass/RemoveUselessBranches.h"
@@ -79,6 +80,7 @@
 #include "pass/SplitBlocks.h"
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
+#include "pass/TracePhi.h"
 #include "pass/TransformInstructions.h"
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
@@ -756,6 +758,8 @@ namespace LL2W {
 	void Function::initialCompile() {
 		extractBlocks();
 		makeInitialDebugIndex();
+		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
+			Passes::tracePhi(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -793,13 +797,19 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 		extractVariables();
+#ifdef MOVE_PHI
+		Passes::movePhi(*this);
+#else
 		Passes::coalescePhi(*this, true);
+#endif
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
 		initialDone = true;
+#ifndef MOVE_PHI
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
+#endif
 	}
 
 	void Function::finalCompile() {
@@ -854,6 +864,10 @@ namespace LL2W {
 #endif
 
 		finalCompile();
+
+		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+			// debug();
+		}
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
@@ -1249,8 +1263,8 @@ namespace LL2W {
 					std::cerr << "\e[31m[e]\e[39m";
 				else
 					std::cerr << "   ";
-				std::cerr << " \e[2m; \e[1m%" << std::left << std::setw(2) << *id << "/" << *var->id << "/"
-				          << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
+				std::cerr << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs ("
+				          << var->definitions.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks)
 					std::cerr << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
 				std::cerr << "  \e[0;2muses =";

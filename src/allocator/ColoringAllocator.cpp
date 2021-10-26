@@ -76,7 +76,6 @@ namespace LL2W {
 			triedIDs.insert(to_spill->id);
 			triedLabels.insert(*to_spill->id);
 
-
 			if (function->spill(to_spill)) {
 #ifdef DEBUG_COLORING
 				std::cerr << "Spilled " << *to_spill << ". Variables: " << function->variableStore.size()
@@ -116,8 +115,11 @@ namespace LL2W {
 			VariablePtr ptr = pair.second->get<VariablePtr>();
 #ifdef DEBUG_COLORING
 			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> ( ";
-			for (const int color: pair.second->colors) std::cerr << color << " ";
-			std::cerr << ")\n";
+			for (const int color: pair.second->colors) std::cerr << color << ' ';
+			std::cerr << ") a =";
+			for (const Variable *alias: ptr->getAliases())
+				std::cerr << ' ' << *alias;
+			std::cerr << '\n';
 #endif
 			if (ptr->registers.empty()) {
 				std::set<int> assigned;
@@ -194,8 +196,11 @@ namespace LL2W {
 				}
 			}
 
-		if (!ptr)
+		if (!ptr) {
+			function->debug();
+			std::cerr << "Function: " << *function->name << "\n";
 			throw std::runtime_error("Couldn't select variable with highest liveness");
+		}
 
 		if (liveness_out)
 			*liveness_out = highest;
@@ -244,9 +249,21 @@ namespace LL2W {
 			// std::cerr << "\n";
 #endif
 			if (var->registers.empty()) {
+				bool skip = false;
+				for (Variable *alias: var->getAliases())
+					if (interference.hasLabel(*alias->id)) {
+						std::cerr << "Skipping " << *var << " (" << *id << "): alias (" << *alias->id << ") is in graph\n";
+						skip = true;
+						break;
+					}
+
+				if (skip)
+					continue;
+
 				const std::string *parent_id = var->parentID();
 				if (!interference.hasLabel(*parent_id)) { // Use only one variable from a set of aliases.
 					Node &node = interference.addNode(*parent_id);
+					// std::cerr << "Adding " << *parent_id << " (id=" << *id << "/" << *var->id << ")\n";
 					node.data = var;
 #ifdef DEBUG_COLORING
 					// info() << *var << ": " << var->registersRequired() << " required.";
@@ -255,6 +272,8 @@ namespace LL2W {
 					// std::cerr << "\n";
 #endif
 					node.colorsNeeded = var->registersRequired();
+				} else {
+					// std::cerr << "Skipping " << *var << " (" << *id << "): parent (" << *parent_id << ") is in graph\n";
 				}
 			}
 		}
@@ -320,7 +339,7 @@ namespace LL2W {
 					VariablePtr left  = function->variableStore.at(labels[i]),
 					            right = function->variableStore.at(labels[j]);
 					if (left->id != right->id && Util::hasOverlap(live[left->id], live[right->id])) {
-						interference.link(std::to_string(left->id), std::to_string(right->id), true);
+						interference.link(*left->id, *right->id, true);
 						++links;
 					}
 					++checks;

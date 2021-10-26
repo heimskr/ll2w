@@ -1,5 +1,4 @@
-#ifndef COMPILER_FUNCTION_H_
-#define COMPILER_FUNCTION_H_
+#pragma once
 
 #include <list>
 #include <map>
@@ -372,5 +371,3 @@ namespace LL2W {
 			VariablePtr sp(std::shared_ptr<Instruction>);
 	};
 }
-
-#endif

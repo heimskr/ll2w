@@ -4,8 +4,9 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "graph/Graph.h"
+#include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "pass/CoalescePhi.h"
+#include "pass/Phi.h"
 
 #define REMOVE_OLD_TEMPORARIES
 
@@ -54,7 +55,7 @@ namespace LL2W::Passes {
 							BasicBlockPtr block = function.bbMap.at(pair.second);
 							InstructionPtr new_instr;
 							if (pair.first->isIntLike())
-								new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue());
+								new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue(false));
 							else
 								new_instr = std::make_shared<SetInstruction>(target,
 									dynamic_cast<GlobalValue *>(pair.first.get())->name);
@@ -62,16 +63,14 @@ namespace LL2W::Passes {
 							if (block->instructions.empty()) {
 								block->insertBeforeTerminal(new_instr);
 								should_relinearize = true;
-							} else {
+							} else
 								function.insertBefore(block->instructions.back(), new_instr);
-							}
 							target->addDefinition(new_instr);
 							target->addDefiner(block);
 							new_instr->extract();
-						} else {
+						} else
 							std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
 							          << phi_node->debugExtra() << '\n';
-						}
 #ifdef REMOVE_OLD_TEMPORARIES
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
@@ -125,6 +124,69 @@ namespace LL2W::Passes {
 		for (const Variable *var: vars_to_erase) {
 			// warn() << "Erasing " << *var << " (OID: " << var->originalID << ")\n";
 			function.variableStore.erase(var->id);
+		}
+
+		for (InstructionPtr &ptr: to_remove)
+			function.remove(ptr);
+
+		if (should_relinearize)
+			function.relinearize();
+	}
+
+	void movePhi(Function &function) {
+		std::list<InstructionPtr> to_remove;
+		bool should_relinearize = false;
+
+		// Scan through each instruction in order.
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
+			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
+				continue;
+			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			if (!phi_node)
+				throw std::runtime_error("phi_node is null in Function::movePhi");
+
+			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
+
+			for (const auto &[value, block_label]: phi_node->pairs) {
+				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
+				BasicBlockPtr block = function.bbMap.at(block_label);
+				if (local) {
+					auto move = std::make_shared<MoveInstruction>(local->variable, target);
+					const std::string comment = "MovePhi: " + local->variable->plainString() + " -> " +
+						target->plainString();
+					if (block->instructions.empty()) {
+						block->insertBeforeTerminal(move);
+						function.comment(move, comment); // TODO: does this work before relinearization?
+						should_relinearize = true;
+					} else
+						function.insertBefore(block->instructions.back(), move, comment);
+					move->setDebug(phi_node)->extract();
+					target->addDefinition(move);
+					target->addDefiner(block);
+				} else if (value->isIntLike() || value->isGlobal()) {
+					InstructionPtr new_instr;
+					if (value->isIntLike())
+						new_instr = std::make_shared<SetInstruction>(target, value->intValue(false));
+					else
+						new_instr = std::make_shared<SetInstruction>(target,
+							dynamic_cast<GlobalValue *>(value.get())->name);
+					new_instr->parent = block;
+					if (block->instructions.empty()) {
+						block->insertBeforeTerminal(new_instr);
+						should_relinearize = true;
+					} else
+						function.insertBefore(block->instructions.back(), new_instr);
+					target->addDefinition(new_instr);
+					target->addDefiner(block);
+					new_instr->extract();
+				} else
+					std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
+					          << phi_node->debugExtra() << '\n';
+			}
+
+			to_remove.push_back(instruction);
 		}
 
 		for (InstructionPtr &ptr: to_remove)

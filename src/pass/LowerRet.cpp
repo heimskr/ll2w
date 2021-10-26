@@ -45,6 +45,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, set, false)->setDebug(llvm)->extract();
 			} else if (ret->value->isLocal()) {
 				VariablePtr var = dynamic_cast<LocalValue *>(ret->value.get())->variable;
+				// std::cerr << "Banishing " << *var << " in LowerRet.\n";
 				function.extraVariables.emplace(var->id, var);
 				if (var->multireg()) {
 					if (WhyInfo::returnValueCount < var->registers.size())

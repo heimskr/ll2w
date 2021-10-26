@@ -26,6 +26,7 @@
 // #define SINGLE_FUNCTION "@_ZL8_out_revPFvcPvmmEPcmmPKcmjj"
 // #define SINGLE_FUNCTION "@_ZL9_is_digitc"
 // #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+// #define SINGLE_FUNCTION "@memcpy"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
