@@ -196,8 +196,8 @@ namespace LL2W {
 			} else if (Util::isAny(first, {"t", "tr", "tried"})) {
 				GET_FN();
 				info() << "Tried IDs:   ";
-				const std::unordered_set<int> &ids = function->allocator->getTriedIDs();
-				for (int tried: std::set<int>(ids.begin(), ids.end()))
+				const auto &ids = function->allocator->getTriedIDs();
+				for (int tried: std::set<decltype(ids)::key_type>(ids.begin(), ids.end()))
 					std::cerr << " " << tried;
 				std::cerr << "\n";
 				info() << "Tried labels:";

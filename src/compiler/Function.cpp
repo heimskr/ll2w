@@ -213,17 +213,20 @@ namespace LL2W {
 		}
 	}
 
-	int Function::newLabel() const {
+	Variable::ID Function::newLabel() const {
 		int label = 0;
 		if (!variableStore.empty()) {
 			auto iter = variableStore.end();
-			--iter;
-			label = iter->first + 1;
+			while (iter-- != variableStore.begin())
+				if (Util::isNumeric(iter->first)) {
+					label = Util::parseLong(iter->first) + 1;
+					break;
+				}
 		}
 
 		for (; bbLabels.count(StringSet::intern(std::to_string(label))) == 1; ++label);
-		for (; extraVariables.count(label) != 0; ++label);
-		return label;
+		for (; extraVariables.count(StringSet::intern(std::to_string(label))) != 0; ++label);
+		return StringSet::intern(std::to_string(label));
 	}
 
 	VariablePtr Function::newVariable(TypePtr type, std::shared_ptr<BasicBlock> definer) {
@@ -435,13 +438,17 @@ namespace LL2W {
 		return false;
 	}
 
-	bool Function::isArgument(Variable::ID id) {
+	static bool isLess(Variable::ID id, long max) {
 		try {
 			long parsed = Util::parseLong(id);
-			return parsed < getArity();
+			return parsed < max;
 		} catch (const std::invalid_argument &) {
 			return false;
 		}
+	}
+
+	bool Function::isArgument(Variable::ID id) const {
+		return isLess(id, getArity());
 	}
 
 	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
@@ -589,7 +596,7 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
-		const std::string *label = StringSet::intern(std::to_string(newLabel()));
+		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label
 		          << " & " << *label << "\n";
@@ -720,31 +727,30 @@ namespace LL2W {
 			if (Reader *reader = dynamic_cast<Reader *>(node)) {
 				for (std::shared_ptr<LocalValue> value: reader->allLocals()) {
 					if (value->variable)
-						value->name = StringSet::intern(std::to_string(value->variable->id));
+						value->name = value->variable->id;
 				}
 			}
 
 			if (Writer *writer = dynamic_cast<Writer *>(node)) {
 				if (writer->variable)
-					writer->result = StringSet::intern(std::to_string(writer->variable->id));
+					writer->result = writer->variable->id;
 			}
 		}
 	}
 
 	void Function::resetRegisters(bool respectful) {
-		if (!respectful) {
-			for (const std::pair<const int, VariablePtr> &pair: variableStore)
-				pair.second->setRegisters({});
-		} else {
-			for (const std::pair<const int, VariablePtr> &pair: variableStore) {
+		if (!respectful)
+			for (const auto &[id, var]: variableStore)
+				var->setRegisters({});
+		else
+			for (const auto &[id, var]: variableStore) {
 				std::unordered_set<int> to_remove;
-				for (const int reg: pair.second->registers)
+				for (const int reg: var->registers)
 					if (!WhyInfo::isSpecialPurpose(reg))
 						to_remove.insert(reg);
 				for (const int reg: to_remove)
-					pair.second->registers.erase(reg);
+					var->registers.erase(reg);
 			}
-		}
 	}
 
 	void Function::initialCompile() {
@@ -878,7 +884,8 @@ namespace LL2W {
 		if (getCallingConvention() == CallingConvention::Reg16) {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
 			for (Interval &interval: intervals)
-				if (interval.variable.lock()->id < max)
+				// TODO: change to support non-numeric argument variables
+				if (isLess(interval.variable.lock()->id, max))
 					interval.setRegisters({++reg});
 		}
 	}
@@ -886,16 +893,17 @@ namespace LL2W {
 	void Function::precolorArguments() {
 		if (getCallingConvention() == CallingConvention::Reg16) {
 			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
-			for (const std::pair<const int, VariablePtr> &pair: variableStore)
-				if (pair.second->id < max)
-					pair.second->setRegisters({++reg});
+			for (const auto &[id, var]: variableStore)
+				// TODO: change to support non-numeric argument variables
+				if (isLess(var->id, max))
+					var->setRegisters({++reg});
 		}
 	}
 
 	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
-		for (std::pair<const int, StackLocation> &pair: stack)
-			if (*pair.second.variable == *variable && pair.second.purpose == purpose)
-				return pair.second;
+		for (auto &[offset, location]: stack)
+			if (*location.variable == *variable && location.purpose == purpose)
+				return location;
 
 		if (width == -1) {
 			width = !variable || !variable->type? 8 : Util::upalign(variable->type->width() < 8? 1 :
@@ -920,9 +928,9 @@ namespace LL2W {
 				--(*iter)->index;
 		}
 
-		for (std::pair<const int, VariablePtr> &pair: variableStore) {
-			pair.second->removeUse(instruction);
-			pair.second->removeDefinition(instruction);
+		for (auto &[id, var]: variableStore) {
+			var->removeUse(instruction);
+			var->removeDefinition(instruction);
 		}
 	}
 
@@ -1052,12 +1060,12 @@ namespace LL2W {
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const std::unordered_set<Variable *> &alias_pointers = var->getAliases();
 		std::unordered_set<std::shared_ptr<Variable>> aliases;
-		for (const std::pair<const int, std::shared_ptr<Variable>> &pair: variableStore)
-			if (alias_pointers.count(pair.second.get()) != 0)
-				aliases.insert(pair.second);
+		for (const auto &[id, subvar]: variableStore)
+			if (alias_pointers.count(subvar.get()) != 0)
+				aliases.insert(subvar);
 		aliases.insert(var);
-		for (const std::shared_ptr<Variable> &alias: aliases)
-			for (const std::shared_ptr<BasicBlock> &block: blocks)
+		for (const auto &alias: aliases)
+			for (const auto &block: blocks)
 				if (getter(block).count(alias) != 0)
 					out.insert(block);
 		return out;
@@ -1228,39 +1236,38 @@ namespace LL2W {
 			for (const auto &pair: extraVariables)
 				all_vars.insert(pair);
 
-			for (std::pair<const int, VariablePtr> &pair: all_vars) {
-				if (extraVariables.count(pair.first) != 0)
+			for (auto &[id, var]: all_vars) {
+				if (extraVariables.count(id) != 0)
 					std::cerr << "\e[31m[e]\e[39m";
 				else
 					std::cerr << "   ";
-				std::cerr << " \e[2m; \e[1m%" << std::left << std::setw(2) << pair.first << "/" << pair.second->id
-				          << "/" << pair.second->originalID << "\e[0;2m  defs (" << pair.second->definitions.size()
-				          << ") =";
-				for (const std::weak_ptr<BasicBlock> &def: pair.second->definingBlocks)
+				std::cerr << " \e[2m; \e[1m%" << std::left << std::setw(2) << *id << "/" << *var->id << "/"
+				          << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
+				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks)
 					std::cerr << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
 				std::cerr << "  \e[0;2muses =";
-				for (const std::weak_ptr<BasicBlock> &use: pair.second->usingBlocks)
+				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks)
 					std::cerr << " \e[1;2m" << std::setw(2) << *use.lock()->label << "\e[0m";
-				const int spill_cost = pair.second->spillCost();
+				const int spill_cost = var->spillCost();
 				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
 				          << "\e[0;2m";
-				if (pair.second->definingBlocks.size() > 1)
+				if (var->definingBlocks.size() > 1)
 					std::cerr << " (multiple defs)";
-				std::cerr << "  pid = \e[1m" << pair.second->parentID() << "\e[22;2m";
+				std::cerr << "  pid = \e[1m" << *var->parentID() << "\e[22;2m";
 				std::cerr << "  aliases =\e[1m";
-				for (Variable *alias: pair.second->getAliases())
-					std::cerr << " " << alias->id;
+				for (Variable *alias: var->getAliases())
+					std::cerr << " " << *alias->id;
 				std::cerr << "\e[0m\n";
 				if (varLiveness) {
 					std::cerr << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveIn(pair.second))
+						if (block->isLiveIn(var))
 							std::cerr << " %" << *block->label;
 					}
 					std::cerr << "\e[0m\n";
 					std::cerr << "    \e[2m;      \e[31mout =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveOut(pair.second))
+						if (block->isLiveOut(var))
 							std::cerr << " %" << *block->label;
 					}
 					std::cerr << "\e[0m\n";
@@ -1272,7 +1279,7 @@ namespace LL2W {
 		if (aliases) {
 			std::cerr << "<Aliases>\n";
 			for (auto &[id, var]: variableStore) {
-				std::cerr << id << " = " << *var;
+				std::cerr << *id << " = " << *var;
 				if (auto vparent = var->getParent().lock())
 					std::cerr << "(parent = " << *vparent << ")";
 				std::cerr << ":";
@@ -1413,14 +1420,13 @@ namespace LL2W {
 
 	Graph Function::makeDependencyGraph() const {
 		Graph dependencies;
-		const auto get_string = [&](const Variable &var) { return std::to_string(var.originalID); };
 		for (const auto &[id, var]: variableStore)
-			dependencies.addNode(get_string(*var)).data = var.get();
+			dependencies.addNode(*var).data = var.get();
 		for (const auto &[id, var]: variableStore) {
 			for (Variable *phi_parent: var->phiParents)
-				dependencies[get_string(*phi_parent)].link(dependencies[get_string(*var)], true);
+				dependencies[*phi_parent].link(dependencies[*var], true);
 			for (Variable *child: var->phiChildren)
-				dependencies[get_string(*var)].link(dependencies[get_string(*child)], true);
+				dependencies[*var].link(dependencies[*child], true);
 		}
 		return dependencies;
 	}
