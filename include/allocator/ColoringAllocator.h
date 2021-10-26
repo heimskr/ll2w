@@ -1,22 +1,21 @@
-#ifndef ALLOCATOR_COLORINGALLOCATOR_H_
-#define ALLOCATOR_COLORINGALLOCATOR_H_
+#pragma once
 
 #include <memory>
 #include <unordered_set>
 
 #include "allocator/Allocator.h"
+#include "compiler/Variable.h"
 #include "graph/Graph.h"
 
 namespace LL2W {
 	class Function;
-	class Variable;
 }
 
 namespace LL2W {
 	/** Assigns registers using a graph coloring algorithm. */
 	class ColoringAllocator: public Allocator {
 		private:
-			std::unordered_set<int> triedIDs;
+			std::unordered_set<Variable::ID> triedIDs;
 			std::unordered_set<std::string> triedLabels;
 
 		public:
@@ -42,13 +41,7 @@ namespace LL2W {
 			 *  colorable, it returns Success. */
 			Result attempt() override;
 
-			const std::unordered_set<int> getTriedIDs() const { return triedIDs; }
-			const std::unordered_set<std::string> getTriedLabels() const { return triedLabels; }
+			const decltype(triedIDs)    & getTriedIDs()    const { return triedIDs;    }
+			const decltype(triedLabels) & getTriedLabels() const { return triedLabels; }
 	};
-
-	// int allocateColoring(Function &);
-
-
 }
-
-#endif

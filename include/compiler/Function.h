@@ -75,13 +75,13 @@ namespace LL2W {
 			std::list<std::shared_ptr<Instruction>> linearInstructions;
 
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
-			std::map<int, VariablePtr> variableStore;
+			std::map<Variable::ID, VariablePtr> variableStore;
 
 			/** A map of variables that have been removed but are likely to be still referenced somewhere, or that
 			 *  aren't in variableStore but need to be processed by hackVariables. */
-			std::map<int, VariablePtr> extraVariables;
+			std::map<Variable::ID, VariablePtr> extraVariables;
 
-			std::unordered_set<int> spilledVariables;
+			std::unordered_set<Variable::ID> spilledVariables;
 
 			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by
 			 *  InsertPrologue. */
@@ -152,7 +152,7 @@ namespace LL2W {
 			void relinearize();
 
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
-			int newLabel() const;
+			Variable::ID newLabel() const;
 
 			/** Produces a new variable with an as yet unused label. */
 			VariablePtr newVariable(TypePtr = nullptr, BasicBlockPtr = nullptr);
@@ -165,6 +165,8 @@ namespace LL2W {
 			bool isSpilled(VariablePtr) const;
 
 			bool canSpill(VariablePtr);
+
+			bool isArgument(Variable::ID) const;
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
 			std::shared_ptr<Instruction> firstInstruction(bool includeComments = false);
@@ -273,14 +275,14 @@ namespace LL2W {
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown,
 			 *  unless the second argument is true and the variable is one of the argument variables, in which case
 			 *  it'll be added to the variable store and returned. */
-			VariablePtr getVariable(int, bool add_arguments = true);
+			VariablePtr getVariable(Variable::ID, bool add_arguments = true);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, an exception will be thrown. */
 			VariablePtr getVariable(const std::string &);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */
-			VariablePtr getVariable(int, const TypePtr, BasicBlockPtr = nullptr);
+			VariablePtr getVariable(Variable::ID, const TypePtr, BasicBlockPtr = nullptr);
 
 			/** Returns the variable with a given label. If the variable doesn't exist, it will be created with the
 			 *  given type and defining block options. */

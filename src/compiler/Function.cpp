@@ -186,17 +186,17 @@ namespace LL2W {
 		}
 
 		for (auto &map: {variableStore, extraVariables})
-			for (const std::pair<const int, VariablePtr> &pair: map) {
-				if (pair.second->definingBlocks.empty()) {
+			for (const auto &[id, var]: map) {
+				if (var->definingBlocks.empty()) {
 					// Function arguments aren't defined by any instruction.
 					// They're implicitly defined in the first block.
-					if (pair.first < getArity()) {
-						pair.second->addDefiner(blocks.front());
-						blocks.front()->written.insert(pair.second);
-					} else if (!pair.second->usingBlocks.empty()) {
-						BasicBlockPtr block = pair.second->usingBlocks.begin()->lock();
-						pair.second->addDefiner(block);
-						block->written.insert(pair.second);
+					if (isArgument(id)) {
+						var->addDefiner(blocks.front());
+						blocks.front()->written.insert(var);
+					} else if (!var->usingBlocks.empty()) {
+						BasicBlockPtr block = var->usingBlocks.begin()->lock();
+						var->addDefiner(block);
+						block->written.insert(var);
 					}
 				}
 			}
@@ -433,6 +433,15 @@ namespace LL2W {
 		}
 
 		return false;
+	}
+
+	bool Function::isArgument(Variable::ID id) {
+		try {
+			long parsed = Util::parseLong(id);
+			return parsed < getArity();
+		} catch (const std::invalid_argument &) {
+			return false;
+		}
 	}
 
 	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
@@ -937,19 +946,19 @@ namespace LL2W {
 		return var;
 	}
 
-	VariablePtr Function::getVariable(int id, bool add_arguments) {
+	VariablePtr Function::getVariable(Variable::ID id, bool add_arguments) {
 		if (variableStore.count(id) != 0)
 			return variableStore.at(id);
-		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && id < getArity())
-			return getVariable(id, arguments->at(id).type, getEntry());
+		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && isArgument(id))
+			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
 		return extraVariables.at(id);
 	}
 
 	VariablePtr Function::getVariable(const std::string &label) {
-		return getVariable(Util::parseLong(label));
+		return getVariable(StringSet::intern(label));
 	}
 
-	VariablePtr Function::getVariable(int id, const TypePtr type, BasicBlockPtr definer) {
+	VariablePtr Function::getVariable(Variable::ID id, const TypePtr type, BasicBlockPtr definer) {
 		const size_t vcount = variableStore.count(id), ecount = extraVariables.count(id);
 		if (vcount == 0 && ecount == 0) {
 			auto out =
@@ -969,7 +978,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(const std::string &id, const TypePtr type, BasicBlockPtr definer) {
-		return getVariable(Util::parseLong(id), type, definer);
+		return getVariable(StringSet::intern(id), type, definer);
 	}
 
 	BasicBlockPtr Function::getEntry() {

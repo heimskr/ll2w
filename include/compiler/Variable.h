@@ -1,5 +1,4 @@
-#ifndef COMPILER_VARIABLE_H_
-#define COMPILER_VARIABLE_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -23,8 +22,10 @@ namespace LL2W {
 			std::optional<int> spillCost_;
 
 		public:
-			const int originalID;
-			int id;
+			using ID = const std::string *;
+
+			const ID originalID;
+			ID id;
 			TypePtr type = nullptr;
 			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
 			WeakSet<Instruction> definitions, uses;
@@ -35,7 +36,7 @@ namespace LL2W {
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(int id_, TypePtr type_ = nullptr,
+			Variable(ID id_, TypePtr type_ = nullptr,
 			         const WeakSet<BasicBlock> &defining_blocks = {}, const WeakSet<BasicBlock> &using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
@@ -58,7 +59,7 @@ namespace LL2W {
 
 			/** If this variable has a parent, the parent's ID is returned. Otherwise, this variable's ID is returned.
 			 */
-			int parentID() const;
+			ID parentID() const;
 
 			/** Sets up this variable so that changes to a different variable will be reflected in this one. */
 			void makeAliasOf(std::shared_ptr<Variable>);
@@ -78,7 +79,7 @@ namespace LL2W {
 			std::shared_ptr<BasicBlock> onlyDefiner() const;
 			std::shared_ptr<Instruction> onlyDefinition() const;
 
-			void setID(int);
+			void setID(ID);
 			void setType(TypePtr);
 			void setDefiningBlocks(const decltype(definingBlocks) &);
 			void setDefinitions(const decltype(definitions) &);
@@ -126,6 +127,3 @@ namespace LL2W {
 
 	using VariablePtr = std::shared_ptr<Variable>;
 }
-
-
-#endif

@@ -65,7 +65,7 @@ namespace LL2W {
 			std::cerr << "Can spill: " << std::boolalpha << function->canSpill(to_spill) << "\n";
 #endif
 			triedIDs.insert(to_spill->originalID);
-			triedLabels.insert(std::to_string(to_spill->originalID));
+			triedLabels.insert(*to_spill->originalID);
 #ifdef DEBUG_COLORING
 			info() << "Variable before climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
 #endif
@@ -76,7 +76,7 @@ namespace LL2W {
 #endif
 			lastSpillAttempt = to_spill;
 			triedIDs.insert(to_spill->id);
-			triedLabels.insert(std::to_string(to_spill->id));
+			triedLabels.insert(*to_spill->id);
 
 
 			if (function->spill(to_spill)) {
@@ -165,8 +165,7 @@ namespace LL2W {
 	VariablePtr ColoringAllocator::selectLowestSpillCost() const {
 		VariablePtr ptr;
 		int lowest = INT_MAX;
-		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
-			const VariablePtr &var = pair.second;
+		for (const auto &[id, var]: function->variableStore) {
 			if (var->allRegistersSpecial())
 				continue;
 			var->clearSpillCost();
@@ -240,51 +239,51 @@ namespace LL2W {
 		interference.clear();
 		size_t links = 0;
 
-		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
+		for (const auto &[id, var]: function->variableStore) {
 #ifdef DEBUG_COLORING
 			// std::cerr << "%% " << pair.first << " " << *pair.second << "; aliases:";
 			// for (Variable *v: pair.second->getAliases()) std::cerr << " " << *v;
 			// std::cerr << "\n";
 #endif
-			if (pair.second->registers.empty()) {
-				const std::string id = std::to_string(pair.second->parentID());
-				if (!interference.hasLabel(id)) { // Use only one variable from a set of aliases.
-					Node &node = interference.addNode(id);
-					node.data = pair.second;
+			if (var->registers.empty()) {
+				const std::string *parent_id = var->parentID();
+				if (!interference.hasLabel(*parent_id)) { // Use only one variable from a set of aliases.
+					Node &node = interference.addNode(*parent_id);
+					node.data = var;
 #ifdef DEBUG_COLORING
-					// info() << *pair.second << ": " << pair.second->registersRequired() << " required.";
-					// if (pair.second->type)
-					// 	std::cerr << " " << std::string(*pair.second->type);
+					// info() << *var << ": " << var->registersRequired() << " required.";
+					// if (var->type)
+					// 	std::cerr << " " << std::string(*var->type);
 					// std::cerr << "\n";
 #endif
-					node.colorsNeeded = pair.second->registersRequired();
+					node.colorsNeeded = var->registersRequired();
 				}
 			}
 		}
 
-		std::vector<int> labels;
+		std::vector<Variable::ID> labels;
 		labels.reserve(function->variableStore.size());
-		for (const std::pair<const int, VariablePtr> &pair: function->variableStore)
-			labels.push_back(pair.first);
+		for (const auto &[id, var]: function->variableStore)
+			labels.push_back(id);
 
 #ifndef CONSTRUCT_BY_BLOCK
 		// Maps a variable ID to a set of blocks in which the variable is live-in or live-out.
-		std::map<int, std::unordered_set<int>> live;
+		std::map<Variable::ID, std::unordered_set<int>> live;
 
-		for (const std::pair<const int, VariablePtr> &pair: function->variableStore) {
-			if (!pair.second->registers.empty())
+		for (const auto &[id, var]: function->variableStore) {
+			if (!var->registers.empty())
 				continue;
 #ifdef DEBUG_COLORING
-			std::cerr << "Variable " << *pair.second << ":\n";
+			std::cerr << "Variable " << *var << ":\n";
 #endif
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->definingBlocks) {
-				live[pair.second->id].insert(bptr.lock()->index);
+			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
+				live[var->id].insert(bptr.lock()->index);
 #ifdef DEBUG_COLORING
 				std::cerr << "  definer: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
 #endif
 			}
-			for (const std::weak_ptr<BasicBlock> &bptr: pair.second->usingBlocks) {
-				live[pair.second->id].insert(bptr.lock()->index);
+			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
+				live[var->id].insert(bptr.lock()->index);
 #ifdef DEBUG_COLORING
 				std::cerr << "  user: " << *bptr.lock()->label << " (" << bptr.lock()->index << ")\n";
 #endif
@@ -335,44 +334,44 @@ namespace LL2W {
 		}
 
 #else
-		std::unordered_map<int, std::vector<int>> vecs;
-		std::unordered_map<int, std::unordered_set<int>> sets;
+		std::unordered_map<int, std::vector<Variable::ID>> vecs;
+		std::unordered_map<int, std::unordered_set<Variable::ID>> sets;
 
 		for (const auto &[id, var]: function->variableStore) {
-			const int pid = var->parentID();
+			const Variable::ID parent_id = var->parentID();
 			if (!var->registers.empty())
 				continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
-				const int index = bptr.lock()->index;
-				if (sets[index].count(pid) == 0) {
-					vecs[index].push_back(pid);
-					sets[index].insert(pid);
+				const auto index = bptr.lock()->index;
+				if (sets[index].count(parent_id) == 0) {
+					vecs[index].push_back(parent_id);
+					sets[index].insert(parent_id);
 				}
 			}
 			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
-				const int index = bptr.lock()->index;
-				if (sets[index].count(pid) == 0) {
-					vecs[index].push_back(pid);
-					sets[index].insert(pid);
+				const auto index = bptr.lock()->index;
+				if (sets[index].count(parent_id) == 0) {
+					vecs[index].push_back(parent_id);
+					sets[index].insert(parent_id);
 				}
 			}
 		}
 
 		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
-			std::vector<int> &vec = vecs[block->index];
-			std::unordered_set<int> &set = sets[block->index];
+			auto &vec = vecs[block->index];
+			auto &set = sets[block->index];
 			for (const VariablePtr &var: block->liveIn) {
-				const int pid = var->parentID();
-				if (var->registers.empty() && set.count(pid) == 0) {
-					vec.push_back(pid);
-					set.insert(pid);
+				const Variable::ID parent_id = var->parentID();
+				if (var->registers.empty() && set.count(parent_id) == 0) {
+					vec.push_back(parent_id);
+					set.insert(parent_id);
 				}
 			}
 			for (const VariablePtr &var: block->liveOut) {
-				const int pid = var->parentID();
-				if (var->registers.empty() && set.count(pid) == 0) {
-					vec.push_back(pid);
-					set.insert(pid);
+				const Variable::ID parent_id = var->parentID();
+				if (var->registers.empty() && set.count(parent_id) == 0) {
+					vec.push_back(parent_id);
+					set.insert(parent_id);
 				}
 			}
 		}
@@ -380,13 +379,13 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 		std::cerr << "Label count: " << labels.size() << "\n";
 #endif
-		for (const std::pair<const int, std::vector<int>> &pair: vecs) {
-			const size_t size = pair.second.size();
+		for (const auto &[block_id, vec]: vecs) {
+			const size_t size = vec.size();
 			if (size < 2)
 				continue;
 			for (size_t i = 0; i < size - 1; ++i)
 				for (size_t j = i + 1; j < size; ++j) {
-					interference.link(std::to_string(pair.second[i]), std::to_string(pair.second[j]), true);
+					interference.link(*vec[i], *vec[j], true);
 					++links;
 				}
 		}

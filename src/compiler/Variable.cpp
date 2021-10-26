@@ -14,7 +14,7 @@
 // #define ADOPT_PARENT_ID
 
 namespace LL2W {
-	Variable::Variable(int id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
+	Variable::Variable(ID id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
 	const WeakSet<BasicBlock> &using_blocks):
 		originalID(id_), id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
 
@@ -84,13 +84,13 @@ namespace LL2W {
 		std::stringstream out;
 		const std::string base;
 		if (registers.empty())
-			out << "\e[32m%" << id << "\e[39m";
+			out << "\e[32m%" << *id << "\e[39m";
 		else {
 			out << "\e[92m";
 			if (1 < registers.size())
 				out << "(";
 			bool first = true;
-			for (int reg: registers) {
+			for (const int reg: registers) {
 				if (first)
 					first = false;
 				else
@@ -99,7 +99,7 @@ namespace LL2W {
 			}
 			if (1 < registers.size())
 				out << ")";
-			out << "\e[39;2m:\e[32m" << id << "\e[39;22m";
+			out << "\e[39;2m:\e[32m" << *id << "\e[39;22m";
 		}
 #ifdef VARIABLE_EXTRA
 		auto sparent = parent.lock();
@@ -109,7 +109,7 @@ namespace LL2W {
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {
 				if (iter != begin)
 					out << ",";
-				out << (*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
+				out << *(*iter)->id << "x" << (*iter)->definitions.size() << "." << (*iter)->definingBlocks.size();
 			}
 			out << "]\e[22m";
 		}
@@ -140,9 +140,9 @@ namespace LL2W {
 
 	std::string Variable::plainString() const {
 		if (registers.empty())
-			return "%" + std::to_string(id);
+			return "%" + *id;
 		else if (registers.size() == 1)
-			return "$" + WhyInfo::registerName(*registers.begin()) + ":" + std::to_string(id);
+			return "$" + WhyInfo::registerName(*registers.begin()) + ":" + *id;
 		else {
 			std::string out = "(";
 			bool first = true;
@@ -153,7 +153,7 @@ namespace LL2W {
 					out += " ";
 				out += "$" + WhyInfo::registerName(reg);
 			}
-			out += "):" + std::to_string(id);
+			out += "):" + *id;
 			return out;
 		}
 	}
@@ -168,14 +168,14 @@ namespace LL2W {
 		return function? function->name->substr(1) : "?";
 	}
 
-	int Variable::parentID() const {
+	Variable::ID Variable::parentID() const {
 		auto sparent = parent.lock();
 		return sparent? sparent->id : id;
 	}
 
 	void Variable::makeAliasOf(std::shared_ptr<Variable> new_parent) {
 #ifdef DEBUG_ALIASES
-		std::cerr << *this << "{o" << originalID << "}.makeAliasOf(" << new_parent << "{o" << new_parent.originalID
+		std::cerr << *this << "{o" << *originalID << "}.makeAliasOf(" << new_parent << "{o" << *new_parent.originalID
 		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << &new_parent;
 #endif
 		if (new_parent.get() == this || new_parent->parent.lock().get() == this
@@ -339,7 +339,7 @@ namespace LL2W {
 		} \
 	}
 
-	VARSETTER(ID, int, new_id, id)
+	VARSETTER(ID, ID, new_id, id)
 	VARSETTER(DefiningBlocks, const decltype(Variable::definingBlocks) &, block, definingBlocks)
 	VARSETTER(Definitions, const decltype(Variable::definitions) &, defs, definitions)
 	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)
