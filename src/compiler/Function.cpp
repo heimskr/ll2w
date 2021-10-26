@@ -1060,7 +1060,7 @@ namespace LL2W {
 	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
 	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) const {
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
-		const std::unordered_set<Variable *> &alias_pointers = var->getAliases();
+		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<std::shared_ptr<Variable>> aliases;
 		for (const auto &[id, subvar]: variableStore)
 			if (alias_pointers.count(subvar.get()) != 0)

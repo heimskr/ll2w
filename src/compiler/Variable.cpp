@@ -14,6 +14,10 @@
 // #define ADOPT_PARENT_ID
 
 namespace LL2W {
+	bool VariableCompare::operator()(Variable *left, Variable *right) const {
+		return strnatcmp(left->id->c_str(), right->id->c_str()) == -1;
+	}
+
 	Variable::Variable(ID id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
 	const WeakSet<BasicBlock> &using_blocks):
 		originalID(id_), id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}

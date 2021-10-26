@@ -6,6 +6,7 @@
 #include <set>
 
 #include "parser/Types.h"
+#include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
 namespace LL2W {
@@ -13,11 +14,16 @@ namespace LL2W {
 	class Function;
 	class Instruction;
 	class Node;
+	class Variable;
+
+	struct VariableCompare {
+		bool operator()(Variable *left, Variable *right) const;
+	};
 
 	class Variable {
 		private:
 			std::list<Instruction *> useOrder;
-			std::unordered_set<Variable *> aliases;
+			std::set<Variable *, VariableCompare> aliases;
 			std::weak_ptr<Variable> parent;
 			std::optional<int> spillCost_;
 
@@ -65,7 +71,7 @@ namespace LL2W {
 			void makeAliasOf(std::shared_ptr<Variable>);
 
 			std::weak_ptr<Variable> getParent() const { return parent; }
-			const std::unordered_set<Variable *> & getAliases() const { return aliases; }
+			const std::set<Variable *, VariableCompare> & getAliases() const { return aliases; }
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
 			void removeDefiner(std::shared_ptr<BasicBlock>);
