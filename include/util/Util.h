@@ -1,13 +1,14 @@
-#ifndef UTIL_UTIL_H_
-#define UTIL_UTIL_H_
+#pragma once
 
 #include <initializer_list>
 #include <iostream>
+#include <set>
 #include <signal.h>
 #include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include "util/strnatcmp.h"
@@ -141,6 +142,32 @@ namespace LL2W::Util {
 				return true;
 		return false;
 	}
+
+	template <typename T>
+	std::ostream & out(std::ostream &os, const std::unordered_set<T> &set) {
+		bool first = true;
+		for (auto &&item: set) {
+			if (first)
+				first = false;
+			else
+				os << ' ';
+			os << item;
+		}
+		return os;
+	}
+
+	template <typename T>
+	std::ostream & out(std::ostream &os, const std::set<T> &set) {
+		bool first = true;
+		for (auto &&item: set) {
+			if (first)
+				first = false;
+			else
+				os << ' ';
+			os << item;
+		}
+		return os;
+	}
 }
 
 namespace LL2W {
@@ -165,4 +192,3 @@ namespace LL2W {
 	}
 }
 
-#endif

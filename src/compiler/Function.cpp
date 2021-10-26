@@ -128,8 +128,8 @@ namespace LL2W {
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
-				for (const std::unordered_set<VariablePtr> &variables: {instruction->read, instruction->written})
-					for (VariablePtr vptr: variables)
+				for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written})
+					for (VariablePtr vptr: *variables)
 						variableStore.insert({vptr->id, vptr});
 			}
 		};
@@ -224,8 +224,9 @@ namespace LL2W {
 				}
 		}
 
-		for (; bbLabels.count(StringSet::intern(std::to_string(label))) == 1; ++label);
+		for (; bbLabels.count(StringSet::intern(std::to_string(label))) != 0; ++label);
 		for (; extraVariables.count(StringSet::intern(std::to_string(label))) != 0; ++label);
+		for (; variableStore.count(StringSet::intern(std::to_string(label))) != 0; ++label);
 		return StringSet::intern(std::to_string(label));
 	}
 
@@ -1415,12 +1416,12 @@ namespace LL2W {
 	Graph Function::makeDependencyGraph() const {
 		Graph dependencies;
 		for (const auto &[id, var]: variableStore)
-			dependencies.addNode(*var).data = var.get();
+			dependencies.addNode(*var->originalID).data = var.get();
 		for (const auto &[id, var]: variableStore) {
 			for (Variable *phi_parent: var->phiParents)
-				dependencies[*phi_parent].link(dependencies[*var], true);
+				dependencies[*phi_parent->originalID].link(dependencies[*var->originalID], true);
 			for (Variable *child: var->phiChildren)
-				dependencies[*var].link(dependencies[*child], true);
+				dependencies[*var->originalID].link(dependencies[*child->originalID], true);
 		}
 		return dependencies;
 	}

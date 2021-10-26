@@ -21,6 +21,7 @@
 // #define SINGLE_FUNCTION "@_ZL11alloc_groupim"
 // #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcP13__va_list_tag"
 // #define SINGLE_FUNCTION "@_ZN9P0Wrapper6getP4EEPvRm"
+// #define SINGLE_FUNCTION "@_ZNKSt3__117basic_string_viewIwNS_11char_traitsIwEEE4sizeEv"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {
