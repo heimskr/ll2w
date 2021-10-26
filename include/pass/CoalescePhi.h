@@ -1,5 +1,4 @@
-#ifndef PASS_COALESCEPHI_H_
-#define PASS_COALESCEPHI_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  the variables to each other and doesn't remove any instructions. */
 	void coalescePhi(Function &, bool variablesOnly = false);
 }
-
-#endif

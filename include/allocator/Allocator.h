@@ -1,5 +1,4 @@
-#ifndef ALLOCATOR_ALLOCATOR_H_
-#define ALLOCATOR_ALLOCATOR_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -13,7 +12,6 @@ namespace LL2W {
 			Function *function = nullptr;
 			int spillCount = 0;
 			int attempts = 0;
-			bool argumentsPrecolored = false;
 
 		public:
 			enum class Result: int {Spilled = 1, NotSpilled = 2, Success = 3};
@@ -33,5 +31,3 @@ namespace LL2W {
 			}
 	};
 }
-
-#endif

@@ -175,8 +175,8 @@ namespace LL2W {
 
 	void Variable::makeAliasOf(std::shared_ptr<Variable> new_parent) {
 #ifdef DEBUG_ALIASES
-		std::cerr << *this << "{o" << *originalID << "}.makeAliasOf(" << new_parent << "{o" << *new_parent.originalID
-		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << &new_parent;
+		std::cerr << *this << "{o" << *originalID << "}.makeAliasOf(" << *new_parent << "{o" << *new_parent->originalID
+		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << new_parent.get();
 #endif
 		if (new_parent.get() == this || new_parent->parent.lock().get() == this
 		    || new_parent->aliases.count(this) != 0) {
@@ -386,7 +386,8 @@ namespace LL2W {
 	int Variable::registersRequired(bool may_warn) const {
 		if (!type) {
 			if (may_warn)
-				warn() << "Variable::registersRequired: " << *this << " has no type.\n";
+				warn() << "Variable::registersRequired: " << *this << " has no type in function " << functionName()
+				       << ".\n";
 			return 1;
 		}
 		return Util::updiv(type->width(), 64);

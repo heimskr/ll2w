@@ -41,6 +41,7 @@
 #include "parser/FunctionHeader.h"
 #include "pass/BreakUpBigSets.h"
 #include "pass/CoalescePhi.h"
+#include "pass/CopyArguments.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
 #include "pass/IgnoreIntrinsics.h"
@@ -753,6 +754,7 @@ namespace LL2W {
 		Passes::lowerStacksave(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract();
+		Passes::copyArguments(*this);
 		Passes::trimBlocks(*this);
 		Passes::splitBlocks(*this);
 		for (BasicBlockPtr &block: blocks)
@@ -844,6 +846,8 @@ namespace LL2W {
 		}
 #endif
 
+		debug();
+
 		finalCompile();
 
 #ifdef DEBUG_SPILL
@@ -874,7 +878,8 @@ namespace LL2W {
 
 	void Function::precolorArguments(std::list<Interval> &intervals) {
 		if (getCallingConvention() == CallingConvention::Reg16) {
-			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
+			const int max = std::min(16, getArity());
+			int reg = WhyInfo::argumentOffset - 1;
 			for (Interval &interval: intervals)
 				// TODO: change to support non-numeric argument variables
 				if (interval.variable.lock()->isLess(max))
@@ -884,11 +889,11 @@ namespace LL2W {
 
 	void Function::precolorArguments() {
 		if (getCallingConvention() == CallingConvention::Reg16) {
-			int reg = WhyInfo::argumentOffset - 1, max = std::min(16, getArity());
-			for (const auto &[id, var]: variableStore)
-				// TODO: change to support non-numeric argument variables
-				if (var->isLess(max))
-					var->setRegisters({++reg});
+			const int max = std::min(16, getArity());
+			int reg = WhyInfo::argumentOffset - 1;
+			// TODO: change to support non-numeric argument variables
+			for (int i = 0; i < max; ++i)
+				variableStore.at(StringSet::intern(std::to_string(i)))->setRegisters({++reg});
 		}
 	}
 

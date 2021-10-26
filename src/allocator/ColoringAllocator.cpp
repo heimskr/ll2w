@@ -25,8 +25,6 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";
 #endif
-		if (!argumentsPrecolored)
-			function->precolorArguments();
 
 		makeInterferenceGraph();
 		try {
@@ -125,6 +123,7 @@ namespace LL2W {
 				std::set<int> assigned;
 				for (const int color: pair.second->colors)
 					assigned.insert(color);
+				Util::out(std::cerr << *ptr << " <- [", assigned) << "]\n";
 				ptr->setRegisters(assigned);
 			}
 		}
