@@ -204,7 +204,12 @@ namespace LL2W {
 	}
 
 	long ASTNode::atoi(int offset) const {
-		return Util::parseLong(lexerInfo->substr(offset));
+		try {
+			return Util::parseLong(lexerInfo->substr(offset));
+		} catch (const std::invalid_argument &err) {
+			debug();
+			throw;
+		}
 	}
 
 	std::string ASTNode::unquote() const {

@@ -826,12 +826,14 @@ namespace LL2W {
 		// if (!std::dynamic_pointer_cast<LocalValue>(ptrValue) && !std::dynamic_pointer_cast<GlobalValue>(ptrValue))
 		// 	llvmerror("Expected LocalValue or GlobalValue in getelementptr instruction", ptr_value->location);
 
-		for (ASTNode *comma: *indices_) {
-			indices.push_back({
-				comma->at(0)->atoi(1),
-				comma->at(1)->atoi(),
-				comma->size() == 3,
-				comma->at(1)->symbol == LLVMTOK_PVAR});
+		for (const ASTNode *comma: *indices_) {
+			const long width = comma->at(0)->atoi(1);
+			const ASTNode &index = *comma->at(1);
+			const bool has_minrange = comma->size() == 3;
+			if (index.symbol == LLVMTOK_PVAR)
+				indices.push_back({width, StringSet::intern(index.lexerInfo->substr(1)), has_minrange, true});
+			else
+				indices.push_back({width, index.atoi(), has_minrange, false});
 		}
 
 		delete pvar;
