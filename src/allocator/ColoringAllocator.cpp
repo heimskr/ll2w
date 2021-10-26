@@ -183,12 +183,12 @@ namespace LL2W {
 	VariablePtr ColoringAllocator::selectMostLive(int *liveness_out) const {
 		VariablePtr ptr;
 		int highest = -1;
-		for (auto &map: {function->variableStore, function->extraVariables})
-			for (const auto &[id, var]: map) {
+		for (const auto *map: {&function->variableStore, &function->extraVariables})
+			for (const auto &[id, var]: *map) {
 				if (var->allRegistersSpecial() || !function->canSpill(var))
 					continue;
 				const int sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
-				if (highest < sum && triedIDs.count(var->originalID) == 0 && function->canSpill(var)) {
+				if (highest < sum && triedIDs.count(var->originalID) == 0) {
 					highest = sum;
 					ptr = var;
 				}

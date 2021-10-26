@@ -7,6 +7,8 @@
 #include "instruction/SetInstruction.h"
 #include "pass/CoalescePhi.h"
 
+#define REMOVE_OLD_TEMPORARIES
+
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
 		std::list<InstructionPtr> to_remove;
@@ -70,17 +72,18 @@ namespace LL2W::Passes {
 							std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
 							          << phi_node->debugExtra() << '\n';
 						}
+#ifdef REMOVE_OLD_TEMPORARIES
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
 						// temporary.
 						try {
 							VariablePtr to_rename = function.getVariable(*local->name);
 							if (to_rename->id != to_rename->parentID()) {
-								// info() << "Retiring " << *to_rename << " (pid = " << to_rename->parentID() << ")\n";
+								// info() << "Retiring " << *to_rename << " (pid = " << *to_rename->parentID() << ")\n";
 								function.extraVariables.emplace(to_rename->id, to_rename);
 								vars_to_erase.insert(to_rename.get());
 								// TODO: verify whether this is unneeded.
-								// to_rename->makeAliasOf(*target);
+								// to_rename->makeAliasOf(target);
 							}
 						} catch (const std::out_of_range &err) {
 							// Sometimes, the same variable will appear multiple times in the table, e.g.
@@ -88,6 +91,7 @@ namespace LL2W::Passes {
 							// We do nothing if we've already aliased the variable and removed it from the variable
 							// store.
 						}
+#endif
 					}
 				}
 

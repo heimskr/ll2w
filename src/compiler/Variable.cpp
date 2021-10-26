@@ -233,72 +233,93 @@ namespace LL2W {
 
 	void Variable::removeDefiner(std::shared_ptr<BasicBlock> block) {
 		if (auto sparent = parent.lock()) {
-			sparent->removeDefiner(block);
-		} else {
-			definingBlocks.erase(block);
-			for (Variable *alias: aliases)
-				alias->definingBlocks.erase(block);
+			if (sparent.get() != this) {
+				sparent->removeDefiner(block);
+				return;
+			}
 		}
+
+		definingBlocks.erase(block);
+		for (Variable *alias: aliases)
+			alias->definingBlocks.erase(block);
 	}
 
 	void Variable::addUsingBlock(std::shared_ptr<BasicBlock> block) {
 		if (auto sparent = parent.lock()) {
-			sparent->addUsingBlock(block);
-		} else {
-			usingBlocks.insert(block);
-			for (Variable *alias: aliases)
-				alias->usingBlocks.insert(block);
+			if (sparent.get() != this) {
+				sparent->addUsingBlock(block);
+				return;
+			}
 		}
+
+		usingBlocks.insert(block);
+		for (Variable *alias: aliases)
+			alias->usingBlocks.insert(block);
 	}
 
 	void Variable::removeUsingBlock(std::shared_ptr<BasicBlock> block) {
 		if (auto sparent = parent.lock()) {
-			sparent->removeUsingBlock(block);
-		} else {
-			usingBlocks.erase(block);
-			for (Variable *alias: aliases)
-				alias->usingBlocks.erase(block);
+			if (sparent.get() != this) {
+				sparent->removeUsingBlock(block);
+				return;
+			}
 		}
+
+		usingBlocks.erase(block);
+		for (Variable *alias: aliases)
+			alias->usingBlocks.erase(block);
 	}
 
 	void Variable::addDefinition(std::shared_ptr<Instruction> instruction) {
 		if (auto sparent = parent.lock()) {
-			sparent->addDefinition(instruction);
-		} else {
-			definitions.insert(instruction);
-			for (Variable *alias: aliases)
-				alias->definitions.insert(instruction);
+			if (sparent.get() != this) {
+				sparent->addDefinition(instruction);
+				return;
+			}
 		}
+
+		definitions.insert(instruction);
+		for (Variable *alias: aliases)
+			alias->definitions.insert(instruction);
 	}
 
 	void Variable::removeDefinition(std::shared_ptr<Instruction> instruction) {
 		if (auto sparent = parent.lock()) {
-			sparent->removeDefinition(instruction);
-		} else {
-			definitions.erase(instruction);
-			for (Variable *alias: aliases)
-				alias->definitions.erase(instruction);
+			if (sparent.get() != this) {
+				sparent->removeDefinition(instruction);
+				return;
+			}
 		}
+
+		definitions.erase(instruction);
+		for (Variable *alias: aliases)
+			alias->definitions.erase(instruction);
 	}
 
 	void Variable::addUse(std::shared_ptr<Instruction> instruction) {
 		if (auto sparent = parent.lock()) {
-			sparent->addUse(instruction);
-		} else {
-			uses.insert(instruction);
-			for (Variable *alias: aliases)
-				alias->uses.insert(instruction);
+			if (sparent.get() != this) {
+				sparent->addUse(instruction);
+				return;
+			}
 		}
+
+		uses.insert(instruction);
+		for (Variable *alias: aliases)
+			alias->uses.insert(instruction);
 	}
 
 	void Variable::removeUse(std::shared_ptr<Instruction> instruction) {
 		if (auto sparent = parent.lock()) {
-			sparent->removeUse(instruction);
-		} else {
-			uses.erase(instruction);
-			for (Variable *alias: aliases)
-				alias->uses.erase(instruction);
+			if (sparent.get() != this) {
+				sparent->removeUse(instruction);
+				return;
+			}
 		}
+
+		uses.erase(instruction);
+		for (Variable *alias: aliases)
+			alias->uses.erase(instruction);
 	}
 
 	std::shared_ptr<BasicBlock> Variable::onlyDefiner() const {
