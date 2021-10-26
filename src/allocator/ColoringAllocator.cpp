@@ -123,7 +123,6 @@ namespace LL2W {
 				std::set<int> assigned;
 				for (const int color: pair.second->colors)
 					assigned.insert(color);
-				Util::out(std::cerr << *ptr << " <- [", assigned) << "]\n";
 				ptr->setRegisters(assigned);
 			}
 		}

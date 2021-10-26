@@ -846,8 +846,6 @@ namespace LL2W {
 		}
 #endif
 
-		debug();
-
 		finalCompile();
 
 #ifdef DEBUG_SPILL
