@@ -83,6 +83,7 @@
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
+#include "util/strnatcmp.h"
 #include "util/Util.h"
 #include "Interactive.h"
 
@@ -1233,9 +1234,15 @@ namespace LL2W {
 		if (vars) {
 			std::cerr << "    \e[2m; Variables:\e[0m\n";
 
-			auto all_vars = variableStore;
-			for (const auto &pair: extraVariables)
-				all_vars.insert(pair);
+			struct Compare {
+				bool operator()(const Variable::ID &left, const Variable::ID &right) const {
+					return strnatcmp(left->c_str(), right->c_str()) == -1;
+				}
+			};
+
+			std::map<Variable::ID, VariablePtr, Compare> all_vars;
+			all_vars.insert(variableStore.cbegin(), variableStore.cend());
+			all_vars.insert(extraVariables.cbegin(), extraVariables.cend());
 
 			for (auto &[id, var]: all_vars) {
 				if (extraVariables.count(id) != 0)
