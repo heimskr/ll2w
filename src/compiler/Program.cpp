@@ -24,6 +24,7 @@
 // #define SINGLE_FUNCTION "@_ZNKSt3__117basic_string_viewIwNS_11char_traitsIwEEE4sizeEv"
 // #define SINGLE_FUNCTION "@_ZNSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE17__assign_no_aliasILb1EEERS5_PKwm"
 // #define SINGLE_FUNCTION "@_ZL8_out_revPFvcPvmmEPcmmPKcmjj"
+// #define SINGLE_FUNCTION "@_ZL9_is_digitc"
 
 namespace LL2W {
 	Program::Program(const ASTNode &root) {

@@ -225,10 +225,16 @@ namespace LL2W {
 				}
 		}
 
-		for (; bbLabels.count(StringSet::intern(std::to_string(label))) != 0; ++label);
-		for (; extraVariables.count(StringSet::intern(std::to_string(label))) != 0; ++label);
-		for (; variableStore.count(StringSet::intern(std::to_string(label))) != 0; ++label);
-		return StringSet::intern(std::to_string(label));
+		const std::string *interned;
+		for (;;) {
+			interned = StringSet::intern(std::to_string(label));
+			if (0 < variableStore.count(interned) + extraVariables.count(interned) + bbLabels.count(interned))
+				++label;
+			else
+				break;
+		}
+
+		return interned;
 	}
 
 	VariablePtr Function::newVariable(TypePtr type, std::shared_ptr<BasicBlock> definer) {
