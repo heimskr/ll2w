@@ -25,7 +25,7 @@
 // #define SINGLE_FUNCTION "@_ZNSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE17__assign_no_aliasILb1EEERS5_PKwm"
 // #define SINGLE_FUNCTION "@_ZL8_out_revPFvcPvmmEPcmmPKcmjj"
 // #define SINGLE_FUNCTION "@_ZL9_is_digitc"
-// #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+#define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 // #define SINGLE_FUNCTION "@memcpy"
 
 namespace LL2W {

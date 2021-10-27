@@ -235,15 +235,18 @@ namespace LL2W::Passes {
 	void cutPhi(Function &function) {
 		Graph dependencies = getDependencies(function);
 		std::list<Graph> components = dependencies.components();
-		components.sort([](const Graph &left, const Graph &right) { return left.size() < right.size(); });
-		size_t sum = 0;
-		size_t i = 0;
 		for (Graph &graph: components) {
-			std::cerr << ++i << ": size = " << graph.size() << '\n';
+			if (graph.size() <= WEB_MAX)
+				continue;
 			const auto bridges = graph.bridges();
-
+			if (bridges.size() == 0) {
+				warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph "
+					"components.\n";
+				continue;
+			}
 			ssize_t min_diff = SSIZE_MAX;
-			std::pair<Graph::Label, Graph::Label> min_pair;
+			bool min_swap = false;
+			const std::pair<Graph::Label, Graph::Label> *min_pair = nullptr;
 			for (const auto &pair: bridges) {
 				const bool swap = graph[pair.first].out().count(&graph[pair.second]) == 0;
 				if (swap)
@@ -258,22 +261,12 @@ namespace LL2W::Passes {
 					graph.link(pair.first, pair.second);
 				if (diff < min_diff) {
 					min_diff = diff;
-					min_pair = pair;
+					min_pair = &pair;
 				}
 			}
-
-			for (const auto &[from, to]: bridges) {
-				std::cerr << "    ";
-				if (min_pair.first == from && min_pair.second == to)
-					std::cerr << "\e[32m";
-				else
-					std::cerr << "\e[2m";
-				std::cerr << from << " -> " << to << "\e[0m\n";
-			}
-
-			sum += graph.size();
-			std::cerr << '\n';
+			if (!min_pair)
+				throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
+					std::to_string(SSIZE_MAX) + " nodes?");
 		}
-		std::cerr << "Sum: " << sum << " (vs. " << dependencies.size() << ")\n";
 	}
 }

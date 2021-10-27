@@ -249,16 +249,16 @@ namespace LL2W {
 			// std::cerr << "\n";
 #endif
 			if (var->registers.empty()) {
-				bool skip = false;
-				for (Variable *alias: var->getAliases())
-					if (interference.hasLabel(*alias->id)) {
-						std::cerr << "Skipping " << *var << " (" << *id << "): alias (" << *alias->id << ") is in graph\n";
-						skip = true;
-						break;
-					}
+				// bool skip = false;
+				// for (Variable *alias: var->getAliases())
+				// 	if (interference.hasLabel(*alias->id)) {
+				// 		std::cerr << "Skipping " << *var << " (" << *id << "): alias (" << *alias->id << ") is in graph\n";
+				// 		skip = true;
+				// 		break;
+				// 	}
 
-				if (skip)
-					continue;
+				// if (skip)
+				// 	continue;
 
 				const std::string *parent_id = var->parentID();
 				if (!interference.hasLabel(*parent_id)) { // Use only one variable from a set of aliases.
