@@ -1,3 +1,4 @@
+#include <climits>
 #include <iostream>
 
 #include "compiler/Function.h"
@@ -9,6 +10,7 @@
 #include "pass/Phi.h"
 
 #define REMOVE_OLD_TEMPORARIES
+#define WEB_MAX 16
 
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
@@ -196,8 +198,9 @@ namespace LL2W::Passes {
 			function.relinearize();
 	}
 
-	void tracePhi(Function &function) {
+	static Graph getDependencies(Function &function) {
 		Graph dependencies;
+
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
@@ -205,7 +208,7 @@ namespace LL2W::Passes {
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			if (!phi_node)
-				throw std::runtime_error("phi_node is null in Function::coalescePhi");
+				throw std::runtime_error("phi_node is null");
 
 			if (!dependencies.hasLabel(*phi_node->result))
 				dependencies.addNode(*phi_node->result);
@@ -221,7 +224,16 @@ namespace LL2W::Passes {
 			}
 		}
 
+		return dependencies;
+	}
+
+	void tracePhi(Function &function) {
+		Graph dependencies = getDependencies(function);
 		dependencies.renderTo("dependencies.png");
+	}
+
+	void cutPhi(Function &function) {
+		Graph dependencies = getDependencies(function);
 		std::list<Graph> components = dependencies.components();
 		components.sort([](const Graph &left, const Graph &right) { return left.size() < right.size(); });
 		size_t sum = 0;
@@ -232,14 +244,21 @@ namespace LL2W::Passes {
 
 			ssize_t min_diff = SSIZE_MAX;
 			std::pair<Graph::Label, Graph::Label> min_pair;
-			for (auto &&pair: bridges) {
-				Graph copy(graph);
-				copy.unlink(pair.first, pair.second, true);
+			for (const auto &pair: bridges) {
+				const bool swap = graph[pair.first].out().count(&graph[pair.second]) == 0;
+				if (swap)
+					graph.unlink(pair.second, pair.first);
+				else
+					graph.unlink(pair.first, pair.second);
 				const ssize_t diff =
-					std::abs((long) copy.size() / 2l - (long) copy.undirectedSearch(*copy.begin()->second).size());
+					std::abs((long) graph.size() - 2l * (long) graph.undirectedSearch(*graph.begin()->second).size());
+				if (swap)
+					graph.link(pair.second, pair.first);
+				else
+					graph.link(pair.first, pair.second);
 				if (diff < min_diff) {
 					min_diff = diff;
-					min_pair = std::move(pair);
+					min_pair = pair;
 				}
 			}
 
@@ -253,7 +272,6 @@ namespace LL2W::Passes {
 			}
 
 			sum += graph.size();
-			graph.renderTo("component_" + std::to_string(i) + ".png");
 			std::cerr << '\n';
 		}
 		std::cerr << "Sum: " << sum << " (vs. " << dependencies.size() << ")\n";

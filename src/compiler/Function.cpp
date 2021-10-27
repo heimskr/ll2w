@@ -80,7 +80,6 @@
 #include "pass/SplitBlocks.h"
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
-#include "pass/TracePhi.h"
 #include "pass/TransformInstructions.h"
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
@@ -759,7 +758,8 @@ namespace LL2W {
 		extractBlocks();
 		makeInitialDebugIndex();
 		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-			Passes::tracePhi(*this);
+			// Passes::tracePhi(*this);
+			Passes::cutPhi(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
