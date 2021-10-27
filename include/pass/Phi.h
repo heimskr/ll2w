@@ -12,4 +12,7 @@ namespace LL2W::Passes {
 	/** This is an alternative to coalescePhi that translates ϕ-instructions by inserting move instructions in the
 	 *  predecessor blocks. This breaks SSA form. */
 	void movePhi(Function &);
+
+	/** Produces and renders a graph of ϕ-instruction dependencies. Useful only for debugging. */
+	void tracePhi(Function &);
 }
