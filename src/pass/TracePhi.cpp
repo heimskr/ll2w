@@ -33,5 +33,18 @@ namespace LL2W::Passes {
 		}
 
 		dependencies.renderTo("dependencies.png");
+		std::list<Graph> components = dependencies.components();
+		components.sort([](const Graph &left, const Graph &right) { return left.size() < right.size(); });
+		size_t sum = 0;
+		size_t i = 0;
+		for (Graph &graph: components) {
+			std::cerr << ++i << ": size = " << graph.size() << '\n';
+			for (const auto &[from, to]: graph.bridges())
+				std::cerr << "    " << from << " -> " << to << '\n';
+			sum += graph.size();
+			graph.renderTo("component_" + std::to_string(i) + ".png");
+			std::cerr << '\n';
+		}
+		std::cerr << "Sum: " << sum << " (vs. " << dependencies.size() << ")\n";
 	}
 }
