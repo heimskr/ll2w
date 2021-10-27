@@ -1,3 +1,5 @@
+#include <climits>
+#include <cstdlib>
 #include <iostream>
 
 #include "compiler/Function.h"
@@ -39,8 +41,30 @@ namespace LL2W::Passes {
 		size_t i = 0;
 		for (Graph &graph: components) {
 			std::cerr << ++i << ": size = " << graph.size() << '\n';
-			for (const auto &[from, to]: graph.bridges())
-				std::cerr << "    " << from << " -> " << to << '\n';
+			const auto bridges = graph.bridges();
+
+			ssize_t min_diff = SSIZE_MAX;
+			std::pair<Graph::Label, Graph::Label> min_pair;
+			for (auto &&pair: bridges) {
+				Graph copy(graph);
+				copy.unlink(pair.first, pair.second, true);
+				const ssize_t diff =
+					std::abs((long) copy.size() / 2l - (long) copy.undirectedSearch(*copy.begin()->second).size());
+				if (diff < min_diff) {
+					min_diff = diff;
+					min_pair = std::move(pair);
+				}
+			}
+
+			for (const auto &[from, to]: bridges) {
+				std::cerr << "    ";
+				if (min_pair.first == from && min_pair.second == to)
+					std::cerr << "\e[32m";
+				else
+					std::cerr << "\e[2m";
+				std::cerr << from << " -> " << to << "\e[0m\n";
+			}
+
 			sum += graph.size();
 			graph.renderTo("component_" + std::to_string(i) + ".png");
 			std::cerr << '\n';

@@ -95,7 +95,7 @@ namespace LL2W {
 		return nodes_.empty();
 	}
 
-	const std::list<Node *> Graph::nodes() const {
+	const std::list<Node *> & Graph::nodes() const {
 		return nodes_;
 	}
 
@@ -310,11 +310,11 @@ namespace LL2W {
 		return BFS((*this)[start_label]);
 	}
 
-	std::vector<Node *> Graph::undirectedBFS(Node &start) const {
+	std::unordered_set<Node *> Graph::undirectedSearch(Node &start) const {
 		std::list<Node *> queue = {&start};
 		std::unordered_set<Node *> visited;
-		std::vector<Node *> order;
-		order.reserve(size());
+		std::unordered_set<Node *> out;
+		out.reserve(size());
 
 		while (!queue.empty()) {
 			Node *next = queue.front();
@@ -323,16 +323,16 @@ namespace LL2W {
 				for (Node *adjacent: *set)
 					if (visited.count(adjacent) == 0) {
 						visited.insert(adjacent);
-						order.push_back(adjacent);
+						out.insert(adjacent);
 						queue.push_back(adjacent);
 					}
 		}
 
-		return order;
+		return out;
 	}
 
-	std::vector<Node *> Graph::undirectedBFS(const std::string &start_label) const {
-		return undirectedBFS((*this)[start_label]);
+	std::unordered_set<Node *> Graph::undirectedSearch(const std::string &start_label) const {
+		return undirectedSearch((*this)[start_label]);
 	}
 
 	std::vector<Node *> Graph::postOrder(Node &start) const {
@@ -376,7 +376,7 @@ namespace LL2W {
 			Graph component_graph;
 			Node *front = *remaining.begin();
 			remaining.erase(front);
-			std::vector<Node *> component_nodes = undirectedBFS(*front);
+			std::unordered_set<Node *> component_nodes = undirectedSearch(*front);
 			for (Node *node: component_nodes) {
 				component_graph.addNode(node->label_);
 				remaining.erase(node);

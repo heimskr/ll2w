@@ -26,7 +26,6 @@ namespace LL2W {
 			                    std::vector<std::pair<Label, Label>> &out) const;
 
 		public:
-
 			enum class ColoringAlgorithm {Bad, Greedy};
 
 			std::string name = "Graph";
@@ -64,7 +63,7 @@ namespace LL2W {
 			bool empty() const;
 
 			/** Returns a constant reference to the list of nodes. */
-			const std::list<Node *> nodes() const;
+			const std::list<Node *> & nodes() const;
 
 			/** Returns the node at a given index. Throws an exception if no node exists at the index. */
 			Node & operator[](size_t) const;
@@ -130,15 +129,15 @@ namespace LL2W {
 			/** Runs a depth-first search at a given start node. */
 			DFSResult DFS(const Label &) const;
 
-			/** Returns a list of nodes in level (breadth-first) order. */
+			/** Returns a vector of nodes in level (breadth-first) order. */
 			std::vector<Node *> BFS(Node &) const;
-			/** Returns a list of nodes in level (breadth-first) order. */
+			/** Returns a vector of nodes in level (breadth-first) order. */
 			std::vector<Node *> BFS(const Label &) const;
 
-			/** Returns a list of nodes in level (breadth-first) order, treating the graph as undirected. */
-			std::vector<Node *> undirectedBFS(Node &) const;
-			/** Returns a list of nodes in level (breadth-first) order, treating the graph as undirected. */
-			std::vector<Node *> undirectedBFS(const Label &) const;
+			/** Returns a set of nodes connected to a node. */
+			std::unordered_set<Node *> undirectedSearch(Node &) const;
+			/** Returns a set of nodes connected to a node. */
+			std::unordered_set<Node *> undirectedSearch(const Label &) const;
 
 			/** Returns a postorder list of nodes. */
 			std::vector<Node *> postOrder(Node &) const;
