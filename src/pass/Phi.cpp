@@ -22,7 +22,7 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
+			if (!llvm_instruction || !llvm_instruction->isPhi())
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			if (!phi_node)
@@ -143,7 +143,7 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
+			if (!llvm_instruction || !llvm_instruction->isPhi())
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			if (!phi_node)
@@ -167,6 +167,8 @@ namespace LL2W::Passes {
 					move->setDebug(phi_node)->extract();
 					target->addDefinition(move);
 					target->addDefiner(block);
+				} else if (value->valueType() == ValueType::Undef) {
+					// Do nothing for undef values. This allows us to insert moves in cutPhi.
 				} else if (value->isIntLike() || value->isGlobal()) {
 					InstructionPtr new_instr;
 					if (value->isIntLike())
@@ -180,9 +182,9 @@ namespace LL2W::Passes {
 						should_relinearize = true;
 					} else
 						function.insertBefore(block->instructions.back(), new_instr);
+					new_instr->setDebug(phi_node)->extract();
 					target->addDefinition(new_instr);
 					target->addDefiner(block);
-					new_instr->extract();
 				} else
 					std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
 					          << phi_node->debugExtra() << '\n';
@@ -204,7 +206,7 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || llvm_instruction->node->nodeType() != NodeType::Phi)
+			if (!llvm_instruction || !llvm_instruction->isPhi())
 				continue;
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			if (!phi_node)
@@ -235,6 +237,7 @@ namespace LL2W::Passes {
 	void cutPhi(Function &function) {
 		Graph dependencies = getDependencies(function);
 		std::list<Graph> components = dependencies.components();
+		bool should_relinearize = false;
 		for (Graph &graph: components) {
 			if (graph.size() <= WEB_MAX)
 				continue;
@@ -262,11 +265,57 @@ namespace LL2W::Passes {
 				if (diff < min_diff) {
 					min_diff = diff;
 					min_pair = &pair;
+					min_swap = swap;
 				}
 			}
 			if (!min_pair)
 				throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
 					std::to_string(SSIZE_MAX) + " nodes?");
+			auto source      = function.getVariable(StringSet::intern(min_swap? min_pair->second : min_pair->first));
+			auto destination = function.getVariable(StringSet::intern(min_swap? min_pair->first : min_pair->second));
+			// Can't add definitions while iterating over definitions.
+			std::list<InstructionPtr> definitions_to_add;
+			std::list<BasicBlockPtr> definers_to_add;
+			for (const auto &definition: destination->definitions) {
+				auto *llvm = dynamic_cast<LLVMInstruction *>(definition.lock().get());
+				if (!llvm || !llvm->isPhi())
+					throw std::runtime_error("Definition of " + std::string(*destination) + " isn't a ϕ-instruction: " +
+						definition.lock()->debugExtra());
+				auto *phi = dynamic_cast<PhiNode *>(llvm->node);
+				bool did_reset = false;
+				const std::string initial_debug_extra = phi->debugExtra();
+				for (auto &[value, block_label]: phi->pairs)
+					if (value->isLocal()) {
+						auto *local = dynamic_cast<LocalValue *>(value.get());
+						if (local->variable && *local->variable == *source) {
+							if (did_reset)
+								throw std::runtime_error("ϕ-instruction depends on variable " + std::string(*source) +
+									" from multiple blocks: " + initial_debug_extra);
+							did_reset = true;
+							auto block = function.bbMap.at(block_label);
+							auto move = std::make_shared<MoveInstruction>(source, destination);
+							const std::string comment = "CutPhi: " + source->plainString() + " -> " +
+								destination->plainString();
+							if (block->instructions.empty()) {
+								block->insertBeforeTerminal(move);
+								function.comment(move, comment); // TODO: does this work before relinearization?
+								should_relinearize = true;
+							} else
+								function.insertBefore(block->instructions.back(), move, comment);
+							move->setDebug(phi)->extract();
+							definitions_to_add.push_back(move);
+							definers_to_add.push_back(block);
+							value.reset(new UndefValue);
+						}
+					}
+			}
+			for (const auto &definition: definitions_to_add)
+				destination->addDefinition(definition);
+			for (const auto &definer: definers_to_add)
+				destination->addDefiner(definer);
 		}
+
+		if (should_relinearize)
+			function.relinearize();
 	}
 }
