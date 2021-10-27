@@ -12,11 +12,21 @@
 
 namespace LL2W {
 	class Graph {
+		public:
+			using Label = std::string;
+
 		private:
 			std::list<Node *> nodes_;
 			std::unordered_map<std::string, Node *> labelMap;
 
+			void bridgeTraverse(const Node &node, std::unordered_map<const Node *, bool> &visited,
+			                    std::unordered_map<const Node *, size_t> &discovered,
+			                    std::unordered_map<const Node *, size_t> &low,
+			                    std::unordered_map<const Node *, const Node *> &parent,
+			                    std::vector<std::pair<Label, Label>> &out) const;
+
 		public:
+
 			enum class ColoringAlgorithm {Bad, Greedy};
 
 			std::string name = "Graph";
@@ -25,11 +35,19 @@ namespace LL2W {
 			/** Constructs a graph with no nodes. */
 			Graph();
 
+			Graph(const Graph &);
+
+			Graph(Graph &&);
+
+			Graph & operator=(const Graph &);
+
+			Graph & operator=(Graph &&);
+
 			/** Constructs a graph with a number n of nodes with labels 0, 1, ..., n. */
 			Graph(size_t);
 
 			/** Constructs a graph with nodes with given labels. */
-			Graph(std::initializer_list<std::string>);
+			Graph(std::initializer_list<Label>);
 
 			virtual ~Graph();
 
@@ -37,7 +55,7 @@ namespace LL2W {
 			void clear();
 
 			/** Returns whether the graph contains a node with a given label. */
-			bool hasLabel(const std::string &) const;
+			bool hasLabel(const Label &) const;
 
 			/** Returns the number of nodes in the graph. */
 			size_t size() const;
@@ -51,13 +69,13 @@ namespace LL2W {
 			/** Returns the node at a given index. Throws an exception if no node exists at the index. */
 			Node & operator[](size_t) const;
 			/** Returns the node with a given label. Throws an exception if no such node exists. */
-			Node & operator[](const std::string &) const;
+			Node & operator[](const Label &) const;
 			/** Returns the node that has the same label as a given node from another graph. Throws an exception if no
 			 *  such node exists. */
 			Node & operator[](const Node &) const;
 
 			/** Adds a node with a given label. */
-			Graph & operator+=(const std::string &);
+			Graph & operator+=(const Label &);
 
 			/** Adds a premade node to the graph. Note that this doesn't check for label collisions. */
 			Graph & operator+=(Node *);
@@ -67,26 +85,26 @@ namespace LL2W {
 			/** Removes and deletes a node. */
 			Graph & operator-=(Node *);
 			/** Removes and deletes a node with a given label. */
-			Graph & operator-=(const std::string &);
+			Graph & operator-=(const Label &);
 
 			/** Adds a node with a given label. */
-			Node & addNode(const std::string &);
+			Node & addNode(const Label &);
 
 			/** Adds a premade node to the graph. Note that this function doesn't check for label collisions. */
 			Node & addNode(Node *);
 
 			/** Assigns a new label to a node with a given label and returns the node. */
-			Node & rename(const std::string &, const std::string &);
+			Node & rename(const Label &, const Label &);
 			/** Assigns a new label to a node and returns the node. */
-			Node & rename(Node &, const std::string &);
+			Node & rename(Node &, const Label &);
 			/** Assigns a new label to a node and returns the node. */
-			Node & rename(Node *, const std::string &);
+			Node & rename(Node *, const Label &);
 
 			/** Connects two nodes with given labels (unidirectionally by default). */
-			void link(const std::string &, const std::string &, bool bidirectional = false);
+			void link(const Label &, const Label &, bool bidirectional = false);
 
 			/** Removes any connection between two nodes with given labels (and optionally the inverse edge too). */
-			void unlink(const std::string &, const std::string &, bool bidirectional = false);
+			void unlink(const Label &, const Label &, bool bidirectional = false);
 			/** Removes all edges in the graph. */
 			void unlink();
 
@@ -97,7 +115,7 @@ namespace LL2W {
 			Graph clone(std::unordered_map<Node *, Node *> *rename_map = nullptr);
 
 			/** Takes a space-separated list of colon-separated pairs of labels and links each pair of nodes. */
-			void addEdges(const std::string &);
+			void addEdges(const Label &);
 
 			/** Removes all nodes from the graph. */
 			void reset();
@@ -106,21 +124,32 @@ namespace LL2W {
 			Node * find(std::function<bool(Node &)>);
 
 			/** Runs a depth-first search at a given start node. */
-			DFSResult DFS(Node *);
+			DFSResult DFS(Node *) const;
 			/** Runs a depth-first search at a given start node. */
-			DFSResult DFS(Node &);
+			DFSResult DFS(Node &) const;
 			/** Runs a depth-first search at a given start node. */
-			DFSResult DFS(const std::string &);
+			DFSResult DFS(const Label &) const;
 
 			/** Returns a list of nodes in level (breadth-first) order. */
-			std::vector<Node *> BFS(Node &);
+			std::vector<Node *> BFS(Node &) const;
 			/** Returns a list of nodes in level (breadth-first) order. */
-			std::vector<Node *> BFS(const std::string &);
+			std::vector<Node *> BFS(const Label &) const;
+
+			/** Returns a list of nodes in level (breadth-first) order, treating the graph as undirected. */
+			std::vector<Node *> undirectedBFS(Node &) const;
+			/** Returns a list of nodes in level (breadth-first) order, treating the graph as undirected. */
+			std::vector<Node *> undirectedBFS(const Label &) const;
 
 			/** Returns a postorder list of nodes. */
 			std::vector<Node *> postOrder(Node &) const;
 			/** Returns a reverse-postorder list of nodes. */
 			std::vector<Node *> reversePostOrder(Node &) const;
+
+			/** Finds all bridges in the graph. Assumes the graph is connected. */
+			std::vector<std::pair<Label, Label>> bridges() const;
+
+			/** Returns a list of the graph's connected components. */
+			std::list<Graph> components() const;
 
 			/** Returns a map of nodes to sets of their predecessors. */
 			std::unordered_map<Node *, std::unordered_set<Node *>> predecessors() const;
@@ -141,5 +170,8 @@ namespace LL2W {
 
 			decltype(labelMap)::iterator begin();
 			decltype(labelMap)::iterator end();
+
+			decltype(labelMap)::const_iterator begin() const;
+			decltype(labelMap)::const_iterator end() const;
 	};
 }

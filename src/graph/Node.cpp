@@ -166,6 +166,7 @@ namespace LL2W {
 	}
 
 	Node & Node::operator-=(Node *neighbor) {
+		std::cerr << label_ << " -= " << neighbor->label_ << "\n";
 		out_.erase(neighbor);
 		return *this;
 	}

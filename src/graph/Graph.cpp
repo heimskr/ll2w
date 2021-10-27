@@ -15,6 +15,50 @@
 namespace LL2W {
 	Graph::Graph() {}
 
+	Graph::Graph(const Graph &other) {
+		for (const auto &[label, node]: other)
+			addNode(label);
+		for (const auto &[label, node]: other) {
+			for (const Node *in: node->in_)
+				link(in->label_, node->label_);
+			for (const Node *out: node->out_)
+				link(node->label_, out->label_);
+		}
+	}
+
+	Graph::Graph(Graph &&other) {
+		nodes_ = std::move(other.nodes_);
+		labelMap = std::move(other.labelMap);
+		name = std::move(other.name);
+		colors = std::move(other.colors);
+		for (Node *node: nodes_)
+			node->owner = this;
+	}
+
+	Graph & Graph::operator=(const Graph &other) {
+		clear();
+		for (const auto &[label, node]: other)
+			addNode(label);
+		for (const auto &[label, node]: other) {
+			for (const Node *in: node->in_)
+				link(in->label_, node->label_);
+			for (const Node *out: node->out_)
+				link(node->label_, out->label_);
+		}
+		return *this;
+	}
+
+	Graph & Graph::operator=(Graph &&other) {
+		clear();
+		nodes_ = std::move(other.nodes_);
+		labelMap = std::move(other.labelMap);
+		name = std::move(other.name);
+		colors = std::move(other.colors);
+		for (Node *node: nodes_)
+			node->owner = this;
+		return *this;
+	}
+
 	Graph::Graph(size_t node_count) {
 		for (size_t i = 0; i < node_count; ++i)
 			*this += std::to_string(i);
@@ -215,7 +259,7 @@ namespace LL2W {
 		return nullptr;
 	}
 
-	DFSResult Graph::DFS(Node *start) {
+	DFSResult Graph::DFS(Node *start) const {
 		DFSResult::ParentMap parents;
 		DFSResult::TimeMap discovered, finished;
 		int time = 0;
@@ -231,18 +275,18 @@ namespace LL2W {
 		};
 
 		visit(start);
-		return {this, parents, discovered, finished};
+		return {*this, parents, discovered, finished};
 	}
 
-	DFSResult Graph::DFS(Node &start) {
+	DFSResult Graph::DFS(Node &start) const {
 		return DFS(&start);
 	}
 
-	DFSResult Graph::DFS(const std::string &start_label) {
+	DFSResult Graph::DFS(const std::string &start_label) const {
 		return DFS((*this)[start_label]);
 	}
 
-	std::vector<Node *> Graph::BFS(Node &start) {
+	std::vector<Node *> Graph::BFS(Node &start) const {
 		std::list<Node *> queue = {&start};
 		std::unordered_set<Node *> visited;
 		std::vector<Node *> order;
@@ -262,8 +306,33 @@ namespace LL2W {
 		return order;
 	}
 
-	std::vector<Node *> Graph::BFS(const std::string &start_label) {
+	std::vector<Node *> Graph::BFS(const std::string &start_label) const {
 		return BFS((*this)[start_label]);
+	}
+
+	std::vector<Node *> Graph::undirectedBFS(Node &start) const {
+		std::list<Node *> queue = {&start};
+		std::unordered_set<Node *> visited;
+		std::vector<Node *> order;
+		order.reserve(size());
+
+		while (!queue.empty()) {
+			Node *next = queue.front();
+			queue.pop_front();
+			for (const auto *set: {&next->in_, &next->out_})
+				for (Node *adjacent: *set)
+					if (visited.count(adjacent) == 0) {
+						visited.insert(adjacent);
+						order.push_back(adjacent);
+						queue.push_back(adjacent);
+					}
+		}
+
+		return order;
+	}
+
+	std::vector<Node *> Graph::undirectedBFS(const std::string &start_label) const {
+		return undirectedBFS((*this)[start_label]);
 	}
 
 	std::vector<Node *> Graph::postOrder(Node &start) const {
@@ -287,6 +356,43 @@ namespace LL2W {
 		std::vector<Node *> post = postOrder(start);
 		std::reverse(post.begin(), post.end());
 		return post;
+	}
+
+	std::vector<std::pair<Graph::Label, Graph::Label>> Graph::bridges() const {
+		std::vector<std::pair<Label, Label>> out;
+		std::unordered_map<const Node *, bool> visited;
+		std::unordered_map<const Node *, size_t> discovered;
+		std::unordered_map<const Node *, size_t> low;
+		std::unordered_map<const Node *, const Node *> parent;
+		bridgeTraverse(*nodes_.front(), visited, discovered, low, parent, out);
+		return out;
+	}
+
+	std::list<Graph> Graph::components() const {
+		std::list<Graph> out;
+		std::unordered_set<Node *> remaining(nodes_.begin(), nodes_.end());
+
+		while (!remaining.empty()) {
+			Graph component_graph;
+			Node *front = *remaining.begin();
+			remaining.erase(front);
+			std::vector<Node *> component_nodes = undirectedBFS(*front);
+			for (Node *node: component_nodes) {
+				component_graph.addNode(node->label_);
+				remaining.erase(node);
+			}
+			if (!component_graph.hasLabel(front->label_))
+				component_graph.addNode(front->label_);
+			for (Node *node: component_nodes) {
+				for (const Node *in: node->in_)
+					component_graph.link(in->label_, node->label_);
+				for (const Node *out: node->out_)
+					component_graph.link(node->label_, out->label_);
+			}
+			out.push_back(std::move(component_graph));
+		}
+
+		return out;
 	}
 
 	std::unordered_map<Node *, std::unordered_set<Node *>> Graph::predecessors() const {
@@ -432,5 +538,33 @@ namespace LL2W {
 
 	decltype(Graph::labelMap)::iterator Graph::end() {
 		return labelMap.end();
+	}
+
+	decltype(Graph::labelMap)::const_iterator Graph::begin() const {
+		return labelMap.cbegin();
+	}
+
+	decltype(Graph::labelMap)::const_iterator Graph::end() const {
+		return labelMap.cend();
+	}
+
+	void Graph::bridgeTraverse(const Node &node, std::unordered_map<const Node *, bool> &visited,
+	                           std::unordered_map<const Node *, size_t> &discovered,
+	                           std::unordered_map<const Node *, size_t> &low,
+	                           std::unordered_map<const Node *, const Node *> &parents,
+	                           std::vector<std::pair<Label, Label>> &out) const {
+		static size_t time = 0;
+		visited[&node] = true;
+		discovered[&node] = low[&node] = ++time;
+		for (const Node *adjacent: node.allEdges())
+			if (!visited[adjacent]) {
+				parents[adjacent] = &node;
+				bridgeTraverse(*adjacent, visited, discovered, low, parents, out);
+				if (low[adjacent] < low[&node])
+					low[&node] = low[adjacent];
+				if (discovered[&node] < low[adjacent])
+					out.emplace_back(node.label(), adjacent->label());
+			} else if (adjacent != parents[&node] && discovered[adjacent] < low[&node])
+				low[&node] = discovered[adjacent];
 	}
 }

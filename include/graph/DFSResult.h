@@ -1,5 +1,4 @@
-#ifndef DFSRESULT_H_
-#define DFSRESULT_H_
+#pragma once
 
 #include <ostream>
 #include <unordered_map>
@@ -13,13 +12,13 @@ namespace LL2W {
 		using ParentMap = std::unordered_map<Node *, Node *>;
 		using TimeMap   = std::unordered_map<Node *, int>;
 
-		Graph *graph;
+		const Graph *graph;
 		ParentMap parents;
 		TimeMap discovered, finished;
 
-		DFSResult(Graph *graph_, const ParentMap &parents_, const TimeMap &discovered_, const TimeMap &finished_);
+		DFSResult(const Graph &graph_, const ParentMap &parents_, const TimeMap &discovered_, const TimeMap &finished_);
 
-		DFSResult(Graph *graph_,
+		DFSResult(const Graph &graph_,
 		          const std::vector<Node *> &parents_,
 		          const std::vector<int> &discovered_,
 		          const std::vector<int> &finished_);
@@ -27,5 +26,3 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &, const DFSResult &);
 }
-
-#endif
