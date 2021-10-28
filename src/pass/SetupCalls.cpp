@@ -13,10 +13,12 @@
 #include "instruction/StackPushInstruction.h"
 #include "pass/MakeCFG.h"
 #include "pass/SetupCalls.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	void setupCalls(Function &function) {
+		Timer timer("SetupCalls");
 		int i;
 		std::list<InstructionPtr> to_remove;
 

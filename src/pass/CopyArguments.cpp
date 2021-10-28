@@ -3,9 +3,12 @@
 #include "compiler/Function.h"
 #include "instruction/MoveInstruction.h"
 #include "pass/CopyArguments.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void copyArguments(Function &function) {
+		Timer timer("CopyArguments");
+
 		if (function.getCallingConvention() != CallingConvention::Reg16)
 			return;
 

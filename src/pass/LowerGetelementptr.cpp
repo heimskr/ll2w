@@ -11,6 +11,7 @@
 #include "instruction/SetInstruction.h"
 #include "parser/StructNode.h"
 #include "pass/LowerGetelementptr.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 // #define DEBUG_GETELEMENTPTR
@@ -24,6 +25,7 @@ namespace LL2W::Passes {
 	}
 
 	int lowerGetelementptr(Function &function) {
+		Timer timer("LowerGetelementptr");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

@@ -5,9 +5,11 @@
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
 #include "pass/ReplaceStoresAndLoads.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void replaceStoresAndLoads(Function &function) {
+		Timer timer("ReplaceStoresAndLoads");
 		std::list<InstructionPtr> to_remove, &linearInstructions = function.linearInstructions;
 		bool any_changed;
 

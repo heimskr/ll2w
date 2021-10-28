@@ -7,9 +7,11 @@
 #include "instruction/ComparisonRInstruction.h"
 #include "instruction/LogicalNotRInstruction.h"
 #include "pass/LowerIcmp.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerIcmp(Function &function) {
+		Timer timer("LowerIcmp");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

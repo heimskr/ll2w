@@ -4,9 +4,11 @@
 #include "compiler/WhyInfo.h"
 #include "instruction/SetInstruction.h"
 #include "pass/IgnoreIntrinsics.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int ignoreIntrinsics(Function &function) {
+		Timer timer("IgnoreInstrinsics");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

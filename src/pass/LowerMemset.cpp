@@ -10,10 +10,12 @@
 #include "instruction/MemsetInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "pass/LowerMemset.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	size_t lowerMemset(Function &function) {
+		Timer timer("LowerMemset");
 		size_t replaced = 0;
 		std::list<InstructionPtr> to_remove, &linear = function.linearInstructions;
 

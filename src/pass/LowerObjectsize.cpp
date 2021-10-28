@@ -4,9 +4,11 @@
 #include "compiler/WhyInfo.h"
 #include "instruction/SetInstruction.h"
 #include "pass/LowerObjectsize.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerObjectsize(Function &function) {
+		Timer timer("LowerObjectsize");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

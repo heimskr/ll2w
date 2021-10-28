@@ -17,10 +17,12 @@
 #include "instruction/SubRInstruction.h"
 #include "parser/Enums.h"
 #include "pass/LowerMemory.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	size_t lowerMemory(Function &function) {
+		Timer timer("LowerMemory");
 		size_t replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 

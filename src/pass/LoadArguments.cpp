@@ -6,10 +6,12 @@
 #include "instruction/LoadRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/LoadArguments.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	void loadArguments(Function &function) {
+		Timer timer("LoadArguments");
 		CallingConvention cconv = function.getCallingConvention();
 
 		if (cconv == CallingConvention::Reg16 || cconv == CallingConvention::StackOnly) {
@@ -61,6 +63,7 @@ namespace LL2W::Passes {
 	}
 
 	void loadArgumentsReadjust(Function &function) {
+		Timer timer("LoadArgumentsReadjust");
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// TODO: should this be == 0?
 			if (instruction->meta.count(InstructionMeta::LoadArgumentsSkip) != 0) {

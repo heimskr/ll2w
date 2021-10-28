@@ -4,11 +4,12 @@
 #include "instruction/DeferredSourceMoveInstruction.h"
 #include "instruction/LoadRInstruction.h"
 #include "instruction/MoveInstruction.h"
-
 #include "pass/FinishMultireg.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void finishMultireg(Function &function) {
+		Timer timer("FinishMultireg");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

@@ -5,9 +5,11 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/LuiInstruction.h"
 #include "pass/BreakUpBigSets.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void breakUpBigSets(Function &function) {
+		Timer timer("BreakUpBigSets");
 		bool any_inserted = false;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

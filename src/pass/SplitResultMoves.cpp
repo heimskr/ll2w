@@ -3,9 +3,11 @@
 #include "compiler/WhyInfo.h"
 #include "instruction/MoveInstruction.h"
 #include "pass/SplitResultMoves.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int splitResultMoves(Function &function) {
+		Timer timer("SplitResultMoves");
 		int changed = 0;
 
 		std::list<InstructionPtr> to_remove;

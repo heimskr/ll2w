@@ -9,12 +9,14 @@
 #include "instruction/SubIInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "pass/LowerAlloca.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 // #define ADD_ALLOCA_TO_STACK
 
 namespace LL2W::Passes {
 	int lowerAlloca(Function &function) {
+		Timer timer("LowerAlloca");
 		std::list<InstructionPtr> to_remove;
 
 		int replaced_count = 0;

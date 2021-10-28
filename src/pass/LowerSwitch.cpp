@@ -6,9 +6,11 @@
 #include "instruction/JumpConditionalInstruction.h"
 #include "instruction/JumpInstruction.h"
 #include "pass/LowerSwitch.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerSwitch(Function &function) {
+		Timer timer("LowerSwitch");
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr m0 = function.m0(function.getEntry());

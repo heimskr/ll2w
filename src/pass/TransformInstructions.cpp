@@ -10,9 +10,11 @@
 #include "instruction/StoreIInstruction.h"
 #include "instruction/StoreRInstruction.h"
 #include "pass/TransformInstructions.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	size_t transformInstructions(Function &function) {
+		Timer timer("TransformInstructions");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

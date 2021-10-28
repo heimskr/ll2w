@@ -12,10 +12,12 @@
 #include "instruction/SubRInstruction.h"
 #include "instruction/XorRInstruction.h"
 #include "pass/LowerConversions.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	int lowerConversions(Function &function) {
+		Timer timer("LowerConversions");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

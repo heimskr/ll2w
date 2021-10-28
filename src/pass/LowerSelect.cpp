@@ -7,9 +7,11 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/LowerSelect.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerSelect(Function &function) {
+		Timer timer("LowerSelect");
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr m0 = function.m0(function.getEntry());

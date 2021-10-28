@@ -14,10 +14,12 @@
 #include "instruction/StackPushInstruction.h"
 #include "pass/LowerMemcpy.h"
 #include "pass/LowerMemset.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	size_t lowerMemcpy(Function &function) {
+		Timer timer("LowerMemcpy");
 		size_t replaced = 0;
 		std::list<InstructionPtr> to_remove, &linear = function.linearInstructions;
 

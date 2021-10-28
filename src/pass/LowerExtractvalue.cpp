@@ -6,10 +6,12 @@
 #include "instruction/SetInstruction.h"
 #include "parser/StructNode.h"
 #include "pass/LowerExtractvalue.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	size_t lowerExtractvalue(Function &function) {
+		Timer timer("LowerExtractvalue");
 		size_t changed = 0;
 
 		std::list<InstructionPtr> to_remove;

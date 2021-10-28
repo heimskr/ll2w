@@ -8,10 +8,12 @@
 #include "instruction/StoreRInstruction.h"
 #include "parser/Nodes.h"
 #include "pass/LowerVarargs.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	void lowerVarargsFirst(Function &function) {
+		Timer timer("LowerVarargsFirst");
 		VariablePtr m2 = function.mx(2, function.getEntry());
 		bool any_changed = false;
 		std::list<InstructionPtr> to_remove;
@@ -51,6 +53,7 @@ namespace LL2W::Passes {
 	}
 
 	void lowerVarargsSecond(Function &function) {
+		Timer timer("LowerVarargsSecond");
 		if (!function.isVariadic())
 			return;
 		// At the beginning of each function, copy the stack pointer plus the combined size of all the non-variadic

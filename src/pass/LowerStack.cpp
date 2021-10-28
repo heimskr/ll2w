@@ -7,6 +7,7 @@
 #include "instruction/StoreRInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/LowerStack.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	static int getOffset(const Function &function, const StackLocation &location) {
@@ -17,6 +18,7 @@ namespace LL2W::Passes {
 	}
 
 	int lowerStack(Function &function) {
+		Timer timer("LowerStack");
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr base = function.fp(function.getEntry());

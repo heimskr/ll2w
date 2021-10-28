@@ -11,9 +11,11 @@
 #include "wasm/Nodes.h"
 #include "instruction/Comment.h"
 #include "instruction/SetInstruction.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerInlineAsm(Function &function) {
+		Timer timer("LowerInlineAsm");
 		std::list<InstructionPtr> to_remove;
 
 		int count = 0;

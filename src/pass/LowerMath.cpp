@@ -41,6 +41,7 @@
 #include "instruction/XorIInstruction.h"
 #include "instruction/XorRInstruction.h"
 #include "pass/LowerMath.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	template <typename R, typename I, typename Inv>
@@ -419,6 +420,7 @@ namespace LL2W::Passes {
 	}
 
 	int lowerMath(Function &function) {
+		Timer timer("LowerMath");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

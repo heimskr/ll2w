@@ -9,9 +9,11 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "pass/LowerRet.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerRet(Function &function) {
+		Timer timer("LowerRet");
 		std::list<InstructionPtr> to_remove;
 		
 		for (InstructionPtr &instruction: function.linearInstructions) {

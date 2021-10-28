@@ -6,11 +6,13 @@
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/InsertPrologue.h"
+#include "util/Timer.h"
 
 // #define MOVE_STACK_POINTER
 
 namespace LL2W::Passes {
 	void insertPrologue(Function &function) {
+		Timer timer("InsertPrologue");
 		BasicBlockPtr front_block = function.blocks.front();
 		InstructionPtr first = function.firstInstruction(true);
 

@@ -3,9 +3,11 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "pass/LowerFreeze.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	size_t lowerFreeze(Function &function) {
+		Timer timer("LowerFreeze");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

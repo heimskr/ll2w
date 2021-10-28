@@ -5,9 +5,11 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "pass/LowerStacksave.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void lowerStacksave(Function &function) {
+		Timer timer("LowerStacksave");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {

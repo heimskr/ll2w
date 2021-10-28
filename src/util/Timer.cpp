@@ -33,12 +33,12 @@ namespace LL2W {
 
 			for (const std::string *name: names) {
 				const double nanos = times.at(*name).count();
-				std::cerr << "    \e[1m" << *name << std::string(max_length - name->size(), ' ') << "\e[22m took \e[33m"
-				          << (nanos / 1e9) << " s\e[39m";
+				std::cerr << "    \e[1m" << *name << std::string(max_length - name->size(), ' ') << "\e[22m took \e[32m"
+				          << (nanos / 1e9) << "\e[39m seconds";
 				const size_t count = counts.at(*name);
 				if (1 < count)
-					std::cerr << " (average: " << (nanos / double(count) / 1e9) << "s over " << count
-					          << " instances)";
+					std::cerr << " (average: \e[33m" << (nanos / double(count) / 1e9) << "\e[39m over \e[1m" << count
+					          << "\e[22m instances)";
 				std::cerr << '\n';
 			}
 		}

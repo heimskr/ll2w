@@ -5,8 +5,8 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
-#include "util/Util.h"
 #include "util/Timer.h"
+#include "util/Util.h"
 
 namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {

@@ -1,8 +1,10 @@
 #include "compiler/Function.h"
 #include "pass/TrimBlocks.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void trimBlocks(Function &function) {
+		Timer timer("TrimBlocks");
 		std::list<BasicBlockPtr> to_remove;
 
 		for (BasicBlockPtr &block: function.blocks) {

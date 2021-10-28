@@ -174,6 +174,7 @@ namespace LL2W {
 	}
 
 	void Function::extractVariables(bool reset) {
+		Timer timer("ExtractVariables");
 		if (reset)
 			for (auto &map: {variableStore, extraVariables})
 				for (const auto &[id, var]: map) {
@@ -625,6 +626,7 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
+		Timer timer("SplitBlock");
 		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label
@@ -749,6 +751,7 @@ namespace LL2W {
 	}
 
 	void Function::updateInstructionNodes() {
+		Timer timer("UpdateInstructionNodes");
 		for (InstructionPtr &instruction: linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm)
@@ -1048,6 +1051,7 @@ namespace LL2W {
 	}
 
 	void Function::computeLiveness() {
+		Timer timer("ComputeLiveness");
 		for (BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
@@ -1107,6 +1111,7 @@ namespace LL2W {
 
 	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
 	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) const {
+		Timer timer("GetLive");
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<std::shared_ptr<Variable>> aliases;
@@ -1134,6 +1139,7 @@ namespace LL2W {
 	}
 
 	std::string Function::toString() {
+		Timer timer("Function::toString");
 		std::stringstream out;
 		out << *name << "\n";
 		for (InstructionPtr &instruction: linearInstructions) {
@@ -1444,6 +1450,7 @@ namespace LL2W {
 	}
 
 	void Function::hackVariables() {
+		Timer timer("HackVariables");
 		std::list<VariablePtr> all_vars;
 		for (auto &pair: extraVariables)
 			all_vars.push_back(pair.second);
@@ -1478,6 +1485,7 @@ namespace LL2W {
 	}
 
 	Graph Function::makeDependencyGraph() const {
+		Timer timer("Function::makeDependencyGraph");
 		Graph dependencies;
 		for (const auto &[id, var]: variableStore)
 			dependencies.addNode(*var->originalID).data = var.get();

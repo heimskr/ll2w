@@ -6,10 +6,13 @@
 #include "instruction/InvalidInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "pass/ReplaceConstants.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 namespace LL2W::Passes {
 	void replaceConstants(Function &function) {
+		Timer timer("ReplaceConstants");
+
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
 			if (!llvm || llvm->node->nodeType() == NodeType::Call)

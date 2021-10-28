@@ -1,9 +1,11 @@
 #include "compiler/Function.h"
 #include "compiler/LLVMInstruction.h"
 #include "pass/FillLocalValues.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void fillLocalValues(Function &function) {
+		Timer timer("FillLocalValues");
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm)

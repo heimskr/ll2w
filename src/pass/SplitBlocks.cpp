@@ -2,6 +2,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/WhyInfo.h"
 #include "pass/SplitBlocks.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int splitBlocks(Function &function) {
@@ -11,6 +12,7 @@ namespace LL2W::Passes {
 		// block has too many definitions by splitting them at the point where the number of definitions is equal to the
 		// number of physical registers. The terminator of the original block is moved to the end of the added block and
 		// replaced with a branch to the added block.
+		Timer timer("SplitBlocks");
 		bool any_changed;
 		int split_count = 0;
 

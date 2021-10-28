@@ -2,9 +2,11 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "pass/RemoveUselessBranches.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void removeUselessBranches(Function &function) {
+		Timer timer("RemoveUselessBranches");
 		std::list<InstructionPtr> to_remove;
 		for (auto iter = function.blocks.begin(), end = function.blocks.end(); iter != end; ++iter) {
 			BasicBlockPtr &block = *iter;

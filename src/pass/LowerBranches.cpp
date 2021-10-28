@@ -4,9 +4,11 @@
 #include "instruction/JumpInstruction.h"
 #include "instruction/JumpConditionalInstruction.h"
 #include "pass/LowerBranches.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	int lowerBranches(Function &function) {
+		Timer timer("LowerBranches");
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
