@@ -884,6 +884,9 @@ namespace LL2W {
 		debug();
 #endif
 
+		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
+		// 	debug();
+
 		{
 			Timer timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
@@ -902,9 +905,8 @@ namespace LL2W {
 
 		finalCompile();
 
-		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-			// debug();
-		}
+		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
+		// 	debug();
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name

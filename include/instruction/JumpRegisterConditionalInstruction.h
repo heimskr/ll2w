@@ -10,6 +10,7 @@ namespace LL2W {
 		bool link_ = false, int index_ = -1):
 			RType(rs_, nullptr, rd_, index_), link(link_) {}
 
+		std::pair<char, char> extract(bool = false) override;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

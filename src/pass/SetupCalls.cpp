@@ -142,8 +142,8 @@ namespace LL2W::Passes {
 					->setDebug(*llvm)->extract();
 			} else {
 				auto jump = std::make_shared<JumpRegisterInstruction>(jump_var, true);
-				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer")
-					->setDebug(*llvm)->extract();
+				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer " +
+					jump_var->plainString())->setDebug(*llvm)->extract();
 			}
 
 			// Move the stack pointer up past the variables that were pushed onto the stack with pushCallValue.

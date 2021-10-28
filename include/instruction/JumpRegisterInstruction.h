@@ -11,6 +11,7 @@ namespace LL2W {
 		Condition condition_ = Condition::None, int index_ = -1):
 			RType(nullptr, nullptr, rd_, index_), Conditional(condition_), link(link_) {}
 
+		std::pair<char, char> extract(bool = false) override;
 		std::string debugExtra() override;
 		std::string toString() const override;
 		bool alwaysTerminal() const override;
