@@ -5,6 +5,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "graph/Graph.h"
+#include "instruction/Comment.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
@@ -201,10 +202,11 @@ namespace LL2W::Passes {
 					if (function.movePhiBlocks.count({block->label, phi_block_label}) != 0) {
 						middle_block = function.movePhiBlocks.at({block->label, phi_block_label});
 					} else {
-						middle_made = true;
+						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
 						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
 							std::list {new_instruction});
+						middle_block->parent = &function;
 						auto iter = std::find(function.blocks.begin(), function.blocks.end(), block);
 						if (iter == function.blocks.end())
 							throw std::runtime_error("Can't find block in MovePhi");
@@ -214,7 +216,6 @@ namespace LL2W::Passes {
 						BrUncondNode *uncond = new BrUncondNode(phi_block_label);
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
 						new_instruction->parent = new_llvm->parent = middle_block;
-						block_made = true;
 
 						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
 						if (preds_iter == phi_block->preds.end()) {
@@ -223,10 +224,15 @@ namespace LL2W::Passes {
 								*phi_block->label);
 						}
 						*preds_iter = new_label;
+						auto new_llvm_comment = std::make_shared<Comment>("MovePhi: new_llvm");
+						new_llvm_comment->parent = middle_block;
+						middle_block->instructions.push_back(new_llvm_comment);
 						middle_block->instructions.push_back(new_llvm);
 						function.movePhiBlocks.emplace(std::make_pair(block->label, phi_block_label), middle_block);
+						comment += " (in new block " + *new_label + ")";
 					}
 
+					middle_block->insertBeforeTerminal(std::make_shared<Comment>(comment));
 					middle_block->insertBeforeTerminal(new_instruction);
 
 					if (middle_made) {
@@ -241,8 +247,9 @@ namespace LL2W::Passes {
 								if (!cond_label)
 									error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
 											<< parent_llvm->debugExtra() << '\n';
-								else
+								else {
 									*cond_label = percent_label;
+								}
 							} else if (type == NodeType::Switch) {
 								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
 								if (switch_node->label->substr(1) == *phi_block_label)
@@ -257,6 +264,7 @@ namespace LL2W::Passes {
 						} else
 							error() << "Final instruction of block " << *block->label
 							        << " isn't a BrCond or Switch.\n";
+						middle_block->extract();
 					}
 				} else {
 					function.insertBefore(block->instructions.back(), new_instruction, comment);

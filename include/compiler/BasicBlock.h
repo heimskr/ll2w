@@ -18,7 +18,7 @@ namespace LL2W {
 	class LLVMInstruction;
 	class Type;
 
-	class BasicBlock {
+	class BasicBlock: public std::enable_shared_from_this<BasicBlock> {
 		private:
 			bool extracted = false;
 			void extract(std::shared_ptr<Instruction> &);

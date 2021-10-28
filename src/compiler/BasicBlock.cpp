@@ -10,6 +10,9 @@ namespace LL2W {
 		label(label_), preds(preds_), instructions(instructions_) {}
 
 	void BasicBlock::extract(std::shared_ptr<Instruction> &instruction) {
+		if (instruction->parent.lock().get() != this)
+			warn() << "Instruction's block is " << *instruction->parent.lock()->label << ", not " << *label << ": "
+			       << instruction->debugExtra() << '\n';
 		instruction->extract();
 		for (auto read_var: instruction->read)
 			read.insert(read_var);
@@ -100,6 +103,8 @@ namespace LL2W {
 	}
 
 	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
+		instruction->parent = shared_from_this();
+
 		if (instructions.empty()) {
 			instructions.push_back(instruction);
 		} else {

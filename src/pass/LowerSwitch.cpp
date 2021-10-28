@@ -40,7 +40,7 @@ namespace LL2W::Passes {
 
 			auto jump = std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*sw->label)),
 				false);
-			function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();
+			function.insertBefore(instruction, jump, "LowerSwitch: default", false)->setDebug(llvm)->extract();
 			to_remove.push_back(instruction);
 		}
 

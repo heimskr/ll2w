@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_STACKSTOREINSTRUCTION_H_
-#define INSTRUCTION_STACKSTOREINSTRUCTION_H_
+#pragma once
 
 #include "compiler/StackLocation.h"
 #include "instruction/IntermediateInstruction.h"
@@ -22,5 +21,3 @@ namespace LL2W {
 			bool operator==(const StackStoreInstruction &) const;
 	};
 }
-
-#endif

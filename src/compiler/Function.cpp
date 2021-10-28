@@ -497,7 +497,9 @@ namespace LL2W {
 			new_instruction->debugIndex = base->debugIndex;
 
 		if (reindex)
-			new_instruction->index = base->index + 1;
+			// There used to be a + 1 here, but I removed it because I believe it gets incremented in the loop shortly
+			// before the end of this function anyway.
+			new_instruction->index = base->index;
 		new_instruction->parent = base->parent;
 		std::list<InstructionPtr>::iterator iter;
 
@@ -533,15 +535,32 @@ namespace LL2W {
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
 
+		if (block->parent != this)
+			throw std::runtime_error("Block parent isn't equal to this in Function::insertBefore");
+
 		if (new_instruction->debugIndex == -1)
 			new_instruction->debugIndex = base->debugIndex;
 
 		if (reindex)
-			new_instruction->index = base->index + 1;
+			// There used to be a + 1 here, but I removed it because I believe it gets incremented in the loop right
+			// before the end of this function anyway.
+			new_instruction->index = base->index;
 		new_instruction->parent = base->parent;
 
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
+		if (linearIter == linearInstructions.end())
+			warn() << "Couldn't find instruction in linearInstructions: " << base->debugExtra() << '\n';
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
+		if (blockIter == block->instructions.end()) {
+			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": " << base->debugExtra() << '\n';
+			std::cerr << "Index: " << block->index << '\n';
+			for (const auto &subblock: blocks)
+				std::cerr << *subblock->label << '[' << subblock->index << "] ";
+			std::cerr << '\n';
+			for (const auto &block_instruction: block->instructions)
+				std::cerr << "    " << block_instruction->debugExtra() << '\n';
+			throw std::runtime_error("Instruction not found in block");
+		}
 		linearInstructions.insert(linearIter, new_instruction);
 		block->instructions.insert(blockIter, new_instruction);
 		if (reindex)
@@ -655,6 +674,8 @@ namespace LL2W {
 		branch->parent = block;
 		block->instructions.push_back(branch);
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
+		if (iter == linearInstructions.end())
+			warn() << "Couldn't find instruction in Function::splitBlock: " << instruction->debugExtra() << '\n';
 		++iter;
 		linearInstructions.insert(iter, branch);
 
@@ -778,6 +799,7 @@ namespace LL2W {
 		Passes::copyArguments(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
+
 		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
@@ -830,7 +852,7 @@ namespace LL2W {
 		Passes::finishMultireg(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
-		Passes::mergeAllBlocks(*this);
+		// Passes::mergeAllBlocks(*this);
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		const bool naked = isNaked();

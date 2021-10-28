@@ -36,7 +36,7 @@ namespace LL2W::Passes {
 			const BoolValue *boolval = dynamic_cast<BoolValue *>(br->condition.get());
 			function.insertBefore(instruction, std::make_shared<JumpInstruction>(
 				StringSet::intern(function.transformLabel(boolval->value? *br->ifTrue : *br->ifFalse)), false))
-				->setDebug(*br);
+				->setDebug(*br)->extract();
 		} else if (condition_type != ValueType::Local) {
 			br->debug();
 			throw std::runtime_error("Expected a pvar for the condition of a conditional jump, got " +
@@ -44,16 +44,16 @@ namespace LL2W::Passes {
 		} else {
 			function.insertBefore(instruction, std::make_shared<JumpConditionalInstruction>(
 				dynamic_cast<LocalValue *>(br->condition.get())->variable,
-				StringSet::intern(function.transformLabel(*br->ifTrue)), false));
+				StringSet::intern(function.transformLabel(*br->ifTrue)), false))->setDebug(*br)->extract();
 			function.insertBefore(instruction,
 				std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->ifFalse)), false))
-				->setDebug(*br);
+				->setDebug(*br)->extract();
 		}
 	}
 
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
 		function.insertBefore(instruction,
 			std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->destination)), false))
-			->setDebug(*br);
+			->setDebug(*br)->extract();
 	}
 }
