@@ -1,5 +1,4 @@
-#ifndef UTIL_WEAKCOMPARE_H_
-#define UTIL_WEAKCOMPARE_H_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -20,5 +19,3 @@ namespace LL2W {
 	template <typename T>
 	using WeakSet = std::set<std::weak_ptr<T>, WeakCompare<T>>;
 }
-
-#endif

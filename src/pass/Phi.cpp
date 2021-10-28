@@ -10,12 +10,14 @@
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
 #include "pass/Phi.h"
+#include "util/Timer.h"
 
 #define REMOVE_OLD_TEMPORARIES
 #define WEB_MAX 4
 
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
+		Timer timer("CoalescePhi");
 		std::list<InstructionPtr> to_remove;
 		std::unordered_set<Variable *> vars_to_erase;
 		bool should_relinearize = false;
@@ -138,6 +140,7 @@ namespace LL2W::Passes {
 	}
 
 	void movePhi(Function &function) {
+		Timer timer("MovePhi");
 		std::list<InstructionPtr> to_remove;
 
 		bool block_made = false;
@@ -288,6 +291,7 @@ namespace LL2W::Passes {
 	}
 
 	static Graph getDependencies(Function &function) {
+		Timer timer("GetDependencies");
 		Graph dependencies;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -322,7 +326,9 @@ namespace LL2W::Passes {
 	}
 
 	void cutPhi(Function &function) {
+		Timer timer("CutPhi");
 		Graph dependencies = getDependencies(function);
+		Timer timer2("CutPhi after getDependencies");
 		bool should_relinearize = false;
 		auto &insertions = function.categories["CutPhi:Insertions"];
 		bool any_done = true;

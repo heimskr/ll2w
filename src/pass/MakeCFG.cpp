@@ -6,9 +6,11 @@
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
 #include "util/Util.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {
+		Timer timer("MakeCFG");
 		function.cfg.clear();
 		function.cfg.name = "CFG for " + *function.name;
 		function.bbNodeMap.clear();
@@ -80,6 +82,7 @@ namespace LL2W::Passes {
 	}
 
 	void walkCFG(Function &function, size_t walks, unsigned int seed, size_t inner_limit) {
+		Timer timer("WalkCFG");
 		srand(seed == 0? time(NULL) : seed);
 		for (size_t walk = 0; walk < walks; ++walk) {
 			Node *node = &function.cfg[0];

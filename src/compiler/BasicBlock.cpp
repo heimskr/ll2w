@@ -3,6 +3,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Variable.h"
+#include "util/Timer.h"
 
 namespace LL2W {
 	BasicBlock::BasicBlock(const std::string *label_, const std::vector<const std::string *> &preds_,
@@ -27,6 +28,8 @@ namespace LL2W {
 	}
 
 	std::pair<char, char> BasicBlock::extract(bool force) {
+		Timer timer("BasicBlock::extract");
+
 		if (extracted && !force)
 			return {read.size(), written.size()};
 

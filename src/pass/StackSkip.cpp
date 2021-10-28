@@ -2,9 +2,11 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/InsertLabels.h"
+#include "util/Timer.h"
 
 namespace LL2W::Passes {
 	void insertStackSkip(Function &function) {
+		Timer timer("InsertStackSkip");
 		if (function.isNaked())
 			return;
 		BasicBlockPtr entry = function.getEntry();
@@ -16,6 +18,7 @@ namespace LL2W::Passes {
 	}
 
 	void readjustStackSkip(Function &function) {
+		Timer timer("ReadjustStackSkip");
 		if (function.isNaked())
 			return;
 		if (function.categories.count("StackSkip") == 0)

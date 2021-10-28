@@ -85,6 +85,7 @@
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
 #include "util/strnatcmp.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 #include "Interactive.h"
 
@@ -173,7 +174,7 @@ namespace LL2W {
 	}
 
 	void Function::extractVariables(bool reset) {
-		if (reset) {
+		if (reset)
 			for (auto &map: {variableStore, extraVariables})
 				for (const auto &[id, var]: map) {
 					var->setUsingBlocks({});
@@ -182,7 +183,6 @@ namespace LL2W {
 					var->setUses({});
 					var->setLastUse({});
 				}
-		}
 
 		for (BasicBlockPtr &block: blocks) {
 			for (VariablePtr read_var: block->read)
@@ -785,6 +785,7 @@ namespace LL2W {
 	}
 
 	void Function::initialCompile() {
+		Timer timer("InitialCompile");
 		extractBlocks();
 		makeInitialDebugIndex();
 		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
@@ -799,7 +800,6 @@ namespace LL2W {
 		Passes::copyArguments(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-
 		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
@@ -825,7 +825,6 @@ namespace LL2W {
 		Passes::transformInstructions(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		extractVariables();
 #ifdef MOVE_PHI
 		Passes::movePhi(*this);
 #else
@@ -833,6 +832,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
+		extractVariables(true);
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -844,6 +844,7 @@ namespace LL2W {
 	}
 
 	void Function::finalCompile() {
+		Timer timer("FinalCompile");
 		Passes::readjustStackSkip(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
@@ -880,19 +881,21 @@ namespace LL2W {
 		debug();
 #endif
 
-
+		{
+			Timer timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
-		try {
+			try {
 #endif
-			while (allocator->attempt() != Allocator::Result::Success);
+				while (allocator->attempt() != Allocator::Result::Success);
 #ifdef FN_CATCH_EXCEPTIONS
-		} catch (std::exception &err) {
-			error() << err.what() << "\n";
-			if (parent)
-				LL2W::interactive(*parent, this);
-			throw;
+			} catch (std::exception &err) {
+				error() << err.what() << "\n";
+				if (parent)
+					LL2W::interactive(*parent, this);
+				throw;
+			}
+#endif
 		}
-#endif
 
 		finalCompile();
 

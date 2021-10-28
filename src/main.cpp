@@ -10,6 +10,7 @@
 #include "graph/DJGraph.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 #include "Interactive.h"
 #include "main.h"
@@ -31,15 +32,18 @@ int main(int argc, char **argv) {
 	if (argc < 2)
 		usage();
 	if (argc == 3) {
+		LL2W::Timer timer("Compile");
 		if (strcmp(argv[1], "-d") == 0)
 			compile(argv[2], true);
 		else
 			compile(argv[1], false);
 	} else if (argc == 2) {
+		LL2W::Timer timer("Compile");
 		compile(argv[1], false);
-	} else {
+	} else
 		usage();
-	}
+
+	LL2W::Timer::summary();
 }
 
 bool hasArg(const char *arg) {
