@@ -153,7 +153,7 @@ namespace LL2W::Passes {
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
-			std::cerr << "INSTRUCTION: " << instruction->debugExtra() << '\n';
+			std::cerr << "INSTRUCTION: " << instruction->debugExtra() << " in block " << *instruction->parent.lock()->label << '\n';
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
 				BasicBlockPtr block = function.bbMap.at(block_label);
@@ -193,64 +193,72 @@ namespace LL2W::Passes {
 				if (1 < out_blocks.size()) {
 					// If there are multiple blocks, inserting a move before the end might be incorrect, or something?
 					// We need to insert a block in between.
-					const std::string *new_label = function.newLabel();
-					const std::string *percent_label = StringSet::intern("%" + *new_label);
+
+					BasicBlockPtr middle_block;
+					bool middle_made = false;
+
 					auto phi_block = llvm_instruction->parent.lock();
 					const std::string *phi_block_label = phi_block->label;
-					BasicBlockPtr new_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
-						std::list {new_instruction});
-					auto iter = std::find(function.blocks.begin(), function.blocks.end(), block);
-					if (iter == function.blocks.end())
-						throw std::runtime_error("Can't find block in MovePhi");
-					function.blocks.insert(++iter, new_block);
-					function.bbMap.try_emplace(new_label, new_block);
-					function.bbLabels.insert(new_label);
-					BrUncondNode *uncond = new BrUncondNode(phi_block_label);
-					auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
-					new_instruction->parent = new_llvm->parent = new_block;
-					block_made = true;
+					if (function.movePhiBlocks.count({block->label, phi_block_label}) != 0) {
+						middle_block = function.movePhiBlocks.at({block->label, phi_block_label});
+					} else {
+						middle_made = true;
+						const std::string *new_label = function.newLabel();
+						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
+							std::list {new_instruction});
+						auto iter = std::find(function.blocks.begin(), function.blocks.end(), block);
+						if (iter == function.blocks.end())
+							throw std::runtime_error("Can't find block in MovePhi");
+						function.blocks.insert(++iter, middle_block);
+						function.bbMap.try_emplace(new_label, middle_block);
+						function.bbLabels.insert(new_label);
+						BrUncondNode *uncond = new BrUncondNode(phi_block_label);
+						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
+						new_instruction->parent = new_llvm->parent = middle_block;
+						block_made = true;
 
-					std::cerr << "Creating block " << *new_label << " with phi block " << *phi_block_label << '\n';
-					auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
-					std::cerr << "Searching for " << *block->label << " in " << *phi_block_label << "\n";
-					std::cerr << "Preds:";
-					for (const auto *l: phi_block->preds)
-						std::cerr << ' ' << *l;
-					std::cerr << '\n';
-					if (preds_iter == phi_block->preds.end()) {
-						function.cfg.renderTo("cfg_error.png");
-						throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " +
-							*phi_block->label);
+						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
+						if (preds_iter == phi_block->preds.end()) {
+							function.cfg.renderTo("cfg_error.png");
+							throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " +
+								*phi_block->label);
+						}
+						*preds_iter = new_label;
+						middle_block->instructions.push_back(new_llvm);
+						function.movePhiBlocks.emplace(std::make_pair(block->label, phi_block_label), middle_block);
 					}
-					// std::cerr << "Replacing " << **preds_iter << " with " << *new_label << " in " << *phi_block_label << "\n";
-					*preds_iter = new_label;
 
-					new_block->instructions.push_back(new_instruction);
-					new_block->instructions.push_back(new_llvm);
+					middle_block->insertBeforeTerminal(new_instruction);
 
-					if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
-						auto type = parent_llvm->node->nodeType();
-						if (type == NodeType::BrCond) {
-							auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->node);
-							if (cond->ifTrue->substr(1) == *phi_block_label)
-								cond->ifTrue = percent_label;
-							else if (cond->ifFalse->substr(1) == *phi_block_label)
-								cond->ifFalse = percent_label;
-							else
-								error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
-								        << parent_llvm->debugExtra() << '\n';
-						} else if (type == NodeType::Switch) {
-							auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
-							if (switch_node->label->substr(1) == *phi_block_label)
-								switch_node->label = percent_label;
-							else
-								for (auto &[type, value, switch_label]: switch_node->table)
-									if (switch_label->substr(1) == *phi_block_label)
-										switch_label = percent_label;
+					if (middle_made) {
+						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
+						if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
+							auto type = parent_llvm->node->nodeType();
+							if (type == NodeType::BrCond) {
+								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->node);
+								const std::string **cond_label = (cond->ifTrue->substr(1) == *phi_block_label)?
+									&cond->ifTrue :
+									((cond->ifFalse->substr(1) == *phi_block_label)? &cond->ifFalse : nullptr);
+								if (!cond_label)
+									error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
+											<< parent_llvm->debugExtra() << '\n';
+								else
+									*cond_label = percent_label;
+							} else if (type == NodeType::Switch) {
+								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
+								if (switch_node->label->substr(1) == *phi_block_label)
+									switch_node->label = percent_label;
+								else
+									for (auto &[type, value, switch_label]: switch_node->table)
+										if (switch_label->substr(1) == *phi_block_label)
+											switch_label = percent_label;
+							} else
+								error() << "Final instruction of block " << *block->label
+								        << " isn't a BrCond or Switch.\n";
 						} else
-							error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
-					} else
-						error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+							error() << "Final instruction of block " << *block->label
+							        << " isn't a BrCond or Switch.\n";
+					}
 				} else {
 					function.insertBefore(block->instructions.back(), new_instruction, comment);
 					target->addDefiner(block);
