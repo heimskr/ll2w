@@ -153,7 +153,6 @@ namespace LL2W::Passes {
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
-			std::cerr << "INSTRUCTION: " << instruction->debugExtra() << " in block " << *instruction->parent.lock()->label << '\n';
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
 				BasicBlockPtr block = function.bbMap.at(block_label);

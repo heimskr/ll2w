@@ -789,7 +789,6 @@ namespace LL2W {
 		Passes::lowerGetelementptr(*this);
 		Passes::lowerFreeze(*this);
 		Passes::lowerSelect(*this);
-		Passes::lowerSwitch(*this);
 		initialStackSize = stackSize;
 		extractVariables();
 		Passes::lowerStackrestore(*this);
@@ -811,6 +810,7 @@ namespace LL2W {
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
 #endif
+		Passes::lowerSwitch(*this);
 		computeLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
