@@ -2,7 +2,9 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <optional>
+#include <string>
 
 #include "allocator/Allocator.h"
 #include "compiler/BasicBlock.h"
@@ -35,9 +37,6 @@ namespace LL2W {
 		private:
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
-
-			/** A set of the labels of all the function's basic blocks. */
-			std::unordered_set<const std::string *> bbLabels;
 
 			/** Contains the AST node this object was constructed from. */
 			const ASTNode *astnode;
@@ -96,11 +95,18 @@ namespace LL2W {
 			/** Maps basic blocks to their corresponding CFG nodes. */
 			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
 
+			/** A set of the labels of all the function's basic blocks. */
+			std::unordered_set<const std::string *> bbLabels;
+
+			/** MovePhi can insert blocks between a pair of blocks. This maps those pairs to the created blocks so that
+			 *  extra blocks won't be created. */
+			std::map<std::pair<const std::string *, const std::string *>, BasicBlockPtr> movePhiBlocks;
+
 			/** Used by passes to indicate which instructions they produced so that later passes can pick up where they
 			 *  left off after other things have occurred. For example, SetupCalls uses this to record the moves from
 			 *  result registers into variables in case the variable is larger than one physical register and the move
 			 *  needs to be split up after register allocation. */
-			std::unordered_map<std::string, std::list<std::shared_ptr<Instruction>>> categories;
+			std::unordered_map<std::string, std::unordered_set<std::shared_ptr<Instruction>>> categories;
 
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
@@ -142,6 +148,9 @@ namespace LL2W {
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();
+
+			/** Attempts to find a basic block with a given label. The label is allowed to start with a percent sign. */
+			BasicBlockPtr getBlock(const std::string *label, bool can_throw = true) const;
 
 			/** Copies use/definition information from the BasicBlocks into the Variables. */
 			void extractVariables(bool reset = false);

@@ -1,4 +1,5 @@
 #include "compiler/BasicBlock.h"
+#include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Variable.h"
@@ -14,10 +15,8 @@ namespace LL2W {
 			read.insert(read_var);
 		for (auto written_var: instruction->written)
 			written.insert(written_var);
-		if (instruction->isPhi()) {
-			phiNode = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+		if (instruction->isPhi())
 			return;
-		}
 		for (auto read_var: instruction->read)
 			nonPhiRead.insert(read_var);
 		for (auto written_var: instruction->written)
@@ -58,6 +57,31 @@ namespace LL2W {
 				for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs)
 					if (pair.first->valueType() == ValueType::Local)
 						phiUses.insert(dynamic_cast<LocalValue *>(pair.first.get())->variable);
+	}
+
+	std::vector<std::shared_ptr<BasicBlock>> BasicBlock::goesTo() const {
+		if (instructions.empty())
+			return {};
+		const auto back = instructions.back();
+		if (auto *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
+			const NodeType type = llvm->node->nodeType();
+			if (type == NodeType::BrUncond) {
+				return {parent->getBlock(dynamic_cast<BrUncondNode *>(llvm->node)->destination)};
+			} else if (type == NodeType::BrCond) {
+				const auto *cond = dynamic_cast<BrCondNode *>(llvm->node);
+				return {parent->getBlock(cond->ifTrue), parent->getBlock(cond->ifFalse)};
+			} else if (type == NodeType::Ret) {
+				return {};
+			} else if (type == NodeType::Switch) {
+				std::vector<std::shared_ptr<BasicBlock>> out;
+				for (const auto &[type, value, switch_label]: dynamic_cast<SwitchNode *>(llvm->node)->table)
+					out.push_back(parent->getBlock(switch_label));
+				return out;
+			} else
+				throw std::runtime_error("Unrecognized terminal instruction in BasicBlock::goesTo: " +
+					back->debugExtra());
+		} else
+			throw std::runtime_error("Unrecognized terminal instruction in BasicBlock::goesTo: " + back->debugExtra());
 	}
 
 	bool BasicBlock::inPhiDefs(std::shared_ptr<Variable> var) const {

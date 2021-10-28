@@ -7,10 +7,11 @@
 #include "graph/Graph.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "pass/MakeCFG.h"
 #include "pass/Phi.h"
 
 #define REMOVE_OLD_TEMPORARIES
-#define WEB_MAX 16
+#define WEB_MAX 4
 
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
@@ -137,7 +138,8 @@ namespace LL2W::Passes {
 
 	void movePhi(Function &function) {
 		std::list<InstructionPtr> to_remove;
-		bool should_relinearize = false;
+
+		bool block_made = false;
 
 		// Scan through each instruction in order.
 		for (InstructionPtr &instruction: function.linearInstructions) {
@@ -151,53 +153,123 @@ namespace LL2W::Passes {
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
+			std::cerr << "INSTRUCTION: " << instruction->debugExtra() << '\n';
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
 				BasicBlockPtr block = function.bbMap.at(block_label);
+				InstructionPtr new_instruction;
+
+				std::string comment;
+
 				if (local) {
-					auto move = std::make_shared<MoveInstruction>(local->variable, target);
-					const std::string comment = "MovePhi: " + local->variable->plainString() + " -> " +
-						target->plainString();
-					if (block->instructions.empty()) {
-						block->insertBeforeTerminal(move);
-						function.comment(move, comment); // TODO: does this work before relinearization?
-						should_relinearize = true;
-					} else
-						function.insertBefore(block->instructions.back(), move, comment);
-					move->setDebug(phi_node)->extract();
-					target->addDefinition(move);
-					target->addDefiner(block);
+					comment = "MovePhi: " + local->variable->plainString() + " -> " + target->plainString();
+					new_instruction = std::make_shared<MoveInstruction>(local->variable, target);
 				} else if (value->valueType() == ValueType::Undef) {
 					// Do nothing for undef values. This allows us to insert moves in cutPhi.
+					continue;
 				} else if (value->isIntLike() || value->isGlobal()) {
-					InstructionPtr new_instr;
-					if (value->isIntLike())
-						new_instr = std::make_shared<SetInstruction>(target, value->intValue(false));
-					else
-						new_instr = std::make_shared<SetInstruction>(target,
+					if (value->isIntLike()) {
+						comment = "MovePhi: intlike -> " + target->plainString();
+						new_instruction = std::make_shared<SetInstruction>(target, value->intValue(false));
+					} else {
+						comment = "MovePhi: global -> " + target->plainString();
+						new_instruction = std::make_shared<SetInstruction>(target,
 							dynamic_cast<GlobalValue *>(value.get())->name);
-					new_instr->parent = block;
-					if (block->instructions.empty()) {
-						block->insertBeforeTerminal(new_instr);
-						should_relinearize = true;
-					} else
-						function.insertBefore(block->instructions.back(), new_instr);
-					new_instr->setDebug(phi_node)->extract();
-					target->addDefinition(new_instr);
-					target->addDefiner(block);
-				} else
+					}
+				} else {
 					std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
 					          << phi_node->debugExtra() << '\n';
+					continue;
+				}
+
+				new_instruction->parent = block;
+
+				if (block->instructions.empty()) {
+					error() << "Block " << *block->label << " is empty.\n";
+					continue;
+				}
+
+				auto out_blocks = block->goesTo();
+				if (1 < out_blocks.size()) {
+					// If there are multiple blocks, inserting a move before the end might be incorrect, or something?
+					// We need to insert a block in between.
+					const std::string *new_label = function.newLabel();
+					const std::string *percent_label = StringSet::intern("%" + *new_label);
+					auto phi_block = llvm_instruction->parent.lock();
+					const std::string *phi_block_label = phi_block->label;
+					BasicBlockPtr new_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
+						std::list {new_instruction});
+					auto iter = std::find(function.blocks.begin(), function.blocks.end(), block);
+					if (iter == function.blocks.end())
+						throw std::runtime_error("Can't find block in MovePhi");
+					function.blocks.insert(++iter, new_block);
+					function.bbMap.try_emplace(new_label, new_block);
+					function.bbLabels.insert(new_label);
+					BrUncondNode *uncond = new BrUncondNode(phi_block_label);
+					auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
+					new_instruction->parent = new_llvm->parent = new_block;
+					block_made = true;
+
+					std::cerr << "Creating block " << *new_label << " with phi block " << *phi_block_label << '\n';
+					auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
+					std::cerr << "Searching for " << *block->label << " in " << *phi_block_label << "\n";
+					std::cerr << "Preds:";
+					for (const auto *l: phi_block->preds)
+						std::cerr << ' ' << *l;
+					std::cerr << '\n';
+					if (preds_iter == phi_block->preds.end()) {
+						function.cfg.renderTo("cfg_error.png");
+						throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " +
+							*phi_block->label);
+					}
+					// std::cerr << "Replacing " << **preds_iter << " with " << *new_label << " in " << *phi_block_label << "\n";
+					*preds_iter = new_label;
+
+					new_block->instructions.push_back(new_instruction);
+					new_block->instructions.push_back(new_llvm);
+
+					if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
+						auto type = parent_llvm->node->nodeType();
+						if (type == NodeType::BrCond) {
+							auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->node);
+							if (cond->ifTrue->substr(1) == *phi_block_label)
+								cond->ifTrue = percent_label;
+							else if (cond->ifFalse->substr(1) == *phi_block_label)
+								cond->ifFalse = percent_label;
+							else
+								error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
+								        << parent_llvm->debugExtra() << '\n';
+						} else if (type == NodeType::Switch) {
+							auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
+							if (switch_node->label->substr(1) == *phi_block_label)
+								switch_node->label = percent_label;
+							else
+								for (auto &[type, value, switch_label]: switch_node->table)
+									if (switch_label->substr(1) == *phi_block_label)
+										switch_label = percent_label;
+						} else
+							error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+					} else
+						error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+				} else {
+					function.insertBefore(block->instructions.back(), new_instruction, comment);
+					target->addDefiner(block);
+				}
+
+				new_instruction->setDebug(phi_node)->extract();
+				target->addDefinition(new_instruction);
 			}
 
 			to_remove.push_back(instruction);
 		}
 
+		if (block_made) {
+			function.relinearize();
+			Passes::makeCFG(function);
+		}
+
 		for (InstructionPtr &ptr: to_remove)
 			function.remove(ptr);
-
-		if (should_relinearize)
-			function.relinearize();
 	}
 
 	static Graph getDependencies(Function &function) {
@@ -236,83 +308,96 @@ namespace LL2W::Passes {
 
 	void cutPhi(Function &function) {
 		Graph dependencies = getDependencies(function);
-		std::list<Graph> components = dependencies.components();
 		bool should_relinearize = false;
-		for (Graph &graph: components) {
-			if (graph.size() <= WEB_MAX)
-				continue;
-			const auto bridges = graph.bridges();
-			if (bridges.size() == 0) {
-				warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph "
-					"components.\n";
-				continue;
-			}
-			ssize_t min_diff = SSIZE_MAX;
-			bool min_swap = false;
-			const std::pair<Graph::Label, Graph::Label> *min_pair = nullptr;
-			for (const auto &pair: bridges) {
-				const bool swap = graph[pair.first].out().count(&graph[pair.second]) == 0;
-				if (swap)
-					graph.unlink(pair.second, pair.first);
-				else
-					graph.unlink(pair.first, pair.second);
-				const ssize_t diff =
-					std::abs((long) graph.size() - 2l * (long) graph.undirectedSearch(*graph.begin()->second).size());
-				if (swap)
-					graph.link(pair.second, pair.first);
-				else
-					graph.link(pair.first, pair.second);
-				if (diff < min_diff) {
-					min_diff = diff;
-					min_pair = &pair;
-					min_swap = swap;
+		auto &insertions = function.categories["CutPhi:Insertions"];
+		bool any_done = true;
+		while (any_done) {
+			any_done = false;
+			std::list<Graph> components = dependencies.components();
+			for (Graph &graph: components) {
+				if (graph.size() <= WEB_MAX)
+					continue;
+				const auto bridges = graph.bridges();
+				if (bridges.size() == 0) {
+					warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph "
+						"components.\n";
+					continue;
 				}
-			}
-			if (!min_pair)
-				throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
-					std::to_string(SSIZE_MAX) + " nodes?");
-			auto source      = function.getVariable(StringSet::intern(min_swap? min_pair->second : min_pair->first));
-			auto destination = function.getVariable(StringSet::intern(min_swap? min_pair->first : min_pair->second));
-			// Can't add definitions while iterating over definitions.
-			std::list<InstructionPtr> definitions_to_add;
-			std::list<BasicBlockPtr> definers_to_add;
-			for (const auto &definition: destination->definitions) {
-				auto *llvm = dynamic_cast<LLVMInstruction *>(definition.lock().get());
-				if (!llvm || !llvm->isPhi())
-					throw std::runtime_error("Definition of " + std::string(*destination) + " isn't a ϕ-instruction: " +
-						definition.lock()->debugExtra());
-				auto *phi = dynamic_cast<PhiNode *>(llvm->node);
-				bool did_reset = false;
-				const std::string initial_debug_extra = phi->debugExtra();
-				for (auto &[value, block_label]: phi->pairs)
-					if (value->isLocal()) {
-						auto *local = dynamic_cast<LocalValue *>(value.get());
-						if (local->variable && *local->variable == *source) {
-							if (did_reset)
-								throw std::runtime_error("ϕ-instruction depends on variable " + std::string(*source) +
-									" from multiple blocks: " + initial_debug_extra);
-							did_reset = true;
-							auto block = function.bbMap.at(block_label);
-							auto move = std::make_shared<MoveInstruction>(source, destination);
-							const std::string comment = "CutPhi: " + source->plainString() + " -> " +
-								destination->plainString();
-							if (block->instructions.empty()) {
-								block->insertBeforeTerminal(move);
-								function.comment(move, comment); // TODO: does this work before relinearization?
-								should_relinearize = true;
-							} else
-								function.insertBefore(block->instructions.back(), move, comment);
-							move->setDebug(phi)->extract();
-							definitions_to_add.push_back(move);
-							definers_to_add.push_back(block);
-							value.reset(new UndefValue);
-						}
+				ssize_t min_diff = SSIZE_MAX;
+				bool min_swap = false;
+				const std::pair<Graph::Label, Graph::Label> *min_pair = nullptr;
+				for (const auto &pair: bridges) {
+					const bool swap = graph[pair.first].out().count(&graph[pair.second]) == 0;
+					if (swap)
+						graph.unlink(pair.second, pair.first);
+					else
+						graph.unlink(pair.first, pair.second);
+					const ssize_t diff =
+						std::abs((long) graph.size() - 2l * (long) graph.undirectedSearch(*graph.begin()->second).size());
+					if (swap)
+						graph.link(pair.second, pair.first);
+					else
+						graph.link(pair.first, pair.second);
+					if (diff < min_diff) {
+						min_diff = diff;
+						min_pair = &pair;
+						min_swap = swap;
 					}
+				}
+				if (!min_pair)
+					throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
+						std::to_string(SSIZE_MAX) + " nodes?");
+				auto source      = function.getVariable(StringSet::intern(min_swap? min_pair->second : min_pair->first));
+				auto destination = function.getVariable(StringSet::intern(min_swap? min_pair->first : min_pair->second));
+				// Can't add definitions while iterating over definitions.
+				std::list<InstructionPtr> definitions_to_add;
+				std::list<BasicBlockPtr> definers_to_add;
+				for (const auto &definition: destination->definitions) {
+					auto *llvm = dynamic_cast<LLVMInstruction *>(definition.lock().get());
+					if (!llvm || !llvm->isPhi()) {
+						if (insertions.count(definition.lock()) != 0) {
+							// Sometimes, if the web is still too large, we repeat and run into the non-ϕ definitions we
+							// inserted in a previous iteration. We need to ignore those.
+							continue;
+						} else
+							throw std::runtime_error("Definition of " + std::string(*destination) +
+								" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
+					}
+					auto *phi = dynamic_cast<PhiNode *>(llvm->node);
+					bool did_reset = false;
+					const std::string initial_debug_extra = phi->debugExtra();
+					for (auto &[value, block_label]: phi->pairs)
+						if (value->isLocal()) {
+							auto *local = dynamic_cast<LocalValue *>(value.get());
+							if (local->variable && *local->variable == *source) {
+								// if (did_reset)
+								// 	throw std::runtime_error("ϕ-instruction depends on variable " + std::string(*source) +
+								// 		" from multiple blocks: " + initial_debug_extra);
+								did_reset = true;
+								auto block = function.bbMap.at(block_label);
+								auto move = std::make_shared<MoveInstruction>(source, destination);
+								const std::string comment = "CutPhi: " + source->plainString() + " -> " +
+									destination->plainString();
+								if (block->instructions.empty()) {
+									block->insertBeforeTerminal(move);
+									function.comment(move, comment); // TODO: does this work before relinearization?
+									should_relinearize = true;
+								} else
+									function.insertBefore(block->instructions.back(), move, comment);
+								move->setDebug(phi)->extract();
+								definitions_to_add.push_back(move);
+								definers_to_add.push_back(block);
+								insertions.insert(move);
+								value.reset(new UndefValue);
+								any_done = true;
+							}
+						}
+				}
+				for (const auto &definition: definitions_to_add)
+					destination->addDefinition(definition);
+				for (const auto &definer: definers_to_add)
+					destination->addDefiner(definer);
 			}
-			for (const auto &definition: definitions_to_add)
-				destination->addDefinition(definition);
-			for (const auto &definer: definers_to_add)
-				destination->addDefiner(definer);
 		}
 
 		if (should_relinearize)

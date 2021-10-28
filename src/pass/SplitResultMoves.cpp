@@ -10,7 +10,7 @@ namespace LL2W::Passes {
 
 		std::list<InstructionPtr> to_remove;
 
-		for (InstructionPtr &instruction: function.categories["SetupCalls:MoveFromResult"]) { // $r0 -> %var
+		for (const InstructionPtr &instruction: function.categories["SetupCalls:MoveFromResult"]) { // $r0 -> %var
 			auto move = dynamic_cast<MoveInstruction *>(instruction.get());
 
 			size_t register_count = move->rd->registers.size();

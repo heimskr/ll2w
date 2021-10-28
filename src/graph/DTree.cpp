@@ -89,7 +89,7 @@ namespace LL2W {
 			}
 
 			if (!w) {
-				graph.renderTo("w_null_" + Util::hex(&graph) + ".png");
+				graph.renderTo("w_null.png");
 				throw std::runtime_error("w is null (1)");
 			}
 

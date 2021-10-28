@@ -67,7 +67,9 @@ namespace LL2W::Passes {
 		try {
 			function.dTree.emplace(function.cfg, function.cfg[0]);
 		} catch (std::exception &err) {
-			std::cerr << "Constructing DTree failed in function " << *function.name << ": " << err.what() << std::endl;
+			error() << "Constructing DTree failed in function " << *function.name << " for start node "
+			        << function.cfg[0].label() << ": " << err.what() << std::endl;
+			function.cfg.renderTo("cfg_error.png");
 			throw;
 		}
 		function.dTree->name = "DTree";

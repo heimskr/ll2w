@@ -1,5 +1,4 @@
-#ifndef COMPILER_BASICBLOCK_H_
-#define COMPILER_BASICBLOCK_H_
+#pragma once
 
 #include <list>
 #include <map>
@@ -38,9 +37,6 @@ namespace LL2W {
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
 			int estimatedExecutions = 0;
-			/** If this basic block originally had a ϕ-instruction, it'll be contained in this field, even if the
-			 *  ϕ-instruction is removed. */
-			std::shared_ptr<LLVMInstruction> phiNode;
 
 			BasicBlock(const std::string *, const std::vector<const std::string *> &,
 			           const std::list<std::shared_ptr<Instruction>> &);
@@ -54,6 +50,8 @@ namespace LL2W {
 
 			/** Fills phiUses. */
 			void extractPhi();
+
+			std::vector<std::shared_ptr<BasicBlock>> goesTo() const;
 
 			bool inPhiDefs(std::shared_ptr<Variable>) const;
 
@@ -75,5 +73,3 @@ namespace LL2W {
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;
 	std::ostream & operator<<(std::ostream &, const BasicBlock &);
 }
-
-#endif

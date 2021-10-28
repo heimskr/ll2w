@@ -107,7 +107,7 @@ namespace LL2W {
 		}
 #ifdef VARIABLE_EXTRA
 		auto sparent = parent.lock();
-		std::unordered_set<Variable *> alias_set = sparent? sparent->aliases : aliases;
+		auto alias_set = sparent? sparent->aliases : aliases;
 		if (!alias_set.empty()) {
 			out << "\e[2m[";
 			for (auto begin = alias_set.begin(), iter = begin, end = alias_set.end(); iter != end; ++iter) {

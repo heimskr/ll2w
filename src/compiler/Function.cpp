@@ -161,6 +161,17 @@ namespace LL2W {
 		}
 	}
 
+	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
+		if (label->front() == '%')
+			return getBlock(StringSet::intern(label->substr(1)));
+		if (bbMap.count(label) == 0) {
+			if (can_throw)
+				throw std::runtime_error("Couldn't find block " + *label + " in function " + *name);
+			return nullptr;
+		}
+		return bbMap.at(label);
+	}
+
 	void Function::extractVariables(bool reset) {
 		if (reset) {
 			for (auto &map: {variableStore, extraVariables})
@@ -189,7 +200,7 @@ namespace LL2W {
 		}
 
 		for (auto &map: {variableStore, extraVariables})
-			for (const auto &[id, var]: map) {
+			for (const auto &[id, var]: map)
 				if (var->definingBlocks.empty()) {
 					// Function arguments aren't defined by any instruction.
 					// They're implicitly defined in the first block.
@@ -202,18 +213,16 @@ namespace LL2W {
 						block->written.insert(var);
 					}
 				}
-			}
 	}
 
 	void Function::relinearize() {
 		linearInstructions.clear();
 		int index = -1;
-		for (BasicBlockPtr &block: blocks) {
+		for (BasicBlockPtr &block: blocks)
 			for (InstructionPtr &instruction: block->instructions) {
 				instruction->index = ++index;
 				linearInstructions.push_back(instruction);
 			}
-		}
 	}
 
 	Variable::ID Function::newLabel() const {
@@ -757,9 +766,8 @@ namespace LL2W {
 	void Function::initialCompile() {
 		extractBlocks();
 		makeInitialDebugIndex();
-		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
+		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
 			// Passes::tracePhi(*this);
-			Passes::cutPhi(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -800,6 +808,7 @@ namespace LL2W {
 #ifdef MOVE_PHI
 		Passes::movePhi(*this);
 #else
+		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
 #endif
 		computeLiveness();

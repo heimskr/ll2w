@@ -1,5 +1,4 @@
-#ifndef COMPILER_LLVMINSTRUCTION_H_
-#define COMPILER_LLVMINSTRUCTION_H_
+#pragma once
 
 #include "compiler/Instruction.h"
 
@@ -28,5 +27,3 @@ namespace LL2W {
 			bool isPhi() const override;
 	};
 }
-
-#endif

@@ -172,7 +172,7 @@ namespace LL2W::Passes {
 						block), function.getVariable(*call->result));
 				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)
 					->setDebug(*llvm)->extract();
-				function.categories["SetupCalls:MoveFromResult"].push_back(move);
+				function.categories["SetupCalls:MoveFromResult"].insert(move);
 			}
 
 			to_remove.push_back(instruction);
