@@ -697,8 +697,14 @@ namespace LL2W {
 		linearInstructions.insert(iter, branch);
 
 		// We need to update ϕ-instructions.
-		for (auto &instruction: linearInstructions) {
-			// ...
+		for (auto &possible_llvm: linearInstructions) {
+			auto *llvm = dynamic_cast<LLVMInstruction *>(possible_llvm.get());
+			if (!llvm || llvm->node->nodeType() != NodeType::Phi)
+				continue;
+			auto *phi = dynamic_cast<PhiNode *>(llvm->node);
+			for (auto &[value, phi_label]: phi->pairs)
+				if (phi_label == block->label)
+					phi_label = label;
 		}
 
 		block->extract(true);
