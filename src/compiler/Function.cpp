@@ -227,16 +227,7 @@ namespace LL2W {
 	}
 
 	Variable::ID Function::newLabel() const {
-		int label = 0;
-		if (!variableStore.empty()) {
-			auto iter = variableStore.end();
-			while (iter-- != variableStore.begin())
-				if (Util::isNumeric(iter->first)) {
-					label = Util::parseLong(iter->first) + 1;
-					break;
-				}
-		}
-
+		int label = getArity();
 		const std::string *interned;
 		for (;;) {
 			interned = StringSet::intern(std::to_string(label));

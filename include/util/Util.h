@@ -71,10 +71,9 @@ namespace LL2W::Util {
 	/** Returns whether two sets have any items in common. */
 	template <typename S>
 	bool hasOverlap(const S &first, const S &second) {
-		for (const auto &item: first) {
+		for (const auto &item: first)
 			if (second.count(item) != 0)
 				return true;
-		}
 		return false;
 	}
 
@@ -88,15 +87,14 @@ namespace LL2W::Util {
 	template <typename C>
 	std::vector<std::string> nsort(const C &container, const bool sensitive = true) {
 		std::vector<std::string> out(container.begin(), container.end());
-		if (sensitive) {
+		if (sensitive)
 			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
 				return strnatcmp(a.c_str(), b.c_str()) == -1;
 			});
-		} else {
+		else
 			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
 				return strnatcasecmp(a.c_str(), b.c_str()) == -1;
 			});
-		}
 
 		return out;
 	}
@@ -104,15 +102,14 @@ namespace LL2W::Util {
 	template <typename C, typename F, std::enable_if_t<!std::is_same<F, bool>::value, int> = 0>
 	auto nsort(const C &container, F get, const bool sensitive = true) {
 		std::vector<typename C::value_type> out(container.begin(), container.end());
-		if (sensitive) {
+		if (sensitive)
 			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
 				return strnatcmp(get(a).c_str(), get(b).c_str()) == -1;
 			});
-		} else {
+		else
 			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
 				return strnatcasecmp(get(a).c_str(), get(b).c_str()) == -1;
 			});
-		}
 
 		return out;
 	}
@@ -121,15 +118,14 @@ namespace LL2W::Util {
 	std::vector<typename M::value_type> mapnsort(const M &map, const bool sensitive = true) {
 		using pair_type = std::pair<std::string, typename M::mapped_type>;
 		std::vector<pair_type> vec(map.begin(), map.end());
-		if (sensitive) {
+		if (sensitive)
 			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
 				return strnatcmp(a.first.c_str(), b.first.c_str()) == -1;
 			});
-		} else {
+		else
 			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
 				return strnatcasecmp(a.first.c_str(), b.first.c_str()) == -1;
 			});
-		}
 
 		// I don't think there's any other way to cast A<B<C, D>> to A<B<const C, D>>.
 		return *reinterpret_cast<std::vector<typename M::value_type> *>(&vec);
@@ -191,4 +187,3 @@ namespace LL2W {
 		raise(SIGTRAP);
 	}
 }
-

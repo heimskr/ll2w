@@ -28,7 +28,8 @@ namespace LL2W::Passes {
 			else
 				source->type = destination->type = function.arguments->at(i).type;
 			auto move = std::make_shared<MoveInstruction>(source, destination);
-			function.insertBefore(first, move, "CopyArguments", false)->setDebug(debug_index)->extract();
+			function.insertBefore(first, move, "CopyArguments: " + source->plainString() + " -> " +
+				destination->plainString(), false)->setDebug(debug_index)->extract();
 		}
 
 		function.reindexInstructions();
