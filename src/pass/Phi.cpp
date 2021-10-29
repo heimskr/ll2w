@@ -145,15 +145,24 @@ namespace LL2W::Passes {
 
 		bool block_made = false;
 
+		auto &linear = function.linearInstructions;
+		auto iter = linear.begin();
 		// Scan through each instruction in order.
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (; iter != linear.end();) {
+			auto instruction = *iter;
+			// bool removed = false;
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || !llvm_instruction->isPhi())
+			if (!llvm_instruction || !llvm_instruction->isPhi()) {
+				++iter;
 				continue;
+			}
+
 			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
 			if (!phi_node)
 				throw std::runtime_error("phi_node is null in Function::movePhi");
+
+			std::cerr << instruction->debugExtra() << ' ' << *function.name << '\n';
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
@@ -192,7 +201,7 @@ namespace LL2W::Passes {
 					continue;
 				}
 
-				auto out_blocks = block->goesTo();
+				const auto out_blocks = block->goesTo();
 				if (1 < out_blocks.size()) {
 					// If there are multiple blocks, inserting a move before the end might be incorrect, or something?
 					// We need to insert a block in between.
@@ -204,21 +213,58 @@ namespace LL2W::Passes {
 					const std::string *phi_block_label = phi_block->label;
 					if (function.movePhiBlocks.count({block->label, phi_block_label}) != 0) {
 						middle_block = function.movePhiBlocks.at({block->label, phi_block_label});
+
+						// At this point, neither lowerSwitch nor lowerRet nor lowerBranches has been called, so we can
+						// safely insert instructions before the last instruction in the block. Or something?
+
+						bool should_relinearize = false;
+						function.insertBefore(middle_block->instructions.back(), new_instruction, true, false,
+							&should_relinearize);
+						if (should_relinearize) {
+							info() << "Relinearizing.\n";
+							function.relinearize();
+							// function.remove(instruction);
+							// removed = true;
+							std::cerr << "Readjusting iter.\n";
+							iter = std::find(linear.begin(), linear.end(), instruction);
+
+							if (iter == linear.end()) {
+								warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
+								       << *function.name << "'s linear instructions.\n";
+							}
+							// else ++iter;
+						} else {
+							info() << "Not relinearizing.\n";
+							// ++iter;
+						}
+
+						function.insertBefore(new_instruction, std::make_shared<Comment>(comment));
+
+						// function.insertBefore(middle_block->instructions.back(), new_instruction, comment);
+						// middle_block->insertBeforeTerminal(std::make_shared<Comment>(comment));
+						// middle_block->insertBeforeTerminal(new_instruction);
 					} else {
 						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
+						comment += " (in new block " + *new_label + ")";
 						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
-							std::list {new_instruction});
+							std::list<InstructionPtr> {});
 						middle_block->parent = &function;
-						auto iter = std::find(function.blocks.begin(), function.blocks.end(), block);
-						if (iter == function.blocks.end())
+						auto block_iter = std::find(function.blocks.begin(), function.blocks.end(), block);
+						if (block_iter == function.blocks.end())
 							throw std::runtime_error("Can't find block in MovePhi");
-						function.blocks.insert(++iter, middle_block);
+						function.blocks.insert(++block_iter, middle_block);
 						function.bbMap.try_emplace(new_label, middle_block);
 						function.bbLabels.insert(new_label);
+
 						BrUncondNode *uncond = new BrUncondNode(phi_block_label);
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
-						new_instruction->parent = new_llvm->parent = middle_block;
+						new_llvm->parent = middle_block;
+
+						auto comment_node = std::make_shared<Comment>(comment + "!!!");
+						comment_node->parent = new_instruction->parent = middle_block;
+						middle_block->instructions.push_back(comment_node);
+						middle_block->instructions.push_back(new_instruction);
 
 						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
 						if (preds_iter == phi_block->preds.end()) {
@@ -227,16 +273,35 @@ namespace LL2W::Passes {
 								*phi_block->label);
 						}
 						*preds_iter = new_label;
-						auto new_llvm_comment = std::make_shared<Comment>("MovePhi: new_llvm");
-						new_llvm_comment->parent = middle_block;
-						middle_block->instructions.push_back(new_llvm_comment);
 						middle_block->instructions.push_back(new_llvm);
 						function.movePhiBlocks.emplace(std::make_pair(block->label, phi_block_label), middle_block);
-						comment += " (in new block " + *new_label + ")";
+
+
+						// function.remove(instruction);
+						// removed = true;
+						// iter = std::find(linear.begin(), linear.end(), new_instruction);
+						// if (iter == linear.end()) {
+						// 	--iter;
+						// 	warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
+						// 			<< *function.name << "'s linear instructions.\n";
+						// }
+
+
+						// std::cerr << '@' << *middle_block->label << '\n';
+						// for (auto &block_instr: middle_block->instructions)
+						// 	std::cerr << "    " << block_instr->debugExtra() << '\n';
+						// std::cerr << "-----\n";
+
+						// function.relinearize();
+
+						// iter = std::find(linear.begin(), linear.end(),
+						// 	new_llvm);
+
+						// goto movephi_loop;
 					}
 
-					middle_block->insertBeforeTerminal(std::make_shared<Comment>(comment));
-					middle_block->insertBeforeTerminal(new_instruction);
+					// info() << "Middle made: " << (middle_made? "yes" : "no") << '\n';
+
 
 					if (middle_made) {
 						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
@@ -278,7 +343,10 @@ namespace LL2W::Passes {
 				target->addDefinition(new_instruction);
 			}
 
-			to_remove.push_back(instruction);
+			++iter;
+			std::cerr << "Remove " << instruction->debugExtra() << '\n';
+			function.remove(instruction);
+			// to_remove.push_back(instruction);
 		}
 
 		if (block_made) {

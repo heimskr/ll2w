@@ -286,12 +286,17 @@ namespace LL2W {
 			}
 
 			if (should_insert) {
+				// if (*definition->parent.lock()->label == "376" && ("Spill: stack store for " + variable->plainString() + " into " + std::to_string(location.offset)) == "Spill: stack store for %.1023 into 72")
+				// 	debug();
 				insertAfter(definition, store, false);
-				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString()));
+				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString() +
+					" into " + std::to_string(location.offset)));
 				VariablePtr new_var = mx(6, definition);
 				definition->replaceWritten(variable, new_var);
 				store->variable = new_var;
 				store->extract();
+				// if (*definition->parent.lock()->label == "376" && ("Spill: stack store for " + variable->plainString() + " into " + std::to_string(location.offset)) == "Spill: stack store for %.1023 into 72")
+				// 	debug();
 				out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";
@@ -520,7 +525,8 @@ namespace LL2W {
 		return new_instruction;
 	}
 
-	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex) {
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex,
+	                                      bool linear_warn, bool *should_relinearize_out) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
 			error() << base->debugExtra() << "\n";
@@ -533,15 +539,14 @@ namespace LL2W {
 		if (new_instruction->debugIndex == -1)
 			new_instruction->debugIndex = base->debugIndex;
 
-		if (reindex)
-			// There used to be a + 1 here, but I removed it because I believe it gets incremented in the loop right
-			// before the end of this function anyway.
-			new_instruction->index = base->index;
 		new_instruction->parent = base->parent;
 
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
-		if (linearIter == linearInstructions.end())
-			warn() << "Couldn't find instruction in linearInstructions: " << base->debugExtra() << '\n';
+		if (linear_warn && linearIter == linearInstructions.end()) {
+			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->debugExtra()
+			       << '\n';
+			throw std::runtime_error("youch");
+		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		if (blockIter == block->instructions.end()) {
 			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": " << base->debugExtra() << '\n';
@@ -553,11 +558,29 @@ namespace LL2W {
 				std::cerr << "    " << block_instruction->debugExtra() << '\n';
 			throw std::runtime_error("Instruction not found in block");
 		}
-		linearInstructions.insert(linearIter, new_instruction);
+
+		const bool can_insert_linear = linearIter != linearInstructions.end();
+		// std::cerr << "can_insert_linear[" << std::boolalpha << can_insert_linear << "]\n";
+		if (can_insert_linear) {
+			linearInstructions.insert(linearIter, new_instruction);
+			if (should_relinearize_out)
+				*should_relinearize_out = false;
+		} else {
+			std::cerr << "can't insert linear: " << base->debugExtra() << '\n';
+			if (should_relinearize_out)
+				*should_relinearize_out = true;
+			else
+				std::cerr << "!should_relinearize_out\n";
+		}
+
 		block->instructions.insert(blockIter, new_instruction);
-		if (reindex)
+
+		if (reindex && can_insert_linear) {
+			new_instruction->index = base->index;
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
 				++(*linearIter)->index;
+		}
+
 		return new_instruction;
 	}
 
@@ -878,6 +901,10 @@ namespace LL2W {
 		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
 		// 	debug();
 
+		std::stringstream ss;
+		debug(ss);
+		preAllocateDebug = ss.str();
+
 		{
 			Timer timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
@@ -1170,7 +1197,7 @@ namespace LL2W {
 		return out.str();
 	}
 
-	void Function::debug() {
+	void Function::debug(std::ostream &stream) {
 		debug(
 #ifdef DEBUG_BLOCKS
 			true,
@@ -1218,68 +1245,69 @@ namespace LL2W {
 			false,
 #endif
 #ifdef DEBUG_STACK
-			true
+			true,
 #else
-			false
+			false,
 #endif
+			stream
 		);
 	}
 
 	void Function::debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-	                     bool render, bool estimations, bool aliases, bool stack) {
+	                     bool render, bool estimations, bool aliases, bool stack, std::ostream &stream) {
 		if (doBlocks || linear || vars)
-			std::cerr << headerString() + " \e[94m{\e[39m\n";
+			stream << headerString() + " \e[94m{\e[39m\n";
 		if (doBlocks) {
 			for (const BasicBlockPtr &block: blocks) {
-				std::cerr << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
-						<< ": preds =";
+				stream << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
+				       << ": preds =";
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 					if (iter != begin)
-						std::cerr << ",";
-					std::cerr << " %" << **iter;
+						stream << ",";
+					stream << " %" << **iter;
 				}
 				if (blockLiveness) {
 					if (!block->liveIn.empty()) {
-						std::cerr << "; live-in =";
+						stream << "; live-in =";
 						const auto &liveIn = block->liveIn;
 						for (auto begin = liveIn.begin(), iter = begin, end = liveIn.end(); iter != end; ++iter) {
 							if (iter != begin)
-								std::cerr << ",";
-							std::cerr << " %" << (*iter)->id;
+								stream << ",";
+							stream << " %" << (*iter)->id;
 						}
 					}
 					if (!block->liveOut.empty()) {
-						std::cerr << "; live-out =";
+						stream << "; live-out =";
 						const auto &liveOut = block->liveOut;
 						for (auto begin = liveOut.begin(), iter = begin, end = liveOut.end(); iter != end; ++iter) {
 							if (iter != begin)
-								std::cerr << ",";
-							std::cerr << " %" << (*iter)->id;
+								stream << ",";
+							stream << " %" << (*iter)->id;
 						}
 					}
 				}
-				std::cerr << "\e[22;24m\n";
+				stream << "\e[22;24m\n";
 				if (readWritten)
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 						int read, written;
 						std::tie(read, written) = instruction->extract();
-						std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
-						          << "\e[0m\n";
+						stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
+						       << "\e[0m\n";
 					}
 				else
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions)
-						std::cerr << "    " << instruction->debugExtra() << "\n";
-				std::cerr << "\n";
+						stream << "    " << instruction->debugExtra() << "\n";
+				stream << "\n";
 			}
 		}
 		if (linear)
 			for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
-				std::cerr << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
+				stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
 			}
 		if (vars) {
-			std::cerr << "    \e[2m; Variables:\e[0m\n";
+			stream << "    \e[2m; Variables:\e[0m\n";
 
 			struct Compare {
 				bool operator()(const Variable::ID &left, const Variable::ID &right) const {
@@ -1293,59 +1321,59 @@ namespace LL2W {
 
 			for (auto &[id, var]: all_vars) {
 				if (extraVariables.count(id) != 0)
-					std::cerr << "\e[31m[e]\e[39m";
+					stream << "\e[31m[e]\e[39m";
 				else
-					std::cerr << "   ";
-				std::cerr << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs ("
-				          << var->definitions.size() << ") =";
+					stream << "   ";
+				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs ("
+				       << var->definitions.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks)
-					std::cerr << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
-				std::cerr << "  \e[0;2muses =";
+					stream << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
+				stream << "  \e[0;2muses =";
 				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks)
-					std::cerr << " \e[1;2m" << std::setw(2) << *use.lock()->label << "\e[0m";
+					stream << " \e[1;2m" << std::setw(2) << *use.lock()->label << "\e[0m";
 				const int spill_cost = var->spillCost();
-				std::cerr << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
-				          << "\e[0;2m";
+				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
+				       << "\e[0;2m";
 				if (var->definingBlocks.size() > 1)
-					std::cerr << " (multiple defs)";
-				std::cerr << "  pid = \e[1m" << *var->parentID() << "\e[22;2m";
-				std::cerr << "  aliases =\e[1m";
+					stream << " (multiple defs)";
+				stream << "  pid = \e[1m" << *var->parentID() << "\e[22;2m";
+				stream << "  aliases =\e[1m";
 				for (Variable *alias: var->getAliases())
-					std::cerr << " " << *alias->id;
-				std::cerr << "\e[0m\n";
+					stream << " " << *alias->id;
+				stream << "\e[0m\n";
 				if (varLiveness) {
-					std::cerr << "    \e[2m;      \e[32min  =\e[1m";
+					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveIn(var))
-							std::cerr << " %" << *block->label;
+							stream << " %" << *block->label;
 					}
-					std::cerr << "\e[0m\n";
-					std::cerr << "    \e[2m;      \e[31mout =\e[1m";
+					stream << "\e[0m\n";
+					stream << "    \e[2m;      \e[31mout =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveOut(var))
-							std::cerr << " %" << *block->label;
+							stream << " %" << *block->label;
 					}
-					std::cerr << "\e[0m\n";
+					stream << "\e[0m\n";
 				}
 			}
 		}
 		if (doBlocks || linear || vars)
-			std::cerr << "\e[94m}\e[39m\n\n";
+			stream << "\e[94m}\e[39m\n\n";
 		if (aliases) {
-			std::cerr << "<Aliases>\n";
+			stream << "<Aliases>\n";
 			for (auto &[id, var]: variableStore) {
-				std::cerr << *id << " = " << *var;
+				stream << *id << " = " << *var;
 				if (auto vparent = var->getParent().lock())
-					std::cerr << "(parent = " << *vparent << ")";
-				std::cerr << ":";
+					stream << "(parent = " << *vparent << ")";
+				stream << ":";
 				for (Variable *alias: var->getAliases())
-					std::cerr << " " << *alias;
-				std::cerr << "\n";
+					stream << " " << *alias;
+				stream << "\n";
 			}
-			std::cerr << "</Aliases>\n";
+			stream << "</Aliases>\n";
 		}
 		if (render) {
-			std::cerr << "Rendering.\n";
+			stream << "Rendering.\n";
 			if (estimations)
 				for (Node *node: cfg.nodes()) {
 					if (node->data.has_value()) {
@@ -1361,13 +1389,13 @@ namespace LL2W {
 				djGraph->renderTo("graph_DJ_" + *name + ".png");
 		}
 		if (stack)
-			debugStack();
+			debugStack(stream);
 	}
 
-	void Function::debugStack() const {
+	void Function::debugStack(std::ostream &stream) const {
 		for (const std::pair<const int, StackLocation> &pair: stack)
-			std::cerr << pair.first << "[" << pair.second.width << "]:" << *pair.second.variable << " ";
-		std::cerr << "\n";
+			stream << pair.first << '[' << pair.second.width << "]:" << *pair.second.variable << ' ';
+		stream << '\n';
 	}
 
 	bool Function::isNaked() const {

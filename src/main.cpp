@@ -31,17 +31,22 @@ int main(int argc, char **argv) {
 	auto usage = [] { std::cerr << "Usage: ll2w [-d] <input>\n"; exit(1); };
 	if (argc < 2)
 		usage();
-	if (argc == 3) {
-		LL2W::Timer timer("Compile");
-		if (strcmp(argv[1], "-d") == 0)
-			compile(argv[2], true);
-		else
+	try {
+		if (argc == 3) {
+			LL2W::Timer timer("Compile");
+			if (strcmp(argv[1], "-d") == 0)
+				compile(argv[2], true);
+			else
+				compile(argv[1], false);
+		} else if (argc == 2) {
+			LL2W::Timer timer("Compile");
 			compile(argv[1], false);
-	} else if (argc == 2) {
-		LL2W::Timer timer("Compile");
-		compile(argv[1], false);
-	} else
-		usage();
+		} else
+			usage();
+	} catch (...) {
+		LL2W::Timer::summary();
+		throw;
+	}
 
 	LL2W::Timer::summary();
 }

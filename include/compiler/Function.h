@@ -34,6 +34,9 @@ namespace LL2W {
 	 * Why.js bytecode.
 	 */
 	class Function {
+		public:
+			std::string preAllocateDebug;
+
 		private:
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
@@ -191,7 +194,8 @@ namespace LL2W {
 
 			/** Inserts one instruction before another. Returns the inserted instruction. */
 			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
-				std::shared_ptr<Instruction> new_instruction, bool reindex = true);
+				std::shared_ptr<Instruction> new_instruction, bool reindex = true, bool linear_warn = true,
+				bool *should_relinearize_out = nullptr);
 
 			/** Inserts one instruction before another and adds a comment before the inserted instruction.
 			 *  Returns the inserted instruction. */
@@ -322,14 +326,14 @@ namespace LL2W {
 			std::string headerString() const;
 
 			/** Prints debug information about the function. */
-			void debug();
+			void debug(std::ostream & = std::cerr);
 
 			/** Prints debug information about the function. */
 			void debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-			           bool render, bool estimations, bool aliases, bool stack);
+			           bool render, bool estimations, bool aliases, bool stack, std::ostream & = std::cerr);
 
 			/** Prints debug information about the allocated stack locations. */
-			void debugStack() const;
+			void debugStack(std::ostream & = std::cerr) const;
 
 			bool isNaked() const;
 

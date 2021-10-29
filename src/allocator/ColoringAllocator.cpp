@@ -198,7 +198,7 @@ namespace LL2W {
 
 		if (!ptr) {
 			function->debug();
-			std::cerr << "Function: " << *function->name << "\n";
+			std::cerr << "Function: " << *function->name << '\n' << function->preAllocateDebug;
 			throw std::runtime_error("Couldn't select variable with highest liveness");
 		}
 
