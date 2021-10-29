@@ -217,6 +217,7 @@ namespace LL2W {
 	}
 
 	void Function::relinearize() {
+		Timer timer("Relinearize");
 		linearInstructions.clear();
 		int index = -1;
 		for (BasicBlockPtr &block: blocks)
@@ -566,7 +567,7 @@ namespace LL2W {
 			if (should_relinearize_out)
 				*should_relinearize_out = false;
 		} else {
-			std::cerr << "can't insert linear: " << base->debugExtra() << '\n';
+			// std::cerr << "can't insert linear: " << base->debugExtra() << '\n';
 			if (should_relinearize_out)
 				*should_relinearize_out = true;
 			else
@@ -695,6 +696,11 @@ namespace LL2W {
 		++iter;
 		linearInstructions.insert(iter, branch);
 
+		// We need to update ϕ-instructions.
+		for (auto &instruction: linearInstructions) {
+			// ...
+		}
+
 		block->extract(true);
 		new_block->extract();
 
@@ -806,7 +812,8 @@ namespace LL2W {
 		extractBlocks();
 		makeInitialDebugIndex();
 		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-			// Passes::tracePhi(*this);
+		// if (*name == "@memcpy")
+		// 	Passes::tracePhi(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -843,7 +850,15 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 #ifdef MOVE_PHI
+		// Passes::cutPhi(*this);
+		if (*name == "@memcpy")
+			std::cerr << "<MovePhi>\n";
+		// 	Passes::tracePhi(*this);
 		Passes::movePhi(*this);
+		if (*name == "@memcpy") {
+			std::cerr << "</MovePhi>\n";
+			debug();
+		}
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);

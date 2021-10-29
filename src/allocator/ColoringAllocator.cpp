@@ -83,6 +83,8 @@ namespace LL2W {
 #endif
 				lastSpill = to_spill;
 				++spillCount;
+				if (*function->name == "@memcpy")
+					std::cerr << "Splitting during spill.\n";
 				int split = Passes::splitBlocks(*function);
 				if (0 < split) {
 #ifdef DEBUG_COLORING

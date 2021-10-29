@@ -30,7 +30,9 @@ namespace LL2W::Passes {
 							regular_written_count += variable->nonSpecialCount();
 
 					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
-						function.splitBlock(block, prev_instruction)->extract();
+						auto new_block = function.splitBlock(block, prev_instruction);
+						std::cerr << "SplitBlocks: " << *block->label << " -> " << *new_block->label << '\n';
+						new_block->extract();
 						function.reindexBlocks();
 						block->extract();
 						any_changed = true;

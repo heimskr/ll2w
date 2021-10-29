@@ -15,6 +15,9 @@
 #define REMOVE_OLD_TEMPORARIES
 #define WEB_MAX 4
 
+#define PD if (phidebug)
+static bool phidebug = false;
+
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
 		Timer timer("CoalescePhi");
@@ -75,7 +78,7 @@ namespace LL2W::Passes {
 							target->addDefiner(block);
 							new_instr->extract();
 						} else
-							std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
+							PD std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
 							          << phi_node->debugExtra() << '\n';
 #ifdef REMOVE_OLD_TEMPORARIES
 					} else {
@@ -162,7 +165,9 @@ namespace LL2W::Passes {
 			if (!phi_node)
 				throw std::runtime_error("phi_node is null in Function::movePhi");
 
-			std::cerr << instruction->debugExtra() << ' ' << *function.name << '\n';
+			PD std::cerr << instruction->debugExtra() << ' ' << *function.name << '\n';
+
+			const std::string instruction_extra = instruction->debugExtra();
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
@@ -189,7 +194,7 @@ namespace LL2W::Passes {
 							dynamic_cast<GlobalValue *>(value.get())->name);
 					}
 				} else {
-					std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
+					PD std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
 					          << phi_node->debugExtra() << '\n';
 					continue;
 				}
@@ -197,7 +202,7 @@ namespace LL2W::Passes {
 				new_instruction->parent = block;
 
 				if (block->instructions.empty()) {
-					error() << "Block " << *block->label << " is empty.\n";
+					PD error() << "Block " << *block->label << " is empty.\n";
 					continue;
 				}
 
@@ -221,24 +226,24 @@ namespace LL2W::Passes {
 						function.insertBefore(middle_block->instructions.back(), new_instruction, true, false,
 							&should_relinearize);
 						if (should_relinearize) {
-							info() << "Relinearizing.\n";
+							PD info() << "Relinearizing.\n";
 							function.relinearize();
 							// function.remove(instruction);
 							// removed = true;
-							std::cerr << "Readjusting iter.\n";
+							PD std::cerr << "Readjusting iter.\n";
 							iter = std::find(linear.begin(), linear.end(), instruction);
 
 							if (iter == linear.end()) {
-								warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
+								PD warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
 								       << *function.name << "'s linear instructions.\n";
 							}
 							// else ++iter;
 						} else {
-							info() << "Not relinearizing.\n";
+							PD info() << "Not relinearizing.\n";
 							// ++iter;
 						}
 
-						function.insertBefore(new_instruction, std::make_shared<Comment>(comment));
+						function.insertBefore(new_instruction, std::make_shared<Comment>(comment + " " + instruction_extra));
 
 						// function.insertBefore(middle_block->instructions.back(), new_instruction, comment);
 						// middle_block->insertBeforeTerminal(std::make_shared<Comment>(comment));
@@ -246,7 +251,7 @@ namespace LL2W::Passes {
 					} else {
 						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
-						comment += " (in new block " + *new_label + ")";
+						comment += " (in new block " + *new_label + " whose parent is " + *block->label + ")";
 						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
 							std::list<InstructionPtr> {});
 						middle_block->parent = &function;
@@ -261,7 +266,7 @@ namespace LL2W::Passes {
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
 						new_llvm->parent = middle_block;
 
-						auto comment_node = std::make_shared<Comment>(comment + "!!!");
+						auto comment_node = std::make_shared<Comment>(comment + " in " + instruction_extra);
 						comment_node->parent = new_instruction->parent = middle_block;
 						middle_block->instructions.push_back(comment_node);
 						middle_block->instructions.push_back(new_instruction);
@@ -335,7 +340,7 @@ namespace LL2W::Passes {
 						middle_block->extract();
 					}
 				} else {
-					function.insertBefore(block->instructions.back(), new_instruction, comment);
+					function.insertBefore(block->instructions.back(), new_instruction, comment + " in " + instruction_extra);
 					target->addDefiner(block);
 				}
 
@@ -344,7 +349,7 @@ namespace LL2W::Passes {
 			}
 
 			++iter;
-			std::cerr << "Remove " << instruction->debugExtra() << '\n';
+			PD std::cerr << "Remove " << instruction->debugExtra() << '\n';
 			function.remove(instruction);
 			// to_remove.push_back(instruction);
 		}
@@ -436,8 +441,10 @@ namespace LL2W::Passes {
 				if (!min_pair)
 					throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
 						std::to_string(SSIZE_MAX) + " nodes?");
-				auto source      = function.getVariable(StringSet::intern(min_swap? min_pair->second : min_pair->first));
-				auto destination = function.getVariable(StringSet::intern(min_swap? min_pair->first : min_pair->second));
+				auto source      = function.getVariable(
+					StringSet::intern(min_swap? min_pair->second : min_pair->first));
+				auto destination = function.getVariable(
+					StringSet::intern(min_swap? min_pair->first : min_pair->second));
 				// Can't add definitions while iterating over definitions.
 				std::list<InstructionPtr> definitions_to_add;
 				std::list<BasicBlockPtr> definers_to_add;
