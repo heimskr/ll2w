@@ -15,9 +15,6 @@
 #define REMOVE_OLD_TEMPORARIES
 #define WEB_MAX 4
 
-#define PD if (phidebug)
-static bool phidebug = false;
-
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
 		Timer timer("CoalescePhi");
@@ -78,8 +75,8 @@ namespace LL2W::Passes {
 							target->addDefiner(block);
 							new_instr->extract();
 						} else
-							PD std::cerr << "Value " << std::string(*pair.first) << " isn't intlike or global in "
-							          << phi_node->debugExtra() << '\n';
+							warn() << "Value " << std::string(*pair.first) << " isn't intlike or global in "
+							       << phi_node->debugExtra() << '\n';
 #ifdef REMOVE_OLD_TEMPORARIES
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
@@ -165,10 +162,6 @@ namespace LL2W::Passes {
 			if (!phi_node)
 				throw std::runtime_error("phi_node is null in Function::movePhi");
 
-			PD std::cerr << instruction->debugExtra() << ' ' << *function.name << '\n';
-
-			const std::string instruction_extra = instruction->debugExtra();
-
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 
 			for (const auto &[value, block_label]: phi_node->pairs) {
@@ -194,15 +187,15 @@ namespace LL2W::Passes {
 							dynamic_cast<GlobalValue *>(value.get())->name);
 					}
 				} else {
-					PD std::cerr << "Value " << std::string(*value) << " isn't intlike or global in "
-					          << phi_node->debugExtra() << '\n';
+					warn() << "Value " << std::string(*value) << " isn't intlike or global in "
+					       << phi_node->debugExtra() << '\n';
 					continue;
 				}
 
 				new_instruction->parent = block;
 
 				if (block->instructions.empty()) {
-					PD error() << "Block " << *block->label << " is empty.\n";
+					warn() << "Block " << *block->label << " is empty.\n";
 					continue;
 				}
 
@@ -226,28 +219,14 @@ namespace LL2W::Passes {
 						function.insertBefore(middle_block->instructions.back(), new_instruction, true, false,
 							&should_relinearize);
 						if (should_relinearize) {
-							PD info() << "Relinearizing.\n";
 							function.relinearize();
-							// function.remove(instruction);
-							// removed = true;
-							PD std::cerr << "Readjusting iter.\n";
 							iter = std::find(linear.begin(), linear.end(), instruction);
-
-							if (iter == linear.end()) {
-								PD warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
+							if (iter == linear.end())
+								warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
 								       << *function.name << "'s linear instructions.\n";
-							}
-							// else ++iter;
-						} else {
-							PD info() << "Not relinearizing.\n";
-							// ++iter;
 						}
 
-						function.insertBefore(new_instruction, std::make_shared<Comment>(comment + " " + instruction_extra));
-
-						// function.insertBefore(middle_block->instructions.back(), new_instruction, comment);
-						// middle_block->insertBeforeTerminal(std::make_shared<Comment>(comment));
-						// middle_block->insertBeforeTerminal(new_instruction);
+						function.insertBefore(new_instruction, std::make_shared<Comment>(comment));
 					} else {
 						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
@@ -266,7 +245,7 @@ namespace LL2W::Passes {
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
 						new_llvm->parent = middle_block;
 
-						auto comment_node = std::make_shared<Comment>(comment + " in " + instruction_extra);
+						auto comment_node = std::make_shared<Comment>(comment);
 						comment_node->parent = new_instruction->parent = middle_block;
 						middle_block->instructions.push_back(comment_node);
 						middle_block->instructions.push_back(new_instruction);
@@ -280,33 +259,7 @@ namespace LL2W::Passes {
 						*preds_iter = new_label;
 						middle_block->instructions.push_back(new_llvm);
 						function.movePhiBlocks.emplace(std::make_pair(block->label, phi_block_label), middle_block);
-
-
-						// function.remove(instruction);
-						// removed = true;
-						// iter = std::find(linear.begin(), linear.end(), new_instruction);
-						// if (iter == linear.end()) {
-						// 	--iter;
-						// 	warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
-						// 			<< *function.name << "'s linear instructions.\n";
-						// }
-
-
-						// std::cerr << '@' << *middle_block->label << '\n';
-						// for (auto &block_instr: middle_block->instructions)
-						// 	std::cerr << "    " << block_instr->debugExtra() << '\n';
-						// std::cerr << "-----\n";
-
-						// function.relinearize();
-
-						// iter = std::find(linear.begin(), linear.end(),
-						// 	new_llvm);
-
-						// goto movephi_loop;
 					}
-
-					// info() << "Middle made: " << (middle_made? "yes" : "no") << '\n';
-
 
 					if (middle_made) {
 						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
@@ -340,7 +293,7 @@ namespace LL2W::Passes {
 						middle_block->extract();
 					}
 				} else {
-					function.insertBefore(block->instructions.back(), new_instruction, comment + " in " + instruction_extra);
+					function.insertBefore(block->instructions.back(), new_instruction, comment);
 					target->addDefiner(block);
 				}
 
@@ -349,9 +302,7 @@ namespace LL2W::Passes {
 			}
 
 			++iter;
-			PD std::cerr << "Remove " << instruction->debugExtra() << '\n';
 			function.remove(instruction);
-			// to_remove.push_back(instruction);
 		}
 
 		if (block_made) {
@@ -460,16 +411,10 @@ namespace LL2W::Passes {
 								" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
 					}
 					auto *phi = dynamic_cast<PhiNode *>(llvm->node);
-					bool did_reset = false;
-					const std::string initial_debug_extra = phi->debugExtra();
 					for (auto &[value, block_label]: phi->pairs)
 						if (value->isLocal()) {
 							auto *local = dynamic_cast<LocalValue *>(value.get());
 							if (local->variable && *local->variable == *source) {
-								// if (did_reset)
-								// 	throw std::runtime_error("ϕ-instruction depends on variable " + std::string(*source) +
-								// 		" from multiple blocks: " + initial_debug_extra);
-								did_reset = true;
 								auto block = function.bbMap.at(block_label);
 								auto move = std::make_shared<MoveInstruction>(source, destination);
 								const std::string comment = "CutPhi: " + source->plainString() + " -> " +

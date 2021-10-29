@@ -550,7 +550,8 @@ namespace LL2W {
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		if (blockIter == block->instructions.end()) {
-			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": " << base->debugExtra() << '\n';
+			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": "
+			       << base->debugExtra() << '\n';
 			std::cerr << "Index: " << block->index << '\n';
 			for (const auto &subblock: blocks)
 				std::cerr << *subblock->label << '[' << subblock->index << "] ";
@@ -561,18 +562,12 @@ namespace LL2W {
 		}
 
 		const bool can_insert_linear = linearIter != linearInstructions.end();
-		// std::cerr << "can_insert_linear[" << std::boolalpha << can_insert_linear << "]\n";
 		if (can_insert_linear) {
 			linearInstructions.insert(linearIter, new_instruction);
 			if (should_relinearize_out)
 				*should_relinearize_out = false;
-		} else {
-			// std::cerr << "can't insert linear: " << base->debugExtra() << '\n';
-			if (should_relinearize_out)
-				*should_relinearize_out = true;
-			else
-				std::cerr << "!should_relinearize_out\n";
-		}
+		} else if (should_relinearize_out)
+			*should_relinearize_out = true;
 
 		block->instructions.insert(blockIter, new_instruction);
 
@@ -817,9 +812,6 @@ namespace LL2W {
 		Timer timer("InitialCompile");
 		extractBlocks();
 		makeInitialDebugIndex();
-		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-		// if (*name == "@memcpy")
-		// 	Passes::tracePhi(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -856,15 +848,7 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 #ifdef MOVE_PHI
-		// Passes::cutPhi(*this);
-		if (*name == "@memcpy")
-			std::cerr << "<MovePhi>\n";
-		// 	Passes::tracePhi(*this);
 		Passes::movePhi(*this);
-		if (*name == "@memcpy") {
-			std::cerr << "</MovePhi>\n";
-			debug();
-		}
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
@@ -919,13 +903,6 @@ namespace LL2W {
 		debug();
 #endif
 
-		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-		// 	debug();
-
-		std::stringstream ss;
-		debug(ss);
-		preAllocateDebug = ss.str();
-
 		{
 			Timer timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
@@ -943,9 +920,6 @@ namespace LL2W {
 		}
 
 		finalCompile();
-
-		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-		// 	debug();
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
@@ -1517,7 +1491,7 @@ namespace LL2W {
 							break;
 						}
 					if (var->registers.empty())
-						std::cerr << "hackVariables: last resort failed\n";
+						warn() << "hackVariables: last resort failed\n";
 				}
 			} else
 				for (Variable *alias: var->getAliases())

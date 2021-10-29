@@ -34,9 +34,6 @@ namespace LL2W {
 	 * Why.js bytecode.
 	 */
 	class Function {
-		public:
-			std::string preAllocateDebug;
-
 		private:
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
