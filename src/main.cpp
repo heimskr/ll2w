@@ -17,6 +17,7 @@
 
 // #define DEBUGMODE
 // #define INTERACTIVE
+// #define CATCH
 
 int global_argc = -1;
 char **global_argv = nullptr;
@@ -32,7 +33,9 @@ int main(int argc, char **argv) {
 	auto usage = [] { std::cerr << "Usage: ll2w [-d] <input>\n"; exit(1); };
 	if (argc < 2)
 		usage();
+#ifdef CATCH
 	try {
+#endif
 		if (argc == 3) {
 			LL2W::Timer timer("Compile");
 			if (strcmp(argv[1], "-d") == 0)
@@ -44,10 +47,12 @@ int main(int argc, char **argv) {
 			compile(argv[1], false);
 		} else
 			usage();
+#ifdef CATCH
 	} catch (...) {
 		LL2W::Timer::summary();
 		throw;
 	}
+#endif
 
 	LL2W::Timer::summary();
 }

@@ -30,8 +30,10 @@ namespace LL2W::Passes {
 			VariablePtr switch_var = dynamic_cast<LocalValue *>(sw->value.get())->variable;
 
 			for (const auto &[type, value, label]: sw->table) {
-				if (!value->isInt())
+				if (!value->isIntLike()) {
+					std::cerr << instruction->debugExtra() << '\n';
 					throw TypeError("Expected int constant in table of switch instruction", type);
+				}
 				const std::string *transformed = StringSet::intern(function.transformLabel(*label));
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
 				comp->setOriginalValue(value);
