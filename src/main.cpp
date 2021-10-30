@@ -28,6 +28,42 @@ void interactive(LL2W::Program &);
 int main(int argc, char **argv) {
 	global_argc = argc;
 	global_argv = argv;
+
+	{
+		using namespace LL2W;
+		Graph graph;
+		for (int i = 1; i <= 11; ++i)
+			graph += std::to_string(i);
+		graph.link("1", "2");
+		graph.link("2", "3");
+		graph.link("3", "4");
+		graph.link("4", "5");
+		graph.link("5", "6");
+		graph.link("6", "5");
+		graph.link("6", "7");
+		graph.link("7", "2");
+		graph.link("2", "11");
+		graph.link("3", "8");
+		graph.link("8", "9");
+		graph.link("9", "6");
+		graph.link("9", "10");
+		graph.link("10", "8");
+		DJGraph dj(graph, "1");
+		for (auto &[node, set]: dj.mergeSets(dj["1"], dj["11"])) {
+			std::cerr << "M(" << node->label() << ") = {";
+			bool first = true;
+			for (auto &in_set: set) {
+				if (first)
+					first = false;
+				else
+					std::cerr << ", ";
+				std::cerr << in_set->label();
+			}
+			std::cerr << "}\n";
+		}
+	}
+	return 0;
+
 	auto usage = [] { std::cerr << "Usage: ll2w [-d] <input>\n"; exit(1); };
 	if (argc < 2)
 		usage();

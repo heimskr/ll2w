@@ -16,8 +16,8 @@ namespace LL2W {
 		public:
 			std::vector<std::pair<Node *, Node *>> jEdges;
 
-			DJGraph(Graph &, Node &);
-			DJGraph(Graph &, const std::string &);
+			DJGraph(Graph &, Node &start);
+			DJGraph(Graph &, const std::string &start_label);
 
 			virtual std::string toDot(const std::string &direction = "TB") override;
 
