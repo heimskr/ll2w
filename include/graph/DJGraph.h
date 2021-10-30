@@ -1,5 +1,4 @@
-#ifndef DJGRAPH_H_
-#define DJGRAPH_H_
+#pragma once
 
 #include <unordered_set>
 
@@ -38,5 +37,3 @@ namespace LL2W {
 		Node::Set flatten();
 	};
 }
-
-#endif

@@ -64,7 +64,7 @@ namespace LL2W {
 		std::ostringstream out;
 		out << "digraph rendered_graph {\n";
 		out << "graph [fontname = \"helvetica\"];\n";
-		out << "node [fontname = \"helvetica\"];\n";
+		out << "node [fontname = \"helvetica\", style = \"filled\"];\n";
 		out << "edge [fontname = \"helvetica\", arrowhead=open, arrowsize=0.666];\n";
 		out << "\trankdir=" << direction << ";\n";
 		if (!reflexives.empty()) {
@@ -87,16 +87,19 @@ namespace LL2W {
 			out << ";";
 		out << "\n";
 
-		for (Node *node: nodes()) {
-			for (Node *neighbor: node->out()) {
+
+		for (const Node *node: nodes())
+			if (node->colors.size() == 1 && static_cast<size_t>(*node->colors.begin()) < colors.size())
+				out << "\t" << node->label() << " [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
+
+		for (Node *node: nodes())
+			for (Node *neighbor: node->out())
 				if (neighbor != node) {
 					out << "\t" << node->label() << " -> " << neighbor->label();
 					if (jMap[node].count(neighbor) != 0)
 						out << " [style=dashed]";
 					out << ";\n";
 				}
-			}
-		}
 		out << "}\n";
 		return out.str();
 	}
