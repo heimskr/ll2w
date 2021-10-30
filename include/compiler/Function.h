@@ -48,6 +48,12 @@ namespace LL2W {
 
 			std::unordered_map<unsigned char, VariablePtr> assemblerVariables;
 
+			void computeLivenessUAM();
+
+			bool isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
+			bool isLiveOutUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
+			void computeLivenessMS();
+
 			void upAndMark(BasicBlockPtr, VariablePtr);
 
 			std::unordered_set<std::shared_ptr<BasicBlock>> getLive(std::shared_ptr<Variable>,

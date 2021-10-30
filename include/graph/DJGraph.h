@@ -11,9 +11,9 @@ namespace LL2W {
 			bool isJEdge(const Node &, const Node &) const;
 			std::unordered_set<Node *> allInNodes(const Node &) const;
 			int level(const Node &, const Node &start) const;
-			Node * parent(const Node &, const Node &start) const;
 
 		public:
+			Node *startNode = nullptr;
 			std::vector<std::pair<Node *, Node *>> jEdges;
 
 			DJGraph(Graph &, Node &start);
@@ -22,6 +22,7 @@ namespace LL2W {
 			virtual std::string toDot(const std::string &direction = "TB") override;
 
 			Node::Map mergeSets(Node &start, const Node &exit);
+			Node * parent(const Node &, const Node &start) const;
 	};
 
 	struct MergeSet {

@@ -6,17 +6,17 @@
 
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
-#define DEBUG_VARS
+// #define DEBUG_VARS
 // #define DEBUG_RENDER
 // #define DEBUG_SPILL
 // #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
-// #define DEBUG_BLOCK_LIVENESS
+#define DEBUG_BLOCK_LIVENESS
 #define DEBUG_VAR_LIVENESS
 // #define DEBUG_ALIASES
-#define DEBUG_STACK
+// #define DEBUG_STACK
 #define STRICT_READ_CHECK
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
@@ -919,7 +919,24 @@ namespace LL2W {
 #endif
 		}
 
+		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+			debug();
+			// cfg.renderTo("cfg_vsnprintf.png");
+			// if (djGraph.has_value()) {
+			// 	djGraph->renderTo("dj_vsnprintf.png");
+			// }
+		}
+
 		finalCompile();
+
+		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+			std::cerr << std::string(50, '\n');
+			debug();
+			// cfg.renderTo("cfg_vsnprintf.png");
+			// if (djGraph.has_value()) {
+			// 	djGraph->renderTo("dj_vsnprintf.png");
+			// }
+		}
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
@@ -1065,8 +1082,8 @@ namespace LL2W {
 		return isVariadic()? CallingConvention::StackOnly : CallingConvention::Reg16;
 	}
 
-	void Function::computeLiveness() {
-		Timer timer("ComputeLiveness");
+	void Function::computeLivenessUAM() {
+		Timer timer("ComputeLivenessUAM");
 		for (BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
@@ -1077,6 +1094,100 @@ namespace LL2W {
 			for (VariablePtr var: block->nonPhiRead)
 				upAndMark(block, var);
 		}
+	}
+
+	bool Function::isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var) {
+		if (!djGraph.has_value())
+			throw std::runtime_error("Cannot compute liveness with merge sets when the DJ graph is empty");
+
+		if (var->definingBlocks.size() != 1) {
+			warn() << "Variable " << *var << " has " << var->definingBlocks.size() << " defining blocks, not 1.\n";
+			return false;
+		}
+
+		const Node::Set &merge = merges.at(block);
+		const BasicBlockPtr def = var->definingBlocks.begin()->lock();
+
+		// M^r(n) = M(n) ∪ {n}
+		Node::Set m_r(merge.begin(), merge.end());
+		m_r.insert(block);
+
+		// for t ∈ uses(a)
+		for (auto weak_t: var->usingBlocks) {
+			auto t = weak_t.lock();
+			if (!t)
+				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
+			// while t != def(a)
+			while (t != def) {
+				// if t ∩ M^r (n) then return true
+				if (m_r.count(&(*djGraph)[*t->label]) != 0)
+					return true;
+				// t = dom-parent(t);
+				t = bbMap.at(StringSet::intern(djGraph->parent(*block, *djGraph->startNode)->label()));
+			}
+		}
+
+		return false;
+	}
+
+	bool Function::isLiveOutUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var) {
+		if (!djGraph.has_value())
+			throw std::runtime_error("Cannot compute liveness with merge sets when the DJ graph is empty");
+
+		if (var->definingBlocks.size() != 1) {
+			warn() << "Variable " << *var << " has " << var->definingBlocks.size() << " defining blocks, not 1.\n";
+			return false;
+		}
+
+		const BasicBlockPtr def = var->definingBlocks.begin()->lock();
+
+		// if def(a) = n
+		if (def == bbMap.at(StringSet::intern(block->label()))) {
+			// return uses(a)\def(a) = ∅
+			// At least, I assume the use of φ in the PDF actually refers to the empty set.
+			auto difference = var->usingBlocks;
+			for (const auto &weak_block: var->definingBlocks)
+				difference.erase(weak_block);
+			return !difference.empty();
+		}
+
+		// M_s(n) = ∅
+		Node::Set m_s;
+
+		// for w ∈ succ(n)
+		for (Node *successor: block->out()) {
+			// M_s(n) = M_s(n) ∪ M^r(w)
+			// The authors define M^r(n) as {M(n) ∪ {n}}.
+			m_s.insert(successor);
+			const Node::Set &m_r = merges.at(successor);
+			m_s.insert(m_r.begin(), m_r.end());
+		}
+
+		// for t ∈ uses(a)
+		for (auto weak_t: var->usingBlocks) {
+			auto t = weak_t.lock();
+			if (!t)
+				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
+			// while t != def(a)
+			while (t != def) {
+				// if t ∩ M_s(n) then
+				if (m_s.count(&(*djGraph)[*t->label]) != 0)
+					return true;
+				// t = dom-parent(t);
+				t = bbMap.at(StringSet::intern(djGraph->parent(*block, *djGraph->startNode)->label()));	
+			}
+		}
+
+		return false;
+	}
+
+	void Function::computeLivenessMS() {
+		Timer timer("ComputeLivenessMS");
+
+	}
+
+	void Function::computeLiveness() {
+		computeLivenessUAM();
 	}
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
@@ -1258,7 +1369,7 @@ namespace LL2W {
 				       << ": preds =";
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 					if (iter != begin)
-						stream << ",";
+						stream << ',';
 					stream << " %" << **iter;
 				}
 				if (blockLiveness) {
@@ -1267,8 +1378,8 @@ namespace LL2W {
 						const auto &liveIn = block->liveIn;
 						for (auto begin = liveIn.begin(), iter = begin, end = liveIn.end(); iter != end; ++iter) {
 							if (iter != begin)
-								stream << ",";
-							stream << " %" << (*iter)->id;
+								stream << ',';
+							stream << " %" << *(*iter)->id;
 						}
 					}
 					if (!block->liveOut.empty()) {
@@ -1276,8 +1387,8 @@ namespace LL2W {
 						const auto &liveOut = block->liveOut;
 						for (auto begin = liveOut.begin(), iter = begin, end = liveOut.end(); iter != end; ++iter) {
 							if (iter != begin)
-								stream << ",";
-							stream << " %" << (*iter)->id;
+								stream << ',';
+							stream << " %" << *(*iter)->id;
 						}
 					}
 				}

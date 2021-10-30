@@ -19,6 +19,7 @@ namespace LL2W {
 			jEdges.push_back({&(*this)[src->label()], &(*this)[dest->label()]});
 			jMap[&(*this)[src->label()]].insert(&(*this)[dest->label()]);
 		}
+		startNode = &(*this)[start.label()];
 	}
 
 	Node * DJGraph::parent(const Node &node, const Node &start) const {
@@ -28,11 +29,9 @@ namespace LL2W {
 	};
 
 	bool DJGraph::isJEdge(const Node &from, const Node &to) const {
-		for (const std::pair<Node *, Node *> &j_edge: jEdges) {
+		for (const std::pair<Node *, Node *> &j_edge: jEdges)
 			if (j_edge.first == &from && j_edge.second == &to)
 				return true;
-		}
-
 		return false;
 	}
 
