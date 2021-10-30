@@ -12,7 +12,7 @@ namespace LL2W {
 	enum class WASMNodeType {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
-		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Rest, IO, Interrupts,
+		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Rest, IO, Interrupts, InverseShift,
 	};
 
 	class WhyInstruction;
@@ -526,6 +526,18 @@ namespace LL2W {
 
 		WASMInterruptsNode(bool enable_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Interrupts; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMInverseShiftNode: public WASMInstructionNode {
+		const std::string *rs, *oper, *rd;
+		int operToken;
+		Immediate imm;
+
+		WASMInverseShiftNode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::InverseShift; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;

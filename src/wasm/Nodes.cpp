@@ -90,6 +90,15 @@
 #include "instruction/RestInstruction.h"
 #include "instruction/IOInstruction.h"
 #include "instruction/InterruptsInstruction.h"
+#include "instruction/ShiftLeftLogicalIInstruction.h"
+#include "instruction/ShiftLeftLogicalInverseIInstruction.h"
+#include "instruction/ShiftLeftLogicalRInstruction.h"
+#include "instruction/ShiftRightArithmeticIInstruction.h"
+#include "instruction/ShiftRightArithmeticInverseIInstruction.h"
+#include "instruction/ShiftRightArithmeticRInstruction.h"
+#include "instruction/ShiftRightLogicalIInstruction.h"
+#include "instruction/ShiftRightLogicalInverseIInstruction.h"
+#include "instruction/ShiftRightLogicalRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -287,8 +296,14 @@ namespace LL2W {
 				return std::make_unique<NotRInstruction>(conv(rs), conv(rd));
 			case WASMTOK_MEMSET:
 				return std::make_unique<MemsetInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_LL:
+				return std::make_unique<ShiftLeftLogicalRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_RL:
+				return std::make_unique<ShiftRightLogicalRInstruction>(conv(rs), conv(rt), conv(rd));
+			case WASMTOK_RA:
+				return std::make_unique<ShiftRightArithmeticRInstruction>(conv(rs), conv(rt), conv(rd));
 			default:
-				throw std::invalid_argument("Unknown operator: " + *oper);
+				throw std::invalid_argument("Unknown operator in RNode::convert: " + *oper);
 		}
 	}
 
@@ -363,8 +378,14 @@ namespace LL2W {
 				return std::make_unique<AddIInstruction>(conv(rs), imm, conv(rd));
 			case WASMTOK_MINUS:
 				return std::make_unique<SubIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_LL:
+				return std::make_unique<ShiftLeftLogicalIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_RL:
+				return std::make_unique<ShiftRightLogicalIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_RA:
+				return std::make_unique<ShiftRightArithmeticIInstruction>(conv(rs), imm, conv(rd));
 			default:
-				throw std::invalid_argument("Unknown operator: " + *oper);
+				throw std::invalid_argument("Unknown operator in INode::convert: " + *oper);
 		}
 	}
 
@@ -1210,5 +1231,37 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMInterruptsNode::convert(Function &, VarMap &) {
 		return std::make_unique<InterruptsInstruction>(enable);
+	}
+
+	WASMInverseShiftNode::WASMInverseShiftNode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_):
+	WASMInstructionNode(WASM_INVERSESHIFTNODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo),
+	operToken(oper_->symbol), imm(getImmediate(imm_)) {
+		delete rs_;
+		delete oper_;
+		delete imm_;
+		delete rd_;
+	}
+
+	std::string WASMInverseShiftNode::debugExtra() const {
+		return colorize(imm) + " " + dim(*oper) + " " + cyan(*rs) + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMInverseShiftNode::operator std::string() const {
+		return toString(imm) + " " + *oper + " " + *rs + " -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMInverseShiftNode::convert(Function &function, VarMap &map) {
+		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
+
+		switch (operToken) {
+			case WASMTOK_LL:
+				return std::make_unique<ShiftLeftLogicalInverseIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_RL:
+				return std::make_unique<ShiftRightLogicalInverseIInstruction>(conv(rs), imm, conv(rd));
+			case WASMTOK_RA:
+				return std::make_unique<ShiftRightArithmeticInverseIInstruction>(conv(rs), imm, conv(rd));
+			default:
+				throw std::invalid_argument("Unknown operator in WASMInverseShiftNode::convert: " + *oper);
+		}
 	}
 }

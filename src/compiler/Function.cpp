@@ -921,7 +921,7 @@ namespace LL2W {
 		}
 
 		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-			debug();
+			// debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
 			// if (djGraph.has_value()) {
 			// 	djGraph->renderTo("dj_vsnprintf.png");

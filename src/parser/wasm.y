@@ -139,6 +139,7 @@ using AN = LL2W::ASTNode;
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_RESTNODE WASM_IONODE WASM_INTERRUPTSNODE
+%token WASM_INVERSESHIFTNODE
 
 %start start
 
@@ -158,7 +159,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh   | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring | op_page | op_setpt | label
-         | op_svpg | op_qmem  | op_di    | op_ei;
+         | op_svpg | op_qmem  | op_di    | op_ei    | op_sllii  | op_srlii | op_sraii;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -176,6 +177,12 @@ op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2
 op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
 op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
+
+op_sllii: immediate "<<" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $3, $5); D($4); };
+
+op_srlii: immediate ">>>" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $3, $5); D($4); };
+
+op_sraii: immediate ">>" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $3, $5); D($4); };
 
 op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 _byte: "/b" | { $$ = nullptr; };
