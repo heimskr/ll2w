@@ -7,7 +7,8 @@
 namespace LL2W {
 	class DJGraph: public Graph {
 		private:
-			Node::Map jMap;
+			bool hasCachedMergeSets = false;
+			Node::Map jMap, cachedMergeSets;
 			bool isJEdge(const Node &, const Node &) const;
 			std::unordered_set<Node *> allInNodes(const Node &) const;
 			int level(const Node &, const Node &start) const;
@@ -23,6 +24,7 @@ namespace LL2W {
 
 			Node::Map mergeSets(Node &start, const Node &exit);
 			Node * parent(const Node &, const Node &start) const;
+			const Node::Map & getMergeSets();
 	};
 
 	struct MergeSet {

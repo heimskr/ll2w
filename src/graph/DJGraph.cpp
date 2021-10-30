@@ -182,6 +182,14 @@ namespace LL2W {
 		return out;
 	}
 
+	const Node::Map & DJGraph::getMergeSets() {
+		if (hasCachedMergeSets)
+			return cachedMergeSets;
+		cachedMergeSets = mergeSets(*startNode, (*this)["exit"]);
+		hasCachedMergeSets = true;
+		return cachedMergeSets;
+	}
+
 	void MergeSet::insert(MergeSet &other) {
 		references.insert(&other);
 	}
