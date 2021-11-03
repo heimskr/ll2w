@@ -227,8 +227,8 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
-		} else if (value_type == ValueType::Null) {
-			// Null values
+		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
+			// Null and undef values
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
