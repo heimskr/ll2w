@@ -13,14 +13,12 @@ namespace LL2W::Passes {
 	size_t lowerExtractvalue(Function &function) {
 		Timer timer("LowerExtractvalue");
 		size_t changed = 0;
-
 		std::list<InstructionPtr> to_remove;
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || llvm->node->nodeType() != NodeType::ExtractValue)
 				continue;
-
 			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->node);
 
 			if (ev->decimals.size() != 1 || ev->aggregateValue->valueType() != ValueType::Local) {
@@ -51,4 +49,6 @@ namespace LL2W::Passes {
 
 		return changed;
 	}
+
+	
 }

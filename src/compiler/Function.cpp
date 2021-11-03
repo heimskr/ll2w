@@ -16,7 +16,7 @@
 #define DEBUG_BLOCK_LIVENESS
 #define DEBUG_VAR_LIVENESS
 // #define DEBUG_ALIASES
-// #define DEBUG_STACK
+#define DEBUG_STACK
 #define STRICT_READ_CHECK
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
@@ -57,6 +57,7 @@
 #include "pass/LowerGetelementptr.h"
 #include "pass/LowerIcmp.h"
 #include "pass/LowerInlineAsm.h"
+#include "pass/LowerInsertvalue.h"
 #include "pass/LowerMath.h"
 #include "pass/LowerMemcpy.h"
 #include "pass/LowerMemory.h"
@@ -868,6 +869,7 @@ namespace LL2W {
 
 	void Function::finalCompile() {
 		Timer timer("FinalCompile");
+		Passes::lowerInsertvalue(*this);
 		Passes::readjustStackSkip(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
@@ -889,11 +891,15 @@ namespace LL2W {
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		hackVariables();
-		for (InstructionPtr &instruction: linearInstructions)
+		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
 				auto lock = parent->getLock();
 				parent->debugIndices.insert(instruction->debugIndex);
 			}
+			if (!dynamic_cast<WhyInstruction *>(instruction.get()))
+				error() << "Untranslated instruction in " << *name << ":\n\n    " << instruction->debugExtra()
+				        << "\n\n";
+		}
 		finalDone = true;
 	}
 
@@ -920,8 +926,10 @@ namespace LL2W {
 #endif
 		}
 
-		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-			// debug();
+		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+		if (*name == "@memcpy") {
+			// extractVariables(false);
+			debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
 			// if (djGraph.has_value()) {
 			// 	djGraph->renderTo("dj_vsnprintf.png");
@@ -930,7 +938,8 @@ namespace LL2W {
 
 		finalCompile();
 
-		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+		if (*name == "@memcpy") {
 			// std::cerr << std::string(50, '\n');
 			// debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
