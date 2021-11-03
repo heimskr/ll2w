@@ -292,7 +292,7 @@ program: program source_filename { $1->adopt($2); }
        | program alias_def       { $1->adopt($2); }
        | { $$ = LL2W::llvmParser.root; };
 
-declaration: "declare" function_header { $1->adopt($2); }
+declaration: "declare" _debug function_header { $1->adopt($3); D($2); }
            | "declare" "void" dbg_type "(" "metadata" "," "metadata" "," "metadata" ")" _fnattrs
              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); }
            | "declare" "void" "@llvm.dbg.label" "(" "metadata" ")" _fnattrs

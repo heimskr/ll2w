@@ -76,7 +76,7 @@ namespace LL2W::Passes {
 					auto move = std::make_shared<MoveInstruction>(source, reg);
 					function.insertBefore(instruction, move, "LowerInsertvalue: local: " + source->plainString() +
 						comment);
-					function.insertBefore(move, std::make_shared<PrintPseudoinstruction>("@"));
+					// function.insertBefore(move, std::make_shared<PrintPseudoinstruction>("@"));
 				} else {
 					warn() << "Skipping insertvalue with unsupported value type: " << instruction->debugExtra() << '\n';
 					continue;
