@@ -29,6 +29,14 @@
 // #define SINGLE_FUNCTION "@memcpy"
 
 namespace LL2W {
+	struct GlobalData {
+		ConstantPtr constant;
+		ValuePtr value;
+		ASTLocation location;
+		GlobalData(const ConstantPtr &constant_, const ValuePtr &value_, const ASTLocation &location_):
+			constant(constant_), value(value_), location(location_) {}
+	};
+
 	Program::Program(const ASTNode &root) {
 		// Look for all struct definitions.
 		for (const ASTNode *node: root) {
@@ -141,11 +149,9 @@ namespace LL2W {
 		std::stringstream out;
 		out << "#meta\n";
 		out << "name: \"" << Util::escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
-		out << "\n#data\n";
+		out << "\n#text\n\n%data\n\n";
 		dataSection(out);
-		out << "\n#debug\n";
-		debugSection(&out);
-		out << "\n#code\n\n";
+		out << "\n%code\n\n";
 		if (functions.count("@main") == 1 || hasArg("-main"))
 			out << ":: main\n<halt>\n\n";
 		for (std::pair<const std::string, Function *> &pair: functions) {
@@ -154,123 +160,198 @@ namespace LL2W {
 #endif
 			out << pair.second->toString() << "\n";
 		}
+		out << "\n#debug\n";
+		debugSection(&out);
 		return out.str();
 	}
 
 	void Program::dataSection(std::ostream &out) {
+		std::map<std::string, GlobalData> global_data;
+		std::map<std::string, std::string> global_strings;
+
 		for (const std::pair<const std::string, GlobalVarDef *> &pair: globals) {
 			const std::string name = pair.first.substr(1);
 			GlobalVarDef *global = pair.second;
-			ConstantPtr constant = global->constant;
 
 			if (global->linkage == Linkage::External)
 				continue;
+
+			ConstantPtr constant = global->constant;
 
 			if (!constant) {
 				warn() << name << " inexplicably lacks a constant: " << global->debugExtra() << "\n";
 				continue;
 			}
 
-			ValuePtr value = constant->value;
-			if (value)
-				outputNamedValue(out, name, constant, value, global->location);
+			constant = constant->convert();
+			global_data.try_emplace(name, constant, constant->value, global->location);
+		}
+
+		bool changed;
+
+		do {
+			changed = false;
+			for (const auto &[name, data]: global_data) {
+				if (data.value) {
+					const std::string stringified = stringifyNamedValue(data.constant, data.value, data.location);
+					if (!stringified.empty()) {
+						global_strings.emplace(name, stringified);
+						changed = true;
+					} else if (data.value->valueType() == ValueType::Global) {
+						const std::string &target = *dynamic_cast<GlobalValue *>(data.value.get())->name;
+						if (global_strings.count(target) != 0) {
+							global_strings.emplace(name, global_strings.at(target));
+							changed = true;
+						}
+					}
+				} else {
+					global_strings.emplace(name, "");
+					changed = true;
+				}
+
+				if (changed) {
+					global_data.erase(name);
+					break;
+				}
+			}
+		} while (changed);
+
+		for (const auto &[name, stringified]: global_strings)
+			if (stringified.empty())
+				out << '@' << name << "\n%8b 0\n\n";
 			else
-				out << name << "\n";
+				out << '@' << name << '\n' << stringified << "\n\n";
+
+		if (!global_data.empty()) {
+			error() << "Couldn't translate global constants (is there a loop?):\n";
+			for (const auto &[name, data]: global_data)
+				std::cerr << "- " << name << " @ " << data.location;
+			throw std::runtime_error("Global constant translation failed");
 		}
 	}
 
-	void Program::outputNamedValue(std::ostream &out, const std::string &name, ConstantPtr constant, ValuePtr value,
-	                          const ASTLocation &location) {
+	std::string Program::stringifyNamedValue(ConstantPtr constant, ValuePtr value, const ASTLocation &location) {
 		ValueType type = value->valueType();
 		if (type == ValueType::CString) {
-			out << name << ": \"" << dynamic_cast<CStringValue *>(value.get())->reescape() << "\"\n";
-		} else if (type == ValueType::Zeroinitializer || type == ValueType::Null) {
-			out << name << ": (" << (constant->type->width() / 8) << ")\n";
+			return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
+		} else if (type == ValueType::Zeroinitializer || type == ValueType::Null || type == ValueType::Undef) {
+			return "%fill " + std::to_string(constant->type->width() / 8) + " 0";
 		} else if (value->isIntLike()) {
-			out << name << ": " << value->longValue() << '\n';
-		} else if (type == ValueType::Undef) {
-			out << name << ": 0\n";
+			return valuePrefix(constant->type->width()) + std::to_string(value->longValue());
 		} else if (type == ValueType::Array) {
 			ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
-			out << name << ": ";
+			std::string out;
 			if (array->constants.empty())
-				out << "(8)";
+				out += "%8b 0";
 			else if (!constant->type)
-				throw std::runtime_error("constant->type is null in Program::outputNamedValue");
+				throw std::runtime_error("constant->type is null in Program::stringifyNamedValue");
 			else
-				outputArray(out, constant->type, *array);
-			out << '\n';
+				out += outputArray(*array);
+			return out;
 		} else if (type == ValueType::Struct) {
-			out << name << ": ";
-			outputStruct(out, *dynamic_cast<StructValue *>(value.get()));
-			out << '\n';
+			return outputStruct(*dynamic_cast<StructValue *>(value.get()));
 		} else if (type == ValueType::Getelementptr) {
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
 			for (const auto &[width, index]: gep->decimals)
 				if (!std::holds_alternative<long>(index) || std::get<long>(index) != 0) {
 					error() << "Unsupported getelementptr value (invalid indices): " << *gep << '\n';
-					return;
+					return {};
 				}
 			if (gep->variable->valueType() != ValueType::Global)
 				error() << "Invalid getelementptrvalue variable: " << *gep->variable << '\n';
 			else
-				out << name << ": &" << *dynamic_cast<GlobalValue *>(gep->variable.get())->name << '\n';
+				return '&' + *dynamic_cast<GlobalValue *>(gep->variable.get())->name;
+		} else if (type == ValueType::Global) {
+			referencedGlobals.insert(*dynamic_cast<GlobalValue *>(value.get())->name);
+			// Return an empty string to indicate that the value isn't valid yet, but don't print any error.
+			return {};
 		} else
 			error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
 					<< location << '\n';
+		return {};
 	}
 
-	void Program::outputStruct(std::ostream &out, const StructValue &structval, int indentation) {
-		const std::string tabs(indentation, '\t');
-		out << "{\n";
+	std::string Program::outputStruct(const StructValue &structval) {
+		std::string out;
+		bool first = true;
 		for (const ConstantPtr &constant: structval.constants) {
 			ConstantPtr converted = constant->convert();
-			out << tabs << '\t';
-			outputValue(out, converted->type, converted->value, indentation + 1);
-			out << '\n';
+			if (first)
+				first = false;
+			else
+				out += '\n';
+			out += outputValue(converted->type, converted->value);
 		}
-		out << tabs << "}";
+		return out;
 	}
 
-	void Program::outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation) {
+	std::string Program::valuePrefix(size_t bitwidth) {
+		if (bitwidth % 8 != 0)
+			throw std::runtime_error("Int width (" + std::to_string(bitwidth) + "b) isn't a multiple of 8");
+		switch (bitwidth / 8) {
+			case 8: return "%8b ";
+			case 4: return "%4b ";
+			case 2: return "%2b ";
+			case 1: return "%1b ";
+			default:
+				throw std::runtime_error("Invalid int width: " + std::to_string(bitwidth / 8) + "B");
+		}
+	}
+
+	std::string Program::outputValue(const TypePtr &type, const ValuePtr &value) {
 		switch (value->valueType()) {
 			case ValueType::Array:
-				outputArray(out, type, *dynamic_cast<ArrayValue *>(value.get()), indentation);
-				break;
-			case ValueType::Int:
-				out << "#i" << dynamic_cast<IntType *>(type.get())->intWidth << ' '
-					<< dynamic_cast<IntValue *>(value.get())->longValue();
-					break;
+				return outputArray(*dynamic_cast<ArrayValue *>(value.get()));
+			case ValueType::Int: {
+				const auto int_width = dynamic_cast<IntType *>(type.get())->intWidth;
+				const std::string stringified = std::to_string(dynamic_cast<IntValue *>(value.get())->longValue());
+				return valuePrefix(int_width) + stringified;
+			}
 			case ValueType::Null:
 			case ValueType::Undef:
-				out << "#i8 0";
-				break;
+				if (type)
+					return valuePrefix(type->width()) + "0";
+				return "%1b 0";
 			case ValueType::Struct:
-				outputStruct(out, *dynamic_cast<StructValue *>(value.get()), indentation);
-				break;
-			case ValueType::Global:
-				out << "&" << *dynamic_cast<GlobalValue *>(value.get())->name;
-				break;
+				return outputStruct(*dynamic_cast<StructValue *>(value.get()));
+			case ValueType::Global: {
+				const std::string *name = dynamic_cast<GlobalValue *>(value.get())->name;
+				referencedGlobals.insert(*name);
+				return "%8b " + *name;
+			}
 			case ValueType::Getelementptr: {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
-				GlobalValue *global = dynamic_cast<GlobalValue *>(gep->variable.get());
+				GlobalValue *global;
 
-				if (!global) {
-					std::cerr << *value << '\n';
-					std::cerr << *gep->variable << '\n';
-					throw std::runtime_error("Expected a global value in getelementptr expression in "
-						"Program::outputValue");
-				}
+				auto validate = [value](GetelementptrValue *gep) {
+					for (const auto &[width, decimal]: gep->decimals)
+						if (!std::holds_alternative<long>(decimal) || std::get<long>(decimal) != 0) {
+							std::cerr << *value << '\n';
+							throw std::runtime_error("Found a non-zero decimal in a getelementptr expression in "
+								"Program::outputValue");
+						}
+				};
 
-				for (const auto &[width, decimal]: gep->decimals)
-					if (!std::holds_alternative<long>(decimal) || std::get<long>(decimal) != 0) {
+				while (gep) {
+					global = dynamic_cast<GlobalValue *>(gep->variable.get());
+
+					if (!global) {
+						if (GetelementptrValue *subgep = dynamic_cast<GetelementptrValue *>(gep->variable.get())) {
+							validate(gep);
+							gep = subgep;
+							continue;
+						}
+
 						std::cerr << *value << '\n';
-						throw std::runtime_error("Found a non-zero decimal in a getelementptr expression in "
+						std::cerr << *gep->variable << '\n';
+						throw std::runtime_error("Expected a global value in getelementptr expression in "
 							"Program::outputValue");
 					}
 
-				out << "&" << *global->name;
-				break;
+					validate(gep);
+				}
+
+				return '&' + *global->name;
 			}
 			default:
 				std::cerr << *value << '\n';
@@ -279,57 +360,18 @@ namespace LL2W {
 		}
 	}
 
-	void Program::outputType(std::ostream &out, const TypePtr &type) {
-		switch (type->typeType()) {
-			case TypeType::Array: {
-				ArrayType &array = *dynamic_cast<ArrayType *>(type.get());
-				out << "(" << array.count << " # ";
-				outputType(out, array.subtype);
-				out << ")";
-				break;
-			}
-			case TypeType::Int:
-				out << "#i" << dynamic_cast<IntType *>(type.get())->intWidth;
-				break;
-			case TypeType::Pointer:
-				outputType(out, dynamic_cast<PointerType *>(type.get())->subtype);
-				out << "*";
-				break;
-			case TypeType::Struct: {
-				out << "{";
-				bool first = true;
-				for (const TypePtr &subtype: dynamic_cast<StructType *>(type.get())->node->types) {
-					if (first)
-						first = false;
-					else
-						out << ", ";
-					outputType(out, subtype);
-				}
-				out << "}";
-				break;
-			}
-			case TypeType::Function:
-				out << "#fn";
-				break;
-			default:
-				throw std::runtime_error("Unhandled TypeType in Program::outputType: " +
-					std::to_string(int(type->typeType())));
-		}
-	}
-
-	void Program::outputArray(std::ostream &out, const TypePtr &type, const ArrayValue &array, int indentation) {
-		outputType(out, type);
-		out << " [";
+	std::string Program::outputArray(const ArrayValue &array) {
+		std::string out;
 		bool first = true;
 		for (const ConstantPtr &constant: array.constants) {
 			if (first)
 				first = false;
 			else
-				out << ", ";
+				out += "\n";
 			ConstantPtr converted = constant->convert();
-			outputValue(out, converted->type, converted->value, indentation);
+			out += outputValue(converted->type, converted->value);
 		}
-		out << "]";
+		return out;
 	}
 
 	void Program::debugSection(std::ostream * const out) {

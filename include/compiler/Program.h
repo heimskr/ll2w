@@ -23,16 +23,19 @@ namespace LL2W {
 			int highestIndex = -1;
 			std::mutex mutex;
 
-			void outputStruct(std::ostream &, const StructValue &, int indentation = 0);
-			void outputValue(std::ostream &out, const TypePtr &type, const ValuePtr &value, int indentation = 0);
-			void outputType(std::ostream &, const TypePtr &);
-			void outputArray(std::ostream &, const TypePtr &, const ArrayValue &, int indentation = 0);
+			std::string outputStruct(const StructValue &);
+			std::string valuePrefix(size_t bitwidth);
+			std::string outputValue(const TypePtr &type, const ValuePtr &value);
+			std::string outputArray(const ArrayValue &);
 
 		public:
 			std::unordered_map<std::string, Function *> functions;
 			std::string sourceFilename;
 			std::unordered_map<std::string, FunctionHeader *> declarations;
-			std::map<std::string, GlobalVarDef *> globals; // keys include the "@"
+			std::map<std::string, GlobalVarDef *> globals; // keys include the '@'
+			/** A set of all globals to which references were emitted while outputting the data section. Doesn't include
+			 *  the '@'. */
+			std::set<std::string> referencedGlobals;
 			std::map<int, std::unordered_set<FnAttr>> fnattrs;
 			std::map<int, std::unordered_set<ParAttr>> parattrs;
 			std::unordered_map<const std::string *, AliasDef *> aliases;
@@ -55,8 +58,8 @@ namespace LL2W {
 			/** Outputs the data section (excluding the #data header) to a stream. */
 			void dataSection(std::ostream &);
 
-			/** Outputs a single value with a name in the data section. */
-			void outputNamedValue(std::ostream &, const std::string &name, ConstantPtr, ValuePtr, const ASTLocation &);
+			/** Stringifies a single data section value. */
+			std::string stringifyNamedValue(ConstantPtr, ValuePtr, const ASTLocation &);
 
 			/** Outputs the debug data section (excluding the #debug header) to a stream. */
 			void debugSection(std::ostream *);
