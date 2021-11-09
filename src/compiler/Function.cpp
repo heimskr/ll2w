@@ -901,6 +901,16 @@ namespace LL2W {
 				        << "\n\n";
 		}
 		finalDone = true;
+		labels = extractLabels();
+	}
+
+	std::set<std::string> Function::extractLabels() const {
+		std::set<std::string> out;
+		out.insert(*name);
+		for (const InstructionPtr &instruction: linearInstructions)
+			if (auto *label = dynamic_cast<Label *>(instruction.get()))
+				out.insert(label->name);
+		return out;
 	}
 
 	void Function::compile() {

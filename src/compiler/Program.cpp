@@ -160,9 +160,31 @@ namespace LL2W {
 #endif
 			out << pair.second->toString() << "\n";
 		}
+		const std::string declarations = getDeclarations();
+		if (!declarations.empty())
+			out << "\n" << declarations << "\n";
 		out << "\n#debug\n";
 		debugSection(&out);
 		return out.str();
+	}
+
+	std::string Program::getDeclarations() const {
+		std::string out;
+		bool first = true;
+		std::set<std::string> function_labels;
+
+		for (const auto &[name, function]: functions)
+			function_labels.insert(function->labels.cbegin(), function->labels.cend());
+
+		for (const std::string &label: referencedGlobals)
+			if (emittedGlobals.count(label) == 0 && function_labels.count(label) == 0) {
+				if (first)
+					first = false;
+				else
+					out += '\n';
+				// out += "%type " +
+			}
+		return out;
 	}
 
 	void Program::dataSection(std::ostream &out) {
@@ -216,11 +238,14 @@ namespace LL2W {
 			}
 		} while (changed);
 
-		for (const auto &[name, stringified]: global_strings)
+		emittedGlobals.clear();
+		for (const auto &[name, stringified]: global_strings) {
+			emittedGlobals.insert(name);
 			if (stringified.empty())
 				out << '@' << name << "\n%8b 0\n\n";
 			else
 				out << '@' << name << '\n' << stringified << "\n\n";
+		}
 
 		if (!global_data.empty()) {
 			error() << "Couldn't translate global constants (is there a loop?):\n";
@@ -266,7 +291,7 @@ namespace LL2W {
 			// Return an empty string to indicate that the value isn't valid yet, but don't print any error.
 			return {};
 		} else
-			error() << "Unsupported global value: " << *value << " (type: " << static_cast<int>(type) << ") @ "
+			error() << "Unsupported global value: " << *value << " (type: " << int(type) << ") @ "
 					<< location << '\n';
 		return {};
 	}

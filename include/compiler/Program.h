@@ -36,6 +36,7 @@ namespace LL2W {
 			/** A set of all globals to which references were emitted while outputting the data section. Doesn't include
 			 *  the '@'. */
 			std::set<std::string> referencedGlobals;
+			std::set<std::string> emittedGlobals;
 			std::map<int, std::unordered_set<FnAttr>> fnattrs;
 			std::map<int, std::unordered_set<ParAttr>> parattrs;
 			std::unordered_map<const std::string *, AliasDef *> aliases;
@@ -54,6 +55,9 @@ namespace LL2W {
 
 			/** Returns the source code of the program. */
 			std::string toString();
+
+			/** Returns any declarations of types for undefined symbols. */
+			std::string getDeclarations() const;
 
 			/** Outputs the data section (excluding the #data header) to a stream. */
 			void dataSection(std::ostream &);
