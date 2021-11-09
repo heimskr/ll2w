@@ -114,9 +114,6 @@ namespace LL2W {
 			 *  needs to be split up after register allocation. */
 			std::unordered_map<std::string, std::unordered_set<std::shared_ptr<Instruction>>> categories;
 
-			/** A set of all labels governed by this function. It's filled at the end of finalCompile. */
-			std::set<std::string> labels;
-
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
 
@@ -263,9 +260,6 @@ namespace LL2W {
 
 			/** Performs a full set of compiler passes on the function. */
 			void compile();
-
-			/** Finds all labels governed by the function. */
-			std::set<std::string> extractLabels() const;
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);
