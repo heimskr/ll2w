@@ -246,7 +246,6 @@ namespace LL2W {
 		}
 
 		std::cerr << style() << parser->getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
-		std::cerr << "\e[1m" << parser->getName(symbol) << "\e[0;2m " << location << "\x1b[0;35m " << *lexerInfo;
 		std::cerr << "\e[0m" << debugExtra() << "\n";
 		for (ASTNode *child: children)
 			child->debug(indent + 1, child == children.back());
