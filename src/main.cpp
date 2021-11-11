@@ -15,6 +15,10 @@
 #include "Interactive.h"
 #include "main.h"
 
+#include "parser/Nodes.h"
+#include "parser/StructNode.h"
+#include "parser/Types.h"
+
 // #define DEBUGMODE
 // #define INTERACTIVE
 // #define CATCH
@@ -25,6 +29,7 @@ char **global_argv = nullptr;
 void compile(const std::string &, bool show_debug);
 void wasmparsertest(const std::string &);
 void interactive(LL2W::Program &);
+void paddingtest();
 
 int main(int argc, char **argv) {
 	global_argc = argc;
@@ -115,4 +120,23 @@ void wasmparsertest(const std::string &filename) {
 	LL2W::wasmParser.parse();
 	LL2W::wasmParser.root->debug();
 	LL2W::wasmParser.done();
+}
+
+void paddingtest() {
+	auto i1  = std::make_shared<LL2W::IntType>(1);
+	auto i8  = std::make_shared<LL2W::IntType>(8);
+	auto i24 = std::make_shared<LL2W::IntType>(24);
+	auto i32 = std::make_shared<LL2W::IntType>(32);
+	auto i64 = std::make_shared<LL2W::IntType>(64);
+	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {i8, i8, i24, i24, i32, i64,
+		i24, i32, i1, i64}, LL2W::StructShape::Default);
+	auto stype = std::make_shared<LL2W::StructType>(snode);
+	std::cout << "x86: " << stype->barename() << '\n';
+	long offset = 0;
+	for (size_t i = 0; i < snode->types.size(); ++i) {
+		const long width = LL2W::Util::alignToPower(snode->types.at(i)->width());
+		offset = LL2W::Util::upalign(offset, width);
+		std::cout << i << ": offset=" << (offset / 8) << " (i" << width << ")\n";
+		offset += width;
+	}
 }

@@ -31,16 +31,16 @@ namespace LL2W::Getelementptr {
 				}
 
 				long offset = 0;
-#ifdef STRUCT_PAD_LARGEST
+#ifdef STRUCT_PAD_CUSTOM
 				std::cerr << "Custom: " << stype->barename() << "\n";
-				long largest = 0;
 				for (long i = 0; i < front; ++i) {
-					const long width = snode->types.at(i)->width();
-					if (largest < width)
-						largest = width;
+					const long width = Util::alignToPower(snode->types.at(i)->width());
+					offset = Util::upalign(offset, width);
+					std::cerr << i << ": offset=" << (offset / 8) << " (" << offset << "), width=" << width << "\n";
+					if (i != front - 1)
+						offset += width;
 				}
-				offset = largest * front;
-				std::cerr << front << ": offset=" << offset << "\n";
+				std::cerr << "Final: " << (offset / 8) << " (" << offset << ")\n";
 #elif defined(STRUCT_PAD_X86)
 				std::cerr << "x86: " << stype->barename() << "\n";
 				for (long i = 0; i < front; ++i) {

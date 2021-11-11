@@ -24,6 +24,14 @@ namespace LL2W::Util {
 		return num + ((alignment - (num % alignment)) % alignment);
 	}
 
+	template <typename T>
+	inline T alignToPower(T num) {
+		num--;
+		for (size_t i = 1; i < 8 * sizeof(T); ++i)
+			num |= num >> i;
+		return num + 1;
+	}
+
 	bool isNumeric(const std::string &);
 	bool isNumeric(const std::string *);
 	bool isNumeric(const char *);

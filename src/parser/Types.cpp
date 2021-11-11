@@ -253,15 +253,23 @@ namespace LL2W {
 			return knownStructs.at(barename())->width();
 		}
 
-#ifdef STRUCT_PAD_LARGEST
-		int largest = 0;
+#ifdef STRUCT_PAD_CUSTOM
+		int largest = 0, offset = 0, last_offset = 0;
+		std::cerr << "(SIZE) Custom: " << barename() << '\n';
+		size_t i = 0;
 		for (const TypePtr &type: node->types) {
-			const int width = type->width();
+			const int width = Util::alignToPower(type->width());
+			if (width == 0)
+				continue;
+			offset = Util::upalign(offset, width);
+			last_offset = offset;
+			std::cerr << "(SIZE) " << i++ << ": offset=" << (offset / 8) << ", width=" << type->width() << '\n';
+			offset += width;
 			if (largest < width)
 				largest = width;
 		}
-
-		out += largest * node->types.size();
+		out = Util::upalign(offset, largest);
+		std::cerr << "(SIZE) out = " << (out / 8) << '\n';
 #elif defined(STRUCT_PAD_X86)
 		int largest = 0;
 		for (const TypePtr &type: node->types) {

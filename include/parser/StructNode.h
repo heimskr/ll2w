@@ -1,5 +1,4 @@
-#ifndef PARSER_STRUCTNODE_H_
-#define PARSER_STRUCTNODE_H_
+#pragma once
 
 #include <initializer_list>
 #include <vector>
@@ -33,5 +32,3 @@ namespace LL2W {
 			std::shared_ptr<StructNode> copy() const;
 	};
 }
-
-#endif
