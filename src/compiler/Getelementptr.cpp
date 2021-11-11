@@ -16,6 +16,7 @@ namespace LL2W::Getelementptr {
 
 		const long front = indices.front();
 		indices.pop_front();
+		std::cerr << "typeType[" << type_map.at(type->typeType()) << "], front[" << front << "]\n";
 		switch (type->typeType()) {
 			case TypeType::Pointer:
 			case TypeType::Array: {
@@ -33,11 +34,11 @@ namespace LL2W::Getelementptr {
 				long offset = 0;
 #ifdef STRUCT_PAD_CUSTOM
 				std::cerr << "Custom: " << stype->barename() << "\n";
-				for (long i = 0; i < front; ++i) {
+				for (long i = 0; i <= front; ++i) {
 					const long width = Util::alignToPower(snode->types.at(i)->width());
 					offset = Util::upalign(offset, width);
 					std::cerr << i << ": offset=" << (offset / 8) << " (" << offset << "), width=" << width << "\n";
-					if (i != front - 1)
+					if (i != front)
 						offset += width;
 				}
 				std::cerr << "Final: " << (offset / 8) << " (" << offset << ")\n";
@@ -59,6 +60,7 @@ namespace LL2W::Getelementptr {
 	}
 
 	long compute(TypePtr type, std::list<long> indices, TypePtr *out_type) {
+		std::cerr << "indices[" << Util::join(indices, ", ") << "]\n";
 		return compute_mutating(type, indices, out_type);
 	}
 

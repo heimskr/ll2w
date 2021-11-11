@@ -45,6 +45,20 @@ namespace LL2W::Util {
 
 	std::string escape(const std::string &);
 
+	template <template <typename...> typename C, typename T, typename D>
+	std::string join(const C<T> &container, D &&delimiter) {
+		std::stringstream ss;
+		bool first = true;
+		for (const T &item: container) {
+			if (first)
+				first = false;
+			else
+				ss << delimiter;
+			ss << item;
+		}
+		return ss.str();
+	}
+
 	template <typename T>
 	std::string hex(T n) {
 		std::stringstream ss;
