@@ -75,8 +75,8 @@ namespace LL2W::Passes {
 				VariablePtr var = node->variable;
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 				auto move = std::make_shared<MoveInstruction>(pointer, var);
-				function.insertBefore(instruction, move, "LowerGetelementptr: initial move -> " + var->plainString())
-					->setDebug(node)->extract();
+				function.insertBefore(instruction, move, "LowerGetelementptr(" + std::string(node->location) +
+					"): initial move -> " + var->plainString())->setDebug(node)->extract();
 				while (!indices.empty()) {
 					const auto &index = indices.front();
 					indices.pop_front();
@@ -89,8 +89,8 @@ namespace LL2W::Passes {
 							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
 							auto mult = std::make_shared<MultIInstruction>(pvar, type->width());
 							auto add = std::make_shared<AddRInstruction>(var, lo, var);
-							function.insertBefore(instruction, mult, "LowerGetelementptr: pointer/array, pvar -> " +
-								var->plainString())->setDebug(node)->extract();
+							function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location)
+								+ "): pointer/array, pvar -> " + var->plainString())->setDebug(node)->extract();
 							function.insertBefore(instruction, add)->setDebug(node)->extract();
 						} else if (tt == TypeType::Struct) {
 							throw std::runtime_error("pvar indices are invalid for struct types @ " +
@@ -100,8 +100,8 @@ namespace LL2W::Passes {
 						type = dynamic_cast<HasSubtype *>(type.get())->subtype;
 						auto add = std::make_shared<AddIInstruction>(var,
 							int(type->width() * std::get<long>(index.value)), var);
-						function.insertBefore(instruction, add, "LowerGetelementptr: pointer/array, number -> " +
-							var->plainString())->setDebug(node)->extract();
+						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
+							"): pointer/array, number -> " + var->plainString())->setDebug(node)->extract();
 					} else if (tt == TypeType::Struct) {
 						std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
 						std::shared_ptr<StructNode> snode = stype->node;
@@ -121,8 +121,8 @@ namespace LL2W::Passes {
 						var->type = out_type;
 
 						auto add = std::make_shared<AddIInstruction>(var, int(offset), var);
-						function.insertBefore(instruction, add, "LowerGetelementptr: struct, number -> " +
-							var->plainString())->setDebug(node)->extract();
+						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
+							"): struct, number -> " + var->plainString())->setDebug(node)->extract();
 						type = snode->types.at(std::get<long>(index.value));
 					} else
 						throw std::runtime_error("Invalid type in GetelementPtr: " + std::string(*type));
@@ -149,8 +149,8 @@ namespace LL2W::Passes {
 				auto addskip = std::make_shared<AddIInstruction>(node->variable, skip, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult, "LowerGetelementptr: array/pointer-type, dynamic index -> " +
-					node->variable->plainString());
+				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) +
+					"): array/pointer-type, dynamic index -> " + node->variable->plainString());
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, addskip)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
@@ -183,15 +183,20 @@ namespace LL2W::Passes {
 #ifdef DEBUG_GETELEMENTPTR
 				TypePtr old_type = node->variable->type;
 #endif
+				if (node->location.line == 1300)
+					std::cerr << "<SPECIAL>\n";
 				long offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8l);
 				if (Util::outOfRange(offset))
 					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 				node->variable->type = out_type;
 				node->type = out_type;
+				if (node->location.line == 1300)
+					std::cerr << "</SPECIAL>\n";
 
 				auto add = std::make_shared<AddIInstruction>(pointer, int(offset), node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
-					"): struct-type: " + constant_type->toString() + " -> " + node->variable->plainString())
+					"): struct-type: " + constant_type->toString() + " -> " + node->variable->plainString() +
+					", offset=" + std::to_string(offset) + ", indices=" + Util::join(indices, ","))
 					->setDebug(node)->extract();
 				if (first_pvar) {
 					auto pvar = function.getVariable(first_pvar);
@@ -215,11 +220,10 @@ namespace LL2W::Passes {
 				auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult, "LowerGetelementptr: pointer-type -> " +
-					node->variable->plainString());
+				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) +
+					"): pointer-type -> " + node->variable->plainString())->setDebug(node)->extract();
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
-				mult->setDebug(node)->extract();
 			} else throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
 
 			to_remove.push_back(instruction);
