@@ -1290,4 +1290,11 @@ namespace LL2W {
 		return "\e[34m%" + std::string(*result) + " \e[39;2m= \e[22;91mfreeze\e[39m " + std::string(*type) + " " +
 			std::string(*operand) + "\n";
 	}
+
+	ASTNode * ignoreConversion(ASTNode *node) {
+		if (*node->lexerInfo != "bitcast")
+			throw std::invalid_argument("Unexpected conversion expr in ignoreConversion: " + *node->lexerInfo);
+		// node->debug();
+		return node->at(0)->at(1);
+	}
 }

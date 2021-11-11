@@ -14,7 +14,7 @@ namespace LL2W::Getelementptr {
 			return 0;
 		}
 
-		auto front = indices.front();
+		const long front = indices.front();
 		indices.pop_front();
 		switch (type->typeType()) {
 			case TypeType::Pointer:
@@ -31,15 +31,26 @@ namespace LL2W::Getelementptr {
 				}
 
 				long offset = 0;
-#ifndef STRUCT_PAD_X86
+#ifdef STRUCT_PAD_LARGEST
+				std::cerr << "Custom: " << stype->barename() << "\n";
+				long largest = 0;
+				for (long i = 0; i < front; ++i) {
+					const long width = snode->types.at(i)->width();
+					if (largest < width)
+						largest = width;
+				}
+				offset = largest * front;
+				std::cerr << front << ": offset=" << offset << "\n";
+#elif defined(STRUCT_PAD_X86)
+				std::cerr << "x86: " << stype->barename() << "\n";
+				for (long i = 0; i < front; ++i) {
+					const long width = snode->types.at(i)->width();
+					offset = Util::upalign(offset, width) + width;
+					std::cerr << i << ": offset=" << offset << "\n";
+				}
+#else
 				for (long i = 0; i < front; ++i)
 					offset += snode->types.at(i)->width();
-#else
-				long width;
-				for (long i = 0; i < front; ++i) {
-					width = snode->types.at(i)->width();
-					offset += width + ((width - (offset % width)) % width);
-				}
 #endif
 				return offset + compute_mutating(snode->types.at(front), indices, out_type);
 			}

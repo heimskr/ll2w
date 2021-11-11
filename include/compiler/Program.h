@@ -58,9 +58,6 @@ namespace LL2W {
 			/** Outputs the data section (excluding the #data header) to a stream. */
 			void dataSection(std::ostream &);
 
-			/** Stringifies a single data section value. */
-			std::string stringifyNamedValue(ConstantPtr, ValuePtr, const ASTLocation &);
-
 			/** Outputs the debug data section (excluding the #debug header) to a stream. */
 			void debugSection(std::ostream *);
 

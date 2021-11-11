@@ -479,4 +479,6 @@ namespace LL2W {
 		std::vector<ValuePtr> allValues() override { return {operand}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&operand}; }
 	};
+
+	ASTNode * ignoreConversion(ASTNode *);
 }

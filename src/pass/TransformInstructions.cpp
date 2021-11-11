@@ -19,7 +19,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (auto li = std::dynamic_pointer_cast<LoadIInstruction>(instruction)) {
-				if (li->size == 4) {
+				if (li->size == 4 || li->size == 2) {
 					// TODO: verify
 					auto var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(64)),
 						li->parent.lock());

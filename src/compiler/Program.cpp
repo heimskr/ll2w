@@ -7,6 +7,7 @@
 // #define HIDE_PRINTS
 
 #include "compiler/BasicBlock.h"
+#include "compiler/Getelementptr.h"
 #include "compiler/Program.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
@@ -149,6 +150,8 @@ namespace LL2W {
 		std::stringstream out;
 		out << "#meta\n";
 		out << "name: \"" << Util::escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
+		out << "\n#debug\n";
+		debugSection(&out);
 		out << "\n#text\n\n%data\n\n";
 		dataSection(out);
 		out << "\n%code\n\n";
@@ -160,8 +163,6 @@ namespace LL2W {
 #endif
 			out << pair.second->toString() << "\n";
 		}
-		out << "\n#debug\n";
-		debugSection(&out);
 		return out.str();
 	}
 
@@ -193,7 +194,7 @@ namespace LL2W {
 			changed = false;
 			for (const auto &[name, data]: global_data) {
 				if (data.value) {
-					const std::string stringified = stringifyNamedValue(data.constant, data.value, data.location);
+					const std::string stringified = outputValue(data.constant->type, data.value);
 					if (!stringified.empty()) {
 						global_strings.emplace(name, stringified);
 						changed = true;
@@ -230,47 +231,6 @@ namespace LL2W {
 		}
 	}
 
-	std::string Program::stringifyNamedValue(ConstantPtr constant, ValuePtr value, const ASTLocation &location) {
-		ValueType type = value->valueType();
-		if (type == ValueType::CString) {
-			return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
-		} else if (type == ValueType::Zeroinitializer || type == ValueType::Null || type == ValueType::Undef) {
-			return "%fill " + std::to_string(constant->type->width() / 8) + " 0";
-		} else if (value->isIntLike()) {
-			return valuePrefix(constant->type->width()) + std::to_string(value->longValue());
-		} else if (type == ValueType::Array) {
-			ArrayValue *array = dynamic_cast<ArrayValue *>(value.get());
-			std::string out;
-			if (array->constants.empty())
-				out += "%8b 0";
-			else if (!constant->type)
-				throw std::runtime_error("constant->type is null in Program::stringifyNamedValue");
-			else
-				out += outputArray(*array);
-			return out;
-		} else if (type == ValueType::Struct) {
-			return outputStruct(*dynamic_cast<StructValue *>(value.get()));
-		} else if (type == ValueType::Getelementptr) {
-			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
-			for (const auto &[width, index]: gep->decimals)
-				if (!std::holds_alternative<long>(index) || std::get<long>(index) != 0) {
-					error() << "Unsupported getelementptr value (invalid indices): " << *gep << '\n';
-					return {};
-				}
-			if (gep->variable->valueType() != ValueType::Global)
-				error() << "Invalid getelementptrvalue variable: " << *gep->variable << '\n';
-			else
-				return '&' + *dynamic_cast<GlobalValue *>(gep->variable.get())->name;
-		} else if (type == ValueType::Global) {
-			referencedGlobals.insert(*dynamic_cast<GlobalValue *>(value.get())->name);
-			// Return an empty string to indicate that the value isn't valid yet, but don't print any error.
-			return {};
-		} else
-			error() << "Unsupported global value: " << *value << " (type: " << int(type) << ") @ "
-					<< location << '\n';
-		return {};
-	}
-
 	std::string Program::outputStruct(const StructValue &structval) {
 		std::string out;
 		bool first = true;
@@ -300,6 +260,8 @@ namespace LL2W {
 
 	std::string Program::outputValue(const TypePtr &type, const ValuePtr &value) {
 		switch (value->valueType()) {
+			case ValueType::CString:
+				return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
 			case ValueType::Array:
 				return outputArray(*dynamic_cast<ArrayValue *>(value.get()));
 			case ValueType::Int: {
@@ -309,8 +271,14 @@ namespace LL2W {
 			}
 			case ValueType::Null:
 			case ValueType::Undef:
-				if (type)
-					return valuePrefix(type->width()) + "0";
+			case ValueType::Zeroinitializer:
+				if (type) {
+					const auto width = type->width();
+					if (width % 8)
+						throw std::runtime_error("Invalid type width for null/undef/zeroinitializer value: " +
+							std::to_string(width) + "b");
+					return "%fill " + std::to_string(width / 8) + " 0";
+				}
 				return "%1b 0";
 			case ValueType::Struct:
 				return outputStruct(*dynamic_cast<StructValue *>(value.get()));
@@ -321,37 +289,37 @@ namespace LL2W {
 			}
 			case ValueType::Getelementptr: {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
-				GlobalValue *global;
 
 				auto validate = [value](GetelementptrValue *gep) {
 					for (const auto &[width, decimal]: gep->decimals)
-						if (!std::holds_alternative<long>(decimal) || std::get<long>(decimal) != 0) {
+						if (!std::holds_alternative<long>(decimal)) {
 							std::cerr << *value << '\n';
-							throw std::runtime_error("Found a non-zero decimal in a getelementptr expression in "
+							throw std::runtime_error("Found an invalid decimal in a getelementptr expression in "
 								"Program::outputValue");
 						}
 				};
 
-				while (gep) {
-					global = dynamic_cast<GlobalValue *>(gep->variable.get());
+				validate(gep);
+				long offset = Getelementptr::compute(gep, nullptr);
+				std::string comment = " // Offsets: " + std::to_string(offset);
+				bool comment_changed = false;
 
-					if (!global) {
-						if (GetelementptrValue *subgep = dynamic_cast<GetelementptrValue *>(gep->variable.get())) {
-							validate(gep);
-							gep = subgep;
-							continue;
-						}
-
-						std::cerr << *value << '\n';
-						std::cerr << *gep->variable << '\n';
-						throw std::runtime_error("Expected a global value in getelementptr expression in "
-							"Program::outputValue");
-					}
-
+				while (gep->variable->valueType() == ValueType::Getelementptr) {
+					gep = dynamic_cast<GetelementptrValue *>(gep->variable.get());
 					validate(gep);
+					// TODO: this is probably right, but something feels odd. I need to think things through more.
+					const long new_offset = Getelementptr::compute(gep, nullptr);
+					comment += ", " + std::to_string(new_offset);
+					comment_changed = true;
+					offset += new_offset;
 				}
 
-				return '&' + *global->name;
+				if (gep->variable->valueType() != ValueType::Global)
+					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got "
+						"type " + value_map.at(gep->variable->valueType()) + " instead");
+
+				return "%8b " + *dynamic_cast<GlobalValue *>(gep->variable.get())->name + "+" + std::to_string(offset) +
+					(comment_changed? comment : "");
 			}
 			default:
 				std::cerr << *value << '\n';

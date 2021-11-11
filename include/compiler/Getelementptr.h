@@ -1,5 +1,4 @@
-#ifndef COMPILER_GETELEMENTPTR_H_
-#define COMPILER_GETELEMENTPTR_H_
+#pragma once
 
 #include <list>
 #include <memory>
@@ -20,5 +19,3 @@ namespace LL2W {
 		std::list<long> getIndices(const GetelementptrValue &);
 	}
 }
-
-#endif

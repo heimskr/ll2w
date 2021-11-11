@@ -253,10 +253,16 @@ namespace LL2W {
 			return knownStructs.at(barename())->width();
 		}
 
-#ifndef STRUCT_PAD_X86
-		for (const TypePtr &type: node->types)
-			out += type->width();
-#else
+#ifdef STRUCT_PAD_LARGEST
+		int largest = 0;
+		for (const TypePtr &type: node->types) {
+			const int width = type->width();
+			if (largest < width)
+				largest = width;
+		}
+
+		out += largest * node->types.size();
+#elif defined(STRUCT_PAD_X86)
 		int largest = 0;
 		for (const TypePtr &type: node->types) {
 			const int width = type->width();
@@ -268,6 +274,9 @@ namespace LL2W {
 		}
 		if (largest != 0 && out % largest != 0)
 			out += largest - (out % largest);
+#else
+		for (const TypePtr &type: node->types)
+			out += type->width();
 #endif
 		return out;
 	}

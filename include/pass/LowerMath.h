@@ -10,13 +10,11 @@ namespace LL2W {
 }
 
 namespace LL2W::Passes {
-	using InstructionPtr = std::shared_ptr<Instruction>;
-
 	/** Lowers mathematical and logic instructions. */
 	int lowerMath(Function &);
 
-	void lowerMath(Function &, InstructionPtr &, BasicMathNode *);
-	void lowerMult(Function &, InstructionPtr &, BasicMathNode *);
-	void lowerSub(Function &, InstructionPtr &, BasicMathNode *);
-	void lowerLogic(Function &, InstructionPtr &, LogicNode *);
+	void lowerMath(Function &, std::shared_ptr<Instruction> &, BasicMathNode *);
+	void lowerMult(Function &, std::shared_ptr<Instruction> &, BasicMathNode *);
+	void lowerSub(Function &, std::shared_ptr<Instruction> &, BasicMathNode *);
+	void lowerLogic(Function &, std::shared_ptr<Instruction> &, LogicNode *);
 }

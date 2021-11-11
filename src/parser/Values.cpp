@@ -14,6 +14,8 @@
 #include "parser/Constant.h"
 #include "util/Util.h"
 
+#define THROW_ON_OVERFLOW
+
 namespace LL2W {
 	bool Value::isInt() const {
 		return valueType() == ValueType::Int;
@@ -41,14 +43,19 @@ namespace LL2W {
 
 	int Value::intValue(bool can_warn) {
 		long val = longValue();
-		if (can_warn && INT_MAX < val)
-			warn() << "Value " << val << " is larger than INT_MAX\n";
+		if (can_warn && (INT_MAX < val || val < INT_MIN)) {
+#ifdef THROW_ON_OVERFLOW
+			throw std::runtime_error("Value " + std::to_string(val) + " is outside the integer range");
+#else
+			warn() << "Value " << val << " is outside the integer range\n";
+#endif
+		}
 		return static_cast<int>(val);
 	}
 
 	bool Value::overflows() const {
 		const long long_value = longValue();
-		return INT_MAX <= long_value || long_value <= INT_MIN;
+		return INT_MAX < long_value || long_value < INT_MIN;
 	}
 
 	IntValue::IntValue(const std::string &value_) {

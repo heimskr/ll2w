@@ -110,18 +110,17 @@ namespace LL2W::Passes {
 							snode = stype->node;
 						}
 
-						int offset = 0;
-#ifndef STRUCT_PAD_X86
-						for (long i = 0; i < std::get<long>(index.value); ++i)
-							offset += snode->types.at(i)->width();
-#else
-						int width;
-						for (long i = 0; i < std::get<long>(index.value); ++i) {
-							width = snode->types.at(i)->width();
-							offset += width + ((width - (offset % width)) % width);
-						}
-#endif
-						auto add = std::make_shared<AddIInstruction>(var, offset, var);
+						std::list<long> index_list;
+						for (const GetelementptrNode::Index &index: indices)
+							index_list.push_back(std::get<long>(index.value));
+
+						TypePtr out_type;
+						long offset = Util::updiv(Getelementptr::compute(constant_type, index_list, &out_type), 8l);
+						if (Util::outOfRange(offset))
+							warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+						var->type = out_type;
+
+						auto add = std::make_shared<AddIInstruction>(var, int(offset), var);
 						function.insertBefore(instruction, add, "LowerGetelementptr: struct, number -> " +
 							var->plainString())->setDebug(node)->extract();
 						type = snode->types.at(std::get<long>(index.value));

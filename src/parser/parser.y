@@ -901,15 +901,15 @@ retattr: LLVMTOK_RETATTR
        | "align" LLVMTOK_DECIMAL               { $$ = $1->adopt($2); };
 operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct
        | bare_array   | LLVMTOK_CSTRING | getelementptr_expr  | "null" | "zeroinitializer"  | "undef";
-conversion_expr: LLVMTOK_CONV_OP constant LLVMTOK_TO type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
-               | LLVMTOK_CONV_OP "(" constant LLVMTOK_TO type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
+conversion_expr: LLVMTOK_CONV_OP constant "to" type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
+               | LLVMTOK_CONV_OP "(" constant "to" type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: LLVMTOK_INBOUNDS | { $$ = nullptr; };
 decimal_pairs: decimal_pairs "," _inrange LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$4, $5})); }
              | { $$ = new AN(llvmParser, LLVM_DECIMAL_PAIR_LIST); };
-gepexpr_operand: variable | getelementptr_expr;
+gepexpr_operand: variable | getelementptr_expr | conversion_expr { $$ = ignoreConversion($1); };
 
 %%
 
