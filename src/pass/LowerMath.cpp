@@ -27,6 +27,7 @@
 #include "instruction/OrIInstruction.h"
 #include "instruction/OrRInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/Sext32RInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftLeftLogicalInverseIInstruction.h"
 #include "instruction/ShiftLeftLogicalRInstruction.h"
@@ -499,6 +500,16 @@ namespace LL2W::Passes {
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
+					// If we're arithmetic-shifting a smaller value to the right, we need to sign extend it.
+					const int width = shr->type->width();
+					if (width == 32 && shr->left->isLocal()) {
+						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
+						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(left, left))
+							->setDebug(shr)->extract();
+					} else if (width < 64 && shr->left->isLocal())
+						warn() << "Arithmetic shift right at " << shr->location << " needs to be sign extended from "
+						          "width " << width << " to 64, but sign extension from that width is currently "
+						          "unsupported.\n";
 					lowerNoncommutativeOrInverse<ShiftRightArithmeticRInstruction, ShiftRightArithmeticIInstruction,
 						ShiftRightArithmeticInverseIInstruction>(function, instruction, shr);
 				} else {
