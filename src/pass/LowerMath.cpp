@@ -275,6 +275,10 @@ namespace LL2W::Passes {
 				function.insertAfter(last, std::make_shared<LuiInstruction>(node->variable, 0))
 					->setDebug(node)->extract();
 				break;
+			case 24:
+				function.insertAfter(last, std::make_shared<AndIInstruction>(node->variable, 0xffffff,
+					node->variable))->setDebug(node)->extract();
+				break;
 			case 16:
 				function.insertAfter(last, std::make_shared<AndIInstruction>(node->variable, 0xffff,
 					node->variable))->setDebug(node)->extract();
