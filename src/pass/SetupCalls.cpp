@@ -109,10 +109,9 @@ namespace LL2W::Passes {
 
 			// Next, move variables into the argument registers.
 			for (i = 0; i < reg_max && i < arg_count; ++i) {
-				// Make a precolored dummy variable.
-				VariablePtr new_var = function.newVariable(argument_types[i]);
-				new_var->registers = {WhyInfo::argumentOffset + i};
-				setupCallValue(function, new_var, instruction, call->constants[i]);
+				VariablePtr precolored = function.makePrecoloredVariable(WhyInfo::argumentOffset + i,
+					instruction->parent.lock());
+				setupCallValue(function, precolored, instruction, call->constants[i]);
 			}
 
 			// Push variables onto the stack, right to left.

@@ -6,6 +6,7 @@
 #include "instruction/LuiInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/Sext32RInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftRightLogicalIInstruction.h"
 #include "instruction/SubIInstruction.h"
@@ -55,7 +56,7 @@ namespace LL2W::Passes {
 		return to_remove.size();
 	}
 
-	void lowerBasicConversion(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *node) {
+	void lowerBasicConversion(Function &function, InstructionPtr &instruction, ConversionNode *node) {
 		if (!node->value->isLocal())
 			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
 		VariablePtr source = dynamic_cast<LocalValue *>(node->value.get())->variable;
@@ -65,7 +66,7 @@ namespace LL2W::Passes {
 		move->setDebug(node)->extract();
 	}
 
-	void lowerTrunc(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
+	void lowerTrunc(Function &function, InstructionPtr &instruction, ConversionNode *conversion) {
 		if (!conversion->to->isInt())
 			throw std::runtime_error("Trunc conversion expected to convert to an integer type");
 
@@ -94,7 +95,7 @@ namespace LL2W::Passes {
 		}
 	}
 
-	void lowerSext(Function &function, std::shared_ptr<Instruction> &instruction, ConversionNode *conversion) {
+	void lowerSext(Function &function, InstructionPtr &instruction, ConversionNode *conversion) {
 		if (!conversion->from->isInt() || !conversion->to->isInt())
 			throw std::runtime_error("Expected from and to types to be integer types in sext conversion");
 
@@ -104,7 +105,10 @@ namespace LL2W::Passes {
 		VariablePtr destination = conversion->variable;
 
 		const int from = conversion->from->width(), to = conversion->to->width();
-		if (to == 64 || to == 32) {
+		if (from == 32 && to == 64) {
+			function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(source, destination))
+				->setDebug(conversion)->extract();
+		} else if (to == 64 || to == 32) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
 			auto m0 = function.mx(0, instruction->parent.lock());

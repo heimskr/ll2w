@@ -10,8 +10,42 @@
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "parser/Nodes.h"
 #include "parser/StructNode.h"
+#include "options.h"
 
 namespace LL2W::PaddedStructs {
+	int getOffset(std::shared_ptr<StructType> type, int index) {
+		if (index == 0)
+			return 0;
+		int offset = 0;
+		std::shared_ptr<StructNode> node = type->node;
+		if (!node) {
+			type = StructType::knownStructs.at(type->barename());
+			node = type->node;
+		}
+#ifdef STRUCT_PAD_CUSTOM
+		int i = 0;
+		for (const TypePtr &type: type->node->types) {
+			const int align = type->alignment() * 8;
+			const int width = type->width();
+			if (align == 0)
+				continue;
+			offset = LL2W::Util::upalign(offset, align);
+			if (i++ == index)
+				return offset;
+			offset += width;
+		}
+#elif defined(STRUCT_PAD_X86)
+		for (int i = 0; i < index; ++i) {
+			const int width = node->types.at(i)->width();
+			offset = Util::upalign(offset, width) + width;
+		}
+#else
+		for (int i = 0; i < index; ++i)
+			offset += node->types.at(i)->width();
+#endif
+		return offset;
+	}
+
 	VariablePtr extract(VariablePtr source, int index, Function &function, InstructionPtr instruction) {
 		std::list<int> source_regs(source->registers.begin(), source->registers.end());
 

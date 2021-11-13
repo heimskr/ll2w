@@ -29,6 +29,8 @@ namespace LL2W {
 			virtual TypePtr copy() const = 0;
 			/** Returns the width of the type in bits. */
 			virtual int width() const = 0;
+			/** Returns the alignment of the type in bytes. */
+			virtual int alignment() const = 0;
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 			bool isInt() const;
@@ -41,6 +43,7 @@ namespace LL2W {
 		std::string toString() override { return "void"; }
 		TypePtr copy() const override { return std::make_shared<VoidType>(); }
 		int width() const override { return 0; }
+		int alignment() const override { return 1; }
 	};
 
 	struct IntType: public Type {
@@ -52,6 +55,7 @@ namespace LL2W {
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
 		int width() const override { return Util::upalign(intWidth, 8); }
+		int alignment() const override { return Util::alignToPower(intWidth) / 8; }
 		bool operator==(const Type &other) const override;
 	};
 
@@ -76,6 +80,7 @@ namespace LL2W {
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<ArrayType>(count, subtype->copy()); }
 		int width() const override { return count * subtype->width(); }
+		int alignment() const override { return subtype->alignment(); }
 		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
 	};
@@ -99,6 +104,7 @@ namespace LL2W {
 		LL2W::TypePtr copy() const override { return std::make_shared<FloatType>(type); }
 		static Type getType(const std::string &);
 		int width() const override;
+		int alignment() const override { return Util::alignToPower(width() / 8); }
 		bool operator==(const LL2W::Type &) const override;
 	};
 
@@ -109,6 +115,7 @@ namespace LL2W {
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
 		int width() const override { return WhyInfo::pointerWidth * 8; }
+		int alignment() const override { return WhyInfo::pointerWidth; }
 		bool operator==(const Type &) const override;
 	};
 
@@ -130,6 +137,7 @@ namespace LL2W {
 			std::string toString() override;
 			TypePtr copy() const override;
 			int width() const override { return WhyInfo::pointerWidth; }
+			int alignment() const override;
 			bool operator==(const Type &) const override;
 			bool operator!=(const Type &) const override;
 	};
@@ -153,6 +161,7 @@ namespace LL2W {
 		std::string toString() override;
 		TypePtr copy() const override;
 		int width() const override;
+		int alignment() const override;
 		TypePtr extractType(std::list<int> indices) const override;
 		std::string barename() const;
 		bool operator==(const Type &) const override;
@@ -173,6 +182,7 @@ namespace LL2W {
 		std::string toString() override { return "@" + *globalName; }
 		TypePtr copy() const override { return std::make_shared<GlobalTemporaryType>(globalName); }
 		int width() const override { throw std::runtime_error("Calling GlobalTemporaryType::width() is invalid"); }
+		int alignment() const override;
 		bool operator==(const Type &) const override;
 	};
 
@@ -186,6 +196,7 @@ namespace LL2W {
 		std::string toString() override { return "opaque"; }
 		TypePtr copy() const override { return std::make_shared<OpaqueType>(); }
 		int width() const override { return 64; }
+		int alignment() const override { warn() << "Opaque alignment is unspecified!\n"; return 8; }
 		bool operator==(const Type &type) const override { return dynamic_cast<const OpaqueType *>(&type) != nullptr; }
 	};
 

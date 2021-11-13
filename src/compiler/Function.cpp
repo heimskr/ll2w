@@ -289,17 +289,13 @@ namespace LL2W {
 			}
 
 			if (should_insert) {
-				// if (*definition->parent.lock()->label == "376" && ("Spill: stack store for " + variable->plainString() + " into " + std::to_string(location.offset)) == "Spill: stack store for %.1023 into 72")
-				// 	debug();
 				insertAfter(definition, store, false);
 				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString() +
-					" into " + std::to_string(location.offset)));
+					" into location=" + std::to_string(location.offset)));
 				VariablePtr new_var = mx(6, definition);
 				definition->replaceWritten(variable, new_var);
 				store->variable = new_var;
 				store->extract();
-				// if (*definition->parent.lock()->label == "376" && ("Spill: stack store for " + variable->plainString() + " into " + std::to_string(location.offset)) == "Spill: stack store for %.1023 into 72")
-				// 	debug();
 				out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "    Inserting a stack store after definition: " << store->debugExtra() << "\n";

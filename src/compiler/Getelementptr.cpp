@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "compiler/Getelementptr.h"
+#include "compiler/PaddedStructs.h"
 #include "exception/TypeError.h"
 #include "parser/Types.h"
 #include "parser/StructNode.h"
@@ -29,25 +30,8 @@ namespace LL2W::Getelementptr {
 					stype = StructType::knownStructs.at(stype->barename());
 					snode = stype->node;
 				}
-
-				long offset = 0;
-#ifdef STRUCT_PAD_CUSTOM
-				for (long i = 0; i <= front; ++i) {
-					const long width = Util::alignToPower(snode->types.at(i)->width());
-					offset = Util::upalign(offset, width);
-					if (i != front)
-						offset += width;
-				}
-#elif defined(STRUCT_PAD_X86)
-				for (long i = 0; i < front; ++i) {
-					const long width = snode->types.at(i)->width();
-					offset = Util::upalign(offset, width) + width;
-				}
-#else
-				for (long i = 0; i < front; ++i)
-					offset += snode->types.at(i)->width();
-#endif
-				return offset + compute_mutating(snode->types.at(front), indices, out_type);
+				return PaddedStructs::getOffset(stype, front)
+					+ compute_mutating(snode->types.at(front), indices, out_type);
 			}
 			default: throw TypeError("Getelementptr::compute encountered an invalid type", type);
 		}

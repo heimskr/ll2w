@@ -184,6 +184,11 @@ namespace LL2W {
 		return std::make_shared<FunctionType>(returnType->copy(), argument_types);
 	}
 
+	int FunctionType::alignment() const {
+		warn() << "Function alignment is unspecified!\n";
+		return WhyInfo::pointerWidth;
+	}
+
 	bool FunctionType::operator==(const Type &other) const {
 		if (this == &other)
 			return true;
@@ -254,14 +259,13 @@ namespace LL2W {
 		}
 
 #ifdef STRUCT_PAD_CUSTOM
-		int largest = 0, offset = 0, last_offset = 0;
+		int largest = 0, offset = 0;
 		for (const TypePtr &type: node->types) {
-			const int width = Util::alignToPower(type->width());
-			if (width == 0)
+			const int align = type->alignment() * 8;
+			const int width = type->width();
+			if (align == 0)
 				continue;
-			offset = Util::upalign(offset, width);
-			last_offset = offset;
-			offset += width;
+			offset = LL2W::Util::upalign(offset, align) + width;
 			if (largest < width)
 				largest = width;
 		}
@@ -283,6 +287,16 @@ namespace LL2W {
 			out += type->width();
 #endif
 		return out;
+	}
+
+	int StructType::alignment() const {
+		int largest = 0;
+		for (const TypePtr &type: node->types) {
+			const int subalignment = type->alignment();
+			if (largest < subalignment)
+				largest = subalignment;
+		}
+		return largest;
 	}
 
 	TypePtr StructType::extractType(std::list<int> indices) const {
@@ -362,6 +376,10 @@ namespace LL2W {
 
 		out->padded = true;
 		return out;
+	}
+
+	int GlobalTemporaryType::alignment() const {
+		throw std::runtime_error("Calling GlobalTemporaryType::alignment() is invalid");
 	}
 
 	bool GlobalTemporaryType::operator==(const Type &other) const {

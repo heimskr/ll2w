@@ -125,18 +125,29 @@ void wasmparsertest(const std::string &filename) {
 void paddingtest() {
 	auto i1  = std::make_shared<LL2W::IntType>(1);
 	auto i8  = std::make_shared<LL2W::IntType>(8);
+	auto i16 = std::make_shared<LL2W::IntType>(16);
 	auto i24 = std::make_shared<LL2W::IntType>(24);
 	auto i32 = std::make_shared<LL2W::IntType>(32);
 	auto i64 = std::make_shared<LL2W::IntType>(64);
-	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {i8, i8, i24, i24, i32, i64,
-		i24, i32, i1, i64}, LL2W::StructShape::Default);
+	auto i8x3 = std::make_shared<LL2W::ArrayType>(3, i8);
+	auto i24x3 = std::make_shared<LL2W::ArrayType>(3, i24);
+	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {
+		i32, i8, i8x3, i8, i8, i8, i8, i64, i16, i32
+	}, LL2W::StructShape::Default);
 	auto stype = std::make_shared<LL2W::StructType>(snode);
-	std::cout << "x86: " << stype->barename() << '\n';
-	long offset = 0;
-	for (size_t i = 0; i < snode->types.size(); ++i) {
-		const long width = LL2W::Util::alignToPower(snode->types.at(i)->width());
-		offset = LL2W::Util::upalign(offset, width);
-		std::cout << i << ": offset=" << (offset / 8) << " (i" << width << ")\n";
+	std::cout << "Custom: " << stype->barename() << '\n';
+	int largest = 0, offset = 0, last_offset = 0, i = 0;
+	for (const auto &type: snode->types) {
+		const int align = type->alignment() * 8;
+		const int width = type->width();
+		if (align == 0)
+			continue;
+		offset = LL2W::Util::upalign(offset, align);
+		last_offset = offset;
+		std::cout << i++ << " (" << std::string(*type) << "): " << offset / 8 << '\n';
 		offset += width;
+		if (largest < width)
+			largest = width;
 	}
+	std::cout << "Width: " << LL2W::Util::upalign(offset, largest) / 8 << '\n';
 }
