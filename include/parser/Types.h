@@ -142,11 +142,12 @@ namespace LL2W {
 			bool operator!=(const Type &) const override;
 	};
 
-	struct StructType: public AggregateType {
+	struct StructType: public AggregateType, public std::enable_shared_from_this<StructType> {
 		bool padded = false;
 		/** Map indices in the struct before padding to the corresponding indices after padding has been inserted.
 		 *  If padded is false, this is empty. */
 		std::map<int, int> paddingMap;
+		std::shared_ptr<StructType> paddedChild;
 		static std::unordered_map<std::string, std::shared_ptr<StructType>> knownStructs;
 		TypeType typeType() const override { return TypeType::Struct; }
 		const std::string *name;
@@ -154,7 +155,7 @@ namespace LL2W {
 		StructShape shape = StructShape::Default;
 		std::shared_ptr<StructNode> node;
 		StructType(const std::string *name_, StructForm form_ = StructForm::Struct,
-			StructShape shape_ = StructShape::Default): name(name_), form(form_), shape(shape_) {}
+		           StructShape shape_ = StructShape::Default);
 		StructType(std::shared_ptr<StructNode>);
 		StructType(const StructNode *);
 		operator std::string() override;
@@ -166,7 +167,7 @@ namespace LL2W {
 		std::string barename() const;
 		bool operator==(const Type &) const override;
 		/** Assumes that each member in a struct has a width that's a multiple of 8. */
-		std::shared_ptr<StructType> pad() const;
+		std::shared_ptr<StructType> pad();
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we

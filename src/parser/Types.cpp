@@ -223,6 +223,9 @@ namespace LL2W {
 
 	std::unordered_map<std::string, std::shared_ptr<StructType>> StructType::knownStructs = {};
 
+	StructType::StructType(const std::string *name_, StructForm form_, StructShape shape_):
+		name(name_), form(form_), shape(shape_) {}
+
 	StructType::StructType(std::shared_ptr<StructNode> node_):
 		name(node_->name), form(node_->form), shape(node_->shape), node(node_) {}
 
@@ -248,6 +251,7 @@ namespace LL2W {
 		auto out = node? std::make_shared<StructType>(node) : std::make_shared<StructType>(name, form, shape);
 		out->padded = padded;
 		out->paddingMap = paddingMap;
+		out->paddedChild = paddedChild;
 		return out;
 	}
 
@@ -290,6 +294,11 @@ namespace LL2W {
 	}
 
 	int StructType::alignment() const {
+		if (!node) {
+			// This is likely a named struct rather than a literal struct.
+			return knownStructs.at(barename())->width();
+		}
+
 		int largest = 0;
 		for (const TypePtr &type: node->types) {
 			const int subalignment = type->alignment();
@@ -321,6 +330,8 @@ namespace LL2W {
 	}
 
 	bool StructType::operator==(const Type &other) const {
+		if (this == &other)
+			return true;
 		// TODO: is this correct?
 		if (other.typeType() != TypeType::Struct)
 			return false;
@@ -339,14 +350,17 @@ namespace LL2W {
 		return true;
 	}
 
-	std::shared_ptr<StructType> StructType::pad() const {
+	std::shared_ptr<StructType> StructType::pad() {
 		if (padded)
-			return std::dynamic_pointer_cast<StructType>(copy());
+			return shared_from_this();
+
+		if (paddedChild)
+			return paddedChild;
 
 		auto out = std::make_shared<StructType>(
 			*name == "[anon]"? name : StringSet::intern(*name + "$padded"), form, StructShape::Default);
 
-		out->node = std::make_shared<StructNode>(StructShape::Default);
+		out->node = std::make_shared<StructNode>(StructShape::Packed);
 
 		int largest = 1, current_width = 0, padding_items_added = 0;
 		for (TypePtr &subtype: node->types)
@@ -375,6 +389,7 @@ namespace LL2W {
 		}
 
 		out->padded = true;
+		paddedChild = out;
 		return out;
 	}
 

@@ -41,6 +41,7 @@ namespace LL2W {
 
 	Program::Program(const ASTNode &root) {
 		// Look for all struct definitions.
+		StructType::knownStructs.clear();
 		for (const ASTNode *node: root) {
 			if (node->symbol == LLVM_STRUCTDEF) {
 				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
