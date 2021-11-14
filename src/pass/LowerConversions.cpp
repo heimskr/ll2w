@@ -108,7 +108,7 @@ namespace LL2W::Passes {
 		if (from == 32 && to == 64) {
 			function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(source, destination))
 				->setDebug(conversion)->extract();
-		} else if (to == 64 || to == 32) {
+		} else if (to == 64 || to == 32 || to == 16) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
 			auto m0 = function.mx(0, instruction->parent.lock());
@@ -133,7 +133,9 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, lui)->setDebug(conversion)->extract();
 				function.insertBefore(instruction, andi)->setDebug(conversion)->extract();
 			}
-		} else throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported");
+		} else
+			throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported (" +
+				std::string(conversion->location) + ")");
 		// TODO: support other destination widths
 	}
 }
