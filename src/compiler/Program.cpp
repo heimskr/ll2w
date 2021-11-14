@@ -335,15 +335,14 @@ namespace LL2W {
 				};
 
 				validate(gep);
-				long offset = Getelementptr::compute(gep, nullptr);
+				long offset = Getelementptr::compute(gep, nullptr) / 8;
 				std::string comment = " // Offsets: " + std::to_string(offset);
 				bool comment_changed = false;
 
 				while (gep->variable->valueType() == ValueType::Getelementptr) {
 					gep = dynamic_cast<GetelementptrValue *>(gep->variable.get());
 					validate(gep);
-					// TODO: this is probably right, but something feels odd. I need to think things through more.
-					const long new_offset = Getelementptr::compute(gep, nullptr);
+					const long new_offset = Getelementptr::compute(gep, nullptr) / 8;
 					comment += ", " + std::to_string(new_offset);
 					comment_changed = true;
 					offset += new_offset;
