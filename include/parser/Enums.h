@@ -62,6 +62,8 @@ namespace LL2W {
 	extern std::unordered_map<IcmpCond,   IcmpCond>    cond_rev_map;
 	extern std::unordered_map<Conversion, std::string> conversion_map;
 	extern std::unordered_map<QueryType,  std::string> query_map;
+
+	bool isSigned(IcmpCond);
 }
 
 #endif

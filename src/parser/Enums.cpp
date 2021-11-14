@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "parser/Enums.h"
 
 namespace LL2W {
@@ -110,4 +112,23 @@ namespace LL2W {
 
 	std::unordered_map<QueryType, std::string> query_map {
 		{QueryType::Memory, "mem"}};
+
+	bool isSigned(IcmpCond cond) {
+		switch (cond) {
+			case IcmpCond::Sge:
+			case IcmpCond::Sgt:
+			case IcmpCond::Slt:
+			case IcmpCond::Sle:
+				return true;
+			case IcmpCond::Eq:
+			case IcmpCond::Ne:
+			case IcmpCond::Uge:
+			case IcmpCond::Ugt:
+			case IcmpCond::Ult:
+			case IcmpCond::Ule:
+				return false;
+			default:
+				throw std::invalid_argument("Invalid IcmpCond in isSigned: " + std::to_string(int(cond)));
+		}
+	}
 }
