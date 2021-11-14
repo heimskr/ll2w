@@ -27,7 +27,7 @@ namespace LL2W::PaddedStructs {
 		for (const TypePtr &type: type->node->types) {
 			const int align = type->alignment() * 8;
 			const int width = type->width();
-			if (align == 0)
+			if (align == 0 || width == 0)
 				continue;
 			offset = LL2W::Util::upalign(offset, align);
 			if (i++ == index)

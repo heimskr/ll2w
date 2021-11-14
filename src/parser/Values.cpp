@@ -170,6 +170,7 @@ namespace LL2W {
 	}
 
 	StructValue::StructValue(const ASTNode *node) {
+		packed = *node->lexerInfo == "<";
 		for (const ASTNode *sub: *node->at(0))
 			constants.push_back(std::make_shared<Constant>(sub));
 	}
@@ -178,18 +179,24 @@ namespace LL2W {
 		std::vector<std::shared_ptr<Constant>> constants_copy;
 		for (ConstantPtr constant: constants)
 			constants_copy.push_back(constant->copy());
-		return std::make_shared<StructValue>(std::move(constants_copy));
+		return std::make_shared<StructValue>(std::move(constants_copy), packed);
 	}
 
 	StructValue::operator std::string() {
 		std::stringstream out;
-		out << "\e[2m{\e[0m";
+		out << "\e[2m";
+		if (packed)
+			out << '<';
+		out << "{\e[22m";
 		for (auto begin = constants.cbegin(), iter = begin, end = constants.cend(); iter != end; ++iter) {
 			if (iter != begin)
-				out << "\e[2m,\e[0m ";
+				out << "\e[2m,\e[22m ";
 			out << std::string(**iter);
 		}
-		out << "\e[2m}\e[0m";
+		out << "\e[2m}";
+		if (packed)
+			out << '>';
+		out << "\e[22m";
 		return out.str();
 	}
 

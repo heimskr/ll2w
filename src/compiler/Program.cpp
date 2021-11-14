@@ -8,6 +8,7 @@
 
 #include "compiler/BasicBlock.h"
 #include "compiler/Getelementptr.h"
+#include "compiler/PaddedStructs.h"
 #include "compiler/Program.h"
 #include "parser/ASTNode.h"
 #include "parser/Parser.h"
@@ -234,14 +235,46 @@ namespace LL2W {
 	std::string Program::outputStruct(const StructValue &structval) {
 		std::string out;
 		bool first = true;
+		const bool packed = structval.packed;
+
+		std::vector<ConstantPtr> constants;
+		std::vector<TypePtr> types;
+
 		for (const ConstantPtr &constant: structval.constants) {
-			ConstantPtr converted = constant->convert();
-			if (first)
-				first = false;
-			else
-				out += '\n';
-			out += outputValue(converted->type, converted->value);
+			constants.push_back(constant->convert());
+			types.push_back(constants.back()->type);
 		}
+
+		if (packed) {
+			for (const ConstantPtr &constant: constants) {
+				if (first)
+					first = false;
+				else
+					out += '\n';
+				out += outputValue(constant->type, constant->value);
+			}
+		} else {
+			auto snode = std::make_shared<StructNode>(types, packed? StructShape::Packed : StructShape::Default);
+			auto stype = std::make_shared<StructType>(snode);
+			int sum = 0, i = 0;
+			for (const ConstantPtr &constant: constants) {
+				if (first)
+					first = false;
+				else
+					out += '\n';
+				const int offset = PaddedStructs::getOffset(stype, i++) / 8;
+				const int difference = offset - sum;
+				if (difference < 0) {
+					throw std::runtime_error("Difference between struct offset and total width is negative");
+				} else if (0 < difference) {
+					out += "%fill " + std::to_string(difference) + " 0\n";
+					sum = offset;
+				}
+				out += outputValue(constant->type, constant->value);
+				sum += constant->type->width() / 8;
+			}
+		}
+
 		return out;
 	}
 

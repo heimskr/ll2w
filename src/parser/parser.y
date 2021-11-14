@@ -569,7 +569,8 @@ vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
            | type_any value { $$ = (new AN(llvmParser, LLVM_VECTOR))->adopt((new AN(llvmParser, LLVMTOK_COMMA, ","))->adopt({$1, $2})); };
-struct: "{" _value_pairs "}" { $1->adopt($2); $1->symbol = LLVM_STRUCT_VALUE; D($3); };
+struct: "{" _value_pairs "}"         { $1->adopt($2); $1->symbol = LLVM_STRUCT_VALUE; D($3); }
+      | "<" "{" _value_pairs "}" ">" { $1->adopt($3); $1->symbol = LLVM_STRUCT_VALUE; D($2, $4, $5); };
 _value_pairs: { $$ = nullptr; } | value_pairs;
 value_pairs: value_pairs "," value_pair { $1->adopt($3); D($2); }
            | value_pair { $$ = (new AN(llvmParser, LLVM_VALUE_LIST))->adopt($1); };

@@ -163,8 +163,10 @@ namespace LL2W {
 
 	struct StructValue: public Value {
 		std::vector<ConstantPtr> constants;
+		bool packed = false;
 		StructValue(const ASTNode *);
-		StructValue(const std::vector<ConstantPtr> &constants_): constants(constants_) {}
+		StructValue(const std::vector<ConstantPtr> &constants_, bool packed_ = false):
+			constants(constants_), packed(packed_) {}
 		ValueType valueType() const override { return ValueType::Struct; }
 		ValuePtr copy() const override;
 		operator std::string() override;

@@ -105,8 +105,7 @@ void compile(const std::string &filename, bool show_debug) {
 				std::cout << " \e[2m(\e[22m" << prog->subprograms.at(location.scope).name << "\e[2m)\e[22m";
 			std::cout << '\n';
 		}
-	}
-	else
+	} else
 		std::cout << prog->toString();
 #endif
 #endif
