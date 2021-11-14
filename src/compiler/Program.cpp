@@ -218,11 +218,13 @@ namespace LL2W {
 			}
 		} while (changed);
 
-		for (const auto &[name, stringified]: global_strings)
+		for (const auto &[name, stringified]: global_strings) {
+			out << "%align 8\n";
 			if (stringified.empty())
 				out << '@' << name << "\n%8b 0\n\n";
 			else
 				out << '@' << name << '\n' << stringified << "\n\n";
+		}
 
 		if (!global_data.empty()) {
 			error() << "Couldn't translate global constants (is there a loop?):\n";
