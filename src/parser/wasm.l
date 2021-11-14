@@ -63,9 +63,12 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "%%time"					{ WASMRTOKEN(TIME) }
 "%%ring"					{ WASMRTOKEN(RING) }
 "%%page"					{ WASMRTOKEN(PAGE) }
+"sext32"					{ WASMRTOKEN(SEXT32) }
+"sext16"					{ WASMRTOKEN(SEXT16) }
 "%time"						{ WASMRTOKEN(TIME) }
 "%ring"						{ WASMRTOKEN(RING) }
 "%page"						{ WASMRTOKEN(PAGE) }
+"sext8"						{ WASMRTOKEN(SEXT8) }
 "%%int"						{ WASMRTOKEN(INT) }
 "%%rit"						{ WASMRTOKEN(RIT) }
 "%int"						{ WASMRTOKEN(INT) }

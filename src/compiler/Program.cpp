@@ -393,8 +393,6 @@ namespace LL2W {
 			if (files.count(location.file) == 0) {
 				warn() << "Couldn't find file " << location.file << " from location " << index << ".\n";
 			} else if (subprograms.count(location.scope) != 0) {
-				// TODO: Originally, I had the or'd condition above split into two else if blocks with identical
-				// contents, but then I merged them. Were they supposed to be separate with different contents?
 				if (out)
 					*out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column
 					     << " " << subprograms.at(location.scope).index << "\n";
