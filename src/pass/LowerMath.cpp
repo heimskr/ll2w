@@ -27,6 +27,8 @@
 #include "instruction/OrIInstruction.h"
 #include "instruction/OrRInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/Sext8RInstruction.h"
+#include "instruction/Sext16RInstruction.h"
 #include "instruction/Sext32RInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftLeftLogicalInverseIInstruction.h"
@@ -506,11 +508,20 @@ namespace LL2W::Passes {
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
 					// If we're arithmetic-shifting a smaller value to the right, we need to sign extend it.
 					const int width = shr->type->width();
-					if (width == 32 && shr->left->isLocal()) {
+					const bool left_local = shr->left->isLocal();
+					if (width == 32 && left_local) {
 						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
 						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(left, left))
 							->setDebug(shr)->extract();
-					} else if (width < 64 && shr->left->isLocal())
+					} else if (width == 16 && left_local) {
+						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
+						function.insertBefore(instruction, std::make_shared<Sext16RInstruction>(left, left))
+							->setDebug(shr)->extract();
+					} else if (width == 8 && left_local) {
+						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
+						function.insertBefore(instruction, std::make_shared<Sext8RInstruction>(left, left))
+							->setDebug(shr)->extract();
+					} else if (width < 64 && left_local)
 						warn() << "Arithmetic shift right at " << shr->location << " needs to be sign extended from "
 						          "width " << width << " to 64, but sign extension from that width is currently "
 						          "unsupported.\n";
