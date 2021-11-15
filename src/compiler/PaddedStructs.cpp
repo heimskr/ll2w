@@ -22,27 +22,32 @@ namespace LL2W::PaddedStructs {
 			type = StructType::knownStructs.at(type->barename());
 			node = type->node;
 		}
+		if (type->shape == StructShape::Packed) {
+			for (int i = 0; i < index; ++i)
+				offset += node->types.at(i)->width();
+		} else {
 #ifdef STRUCT_PAD_CUSTOM
-		int i = 0;
-		for (const TypePtr &type: type->node->types) {
-			const int align = type->alignment() * 8;
-			const int width = type->width();
-			if (align == 0 || width == 0)
-				continue;
-			offset = LL2W::Util::upalign(offset, align);
-			if (i++ == index)
-				return offset;
-			offset += width;
-		}
+			int i = 0;
+			for (const TypePtr &type: type->node->types) {
+				const int align = type->alignment() * 8;
+				const int width = type->width();
+				if (align == 0 || width == 0)
+					continue;
+				offset = LL2W::Util::upalign(offset, align);
+				if (i++ == index)
+					return offset;
+				offset += width;
+			}
 #elif defined(STRUCT_PAD_X86)
-		for (int i = 0; i < index; ++i) {
-			const int width = node->types.at(i)->width();
-			offset = Util::upalign(offset, width) + width;
-		}
+			for (int i = 0; i < index; ++i) {
+				const int width = node->types.at(i)->width();
+				offset = Util::upalign(offset, width) + width;
+			}
 #else
-		for (int i = 0; i < index; ++i)
-			offset += node->types.at(i)->width();
+			for (int i = 0; i < index; ++i)
+				offset += node->types.at(i)->width();
 #endif
+		}
 		return offset;
 	}
 

@@ -12,6 +12,7 @@ namespace LL2W {
 	struct StructType;
 
 	namespace PaddedStructs {
+		/** Returns the offset in bits of a member of a struct. */
 		int getOffset(std::shared_ptr<StructType>, int index);
 
 		/** Inserts instructions to extract a value from a struct packed inside registers. */

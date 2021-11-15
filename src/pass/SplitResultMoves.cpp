@@ -6,9 +6,9 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	int splitResultMoves(Function &function) {
+	size_t splitResultMoves(Function &function) {
 		Timer timer("SplitResultMoves");
-		int changed = 0;
+		size_t changed = 0;
 
 		std::list<InstructionPtr> to_remove;
 

@@ -1,7 +1,7 @@
 $m0: Used in LoadArguments, LowerAlloca, LowerConversions, LowerMath, LowerMemset, LowerSelect and LowerSwitch
 $m1: Used in LowerMemory and LowerMemset
 $m2: Used in LowerMemset, LowerVarargs and SetupCalls
-$m3: Used in LowerIcmp
+$m3: Used in LowerIcmp and SplitLargeMemory
 $m4: Used in FinishMultireg
 $m5: Used for storing prologue size
 $m6: Used for spilled variables

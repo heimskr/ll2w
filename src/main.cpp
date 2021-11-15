@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 
+#include "compiler/PaddedStructs.h"
 #include "compiler/Program.h"
 #include "graph/Graph.h"
 #include "graph/DTree.h"
@@ -131,22 +132,24 @@ void paddingtest() {
 	auto i8x3 = std::make_shared<LL2W::ArrayType>(3, i8);
 	auto i24x3 = std::make_shared<LL2W::ArrayType>(3, i24);
 	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {
-		i32, i8, i8x3, i8, i8, i8, i8, i64, i16, i32
-	}, LL2W::StructShape::Default);
+		i8, i8, i16, i8, i32
+	}, LL2W::StructShape::Packed);
 	auto stype = std::make_shared<LL2W::StructType>(snode);
 	std::cout << "Custom: " << stype->barename() << '\n';
-	int largest = 0, offset = 0, last_offset = 0, i = 0;
+	int i = 0;
 	for (const auto &type: snode->types) {
-		const int align = type->alignment() * 8;
-		const int width = type->width();
-		if (align == 0)
-			continue;
-		offset = LL2W::Util::upalign(offset, align);
-		last_offset = offset;
-		std::cout << i++ << " (" << std::string(*type) << "): " << offset / 8 << '\n';
-		offset += width;
-		if (largest < width)
-			largest = width;
+		const int offset = LL2W::PaddedStructs::getOffset(stype, i);
+		// const int align = type->alignment() * 8;
+		// const int width = type->width();
+		// if (align == 0)
+		// 	continue;
+		// offset = LL2W::Util::upalign(offset, align);
+		// last_offset = offset;
+		std::cout << i << " (" << std::string(*type) << "): " << offset / 8 << '\n';
+		++i;
+		// offset += width;
+		// if (largest < width)
+		// 	largest = width;
 	}
-	std::cout << "Width: " << LL2W::Util::upalign(offset, largest) / 8 << '\n';
+	std::cout << "Width: " << LL2W::PaddedStructs::getOffset(stype, snode->types.size()) / 8 << '\n';
 }

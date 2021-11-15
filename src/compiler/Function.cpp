@@ -80,6 +80,7 @@
 #include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
 #include "pass/SplitBlocks.h"
+#include "pass/SplitLargeMemory.h"
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
 #include "pass/TransformInstructions.h"
@@ -871,6 +872,7 @@ namespace LL2W {
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
 		Passes::splitResultMoves(*this);
+		Passes::splitLargeMemory(*this);
 		Passes::finishMultireg(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
