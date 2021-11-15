@@ -28,6 +28,11 @@ namespace LL2W {
 				throw std::runtime_error("Constant::Constant: type hint expected for pvar node");
 			type = type_hint;
 			value = std::make_shared<LocalValue>(node);
+		} else if (node->symbol == LLVMTOK_GVAR) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for gvar node");
+			type = type_hint;
+			value = std::make_shared<GlobalValue>(node);
 		} else if (node->symbol == LLVM_CONVERSION_EXPR) {
 			// if (!type_hint)
 			// 	throw std::runtime_error("Constant::Constant: type hint expected for conversion expression node");

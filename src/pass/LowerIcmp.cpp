@@ -5,7 +5,9 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/ComparisonIInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
+#include "instruction/LoadIInstruction.h"
 #include "instruction/LogicalNotRInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "instruction/Sext32RInstruction.h"
 #include "pass/LowerIcmp.h"
 #include "util/Timer.h"
@@ -53,13 +55,20 @@ namespace LL2W::Passes {
 			throw std::invalid_argument("icmp instructions must have an integer or pointer type");
 		}
 
-
 		VariablePtr rs = dynamic_cast<LocalValue *>(value1.get())->variable;
 		VariablePtr rd = node->variable;
 		
 		const ValueType type2 = value2->valueType();
-		if (type2 == ValueType::Local) {
-			VariablePtr rt = dynamic_cast<LocalValue *>(value2.get())->variable;
+		if (type2 == ValueType::Local || type2 == ValueType::Global) {
+			VariablePtr rt;
+			if (type2 == ValueType::Local) {
+				rt = dynamic_cast<LocalValue *>(value2.get())->variable;
+			} else {
+				rt = function.newVariable(node->type, instruction->parent.lock());
+				// Because gvars are pointers instead of the actual values, we use set instead of load here.
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(rt,
+					dynamic_cast<GlobalValue *>(value2.get())->name));
+			}
 			// Because Why lacks a not-equals comparison, we have to do an equals comparison and invert it.
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.mx(3, instruction->parent.lock());

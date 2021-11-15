@@ -14,7 +14,7 @@
 #include "parser/Constant.h"
 #include "util/Util.h"
 
-#define THROW_ON_OVERFLOW
+#define THROW_ON_OVERFLOW // More like THROWVERFLOW am I right :^)
 
 namespace LL2W {
 	bool Value::isInt() const {

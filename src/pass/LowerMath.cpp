@@ -77,10 +77,17 @@ namespace LL2W::Passes {
 		} else if (left->isIntLike()) {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto divi = std::make_shared<Inv>(right_var, left->intValue(), node->variable);
-				divi->setOriginalValue(left);
-				function.insertBefore(instruction, divi);
-				divi->setDebug(node)->extract();
+				InstructionPtr new_instruction;
+				if (left->overflows()) {
+					VariablePtr left_var = function.get64(instruction, left->longValue());
+					new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+				} else {
+					auto new_inv = std::make_shared<Inv>(right_var, left->intValue(false), node->variable);
+					new_inv->setOriginalValue(left);
+					new_instruction = new_inv;
+				}
+
+				function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 			} else {
 				throw std::runtime_error("Invalid RHS value type with constant LHS in division instruction: " +
 					std::string(*right));
@@ -251,8 +258,15 @@ namespace LL2W::Passes {
 		} else if (left->isIntLike()) {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto new_instruction = std::make_shared<II>(right_var, left->intValue(), node->variable);
-				new_instruction->setOriginalValue(left);
+				InstructionPtr new_instruction;
+				if (left->overflows()) {
+					VariablePtr left_var = function.get64(instruction, left->longValue());
+					new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+				} else {
+					auto new_ii = std::make_shared<II>(right_var, left->intValue(false), node->variable);
+					new_ii->setOriginalValue(left);
+					new_instruction = new_ii;
+				}
 				function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 				return new_instruction;
 			} else if (right->isIntLike()) {
@@ -400,8 +414,15 @@ namespace LL2W::Passes {
 				// If the LHS is a non-zero integer, we need to use the property a-b = -(b-a) and then subtract the
 				// result from the zero register to fix the sign.
 				auto m0 = function.m0(instruction);
-				auto reverse = std::make_shared<SubIInstruction>(right_var, left->intValue(), m0);
-				reverse->setOriginalValue(left);
+				InstructionPtr reverse;
+				if (left->overflows()) {
+					reverse = std::make_shared<SubRInstruction>(right_var, function.get64(instruction,
+						left->longValue()), m0);
+				} else {
+					auto subi = std::make_shared<SubIInstruction>(right_var, left->intValue(false), m0);
+					subi->setOriginalValue(left);
+					reverse = subi;
+				}
 				auto fix = std::make_shared<SubRInstruction>(zero, m0, node->variable);
 				function.insertBefore(instruction, reverse)->setDebug(node)->extract();
 				function.insertBefore(instruction, fix)->setDebug(node)->extract();
