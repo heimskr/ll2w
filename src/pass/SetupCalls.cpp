@@ -187,7 +187,7 @@ namespace LL2W::Passes {
 	}
 
 	int pushCallValue(Function &function, InstructionPtr instruction, ConstantPtr constant) {
-		// I produce LLVM IR from C code for the mips64el-linux-gnu target, as it's seemingly the most similar to WhySA.
+		// I produce LLVM IR from C code for the mips64el-linux-gnu target, as it's seemingly the most similar to Why.
 		// Stack parameters are passed on a 64-bit boundary (https://gcc.gnu.org/projects/mipso64-abi.html), and this
 		// function has to adhere to that requirement to satisfy the assumptions that LLVM makes.
 

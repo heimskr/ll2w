@@ -15,6 +15,7 @@ namespace LL2W {
 		align = source.align;
 		dereferenceable = source.dereferenceable;
 		orNull = source.orNull;
+		signext = source.signext;
 	}
 	
 	ParAttrs::ParAttrs(const ASTNode &node) {
@@ -24,18 +25,14 @@ namespace LL2W {
 				orNull = *child->lexerInfo == "dereferenceable_or_null";
 			} else if (child->symbol == LLVMTOK_ALIGN) {
 				align = atoi(child->at(0)->lexerInfo->c_str());
-			// } else if (child->symbol == LLVMTOK_BYVAL) {
-			// 	attributes.insert(ParAttr::Byval);
-			// 	if (child->size() == 1)
-			// 		byvalType = getType(child->at(0));
-			} else {
-				for (const std::pair<const ParAttr, std::string> &pair: parattr_map) {
+			} else
+				for (const std::pair<const ParAttr, std::string> &pair: parattr_map)
 					if (*child->lexerInfo == pair.second) {
 						attributes.insert(pair.first);
+						if (pair.first == ParAttr::Signext)
+							signext = true;
 						break;
 					}
-				}
-			}
 		}
 	}
 
@@ -43,30 +40,27 @@ namespace LL2W {
 		if (this == &other)
 			return *this;
 
-		byvalType = nullptr;
-
 		attributes = other.attributes;
-		if (other.byvalType)
-			byvalType = other.byvalType->copy();
+		byvalType = other.byvalType? other.byvalType->copy() : nullptr;
 		align = other.align;
 		dereferenceable = other.dereferenceable;
 		orNull = other.orNull;
+		signext = other.signext;
 		return *this;
 	}
 
 	ParAttrs::operator std::string() const {
 		std::stringstream out;
-		std::string str = out.str();
-		for (ParAttr attribute: attributes) {
+		for (ParAttr attribute: attributes)
 			if (attribute != ParAttr::Byval || !byvalType)
 				out << parattr_map.at(attribute) << " ";
-		}
 		if (byvalType)
 			out << "byval(" << std::string(*byvalType) << ") ";
 		if (dereferenceable != -1)
 			out << "dereferenceable" << (orNull? "_or_null" : "") << "(" << dereferenceable << ") ";
 		if (align != -1)
 			out << "align " << align << " ";
+		std::string str = out.str();
 		if (!str.empty())
 			str.pop_back(); // Remove the extra space at the end
 		return str;

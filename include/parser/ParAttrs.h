@@ -16,6 +16,7 @@ namespace LL2W {
 		std::shared_ptr<Type> byvalType = nullptr;
 		int align = -1, dereferenceable = -1;
 		bool orNull = false;
+		bool signext = false;
 
 		ParAttrs();
 		ParAttrs(const ASTNode &);
