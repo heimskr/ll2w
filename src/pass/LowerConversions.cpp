@@ -110,12 +110,18 @@ namespace LL2W::Passes {
 		if (from == 32 && to == 64) {
 			function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(source, destination))
 				->setDebug(conversion)->extract();
-		} else if (from == 16 && to == 64) {
+		} else if (from == 16 && (to == 32 || to == 64)) {
 			function.insertBefore(instruction, std::make_shared<Sext16RInstruction>(source, destination))
 				->setDebug(conversion)->extract();
-		} else if (from == 8 && to == 64) {
+			if (to == 32)
+				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
+					->setDebug(conversion)->extract();
+		} else if (from == 8 && (to == 32 || to == 64)) {
 			function.insertBefore(instruction, std::make_shared<Sext8RInstruction>(source, destination))
 				->setDebug(conversion)->extract();
+			if (to == 32)
+				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
+					->setDebug(conversion)->extract();
 		} else if (to == 64 || to == 32 || to == 16) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
