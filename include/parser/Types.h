@@ -57,6 +57,7 @@ namespace LL2W {
 		int width() const override { return Util::upalign(intWidth, 8); }
 		int alignment() const override { return Util::alignToPower(intWidth) / 8; }
 		bool operator==(const Type &other) const override;
+		static std::shared_ptr<IntType> get(int width) { return std::make_shared<IntType>(width); }
 	};
 
 	struct AggregateType: public Type {

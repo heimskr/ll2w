@@ -385,5 +385,11 @@ namespace LL2W {
 
 			/** Convenience method for creating a precolored $sp register. */
 			VariablePtr sp(std::shared_ptr<Instruction>);
+
+			/** Convenience method for creating a precolored $0 register. */
+			VariablePtr zero(BasicBlockPtr);
+
+			/** Convenience method for creating a precolored $0 register. */
+			VariablePtr zero(std::shared_ptr<Instruction>);
 	};
 }

@@ -1724,4 +1724,12 @@ namespace LL2W {
 	VariablePtr Function::sp(InstructionPtr instruction) {
 		return sp(instruction->parent.lock());
 	}
+
+	VariablePtr Function::zero(BasicBlockPtr block) {
+		return makePrecoloredVariable(WhyInfo::zeroOffset, block);
+	}
+
+	VariablePtr Function::zero(InstructionPtr instruction) {
+		return zero(instruction->parent.lock());
+	}
 }

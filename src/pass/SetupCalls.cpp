@@ -8,6 +8,10 @@
 #include "instruction/JumpInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "instruction/Sext8RInstruction.h"
+#include "instruction/Sext16RInstruction.h"
+#include "instruction/Sext32RInstruction.h"
+#include "instruction/SubRInstruction.h"
 #include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
@@ -193,17 +197,45 @@ namespace LL2W::Passes {
 
 		const int size = 8;
 		ValueType value_type = constant->value->valueType();
+		int signext = constant->parattrs.signext? constant->type->width() : 0;
+		signext = signext == 64? 0 : signext;
+
+		auto make_signext = [&](VariablePtr source, VariablePtr destination) -> InstructionPtr {
+			InstructionPtr out = nullptr;
+			switch (signext) {
+				case  0:
+				case 64: return out;
+				case  1:
+					// If we're sign extending an i1, we can take advantage of the fact that 0 - 1 = all ones
+					// and 0 - 0 = all zeroes.
+					out = std::make_shared<SubRInstruction>(function.zero(instruction), source, destination); break;
+				case  8: out = std::make_shared<Sext8RInstruction>(source, destination);  break;
+				case 16: out = std::make_shared<Sext16RInstruction>(source, destination); break;
+				case 32: out = std::make_shared<Sext32RInstruction>(source, destination); break;
+				default:
+					std::cerr << instruction->debugExtra() << '\n';
+					throw std::runtime_error("Invalid sign extension in pushCallValue: " + std::to_string(signext));
+			}
+			out->setDebug(*instruction)->extract();
+			return out;
+		};
 
 		if (value_type == ValueType::Local) {
 			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(local->variable, size, -1))
+			VariablePtr var = signext? function.newVariable(IntType::get(64)) : local->variable;
+			if (signext)
+				function.insertBefore(instruction, make_signext(local->variable, var));
+			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(var, size, -1))
 				->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Global) {
+			// Global variables
 			std::shared_ptr<GlobalValue> global = std::dynamic_pointer_cast<GlobalValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, global->name);
+			if (signext)
+				function.insertBefore(instruction, make_signext(new_var, new_var));
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
@@ -215,6 +247,8 @@ namespace LL2W::Passes {
 			set->setOriginalValue(constant->value);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext(new_var, new_var));
 			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Bool) {
@@ -224,6 +258,8 @@ namespace LL2W::Passes {
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
 			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext(new_var, new_var));
 			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
@@ -254,6 +290,8 @@ namespace LL2W::Passes {
 					auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
 					function.insertAfter(setsym, addi)->setDebug(*instruction)->extract();
 				}
+				if (signext)
+					function.insertBefore(instruction, make_signext(new_var, new_var));
 				auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
 				function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
 				return size;
@@ -273,24 +311,50 @@ namespace LL2W::Passes {
 			return;
 		}
 
+		int signext = constant->parattrs.signext? constant->type->width() : 0;
+		signext = signext == 64? 0 : signext;
+
+		auto make_signext = [&]() -> InstructionPtr {
+			InstructionPtr out = nullptr;
+			switch (signext) {
+				case  0:
+				case 64: return out;
+				case  1: out = std::make_shared<SubRInstruction>(function.zero(instruction), new_var, new_var); break;
+				case  8: out = std::make_shared<Sext8RInstruction>(new_var, new_var);  break;
+				case 16: out = std::make_shared<Sext16RInstruction>(new_var, new_var); break;
+				case 32: out = std::make_shared<Sext32RInstruction>(new_var, new_var); break;
+				default:
+					std::cerr << instruction->debugExtra() << '\n';
+					throw std::runtime_error("Invalid sign extension in setupCallValue: " + std::to_string(signext));
+			}
+			out->setDebug(*instruction)->extract();
+			return out;
+		};
+
 		ValueType value_type = constant->value->valueType();
 		if (value_type == ValueType::Local) {
 			// If it's a variable, move it into the argument register.
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
 			function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext());
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
 			set->setOriginalValue(constant->value);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext());
 		} else if (value_type == ValueType::Bool) {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
-			auto set = std::make_shared<SetInstruction>(new_var, bval->value + 0);
+			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext());
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
-			// If it's a null or undef constant, just use zero.
+			// If it's a null or undef constant, just use zero. No need to sign extend.
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 		} else if (value_type == ValueType::Getelementptr) {
@@ -327,6 +391,8 @@ namespace LL2W::Passes {
 					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), int(offset), new_var);
 					function.insertBefore(instruction, addi)->setDebug(*instruction)->extract();
 				}
+				if (signext)
+					function.insertBefore(instruction, make_signext());
 			} else {
 				const std::list<long> indices = Getelementptr::getIndices(*gep);
 
@@ -339,11 +405,15 @@ namespace LL2W::Passes {
 				if (offset != 0)
 					function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, int(offset), new_var))
 						->setDebug(*instruction)->extract();
+				if (signext)
+					function.insertBefore(instruction, make_signext());
 			}
 		} else if (value_type == ValueType::Global) {
 			GlobalValue *global = dynamic_cast<GlobalValue *>(constant->value.get());
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name))
 				->setDebug(*instruction)->extract();
+			if (signext)
+				function.insertBefore(instruction, make_signext());
 		} else {
 			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
