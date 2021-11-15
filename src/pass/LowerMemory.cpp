@@ -147,17 +147,29 @@ namespace LL2W::Passes {
 				// imm -> $m1
 				auto set = std::make_shared<SetInstruction>(m1, int_value);
 				set->setOriginalValue(value);
-				// $m1 -> [global]
-				std::shared_ptr<StoreIInstruction> store;
-				try {
-					store = std::make_shared<StoreIInstruction>(m1, global->name,
-						function.parent->symbolSize("@" + *global->name) / 8);
-				} catch (const std::out_of_range &) {
-					throw std::runtime_error("Couldn't find global variable @" + *global->name);
-				}
-
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1")->setDebug(&llvm)->extract();
-				function.insertBefore(instruction, store, "LowerMemory: $m1 -> [global]")->setDebug(&llvm)->extract();
+
+				const int symsize = Util::updiv(function.parent->symbolSize("@" + *global->name), 8);
+
+				// $m1 -> [global]
+				if (symsize == 1 || symsize == 8) {
+					InstructionPtr store;
+					try {
+						store = std::make_shared<StoreIInstruction>(m1, global->name, symsize);
+					} catch (const std::out_of_range &) {
+						throw std::runtime_error("Couldn't find global variable @" + *global->name);
+					}
+
+					function.insertBefore(instruction, store, "LowerMemory: $m1 -> [global]")
+						->setDebug(&llvm)->extract();
+				} else if (symsize == 2 || symsize == 4) {
+					VariablePtr new_var = function.newVariable(node->destination->type, instruction->parent.lock());
+					function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name),
+						"LowerMemory: global -> temp")->setDebug(&llvm)->extract();
+					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(m1, new_var, symsize),
+						"LowerMemory: $m1 -> [temp]")->setDebug(&llvm)->extract();
+				} else
+					throw std::runtime_error("$m1 -> [global] failed: invalid symbol size: " + std::to_string(symsize));
 			} else if (converted->value->isIntLike()) {
 				auto m1 = function.mx(1, instruction->parent.lock());
 				const int intptr = converted->value->intValue();
