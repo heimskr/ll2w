@@ -510,11 +510,12 @@ digv_item: "name"         ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
 digv_list: digv_list "," digv_item { $$ = $1->adopt($3); D($2); }
          | digv_item { $$ = (new AN(llvmParser, LLVM_DIGV_LIST))->adopt($1); };
 
-ditvp_item: "name"  ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
-          | "type"  ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-          | "value" ":" constant        { $$ = $1->adopt($3); D($2); }
-          | "value" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
-          | "tag"   ":" any_ident       { $$ = $1->adopt($3); D($2); };
+ditvp_item: "name"  ":" LLVMTOK_STRING     { $$ = $1->adopt($3); D($2); }
+          | "type"  ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
+          | "value" ":" constant           { $$ = $1->adopt($3); D($2); }
+          | "value" ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
+          | "value" ":" "!" LLVMTOK_STRING { $$ = $1->adopt($3); D($2); }
+          | "tag"   ":" any_ident          { $$ = $1->adopt($3); D($2); };
 ditvp_list: ditvp_list "," ditvp_item { $$ = $1->adopt($3); D($2); }
           | ditvp_item { $$ = (new AN(llvmParser, LLVM_DITVP_LIST))->adopt($1); };
 
