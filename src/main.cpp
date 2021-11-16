@@ -71,8 +71,6 @@ bool hasArg(const char *arg) {
 	return false;
 }
 
-LL2W::Program *prog = nullptr;
-
 void compile(const std::string &filename, bool show_debug) {
 	std::ifstream file(filename);
 	if (!file.is_open())
@@ -86,32 +84,43 @@ void compile(const std::string &filename, bool show_debug) {
 	LL2W::llvmParser.in(text);
 	LL2W::llvmParser.debug(false, false);
 	LL2W::llvmParser.parse();
-	prog = new LL2W::Program(*LL2W::llvmParser.root);
+	LL2W::Program prog(*LL2W::llvmParser.root);
 #ifdef INTERACTIVE
 	LL2W::interactive(*prog);
 	std::cout << "Done.\n";
 #else
-	prog->compile();
+	prog.compile();
 #ifdef DEBUGMODE
-	prog->debug();
+	prog.debug();
 #else
 	if (show_debug) {
-		prog->debugSection(nullptr);
-		for (const int index: prog->debugIndices) {
-			const auto &location = prog->locations.at(index);
+		prog.debugSection(nullptr);
+		for (const int index: prog.debugIndices) {
+			const auto &location = prog.locations.at(index);
 			std::cout << "\e[33m" << index << " \e[39;2m->\e[22m \e[32m" << location.index << " \e[39;2m->\e[22m "
-			          << prog->files.at(location.file).filename << "\e[2m:\e[22m" << location.line << "\e[2m:\e[22m"
+			          << prog.files.at(location.file).filename << "\e[2m:\e[22m" << location.line << "\e[2m:\e[22m"
 			          << location.column;
-			if (prog->subprograms.count(location.scope) != 0)
-				std::cout << " \e[2m(\e[22m" << prog->subprograms.at(location.scope).name << "\e[2m)\e[22m";
+			if (prog.subprograms.count(location.scope) != 0)
+				std::cout << " \e[2m(\e[22m" << prog.subprograms.at(location.scope).name << "\e[2m)\e[22m";
 			std::cout << '\n';
 		}
 	} else
-		std::cout << prog->toString();
+		std::cout << prog.toString();
 #endif
 #endif
+	// for (const auto &[name, stype]: LL2W::StructType::knownStructs) {
+	// 	std::cerr << name << ":\n";
+	// 	auto snode = stype->node;
+	// 	int i = 0;
+	// 	for (const auto &type: snode->types) {
+	// 		const int offset = LL2W::PaddedStructs::getOffset(stype, i);
+	// 		std::cerr << "    " << i << " (" << std::string(*type) << "): " << offset / 8 << '\n';
+	// 		++i;
+	// 	}
+	// 	std::cerr << "    Width: " << LL2W::PaddedStructs::getOffset(stype, snode->types.size()) / 8 << " B\n";
+	// 	std::cerr << "    Alignment: " << stype->alignment() << " B\n\n";
+	// }
 	LL2W::llvmParser.done();
-	delete prog;
 }
 
 void wasmparsertest(const std::string &filename) {
@@ -139,17 +148,8 @@ void paddingtest() {
 	int i = 0;
 	for (const auto &type: snode->types) {
 		const int offset = LL2W::PaddedStructs::getOffset(stype, i);
-		// const int align = type->alignment() * 8;
-		// const int width = type->width();
-		// if (align == 0)
-		// 	continue;
-		// offset = LL2W::Util::upalign(offset, align);
-		// last_offset = offset;
 		std::cout << i << " (" << std::string(*type) << "): " << offset / 8 << '\n';
 		++i;
-		// offset += width;
-		// if (largest < width)
-		// 	largest = width;
 	}
 	std::cout << "Width: " << LL2W::PaddedStructs::getOffset(stype, snode->types.size()) / 8 << '\n';
 }
