@@ -296,7 +296,7 @@ namespace LL2W {
 	int StructType::alignment() const {
 		if (!node) {
 			// This is likely a named struct rather than a literal struct.
-			return knownStructs.at(barename())->width();
+			return knownStructs.at(barename())->alignment();
 		}
 
 		int largest = 0;
