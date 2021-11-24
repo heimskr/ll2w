@@ -33,6 +33,8 @@ void interactive(LL2W::Program &);
 void paddingtest();
 
 int main(int argc, char **argv) {
+	// paddingtest();
+	// return 0;
 	global_argc = argc;
 	global_argv = argv;
 
@@ -132,17 +134,19 @@ void wasmparsertest(const std::string &filename) {
 }
 
 void paddingtest() {
-	auto i1  = std::make_shared<LL2W::IntType>(1);
 	auto i8  = std::make_shared<LL2W::IntType>(8);
-	auto i16 = std::make_shared<LL2W::IntType>(16);
-	auto i24 = std::make_shared<LL2W::IntType>(24);
 	auto i32 = std::make_shared<LL2W::IntType>(32);
 	auto i64 = std::make_shared<LL2W::IntType>(64);
-	auto i8x3 = std::make_shared<LL2W::ArrayType>(3, i8);
-	auto i24x3 = std::make_shared<LL2W::ArrayType>(3, i24);
-	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {
-		i8, i8, i16, i8, i32
-	}, LL2W::StructShape::Packed);
+	auto i8x4 = std::make_shared<LL2W::ArrayType>(4, i8);
+	auto i8p = std::make_shared<LL2W::PointerType>(i8);
+	auto bslong = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {i64, i64, i8p}, LL2W::StructShape::Default));
+	auto anon = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {bslong}, LL2W::StructShape::Default));
+	auto bsrep = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {anon}, LL2W::StructShape::Default));
+	auto cpe = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {bsrep}, LL2W::StructShape::Default));
+	auto compressed_pair = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {cpe}, LL2W::StructShape::Default));
+	auto basic_string = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {compressed_pair}, LL2W::StructShape::Default));
+	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {basic_string, i32, i8x4},
+		LL2W::StructShape::Packed);
 	auto stype = std::make_shared<LL2W::StructType>(snode);
 	std::cout << "Custom: " << stype->barename() << '\n';
 	int i = 0;

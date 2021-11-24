@@ -13,24 +13,22 @@
 #include "options.h"
 
 namespace LL2W::PaddedStructs {
-	int getOffset(std::shared_ptr<StructType> type, int index) {
+	int getOffset(const StructType &type, int index) {
 		if (index == 0)
 			return 0;
 		int offset = 0;
-		std::shared_ptr<StructNode> node = type->node;
-		if (!node) {
-			type = StructType::knownStructs.at(type->barename());
-			node = type->node;
-		}
-		if (type->shape == StructShape::Packed) {
+		std::shared_ptr<StructNode> node = type.node;
+		if (!node)
+			return getOffset(*StructType::knownStructs.at(type.barename()), index);
+		if (type.shape == StructShape::Packed) {
 			for (int i = 0; i < index; ++i)
 				offset += node->types.at(i)->width();
 		} else {
 #ifdef STRUCT_PAD_CUSTOM
 			int i = 0;
-			for (const TypePtr &type: type->node->types) {
-				const int align = type->alignment() * 8;
-				const int width = type->width();
+			for (const TypePtr &subtype: type.node->types) {
+				const int align = subtype->alignment() * 8;
+				const int width = subtype->width();
 				if (align == 0 || width == 0)
 					continue;
 				offset = LL2W::Util::upalign(offset, align);
@@ -49,6 +47,10 @@ namespace LL2W::PaddedStructs {
 #endif
 		}
 		return offset;
+	}
+
+	int getOffset(std::shared_ptr<StructType> type, int index) {
+		return getOffset(*type, index);
 	}
 
 	VariablePtr extract(VariablePtr source, int index, Function &function, InstructionPtr instruction) {

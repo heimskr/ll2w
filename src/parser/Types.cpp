@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "options.h"
+#include "compiler/PaddedStructs.h"
 #include "parser/ASTNode.h"
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
@@ -263,17 +264,7 @@ namespace LL2W {
 		}
 
 #ifdef STRUCT_PAD_CUSTOM
-		int largest = 0, offset = 0;
-		for (const TypePtr &type: node->types) {
-			const int align = type->alignment() * 8;
-			const int width = type->width();
-			if (align == 0)
-				continue;
-			offset = LL2W::Util::upalign(offset, align) + width;
-			if (largest < width)
-				largest = width;
-		}
-		out = Util::upalign(offset, largest);
+		return PaddedStructs::getOffset(*this, node->types.size());
 #elif defined(STRUCT_PAD_X86)
 		int largest = 0;
 		for (const TypePtr &type: node->types) {
