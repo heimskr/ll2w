@@ -4,6 +4,7 @@
 #include "instruction/DeferredSourceMoveInstruction.h"
 #include "instruction/LoadRInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/StoreRInstruction.h"
 #include "pass/FinishMultireg.h"
 #include "util/Timer.h"
 
@@ -32,19 +33,59 @@ namespace LL2W::Passes {
 			} else if (auto *load = dynamic_cast<LoadRInstruction *>(instruction.get())) {
 				if (load->rd->registers.size() < 2)
 					continue;
-				if (load->size % 8)
-					throw std::runtime_error("Load into register pack has a size that isn't divisible by 8");
 				auto m4 = function.mx(4, instruction);
 				auto move = std::make_shared<MoveInstruction>(load->rs, m4);
 				function.insertBefore(instruction, move)->setDebug(load)->extract();
 				auto iter = load->rd->registers.begin();
-				for (int i = 0; i < load->size / 8; ++i) {
-					if (i != 0)
-						function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, 8, m4))
-							->setDebug(load->debugIndex)->extract();
+				auto bytes_remaining = load->size;
+				while (8 <= bytes_remaining) {
 					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
 					auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, 8);
 					function.insertBefore(instruction, new_load)->setDebug(load)->extract();
+					bytes_remaining -= 8;
+					if (0 < bytes_remaining)
+						function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, 8, m4))
+							->setDebug(load)->extract();
+				}
+				for (int size = 4; 0 < size; size /= 2) {
+					if (size <= bytes_remaining) {
+						auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
+						auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, size);
+						function.insertBefore(instruction, new_load)->setDebug(load)->extract();
+						bytes_remaining -= size;
+						if (0 < bytes_remaining)
+							function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, size, m4))
+								->setDebug(load)->extract();
+					}
+				}
+				to_remove.push_back(instruction);
+			} else if (auto *store = dynamic_cast<StoreRInstruction *>(instruction.get())) {
+				if (store->rs->registers.size() < 2)
+					continue;
+				auto m4 = function.mx(4, instruction);
+				auto move = std::make_shared<MoveInstruction>(store->rt, m4);
+				function.insertBefore(instruction, move)->setDebug(store)->extract();
+				auto iter = store->rs->registers.begin();
+				auto bytes_remaining = store->size;
+				while (8 <= bytes_remaining) {
+					auto precolored = function.makePrecoloredVariable(*iter++, store->parent.lock());
+					auto new_store = std::make_shared<StoreRInstruction>(precolored, m4, 8);
+					function.insertBefore(instruction, new_store)->setDebug(store)->extract();
+					bytes_remaining -= 8;
+					if (0 < bytes_remaining)
+						function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, 8, m4))
+							->setDebug(store)->extract();
+				}
+				for (int size = 4; 0 < size; size /= 2) {
+					if (size <= bytes_remaining) {
+						auto precolored = function.makePrecoloredVariable(*iter++, store->parent.lock());
+						auto new_store = std::make_shared<StoreRInstruction>(precolored, m4, size);
+						function.insertBefore(instruction, new_store)->setDebug(store)->extract();
+						bytes_remaining -= size;
+						if (0 < bytes_remaining)
+							function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, size, m4))
+								->setDebug(store)->extract();
+					}
 				}
 				to_remove.push_back(instruction);
 			}
