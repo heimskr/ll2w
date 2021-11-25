@@ -56,7 +56,7 @@ namespace LL2W {
 
 			case NodeType::Alloca: {
 				CAST(AllocaNode);
-				std::shared_ptr<PointerType> ptr = std::make_shared<PointerType>(cast->type->copy());
+				auto ptr = std::make_shared<PointerType>(cast->type->copy());
 				write(cast->result, ptr);
 				IFLV(cast->numelementsValue, cast->numelementsType);
 				break;
@@ -79,9 +79,9 @@ namespace LL2W {
 
 			case NodeType::Icmp: {
 				CAST(IcmpNode);
-				write(cast->result, cast->type);
+				write(cast->result, cast->getType());
 				for (ValuePtr *value: cast->allValuePointers())
-					IFLV(*value, cast->type);
+					IFLV(*value, cast->getType());
 				break;
 			}
 

@@ -32,7 +32,7 @@ namespace LL2W::Passes {
 	}
 
 	void lowerIcmp(Function &function, InstructionPtr &instruction, IcmpNode *node) {
-		if (node->type->typeType() == TypeType::Vector)
+		if (node->getType()->typeType() == TypeType::Vector)
 			throw std::runtime_error("Vectors are unsupported in icmp instructions");
 
 		IcmpCond cond = node->cond;
@@ -46,11 +46,16 @@ namespace LL2W::Passes {
 				// things simple by just swapping the two values and flipping the comparison operator.
 				std::swap(value1, value2);
 				cond = cond_rev_map.at(cond);
-			} else throw std::runtime_error("First value of icmp instruction expected to be a pvar");
+			} else {
+				ValuePtr local = LocalValue::make(function.makeVariable(value1, instruction));
+				std::swap(value1, local);
+				// node->debug();
+				// throw std::runtime_error("First value of icmp instruction expected to be a pvar");
+			}
 		}
 
-		auto int_type = std::dynamic_pointer_cast<IntType>(node->type);
-		if (!int_type && node->type->typeType() != TypeType::Pointer) {
+		auto int_type = std::dynamic_pointer_cast<IntType>(node->getType());
+		if (!int_type && node->getType()->typeType() != TypeType::Pointer) {
 			node->debug();
 			throw std::invalid_argument("icmp instructions must have an integer or pointer type");
 		}
@@ -64,7 +69,7 @@ namespace LL2W::Passes {
 			if (type2 == ValueType::Local) {
 				rt = dynamic_cast<LocalValue *>(value2.get())->variable;
 			} else {
-				rt = function.newVariable(node->type, instruction->parent.lock());
+				rt = function.newVariable(node->getType(), instruction->parent.lock());
 				// Because gvars are pointers instead of the actual values, we use set instead of load here.
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(rt,
 					dynamic_cast<GlobalValue *>(value2.get())->name));
@@ -77,7 +82,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
 					->setDebug(node)->extract();
 			} else {
-				const int width = node->type->width();
+				const int width = node->getType()->width();
 				if (isSigned(cond) && int_type && width < 64) {
 					if (width == 32) {
 						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
@@ -107,7 +112,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
 					->setDebug(node)->extract();
 			} else {
-				const int width = node->type->width();
+				const int width = node->getType()->width();
 				if (isSigned(cond) && int_type && width < 64) {
 					if (width == 32) {
 						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))

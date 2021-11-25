@@ -6,6 +6,7 @@
 
 #include "compiler/ExtractionResult.h"
 #include "instruction/InstructionMeta.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
 	class ASTNode;

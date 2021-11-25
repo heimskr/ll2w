@@ -5,6 +5,7 @@
 #include "instruction/AddIInstruction.h"
 #include "instruction/InvalidInstruction.h"
 #include "instruction/SetInstruction.h"
+#include "pass/LowerIcmp.h"
 #include "pass/ReplaceConstants.h"
 #include "util/Timer.h"
 #include "util/Util.h"
@@ -30,30 +31,32 @@ namespace LL2W::Passes {
 				}
 
 			for (ValuePtr *value: reader->allValuePointers()) {
-				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get());
-				if (!gep)
-					continue;
-				std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
-				if (!gep_global) {
-					warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
-				} else {
-					TypePtr out_type;
-					const long offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8l);
-					if (Util::outOfRange(offset))
-						warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
-					TypePtr ptr_type = std::make_shared<PointerType>(out_type);
-					VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
-					auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
-					function.insertBefore(instruction, setsym)->setDebug(*llvm)->extract();
-					if (offset != 0) {
-						auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
-						function.insertAfter(setsym, addi)->setDebug(*llvm)->extract();
-					}
+				if (GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get())) {
+					std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
+					if (!gep_global) {
+						warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+						function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+					} else {
+						TypePtr out_type;
+						const long offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8l);
+						if (Util::outOfRange(offset))
+							warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+						TypePtr ptr_type = std::make_shared<PointerType>(out_type);
+						VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
+						auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
+						function.insertBefore(instruction, setsym)->setDebug(*llvm)->extract();
+						if (offset != 0) {
+							auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
+							function.insertAfter(setsym, addi)->setDebug(*llvm)->extract();
+						}
 
-					auto new_value = std::make_shared<LocalValue>(new_var->id);
-					new_value->variable = new_var;
-					*value = new_value;
+						*value = LocalValue::make(new_var);
+					}
+				} else if (IcmpValue *icmp = dynamic_cast<IcmpValue *>(value->get())) {
+					VariablePtr new_var = function.newVariable(IntType::make(1), instruction->parent.lock());
+					auto icmp_node = std::make_unique<IcmpNode>(new_var, icmp->cond, icmp->left, icmp->right);
+					lowerIcmp(function, instruction, icmp_node.get());
+					*value = LocalValue::make(new_var);
 				}
 			}
 

@@ -10,11 +10,11 @@ namespace LL2W {
 		{TypeType::GlobalTemporary, "GlobalTemporary"}};
 
 	std::unordered_map<ValueType, std::string> value_map {
-		{ValueType::Double, "Double"}, {ValueType::Int,             "Int"},           {ValueType::Null,    "Null"},
-		{ValueType::Vector, "Vector"}, {ValueType::Bool,            "Bool"},          {ValueType::Local,   "Local"},
-		{ValueType::Global, "Global"}, {ValueType::Getelementptr,   "Getelementptr"}, {ValueType::Void,    "Void"},
-		{ValueType::Struct, "Struct"}, {ValueType::Array,           "Array"},         {ValueType::CString, "CString"},
-		{ValueType::Undef,  "Undef"},  {ValueType::Zeroinitializer, "Zeroinitializer"}};
+		{ValueType::Double, "Double"}, {ValueType::Int,             "Int"            }, {ValueType::Null,    "Null"   },
+		{ValueType::Vector, "Vector"}, {ValueType::Bool,            "Bool"           }, {ValueType::Local,   "Local"  },
+		{ValueType::Global, "Global"}, {ValueType::Getelementptr,   "Getelementptr"  }, {ValueType::Void,    "Void"   },
+		{ValueType::Struct, "Struct"}, {ValueType::Array,           "Array"          }, {ValueType::CString, "CString"},
+		{ValueType::Undef,  "Undef" }, {ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Icmp,    "Icmp"  }};
 
 	std::unordered_map<Linkage, std::string> linkage_map {
 		{Linkage::Private,     "private"},      {Linkage::Appending,  "appending"},   {Linkage::Weak,    "weak"},
@@ -96,6 +96,11 @@ namespace LL2W {
 		{IcmpCond::Eq,  "=="}, {IcmpCond::Ne,  "!="},
 		{IcmpCond::Ugt, ">"},  {IcmpCond::Uge, ">="}, {IcmpCond::Ult, "<"}, {IcmpCond::Ule, "<="},
 		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="}};
+
+	std::unordered_map<std::string, IcmpCond> cond_inv_map {
+		{ "eq", IcmpCond::Eq},  { "ne", IcmpCond::Ne},  {"ugt", IcmpCond::Ugt}, {"uge", IcmpCond::Uge},
+		{"ult", IcmpCond::Ult}, {"ule", IcmpCond::Ule}, {"sgt", IcmpCond::Sgt}, {"sge", IcmpCond::Sge},
+		{"slt", IcmpCond::Slt}, {"sle", IcmpCond::Sle}};
 
 	std::unordered_map<IcmpCond, IcmpCond> cond_rev_map {
 		{IcmpCond::Eq, IcmpCond::Eq}, {IcmpCond::Ne, IcmpCond::Ne}, {IcmpCond::Ugt, IcmpCond::Ult},

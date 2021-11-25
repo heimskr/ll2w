@@ -1593,32 +1593,72 @@ namespace LL2W {
 				auto set =
 					std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
 				auto addi = std::make_shared<AddIInstruction>(var1, int(offset), var2);
-				insertBefore(instruction, set);
-				insertBefore(instruction, addi);
-				set->extract();
-				addi->extract();
-				return std::make_shared<LocalValue>(var2);
+				insertBefore(instruction, set)->setDebug(*instruction)->extract();
+				insertBefore(instruction, addi)->setDebug(*instruction)->extract();
+				return LocalValue::make(var2);
 			}
 			case ValueType::Local: {
 				VariablePtr new_var(newVariable(out_type));
-				auto addi = std::make_shared<AddIInstruction>(
-					dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this), int(offset), new_var);
-				insertBefore(instruction, addi);
-				addi->extract();
-				return std::make_shared<LocalValue>(new_var);
+				auto addi = AddIInstruction::make(dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this),
+					int(offset), new_var);
+				insertBefore(instruction, addi)->setDebug(*instruction)->extract();
+				return LocalValue::make(new_var);
 			}
 			default:;
 		}
 
 		if (gep->variable->isIntLike()) {
 			VariablePtr new_var(newVariable(out_type));
-			auto set = std::make_shared<SetInstruction>(new_var, gep->variable->intValue() + int(offset));
-			insertBefore(instruction, set);
-			set->extract();
-			return std::make_shared<LocalValue>(new_var);
+			insertBefore(instruction, SetInstruction::make(new_var, gep->variable->intValue() + int(offset)))
+				->setDebug(*instruction)->extract();
+			return LocalValue::make(new_var);
 		}
 
 		throw std::invalid_argument("Expected a global, local or intlike value in Function::replaceGetelementptrValue");
+	}
+
+	VariablePtr Function::makeVariable(ValuePtr value, InstructionPtr instruction, TypePtr hint) {
+		VariablePtr new_var;
+		std::shared_ptr<SetInstruction> set;
+
+		switch (value->valueType()) {
+			case ValueType::Getelementptr:
+				return replaceGetelementptrValue(std::dynamic_pointer_cast<GetelementptrValue>(value), instruction)
+					->getVariable(*this);
+			case ValueType::Local:
+				return dynamic_cast<LocalValue *>(value.get())->variable;
+			case ValueType::Global: {
+				auto *global = dynamic_cast<GlobalValue *>(value.get());
+				new_var = newVariable(hint? hint : GlobalTemporaryType::make(global->name));
+				set = SetInstruction::make(new_var, global->name);
+				break;
+			}
+			case ValueType::Int:
+			case ValueType::Bool:
+			case ValueType::Null:
+			case ValueType::Undef:
+				new_var = newVariable(hint? hint : IntType::make(64));
+				set = SetInstruction::make(new_var, value->intValue(false));
+				set->setOriginalValue(value);
+				break;
+			case ValueType::Icmp: {
+				auto *icmp = dynamic_cast<IcmpValue *>(value.get());
+				new_var = newVariable(hint? hint : IntType::make(1));
+				Passes::lowerIcmp(*this, instruction, icmp->makeNode(new_var).get());
+				break;
+			}
+			default:
+				throw std::runtime_error("Unhandled value in Function::makeVariable: " +
+					value_map.at(value->valueType()));
+		}
+
+		if (!new_var)
+			throw std::runtime_error("new_var is null at the end of Function::makeVariable");
+
+		if (set)
+			insertBefore(instruction, set)->setDebug(*instruction)->extract();
+
+		return new_var;
 	}
 
 	void Function::hackVariables() {

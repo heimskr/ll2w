@@ -1,5 +1,4 @@
-#ifndef PARSER_CONSTANT_H_
-#define PARSER_CONSTANT_H_
+#pragma once
 
 #include <memory>
 #include <unordered_set>
@@ -8,6 +7,7 @@
 #include "Types.h"
 #include "Values.h"
 #include "ParAttrs.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -15,7 +15,7 @@ namespace LL2W {
 	struct Constant;
 	using ConstantPtr = std::shared_ptr<Constant>;
 
-	struct Constant {
+	struct Constant: Makeable<Constant> {
 		TypePtr type;
 		ValuePtr value;
 		ParAttrs parattrs;
@@ -36,5 +36,3 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &, const Constant &);
 }
-
-#endif

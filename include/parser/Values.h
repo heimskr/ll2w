@@ -9,6 +9,7 @@
 
 #include "ASTNode.h"
 #include "Enums.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
 	class ASTNode;
@@ -16,6 +17,7 @@ namespace LL2W {
 	struct Constant;
 	class Variable;
 	class Function;
+	struct IcmpNode;
 
 	struct Value;
 	using ValuePtr = std::shared_ptr<Value>;
@@ -110,7 +112,7 @@ namespace LL2W {
 			std::string compile() const override { return "UNSUPPORTED (Variable)"; }
 	};
 
-	struct LocalValue: public VariableValue {
+	struct LocalValue: VariableValue, Makeable<LocalValue> {
 		std::shared_ptr<Variable> variable = nullptr;
 		LocalValue(const std::string *name_): VariableValue(name_) {}
 		LocalValue(const std::string &name_): LocalValue(StringSet::intern(name_)) {}
@@ -137,14 +139,14 @@ namespace LL2W {
 		bool inbounds = false;
 		TypePtr type, ptrType;
 		ValuePtr variable;
-		// The first element represents the width of the integer type
+		// The first element represents the width of the integer type.
 		std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals {};
 
 		GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
 							ASTNode *decimal_list);
 		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
 							const decltype(decimals) &decimals_);
-		GetelementptrValue(const ASTNode *node);
+		GetelementptrValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::Getelementptr; }
 		ValuePtr copy() const override {
 			return std::make_shared<GetelementptrValue>(inbounds, type->copy(), ptrType->copy(), variable->copy(),
@@ -152,6 +154,19 @@ namespace LL2W {
 		}
 		operator std::string() override;
 		std::string compile() const override { return "UNSUPPORTED (Getelementptr)"; }
+	};
+
+	struct IcmpValue: public Value {
+		IcmpCond cond;
+		ConstantPtr left, right;
+		IcmpValue(ASTNode *cond_, ASTNode *left_, ASTNode *right_);
+		IcmpValue(IcmpCond cond_, ConstantPtr left_, ConstantPtr right_): cond(cond_), left(left_), right(right_) {}
+		IcmpValue(const ASTNode *);
+		ValueType valueType() const override { return ValueType::Icmp; }
+		ValuePtr copy() const override;
+		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Icmp)"; }
+		std::shared_ptr<IcmpNode> makeNode(std::shared_ptr<Variable>) const;
 	};
 
 	struct VoidValue: public Value {

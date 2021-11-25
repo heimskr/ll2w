@@ -565,8 +565,8 @@ any_ident: LLVMTOK_IDENT
         //  | "isUnsigned" { $1->symbol = LLVMTOK_IDENT; }
         ;
 
-value: LLVMTOK_FLOATING | LLVMTOK_HEXADECIMAL | LLVMTOK_DECIMAL | LLVMTOK_BOOL | vector | variable | struct | array | getelementptr_expr
-     | conversion_expr | "null" | "zeroinitializer" | "undef";
+value: LLVMTOK_FLOATING | LLVMTOK_HEXADECIMAL | LLVMTOK_DECIMAL | LLVMTOK_BOOL | vector | variable | struct | array
+     | getelementptr_expr | conversion_expr | icmp_expr | "null" | "zeroinitializer" | "undef";
 vector: "<" _vector_list ">" { $$ = $2; D($1, $3); };
 _vector_list: vector_list | { $$ = nullptr; };
 vector_list: vector_list "," type_any value { $$ = $1->adopt($2->adopt({$3, $4})); }
@@ -756,8 +756,8 @@ bang_align:              "," "!align"                   metabang    { $$ = $2->a
 i_load_atomic: result "load" "atomic" _volatile type_any "," constant _syncscope LLVMTOK_ORDERING align load_bangs
                { auto loc = $1->location; $$ = (new LoadNode($1, $4, $5, $7, $8, $9, $10, $11))->locate(loc); D($2, $3, $6); };
 
-i_icmp: result "icmp" LLVMTOK_ICMP_COND type_any operand "," constant_right unibangs
-        { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $5, $7, $8))->locate(loc); D($2, $6); };
+i_icmp: result "icmp" LLVMTOK_ICMP_COND constant "," constant_right unibangs
+        { auto loc = $1->location; $$ = (new IcmpNode($1, $3, $4, $6, $7))->locate(loc); D($2, $5); };
 
 i_br_uncond: "br" "label" LLVMTOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4))->locate($1); D($1, $2); };
 
@@ -889,7 +889,7 @@ i_freeze: result "freeze" type_any value unibangs { $$ = new FreezeNode($1, $3, 
 constant: type_any parattr_list constant_right { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt({$1, $3, $2}); }
         | type_any constant_right              { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt({$1, $2}); }
         | LLVMTOK_GVAR                         { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt($1); };
-constant_right: operand | conversion_expr;
+constant_right: operand | conversion_expr | icmp_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
             | parattr              { $$ = (new AN(llvmParser, LLVM_PARATTR_LIST))->adopt($1, true); };
 parattr: LLVMTOK_PARATTR
@@ -906,6 +906,7 @@ operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | L
        | bare_array   | LLVMTOK_CSTRING | getelementptr_expr  | "null" | "zeroinitializer"  | "undef";
 conversion_expr: LLVMTOK_CONV_OP constant "to" type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
                | LLVMTOK_CONV_OP "(" constant "to" type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
+icmp_expr: "icmp" LLVMTOK_ICMP_COND "(" constant "," constant ")" { $$ = $1->adopt({$2, $4, $6}); D($3, $5, $7); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };

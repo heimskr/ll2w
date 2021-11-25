@@ -10,6 +10,7 @@
 #include "parser/Enums.h"
 #include "parser/StringSet.h"
 #include "compiler/WhyInfo.h"
+#include "util/Makeable.h"
 #include "util/Util.h"
 
 namespace LL2W {
@@ -57,7 +58,7 @@ namespace LL2W {
 		int width() const override { return Util::upalign(intWidth, 8); }
 		int alignment() const override { return Util::alignToPower(intWidth) / 8; }
 		bool operator==(const Type &other) const override;
-		static std::shared_ptr<IntType> get(int width) { return std::make_shared<IntType>(width); }
+		static std::shared_ptr<IntType> make(int width) { return std::make_shared<IntType>(width); }
 	};
 
 	struct AggregateType: public Type {
@@ -118,6 +119,7 @@ namespace LL2W {
 		int width() const override { return WhyInfo::pointerWidth * 8; }
 		int alignment() const override { return WhyInfo::pointerWidth; }
 		bool operator==(const Type &) const override;
+		static std::shared_ptr<PointerType> make(TypePtr subtype) { return std::make_shared<PointerType>(subtype); }
 	};
 
 	class FunctionType: public Type {
@@ -175,7 +177,7 @@ namespace LL2W {
 	 *  have to defer its type resolution until everything is done parsing and use a temporary type in the meantime.
 	 *  After that, we need to traverse the AST and replace all the temporary types with the known type of the global
 	 *  variable. */
-	struct GlobalTemporaryType: public Type {
+	struct GlobalTemporaryType: Type, Makeable<GlobalTemporaryType> {
 		TypeType typeType() const override { return TypeType::GlobalTemporary; }
 		const std::string *globalName;
 		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}

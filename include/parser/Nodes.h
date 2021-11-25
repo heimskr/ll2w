@@ -12,6 +12,7 @@
 #include "parser/Values.h"
 #include "parser/Lexer.h"
 #include "parser/Constant.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
 	class Variable;
@@ -178,13 +179,14 @@ namespace LL2W {
 			std::vector<ConstantPtr *> allConstantPointers() override { return {&constant}; }
 	};
 
-	struct IcmpNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
+	struct IcmpNode: InstructionNode, Writer, Reader, Makeable<IcmpNode> {
 		IcmpCond cond;
-		TypePtr type;
-		ValuePtr left;
-		ConstantPtr right;
+		ConstantPtr left, right;
 
-		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_, ASTNode *unibangs);
+		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+		IcmpNode(const std::string *result_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_);
+		IcmpNode(VariablePtr variable_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_);
+		TypePtr getType() const { return left->type; }
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Icmp; }
 		std::vector<ValuePtr> allValues() override;

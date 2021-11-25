@@ -6,12 +6,14 @@
 #include "compiler/Function.h"
 #include "compiler/Variable.h"
 #include "parser/ASTNode.h"
+#include "parser/Constant.h"
 #include "parser/Parser.h"
 #include "parser/Types.h"
 #include "parser/Values.h"
 #include "parser/Lexer.h"
 #include "parser/StringSet.h"
 #include "parser/Constant.h"
+#include "util/Deleter.h"
 #include "util/Util.h"
 
 #define THROW_ON_OVERFLOW // More like THROWVERFLOW am I right :^)
@@ -169,6 +171,27 @@ namespace LL2W {
 		return out.str();
 	}
 
+	IcmpValue::IcmpValue(ASTNode *cond_, ASTNode *left_, ASTNode *right_):
+	cond(cond_inv_map.at(*cond_->lexerInfo)), left(Constant::make(left_)), right(Constant::make(right_)) {}
+
+	IcmpValue::IcmpValue(const ASTNode *node) {
+		cond = cond_inv_map.at(*node->at(0)->lexerInfo);
+		left = Constant::make(node->at(1));
+		right = Constant::make(node->at(2));
+	}
+
+	ValuePtr IcmpValue::copy() const {
+		return std::make_shared<IcmpValue>(cond, left->copy(), right->copy());
+	}
+
+	IcmpValue::operator std::string() {
+		return "\e[31micmp " + cond_map.at(cond) + " \e[39m(" + std::string(*left) + ", " + std::string(*right) + ")";
+	}
+
+	std::shared_ptr<IcmpNode> IcmpValue::makeNode(VariablePtr variable) const {
+		return IcmpNode::make(variable, cond, left, right);
+	}
+
 	StructValue::StructValue(const ASTNode *node) {
 		packed = *node->lexerInfo == "<";
 		for (const ASTNode *sub: *node->at(0))
@@ -258,6 +281,7 @@ namespace LL2W {
 			case LLVMTOK_CSTRING:         return std::make_shared<CStringValue>(node);
 			case LLVMTOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
 			case LLVMTOK_UNDEF:           return std::make_shared<UndefValue>();
+			case LLVMTOK_ICMP:            return std::make_shared<IcmpValue>(node);
 			case LLVM_CONVERSION_EXPR:    return convertConversion(node);
 			default:
 				node->debug();

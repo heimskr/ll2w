@@ -403,9 +403,8 @@ namespace LL2W {
 
 // IcmpNode
 
-	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *type_, ASTNode *op, ASTNode *const_,
-	                   ASTNode *unibangs) {
-		Deleter deleter(unibangs, result_, cond_, type_, op, const_);
+	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
+		Deleter deleter(unibangs, result_, cond_, left_, right_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
 
@@ -415,28 +414,28 @@ namespace LL2W {
 				break;
 			}
 
-		type = getType(type_);
-		left = getValue(op);
-		right = std::make_shared<Constant>(const_, type);
+		left  = Constant::make(left_)->convert();
+		right = Constant::make(right_, left->type)->convert();
 	}
+
+	IcmpNode::IcmpNode(const std::string *result_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_):
+		cond(cond_), left(left_->convert()), right(right_->convert()) { result = result_; }
+
+	IcmpNode::IcmpNode(VariablePtr variable_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_):
+		cond(cond_), left(left_->convert()), right(right_->convert()) { variable = variable_; }
 
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
-		out << getResult() << "\e[2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *type << " "
-		    << *left << ", " << *right;
+		out << getResult() << "\e[2m = \e[0;91micmp\e[0m " << cond_map.at(cond) << " " << *left << ", " << *right;
 		return out.str();
 	}
 
 	std::vector<ValuePtr> IcmpNode::allValues() {
-		if (cachedConstantValue)
-			return {left, cachedConstantValue};
-		return {left, cachedConstantValue = right->convert()->value};
+		return {left->value, right->value};
 	}
 
 	std::vector<ValuePtr *> IcmpNode::allValuePointers() {
-		if (!cachedConstantValue)
-			cachedConstantValue = right->convert()->value;
-		return {&left, &cachedConstantValue};
+		return {&left->value, &right->value};
 	}
 
 // BrUncondNode
@@ -900,8 +899,8 @@ namespace LL2W {
 	SimpleNode::SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, type_, left_, right_);
 		handleUnibangs(unibangs);
-		locate(result_);
 		result = result_->extracted();
+		locate(result_);
 		type = getType(type_);
 		left = getValue(left_);
 		right = getValue(right_);

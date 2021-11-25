@@ -8,7 +8,7 @@ namespace LL2W {
 	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque};
 	enum class ValueType {
 		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
-		Undef};
+		Undef, Icmp};
 
 	enum class Linkage {
 		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
@@ -59,6 +59,7 @@ namespace LL2W {
 	extern std::unordered_map<Ordering,   std::string> ordering_map;
 	extern std::unordered_map<IcmpCond,   std::string> cond_map;
 	extern std::unordered_map<IcmpCond,   std::string> cond_op_map;
+	extern std::unordered_map<std::string,   IcmpCond> cond_inv_map;
 	extern std::unordered_map<IcmpCond,   IcmpCond>    cond_rev_map;
 	extern std::unordered_map<Conversion, std::string> conversion_map;
 	extern std::unordered_map<QueryType,  std::string> query_map;

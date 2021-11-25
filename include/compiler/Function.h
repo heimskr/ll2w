@@ -22,6 +22,8 @@ namespace LL2W {
 	struct FunctionArgs;
 	class Program;
 
+	using InstructionPtr = std::shared_ptr<Instruction>;
+
 	/**
 	 * StackOnly: all parameters are pushed to the stack, right-to-left. Used for variadic functions.
 	 * Reg16: The first sixteen arguments are put in registers $a0 through $af, left-to-right. The rest are pushed to
@@ -76,7 +78,7 @@ namespace LL2W {
 			std::list<BasicBlockPtr> blocks;
 
 			/** A list of all instructions in the order they appear in the source code. */
-			std::list<std::shared_ptr<Instruction>> linearInstructions;
+			std::list<InstructionPtr> linearInstructions;
 
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<Variable::ID, VariablePtr> variableStore;
@@ -112,7 +114,7 @@ namespace LL2W {
 			 *  left off after other things have occurred. For example, SetupCalls uses this to record the moves from
 			 *  result registers into variables in case the variable is larger than one physical register and the move
 			 *  needs to be split up after register allocation. */
-			std::unordered_map<std::string, std::unordered_set<std::shared_ptr<Instruction>>> categories;
+			std::unordered_map<std::string, std::unordered_set<InstructionPtr>> categories;
 
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
@@ -183,35 +185,35 @@ namespace LL2W {
 			bool isArgument(Variable::ID) const;
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
-			std::shared_ptr<Instruction> firstInstruction(bool includeComments = false);
+			InstructionPtr firstInstruction(bool includeComments = false);
 
 			/** Returns a pointer to the instruction following a given instruction. */
-			std::shared_ptr<Instruction> after(std::shared_ptr<Instruction>);
+			InstructionPtr after(InstructionPtr);
 
 			/** Returns a pointer to the basic block following a given basic block. */
 			BasicBlockPtr after(BasicBlockPtr);
 
 			/** Inserts one instruction after another. Returns the inserted instructin=on. */
-			std::shared_ptr<Instruction> insertAfter(std::shared_ptr<Instruction> base,
-				std::shared_ptr<Instruction> new_instruction, bool reindex = true);
+			InstructionPtr insertAfter(InstructionPtr base,
+				InstructionPtr new_instruction, bool reindex = true);
 
 			/** Inserts one instruction before another. Returns the inserted instruction. */
-			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
-				std::shared_ptr<Instruction> new_instruction, bool reindex = true, bool linear_warn = true,
+			InstructionPtr insertBefore(InstructionPtr base,
+				InstructionPtr new_instruction, bool reindex = true, bool linear_warn = true,
 				bool *should_relinearize_out = nullptr);
 
 			/** Inserts one instruction before another and adds a comment before the inserted instruction.
 			 *  Returns the inserted instruction. */
-			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
-				std::shared_ptr<Instruction> new_instruction, const std::string &, bool reindex = true);
+			InstructionPtr insertBefore(InstructionPtr base,
+				InstructionPtr new_instruction, const std::string &, bool reindex = true);
 
 			/** Inserts one instruction before another and adds a comment before the inserted instruction.
 			 *  Returns the inserted instruction. */
-			std::shared_ptr<Instruction> insertBefore(std::shared_ptr<Instruction> base,
-				std::shared_ptr<Instruction> new_instruction, const char *, bool reindex = true);
+			InstructionPtr insertBefore(InstructionPtr base,
+				InstructionPtr new_instruction, const char *, bool reindex = true);
 
 			/** Inserts a comment before an instruction. */
-			std::shared_ptr<Instruction> comment(std::shared_ptr<Instruction>, const std::string &,
+			InstructionPtr comment(InstructionPtr, const std::string &,
 				bool reindex = true);
 
 			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
@@ -225,7 +227,7 @@ namespace LL2W {
 			void reindexBlocks();
 
 			/** Splits a basic block after a given instruction. */
-			BasicBlockPtr splitBlock(BasicBlockPtr, std::shared_ptr<Instruction>);
+			BasicBlockPtr splitBlock(BasicBlockPtr, InstructionPtr);
 
 			/** Creates a precolored variable corresponding to any register. */
 			VariablePtr makePrecoloredVariable(unsigned char, BasicBlockPtr);
@@ -271,17 +273,17 @@ namespace LL2W {
 			StackLocation & addToStack(VariablePtr, StackLocation::Purpose, int width = -1);
 
 			/** Removes an instruction from the function. */
-			void remove(std::shared_ptr<Instruction>);
+			void remove(InstructionPtr);
 
 			/** Removes a basic block from the function. Any function that calls this should also be sure to relinearize
 			 *  instructions after calling this. */
 			void remove(BasicBlockPtr);
 
 			/** Replaces the first instruction with the second. Not safe to call while iterating. */
-			void replace(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>);
+			void replace(InstructionPtr, InstructionPtr);
 
 			/** Loads a 64-bit value into a new variable before an instruction by means of set and lui. */
-			VariablePtr get64(std::shared_ptr<Instruction> before, unsigned long, bool reindex = false);
+			VariablePtr get64(InstructionPtr before, unsigned long, bool reindex = false);
 
 			/** Merges two basic blocks. The after-block is absorbed into the before-block. The caller of this function
 			 *  is responsible for recreating the CFG and reindexing all blocks. */
@@ -345,8 +347,9 @@ namespace LL2W {
 
 			/** Computes a getelementptr value, places the result in a variable before the given instruction and returns
 			 *  the variable as a value. */
-			std::shared_ptr<LocalValue> replaceGetelementptrValue(std::shared_ptr<GetelementptrValue>,
-			                                                      std::shared_ptr<Instruction>);
+			std::shared_ptr<LocalValue> replaceGetelementptrValue(std::shared_ptr<GetelementptrValue>, InstructionPtr);
+
+			VariablePtr makeVariable(ValuePtr, InstructionPtr, TypePtr = nullptr);
 
 			/** Through questionable methods, this function ensures that all variables with the same numeric ID share
 			 *  the same register assignment. */
@@ -360,36 +363,36 @@ namespace LL2W {
 			VariablePtr mx(unsigned char, BasicBlockPtr);
 
 			/** Convenience method for creating a precolored assembler register. */
-			VariablePtr mx(unsigned char, std::shared_ptr<Instruction>);
+			VariablePtr mx(unsigned char, InstructionPtr);
 
 			/** Convenience method for creating a precolored argument register. */
 			VariablePtr ax(unsigned char, BasicBlockPtr);
 
 			/** Convenience method for creating a precolored argument register. */
-			VariablePtr ax(unsigned char, std::shared_ptr<Instruction>);
+			VariablePtr ax(unsigned char, InstructionPtr);
 
 			/** Convenience method for creating a precolored $m0 register. */
 			VariablePtr m0(BasicBlockPtr);
 
 			/** Convenience method for creating a precolored $m0 register. */
-			VariablePtr m0(std::shared_ptr<Instruction>);
+			VariablePtr m0(InstructionPtr);
 
 			/** Convenience method for creating a precolored $fp register. */
 			VariablePtr fp(BasicBlockPtr);
 
 			/** Convenience method for creating a precolored $fp register. */
-			VariablePtr fp(std::shared_ptr<Instruction>);
+			VariablePtr fp(InstructionPtr);
 
 			/** Convenience method for creating a precolored $sp register. */
 			VariablePtr sp(BasicBlockPtr);
 
 			/** Convenience method for creating a precolored $sp register. */
-			VariablePtr sp(std::shared_ptr<Instruction>);
+			VariablePtr sp(InstructionPtr);
 
 			/** Convenience method for creating a precolored $0 register. */
 			VariablePtr zero(BasicBlockPtr);
 
 			/** Convenience method for creating a precolored $0 register. */
-			VariablePtr zero(std::shared_ptr<Instruction>);
+			VariablePtr zero(InstructionPtr);
 	};
 }
