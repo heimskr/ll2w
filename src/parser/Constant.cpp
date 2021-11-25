@@ -45,9 +45,14 @@ namespace LL2W {
 				}
 			conversionSource = std::make_shared<Constant>(node->at(0));
 			conversionType = getType(node->at(1));
+		} else if (node->symbol == LLVMTOK_GETELEMENTPTR) {
+			if (!type_hint)
+				throw std::runtime_error("Constant::Constant: type hint expected for getelementptr node");
+			type = type_hint;
+			value = std::make_shared<GetelementptrValue>(node);
 		} else if (node->symbol != LLVM_CONSTANT) {
 			node->debug();
-			throw std::runtime_error("Constant::Constant: node doesn't have symbol LLVM_CONSTANT");
+			throw std::runtime_error("Constant::Constant: node lacks a supported symbol");
 		} else if (node->size() == 1) {
 			// Just a gvar here.
 			type = getType(node->at(0));

@@ -144,7 +144,7 @@ namespace LL2W {
 							ASTNode *decimal_list);
 		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
 							const decltype(decimals) &decimals_);
-		GetelementptrValue(ASTNode *node);
+		GetelementptrValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Getelementptr; }
 		ValuePtr copy() const override {
 			return std::make_shared<GetelementptrValue>(inbounds, type->copy(), ptrType->copy(), variable->copy(),

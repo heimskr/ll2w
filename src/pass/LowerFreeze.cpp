@@ -16,11 +16,11 @@ namespace LL2W::Passes {
 				continue;
 			FreezeNode *sw = dynamic_cast<FreezeNode *>(llvm->node);
 
-			if (!sw->operand->isLocal())
-				throw std::runtime_error("Expected operand of a freeze instruction to be a pvar");
+			if (!sw->value->isLocal())
+				throw std::runtime_error("Expected the operand of a freeze instruction to be a pvar");
 
 			function.insertBefore(instruction, std::make_shared<MoveInstruction>(dynamic_cast<LocalValue *>(
-				sw->operand.get())->getVariable(function), sw->variable), false)->setDebug(llvm)->extract();
+				sw->value.get())->getVariable(function), sw->variable), false)->setDebug(llvm)->extract();
 			to_remove.push_back(instruction);
 		}
 

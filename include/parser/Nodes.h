@@ -17,14 +17,26 @@ namespace LL2W {
 	class Variable;
 
 	enum class NodeType {
-		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke,
-		Call, Invoke, Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath,
-		Switch, ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze
+		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
+		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
+		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze,
 	};
 
 	struct BaseNode: public ASTNode {
 		using ASTNode::ASTNode;
 		virtual NodeType nodeType() const = 0;
+	};
+
+	struct HasType {
+		TypePtr type;
+	};
+
+	struct HasValue {
+		ValuePtr value;
+	};
+
+	struct HasConstant {
+		ConstantPtr constant;
 	};
 
 	struct MetadataDef: public BaseNode {
@@ -103,9 +115,8 @@ namespace LL2W {
 		}
 	};
 
-	struct AllocaNode: public InstructionNode, public Reader, public Writer {
+	struct AllocaNode: public InstructionNode, public Reader, public Writer, public HasType {
 		bool inalloca = false;
-		TypePtr type;
 		TypePtr numelementsType = nullptr;
 		ValuePtr numelementsValue = nullptr;
 		int align = -1;
@@ -472,12 +483,12 @@ namespace LL2W {
 
 	struct FreezeNode: public InstructionNode, public Writer, public Reader {
 		TypePtr type;
-		ValuePtr operand;
-		FreezeNode(ASTNode *result_, ASTNode *type_, ASTNode *operand_, ASTNode *unibangs);
+		ValuePtr value;
+		FreezeNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Freeze; }
-		std::vector<ValuePtr> allValues() override { return {operand}; }
-		std::vector<ValuePtr *> allValuePointers() override { return {&operand}; }
+		std::vector<ValuePtr> allValues() override { return {value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
 	ASTNode * ignoreConversion(ASTNode *);

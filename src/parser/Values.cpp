@@ -136,7 +136,7 @@ namespace LL2W {
 		}
 	}
 
-	GetelementptrValue::GetelementptrValue(ASTNode *node) {
+	GetelementptrValue::GetelementptrValue(const ASTNode *node) {
 		inbounds = node->size() == 5;
 		type = getType(node->at(0));
 		ptrType = getType(node->at(1));
