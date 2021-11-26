@@ -183,15 +183,11 @@ namespace LL2W::Passes {
 #ifdef DEBUG_GETELEMENTPTR
 				TypePtr old_type = node->variable->type;
 #endif
-				if (node->location.line == 1300)
-					std::cerr << "<SPECIAL>\n";
 				long offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8l);
 				if (Util::outOfRange(offset))
 					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 				node->variable->type = out_type;
 				node->type = out_type;
-				if (node->location.line == 1300)
-					std::cerr << "</SPECIAL>\n";
 
 				auto add = std::make_shared<AddIInstruction>(pointer, int(offset), node->variable);
 				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +

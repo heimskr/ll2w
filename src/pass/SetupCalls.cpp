@@ -15,6 +15,7 @@
 #include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
+#include "pass/LowerIcmp.h"
 #include "pass/MakeCFG.h"
 #include "pass/SetupCalls.h"
 #include "util/Timer.h"
@@ -299,7 +300,8 @@ namespace LL2W::Passes {
 		} else if (constant->conversionSource) {
 			return pushCallValue(function, instruction, constant->conversionSource);
 		} else {
-			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
+			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ") at " __FILE__ ":"
+			       << __LINE__ << '\n';
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 			return 0;
 		}
@@ -409,13 +411,20 @@ namespace LL2W::Passes {
 					function.insertBefore(instruction, make_signext());
 			}
 		} else if (value_type == ValueType::Global) {
-			GlobalValue *global = dynamic_cast<GlobalValue *>(constant->value.get());
+			auto *global = dynamic_cast<GlobalValue *>(constant->value.get());
 			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name))
 				->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+		} else if (value_type == ValueType::Icmp) {
+			auto *icmp = dynamic_cast<IcmpValue *>(constant->value.get());
+			Passes::lowerIcmp(function, instruction,
+				IcmpNode::make(new_var, icmp->cond, icmp->left, icmp->right).get());
+			if (signext)
+				function.insertBefore(instruction, make_signext());
 		} else {
-			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ")\n";
+			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ") at " __FILE__ ":"
+			       << __LINE__ << '\n';
 			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 		}
 	}

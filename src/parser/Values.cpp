@@ -306,7 +306,7 @@ namespace LL2W {
 		{ValueType::Vector, "Vector"}, {ValueType::Bool, "Bool"}, {ValueType::Local, "Local"},
 		{ValueType::Global, "Global"}, {ValueType::Getelementptr, "Getelementptr"}, {ValueType::Void, "Void"},
 		{ValueType::Struct, "Struct"}, {ValueType::Array, "Array"}, {ValueType::CString, "CString"},
-		{ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Undef, "Undef"},
+		{ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Undef, "Undef"}, {ValueType::Icmp, "Icmp"},
 	};
 
 	std::string getName(ValueType type) {
