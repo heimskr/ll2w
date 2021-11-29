@@ -9,7 +9,7 @@ namespace LL2W::Passes {
 	void copyArguments(Function &function) {
 		Timer timer("CopyArguments");
 
-		if (function.getCallingConvention() != CallingConvention::Reg16)
+		if (function.getCallingConvention() != CallingConvention::Reg16 || function.isNaked())
 			return;
 
 		const int arity = function.getArity();
