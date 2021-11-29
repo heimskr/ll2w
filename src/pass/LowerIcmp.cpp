@@ -74,6 +74,20 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(rt,
 					dynamic_cast<GlobalValue *>(value2.get())->name));
 			}
+
+			const int width = node->getType()->width();
+			if (isSigned(cond) && int_type && width < 64) {
+				if (width == 32) {
+					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
+						->setDebug(node)->extract();
+					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rt, rt))
+						->setDebug(node)->extract();
+				} else {
+					node->debug();
+					warn() << "Signed compare with width less than 64 but not equal to 32: not sign extending\n";
+				}
+			}
+
 			// Because Why lacks a not-equals comparison, we have to do an equals comparison and invert it.
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.mx(3, instruction->parent.lock());
@@ -82,18 +96,6 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
 					->setDebug(node)->extract();
 			} else {
-				const int width = node->getType()->width();
-				if (isSigned(cond) && int_type && width < 64) {
-					if (width == 32) {
-						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
-							->setDebug(node)->extract();
-						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rt, rt))
-							->setDebug(node)->extract();
-					} else {
-						node->debug();
-						warn() << "Signed compare with width less than 64 but not equal to 32: not sign extending\n";
-					}
-				}
 				function.insertBefore(instruction, std::make_shared<ComparisonRInstruction>(rs, rt, rd, cond))
 					->setDebug(node)->extract();
 			}
@@ -105,6 +107,17 @@ namespace LL2W::Passes {
 				imm = 0;
 			} else throw std::runtime_error("Unsupported value type in icmp instruction: " + value_map.at(type2));
 
+			const int width = node->getType()->width();
+			if ((isSigned(cond) || imm < 0) && int_type && width < 64) {
+				if (width == 32) {
+					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
+						->setDebug(node)->extract();
+				} else {
+					node->debug();
+					warn() << "Signed compare with width less than 64 but not equal to 32: not sign extending\n";
+				}
+			}
+
 			if (cond == IcmpCond::Ne) {
 				VariablePtr m3 = function.mx(3, instruction->parent.lock());
 				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, m3, IcmpCond::Eq))
@@ -112,16 +125,6 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<LogicalNotRInstruction>(m3, rd))
 					->setDebug(node)->extract();
 			} else {
-				const int width = node->getType()->width();
-				if (isSigned(cond) && int_type && width < 64) {
-					if (width == 32) {
-						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
-							->setDebug(node)->extract();
-					} else {
-						node->debug();
-						warn() << "Signed compare with width less than 64 but not equal to 32: not sign extending\n";
-					}
-				}
 				function.insertBefore(instruction, std::make_shared<ComparisonIInstruction>(rs, imm, rd, cond))
 					->setDebug(node)->extract();
 			}
