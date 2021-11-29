@@ -563,9 +563,9 @@ namespace LL2W {
 // CallNode
 
 	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
-	                   ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name,
+	                   ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant,
 	                   ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
-	                   CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
+	                   CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant,
 	                                  _constants, attribute_list, unibangs) {
 		Deleter deleter(_tail);
 		if (_tail)
@@ -634,9 +634,9 @@ namespace LL2W {
 // InvokeNode
 
 	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
-	                       ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
+	                       ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
 	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs):
-	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, function_name,
+	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant,
 	                                      _constants, attribute_list, unibangs) {
 		Deleter deleter(normal_label, exception_label);
 		normalLabel = StringSet::intern(normal_label->extractName());

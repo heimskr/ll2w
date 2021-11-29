@@ -58,7 +58,7 @@ namespace LL2W::Passes {
 			}
 
 			VariablePtr destination = function.variableStore.at(iv->result);
-			std::cerr << "Destination registers required: " << destination->registersRequired() << " -> " << destination->registersString() << "\n";
+			// std::cerr << "Destination registers required: " << destination->registersRequired() << " -> " << destination->registersString() << "\n";
 			VariablePtr reg = function.makePrecoloredVariable(*std::next(destination->registers.begin(),
 				iv->decimals.front()), instruction->parent.lock());
 

@@ -246,7 +246,7 @@ namespace LL2W {
 		std::unordered_set<Fastmath> fastmath;
 
 		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
-		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
+		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
 		         ASTNode *attribute_list, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Call; }
@@ -270,7 +270,7 @@ namespace LL2W {
 		const std::string *normalLabel, *exceptionLabel;
 
 		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
-		           ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list,
+		           ASTNode *_args, ASTNode *constant, ASTNode *_constants, ASTNode *attribute_list,
 		           ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Invoke; }

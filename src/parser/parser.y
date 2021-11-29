@@ -764,7 +764,9 @@ i_br_uncond: "br" "label" LLVMTOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4)
 i_br_cond: "br" LLVMTOK_INTTYPE operand "," label "," label unibangs { $$ = (new BrCondNode($2, $3, $5, $7, $8))->locate($1); D($1, $4, $6); };
 label: "label" LLVMTOK_PVAR { $$ = $2; D($1); };
 
-i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args function_name "(" _constants ")" call_attrs unibangs
+i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args conversion_expr "(" _constants ")" call_attrs unibangs
+        { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
+      | _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args function_name "(" _constants ")" call_attrs unibangs
         { auto loc = L({$1, $2, $3}); $$ = (new CallNode($1, $2, $4, $5, $6, $7, $8, $9, $10, $12, $14, $15))->locate(loc); D($3, $11, $13); }
       | _result _tail "call" _retattrs type_nonfn _args "asm" _sideeffect _alignstack _inteldialect LLVMTOK_STRING "," LLVMTOK_STRING "(" _constants ")" call_attrs _cdebug _srcloc unibangs
         { auto loc = L({$1, $3, $4}); $$ = (new AsmNode($1, $4, $5, $6, $8, $9, $10, $11, $13, $15, $17, $19, $20))->locate(loc)->setDebug($18); D($3, $7, $12, $14, $16); };
@@ -821,7 +823,10 @@ _inrange: LLVMTOK_INRANGE | { $$ = nullptr; };
 i_ret: "ret" type_nonvoid value unibangs { $$ = (new RetNode($2, $3, $4))->locate($1); D($1); }
      | "ret" "void" unibangs { $$ = new RetNode($3); D($1, $2); };
 
-i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
+i_invoke: _result "invoke" _cconv _retattrs _addrspace type_any _args conversion_expr "(" _constants ")" call_attrs unibangs
+          /* TODO: operand bundles */ "to" label "unwind" label
+          { auto loc = L({$1, $2}); $$ = (new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16, $17))->locate(loc); D($2, $9, $11, $13, $15); };
+        | _result "invoke" _cconv _retattrs _addrspace type_any _args function_name "(" _constants ")" call_attrs unibangs
           /* TODO: operand bundles */ "to" label "unwind" label
           { auto loc = L({$1, $2}); $$ = (new InvokeNode($1, $3, $4, $5, $6, $7, $8, $10, $12, $14, $16, $17))->locate(loc); D($2, $9, $11, $13, $15); };
 
