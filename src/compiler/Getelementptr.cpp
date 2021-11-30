@@ -126,7 +126,6 @@ namespace LL2W::Getelementptr {
 		if (!out_var)
 			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
 			// out_var = function.newVariable(IntType::make(64), instruction->parent.lock());
-		function.insertBefore(instruction, MoveInstruction::make(function.zero(instruction->parent.lock()), out_var));
 		insert_mutating(function, type, indices, instruction, out_var, out_type);
 	}
 
@@ -136,7 +135,6 @@ namespace LL2W::Getelementptr {
 		if (!out_var)
 			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
 			// out_var = function.newVariable(IntType::make(64), instruction->parent.lock());
-		function.insertBefore(instruction, MoveInstruction::make(function.zero(instruction->parent.lock()), out_var));
 		insert_mutating(function, value->ptrType, indices, instruction, out_var, out_type);
 	}
 

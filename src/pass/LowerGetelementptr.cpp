@@ -181,6 +181,14 @@ namespace LL2W::Passes {
 				function.comment(instruction, "LowerGetelementptr(" + std::string(node->location) + "): struct-type: " +
 					constant_type->toString() + " -> " + node->variable->plainString() + ", indices=" +
 					indices_str.str());
+
+				VariablePtr source;
+				if (node->constant->value->isLocal())
+					source = dynamic_cast<LocalValue *>(node->constant->value.get())->getVariable(function);
+				else
+					source = function.makeVariable(node->constant->value, instruction, node->constant->type);
+				function.insertBefore(instruction, MoveInstruction::make(source, node->variable));
+
 				Getelementptr::insert(function, node->pointerType, indices, instruction, node->variable, &out_type);
 				node->variable->type = out_type;
 				node->type = out_type;
