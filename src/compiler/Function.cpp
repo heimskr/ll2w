@@ -21,7 +21,7 @@
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
-#define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
+// #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
 // #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
@@ -931,12 +931,12 @@ namespace LL2W {
 		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
 		// if (*name == "@memcpy") {
 			// extractVariables(false);
-			VariablePtr z = getVariable(".0");
-			std::cerr << ".0:\n";
-			for (auto &use: z->uses)
-				std::cerr << "- " << use.lock()->debugExtra() << '\n';
+			// VariablePtr z = getVariable(".0");
+			// std::cerr << ".0:\n";
+			// for (auto &use: z->uses)
+			// 	std::cerr << "- " << use.lock()->debugExtra() << '\n';
 
-			debug();
+			// debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
 			// if (djGraph.has_value()) {
 			// 	djGraph->renderTo("dj_vsnprintf.png");
@@ -1293,49 +1293,24 @@ namespace LL2W {
 	}
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
-		const bool special = *var->id == ".02";
-
-		// if (var->fromPhi)
-		// 	std::cerr << "fromPhi: " << *var << '\n';
-
-		// if (!var->phiChildren.empty()) {
-		// 	std::cerr << "!! " << *var << ":";
-		// 	for (Variable *child: var->phiChildren)
-		// 		std::cerr << ' ' << *child;
-		// 	std::cerr << '\n';
-		// }
-
 		for (const auto &instruction: block->instructions) {
-			if (instruction->isPhi()) {
-				if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Continuing because isPhi: " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
+			if (instruction->isPhi())
 				continue;
-			}
 			// if def(v) ∈ B (φ excluded) then return
-			if (instruction->written.count(var) != 0) {
-				// if (!var->fromPhi) {
-				// if (!block->inPhiDefs(var)) {
-				if (var->id->front() != '.') {
-					if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because written by " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
-					return;
-					// }
-				}
-			}
+			if (instruction->written.count(var) != 0 && !var->fromPhi)
+				return;
 		}
 
 		// if v ∈ LiveIn(B) then return
-		if (block->liveIn.count(var) != 0) {
-			if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because liveIn contains var\n";
+		if (block->liveIn.count(var) != 0)
 			return;
-		}
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
 
 		// if v ∈ PhiDefs(B) then return
-		if (block->inPhiDefs(var)) {
-			if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because var in phi defs\n";
+		if (block->inPhiDefs(var))
 			return;
-		}
 
 		// for each P ∈ CFG_preds(B) do
 		try {
