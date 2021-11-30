@@ -299,18 +299,20 @@ namespace LL2W {
 	}
 
 	std::string ASTNode::extractName() const {
-		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_GVAR) {
-			return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
-		} else if (symbol == LLVMTOK_CLASSVAR || symbol == LLVMTOK_STRUCTVAR || symbol == LLVMTOK_UNIONVAR) {
-			if (lexerInfo->at(1) == '"')
+		if (parser == &llvmParser) {
+			if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_GVAR)
+				return lexerInfo->at(1) == '"'? lexerInfo->substr(2, lexerInfo->size() - 3) : lexerInfo->substr(1);
+			if (symbol == LLVMTOK_CLASSVAR || symbol == LLVMTOK_STRUCTVAR || symbol == LLVMTOK_UNIONVAR) {
+				if (lexerInfo->at(1) == '"')
+					return lexerInfo->substr(2, lexerInfo->size() - 3);
+				return lexerInfo->substr(1);
+			}
+			if (symbol == LLVMTOK_CSTRING)
 				return lexerInfo->substr(2, lexerInfo->size() - 3);
-			return lexerInfo->substr(1);
-		} else if (symbol == LLVMTOK_CSTRING) {
-			return lexerInfo->substr(2, lexerInfo->size() - 3);
-		} else if (symbol == LLVMTOK_STRING || symbol == LLVMTOK_SOURCE_FILENAME) {
+			if (symbol == LLVMTOK_STRING || symbol == LLVMTOK_SOURCE_FILENAME)
+				return lexerInfo->substr(1, lexerInfo->size() - 2);
+		} else if (symbol == WASMTOK_STRING)
 			return lexerInfo->substr(1, lexerInfo->size() - 2);
-		}
-
 		throw std::runtime_error("extractName() was called on an inappropriate symbol: " +
 			std::string(parser->getName(symbol)));
 	}

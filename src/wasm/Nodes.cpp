@@ -179,6 +179,8 @@ namespace LL2W {
 				default:  throw std::runtime_error("Invalid character literal: " + *node->lexerInfo);
 			}
 		}
+		if (node->symbol == WASMTOK_STRING)
+			return node->extracted();
 		return node->lexerInfo;
 	}
 
