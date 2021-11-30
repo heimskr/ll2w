@@ -91,7 +91,6 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 <PREDS>[ \t,]+				{ }
 <PREDS>\n					{ LL2W::llvmLexer.newline(); BEGIN(INITIAL); LLVMRTOKEN(NEWLINE) }
 <PREDS>.					{ LL2W::llvmLexer.badchar(*llvmtext); }
-[0-9]+":"					{ LLVMRTOKEN(SIMPLE_LABEL) }
 
 ";"							{ BEGIN(SGC); }
 {LLVM_MLCOMMENT}			{ }

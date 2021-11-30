@@ -36,7 +36,7 @@ namespace LL2W {
 		ASTNode *list;
 
 		if (simple) {
-			label = StringSet::intern(node->lexerInfo->substr(0, node->lexerInfo->size() - 1));
+			label = node->symbol == LLVMTOK_STRING? node->extracted() : node->lexerInfo;
 			list = node->at(1);
 		} else {
 			label = node->at(0)->lexerInfo;
@@ -51,7 +51,7 @@ namespace LL2W {
 	HeaderNode::HeaderNode(ASTNode *node): BaseNode(llvmParser, LLVM_BLOCKHEADER, "") {
 		Deleter deleter(node);
 		locate(node);
-		label = StringSet::intern(node->lexerInfo->substr(0, node->lexerInfo->size() - 1));
+		label = node->symbol == LLVMTOK_STRING? node->extracted() : node->lexerInfo;
 	}
 
 	std::string HeaderNode::debugExtra() const {

@@ -673,11 +673,11 @@ function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(llvm
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LLVM_LABEL; D($2); };
 bb_header: LLVMTOK_LABEL_COMMENT LLVMTOK_DECIMAL LLVMTOK_PREDS_COMMENT preds_list LLVMTOK_NEWLINE { $$ = new HeaderNode(false, $1->adopt({$2, $3, $4})); D($5); }
-         | LLVMTOK_SIMPLE_LABEL LLVMTOK_PREDS_COMMENT preds_list LLVMTOK_NEWLINE { $$ = new HeaderNode(true, $1->adopt({$2, $3})); D($4); }
-         | LLVMTOK_SIMPLE_LABEL LLVMTOK_NO_PREDS { $$ = new HeaderNode($1); D($2); };
+         | simple_label LLVMTOK_PREDS_COMMENT preds_list LLVMTOK_NEWLINE { $$ = new HeaderNode(true, $1->adopt({$2, $3})); D($4); }
+         | simple_label LLVMTOK_NO_PREDS { $$ = new HeaderNode($1); D($2); };
 preds_list: preds_list LLVMTOK_PVAR { $1->adopt($2); }
           | { $$ = new AN(llvmParser, LLVM_PREDS_LIST); };
-
+simple_label: label_statement | LLVMTOK_STRING ":" { D($2); };
 
 // Aliases
 
