@@ -3,3 +3,4 @@
 [2021/05/17 18:35:06] Support debug data for function prologues and epilogues by referencing the !dbg data from the
                       function header. Do the same for LoadArguments.
 [2021/11/11 02:26:48] Add support for sext32 in inline assembly.
+[2021/11/30 04:20:48] Add support for opcode constant expressions (like add, sub, etc).
