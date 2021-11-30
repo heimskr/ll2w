@@ -106,6 +106,16 @@ namespace LL2W::Util {
 			destination.insert(item);
 	}
 
+	template <typename T, template <typename...> typename C>
+	bool equal(const C<T> &first, const C<T> &second) {
+		if (first.size() != second.size())
+			return false;
+		for (const T &item: first)
+			if (second.count(item) == 0)
+				return false;
+		return true;
+	}
+
 	template <typename C>
 	std::vector<std::string> nsort(const C &container, const bool sensitive = true) {
 		std::vector<std::string> out(container.begin(), container.end());

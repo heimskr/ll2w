@@ -22,6 +22,7 @@
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
 // #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
+#define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
@@ -1226,8 +1227,65 @@ namespace LL2W {
 				}
 	}
 
+	void Function::computeLivenessTraditional() {
+		Timer timer("ComputeLivenessTraditional");
+		// https://www.classes.cs.uchicago.edu/archive/2004/spring/22620-1/docs/liveness.pdf, page 9
+		std::map<BasicBlock::Label, std::set<VariablePtr>> in, out, in_, out_;
+		std::map<BasicBlock::Label, std::vector<BasicBlockPtr>> goes_to;
+
+		bool working;
+
+		// Oh no.
+		{
+			Timer subtimer("GoesTo");
+			for (auto &block: blocks) {
+				goes_to.try_emplace(block->label);
+				for (auto &other: blocks)
+					if (Util::contains(other->preds, block->label))
+						goes_to[block->label].push_back(other);
+			}
+			if (name->find("ntoa_format") != std::string::npos) {
+				std::cerr << "GoesTo[11]:";
+				for (auto &block: goes_to.at(StringSet::intern("11"))) std::cerr << ' ' << *block->label;
+				std::cerr << '\n';
+			}
+		}
+
+		do {
+			for (auto &block: blocks) {
+				auto n = block->label;
+				in_[n]  = in[n];
+				out_[n] = out[n];
+				in[n] = block->read;
+				for (auto &var: out[n])
+					if (block->written.count(var) == 0)
+						in[n].insert(var);
+				out[n].clear();
+				for (auto &succ: goes_to.at(n))
+					for (auto &var: in[succ->label])
+						out[n].insert(var);
+			}
+
+			working = false;
+			for (auto &block: blocks) {
+				auto n = block->label;
+				if (!(Util::equal(in_[n], in[n]) && Util::equal(out_[n], out[n]))) {
+					working = true;
+					break;
+				}
+			}
+		} while (working);
+
+		for (auto &block: blocks) {
+			block->liveIn  = std::unordered_set<VariablePtr>(in[block->label].cbegin(),  in[block->label].cend());
+			block->liveOut = std::unordered_set<VariablePtr>(out[block->label].cbegin(), out[block->label].cend());
+		}
+	}
+
 	void Function::computeLiveness() {
-#ifdef MERGE_SET_LIVENESS
+#ifdef TRADITIONAL_LIVENESS
+		computeLivenessTraditional();
+#elif defined(MERGE_SET_LIVENESS)
 		computeLivenessMS();
 #else
 		computeLivenessUAM();

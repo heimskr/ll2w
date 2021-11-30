@@ -54,7 +54,12 @@ namespace LL2W {
 
 			bool isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
 			bool isLiveOutUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
+
+			/** Computes liveness using merge sets. Seems to be broken? */
 			void computeLivenessMS();
+
+			/** Computes liveness using a traditional, non-SSA method. Broken. Do not use. */
+			void computeLivenessTraditional();
 
 			void upAndMark(BasicBlockPtr, VariablePtr);
 

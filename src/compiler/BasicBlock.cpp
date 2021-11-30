@@ -7,7 +7,7 @@
 #include "util/Timer.h"
 
 namespace LL2W {
-	BasicBlock::BasicBlock(const std::string *label_, const std::vector<const std::string *> &preds_,
+	BasicBlock::BasicBlock(Label label_, const std::vector<Label> &preds_,
 	                       const std::list<std::shared_ptr<Instruction>> &instructions_):
 		label(label_), preds(preds_), instructions(instructions_) {}
 
