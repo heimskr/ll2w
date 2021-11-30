@@ -21,15 +21,15 @@ namespace LL2W {
 
 		read.clear();
 		written.clear();
+		extracted = true;
 
-		if (rs)
+		if (rs && !secretReads)
 			read.insert(rs);
-		if (rt)
+		if (rt && !secretReads)
 			read.insert(rt);
-		if (rd)
+		if (rd && !secretWrites)
 			written.insert(rd);
 
-		extracted = true;
 		return {read.size(), written.size()};
 	}
 

@@ -174,6 +174,7 @@ namespace LL2W::Passes {
 				if (local) {
 					comment = "MovePhi: " + local->variable->plainString() + " -> " + target->plainString();
 					new_instruction = std::make_shared<MoveInstruction>(local->variable, target);
+					function.categories["MovePhi"].insert(new_instruction);
 				} else if (value->valueType() == ValueType::Undef) {
 					// Do nothing for undef values. This allows us to insert moves in cutPhi.
 					continue;

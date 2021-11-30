@@ -6,11 +6,15 @@ namespace LL2W {
 		if (extracted && !force)
 			return {read.size(), written.size()};
 
-		// TODO: verify.
-		read = {variable};
-		// read = {};
+		read.clear();
 		written.clear();
 		extracted = true;
+
+		if (!secretReads)
+			// TODO: verify.
+			read = {variable};
+			// read = {};
+
 		return {read.size(), written.size()};
 	}
 

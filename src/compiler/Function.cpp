@@ -843,10 +843,15 @@ namespace LL2W {
 		Passes::lowerInlineAsm(*this);
 		Passes::lowerExtractvalue(*this);
 		Passes::transformInstructions(*this);
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
+			// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
+			// 	std::cerr << *block->label << "\n";
 			block->extract(true);
+		}
 #ifdef MOVE_PHI
 		Passes::movePhi(*this);
+		for (BasicBlockPtr &block: blocks)
+			block->extract(true);
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
@@ -922,10 +927,10 @@ namespace LL2W {
 #endif
 		}
 
-		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-		if (*name == "@memcpy") {
+		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+		// if (*name == "@memcpy") {
 			// extractVariables(false);
-			// debug();
+			debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
 			// if (djGraph.has_value()) {
 			// 	djGraph->renderTo("dj_vsnprintf.png");
@@ -1109,7 +1114,7 @@ namespace LL2W {
 			auto t = weak_t.lock();
 			if (!t)
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
-			// while t != def(a)
+			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M^r (n)
 				if (m_r.count(&(*djGraph)[*t->label]) != 0)
@@ -1145,7 +1150,7 @@ namespace LL2W {
 
 		// if def(a) = n
 		if (defs.count(bbMap.at(StringSet::intern(block->label()))) != 0) {
-			// return uses(a)\def(a) = ∅
+			// return uses(a)\def(a) = ∅
 			// At least, I assume the use of φ in the PDF actually refers to the empty set.
 			auto difference = var->usingBlocks;
 			for (const auto &weak_block: var->definingBlocks)
@@ -1170,7 +1175,7 @@ namespace LL2W {
 			auto t = weak_t.lock();
 			if (!t)
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
-			// while t != def(a)
+			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M_s(n)
 				if (m_s.count(&(*djGraph)[*t->label]) != 0)
@@ -1211,6 +1216,14 @@ namespace LL2W {
 					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
 						block->liveOut.insert(var);
 				}
+		for (const auto &[name, var]: extraVariables)
+			if (!var->hasSpecialRegister())
+				for (const auto &block: blocks) {
+					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+						block->liveIn.insert(var);
+					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+						block->liveOut.insert(var);
+				}
 	}
 
 	void Function::computeLiveness() {
@@ -1222,24 +1235,35 @@ namespace LL2W {
 	}
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
-		for (const std::shared_ptr<const Instruction> instruction: block->instructions) {
-			if (instruction->isPhi())
+		const bool special = *var->id == ".02";
+		for (const auto &instruction: block->instructions) {
+			if (instruction->isPhi()) {
+				if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Continuing because isPhi: " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
 				continue;
+			}
 			// if def(v) ∈ B (φ excluded) then return
-			if (instruction->written.count(var) != 0)
+			if (instruction->written.count(var) != 0) {
+				// if (!special) {
+				if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because written by " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
 				return;
+				// }
+			}
 		}
 
 		// if v ∈ LiveIn(B) then return
-		if (block->liveIn.count(var) != 0)
+		if (block->liveIn.count(var) != 0) {
+			if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because liveIn contains var\n";
 			return;
+		}
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
 
 		// if v ∈ PhiDefs(B) then return
-		if (block->inPhiDefs(var))
+		if (block->inPhiDefs(var)) {
+			if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because var in phi defs\n";
 			return;
+		}
 
 		// for each P ∈ CFG_preds(B) do
 		try {

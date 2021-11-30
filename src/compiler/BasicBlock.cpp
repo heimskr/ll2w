@@ -3,6 +3,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Variable.h"
+#include "instruction/MoveInstruction.h"
 #include "util/Timer.h"
 
 namespace LL2W {
@@ -63,6 +64,13 @@ namespace LL2W {
 				for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs)
 					if (pair.first->valueType() == ValueType::Local)
 						phiUses.insert(dynamic_cast<LocalValue *>(pair.first.get())->variable);
+
+		// for (InstructionPtr instruction: parent->categories["MovePhi"])
+		// 	if (instruction->parent.lock().get() == this)
+		// 		if (auto *move = dynamic_cast<MoveInstruction *>(instruction.get())) {
+					// std::cerr << "Phi: " << *move->rs << " (" << move->debugExtra() << ")\n";
+					// phiUses.insert(move->rs);
+				// }
 	}
 
 	std::vector<std::shared_ptr<BasicBlock>> BasicBlock::goesTo() const {

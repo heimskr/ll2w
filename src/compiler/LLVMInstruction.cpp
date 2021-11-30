@@ -37,11 +37,12 @@ namespace LL2W {
 		extracted = true;
 
 		auto readname = [&](std::shared_ptr<LocalValue> lv, TypePtr type) {
-			read.insert(parent.lock()->parent->getVariable(lv->name, type));
+			if (!secretReads)
+				read.insert(parent.lock()->parent->getVariable(lv->name, type));
 		};
 
 		auto write = [&](const std::string *str, TypePtr type) {
-			if (str)
+			if (str && !secretWrites)
 				written.insert(parent.lock()->parent->getVariable(str, type, parent.lock()));
 		};
 
@@ -110,13 +111,15 @@ namespace LL2W {
 			case NodeType::Getelementptr: {
 				CAST(GetelementptrNode);
 				write(cast->result, std::make_shared<PointerType>(cast->type));
-				if (auto *local = dynamic_cast<LocalValue *>(cast->allValues().front().get()))
-					read.insert(parent.lock()->parent->getVariable(local->name, cast->constant->convert()->type));
-				for (auto [width, value, minrange, pvar]: cast->indices) {
-					// Because we're assuming that these variables have already been defined earlier in the function,
-					// we can get them from the Function that contains this Instruction.
-					if (pvar)
-						read.insert(parent.lock()->parent->getVariable(std::get<Variable::ID>(value), true));
+				if (!secretReads) {
+					if (auto *local = dynamic_cast<LocalValue *>(cast->allValues().front().get()))
+						read.insert(parent.lock()->parent->getVariable(local->name, cast->constant->convert()->type));
+					for (auto [width, value, minrange, pvar]: cast->indices) {
+						// Because we're assuming that these variables have already been defined earlier in the
+						// function, we can get them from the Function that contains this Instruction.
+						if (pvar)
+							read.insert(parent.lock()->parent->getVariable(std::get<Variable::ID>(value), true));
+					}
 				}
 				break;
 			}

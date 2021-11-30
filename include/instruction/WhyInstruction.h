@@ -1,5 +1,4 @@
-#ifndef COMPILER_WHYINSTRUCTION_H_
-#define COMPILER_WHYINSTRUCTION_H_
+#pragma once
 
 #include "compiler/Instruction.h"
 
@@ -14,5 +13,3 @@ namespace LL2W {
 			virtual bool alwaysTerminal() const { return false; }
 	};
 }
-
-#endif

@@ -28,6 +28,12 @@ namespace LL2W {
 
 			int debugIndex = -1;
 
+			/** Whether to treat this instruction as not reading any variables. */
+			bool secretReads = false;
+
+			/** Whether to treat this instruction as not writing any variables. */
+			bool secretWrites = false;
+
 			std::unordered_set<InstructionMeta> meta;
 
 			virtual ~Instruction();
@@ -99,6 +105,12 @@ namespace LL2W {
 
 			Instruction * setDebug(const ASTNode &);
 			Instruction * setDebug(const ASTNode *);
+
+			Instruction * setSecret(bool reads, bool writes) {
+				secretReads = reads;
+				secretWrites = writes;
+				return this;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

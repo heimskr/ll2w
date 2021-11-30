@@ -8,13 +8,13 @@ namespace LL2W {
 
 		read.clear();
 		written.clear();
+		extracted = true;
 
-		if (rs)
+		if (rs && !secretReads)
 			read.insert(rs);
-		if (rd) // I'm foolish and put a variable that's read—not written to—in rd. It really should be rt.
+		if (rd && !secretReads) // I'm foolish and put a variable that's read—not written to—in rd. It really should be rt.
 			read.insert(rd);
 
-		extracted = true;
 		return {read.size(), written.size()};
 	}
 

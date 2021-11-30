@@ -23,7 +23,7 @@ namespace LL2W {
 			read.clear();
 			written.clear();
 
-			if (rs)
+			if (rs && !secretReads)
 				read.insert(rs);
 
 			extracted = true;
