@@ -38,6 +38,8 @@ namespace LL2W {
 			std::weak_ptr<Instruction> lastUse;
 			std::set<int> registers;
 			std::unordered_set<Variable *> phiParents, phiChildren;
+			/** Whether the variable was defined by a ϕ-instruction. */
+			bool fromPhi = false;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.

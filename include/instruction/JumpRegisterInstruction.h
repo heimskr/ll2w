@@ -12,6 +12,11 @@ namespace LL2W {
 			RType(nullptr, nullptr, rd_, index_), Conditional(condition_), link(link_) {}
 
 		std::pair<char, char> extract(bool = false) override;
+		bool replaceRead(VariablePtr, VariablePtr) override;
+		bool canReplaceRead(VariablePtr) const override;
+		bool replaceWritten(VariablePtr, VariablePtr) override;
+		bool canReplaceWritten(VariablePtr) const override;
+
 		std::string debugExtra() override;
 		std::string toString() const override;
 		bool alwaysTerminal() const override;

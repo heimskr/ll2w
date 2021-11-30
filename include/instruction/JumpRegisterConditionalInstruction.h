@@ -11,6 +11,11 @@ namespace LL2W {
 			RType(rs_, nullptr, rd_, index_), link(link_) {}
 
 		std::pair<char, char> extract(bool = false) override;
+		bool replaceRead(VariablePtr, VariablePtr) override;
+		bool canReplaceRead(VariablePtr) const override;
+		bool replaceWritten(VariablePtr, VariablePtr) override;
+		bool canReplaceWritten(VariablePtr) const override;
+
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

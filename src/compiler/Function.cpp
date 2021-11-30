@@ -21,8 +21,8 @@
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
-// #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
-#define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
+#define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
+// #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
@@ -931,6 +931,11 @@ namespace LL2W {
 		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
 		// if (*name == "@memcpy") {
 			// extractVariables(false);
+			VariablePtr z = getVariable(".0");
+			std::cerr << ".0:\n";
+			for (auto &use: z->uses)
+				std::cerr << "- " << use.lock()->debugExtra() << '\n';
+
 			debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
 			// if (djGraph.has_value()) {
@@ -1244,11 +1249,6 @@ namespace LL2W {
 					if (Util::contains(other->preds, block->label))
 						goes_to[block->label].push_back(other);
 			}
-			if (name->find("ntoa_format") != std::string::npos) {
-				std::cerr << "GoesTo[11]:";
-				for (auto &block: goes_to.at(StringSet::intern("11"))) std::cerr << ' ' << *block->label;
-				std::cerr << '\n';
-			}
 		}
 
 		do {
@@ -1294,6 +1294,17 @@ namespace LL2W {
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
 		const bool special = *var->id == ".02";
+
+		// if (var->fromPhi)
+		// 	std::cerr << "fromPhi: " << *var << '\n';
+
+		// if (!var->phiChildren.empty()) {
+		// 	std::cerr << "!! " << *var << ":";
+		// 	for (Variable *child: var->phiChildren)
+		// 		std::cerr << ' ' << *child;
+		// 	std::cerr << '\n';
+		// }
+
 		for (const auto &instruction: block->instructions) {
 			if (instruction->isPhi()) {
 				if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Continuing because isPhi: " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
@@ -1301,10 +1312,13 @@ namespace LL2W {
 			}
 			// if def(v) ∈ B (φ excluded) then return
 			if (instruction->written.count(var) != 0) {
-				// if (!special) {
-				if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because written by " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
-				return;
-				// }
+				// if (!var->fromPhi) {
+				// if (!block->inPhiDefs(var)) {
+				if (var->id->front() != '.') {
+					if (special) std::cerr << "[" << __FILE__ << ":" << __LINE__ << ", block=" << *block->label << "] Returning because written by " << const_cast<Instruction *>(instruction.get())->debugExtra() << "\n";
+					return;
+					// }
+				}
 			}
 		}
 

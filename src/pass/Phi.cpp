@@ -163,6 +163,7 @@ namespace LL2W::Passes {
 				throw std::runtime_error("phi_node is null in Function::movePhi");
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
+			target->fromPhi = true;
 
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;

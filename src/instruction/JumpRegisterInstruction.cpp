@@ -16,6 +16,27 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
+	bool JumpRegisterInstruction::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+		if (rd && rd->isAliasOf(*to_replace)) {
+			rd = new_var;
+			return true;
+		}
+
+		return false;
+	}
+
+	bool JumpRegisterInstruction::canReplaceRead(std::shared_ptr<Variable> to_replace) const {
+		return rd && rd->isAliasOf(*to_replace);
+	}
+
+	bool JumpRegisterInstruction::replaceWritten(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
+		return false;
+	}
+
+	bool JumpRegisterInstruction::canReplaceWritten(std::shared_ptr<Variable>) const {
+		return false;
+	}
+
 	std::string JumpRegisterInstruction::debugExtra() {
 		return "\e[2m" + conditionPrefix() + std::string(link? "::" : ":") + "\e[0m " + std::string(*rd);
 	}

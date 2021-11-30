@@ -50,11 +50,11 @@ namespace LL2W {
 	}
 
 	bool RType::canReplaceRead(std::shared_ptr<Variable> to_replace) const {
-		return rs->isAliasOf(*to_replace) || rt->isAliasOf(*to_replace);
+		return (rs && rs->isAliasOf(*to_replace)) || (rt && rt->isAliasOf(*to_replace));
 	}
 
 	bool RType::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
-		if (rd->isAliasOf(*to_replace)) {
+		if (rd && rd->isAliasOf(*to_replace)) {
 			rd = new_var;
 			return true;
 		}
@@ -63,6 +63,6 @@ namespace LL2W {
 	}
 
 	bool RType::canReplaceWritten(std::shared_ptr<Variable> to_replace) const {
-		return rd->isAliasOf(*to_replace);
+		return rd && rd->isAliasOf(*to_replace);
 	}
 }
