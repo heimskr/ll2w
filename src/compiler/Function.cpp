@@ -21,7 +21,7 @@
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
-// #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
+#define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
 // #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
