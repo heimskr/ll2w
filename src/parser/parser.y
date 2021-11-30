@@ -761,7 +761,7 @@ i_icmp: result "icmp" LLVMTOK_ICMP_COND constant "," constant_right unibangs
 
 i_br_uncond: "br" "label" LLVMTOK_PVAR unibangs { $$ = (new BrUncondNode($3, $4))->locate($1); D($1, $2); };
 
-i_br_cond: "br" LLVMTOK_INTTYPE operand "," label "," label unibangs { $$ = (new BrCondNode($2, $3, $5, $7, $8))->locate($1); D($1, $4, $6); };
+i_br_cond: "br" constant "," label "," label unibangs { $$ = (new BrCondNode($2, $4, $6, $7))->locate($1); D($1, $3, $5); };
 label: "label" LLVMTOK_PVAR { $$ = $2; D($1); };
 
 i_call: _result _tail "call" fastmath_flags _cconv _retattrs _addrspace type_nonfn _args conversion_expr "(" _constants ")" call_attrs unibangs

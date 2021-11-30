@@ -33,9 +33,9 @@ namespace LL2W::Passes {
 	}
 
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrCondNode *br) {
-		const ValueType condition_type = br->condition->valueType();
+		const ValueType condition_type = br->condition->value->valueType();
 		if (condition_type == ValueType::Bool) {
-			const BoolValue *boolval = dynamic_cast<BoolValue *>(br->condition.get());
+			const BoolValue *boolval = dynamic_cast<BoolValue *>(br->condition->value.get());
 			function.insertBefore(instruction, std::make_shared<JumpInstruction>(
 				StringSet::intern(function.transformLabel(boolval->value? *br->ifTrue : *br->ifFalse)), false))
 				->setDebug(*br)->extract();
@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 				getName(condition_type));
 		} else {
 			function.insertBefore(instruction, std::make_shared<JumpConditionalInstruction>(
-				dynamic_cast<LocalValue *>(br->condition.get())->variable,
+				dynamic_cast<LocalValue *>(br->condition->value.get())->variable,
 				StringSet::intern(function.transformLabel(*br->ifTrue)), false))->setDebug(*br)->extract();
 			function.insertBefore(instruction,
 				std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->ifFalse)), false))

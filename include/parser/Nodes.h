@@ -203,14 +203,16 @@ namespace LL2W {
 	};
 
 	struct BrCondNode: public InstructionNode, public Reader {
-		ValuePtr condition;
+		ConstantPtr condition;
 		const std::string *ifTrue, *ifFalse;
 
-		BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
+		BrCondNode(ASTNode *constant, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BrCond; }
-		std::vector<ValuePtr> allValues() override { return {condition}; }
-		std::vector<ValuePtr *> allValuePointers() override { return {&condition}; }
+		std::vector<ValuePtr> allValues() override { return {condition->value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&condition->value}; }
+		std::vector<ConstantPtr> allConstants() const override { return {condition}; }
+		std::vector<ConstantPtr *> allConstantPointers() override { return {&condition}; }
 	};
 
 	class CallInvokeNode: public InstructionNode, public Writer, public Reader {

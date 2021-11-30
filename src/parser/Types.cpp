@@ -16,6 +16,10 @@ namespace LL2W {
 		return typeType() == TypeType::Int;
 	}
 
+	bool Type::isInt(int width) const {
+		return typeType() == TypeType::Int && dynamic_cast<const IntType *>(this)->intWidth == width;
+	}
+
 	IntType::operator std::string() {
 		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
 	}

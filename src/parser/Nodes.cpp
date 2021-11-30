@@ -451,12 +451,12 @@ namespace LL2W {
 
 // BrCondNode
 
-	BrCondNode::BrCondNode(ASTNode *type, ASTNode *condition_, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs) {
-		Deleter deleter(unibangs, condition_, if_true, if_false);
+	BrCondNode::BrCondNode(ASTNode *constant, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs) {
+		Deleter deleter(unibangs, constant, if_true, if_false);
 		handleUnibangs(unibangs);
-		if (*type->lexerInfo != "i1")
+		condition = Constant::make(constant)->convert();
+		if (!condition->type->isInt(1))
 			llvmerror("Expected i1 for br condition type");
-		condition = getValue(condition_);
 		ifTrue = if_true->lexerInfo;
 		ifFalse = if_false->lexerInfo;
 	}
