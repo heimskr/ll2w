@@ -156,52 +156,48 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
 				mult->setDebug(node)->extract();
 			} else if (tt == TypeType::Struct || ((tt == TypeType::Array || tt == TypeType::Pointer) && !one_pvar)) {
-				// Gather all the indices while making sure they're all decimals.
-				std::list<long> indices;
-				size_t index_count = 0;
-				Variable::ID first_pvar = nullptr;
+				std::list<std::variant<long, const std::string *>> indices;
+				std::stringstream indices_str;
+				bool first = true;
 				for (const auto &index: node->indices) {
-					++index_count;
-					// It's always okay for the first index to be a pvar, even for structs, because it reaches not
-					// within the struct but rather into the abyss beyond.
-					if (index.isPvar) {
-						if (1 < index_count) {
-							node->debug();
-							throw std::runtime_error("Unable to index a struct with a pvar except in the first "
-								"position");
-						} else {
-							first_pvar = std::get<Variable::ID>(index.value);
-							// Insert a dummy 0 value to make Getelementptr::compute still work.
-							indices.push_back(0l);
-							continue;
-						}
-					}
-					indices.push_back(std::get<long>(index.value));
+					indices.push_back(index.value);
+					if (first)
+						first = false;
+					else
+						indices_str << ',';
+					indices_str << (std::holds_alternative<long>(index.value)?
+						std::to_string(std::get<long>(index.value)) :
+						"%" + *std::get<const std::string *>(index.value));
 				}
+
 
 				TypePtr out_type;
 #ifdef DEBUG_GETELEMENTPTR
 				TypePtr old_type = node->variable->type;
 #endif
-				long offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8l);
-				if (Util::outOfRange(offset))
-					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+				// long offset = Util::updiv(Getelementptr::compute(constant_type, indices, &out_type), 8l);
+				// if (Util::outOfRange(offset))
+				// 	warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+				function.comment(instruction, "LowerGetelementptr(" + std::string(node->location) + "): struct-type: " +
+					constant_type->toString() + " -> " + node->variable->plainString() + ", indices=" +
+					indices_str.str());
+				Getelementptr::insert(function, node->pointerType, indices, instruction, node->variable, &out_type);
 				node->variable->type = out_type;
 				node->type = out_type;
 
-				auto add = std::make_shared<AddIInstruction>(pointer, int(offset), node->variable);
-				function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
-					"): struct-type: " + constant_type->toString() + " -> " + node->variable->plainString() +
-					", offset=" + std::to_string(offset) + ", indices=" + Util::join(indices, ","))
-					->setDebug(node)->extract();
-				if (first_pvar) {
-					auto pvar = function.getVariable(first_pvar);
-					auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
-					auto mult = std::make_shared<MultIInstruction>(pvar, constant_type->width());
-					auto second_add = std::make_shared<AddRInstruction>(node->variable, lo, node->variable);
-					function.insertBefore(instruction, mult);
-					function.insertBefore(instruction, second_add);
-				}
+				// auto add = std::make_shared<AddIInstruction>(pointer, int(offset), node->variable);
+				// function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
+				// 	"): struct-type: " + constant_type->toString() + " -> " + node->variable->plainString() +
+				// 	", offset=" + std::to_string(offset) + ", indices=" + Util::join(indices, ","))
+				// 	->setDebug(node)->extract();
+				// if (first_pvar) {
+				// 	auto pvar = function.getVariable(first_pvar);
+				// 	auto lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
+				// 	auto mult = std::make_shared<MultIInstruction>(pvar, constant_type->width());
+				// 	auto second_add = std::make_shared<AddRInstruction>(node->variable, lo, node->variable);
+				// 	function.insertBefore(instruction, mult);
+				// 	function.insertBefore(instruction, second_add);
+				// }
 #ifdef DEBUG_GETELEMENTPTR
 				function.comment(add, "Type: " + std::string(*old_type) + " -> " + std::string(*out_type));
 #endif

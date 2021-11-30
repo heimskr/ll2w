@@ -1581,7 +1581,7 @@ namespace LL2W {
 	InstructionPtr instruction) {
 		TypePtr out_type;
 
-		const std::list<long> indices = Getelementptr::getIndices(*gep);
+		const std::list<long> indices = Getelementptr::getLongIndices(*gep);
 
 		const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8l);
 		if (Util::outOfRange(offset))
@@ -1769,5 +1769,13 @@ namespace LL2W {
 
 	VariablePtr Function::zero(InstructionPtr instruction) {
 		return zero(instruction->parent.lock());
+	}
+
+	VariablePtr Function::lo(BasicBlockPtr block) {
+		return makePrecoloredVariable(WhyInfo::loOffset, block);
+	}
+
+	VariablePtr Function::lo(InstructionPtr instruction) {
+		return lo(instruction->parent.lock());
 	}
 }

@@ -689,7 +689,8 @@ namespace LL2W {
 		result = StringSet::intern(pvar->extractName());
 		inbounds = bool(_inbounds);
 		type = getType(type_);
-		constant = std::make_shared<Constant>(constant_);
+		constant = Constant::make(constant_)->convert();
+		pointerType = constant->type;
 
 		for (const ASTNode *comma: *indices_) {
 			const long width = comma->at(0)->atoi(1);

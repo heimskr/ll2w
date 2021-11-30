@@ -287,7 +287,7 @@ namespace LL2W {
 		};
 
 		bool inbounds = false;
-		TypePtr type;
+		TypePtr type, pointerType;
 		ConstantPtr constant;
 		std::vector<Index> indices;
 

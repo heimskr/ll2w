@@ -1,14 +1,11 @@
-#ifndef INSTRUCTION_ADDRINSTRUCTION_H_
-#define INSTRUCTION_ADDRINSTRUCTION_H_
+#pragma once
 
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct AddRInstruction: public RType {
+	struct AddRInstruction: RType, Makeable<AddRInstruction> {
 		using RType::RType;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif

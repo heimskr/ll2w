@@ -394,5 +394,11 @@ namespace LL2W {
 
 			/** Convenience method for creating a precolored $0 register. */
 			VariablePtr zero(InstructionPtr);
+
+			/** Convenience method for creating a precolored $lo register. */
+			VariablePtr lo(BasicBlockPtr);
+
+			/** Convenience method for creating a precolored $lo register. */
+			VariablePtr lo(InstructionPtr);
 	};
 }

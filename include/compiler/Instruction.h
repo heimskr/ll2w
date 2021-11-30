@@ -76,18 +76,24 @@ namespace LL2W {
 			virtual std::shared_ptr<Variable> doesRead(std::shared_ptr<Variable>) const;
 			virtual std::shared_ptr<Variable> doesWrite(std::shared_ptr<Variable>) const;
 
-			Instruction * setDebug(int debug_index) {
+			Instruction * setDebug(int debug_index, bool do_extract = false) {
 				debugIndex = debug_index;
+				if (do_extract)
+					extract();
 				return this;
 			}
 
-			Instruction * setDebug(const Instruction &other) {
+			Instruction * setDebug(const Instruction &other, bool do_extract = false) {
 				debugIndex = other.debugIndex;
+				if (do_extract)
+					extract();
 				return this;
 			}
 
-			Instruction * setDebug(const Instruction *other) {
+			Instruction * setDebug(const Instruction *other, bool do_extract = false) {
 				debugIndex = other->debugIndex;
+				if (do_extract)
+					extract();
 				return this;
 			}
 

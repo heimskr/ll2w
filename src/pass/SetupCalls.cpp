@@ -280,7 +280,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 				return 0;
 			} else {
-				const std::list<long> indices = Getelementptr::getIndices(*gep);
+				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
 				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
 				if (Util::outOfRange(offset))
 					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
@@ -380,7 +380,7 @@ namespace LL2W::Passes {
 					return;
 				}
 
-				const std::list<long> indices = Getelementptr::getIndices(*gep);
+				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
 
 				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
 				if (Util::outOfRange(offset))
@@ -396,7 +396,7 @@ namespace LL2W::Passes {
 				if (signext)
 					function.insertBefore(instruction, make_signext());
 			} else {
-				const std::list<long> indices = Getelementptr::getIndices(*gep);
+				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
 
 				const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices), 8l);
 				if (Util::outOfRange(offset))
