@@ -304,6 +304,7 @@ namespace LL2W::Passes {
 					node->variable))->setDebug(node)->extract();
 				break;
 			default:
+				node->debug();
 				throw std::runtime_error("Unsupported bit width: " + std::to_string(node->type->width()));
 		}
 	}
