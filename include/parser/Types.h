@@ -75,7 +75,7 @@ namespace LL2W {
 		HasSubtype(const TypePtr &subtype_): subtype(subtype_) {}
 	};
 
-	struct ArrayType: public AggregateType, public HasSubtype {
+	struct ArrayType: AggregateType, HasSubtype, Makeable<ArrayType> {
 		TypeType typeType() const override { return TypeType::Array; }
 		int count;
 		ArrayType(int count_, TypePtr subtype_): HasSubtype(subtype_), count(count_) {}
@@ -146,7 +146,7 @@ namespace LL2W {
 			bool operator!=(const Type &) const override;
 	};
 
-	struct StructType: public AggregateType, public std::enable_shared_from_this<StructType> {
+	struct StructType: AggregateType, std::enable_shared_from_this<StructType>, Makeable<StructType> {
 		bool padded = false;
 		/** Map indices in the struct before padding to the corresponding indices after padding has been inserted.
 		 *  If padded is false, this is empty. */

@@ -6,9 +6,10 @@
 #include "ASTNode.h"
 #include "Enums.h"
 #include "Types.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
-	class StructNode: public ASTNode {
+	class StructNode: public ASTNode, public Makeable<StructNode> {
 		private:
 			void addTypes(ASTNode *);
 

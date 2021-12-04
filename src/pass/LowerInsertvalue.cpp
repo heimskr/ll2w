@@ -70,12 +70,13 @@ namespace LL2W::Passes {
 				if (value->isIntLike()) {
 					auto set = std::make_shared<SetInstruction>(reg, value->intValue(false));
 					set->setOriginalValue(value);
-					function.insertBefore(instruction, set, "LowerInsertvalue: intlike" + comment);
+					function.insertBefore(instruction, set, "LowerInsertvalue: intlike" + comment)
+						->setDebug(*instruction)->extract();
 				} else if (valuetype == ValueType::Local) {
 					VariablePtr source = dynamic_cast<LocalValue *>(value.get())->variable;
 					auto move = std::make_shared<MoveInstruction>(source, reg);
 					function.insertBefore(instruction, move, "LowerInsertvalue: local: " + source->plainString() +
-						comment);
+						comment)->setDebug(*instruction)->extract();
 					// function.insertBefore(move, std::make_shared<PrintPseudoinstruction>("@"));
 				} else {
 					warn() << "Skipping insertvalue with unsupported value type: " << instruction->debugExtra() << '\n';

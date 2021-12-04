@@ -134,19 +134,27 @@ void wasmparsertest(const std::string &filename) {
 }
 
 void paddingtest() {
-	auto i8  = std::make_shared<LL2W::IntType>(8);
-	auto i32 = std::make_shared<LL2W::IntType>(32);
-	auto i64 = std::make_shared<LL2W::IntType>(64);
-	auto i8x4 = std::make_shared<LL2W::ArrayType>(4, i8);
-	auto i8p = std::make_shared<LL2W::PointerType>(i8);
-	auto bslong = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {i64, i64, i8p}, LL2W::StructShape::Default));
-	auto anon = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {bslong}, LL2W::StructShape::Default));
-	auto bsrep = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {anon}, LL2W::StructShape::Default));
-	auto cpe = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {bsrep}, LL2W::StructShape::Default));
-	auto compressed_pair = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {cpe}, LL2W::StructShape::Default));
-	auto basic_string = std::make_shared<LL2W::StructType>(std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {compressed_pair}, LL2W::StructShape::Default));
-	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {basic_string, i32, i8x4},
-		LL2W::StructShape::Packed);
+	using namespace LL2W;
+
+	// llvm::ArrayType *i8x8 = llvm::ArrayType::get(i8, 8);
+	// llvm::ArrayType *i8x32 = llvm::ArrayType::get(i8, 32);
+	// // %"struct.std::__1::aligned_storage<24, 16>::type"
+	// llvm::StructType *aligned24_16 = llvm::StructType::get(llvm, {i8x32}, false);
+	// // %struct.StorageDevice
+	// llvm::StructType *device = llvm::StructType::get(llvm, {i8p}, false); // Actually {i32 (...)**}
+	// llvm::PointerType *device_ptr = llvm::PointerType::get(device, 0);
+	// // %"class.std::__1::__function::__value_func"
+	// llvm::StructType *s10 = llvm::StructType::get(llvm, {aligned24_16, device_ptr, i8x8}, false);
+
+	auto i8 = IntType::make(8);
+	auto i8x8 = ArrayType::make(8, i8);
+	auto i8x32 = ArrayType::make(32, i8);
+	auto i8p = PointerType::make(i8);
+	auto aligned24_16 = StructType::make(StructNode::make(std::initializer_list<LL2W::TypePtr> {i8x32}, StructShape::Default));
+	auto device = StructType::make(StructNode::make(std::initializer_list<LL2W::TypePtr> {i8p}, StructShape::Default));
+	auto device_ptr = PointerType::make(i8);
+
+	auto snode = std::make_shared<LL2W::StructNode>(std::initializer_list<LL2W::TypePtr> {aligned24_16, device_ptr, i8x8}, LL2W::StructShape::Default);
 	auto stype = std::make_shared<LL2W::StructType>(snode);
 	std::cout << "Custom: " << stype->barename() << '\n';
 	int i = 0;
