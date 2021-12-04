@@ -425,6 +425,7 @@ didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "offset"    ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
          | "flags"     ":" pipe_list       { $$ = $1->adopt($3); D($2); }
          | "extraData" ":" constant        { $$ = $1->adopt($3); D($2); }
+         | "extraData" ":" LLVMTOK_INTBANG { $$ = $1->adopt($3); D($2); }
          | "align"     ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); };
 didt_list: didt_list "," didt_item { $$ = $1->adopt($3); D($2); }
          | didt_item { $$ = (new AN(llvmParser, LLVM_DIDT_LIST))->adopt($1); };
