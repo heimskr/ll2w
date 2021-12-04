@@ -17,7 +17,6 @@ namespace LL2W {
 	}
 
 	std::string PrintPseudoinstruction::toString() const {
-		std::cerr << "imm[" << LL2W::toString(imm, false) << "]\n";
 		return "<p \"" + (text? *text : LL2W::toString(imm, false)) + "\">";
 	}
 }
