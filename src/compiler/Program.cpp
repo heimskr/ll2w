@@ -190,6 +190,18 @@ namespace LL2W {
 			global_data.try_emplace(name, constant, constant->value, global->location);
 		}
 
+		if (global_data.count("llvm.global_ctors") != 0) {
+			const GlobalData &def = global_data.at("llvm.global_ctors");
+			if (auto *array = dynamic_cast<const ArrayType *>(def.constant->type.get())) {
+				out << "%align 8\n\n@__ctors_start\n%8b llvm.global_ctors\n\n";
+				out << "@__ctors_end\n%8b llvm.global_ctors + " << (8 * array->count) << "\n\n";
+			} else if (!def.constant->type)
+				throw std::runtime_error("@llvm.global_ctors was expected to be an array but has no type");
+			else
+				throw std::runtime_error("@llvm.global_ctors was expected to be an array but is " +
+					def.constant->type->toString());
+		}
+
 		bool changed;
 
 		do {
