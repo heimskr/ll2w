@@ -13,10 +13,11 @@ namespace LL2W {
 		PrintPseudoinstruction(StringSet::intern(text_), false, index_) {}
 
 	std::string PrintPseudoinstruction::debugExtra() {
-		return "<\e[36mp\e[39m \"" + Util::escape(text? *text : colorize(imm, false)) + "\">";
+		return "<\e[36mp\e[39m \"" + (text? *text : colorize(imm, false)) + "\">";
 	}
 
 	std::string PrintPseudoinstruction::toString() const {
-		return "<p \"" + Util::escape(text? *text : LL2W::toString(imm, false)) + "\">";
+		std::cerr << "imm[" << LL2W::toString(imm, false) << "]\n";
+		return "<p \"" + (text? *text : LL2W::toString(imm, false)) + "\">";
 	}
 }
