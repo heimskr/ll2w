@@ -78,7 +78,9 @@ void wasmerror(const std::string &message) {
 }
 
 void wasmerror(const std::string &message, const LL2W::ASTLocation &location) {
-	std::cerr << LL2W::Util::split(LL2W::wasmParser.getBuffer(), "\n", false).at(location.line) << "\n";
+	auto lines = LL2W::Util::split(LL2W::wasmParser.getBuffer(), "\n", false);
+	if (location.line < lines.size())
+		std::cerr << lines.at(location.line) << "\n";
 	std::cerr << "\e[31mWASM error at \e[1m" << location << "\e[22m: " << message << "\e[0m\n";
 	++LL2W::wasmParser.errorCount;
 	LL2W::wasmLexer.errors.push_back({message, location});

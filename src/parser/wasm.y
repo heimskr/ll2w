@@ -135,6 +135,7 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_SEXT32 "sext32"
 %token WASMTOK_SEXT16 "sext16"
 %token WASMTOK_SEXT8 "sext8"
+%token WASMTOK_TRANSLATE "translate"
 
 %token WASM_RNODE WASM_STATEMENTS WASM_INODE WASM_COPYNODE WASM_LOADNODE WASM_STORENODE WASM_SETNODE WASM_LINODE
 %token WASM_SINODE WASM_LNINODE WASM_CHNODE WASM_LHNODE WASM_SHNODE WASM_CMPNODE WASM_CMPINODE WASM_SELNODE WASM_JNODE
@@ -142,7 +143,7 @@ using AN = LL2W::ASTNode;
 %token WASM_LUINODE WASM_STACKNODE WASM_NOPNODE WASM_INTINODE WASM_RITINODE WASM_TIMEINODE WASM_TIMERNODE WASM_RINGINODE
 %token WASM_RINGRNODE WASM_PRINTNODE WASM_HALTNODE WASM_SLEEPRNODE WASM_PAGENODE WASM_SETPTINODE WASM_MVNODE WASM_LABEL
 %token WASM_SETPTRNODE WASM_SVPGNODE WASM_QUERYNODE WASM_PSEUDOPRINTNODE WASM_RESTNODE WASM_IONODE WASM_INTERRUPTSNODE
-%token WASM_INVERSESHIFTNODE WASM_SEXTNODE
+%token WASM_INVERSESHIFTNODE WASM_SEXTNODE WASM_TRANSNODE
 
 %start start
 
@@ -162,7 +163,7 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh    | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop  | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring  | op_page | op_setpt | label
-         | op_svpg | op_qmem  | op_di    | op_ei    | op_sllii  | op_srlii | op_sraii | op_sext;
+         | op_svpg | op_qmem  | op_di    | op_ei    | op_sllii  | op_srlii | op_sraii | op_sext | op_trans;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -211,6 +212,8 @@ op_ch: "[" reg "]" "->" "[" reg "]" "/h" { $$ = new WASMChNode($2, $6); D($1, $3
 op_lh: "[" reg "]" "->" reg "/h" { $$ = new WASMLhNode($2, $5); D($1, $3, $4, $6); };
 
 op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6); };
+
+op_trans: "translate" reg "->" reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
 
 op_cmp: reg "~" reg { $$ = new WASMCmpNode($1, $3); D($2); };
 
@@ -290,7 +293,8 @@ sext_size: "sext32" | "sext16" | "sext8";
 immediate: _immediate { $$ = new WASMImmediateNode($1); };
 _immediate: number | ident | character;
 
-ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | printop | "p" | WASMTOK_IDENT | "sleep" | "rest" | "io";
+ident: "memset" | "lui" | "if" | "halt" | "on" | "off" | printop | "p" | WASMTOK_IDENT | "sleep" | "rest" | "io"
+     | "translate";
 
 zero: number { if (*$1->lexerInfo != "0") { wasmerror("Invalid number in jump condition: " + *$1->lexerInfo); } };
 

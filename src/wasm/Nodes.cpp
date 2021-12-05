@@ -102,6 +102,7 @@
 #include "instruction/Sext32RInstruction.h"
 #include "instruction/Sext16RInstruction.h"
 #include "instruction/Sext8RInstruction.h"
+#include "instruction/TranslateAddressRInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1308,5 +1309,25 @@ namespace LL2W {
 			default:
 				throw std::runtime_error("Invalid size for WASMSextNode: " + std::to_string(size));
 		}
+	}
+
+	WASMTransNode::WASMTransNode(const ASTNode *rs_, const ASTNode *rd_):
+	WASMInstructionNode(WASM_TRANSNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+		delete rs_;
+		delete rd_;
+	}
+
+	std::string WASMTransNode::debugExtra() const {
+		return bold("translate") + " " + cyan(*rs) + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMTransNode::operator std::string() const {
+		return "translate " + *rs + " -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMTransNode::convert(Function &function, VarMap &map) {
+		VariablePtr rs_ = convertVariable(function, map, rs);
+		VariablePtr rd_ = convertVariable(function, map, rd);
+		return std::make_unique<TranslateAddressRInstruction>(rs_, rd_);
 	}
 }
