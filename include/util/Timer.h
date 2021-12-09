@@ -16,6 +16,6 @@ namespace LL2W {
 		Timer(const std::string &name_);
 		~Timer();
 
-		static void summary();
+		static void summary(double threshold = 0.0);
 	};
 }

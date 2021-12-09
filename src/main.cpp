@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	LL2W::Timer::summary();
+	LL2W::Timer::summary(0.1);
 
 	LL2W::StructType::knownStructs.clear();
 

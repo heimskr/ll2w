@@ -14,7 +14,7 @@ namespace LL2W {
 		++counts[name];
 	}
 
-	void Timer::summary() {
+	void Timer::summary(double threshold) {
 		if (!times.empty()) {
 			std::cerr << "Timer summary:\n";
 
@@ -23,6 +23,8 @@ namespace LL2W {
 			size_t max_length = 0;
 
 			for (const auto &[name, nanos]: times) {
+				if (nanos.count() / 1e9 < threshold)
+					continue;
 				names.push_back(&name);
 				max_length = std::max(name.size(), max_length);
 			}
