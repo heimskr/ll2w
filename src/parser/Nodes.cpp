@@ -322,7 +322,7 @@ namespace LL2W {
 
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
 	                   ASTNode *bangs) {
-		Deleter deleter(type_, constant_, volatile__, align_, bangs);
+		Deleter deleter(result_, type_, constant_, volatile__, align_, bangs);
 		atomic = false;
 		result = result_->extracted();
 		type = getType(type_);

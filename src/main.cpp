@@ -6,11 +6,11 @@
 
 #include "compiler/PaddedStructs.h"
 #include "compiler/Program.h"
-#include "graph/Graph.h"
-#include "graph/DTree.h"
 #include "graph/DJGraph.h"
-#include "parser/Parser.h"
+#include "graph/DTree.h"
+#include "graph/Graph.h"
 #include "parser/Lexer.h"
+#include "parser/Parser.h"
 #include "util/Timer.h"
 #include "util/Util.h"
 #include "Interactive.h"
@@ -31,6 +31,8 @@ void compile(const std::string &, bool show_debug);
 void wasmparsertest(const std::string &);
 void interactive(LL2W::Program &);
 void paddingtest();
+
+std::map<LL2W::ASTNode *, std::string> extras;
 
 int main(int argc, char **argv) {
 	// paddingtest();
@@ -63,6 +65,14 @@ int main(int argc, char **argv) {
 #endif
 
 	LL2W::Timer::summary();
+
+	LL2W::StructType::knownStructs.clear();
+
+	std::cerr << "Remaining nodes: " << all_nodes.size() << "\n";
+	for (auto *remaining: all_nodes) {
+		// std::cerr << "- " << remaining << ": " << extras.at(remaining) << '\n';
+		remaining->debug();
+	}
 }
 
 bool hasArg(const char *arg) {
@@ -122,7 +132,12 @@ void compile(const std::string &filename, bool show_debug) {
 	// 	std::cerr << "    Width: " << LL2W::PaddedStructs::getOffset(stype, snode->types.size()) / 8 << " B\n";
 	// 	std::cerr << "    Alignment: " << stype->alignment() << " B\n\n";
 	// }
+
+	for (auto *node: all_nodes)
+		extras.emplace(node, std::string(node->location) + " " + node->debugExtra());
+
 	LL2W::llvmParser.done();
+	LL2W::wasmParser.done();
 }
 
 void wasmparsertest(const std::string &filename) {

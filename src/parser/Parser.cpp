@@ -60,7 +60,11 @@ namespace LL2W {
 			llvmlex_destroy();
 		else
 			wasmlex_destroy();
-		delete root;
+
+		if (root) {
+			delete root;
+			root = nullptr;
+		}
 
 		if (buffer) {
 			delete[] buffer;

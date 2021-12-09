@@ -349,9 +349,9 @@ attribute_parattr_simple: LLVMTOK_INALLOCA;
 
 // Miscellaneous
 
-source_filename: "source_filename" "=" LLVMTOK_STRING { D($1, $2); $$ = new AN(llvmParser, LLVMTOK_SOURCE_FILENAME, $3->lexerInfo); }
+source_filename: "source_filename" "=" LLVMTOK_STRING { $$ = (new AN(llvmParser, LLVMTOK_SOURCE_FILENAME, $3->lexerInfo))->locate($3); D($1, $2, $3); }
 
-target: LLVMTOK_TARGET target_type "=" LLVMTOK_STRING { $$ = $1->adopt({$2, $4}); }
+target: LLVMTOK_TARGET target_type "=" LLVMTOK_STRING { $$ = $1->adopt({$2, $4}); D($3); }
 target_type: "datalayout" | "triple";
 
 metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
@@ -669,7 +669,7 @@ _header_comdat: "comdat" any_ident { $1->adopt($2); }
               | "comdat"
               | { $$ = nullptr; };
 
-function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(llvmParser, LLVM_FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($3, $5); };
+function_def: "define" function_header "{" function_lines "}" { $$ = (new AN(llvmParser, LLVM_FUNCTION_DEF, $2->lexerInfo))->adopt({$2, $4}); D($1, $3, $5); };
 function_lines: function_lines statement { $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_STATEMENTS); };
 statement: label_statement | instruction | bb_header;
 label_statement: ident ":" { $1->symbol = LLVM_LABEL; D($2); };
@@ -910,8 +910,8 @@ retattr: LLVMTOK_RETATTR
        | "align" LLVMTOK_DECIMAL               { $$ = $1->adopt($2); };
 operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | LLVMTOK_BOOL | LLVMTOK_FLOATING | struct
        | bare_array   | LLVMTOK_CSTRING | getelementptr_expr  | "null" | "zeroinitializer"  | "undef";
-conversion_expr: LLVMTOK_CONV_OP constant "to" type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4}); D($3); }
-               | LLVMTOK_CONV_OP "(" constant "to" type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5}); D($2, $4, $6); };
+conversion_expr: LLVMTOK_CONV_OP constant "to" type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4})->locate($1); D($1, $3); }
+               | LLVMTOK_CONV_OP "(" constant "to" type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5})->locate($1); D($1, $2, $4, $6); };
 icmp_expr: "icmp" LLVMTOK_ICMP_COND "(" constant "," constant ")" { $$ = $1->adopt({$2, $4, $6}); D($3, $5, $7); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"

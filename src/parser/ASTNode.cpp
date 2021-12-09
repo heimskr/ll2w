@@ -8,6 +8,8 @@
 #include "parser/Types.h"
 #include "util/Util.h"
 
+std::set<LL2W::ASTNode *> all_nodes;
+
 namespace LL2W {
 	ASTLocation::operator std::string() const {
 		return std::to_string(line + 1) + ":" + std::to_string(column);
@@ -18,43 +20,56 @@ namespace LL2W {
 		return os;
 	}
 
-	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const char *info) {
+	void ASTNode::onCreate(ASTNode *node) {
+		all_nodes.insert(node);
+	}
+
+	void ASTNode::onDestroy(ASTNode *node) {
+		all_nodes.erase(node);
+	}
+
+	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const char *info): ASTNode() {
 		parser = &parser_;
 		symbol = sym;
 		location = loc;
 		lexerInfo = StringSet::intern(info);
+		onCreate(this);
 	}
 
 	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const std::string *info):
-		parser(&parser_), symbol(sym), location(loc), lexerInfo(info) {}
+		parser(&parser_), symbol(sym), location(loc), lexerInfo(info) { onCreate(this); }
 
 	ASTNode::ASTNode(Parser &parser_, int sym, const std::string *info):
-		parser(&parser_), symbol(sym), location(llvmLexer.location), lexerInfo(info) {}
+		parser(&parser_), symbol(sym), location(llvmLexer.location), lexerInfo(info) { onCreate(this); }
 
 	ASTNode::ASTNode(Parser &parser_, int sym, const char *info) {
 		parser = &parser_;
 		symbol = sym;
 		location = llvmLexer.location;
 		lexerInfo = StringSet::intern(info);
+		onCreate(this);
 	}
 
-	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc): ASTNode(parser_, sym, loc, "") {}
+	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc): ASTNode(parser_, sym, loc, "") { onCreate(this); }
 
-	ASTNode::ASTNode(Parser &parser_, int sym): ASTNode(parser_, sym, "") {}
+	ASTNode::ASTNode(Parser &parser_, int sym): ASTNode(parser_, sym, "") { onCreate(this); }
 
 	ASTNode::ASTNode(Parser &parser_, int sym, ASTNode *node, const char *info):
-			ASTNode(parser_, sym, node->location, info) {
+	ASTNode(parser_, sym, node->location, info) {
 		adopt(node);
+		onCreate(this);
 	}
 
 	ASTNode::ASTNode(Parser &parser_, int sym, ASTNode *node, const std::string *info):
-			ASTNode(parser_, sym, node->location, info) {
+	ASTNode(parser_, sym, node->location, info) {
 		adopt(node);
+		onCreate(this);
 	}
 
 	ASTNode::~ASTNode() {
 		for (ASTNode *child: children)
 			delete child;
+		onDestroy(this);
 	}
 
 	ASTNode * ASTNode::operator[](size_t index) const {

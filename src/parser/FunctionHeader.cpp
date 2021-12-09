@@ -6,6 +6,7 @@
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "parser/Types.h"
+#include "util/Deleter.h"
 
 // TODO: reduce duplication of GlobalVarDef code
 
@@ -15,17 +16,18 @@ namespace LL2W {
 	                               N _section, N _comdat, N _align, N _personality, N debug):
 	ASTNode(llvmParser, LLVM_FUNCTION_HEADER, function_name->lexerInfo),
 	arguments(dynamic_cast<FunctionArgs *>(function_args)) {
-		name = StringSet::intern(function_name->extractName());
+		Deleter deleter(_linkage, _preemption, _visibility, _dll_storage_class, _cconv, _retattrs, debug, type,
+		                unnamed_addr, _fnattrs, _section, _comdat, _align, _personality, function_name);
+
+		name = function_name->extracted();
 
 		if (_linkage) {
 			const std::string &link = *_linkage->lexerInfo;
-			for (const std::pair<const Linkage, std::string> &pair: linkage_map) {
+			for (const std::pair<const Linkage, std::string> &pair: linkage_map)
 				if (link == pair.second) {
 					linkage = pair.first;
 					break;
 				}
-			}
-			delete _linkage;
 		}
 
 		if (_preemption) {
@@ -34,30 +36,25 @@ namespace LL2W {
 			else if (*_preemption->lexerInfo == "dso_local")
 				preemption = Preemption::DsoLocal;
 			else throw std::runtime_error("Invalid preemption: " + *_preemption->lexerInfo);
-			delete _preemption;
 		}
 
 		if (_visibility) {
 			visibility = *_visibility->lexerInfo == "hidden"? Visibility::Hidden :
 				(*_visibility->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
-			delete _visibility;
 		}
 
 		if (_dll_storage_class) {
 			dllStorageClass = *_dll_storage_class->lexerInfo == "dllimport"?
 				DllStorageClass::Import : DllStorageClass::Export;
-			delete _dll_storage_class;
 		}
 
 		if (_cconv) {
 			const std::string &cc = *_cconv->lexerInfo;
-			for (const std::pair<const CConv, std::string> &pair: cconv_map) {
+			for (const std::pair<const CConv, std::string> &pair: cconv_map)
 				if (cc == pair.second) {
 					cconv = pair.first;
 					break;
 				}
-			}
-			delete _cconv;
 		}
 
 		if (_retattrs) {
@@ -87,16 +84,12 @@ namespace LL2W {
 					}
 				}
 			}
-			delete _retattrs;
 		}
 
-		if (debug) {
+		if (debug)
 			debugIndex = debug->front()->atoi();
-			delete debug;
-		}
 
 		returnType = getType(type);
-		delete type;
 
 		if (unnamed_addr) {
 			const std::string &uatype = *unnamed_addr->lexerInfo;
@@ -105,48 +98,37 @@ namespace LL2W {
 			else if (uatype == "unnamed_addr")
 				unnamedAddr = UnnamedAddr::Unnamed;
 			else throw std::runtime_error("Invalid lexerinfo for unnamed_addr: " + uatype);
-			delete unnamed_addr;
 		}
 
-		if (_fnattrs->symbol == LLVMTOK_DECIMAL) {
+		if (_fnattrs->symbol == LLVMTOK_DECIMAL)
 			fnattrsIndex = _fnattrs->atoi();
-		} else if (_fnattrs->symbol == LLVM_FNATTR_LIST) {
+		else if (_fnattrs->symbol == LLVM_FNATTR_LIST)
 			for (ASTNode *fnattr: _fnattrs->children) {
 				const std::string &fnattr_name = *fnattr->lexerInfo;
-				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
+				for (const std::pair<const FnAttr, std::string> &pair: fnattr_map)
 					if (fnattr_name == pair.second) {
 						fnattrs.insert(pair.first);
 						break;
 					}
-				}
 			}
-			delete _fnattrs;
-		} else {
+		else
 			throw std::runtime_error("Bad symbol for fnattrs node: " + std::string(parser->getName(_fnattrs->symbol)));
-		}
 
-		if (_section) {
+		if (_section)
 			section = _section->at(0)->lexerInfo;
-			delete _section;
-		}
 
 		if (_comdat) {
 			if (_comdat->empty())
 				comdat = name;
 			else
 				comdat = _comdat->at(0)->lexerInfo;
-			delete _comdat;
 		}
 
-		if (_align) {
+		if (_align)
 			align = _align->at(0)->atoi();
-			delete _align;
-		}
 
-		if (_personality) {
+		if (_personality)
 			personality = std::make_shared<Constant>(_personality->at(0));
-			delete _personality;
-		}
 	}
 
 	std::string FunctionHeader::debugExtra() const {

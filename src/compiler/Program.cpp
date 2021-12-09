@@ -121,8 +121,8 @@ namespace LL2W {
 	}
 
 	Program::~Program() {
-		for (std::pair<const std::string, Function *> &pair: functions)
-			delete pair.second;
+		for (const auto &[fname, function]: functions)
+			delete function;
 	}
 
 	void Program::compile() {

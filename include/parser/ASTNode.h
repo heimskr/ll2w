@@ -1,9 +1,10 @@
-#ifndef PARSER_ASTNODE_H_
-#define PARSER_ASTNODE_H_
+#pragma once
 
 #include <initializer_list>
+#include <iostream>
 #include <list>
 #include <ostream>
+#include <set>
 #include <string>
 
 namespace LL2W {
@@ -21,6 +22,8 @@ namespace LL2W {
 	class ASTNode {
 		private:
 			ASTNode() {}
+			static void onCreate(ASTNode *);
+			static void onDestroy(ASTNode *);
 
 		public:
 			Parser *parser;
@@ -87,4 +90,5 @@ namespace LL2W {
 	};
 }
 
-#endif
+extern std::set<LL2W::ASTNode *> all_nodes;
+

@@ -13,8 +13,7 @@ class Deleter {
 		Deleter(T *first, Args &&...rest): pointers{first, rest...} {}
 		Deleter(T *pointer): pointers{pointer} {}
 		~Deleter() {
-			for (T *pointer: pointers) {
+			for (T *pointer: pointers)
 				delete pointer;
-			}
 		}
 };
