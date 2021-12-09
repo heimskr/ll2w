@@ -8,10 +8,6 @@
 #include "graph/Graph.h"
 
 namespace LL2W {
-	class Function;
-}
-
-namespace LL2W {
 	/** Assigns registers using a graph coloring algorithm. */
 	class ColoringAllocator: public Allocator {
 		private:

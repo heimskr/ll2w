@@ -130,11 +130,10 @@ namespace LL2W {
 		std::vector<std::thread> threads;
 		threads.reserve(functions.size());
 
-		for (std::pair<const std::string, Function *> &pair: functions) {
+		for (std::pair<const std::string, Function *> &pair: functions)
 			threads.emplace_back(std::thread([&]() {
 				pair.second->compile();
 			}));
-		}
 
 		for (std::thread &thread: threads)
 			thread.join();
@@ -389,7 +388,7 @@ namespace LL2W {
 		return out;
 	}
 
-	void Program::debugSection(std::ostream * const out) {
+	void Program::debugSection(std::ostream *out) {
 		int i = 0;
 		for (auto &[index, file]: files) {
 			if (out)

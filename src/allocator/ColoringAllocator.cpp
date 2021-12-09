@@ -11,6 +11,7 @@
 #include "graph/UncolorableError.h"
 #include "pass/MakeCFG.h"
 #include "pass/SplitBlocks.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 // #define DEBUG_COLORING
@@ -183,6 +184,7 @@ namespace LL2W {
 	}
 
 	VariablePtr ColoringAllocator::selectMostLive(int *liveness_out) const {
+		Timer timer("SelectMostLive");
 		VariablePtr ptr;
 		int highest = -1;
 		for (const auto *map: {&function->variableStore, &function->extraVariables})
@@ -238,6 +240,7 @@ namespace LL2W {
 // #undef DEBUG_COLORING
 
 	void ColoringAllocator::makeInterferenceGraph() {
+		Timer timer("MakeInterferenceGraph");
 		interference.clear();
 		size_t links = 0;
 
@@ -248,21 +251,9 @@ namespace LL2W {
 			// std::cerr << "\n";
 #endif
 			if (var->registers.empty()) {
-				// bool skip = false;
-				// for (Variable *alias: var->getAliases())
-				// 	if (interference.hasLabel(*alias->id)) {
-				// 		std::cerr << "Skipping " << *var << " (" << *id << "): alias (" << *alias->id << ") is in graph\n";
-				// 		skip = true;
-				// 		break;
-				// 	}
-
-				// if (skip)
-				// 	continue;
-
 				const std::string *parent_id = var->parentID();
 				if (!interference.hasLabel(*parent_id)) { // Use only one variable from a set of aliases.
 					Node &node = interference.addNode(*parent_id);
-					// std::cerr << "Adding " << *parent_id << " (id=" << *id << "/" << *var->id << ")\n";
 					node.data = var;
 #ifdef DEBUG_COLORING
 					// info() << *var << ": " << var->registersRequired() << " required.";
@@ -271,8 +262,10 @@ namespace LL2W {
 					// std::cerr << "\n";
 #endif
 					node.colorsNeeded = var->registersRequired();
+#ifdef DEBUG_COLORING
 				} else {
 					// std::cerr << "Skipping " << *var << " (" << *id << "): parent (" << *parent_id << ") is in graph\n";
+#endif
 				}
 			}
 		}

@@ -21,7 +21,7 @@
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
-#define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
+// #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
 // #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
@@ -847,8 +847,8 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 #ifdef MOVE_PHI
-		if (*name == "@strtol")
-			Passes::tracePhi(*this);
+		// if (*name == "@strtol")
+		// 	Passes::tracePhi(*this);
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
@@ -945,7 +945,8 @@ namespace LL2W {
 		finalCompile();
 
 		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-		if (*name == "@memcpy") {
+		if (*name == "@strtol") {
+		// if (*name == "@memcpy") {
 			// std::cerr << std::string(50, '\n');
 			// debug();
 			// cfg.renderTo("cfg_vsnprintf.png");
