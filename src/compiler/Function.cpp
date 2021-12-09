@@ -935,11 +935,11 @@ namespace LL2W {
 			// for (auto &use: z->uses)
 			// 	std::cerr << "- " << use.lock()->debugExtra() << '\n';
 
-			debug();
-			cfg.renderTo("cfg_strtol.png");
-			if (djGraph.has_value()) {
-				djGraph->renderTo("dj_strtol.png");
-			}
+			// debug();
+			// cfg.renderTo("cfg_strtol.png");
+			// if (djGraph.has_value()) {
+			// 	djGraph->renderTo("dj_strtol.png");
+			// }
 		}
 
 		finalCompile();

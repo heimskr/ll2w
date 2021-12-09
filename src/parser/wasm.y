@@ -203,7 +203,7 @@ op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1,
 
 op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 
-op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6, nullptr); D($5); };
+op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6, nullptr); D($3, $5); };
 
 op_lni: "[" immediate "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 

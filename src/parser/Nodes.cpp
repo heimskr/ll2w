@@ -1052,7 +1052,7 @@ namespace LL2W {
 
 	InsertValueNode::InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
 	                                 ASTNode *type_, ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs) {
-		Deleter deleter(unibangs, aggregate_type, aggregate_value, type_, value_, decimals_);
+		Deleter deleter(unibangs, result_, aggregate_type, aggregate_value, type_, value_, decimals_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
 		aggregateType = getType(aggregate_type);

@@ -515,7 +515,7 @@ ditvp_item: "name"  ":" LLVMTOK_STRING     { $$ = $1->adopt($3); D($2); }
           | "type"  ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
           | "value" ":" constant           { $$ = $1->adopt($3); D($2); }
           | "value" ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
-          | "value" ":" "!" LLVMTOK_STRING { $$ = $1->adopt($3); D($2); }
+          | "value" ":" "!" LLVMTOK_STRING { $$ = $1->adopt($4); D($2, $3); }
           | "tag"   ":" any_ident          { $$ = $1->adopt($3); D($2); };
 ditvp_list: ditvp_list "," ditvp_item { $$ = $1->adopt($3); D($2); }
           | ditvp_item { $$ = (new AN(llvmParser, LLVM_DITVP_LIST))->adopt($1); };
@@ -544,8 +544,7 @@ metadata_list: metadata_list "," metadata_listitem { $1->adopt($3); D($2); }
 
 metadata_listitem: "!" LLVMTOK_STRING { D($1); $$ = $2; } | metabang | constant | "null";
 
-metadata_distinct: "distinct" { $$ = new AN(llvmParser, LLVMTOK_DISTINCT, "distinct"); }
-                 |            { $$ = nullptr; };
+metadata_distinct: "distinct" | { $$ = nullptr; };
 
 metabang: LLVMTOK_METABANG
         | LLVMTOK_INTBANG  { $1->symbol = LLVMTOK_METABANG; };
@@ -875,7 +874,7 @@ i_fmath: result LLVMTOK_FMATH fastmath_flags type_any value "," value unibangs
          { $$ = new FMathNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 
 i_extractvalue: result "extractvalue" type_any value decimals unibangs
-                { $$ = new ExtractValueNode($1, $3, $4, $5, $6); };
+                { $$ = new ExtractValueNode($1, $3, $4, $5, $6); D($2); };
 decimals: decimals "," LLVMTOK_DECIMAL { $1->adopt($3); D($2); }
         | { $$ = new AN(llvmParser, LLVM_DECIMAL_LIST); }
 
@@ -917,7 +916,7 @@ icmp_expr: "icmp" LLVMTOK_ICMP_COND "(" constant "," constant ")" { $$ = $1->ado
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
 _inbounds: LLVMTOK_INBOUNDS | { $$ = nullptr; };
-decimal_pairs: decimal_pairs "," _inrange LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$4, $5})); }
+decimal_pairs: decimal_pairs "," _inrange LLVMTOK_INTTYPE LLVMTOK_DECIMAL { $1->adopt($2->adopt({$4, $5, $3})); }
              | { $$ = new AN(llvmParser, LLVM_DECIMAL_PAIR_LIST); };
 gepexpr_operand: variable | getelementptr_expr | conversion_expr { $$ = ignoreConversion($1); };
 
