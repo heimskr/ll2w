@@ -295,8 +295,8 @@ namespace LL2W::Passes {
 						middle_block->extract();
 					}
 				} else {
-					function.insertBefore(block->instructions.back(), new_instruction, false, false);
-					function.insertBefore(block->instructions.back(), std::make_shared<Comment>(comment), true, false);
+					function.insertBefore(block->instructions.back(), std::make_shared<Comment>(comment), false, false);
+					function.insertBefore(block->instructions.back(), new_instruction, true, false);
 					target->addDefiner(block);
 				}
 
