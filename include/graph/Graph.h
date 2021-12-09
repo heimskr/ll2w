@@ -42,6 +42,9 @@ namespace LL2W {
 
 			Graph & operator=(Graph &&);
 
+			/** Constructs a graph with a name and no nodes. */
+			Graph(const std::string &name_);
+
 			/** Constructs a graph with a number n of nodes with labels 0, 1, ..., n. */
 			Graph(size_t);
 

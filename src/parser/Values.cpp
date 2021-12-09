@@ -253,13 +253,16 @@ namespace LL2W {
 	std::string CStringValue::reescape() const {
 		std::string out;
 		for (size_t i = 0, max = value->size(); i < max; ++i) {
-			const char ch0 = (*value)[i], ch1 = (*value)[i + 1], ch2 = (*value)[i + 2];
-			if (i < max - 2 && ch0 == '\\' && Util::isHex(ch1) && Util::isHex(ch2)) {
-				out += std::string("\\x") + ch1 + ch2;
-				i += 2;
-			} else {
+			const char ch0 = (*value)[i];
+			if (i < max - 2) {
+				const char ch1 = (*value)[i + 1], ch2 = (*value)[i + 2];
+				if (ch0 == '\\' && Util::isHex(ch1) && Util::isHex(ch2)) {
+					out += std::string("\\x") + ch1 + ch2;
+					i += 2;
+				} else
+					out += ch0;
+			} else
 				out += ch0;
-			}
 		}
 		return out;
 	}

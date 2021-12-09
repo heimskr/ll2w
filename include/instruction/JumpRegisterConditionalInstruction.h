@@ -6,6 +6,8 @@ namespace LL2W {
 	struct JumpRegisterConditionalInstruction: public RType {
 		bool link;
 
+		JumpRegisterConditionalInstruction() = delete;
+
 		JumpRegisterConditionalInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rd_,
 		bool link_ = false, int index_ = -1):
 			RType(rs_, nullptr, rd_, index_), link(link_) {}

@@ -49,9 +49,10 @@ namespace LL2W {
 		bool exists = out_.count(other) == 1;
 		out_.erase(other);
 		other->in_.erase(this);
+		reachability.erase(other);
 
 		if (bidirectional && other != this)
-			other->unlink(*this);
+			other->unlink(*this, false);
 
 		return exists;
 	}
@@ -92,11 +93,8 @@ namespace LL2W {
 	}
 
 	Node::Set Node::allEdges() const {
-		Set set;
-		for (Node *node: out_)
-			set.insert(node);
-		for (Node *node: in_)
-			set.insert(node);
+		Set set = out_;
+		set.insert(in_.begin(), in_.end());
 		return set;
 	}
 
@@ -134,15 +132,10 @@ namespace LL2W {
 	}
 
 	size_t Node::degree() const {
-		size_t deg = 0;
-		for (Node *neighbor: out_) {
-			(void) neighbor;
-			++deg;
-		}
-		for (Node *neighbor: in_) {
+		size_t deg = out_.size();
+		for (Node *neighbor: in_)
 			if (out_.count(neighbor) == 0)
 				++deg;
-		}
 		return deg;
 	}
 
@@ -166,17 +159,15 @@ namespace LL2W {
 	}
 
 	Node & Node::operator-=(Node *neighbor) {
-		std::cerr << label_ << " -= " << neighbor->label_ << "\n";
 		out_.erase(neighbor);
+		in_.erase(neighbor);
 		return *this;
 	}
 
 	Node & Node::operator-=(const std::string &label) {
-		for (Node *node: out_) {
+		for (Node *node: out_)
 			if (node->label() == label)
 				return *this -= node;
-		}
-
 		throw std::out_of_range("Can't remove: no neighbor with label \"" + label + "\" found");
 	}
 

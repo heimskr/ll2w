@@ -63,7 +63,7 @@ namespace LL2W {
 		delete root;
 
 		if (buffer) {
-			delete buffer;
+			delete[] buffer;
 			buffer = nullptr;
 		}
 

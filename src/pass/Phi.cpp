@@ -349,7 +349,7 @@ namespace LL2W::Passes {
 
 	void tracePhi(Function &function) {
 		Graph dependencies = getDependencies(function);
-		dependencies.renderTo("dependencies.png");
+		dependencies.renderTo("dependencies_" + *function.name + ".png");
 	}
 
 	void cutPhi(Function &function) {

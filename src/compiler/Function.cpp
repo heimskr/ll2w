@@ -811,6 +811,7 @@ namespace LL2W {
 		Timer timer("InitialCompile");
 		extractBlocks();
 		makeInitialDebugIndex();
+		Passes::ignoreIntrinsics(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
@@ -824,7 +825,6 @@ namespace LL2W {
 		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
-		Passes::ignoreIntrinsics(*this);
 		Passes::lowerObjectsize(*this);
 		Passes::lowerIcmp(*this);
 		Passes::lowerMath(*this);
@@ -844,12 +844,11 @@ namespace LL2W {
 		Passes::lowerInlineAsm(*this);
 		Passes::lowerExtractvalue(*this);
 		Passes::transformInstructions(*this);
-		for (BasicBlockPtr &block: blocks) {
-			// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_")
-			// 	std::cerr << *block->label << "\n";
+		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		}
 #ifdef MOVE_PHI
+		if (*name == "@strtol")
+			Passes::tracePhi(*this);
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
@@ -928,7 +927,7 @@ namespace LL2W {
 #endif
 		}
 
-		if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
+		if (*name == "@strtol") {
 		// if (*name == "@memcpy") {
 			// extractVariables(false);
 			// VariablePtr z = getVariable(".0");
@@ -936,11 +935,11 @@ namespace LL2W {
 			// for (auto &use: z->uses)
 			// 	std::cerr << "- " << use.lock()->debugExtra() << '\n';
 
-			// debug();
-			// cfg.renderTo("cfg_vsnprintf.png");
-			// if (djGraph.has_value()) {
-			// 	djGraph->renderTo("dj_vsnprintf.png");
-			// }
+			debug();
+			cfg.renderTo("cfg_strtol.png");
+			if (djGraph.has_value()) {
+				djGraph->renderTo("dj_strtol.png");
+			}
 		}
 
 		finalCompile();

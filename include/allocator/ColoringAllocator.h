@@ -19,7 +19,7 @@ namespace LL2W {
 			std::unordered_set<std::string> triedLabels;
 
 		public:
-			Graph interference;
+			Graph interference = Graph("interference");
 
 			using Allocator::Allocator;
 
