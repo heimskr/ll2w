@@ -1,3 +1,4 @@
+CHECK			?= none
 COMPILER		?= clang++
 DEBUGGER		?= lldb
 OPTIMIZATION	?= -Ofast -march=native
@@ -23,6 +24,12 @@ CLOC_OPTIONS	:= --exclude-dir=.vscode --not-match-f='^(yy|wasm)(lex|parse)'
 BISON_OPTIONS	:= --color=always
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
+
+ifeq ($(CHECK), asan)
+	COMPILER := $(COMPILER) -fsanitize=address -fno-common
+else ifeq ($(CHECK), msan)
+	COMPILER := $(COMPILER) -fsanitize=memory  -fno-common
+endif
 
 .PHONY: all clean count countbf declutter
 
