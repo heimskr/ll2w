@@ -7,6 +7,8 @@
 #include <set>
 #include <string>
 
+// #define TRACK_ASTNODES
+
 namespace LL2W {
 	struct ASTLocation {
 		size_t line;
@@ -90,5 +92,6 @@ namespace LL2W {
 	};
 }
 
+#ifdef TRACK_ASTNODES
 extern std::set<LL2W::ASTNode *> all_nodes;
-
+#endif

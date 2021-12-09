@@ -68,11 +68,11 @@ int main(int argc, char **argv) {
 
 	LL2W::StructType::knownStructs.clear();
 
+#ifdef TRACK_ASTNODES
 	std::cerr << "Remaining nodes: " << all_nodes.size() << "\n";
-	for (auto *remaining: all_nodes) {
-		// std::cerr << "- " << remaining << ": " << extras.at(remaining) << '\n';
+	for (auto *remaining: all_nodes)
 		remaining->debug();
-	}
+#endif
 }
 
 bool hasArg(const char *arg) {
@@ -133,8 +133,10 @@ void compile(const std::string &filename, bool show_debug) {
 	// 	std::cerr << "    Alignment: " << stype->alignment() << " B\n\n";
 	// }
 
+#ifdef TRACK_ASTNODES
 	for (auto *node: all_nodes)
 		extras.emplace(node, std::string(node->location) + " " + node->debugExtra());
+#endif
 
 	LL2W::llvmParser.done();
 	LL2W::wasmParser.done();

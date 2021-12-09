@@ -8,7 +8,9 @@
 #include "parser/Types.h"
 #include "util/Util.h"
 
+#ifdef TRACK_ASTNODES
 std::set<LL2W::ASTNode *> all_nodes;
+#endif
 
 namespace LL2W {
 	ASTLocation::operator std::string() const {
@@ -21,11 +23,17 @@ namespace LL2W {
 	}
 
 	void ASTNode::onCreate(ASTNode *node) {
+		(void) node;
+#ifdef TRACK_ASTNODES
 		all_nodes.insert(node);
+#endif
 	}
 
 	void ASTNode::onDestroy(ASTNode *node) {
+		(void) node;
+#ifdef TRACK_ASTNODES
 		all_nodes.erase(node);
+#endif
 	}
 
 	ASTNode::ASTNode(Parser &parser_, int sym, const ASTLocation &loc, const char *info): ASTNode() {
