@@ -847,8 +847,6 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
 #ifdef MOVE_PHI
-		// if (*name == "@strtol")
-		// 	Passes::tracePhi(*this);
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
@@ -927,33 +925,7 @@ namespace LL2W {
 #endif
 		}
 
-		if (*name == "@strtol") {
-		// if (*name == "@memcpy") {
-			// extractVariables(false);
-			// VariablePtr z = getVariable(".0");
-			// std::cerr << ".0:\n";
-			// for (auto &use: z->uses)
-			// 	std::cerr << "- " << use.lock()->debugExtra() << '\n';
-
-			// debug();
-			// cfg.renderTo("cfg_strtol.png");
-			// if (djGraph.has_value()) {
-			// 	djGraph->renderTo("dj_strtol.png");
-			// }
-		}
-
 		finalCompile();
-
-		// if (*name == "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_") {
-		if (*name == "@strtol") {
-		// if (*name == "@memcpy") {
-			// std::cerr << std::string(50, '\n');
-			// debug();
-			// cfg.renderTo("cfg_vsnprintf.png");
-			// if (djGraph.has_value()) {
-			// 	djGraph->renderTo("dj_vsnprintf.png");
-			// }
-		}
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
