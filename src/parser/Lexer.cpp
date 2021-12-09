@@ -4,7 +4,13 @@
 #include "parser/Parser.h"
 #include "util/Util.h"
 
+std::mutex wasmMutex;
+
 namespace LL2W {
+	std::unique_lock<std::mutex> lockWasm() {
+		return std::unique_lock(wasmMutex);
+	}
+
 	Lexer llvmLexer(llvmParser, llvmleng, llvmlval), wasmLexer(wasmParser, wasmleng, wasmlval);
 
 	Lexer::Lexer(Parser &parser_, yysize &yyleng_ref, ASTNode *&yylval_ref):

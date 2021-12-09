@@ -6,6 +6,7 @@ STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
+LDFLAGS			?= -pthread
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp

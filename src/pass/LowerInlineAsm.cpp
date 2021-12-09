@@ -55,6 +55,7 @@ namespace LL2W::Passes {
 					text.push_back(ch);
 			}
 
+			auto lock = lockWasm();
 			wasmParser.errorCount = 0;
 			wasmParser.in(text);
 			wasmParser.debug(false, false);

@@ -139,7 +139,6 @@ void compile(const std::string &filename, bool show_debug) {
 #endif
 
 	LL2W::llvmParser.done();
-	LL2W::wasmParser.done();
 }
 
 void wasmparsertest(const std::string &filename) {

@@ -1,6 +1,6 @@
-#ifndef PARSER_LEXER_H_
-#define PARSER_LEXER_H_
+#pragma once
 
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -36,8 +36,12 @@ extern yysize wasmleng;
 extern int wasm_flex_debug;
 extern int wasmdebug;
 
+extern std::mutex wasmMutex;
+
 namespace LL2W {
 	class Parser;
+
+	std::unique_lock<std::mutex> lockWasm();
 
 	class Lexer {
 		private:
@@ -75,5 +79,3 @@ void llvmerror(const std::string &, const LL2W::ASTLocation &);
 void wasmerror(const char *);
 void wasmerror(const std::string &);
 void wasmerror(const std::string &, const LL2W::ASTLocation &);
-
-#endif
