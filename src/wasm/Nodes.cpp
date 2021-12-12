@@ -1109,20 +1109,27 @@ namespace LL2W {
 		return std::make_unique<SetptIInstruction>(imm);
 	}
 
-	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_): WASMInstructionNode(WASM_SETPTRNODE), rs(rs_->lexerInfo) {
+	WASMSetptRNode::WASMSetptRNode(ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_SETPTRNODE), rs(rs_->lexerInfo), rt(rt_? rt_->lexerInfo : nullptr) {
 		delete rs_;
+		delete rt_;
 	}
 
 	std::string WASMSetptRNode::debugExtra() const {
-		return blue("setpt") + " " + cyan(*rs);
+		if (!rt)
+			return blue("%setpt") + " " + cyan(*rs);
+		return dim(":") + " " + blue("%setpt") + " " + cyan(*rs) + " " + cyan(*rt);
 	}
 
 	WASMSetptRNode::operator std::string() const {
-		return "setpt " + *rs;
+		if (!rt)
+			return "%setpt " + *rs;
+		return ": %setpt " + *rs + " " + *rt;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSetptRNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<SetptRInstruction>(convertVariable(function, map, rs));
+		return std::make_unique<SetptRInstruction>(convertVariable(function, map, rs),
+		                                           convertVariable(function, map, rt));
 	}
 
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):

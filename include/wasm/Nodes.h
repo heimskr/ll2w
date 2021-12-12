@@ -452,9 +452,10 @@ namespace LL2W {
 	};
 
 	struct WASMSetptRNode: public WASMInstructionNode {
-		const std::string *rs;
+		const std::string *rs, *rt;
 
-		WASMSetptRNode(ASTNode *rs_);
+		WASMSetptRNode(ASTNode *rs_, ASTNode *rt_ = nullptr);
+		WASMSetptRNode(const std::string *rs_, const std::string *rt_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::SetptR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
