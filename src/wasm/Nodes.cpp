@@ -1129,7 +1129,7 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMSetptRNode::convert(Function &function, VarMap &map) {
 		return std::make_unique<SetptRInstruction>(convertVariable(function, map, rs),
-		                                           convertVariable(function, map, rt));
+		                                           rt? convertVariable(function, map, rt) : nullptr);
 	}
 
 	WASMMvNode::WASMMvNode(ASTNode *rs_, ASTNode *rd_):
