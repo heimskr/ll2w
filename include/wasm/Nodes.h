@@ -569,6 +569,7 @@ namespace LL2W {
 	struct WASMPageStackNode: WASMInstructionNode {
 		bool isPush;
 		const std::string *rs;
+		WASMPageStackNode(bool is_push, const ASTNode *rs_);
 		WASMPageStackNode(bool is_push, const std::string *rs_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::PageStack; }
 		std::string debugExtra() const override;

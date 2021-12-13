@@ -1339,6 +1339,11 @@ namespace LL2W {
 		return std::make_unique<TranslateAddressRInstruction>(rs_, rd_);
 	}
 
+	WASMPageStackNode::WASMPageStackNode(bool is_push, const ASTNode *rs_):
+	WASMPageStackNode(is_push, rs_->lexerInfo) {
+		delete rs_;
+	}
+
 	WASMPageStackNode::WASMPageStackNode(bool is_push, const std::string *rs_):
 		WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push), rs(rs_) {}
 
@@ -1355,6 +1360,8 @@ namespace LL2W {
 	}
 
 	std::unique_ptr<WhyInstruction> WASMPageStackNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<PageStackInstruction>(isPush, convertVariable(function, map, rs));
+		if (rs)
+			return std::make_unique<PageStackInstruction>(isPush, convertVariable(function, map, rs));
+		return std::make_unique<PageStackInstruction>(isPush);
 	}
 }
