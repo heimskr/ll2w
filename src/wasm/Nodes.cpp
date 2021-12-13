@@ -1339,17 +1339,22 @@ namespace LL2W {
 		return std::make_unique<TranslateAddressRInstruction>(rs_, rd_);
 	}
 
-	WASMPageStackNode::WASMPageStackNode(bool is_push): WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push) {}
+	WASMPageStackNode::WASMPageStackNode(bool is_push, const std::string *rs_):
+		WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push), rs(rs_) {}
 
 	std::string WASMPageStackNode::debugExtra() const {
-		return dim(isPush? "[" : "]") + " " + blue("%page");
+		if (!rs)
+			return dim(isPush? "[" : "]") + " " + blue("%page");
+		return dim(isPush? ": [" : ": ]") + " " + blue("%page") + " " + cyan(*rs);
 	}
 
 	WASMPageStackNode::operator std::string() const {
-		return std::string(isPush? "[" : "]") + " %page";
+		if (!rs)
+			return std::string(isPush? "[" : "]") + " %page";
+		return ": " + std::string(isPush? "[" : "]") + " %page " + *rs;
 	}
 
-	std::unique_ptr<WhyInstruction> WASMPageStackNode::convert(Function &, VarMap &) {
-		return std::make_unique<PageStackInstruction>(isPush);
+	std::unique_ptr<WhyInstruction> WASMPageStackNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<PageStackInstruction>(isPush, convertVariable(function, map, rs));
 	}
 }

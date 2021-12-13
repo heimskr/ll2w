@@ -2,14 +2,18 @@
 #include "instruction/PageStackInstruction.h"
 
 namespace LL2W {
-	PageStackInstruction::PageStackInstruction(bool is_push, int index_):
-		RType(nullptr, nullptr, nullptr, index_), isPush(is_push) {}
+	PageStackInstruction::PageStackInstruction(bool is_push, VariablePtr rs_, int index_):
+		RType(rs_, nullptr, nullptr, index_), isPush(is_push) {}
 
 	std::string PageStackInstruction::debugExtra() {
-		return "\e[2m" + std::string(isPush? "[" : "]") + "\e[22m \e[34m%page\e[39m";
+		if (!rs)
+			return "\e[2m" + std::string(isPush? "[" : "]") + "\e[22m \e[34m%page\e[39m";
+		return "\e[2m: " + std::string(isPush? "[" : "]") + "\e[22m \e[34m%page\e[39m " + std::string(*rs);
 	}
 
 	std::string PageStackInstruction::toString() const {
-		return std::string(isPush? "[" : "]") + " %page";
+		if (!rs)
+			return std::string(isPush? "[" : "]") + " %page";
+		return ": " + std::string(isPush? "[" : "]") + " %page " + rs->toString();
 	}
 }
