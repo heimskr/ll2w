@@ -103,6 +103,7 @@
 #include "instruction/Sext16RInstruction.h"
 #include "instruction/Sext8RInstruction.h"
 #include "instruction/TranslateAddressRInstruction.h"
+#include "instruction/PageStackInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -1082,11 +1083,11 @@ namespace LL2W {
 	WASMPageNode::WASMPageNode(bool on_): WASMInstructionNode(WASM_PAGENODE), on(on_) {}
 
 	std::string WASMPageNode::debugExtra() const {
-		return blue("page") + " " + (on? "on" : "off");
+		return blue("%page") + " " + (on? "on" : "off");
 	}
 
 	WASMPageNode::operator std::string() const {
-		return "page " + std::string(on? "on" : "off");
+		return "%page " + std::string(on? "on" : "off");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMPageNode::convert(Function &, VarMap &) {
@@ -1098,11 +1099,11 @@ namespace LL2W {
 	}
 
 	std::string WASMSetptINode::debugExtra() const {
-		return blue("setpt") + " " + colorize(imm);
+		return blue("%setpt") + " " + colorize(imm);
 	}
 
 	WASMSetptINode::operator std::string() const {
-		return "setpt " + toString(imm);
+		return "%setpt " + toString(imm);
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSetptINode::convert(Function &, VarMap &) {
@@ -1157,11 +1158,11 @@ namespace LL2W {
 	}
 
 	std::string WASMSvpgNode::debugExtra() const {
-		return blue("page") + dim(" -> ") + cyan(*rd);
+		return blue("%page") + dim(" -> ") + cyan(*rd);
 	}
 
 	WASMSvpgNode::operator std::string() const {
-		return "page -> " + *rd;
+		return "%page -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSvpgNode::convert(Function &function, VarMap &map) {
@@ -1336,5 +1337,19 @@ namespace LL2W {
 		VariablePtr rs_ = convertVariable(function, map, rs);
 		VariablePtr rd_ = convertVariable(function, map, rd);
 		return std::make_unique<TranslateAddressRInstruction>(rs_, rd_);
+	}
+
+	WASMPageStackNode::WASMPageStackNode(bool is_push): WASMInstructionNode(WASM_PAGESTACKNODE), isPush(is_push) {}
+
+	std::string WASMPageStackNode::debugExtra() const {
+		return dim(isPush? "[" : "]") + " " + blue("%page");
+	}
+
+	WASMPageStackNode::operator std::string() const {
+		return std::string(isPush? "[" : "]") + " %page";
+	}
+
+	std::unique_ptr<WhyInstruction> WASMPageStackNode::convert(Function &, VarMap &) {
+		return std::make_unique<PageStackInstruction>(isPush);
 	}
 }
