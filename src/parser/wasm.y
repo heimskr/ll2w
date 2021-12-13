@@ -163,7 +163,8 @@ operation: op_r    | op_mult  | op_multi | op_lui   | op_i      | op_c     | op_
          | op_li   | op_si    | op_ms    | op_lni   | op_ch     | op_lh    | op_sh    | op_cmp  | op_cmpi  | op_sel
          | op_j    | op_jc    | op_jr    | op_jrc   | op_mv     | op_spush | op_spop  | op_nop  | op_int   | op_rit
          | op_time | op_timei | op_ext   | op_ringi | op_sspush | op_sspop | op_ring  | op_page | op_setpt | label
-         | op_svpg | op_qmem  | op_di    | op_ei    | op_sllii  | op_srlii | op_sraii | op_sext | op_trans;
+         | op_svpg | op_qmem  | op_di    | op_ei    | op_sllii  | op_srlii | op_sraii | op_sext | op_trans | op_ppush
+         | op_ppop;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
@@ -281,6 +282,10 @@ op_setpt: "%setpt" reg { $$ = new WASMSetptRNode($2); D($1); }
         | ":" "%setpt" reg reg { $$ = new WASMSetptRNode($3, $4); D($1, $2); };
 
 op_svpg: "%page" "->" reg { $$ = new WASMSvpgNode($3); D($1, $2); };
+
+op_ppush: "[" "%page" { $$ = new WASMPageStackNode(true); D($1, $2); };
+
+op_ppop: "]" "%page" { $$ = new WASMPageStackNode(false); D($1, $2); };
 
 op_di: "%di" { $$ = new WASMInterruptsNode(false); D($1); };
 
