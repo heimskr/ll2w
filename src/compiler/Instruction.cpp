@@ -52,12 +52,10 @@ namespace LL2W {
 	}
 
 	Instruction * Instruction::setDebug(const ASTNode &node) {
-		debugIndex = node.debugIndex;
-		return this;
+		return setDebug(node.debugIndex);
 	}
 
 	Instruction * Instruction::setDebug(const ASTNode *node) {
-		debugIndex = node->debugIndex;
-		return this;
+		return setDebug(node->debugIndex);
 	}
 }

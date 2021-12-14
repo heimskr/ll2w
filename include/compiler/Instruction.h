@@ -90,17 +90,11 @@ namespace LL2W {
 			}
 
 			Instruction * setDebug(const Instruction &other, bool do_extract = false) {
-				debugIndex = other.debugIndex;
-				if (do_extract)
-					extract();
-				return this;
+				return setDebug(other.debugIndex, do_extract);
 			}
 
 			Instruction * setDebug(const Instruction *other, bool do_extract = false) {
-				debugIndex = other->debugIndex;
-				if (do_extract)
-					extract();
-				return this;
+				return setDebug(other->debugIndex, do_extract);
 			}
 
 			Instruction * setDebug(const ASTNode &);

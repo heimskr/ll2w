@@ -128,6 +128,7 @@ namespace LL2W::Passes {
 			if (right->isLocal()) {
 				// The operation is commutative, so we can get away with this.
 				std::swap(left, right);
+				left_var = dynamic_cast<LocalValue *>(left.get())->variable;
 			} else if (left->isIntLike() && right->isIntLike()) {
 				const long applied = I::apply(left->longValue(), right->longValue());
 				auto set = SetInstruction::make(node->variable, int(applied));
