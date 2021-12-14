@@ -186,7 +186,7 @@ namespace LL2W {
 		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
 		std::string toString() override { return "@" + *globalName; }
 		TypePtr copy() const override { return std::make_shared<GlobalTemporaryType>(globalName); }
-		int width() const override { throw std::runtime_error("Calling GlobalTemporaryType::width() is invalid"); }
+		int width() const override { return 64; }
 		int alignment() const override;
 		bool operator==(const Type &) const override;
 	};

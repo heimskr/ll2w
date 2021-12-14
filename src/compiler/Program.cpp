@@ -140,9 +140,13 @@ namespace LL2W {
 #else
 		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef SINGLE_FUNCTION
-			if (*pair.second->name == SINGLE_FUNCTION)
+			if (*pair.second->name == SINGLE_FUNCTION) {
 #endif
+				// std::cerr << "Compiling " << *pair.second->name << "...\n";
 				pair.second->compile();
+#ifdef SINGLE_FUNCTION
+			}
+#endif
 		}
 #endif
 	}

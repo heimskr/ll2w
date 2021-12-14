@@ -1697,6 +1697,12 @@ namespace LL2W {
 				Passes::lowerIcmp(*this, instruction, icmp->makeNode(new_var).get());
 				break;
 			}
+			case ValueType::Logic: {
+				auto *logic = dynamic_cast<LogicValue *>(value.get());
+				new_var = newVariable(hint? hint : logic->left->type);
+				Passes::lowerLogic(*this, instruction, logic->makeNode(new_var).get());
+				break;
+			}
 			default:
 				throw std::runtime_error("Unhandled value in Function::makeVariable: " +
 					value_map.at(value->valueType()));

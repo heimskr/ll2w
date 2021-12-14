@@ -122,6 +122,8 @@ namespace LL2W::Passes {
 		auto values = node->allValues();
 		ValuePtr left = values.at(0), right = values.at(1);
 
+		VariablePtr left_var;
+
 		if (!left->isLocal()) {
 			if (right->isLocal()) {
 				// The operation is commutative, so we can get away with this.
@@ -132,15 +134,29 @@ namespace LL2W::Passes {
 				set->setOriginalValue(IntValue::make(applied));
 				function.insertBefore(instruction, set)->setDebug(node)->extract();
 				return;
+			} else if (left->isGlobal()) {
+				auto *global_name = dynamic_cast<GlobalValue *>(left.get())->name;
+				left_var = function.newVariable(GlobalTemporaryType::make(global_name), instruction->parent.lock());
+				function.insertBefore(instruction, SetInstruction::make(left_var, global_name))
+					->setDebug(node)->extract();
 			} else {
 				std::cerr << instruction->debugExtra() << "\n";
 				throw std::runtime_error("Left value of " + getName(node) + " instruction expected to be a pvar");
 			}
+		} else
+			left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+
+		VariablePtr right_var;
+
+		if (right->isGlobal()) {
+			auto *global_name = dynamic_cast<GlobalValue *>(right.get())->name;
+			right_var = function.newVariable(GlobalTemporaryType::make(global_name), instruction->parent.lock());
+			function.insertBefore(instruction, SetInstruction::make(right_var, global_name))->setDebug(node)->extract();
 		}
 
-		VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
-		if (right->isLocal()) {
-			VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+		if (right->isLocal() || right->isGlobal()) {
+			if (!right_var)
+				right_var = dynamic_cast<LocalValue *>(right.get())->variable;
 			auto  new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
 			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
@@ -155,6 +171,7 @@ namespace LL2W::Passes {
 			}
 			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else {
+			error() << std::string(*right) << '\n';
 			throw std::runtime_error(
 				"Unexpected value type in " + getName(node) + " instruction: " + value_map.at(right->valueType()));
 		}
