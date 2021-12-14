@@ -38,6 +38,8 @@ namespace LL2W::Passes {
 				} else {
 					warn() << "Predicate \e[1m" << *pred << "\e[22m doesn't correspond to any CFG node in function"
 				           << " \e[1m" << *function.name << "\e[22m\n";
+					for (const auto &pair: function.cfg)
+						std::cerr << "- " << pair.first << '\n';
 				}
 			}
 

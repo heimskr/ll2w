@@ -191,6 +191,8 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Icmp; }
 		std::vector<ValuePtr> allValues() override;
 		std::vector<ValuePtr *> allValuePointers() override;
+		std::vector<ConstantPtr> allConstants() const override;
+		std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
 	struct BrUncondNode: public InstructionNode {
@@ -403,12 +405,20 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Rem; }
 	};
 
-	struct LogicNode: public SimpleNode {
-		enum class LogicType {And, Or, Xor};
+	struct LogicNode: InstructionNode, Writer, Reader, Makeable<LogicNode> {
 		LogicType logicType;
-		LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
-		const char * typeName() const override;
+		ConstantPtr left, right;
+
+		LogicNode(ASTNode *result_, ASTNode *logic_type, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+		LogicNode(const std::string *result_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_);
+		LogicNode(VariablePtr variable_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_);
+		TypePtr getType() const { return left->type; }
+		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Logic; }
+		std::vector<ValuePtr> allValues() override;
+		std::vector<ValuePtr *> allValuePointers() override;
+		std::vector<ConstantPtr> allConstants() const override;
+		std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
 	struct ShrNode: public SimpleNode {

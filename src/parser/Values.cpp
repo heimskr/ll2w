@@ -171,26 +171,56 @@ namespace LL2W {
 		return out.str();
 	}
 
+// IcmpValue
+
 	IcmpValue::IcmpValue(ASTNode *cond_, ASTNode *left_, ASTNode *right_):
 	cond(cond_inv_map.at(*cond_->lexerInfo)), left(Constant::make(left_)), right(Constant::make(right_)) {}
 
-	IcmpValue::IcmpValue(const ASTNode *node) {
-		cond = cond_inv_map.at(*node->at(0)->lexerInfo);
-		left = Constant::make(node->at(1));
-		right = Constant::make(node->at(2));
-	}
+	IcmpValue::IcmpValue(const ASTNode *node):
+		cond(cond_inv_map.at(*node->at(0)->lexerInfo)),
+		left(Constant::make(node->at(1))), right(Constant::make(node->at(2))) {}
 
 	ValuePtr IcmpValue::copy() const {
-		return std::make_shared<IcmpValue>(cond, left->copy(), right->copy());
+		return IcmpValue::make(cond, left->copy(), right->copy());
 	}
 
 	IcmpValue::operator std::string() {
-		return "\e[31micmp " + cond_map.at(cond) + " \e[39m(" + std::string(*left) + ", " + std::string(*right) + ")";
+		return "\e[31micmp " + cond_map.at(cond) + "\e[39m (" + std::string(*left) + ", " + std::string(*right) + ")";
 	}
 
 	std::shared_ptr<IcmpNode> IcmpValue::makeNode(VariablePtr variable) const {
 		return IcmpNode::make(variable, cond, left, right);
 	}
+
+// LogicValue
+
+	LogicValue::LogicValue(ASTNode *type_, ASTNode *left_, ASTNode *right_):
+	type(logic_inv_map.at(*type_->lexerInfo)), left(Constant::make(left_)), right(Constant::make(right_)) {}
+
+	LogicValue::LogicValue(const ASTNode *node):
+		type(logic_inv_map.at(*node->lexerInfo)),
+		left(Constant::make(node->at(0))), right(Constant::make(node->at(1))) {}
+
+	// LogicValue::LogicValue(const ASTNode *node) {
+	// 	node->debug();
+	// 	type = logic_inv_map.at(*node->at(0)->lexerInfo);
+	// 	left = Constant::make(node->at(1));
+	// 	right = Constant::make(node->at(2));
+	// }
+
+	ValuePtr LogicValue::copy() const {
+		return LogicValue::make(type, left->copy(), right->copy());
+	}
+
+	LogicValue::operator std::string() {
+		return "\e[31m" + logic_map.at(type) + "\e[39m (" + std::string(*left) + ", " + std::string(*right) + ")";
+	}
+
+	std::shared_ptr<LogicNode> LogicValue::makeNode(VariablePtr variable) const {
+		return LogicNode::make(variable, type, left, right);
+	}
+
+// StructValue
 
 	StructValue::StructValue(const ASTNode *node) {
 		packed = *node->lexerInfo == "<";
@@ -285,6 +315,7 @@ namespace LL2W {
 			case LLVMTOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
 			case LLVMTOK_UNDEF:           return std::make_shared<UndefValue>();
 			case LLVMTOK_ICMP:            return std::make_shared<IcmpValue>(node);
+			case LLVMTOK_LOGIC:           return std::make_shared<LogicValue>(node);
 			case LLVM_CONVERSION_EXPR:    return convertConversion(node);
 			default:
 				node->debug();

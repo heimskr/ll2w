@@ -39,13 +39,19 @@ namespace LL2W {
 			label = node->symbol == LLVMTOK_STRING? node->extracted() : node->lexerInfo;
 			list = node->at(1);
 		} else {
-			label = node->at(0)->lexerInfo;
+			const auto at0 = node->at(0);
+			label = at0->symbol == LLVMTOK_STRING? at0->extracted() : at0->lexerInfo;
 			list = node->at(2);
 		}
 
 		preds.reserve(list->size());
-		for (const ASTNode *pred: *list)
-			preds.push_back(StringSet::intern(pred->lexerInfo->substr(1)));
+		for (const ASTNode *pred: *list) {
+			const std::string &pred_label = *pred->lexerInfo;
+			if (pred_label[1] == '"')
+				preds.push_back(StringSet::intern(pred_label.substr(2, pred_label.size() - 3)));
+			else
+				preds.push_back(StringSet::intern(pred_label.substr(1)));
+		}
 	}
 
 	HeaderNode::HeaderNode(ASTNode *node): BaseNode(llvmParser, LLVM_BLOCKHEADER, "") {
@@ -407,15 +413,9 @@ namespace LL2W {
 		Deleter deleter(unibangs, result_, cond_, left_, right_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
-
-		for (const std::pair<const IcmpCond, std::string> &pair: cond_map)
-			if (*cond_->lexerInfo == pair.second) {
-				cond = pair.first;
-				break;
-			}
-
-		left  = Constant::make(left_)->convert();
-		right = Constant::make(right_, left->type)->convert();
+		cond   = cond_inv_map.at(*cond_->lexerInfo);
+		left   = Constant::make(left_)->convert();
+		right  = Constant::make(right_, left->type)->convert();
 	}
 
 	IcmpNode::IcmpNode(const std::string *result_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_):
@@ -436,6 +436,14 @@ namespace LL2W {
 
 	std::vector<ValuePtr *> IcmpNode::allValuePointers() {
 		return {&left->value, &right->value};
+	}
+
+	std::vector<ConstantPtr> IcmpNode::allConstants() const {
+		return {left, right};
+	}
+
+	std::vector<ConstantPtr *> IcmpNode::allConstantPointers() {
+		return {&left, &right};
 	}
 
 // BrUncondNode
@@ -934,22 +942,41 @@ namespace LL2W {
 
 // LogicNode
 
-	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-	                     ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
-		Deleter deleter(logic);
-		if (*logic->lexerInfo == "and") logicType = LogicType::And;
-		else if (*logic->lexerInfo == "or") logicType = LogicType::Or;
-		else if (*logic->lexerInfo == "xor") logicType = LogicType::Xor;
-		else throw std::invalid_argument("Invalid LogicType: \"" + *logic->lexerInfo + "\"");
+	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic_type, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
+		Deleter deleter(unibangs, result_, logic_type, left_, right_);
+		handleUnibangs(unibangs);
+		result    = result_->extracted();
+		logicType = logic_inv_map.at(*logic_type->lexerInfo);
+		left      = Constant::make(left_)->convert();
+		right     = Constant::make(right_, left->type)->convert();
 	}
 
-	const char * LogicNode::typeName() const {
-		switch (logicType) {
-			case LogicType::And: return "and";
-			case LogicType::Or:  return "or";
-			case LogicType::Xor: return "xor";
-			default: throw std::invalid_argument("Invalid LogicType: " + std::to_string(static_cast<int>(logicType)));
-		}
+	LogicNode::LogicNode(const std::string *result_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_):
+		logicType(logic_type), left(left_->convert()), right(right_->convert()) { result = result_; }
+
+	LogicNode::LogicNode(VariablePtr variable_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_):
+		logicType(logic_type), left(left_->convert()), right(right_->convert()) { variable = variable_; }
+
+	std::string LogicNode::debugExtra() const {
+		std::stringstream out;
+		out << getResult() << "\e[2m = \e[22;91m" << logic_map.at(logicType) << " " << *left << ", " << *right;
+		return out.str();
+	}
+
+	std::vector<ValuePtr> LogicNode::allValues() {
+		return {left->value, right->value};
+	}
+
+	std::vector<ValuePtr *> LogicNode::allValuePointers() {
+		return {&left->value, &right->value};
+	}
+
+	std::vector<ConstantPtr> LogicNode::allConstants() const {
+		return {left, right};
+	}
+
+	std::vector<ConstantPtr *> LogicNode::allConstantPointers() {
+		return {&left, &right};
 	}
 
 // ShrNode

@@ -269,15 +269,16 @@ namespace LL2W::Passes {
 							auto type = parent_llvm->node->nodeType();
 							if (type == NodeType::BrCond) {
 								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->node);
-								const std::string **cond_label = (cond->ifTrue->substr(1) == *phi_block_label)?
+								const std::string **cond_label =
+									(StringSet::unquote(cond->ifTrue) == phi_block_label)?
 									&cond->ifTrue :
-									((cond->ifFalse->substr(1) == *phi_block_label)? &cond->ifFalse : nullptr);
+									((StringSet::unquote(cond->ifFalse) == phi_block_label)?
+									&cond->ifFalse : nullptr);
 								if (!cond_label)
 									error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
 											<< parent_llvm->debugExtra() << '\n';
-								else {
+								else
 									*cond_label = percent_label;
-								}
 							} else if (type == NodeType::Switch) {
 								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
 								if (switch_node->label->substr(1) == *phi_block_label)

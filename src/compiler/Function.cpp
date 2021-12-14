@@ -168,9 +168,14 @@ namespace LL2W {
 	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
 		if (label->front() == '%')
 			return getBlock(StringSet::intern(label->substr(1)));
+		label = StringSet::unquote(label);
 		if (bbMap.count(label) == 0) {
-			if (can_throw)
+			if (can_throw) {
+				std::cerr << "Want: " << *label << '\n';
+				for (const auto &[bname, block]: bbMap)
+					std::cerr << "- " << *bname << '\n';
 				throw std::runtime_error("Couldn't find block " + *label + " in function " + *name);
+			}
 			return nullptr;
 		}
 		return bbMap.at(label);
@@ -1033,7 +1038,9 @@ namespace LL2W {
 			return variableStore.at(id);
 		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && isArgument(id))
 			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
-		return extraVariables.at(id);
+		else if (extraVariables.count(id) != 0)
+			return extraVariables.at(id);
+		throw std::out_of_range("Couldn't find variable with ID " + *id + " in function " + *name);
 	}
 
 	VariablePtr Function::getVariable(const std::string &label) {

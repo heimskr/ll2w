@@ -86,6 +86,14 @@ namespace LL2W {
 				break;
 			}
 
+			case NodeType::Logic: {
+				CAST(LogicNode);
+				write(cast->result, cast->getType());
+				for (ValuePtr *value: cast->allValuePointers())
+					IFLV(*value, cast->getType());
+				break;
+			}
+
 			case NodeType::BrUncond: {
 				// Unconditional branches don't read anything; their PVARs represent labels, not registers.
 				break;
@@ -162,7 +170,6 @@ namespace LL2W {
 
 			case NodeType::Div:
 			case NodeType::Rem:
-			case NodeType::Logic:
 			case NodeType::Shr:
 			case NodeType::FMath: {
 				CAST(SimpleNode);

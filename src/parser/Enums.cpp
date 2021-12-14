@@ -14,7 +14,8 @@ namespace LL2W {
 		{ValueType::Vector, "Vector"}, {ValueType::Bool,            "Bool"           }, {ValueType::Local,   "Local"  },
 		{ValueType::Global, "Global"}, {ValueType::Getelementptr,   "Getelementptr"  }, {ValueType::Void,    "Void"   },
 		{ValueType::Struct, "Struct"}, {ValueType::Array,           "Array"          }, {ValueType::CString, "CString"},
-		{ValueType::Undef,  "Undef" }, {ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Icmp,    "Icmp"  }};
+		{ValueType::Undef,  "Undef" }, {ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Icmp,    "Icmp"   },
+		{ValueType::Logic,  "Logic" }};
 
 	std::unordered_map<Linkage, std::string> linkage_map {
 		{Linkage::Private,     "private"},      {Linkage::Appending,  "appending"},   {Linkage::Weak,    "weak"},
@@ -115,8 +116,13 @@ namespace LL2W {
 		{Conversion::Sitofp,  "sitofp"},  {Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"},
 		{Conversion::Bitcast, "bitcast"}, {Conversion::Addrspacecast, "addrspacecast"}};
 
-	std::unordered_map<QueryType, std::string> query_map {
-		{QueryType::Memory, "mem"}};
+	std::unordered_map<QueryType, std::string> query_map {{QueryType::Memory, "mem"}};
+
+	std::unordered_map<LogicType, std::string> logic_map {
+		{LogicType::And, "and"}, {LogicType::Or, "or"}, {LogicType::Xor, "xor"}};
+
+	std::unordered_map<std::string, LogicType> logic_inv_map {
+		{"and", LogicType::And}, {"or", LogicType::Or}, {"xor", LogicType::Xor}};
 
 	bool isSigned(IcmpCond cond) {
 		switch (cond) {

@@ -21,7 +21,17 @@ namespace LL2W::Passes {
 				continue;
 			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->node);
 
-			if (ev->decimals.size() != 1 || ev->aggregateValue->valueType() != ValueType::Local) {
+			ValueType aggregate_type = ev->aggregateValue->valueType();
+
+			if (aggregate_type == ValueType::Undef) {
+				function.insertBefore(instruction, SetInstruction::make(ev->variable, 0), "ExtractValue: undef == 0")
+					->setDebug(ev)->extract();
+				to_remove.push_back(instruction);
+				++changed;
+				continue;
+			}
+
+			if (ev->decimals.size() != 1 || aggregate_type != ValueType::Local) {
 				warn() << "Skipping unsupported extractvalue node: " << ev->debugExtra() << '\n';
 				continue;
 			}

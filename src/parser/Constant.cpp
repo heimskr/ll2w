@@ -50,6 +50,9 @@ namespace LL2W {
 				throw std::runtime_error("Constant::Constant: type hint expected for getelementptr node");
 			type = type_hint;
 			value = std::make_shared<GetelementptrValue>(node);
+		} else if (node->symbol == LLVMTOK_BOOL) {
+			type = IntType::make(1);
+			value = std::make_shared<BoolValue>(node->lexerInfo);
 		} else if (node->symbol != LLVM_CONSTANT) {
 			node->debug();
 			throw std::runtime_error("Constant::Constant: node lacks a supported symbol");

@@ -7,5 +7,6 @@ namespace LL2W {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		static long apply(long left, long right) { return left + right; }
 	};
 }

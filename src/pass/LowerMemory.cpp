@@ -123,7 +123,7 @@ namespace LL2W::Passes {
 		ValuePtr source_value = node->source->convert()->value;
 		const ValueType value_type = source_value->valueType();
 
-		if (value_type == ValueType::Int || value_type == ValueType::Null || value_type == ValueType::Bool) {
+		if (source_value->isIntLike()) {
 			int int_value = 0;
 			ValuePtr value;
 			if (value_type == ValueType::Int || value_type == ValueType::Bool) {

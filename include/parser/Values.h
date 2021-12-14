@@ -18,6 +18,7 @@ namespace LL2W {
 	class Variable;
 	class Function;
 	struct IcmpNode;
+	struct LogicNode;
 
 	struct Value;
 	using ValuePtr = std::shared_ptr<Value>;
@@ -42,7 +43,7 @@ namespace LL2W {
 		virtual std::string compile() const = 0;
 	};
 
-	struct DoubleValue: public Value {
+	struct DoubleValue: Value {
 		const double value;
 		const std::string *original;
 		DoubleValue(double value_): value(value_), original(StringSet::intern(std::to_string(value_))) {}
@@ -55,7 +56,7 @@ namespace LL2W {
 		std::string compile() const override { return std::to_string(value); }
 	};
 
-	struct IntValue: public Value {
+	struct IntValue: Value, Makeable<IntValue> {
 		long value;
 		IntValue(long value_): value(value_) {}
 		IntValue(const std::string &);
@@ -69,7 +70,7 @@ namespace LL2W {
 		std::string compile() const override { return std::to_string(value); }
 	};
 
-	struct NullValue: public IntValue {
+	struct NullValue: IntValue {
 		NullValue(): IntValue((long) 0) {}
 		ValueType valueType() const override { return ValueType::Null; }
 		ValuePtr copy() const override { return std::make_shared<NullValue>(); }
@@ -79,7 +80,7 @@ namespace LL2W {
 		std::string compile() const override { return "0"; }
 	};
 
-	struct VectorValue: public Value {
+	struct VectorValue: Value {
 		std::vector<std::pair<TypePtr, ValuePtr>> values;
 		VectorValue(const ASTNode *);
 		VectorValue(const std::vector<std::pair<TypePtr, ValuePtr>> &values_): values(values_) {}
@@ -89,7 +90,7 @@ namespace LL2W {
 		std::string compile() const override { return "UNIMPLEMENTED (Vector)"; }
 	};
 
-	struct BoolValue: public Value {
+	struct BoolValue: Value {
 		bool value;
 		BoolValue(bool value_): value(value_) {}
 		BoolValue(const std::string &value_): BoolValue(value_ == "true") {}
@@ -103,7 +104,7 @@ namespace LL2W {
 		std::string compile() const override { return std::to_string(longValue()); }
 	};
 
-	struct VariableValue: public Value {
+	struct VariableValue: Value {
 		protected:
 			VariableValue(const std::string *name_): name(name_) {}
 
@@ -125,7 +126,7 @@ namespace LL2W {
 		std::shared_ptr<Variable> getVariable(Function &);
 	};
 
-	struct GlobalValue: public VariableValue {
+	struct GlobalValue: VariableValue {
 		GlobalValue(const std::string *name_): VariableValue(name_) {}
 		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
 		GlobalValue(const ASTNode *);
@@ -135,7 +136,7 @@ namespace LL2W {
 		std::string compile() const override { return "&" + *name; }
 	};
 
-	struct GetelementptrValue: public Value {
+	struct GetelementptrValue: Value {
 		bool inbounds = false;
 		TypePtr type, ptrType;
 		ValuePtr variable;
@@ -156,7 +157,7 @@ namespace LL2W {
 		std::string compile() const override { return "UNSUPPORTED (Getelementptr)"; }
 	};
 
-	struct IcmpValue: public Value {
+	struct IcmpValue: Value, Makeable<IcmpValue> {
 		IcmpCond cond;
 		ConstantPtr left, right;
 		IcmpValue(ASTNode *cond_, ASTNode *left_, ASTNode *right_);
@@ -169,14 +170,27 @@ namespace LL2W {
 		std::shared_ptr<IcmpNode> makeNode(std::shared_ptr<Variable>) const;
 	};
 
-	struct VoidValue: public Value {
+	struct LogicValue: Value, Makeable<LogicValue> {
+		LogicType type;
+		ConstantPtr left, right;
+		LogicValue(ASTNode *type_, ASTNode *left_, ASTNode *right_);
+		LogicValue(LogicType type_, ConstantPtr left_, ConstantPtr right_): type(type_), left(left_), right(right_) {}
+		LogicValue(const ASTNode *);
+		ValueType valueType() const override { return ValueType::Logic; }
+		ValuePtr copy() const override;
+		operator std::string() override;
+		std::string compile() const override { return "UNSUPPORTED (Logic)"; }
+		std::shared_ptr<LogicNode> makeNode(std::shared_ptr<Variable>) const;
+	};
+
+	struct VoidValue: Value {
 		ValueType valueType() const override { return ValueType::Void; }
 		ValuePtr copy() const override { return std::make_shared<VoidValue>(); }
 		operator std::string() override { return "void"; }
 		std::string compile() const override { return "0"; }
 	};
 
-	struct StructValue: public Value {
+	struct StructValue: Value {
 		std::vector<ConstantPtr> constants;
 		bool packed = false;
 		StructValue(const ASTNode *);
@@ -188,7 +202,7 @@ namespace LL2W {
 		std::string compile() const override { return "UNSUPPORTED (Struct)"; }
 	};
 
-	struct ArrayValue: public Value {
+	struct ArrayValue: Value {
 		std::vector<ConstantPtr> constants;
 		ArrayValue(const ASTNode *);
 		ArrayValue(const std::vector<ConstantPtr> &constants_): constants(constants_) {}
@@ -198,7 +212,7 @@ namespace LL2W {
 		std::string compile() const override { return "UNSUPPORTED (Array)"; }
 	};
 
-	struct CStringValue: public Value {
+	struct CStringValue: Value {
 		const std::string *value;
 		CStringValue(const std::string *value_): value(value_) {}
 		CStringValue(const ASTNode *);
@@ -210,7 +224,7 @@ namespace LL2W {
 		std::string compile() const override { return "\"" + reescape() + "\""; }
 	};
 
-	struct ZeroinitializerValue: public Value {
+	struct ZeroinitializerValue: Value {
 		ZeroinitializerValue() {}
 		ValueType valueType() const override { return ValueType::Zeroinitializer; }
 		ValuePtr copy() const override { return std::make_shared<ZeroinitializerValue>(); }
@@ -218,7 +232,7 @@ namespace LL2W {
 		std::string compile() const override { return "0"; }
 	};
 
-	struct UndefValue: public Value {
+	struct UndefValue: Value {
 		UndefValue() {}
 		ValueType valueType() const override { return ValueType::Undef; }
 		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }

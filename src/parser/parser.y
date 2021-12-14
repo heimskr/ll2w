@@ -789,6 +789,8 @@ srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
 i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs _cdebug
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
+     | "call" "void" dbg_type "(" "metadata" LLVMTOK_INTBANG "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs _cdebug
+       { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
      | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs _cdebug
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9); }
      | LLVMTOK_TAIL "call" "void" "@llvm.experimental.noalias.scope.decl" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs _cdebug
@@ -858,8 +860,8 @@ i_div: result LLVMTOK_DIV _exact type_any value "," value unibangs
 i_rem: result LLVMTOK_REM _exact type_any value "," value unibangs
        { $$ = new RemNode($1, $2, $3, $4, $5, $7, $8); D($6); };
 
-i_logic: result LLVMTOK_LOGIC type_any value "," value unibangs
-         { $$ = new LogicNode($1, $2, $3, $4, $6, $7); D($5); };
+i_logic: result LLVMTOK_LOGIC constant "," constant_right unibangs
+         { $$ = new LogicNode($1, $2, $3, $5, $6); D($4); };
 
 i_switch: "switch" LLVMTOK_INTTYPE value "," label "[" switch_list "]" unibangs
           { $$ = (new SwitchNode($2, $3, $5, $7, $9))->locate($1); D($1, $4, $6, $8); };
@@ -894,7 +896,7 @@ i_freeze: result "freeze" type_any value unibangs { $$ = new FreezeNode($1, $3, 
 constant: type_any parattr_list constant_right { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt({$1, $3, $2}); }
         | type_any constant_right              { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt({$1, $2}); }
         | LLVMTOK_GVAR                         { $$ = (new AN(llvmParser, LLVM_CONSTANT))->adopt($1); };
-constant_right: operand | conversion_expr | icmp_expr;
+constant_right: operand | conversion_expr | icmp_expr | logic_expr;
 parattr_list: parattr_list parattr { $$ = $1->adopt($2); }
             | parattr              { $$ = (new AN(llvmParser, LLVM_PARATTR_LIST))->adopt($1, true); };
 parattr: LLVMTOK_PARATTR
@@ -912,6 +914,7 @@ operand: LLVMTOK_PVAR | LLVMTOK_DECIMAL | LLVMTOK_HEXADECIMAL | LLVMTOK_GVAR | L
 conversion_expr: LLVMTOK_CONV_OP constant "to" type_any         { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$2, $4})->locate($1); D($1, $3); }
                | LLVMTOK_CONV_OP "(" constant "to" type_any ")" { $$ = (new AN(llvmParser, LLVM_CONVERSION_EXPR, $1->lexerInfo))->adopt({$3, $5})->locate($1); D($1, $2, $4, $6); };
 icmp_expr: "icmp" LLVMTOK_ICMP_COND "(" constant "," constant ")" { $$ = $1->adopt({$2, $4, $6}); D($3, $5, $7); };
+logic_expr: LLVMTOK_LOGIC "(" constant "," constant ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); };
 
 getelementptr_expr: "getelementptr" _inbounds "(" type_any "," type_ptr gepexpr_operand decimal_pairs ")"
                     { $1->adopt({$4, $6, $7, $8, $2}); D($3, $5, $9); };
@@ -923,7 +926,7 @@ gepexpr_operand: variable | getelementptr_expr | conversion_expr { $$ = ignoreCo
 %%
 
 #pragma GCC diagnostic pop
-
+
 const char * LL2W::Parser::getNameLLVM(int symbol) {
     return yytname[YYTRANSLATE(symbol)];
 }

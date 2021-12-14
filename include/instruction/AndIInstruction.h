@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_ANDIINSTRUCTION_H_
-#define INSTRUCTION_ANDIINSTRUCTION_H_
+#pragma once
 
 #include "instruction/IType.h"
 
@@ -8,7 +7,6 @@ namespace LL2W {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		static long apply(long left, long right) { return left & right; }
 	};
 }
-
-#endif
