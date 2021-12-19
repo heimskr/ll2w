@@ -104,6 +104,7 @@
 #include "instruction/Sext8RInstruction.h"
 #include "instruction/TranslateAddressRInstruction.h"
 #include "instruction/PageStackInstruction.h"
+#include "instruction/SvringInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -990,15 +991,31 @@ namespace LL2W {
 	}
 
 	std::string WASMRingRNode::debugExtra() const {
-		return blue("ring") + " " + cyan(*rs);
+		return blue("%ring") + " " + cyan(*rs);
 	}
 
 	WASMRingRNode::operator std::string() const {
-		return "ring " + *rs;
+		return "%ring " + *rs;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMRingRNode::convert(Function &function, VarMap &map) {
 		return std::make_unique<RingRInstruction>(convertVariable(function, map, rs));
+	}
+
+	WASMSvringNode::WASMSvringNode(ASTNode *rd_): WASMInstructionNode(WASM_SVRINGNODE), rd(rd_->lexerInfo) {
+		delete rd_;
+	}
+
+	std::string WASMSvringNode::debugExtra() const {
+		return blue("%ring") + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMSvringNode::operator std::string() const {
+		return "%ring -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSvringNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<SvringInstruction>(convertVariable(function, map, rd));
 	}
 
 	WASMPrintNode::WASMPrintNode(ASTNode *rs_, ASTNode *type_):
