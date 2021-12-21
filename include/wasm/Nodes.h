@@ -13,7 +13,7 @@ namespace LL2W {
 		Immediate, RType, IType, Copy, Load, Store, Set, Li, Si, Lni, Ch, Lh, Sh, Cmp, Cmpi, Sel, J, Jc, Jr, Jrc, Mv,
 		SizedStack, MultR, MultI, DiviI, Lui, Stack, Nop, IntI, RitI, TimeI, TimeR, RingI, RingR, Print, Halt, SleepR,
 		Page, SetptI, Label, SetptR, Svpg, Query, PseudoPrint, Rest, IO, Interrupts, InverseShift, Sext, PageStack,
-		TranslateAddress, Svring,
+		TranslateAddress, Svring, Svtime,
 	};
 
 	class WhyInstruction;
@@ -377,6 +377,16 @@ namespace LL2W {
 
 		WASMTimeRNode(ASTNode *rs_);
 		WASMNodeType nodeType() const override { return WASMNodeType::TimeR; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMSvtimeNode: WASMInstructionNode {
+		const std::string *rd;
+
+		WASMSvtimeNode(ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Svtime; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;

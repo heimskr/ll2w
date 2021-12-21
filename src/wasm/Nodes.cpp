@@ -105,6 +105,7 @@
 #include "instruction/TranslateAddressRInstruction.h"
 #include "instruction/PageStackInstruction.h"
 #include "instruction/SvringInstruction.h"
+#include "instruction/SvtimeInstruction.h"
 
 static std::string cyan(const std::string &interior) {
 	return "\e[36m" + interior + "\e[39m";
@@ -968,6 +969,22 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMTimeRNode::convert(Function &function, VarMap &map) {
 		return std::make_unique<TimeRInstruction>(convertVariable(function, map, rs));
+	}
+
+	WASMSvtimeNode::WASMSvtimeNode(ASTNode *rd_): WASMInstructionNode(WASM_SVTIMENODE), rd(rd_->lexerInfo) {
+		delete rd_;
+	}
+
+	std::string WASMSvtimeNode::debugExtra() const {
+		return blue("%time") + dim(" -> ") + cyan(*rd);
+	}
+
+	WASMSvtimeNode::operator std::string() const {
+		return "%time -> " + *rd;
+	}
+
+	std::unique_ptr<WhyInstruction> WASMSvtimeNode::convert(Function &function, VarMap &map) {
+		return std::make_unique<SvtimeInstruction>(convertVariable(function, map, rd));
 	}
 
 	WASMRingINode::WASMRingINode(ASTNode *imm_): WASMInstructionNode(WASM_RINGINODE), imm(getImmediate(imm_)) {
