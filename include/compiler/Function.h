@@ -77,6 +77,8 @@ namespace LL2W {
 		public:
 			Program *parent = nullptr;
 
+			Type analyzedType = Type::Complex;
+
 			/** A pointer to a list of all function arguments. */
 			std::vector<FunctionArgument> *arguments = nullptr;
 

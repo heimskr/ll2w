@@ -128,7 +128,7 @@ namespace LL2W {
 					switch (ret->value->valueType()) {
 						case ValueType::Void:
 							info() << "Useless: " << *name << '\n';
-							return Type::Useless;
+							return analyzedType = Type::Useless;
 						case ValueType::Int:
 						case ValueType::Undef:
 						case ValueType::Null:
@@ -138,10 +138,16 @@ namespace LL2W {
 							info() << "Constant: " << *name << " (" << *ret->value << ")\n";
 							if (value_out)
 								*value_out = ret->value;
-							return Type::Constant;
-						case ValueType::Local:
-							info() << "Possibly simple: " << *name << '\n';
+							return analyzedType = Type::Constant;
+						case ValueType::Local: {
+							const Variable::ID pvar = dynamic_cast<const LocalValue *>(ret->value.get())->name;
+							if (getArity() == 1 && isArgument(pvar)) {
+								info() << "Simple: " << *name << '\n';
+								return analyzedType = Type::Simple;
+							} else
+								info() << "Not simple: " << *name << '\n';
 							break;
+						}
 						default:
 							break;
 					}
@@ -149,7 +155,7 @@ namespace LL2W {
 			}
 		}
 
-		return Type::Complex;
+		return analyzedType = Type::Complex;
 	}
 
 	void Function::extractBlocks() {
