@@ -75,7 +75,7 @@ namespace LL2W {
 				const;
 
 		public:
-			Program *parent = nullptr;
+			Program &parent;
 
 			Type analyzedType = Type::Complex;
 

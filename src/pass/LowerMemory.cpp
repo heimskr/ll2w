@@ -91,6 +91,7 @@ namespace LL2W::Passes {
 	}
 
 	void lowerStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
+		auto lock = function.parent.getLock();
 		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
 
 		ConstantPtr converted = node->destination->convert();
@@ -151,7 +152,7 @@ namespace LL2W::Passes {
 				set->setOriginalValue(value);
 				function.insertBefore(instruction, set,   "LowerMemory: imm -> $m1")->setDebug(&llvm)->extract();
 
-				const int symsize = Util::updiv(function.parent->symbolSize("@" + *global->name), 8);
+				const int symsize = Util::updiv(function.parent.symbolSize("@" + *global->name), 8);
 
 				// $m1 -> [global]
 				if (symsize == 1 || symsize == 8) {
@@ -204,7 +205,7 @@ namespace LL2W::Passes {
 					lvar->plainString() + "]")->setDebug(&llvm)->extract();
 			} else if (global) {
 				// %src -> [global]
-				int symsize = function.parent->symbolSize("@" + *global->name);
+				int symsize = function.parent.symbolSize("@" + *global->name);
 				symsize = symsize / 8 + (symsize % 8? 1 : 0);
 				if (symsize == 2 || symsize == 4) {
 					// No ssi or shi instructions exist.

@@ -93,8 +93,7 @@
 #include "Interactive.h"
 
 namespace LL2W {
-	Function::Function(Program &program, const ASTNode &node) {
-		parent = &program;
+	Function::Function(Program &program, const ASTNode &node): parent(program) {
 		name = node.lexerInfo;
 		FunctionHeader *header = dynamic_cast<FunctionHeader *>(node.front());
 		if (!header)
@@ -120,7 +119,7 @@ namespace LL2W {
 
 	Function::Type Function::analyze(ValuePtr *value_out, long *simple_index_out) {
 		extractBlocks();
-		// Passes::ignoreIntrinsics(*this);
+		Passes::ignoreIntrinsics(*this);
 		if (linearInstructions.size() == 1) {
 			const auto &only = linearInstructions.front();
 			if (const auto *llvm = dynamic_cast<const LLVMInstruction *>(only.get())) {
@@ -950,8 +949,8 @@ namespace LL2W {
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
-				auto lock = parent->getLock();
-				parent->debugIndices.insert(instruction->debugIndex);
+				auto lock = parent.getLock();
+				parent.debugIndices.insert(instruction->debugIndex);
 			}
 			if (!dynamic_cast<WhyInstruction *>(instruction.get()))
 				error() << "Untranslated instruction in " << *name << ":\n\n    " << instruction->debugExtra()
@@ -1425,9 +1424,9 @@ namespace LL2W {
 			out << instruction->toString();
 			const int dbg = instruction->debugIndex;
 			if (dbg != -1 && instruction->showDebug()) {
-				auto lock = parent->getLock();
-				if (parent->locations.count(dbg) != 0)
-					out << " !" << parent->locations.at(dbg).index;
+				auto lock = parent.getLock();
+				if (parent.locations.count(dbg) != 0)
+					out << " !" << parent.locations.at(dbg).index;
 				else
 					warn() << "Couldn't find location for !" << dbg << "\n";
 			}
@@ -1656,14 +1655,10 @@ namespace LL2W {
 		const FunctionHeader *header = dynamic_cast<const FunctionHeader *>(astnode->children.front());
 		if (header->fnattrs.count(FnAttr::naked) != 0)
 			return true;
-		if (!parent) {
-			warn() << "Function::isNaked(): parent is null\n";
-			return false;
-		}
 		if (header->fnattrsIndex == -1)
 			return false;
-		auto lock = parent->getLock();
-		return parent->fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
+		auto lock = parent.getLock();
+		return parent.fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable, bool create, bool *created) {
@@ -1820,16 +1815,14 @@ namespace LL2W {
 	}
 
 	void Function::makeInitialDebugIndex() {
-		if (!parent)
-			throw std::runtime_error("Function " + *name + " is missing a parent");
-		if (debugIndex == -1) // TODO: verify
+		if (debugIndex == -1)
 			return;
-		auto lock = parent->getLock();
-		initialDebugIndex = parent->newDebugIndex();
-		Subprogram &subprogram = parent->subprograms.at(debugIndex);
+		auto lock = parent.getLock();
+		initialDebugIndex = parent.newDebugIndex();
+		Subprogram &subprogram = parent.subprograms.at(debugIndex);
 		Location location(subprogram.line, 1, debugIndex);
 		location.file = subprogram.file;
-		parent->locations.emplace(initialDebugIndex, location);
+		parent.locations.emplace(initialDebugIndex, location);
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {

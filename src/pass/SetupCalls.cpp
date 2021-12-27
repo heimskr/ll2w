@@ -23,6 +23,7 @@
 
 namespace LL2W::Passes {
 	void setupCalls(Function &function) {
+		auto lock = function.parent.getLock();
 		Timer timer("SetupCalls");
 		int i;
 		std::list<InstructionPtr> to_remove;
@@ -54,27 +55,27 @@ namespace LL2W::Passes {
 						ellipsis = call->argumentEllipsis;
 						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
 						break;
-					} else if (function.parent->functions.count("@" + *global_uptr->name) != 0) {
+					} else if (function.parent.functions.count("@" + *global_uptr->name) != 0) {
 						// When the arguments aren't explicit, we check the parent program's map of functions.
-						Function &func = *function.parent->functions.at("@" + *global_uptr->name);
+						Function &func = *function.parent.functions.at("@" + *global_uptr->name);
 						ellipsis = func.isVariadic();
 						convention = func.getCallingConvention();
 						argument_types.reserve(func.arguments->size());
 						for (FunctionArgument &argument: *func.arguments)
 							argument_types.push_back(argument.type);
 						break;
-					} else if (function.parent->declarations.count(*global_uptr->name) != 0) {
+					} else if (function.parent.declarations.count(*global_uptr->name) != 0) {
 						// We can also check the map of declarations.
-						FunctionHeader *header = function.parent->declarations.at(*global_uptr->name);
+						FunctionHeader *header = function.parent.declarations.at(*global_uptr->name);
 						ellipsis = header->arguments->ellipsis;
 						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
 						argument_types.reserve(header->arguments->arguments.size());
 						for (FunctionArgument &argument: header->arguments->arguments)
 							argument_types.push_back(argument.type);
 						break;
-					} else if (function.parent->aliases.count(StringSet::intern("@" + *global_uptr->name)) != 0) {
+					} else if (function.parent.aliases.count(StringSet::intern("@" + *global_uptr->name)) != 0) {
 						// In rare cases, there may be an alias.
-						AliasDef *alias = function.parent->aliases.at(StringSet::intern("@" + *global_uptr->name));
+						AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global_uptr->name));
 						const std::string *alias_to = alias->aliasTo->front() == '@'?
 							StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
 						global_uptr = std::make_unique<GlobalValue>(alias_to);
