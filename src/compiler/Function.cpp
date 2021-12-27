@@ -118,6 +118,40 @@ namespace LL2W {
 		return lastAllocationResult;
 	}
 
+	Function::Type Function::analyze(ValuePtr *value_out) {
+		extractBlocks();
+		// Passes::ignoreIntrinsics(*this);
+		if (linearInstructions.size() == 1) {
+			const auto &only = linearInstructions.front();
+			if (const auto *llvm = dynamic_cast<const LLVMInstruction *>(only.get())) {
+				if (const auto *ret = dynamic_cast<const RetNode *>(llvm->node)) {
+					switch (ret->value->valueType()) {
+						case ValueType::Void:
+							info() << "Useless: " << *name << '\n';
+							return Type::Useless;
+						case ValueType::Int:
+						case ValueType::Undef:
+						case ValueType::Null:
+						case ValueType::Bool:
+						case ValueType::Global:
+						case ValueType::Double:
+							info() << "Constant: " << *name << " (" << *ret->value << ")\n";
+							if (value_out)
+								*value_out = ret->value;
+							return Type::Constant;
+						case ValueType::Local:
+							info() << "Possibly simple: " << *name << '\n';
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		}
+
+		return Type::Complex;
+	}
+
 	void Function::extractBlocks() {
 		const std::string *label = StringSet::intern(std::to_string(arguments->size()));
 		std::vector<const std::string *> preds {};
@@ -125,6 +159,10 @@ namespace LL2W {
 		int offset = 0;
 		int instructionIndex = -1;
 		int blockIndex = -1;
+		linearInstructions.clear();
+		bbLabels.clear();
+		bbMap.clear();
+		blocks.clear();
 
 		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
 			block->offset = offset;

@@ -17,19 +17,6 @@
 #include "util/Util.h"
 #include "main.h"
 
-// #define SINGLE_FUNCTION "@find_free_block"
-// #define SINGLE_FUNCTION "@_ZNKSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE7compareINS_17basic_string_viewIwS2_EEEENS_9_MetaBaseIXaasr33__can_be_converted_to_string_viewIwS2_T_EE5valuentsr17__is_same_uncvrefISA_S5_EE5valueEE13_EnableIfImplIiEEmmRKSA_mm"
-// #define SINGLE_FUNCTION "@_Z8mem_initi"
-// #define SINGLE_FUNCTION "@_ZL11alloc_groupim"
-// #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcP13__va_list_tag"
-// #define SINGLE_FUNCTION "@_ZN9P0Wrapper6getP4EEPvRm"
-// #define SINGLE_FUNCTION "@_ZNKSt3__117basic_string_viewIwNS_11char_traitsIwEEE4sizeEv"
-// #define SINGLE_FUNCTION "@_ZNSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE17__assign_no_aliasILb1EEERS5_PKwm"
-// #define SINGLE_FUNCTION "@_ZL8_out_revPFvcPvmmEPcmmPKcmjj"
-// #define SINGLE_FUNCTION "@_ZL9_is_digitc"
-// #define SINGLE_FUNCTION "@_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
-// #define SINGLE_FUNCTION "@memcpy"
-
 namespace LL2W {
 	struct GlobalData {
 		ConstantPtr constant;
@@ -123,6 +110,25 @@ namespace LL2W {
 	Program::~Program() {
 		for (const auto &[fname, function]: functions)
 			delete function;
+	}
+
+	void Program::analyze() {
+		for (auto &[name, function]: functions) {
+			ValuePtr value;
+			switch (function->analyze(&value)) {
+				case Function::Type::Simple:
+					simpleFunctions.insert(name);
+					break;
+				case Function::Type::Useless:
+					uselessFunctions.insert(name);
+					break;
+				case Function::Type::Constant:
+					constantReturningFunctions.emplace(name, value);
+					break;
+				default:
+					break;
+			}
+		}
 	}
 
 	void Program::compile() {

@@ -101,6 +101,7 @@ void compile(const std::string &filename, bool show_debug) {
 	LL2W::interactive(*prog);
 	std::cout << "Done.\n";
 #else
+	prog.analyze();
 	prog.compile();
 #ifdef DEBUGMODE
 	prog.debug();

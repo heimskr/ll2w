@@ -36,6 +36,13 @@ namespace LL2W {
 	 * Why.js bytecode.
 	 */
 	class Function {
+		public:
+			/** Complex functions have multiple instructions.
+			 *  Simple functions return the only argument and do nothing else.
+			 *  Useless functions return void and do nothing else.
+			 *  Constant functions return a constant value and do nothing else. */
+			enum class Type {Complex, Simple, Useless, Constant};
+
 		private:
 			/** A pointer to an AST node that contains data about the function's arguments. */
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
@@ -158,6 +165,9 @@ namespace LL2W {
 			~Function();
 
 			Allocator::Result attemptAllocation();
+
+			/** Analyzes the function's type. */
+			Type analyze(ValuePtr *value_out = nullptr);
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();
