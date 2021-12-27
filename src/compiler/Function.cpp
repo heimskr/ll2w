@@ -118,7 +118,7 @@ namespace LL2W {
 		return lastAllocationResult;
 	}
 
-	Function::Type Function::analyze(ValuePtr *value_out) {
+	Function::Type Function::analyze(ValuePtr *value_out, long *simple_index_out) {
 		extractBlocks();
 		// Passes::ignoreIntrinsics(*this);
 		if (linearInstructions.size() == 1) {
@@ -141,8 +141,17 @@ namespace LL2W {
 							return analyzedType = Type::Constant;
 						case ValueType::Local: {
 							const Variable::ID pvar = dynamic_cast<const LocalValue *>(ret->value.get())->name;
-							if (getArity() == 1 && isArgument(pvar)) {
-								info() << "Simple: " << *name << '\n';
+							if (isArgument(pvar)) {
+								if (simple_index_out) {
+									if (!Util::isNumeric(pvar)) {
+										warn() << "Argument pvar isn't numeric; not classifying function as simple: "
+											<< *pvar << '\n';
+										break;
+									}
+									*simple_index_out = Util::parseLong(pvar);
+									info() << "Simple: " << *name << " (" << *simple_index_out << ")\n";
+								} else
+									info() << "Simple: " << *name << '\n';
 								return analyzedType = Type::Simple;
 							} else
 								info() << "Not simple: " << *name << '\n';

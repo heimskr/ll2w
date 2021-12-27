@@ -169,7 +169,7 @@ namespace LL2W {
 			Allocator::Result attemptAllocation();
 
 			/** Analyzes the function's type. */
-			Type analyze(ValuePtr *value_out = nullptr);
+			Type analyze(ValuePtr *value_out = nullptr, long *simple_index_out = nullptr);
 
 			/** Scans through the function AST for block headers and populates the list of BasicBlocks accordingly. */
 			void extractBlocks();

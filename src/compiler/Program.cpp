@@ -115,9 +115,10 @@ namespace LL2W {
 	void Program::analyze() {
 		for (auto &[name, function]: functions) {
 			ValuePtr value;
-			switch (function->analyze(&value)) {
+			long simple_index = -1;
+			switch (function->analyze(&value, &simple_index)) {
 				case Function::Type::Simple:
-					simpleFunctions.insert(name);
+					simpleFunctions.emplace(name, simple_index);
 					break;
 				case Function::Type::Useless:
 					uselessFunctions.insert(name);

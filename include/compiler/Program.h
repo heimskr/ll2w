@@ -46,8 +46,9 @@ namespace LL2W {
 			std::map<int, LexicalBlock> lexicalBlocks;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int> debugIndices;
-			/** A set of names of functions that do nothing except return their only argument. */
-			std::set<std::string> simpleFunctions;
+			/** A map of names of functions that do nothing except return an argument to the index of the argument they
+			 *  return. */
+			std::map<std::string, long> simpleFunctions;
 			/** A set of names of functions that do nothing but return void. */
 			std::set<std::string> uselessFunctions;
 			/** A map of names of functions that do nothing but return a constant to the constant they return. */
