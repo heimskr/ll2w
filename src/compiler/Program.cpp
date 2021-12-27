@@ -118,13 +118,13 @@ namespace LL2W {
 			long simple_index = -1;
 			switch (function->analyze(&value, &simple_index)) {
 				case Function::Type::Simple:
-					simpleFunctions.emplace(name, simple_index);
+					simpleFunctions.emplace(name.substr(1), simple_index);
 					break;
 				case Function::Type::Useless:
-					uselessFunctions.insert(name);
+					uselessFunctions.insert(name.substr(1));
 					break;
 				case Function::Type::Constant:
-					constantReturningFunctions.emplace(name, value);
+					constantReturningFunctions.emplace(name.substr(1), value);
 					break;
 				default:
 					break;

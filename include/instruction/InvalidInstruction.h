@@ -1,10 +1,10 @@
-#ifndef INSTRUCTION_INVALIDINSTRUCTION_H_
-#define INSTRUCTION_INVALIDINSTRUCTION_H_
+#pragma once
 
 #include "instruction/IntermediateInstruction.h"
+#include "util/Makeable.h"
 
 namespace LL2W {
-	struct InvalidInstruction: public IntermediateInstruction {
+	struct InvalidInstruction: public IntermediateInstruction, public Makeable<InvalidInstruction> {
 		std::string message;
 		InvalidInstruction(const std::string &message_ = "INVALID", int index_ = -1):
 			IntermediateInstruction(index_), message(message_) {}
@@ -13,5 +13,3 @@ namespace LL2W {
 		bool maySpill() const override { return false; }
 	};
 }
-
-#endif

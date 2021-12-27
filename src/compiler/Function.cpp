@@ -126,7 +126,7 @@ namespace LL2W {
 				if (const auto *ret = dynamic_cast<const RetNode *>(llvm->node)) {
 					switch (ret->value->valueType()) {
 						case ValueType::Void:
-							info() << "Useless: " << *name << '\n';
+							// info() << "Useless: " << *name << '\n';
 							return analyzedType = Type::Useless;
 						case ValueType::Int:
 						case ValueType::Undef:
@@ -134,7 +134,7 @@ namespace LL2W {
 						case ValueType::Bool:
 						case ValueType::Global:
 						case ValueType::Double:
-							info() << "Constant: " << *name << " (" << *ret->value << ")\n";
+							// info() << "Constant: " << *name << " (" << *ret->value << ")\n";
 							if (value_out)
 								*value_out = ret->value;
 							return analyzedType = Type::Constant;
@@ -148,9 +148,8 @@ namespace LL2W {
 										break;
 									}
 									*simple_index_out = Util::parseLong(pvar);
-									info() << "Simple: " << *name << " (" << *simple_index_out << ")\n";
-								} else
-									info() << "Simple: " << *name << '\n';
+									// info() << "Simple: " << *name << " (" << *simple_index_out << ")\n";
+								} // else info() << "Simple: " << *name << '\n';
 								return analyzedType = Type::Simple;
 							} else
 								info() << "Not simple: " << *name << '\n';

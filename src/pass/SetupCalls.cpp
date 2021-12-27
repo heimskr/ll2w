@@ -1,3 +1,5 @@
+#include <tuple>
+
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Program.h"
@@ -22,6 +24,46 @@
 #include "util/Util.h"
 
 namespace LL2W::Passes {
+	static void extractInfo(const std::string *global, Function &function, CallNode *call,
+	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
+		do {
+			// First, we check the call node itself—it sometimes contains the signature of the function.
+			if (call->argumentsExplicit) {
+				if (argument_types)
+					*argument_types = call->argumentTypes;
+				ellipsis = call->argumentEllipsis;
+				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+				return;
+			} else if (function.parent.functions.count("@" + *global) != 0) {
+				// When the arguments aren't explicit, we check the parent program's map of functions.
+				Function &func = *function.parent.functions.at("@" + *global);
+				ellipsis = func.isVariadic();
+				convention = func.getCallingConvention();
+				if (argument_types) {
+					argument_types->reserve(func.arguments->size());
+					for (FunctionArgument &argument: *func.arguments)
+						argument_types->push_back(argument.type);
+				}
+				return;
+			} else if (function.parent.declarations.count(*global) != 0) {
+				// We can also check the map of declarations.
+				FunctionHeader *header = function.parent.declarations.at(*global);
+				ellipsis = header->arguments->ellipsis;
+				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
+				if (argument_types) {
+					argument_types->reserve(header->arguments->arguments.size());
+					for (FunctionArgument &argument: header->arguments->arguments)
+						argument_types->push_back(argument.type);
+				}
+				return;
+			} else if (function.parent.aliases.count(StringSet::intern("@" + *global)) != 0) {
+				// In rare cases, there may be an alias.
+				AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global));
+				global = alias->aliasTo->front() == '@'? StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
+			} else throw std::runtime_error("Couldn't find signature for function " + *global);
+		} while (true);
+	}
+
 	void setupCalls(Function &function) {
 		auto lock = function.parent.getLock();
 		Timer timer("SetupCalls");
@@ -39,8 +81,36 @@ namespace LL2W::Passes {
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(name_value);
 			std::unique_ptr<GlobalValue> global_uptr;
-			if (global_name)
+
+			if (global_name) {
 				global_uptr = std::make_unique<GlobalValue>(*global_name);
+				const auto &name = *global_name->name;
+				if (function.parent.uselessFunctions.count(name) != 0) {
+					to_remove.push_back(instruction);
+					continue;
+				}
+				if (function.parent.simpleFunctions.count(name) != 0) {
+					CallingConvention convention;
+					bool ellipsis;
+					const long simple_index = function.parent.simpleFunctions.at(name);
+					extractInfo(global_uptr->name, function, call, convention, ellipsis, nullptr);
+					// TODO: Instructions inserted here won't be touched by SplitResultMoves. This might be an issue.
+					if (!call->result) {
+						warn() << "Call to simple function " << name << " has no result.\n";
+					} else if (convention != CallingConvention::Reg16) {
+						warn() << "Call to simple function " << name << " isn't Reg16.\n";
+					} else {
+						auto out = setupCallValue(function, call->variable, instruction, call->constants[simple_index]);
+						if (out)
+							function.comment(out, "SetupCallValue: simple function elision for " + name);
+						else
+							function.comment(instruction, "SetupCallValue: simple function elision for " + name +
+								" somewhere around here");
+						to_remove.push_back(instruction);
+						continue;
+					}
+				}
+			}
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
 			CallingConvention convention;
@@ -48,39 +118,7 @@ namespace LL2W::Passes {
 			bool ellipsis;
 
 			if (global_uptr) {
-				do {
-					// First, we check the call node itself—it sometimes contains the signature of the function.
-					if (call->argumentsExplicit) {
-						argument_types = call->argumentTypes;
-						ellipsis = call->argumentEllipsis;
-						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-						break;
-					} else if (function.parent.functions.count("@" + *global_uptr->name) != 0) {
-						// When the arguments aren't explicit, we check the parent program's map of functions.
-						Function &func = *function.parent.functions.at("@" + *global_uptr->name);
-						ellipsis = func.isVariadic();
-						convention = func.getCallingConvention();
-						argument_types.reserve(func.arguments->size());
-						for (FunctionArgument &argument: *func.arguments)
-							argument_types.push_back(argument.type);
-						break;
-					} else if (function.parent.declarations.count(*global_uptr->name) != 0) {
-						// We can also check the map of declarations.
-						FunctionHeader *header = function.parent.declarations.at(*global_uptr->name);
-						ellipsis = header->arguments->ellipsis;
-						convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-						argument_types.reserve(header->arguments->arguments.size());
-						for (FunctionArgument &argument: header->arguments->arguments)
-							argument_types.push_back(argument.type);
-						break;
-					} else if (function.parent.aliases.count(StringSet::intern("@" + *global_uptr->name)) != 0) {
-						// In rare cases, there may be an alias.
-						AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global_uptr->name));
-						const std::string *alias_to = alias->aliasTo->front() == '@'?
-							StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
-						global_uptr = std::make_unique<GlobalValue>(alias_to);
-					} else throw std::runtime_error("Couldn't find signature for function " + *global_uptr->name);
-				} while (true);
+				extractInfo(global_uptr->name, function, call, convention, ellipsis, &argument_types);
 			} else {
 				for (ConstantPtr &ptr: call->constants)
 					argument_types.push_back(ptr->type);
@@ -278,7 +316,7 @@ namespace LL2W::Passes {
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 			if (!gep_global) {
 				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+				function.insertBefore(instruction, InvalidInstruction::make());
 				return 0;
 			} else {
 				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
@@ -303,15 +341,16 @@ namespace LL2W::Passes {
 		} else {
 			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ") at " __FILE__ ":"
 			       << __LINE__ << '\n';
-			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+			function.insertBefore(instruction, InvalidInstruction::make());
 			return 0;
 		}
 	}
 
-	void setupCallValue(Function &function, VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
+	InstructionPtr
+	setupCallValue(Function &function, VariablePtr new_var, InstructionPtr instruction, ConstantPtr constant) {
 		if (constant->conversionSource) {
 			setupCallValue(function, new_var, instruction, constant->conversionSource);
-			return;
+			return nullptr;
 		}
 
 		int signext = constant->parattrs.signext? constant->type->width() : 0;
@@ -339,27 +378,35 @@ namespace LL2W::Passes {
 			// If it's a variable, move it into the argument register.
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
-			function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
+			auto out =function.insertBefore(instruction, move);
+			out->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+			return out;
 		} else if (value_type == ValueType::Int) {
 			// If it's an integer constant, set the argument register to it.
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
 			set->setOriginalValue(constant->value);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			auto out = function.insertBefore(instruction, set);
+			out->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+			return out;
 		} else if (value_type == ValueType::Bool) {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			auto out = function.insertBefore(instruction, set);
+			out->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+			return out;
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
 			// If it's a null or undef constant, just use zero. No need to sign extend.
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			auto out = function.insertBefore(instruction, set);
+			out->setDebug(*instruction)->extract();
+			return out;
 		} else if (value_type == ValueType::Getelementptr) {
 			// If it's a getelementptr expression, things are a little more difficult.
 			GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(constant->value.get());
@@ -377,8 +424,7 @@ namespace LL2W::Passes {
 					if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
 						std::cerr << " (" << llvm->node->location << ")";
 					std::cerr << "\n";
-					function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
-					return;
+					return function.insertBefore(instruction, InvalidInstruction::make());
 				}
 
 				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
@@ -387,15 +433,19 @@ namespace LL2W::Passes {
 				if (Util::outOfRange(offset))
 					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 
+				InstructionPtr out;
 				if (offset == 0) {
 					auto move = std::make_shared<MoveInstruction>(local->getVariable(function), new_var);
 					function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
+					out = move;
 				} else {
 					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), int(offset), new_var);
 					function.insertBefore(instruction, addi)->setDebug(*instruction)->extract();
+					out = addi;
 				}
 				if (signext)
 					function.insertBefore(instruction, make_signext());
+				return out;
 			} else {
 				const std::list<long> indices = Getelementptr::getLongIndices(*gep);
 
@@ -404,29 +454,33 @@ namespace LL2W::Passes {
 					warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 
 				auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);
-				function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
+				auto out = function.insertBefore(instruction, setsym);
+				out->setDebug(*instruction)->extract();
 				if (offset != 0)
 					function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, int(offset), new_var))
 						->setDebug(*instruction)->extract();
 				if (signext)
 					function.insertBefore(instruction, make_signext());
+				return out;
 			}
 		} else if (value_type == ValueType::Global) {
 			auto *global = dynamic_cast<GlobalValue *>(constant->value.get());
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name))
-				->setDebug(*instruction)->extract();
+			auto out = function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name));
+			out->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+			return out;
 		} else if (value_type == ValueType::Icmp) {
 			auto *icmp = dynamic_cast<IcmpValue *>(constant->value.get());
-			Passes::lowerIcmp(function, instruction,
-				IcmpNode::make(new_var, icmp->cond, icmp->left, icmp->right).get());
+			auto node = IcmpNode::make(new_var, icmp->cond, icmp->left, icmp->right);
+			Passes::lowerIcmp(function, instruction, node.get());
 			if (signext)
 				function.insertBefore(instruction, make_signext());
+			return nullptr; // Whatever.
 		} else {
 			warn() << "Not sure what to do with " << *constant << " (" << getName(value_type) << ") at " __FILE__ ":"
 			       << __LINE__ << '\n';
-			function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
+			return function.insertBefore(instruction, InvalidInstruction::make());
 		}
 	}
 }

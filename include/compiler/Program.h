@@ -47,11 +47,12 @@ namespace LL2W {
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they
-			 *  return. */
+			 *  return. Names don't contain a leading @. */
 			std::map<std::string, long> simpleFunctions;
-			/** A set of names of functions that do nothing but return void. */
+			/** A set of names of functions that do nothing but return void. Names don't contain a leading @. */
 			std::set<std::string> uselessFunctions;
-			/** A map of names of functions that do nothing but return a constant to the constant they return. */
+			/** A map of names of functions that do nothing but return a constant to the constant they return.
+			 *  Names don't contain a leading @. */
 			std::map<std::string, std::shared_ptr<Value>> constantReturningFunctions;
 
 			Program(const ASTNode &);
