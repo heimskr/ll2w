@@ -1,5 +1,4 @@
-#ifndef COMPILER_WHYINFO_H_
-#define COMPILER_WHYINFO_H_
+#pragma once
 
 #include <set>
 #include <string>
@@ -9,7 +8,7 @@
 // #define REGISTER_PRESSURE 4
 
 namespace LL2W {
-	/** Contains constants pertaining to the Why.js architecture. */
+	/** Contains constants pertaining to the Why architecture. */
 	struct WhyInfo {
 		constexpr static int wordSize = 8; // in bytes
 		constexpr static int totalRegisters = 128;
@@ -46,5 +45,3 @@ namespace LL2W {
 		static std::string registerName(int);
 	};
 }
-
-#endif
