@@ -2,6 +2,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "pass/InsertLabels.h"
+#include "pass/StackSkip.h"
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
