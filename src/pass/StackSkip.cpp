@@ -11,10 +11,10 @@ namespace LL2W::Passes {
 			return;
 		BasicBlockPtr entry = function.getEntry();
 		auto sp = function.sp(entry);
-		auto add = std::make_shared<SubIInstruction>(sp, 0, sp);
-		function.insertBefore(function.linearInstructions.front(), add, "InsertStackSkip")
+		auto sub = std::make_shared<SubIInstruction>(sp, 0, sp);
+		function.insertBefore(function.linearInstructions.front(), sub, "InsertStackSkip")
 			->setDebug(function.initialDebugIndex)->extract();
-		function.categories["StackSkip"].insert(add);
+		function.categories["StackSkip"].insert(sub);
 	}
 
 	void readjustStackSkip(Function &function) {

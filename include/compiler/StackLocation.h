@@ -1,5 +1,4 @@
-#ifndef COMPILER_STACKLOCATION_H_
-#define COMPILER_STACKLOCATION_H_
+#pragma once
 
 #include <memory>
 
@@ -31,5 +30,3 @@ namespace LL2W {
 		bool operator==(const StackLocation &) const;
 	};
 }
-
-#endif

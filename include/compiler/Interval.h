@@ -1,5 +1,4 @@
-#ifndef COMPILER_INTERVAL_H_
-#define COMPILER_INTERVAL_H_
+#pragma once
 
 #include <memory>
 #include <ostream>
@@ -25,5 +24,3 @@ namespace LL2W {
 
 	std::ostream & operator<<(std::ostream &, const Interval &);
 }
-
-#endif

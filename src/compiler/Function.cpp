@@ -779,7 +779,7 @@ namespace LL2W {
 		after->instructions.clear();
 
 		// Replace the after-block's label with the before-block's in all instructions.
-		// TODO: When Why.js branches are implemented, add them here.
+		// TODO: When Why branches are implemented, add them here.
 		const std::string *before_p_label = StringSet::intern("%" + *before->label);
 		const std::string *after_p_label  = StringSet::intern("%" + *after->label);
 		const std::string *before_label   = before->label;

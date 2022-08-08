@@ -1,5 +1,4 @@
-#ifndef DTREE_H_
-#define DTREE_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -42,5 +41,3 @@ namespace LL2W {
 			std::unordered_map<std::string, std::unordered_set<std::string>> strictDominatorLabels() const;
 	};
 }
-
-#endif

@@ -1,5 +1,5 @@
 %{
-// Parser for a slightly limited subset of Why.js assembly.
+// Parser for a slightly limited subset of Why assembly.
 // Some pseudoinstructions and the "&="-type shorthands aren't supported.
 
 #include <cassert>

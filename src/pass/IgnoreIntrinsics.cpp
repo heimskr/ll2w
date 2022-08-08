@@ -1,8 +1,6 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
-#include "compiler/WhyInfo.h"
-#include "instruction/SetInstruction.h"
 #include "pass/IgnoreIntrinsics.h"
 #include "util/Timer.h"
 

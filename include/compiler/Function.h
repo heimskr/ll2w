@@ -32,8 +32,8 @@ namespace LL2W {
 	enum class CallingConvention {StackOnly, Reg16};
 
 	/**
-	 * Represents a function and contains code for converting functions from LLVM's intermediate representation into
-	 * Why.js bytecode.
+	 * Represents a function and contains code for converting functions from LLVM's intermediate representation into Why
+	 * bytecode.
 	 */
 	class Function {
 		public:

@@ -17,7 +17,7 @@ namespace LL2W {
 	class Variable;
 
 	struct VariableCompare {
-		bool operator()(Variable *left, Variable *right) const;
+		bool operator()(const Variable *left, const Variable *right) const;
 	};
 
 	class Variable {

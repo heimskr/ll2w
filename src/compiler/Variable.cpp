@@ -14,7 +14,7 @@
 // #define ADOPT_PARENT_ID
 
 namespace LL2W {
-	bool VariableCompare::operator()(Variable *left, Variable *right) const {
+	bool VariableCompare::operator()(const Variable *left, const Variable *right) const {
 		return strnatcmp(left->id->c_str(), right->id->c_str()) == -1;
 	}
 
