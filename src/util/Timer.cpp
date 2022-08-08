@@ -10,8 +10,12 @@ namespace LL2W {
 		start(std::chrono::system_clock::now()), name(name_) {}
 
 	Timer::~Timer() {
-		times[name] += std::chrono::system_clock::now() - start;
+		times[name] += difference();
 		++counts[name];
+	}
+
+	std::chrono::nanoseconds Timer::difference() const {
+		return std::chrono::system_clock::now() - start;
 	}
 
 	void Timer::summary(double threshold) {

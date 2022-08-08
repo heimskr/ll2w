@@ -8,7 +8,8 @@ namespace LL2W {
 	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque};
 	enum class ValueType {
 		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
-		Undef, Icmp, Logic};
+		Undef, Icmp, Logic, Poison
+	};
 
 	enum class Linkage {
 		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,

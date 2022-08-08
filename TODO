@@ -4,3 +4,4 @@
                       function header. Do the same for LoadArguments.
 [2021/11/11 02:26:48] Add support for sext32 in inline assembly.
 [2021/11/30 04:20:48] Add support for opcode constant expressions (like add, sub, etc).
+[2022/02/24 13:26:00] Memset reports its "destination" as a written variable, but it's actually a read variable.

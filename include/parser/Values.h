@@ -26,7 +26,7 @@ namespace LL2W {
 
 	struct Value {
 		virtual operator std::string() = 0;
-		virtual ~Value() {}
+		virtual ~Value() = default;
 		virtual ValueType valueType() const = 0;
 		virtual ValuePtr copy() const = 0;
 		bool isInt() const;
@@ -225,7 +225,7 @@ namespace LL2W {
 	};
 
 	struct ZeroinitializerValue: Value {
-		ZeroinitializerValue() {}
+		ZeroinitializerValue() = default;
 		ValueType valueType() const override { return ValueType::Zeroinitializer; }
 		ValuePtr copy() const override { return std::make_shared<ZeroinitializerValue>(); }
 		operator std::string() override { return "zeroinitializer"; }
@@ -233,10 +233,20 @@ namespace LL2W {
 	};
 
 	struct UndefValue: Value {
-		UndefValue() {}
+		UndefValue() = default;
 		ValueType valueType() const override { return ValueType::Undef; }
 		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }
 		operator std::string() override { return "undef"; }
+		bool isIntLike() const override { return true; }
+		long longValue() const override { return 0; }
+		std::string compile() const override { return "0"; }
+	};
+
+	struct PoisonValue: Value {
+		PoisonValue() = default;
+		ValueType valueType() const override { return ValueType::Poison; }
+		ValuePtr copy() const override { return std::make_shared<PoisonValue>(); }
+		operator std::string() override { return "poison"; }
 		bool isIntLike() const override { return true; }
 		long longValue() const override { return 0; }
 		std::string compile() const override { return "0"; }

@@ -1,7 +1,7 @@
 CHECK			?= none
 COMPILER		?= clang++
 DEBUGGER		?= lldb
-OPTIMIZATION	?= -Ofast -march=native
+OPTIMIZATION	?= -O0 -g
 STANDARD		?= c++2a
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude

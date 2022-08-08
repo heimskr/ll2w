@@ -21,7 +21,7 @@ namespace LL2W {
 	}
 
 	bool Node::reflexive() const {
-		return out_.count(const_cast<Node *>(this)) == 1;
+		return out_.contains(const_cast<Node *>(this));
 	}
 
 	bool Node::link(Node &other, bool bidirectional) {
@@ -29,7 +29,7 @@ namespace LL2W {
 	}
 
 	bool Node::link(Node *other, bool bidirectional) {
-		bool already_linked = out_.count(other) == 1;
+		bool already_linked = out_.contains(other);
 		if (!already_linked) {
 			out_.insert(other);
 			other->in_.insert(this);
@@ -46,7 +46,7 @@ namespace LL2W {
 	}
 
 	bool Node::unlink(Node *other, bool bidirectional) {
-		bool exists = out_.count(other) == 1;
+		bool exists = out_.contains(other);
 		out_.erase(other);
 		other->in_.erase(this);
 		reachability.erase(other);
@@ -102,7 +102,7 @@ namespace LL2W {
 		if (other.owner != owner)
 			return false;
 
-		if (reachability.count(&other) != 0)
+		if (reachability.contains(&other))
 			return reachability.at(&other);
 
 		std::unordered_set<Node *> visited;
@@ -116,7 +116,7 @@ namespace LL2W {
 					return true;
 				}
 
-				if (visited.count(out_node) == 0) {
+				if (!visited.contains(out_node)) {
 					visited.insert(out_node);
 					queue.push_back(out_node);
 				}
@@ -134,7 +134,7 @@ namespace LL2W {
 	size_t Node::degree() const {
 		size_t deg = out_.size();
 		for (Node *neighbor: in_)
-			if (out_.count(neighbor) == 0)
+			if (!out_.contains(neighbor))
 				++deg;
 		return deg;
 	}

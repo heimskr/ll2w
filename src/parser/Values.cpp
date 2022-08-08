@@ -314,6 +314,7 @@ namespace LL2W {
 			case LLVMTOK_CSTRING:         return std::make_shared<CStringValue>(node);
 			case LLVMTOK_ZEROINITIALIZER: return std::make_shared<ZeroinitializerValue>();
 			case LLVMTOK_UNDEF:           return std::make_shared<UndefValue>();
+			case LLVMTOK_POISON:          return std::make_shared<PoisonValue>();
 			case LLVMTOK_ICMP:            return std::make_shared<IcmpValue>(node);
 			case LLVMTOK_LOGIC:           return std::make_shared<LogicValue>(node);
 			case LLVM_CONVERSION_EXPR:    return convertConversion(node);
@@ -341,6 +342,7 @@ namespace LL2W {
 		{ValueType::Global, "Global"}, {ValueType::Getelementptr, "Getelementptr"}, {ValueType::Void, "Void"},
 		{ValueType::Struct, "Struct"}, {ValueType::Array, "Array"}, {ValueType::CString, "CString"},
 		{ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Undef, "Undef"}, {ValueType::Icmp, "Icmp"},
+		{ValueType::Poison, "Poison"},
 	};
 
 	std::string getName(ValueType type) {

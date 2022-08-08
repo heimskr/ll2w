@@ -62,7 +62,7 @@ namespace LL2W::Passes {
 			VariablePtr reg = function.makePrecoloredVariable(*std::next(destination->registers.begin(),
 				iv->decimals.front()), instruction->parent.lock());
 
-			if (avtype == ValueType::Undef || avtype == ValueType::Local) {
+			if (avtype == ValueType::Undef || avtype == ValueType::Poison || avtype == ValueType::Local) {
 				ValuePtr value = iv->value;
 				ValueType valuetype = value->valueType();
 				const std::string comment = " -> " + destination->registersString() + "[" +

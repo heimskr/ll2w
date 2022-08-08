@@ -8,6 +8,7 @@
 #include "util/Util.h"
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
+#include "parser/StructNode.h"
 #include "wasm/Nodes.h"
 #include "instruction/Comment.h"
 #include "instruction/SetInstruction.h"

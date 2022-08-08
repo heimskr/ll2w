@@ -21,21 +21,22 @@ namespace LL2W {
 				}
 			};
 
+			using Set = std::unordered_set<Node *>;
+
 		private:
 			Graph *owner;
 			std::string label_;
-			std::set<Node *, Node_less> out_;
-			std::set<Node *, Node_less> in_;
+			Set out_;
+			Set in_;
 			int index_ = -1;
 			std::unordered_map<Node *, bool> reachability;
 
 		public:
 			using USet = std::unordered_set<Node *>;
-			using Set = std::set<Node *, Node_less>;
 			using Map = std::map<Node *, Set, Node_less>;
 
 			std::any data;
-			std::set<int> colors;
+			std::unordered_set<int> colors;
 			int colorsNeeded = 1;
 
 			Node() = delete;

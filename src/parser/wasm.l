@@ -9,8 +9,6 @@
 // Disable PVS-Studio warnings about branches that do the same thing.
 //-V::1037
 
-// PARATTR and FNATTR_BASIC both include "readonly", which has to be treated specially.
-
 %}
 
 %option 8bit

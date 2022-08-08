@@ -270,7 +270,7 @@ namespace LL2W {
 		std::function<void(Node *)> visit = [&](Node *node) {
 			discovered[node] = ++time;
 			for (Node *out: node->out_)
-				if (discovered.count(out) == 0) {
+				if (!discovered.contains(out)) {
 					parents[out] = node;
 					visit(out);
 				}
@@ -299,7 +299,7 @@ namespace LL2W {
 			Node *next = queue.front();
 			queue.pop_front();
 			for (Node *out: next->out_)
-				if (visited.count(out) == 0) {
+				if (!visited.contains(out)) {
 					visited.insert(out);
 					order.push_back(out);
 					queue.push_back(out);
@@ -324,7 +324,7 @@ namespace LL2W {
 			queue.pop_front();
 			for (const auto *set: {&next->in_, &next->out_})
 				for (Node *adjacent: *set)
-					if (visited.count(adjacent) == 0) {
+					if (!visited.contains(adjacent)) {
 						visited.insert(adjacent);
 						out.insert(adjacent);
 						queue.push_back(adjacent);
@@ -347,7 +347,7 @@ namespace LL2W {
 			visited.insert(node);
 			out.push_back(node);
 			for (Node *successor: node->out_)
-				if (visited.count(successor) == 0)
+				if (!visited.contains(successor))
 					visit(successor);
 		};
 

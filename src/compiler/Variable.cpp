@@ -409,10 +409,18 @@ namespace LL2W {
 	}
 
 	int Variable::registersRequired(bool may_warn) const {
+		static std::unordered_set<Variable::ID> warned;
 		if (!type) {
-			if (may_warn)
+			if (may_warn) {
 				warn() << "Variable::registersRequired: " << *this << " has no type in function " << functionName()
 				       << ".\n";
+				if (warned.count(id) == 666) {
+					warned.insert(id);
+					std::cerr << std::string(10, '\n');
+					getFunction()->debug();
+					std::cerr << std::string(10, '\n');
+				}
+			}
 			return 1;
 		}
 		return Util::updiv(type->width(), 64);

@@ -16,6 +16,8 @@ namespace LL2W {
 		Timer(const std::string &name_);
 		~Timer();
 
+		std::chrono::nanoseconds difference() const;
+
 		static void summary(double threshold = 0.0);
 	};
 }

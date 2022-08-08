@@ -195,7 +195,8 @@ namespace LL2W {
 		if (name->substr(0, 2) == "$$")
 			return function.makePrecoloredVariable(registerMap.at(name), nullptr);
 		if (map.count(name) == 0) {
-			std::shared_ptr<Variable> new_var = function.newVariable();
+			// TODO: verify using i64 as a default type.
+			std::shared_ptr<Variable> new_var = function.newVariable(IntType::make(64));
 			map.emplace(name, new_var);
 			return new_var;
 		} else {

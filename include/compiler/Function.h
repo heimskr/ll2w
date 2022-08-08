@@ -210,7 +210,7 @@ namespace LL2W {
 			/** Returns a pointer to the basic block following a given basic block. */
 			BasicBlockPtr after(BasicBlockPtr);
 
-			/** Inserts one instruction after another. Returns the inserted instructin=on. */
+			/** Inserts one instruction after another. Returns the inserted instruction. */
 			InstructionPtr insertAfter(InstructionPtr base,
 				InstructionPtr new_instruction, bool reindex = true);
 
