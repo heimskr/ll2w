@@ -1,5 +1,4 @@
-#ifndef INTERACTIVE_H_
-#define INTERACTIVE_H_
+#pragma once
 
 #include "compiler/StackLocation.h"
 
@@ -8,5 +7,3 @@ namespace LL2W {
 	void interactive(Program &, Function * = nullptr);
 	void printStackLocation(const StackLocation &);
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef PARSER_UTIL_H_
-#define PARSER_UTIL_H_
+#pragma once
 
 #include <ostream>
 #include <unordered_set>
@@ -30,5 +29,3 @@ namespace LL2W {
 		return true;
 	}
 }
-
-#endif

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+
 #include "parser/Types.h"
 
 namespace LL2W {

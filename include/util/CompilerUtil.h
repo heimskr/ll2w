@@ -1,5 +1,4 @@
-#ifndef UTIL_COMPILERUTIL_H_
-#define UTIL_COMPILERUTIL_H_
+#pragma once
 
 #include <memory>
 
@@ -21,5 +20,3 @@ namespace LL2W {
 		UnreachableNode * unreachableCast(std::shared_ptr<Instruction>);
 	}
 }
-
-#endif

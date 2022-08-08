@@ -1,5 +1,4 @@
-#ifndef UNCOLORABLEERROR_H_
-#define UNCOLORABLEERROR_H_
+#pragma once
 
 #include <stdexcept>
 
@@ -8,5 +7,3 @@ namespace LL2W {
 		UncolorableError(): std::runtime_error("Unable to color graph: not enough colors") {}
 	};
 }
-
-#endif

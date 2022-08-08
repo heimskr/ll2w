@@ -4,6 +4,6 @@
 
 namespace LL2W {
 	struct CFG: public Graph {
-		/** Node data: shared_ptr<BasicBlock> */
+		/** Node data: std::shared_ptr<BasicBlock> */
 	};
 }

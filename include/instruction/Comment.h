@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_COMMENT_H_
-#define INSTRUCTION_COMMENT_H_
+#pragma once
 
 #include "instruction/WhyInstruction.h"
 
@@ -15,5 +14,3 @@ namespace LL2W {
 		std::string toString() const override;
 	};
 }
-
-#endif

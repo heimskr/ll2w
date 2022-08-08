@@ -1,10 +1,7 @@
-#ifndef LL2W_INSTRUCTIONMETA_H_
-#define LL2W_INSTRUCTIONMETA_H_
+#pragma once
 
 namespace LL2W {
 	enum class InstructionMeta {
 		LoadArgumentsSkip
 	};
 }
-
-#endif
