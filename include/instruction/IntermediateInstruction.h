@@ -1,5 +1,4 @@
-#ifndef COMPILER_INTERMEDIATEINSTRUCTION_H_
-#define COMPILER_INTERMEDIATEINSTRUCTION_H_
+#pragma once
 
 #include "compiler/Instruction.h"
 
@@ -14,5 +13,3 @@ namespace LL2W {
 			std::pair<char, char> extract(bool = false) override { return {0, 0}; }
 	};
 }
-
-#endif

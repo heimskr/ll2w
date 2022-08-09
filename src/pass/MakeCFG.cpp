@@ -3,7 +3,6 @@
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
-#include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
 #include "util/Timer.h"
 #include "util/Util.h"

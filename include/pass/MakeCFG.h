@@ -1,5 +1,4 @@
-#ifndef PASS_MAKECFG_H_
-#define PASS_MAKECFG_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -12,5 +11,3 @@ namespace LL2W::Passes {
 	/** Randomly walks through the CFG and counts executions of each basic block. */
 	void walkCFG(Function &, size_t walks = 1, unsigned int seed = 0, size_t inner_limit = 1000);
 }
-
-#endif
