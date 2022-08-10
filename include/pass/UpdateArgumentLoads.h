@@ -1,5 +1,4 @@
-#ifndef PASS_UPDATEARGUMENTLOADS_H_
-#define PASS_UPDATEARGUMENTLOADS_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  have occurred because they move the stack pointer down. */
 	void updateArgumentLoads(Function &, int offset);
 }
-
-#endif

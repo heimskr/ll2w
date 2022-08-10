@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_STACKLOADINSTRUCTION_H_
-#define INSTRUCTION_STACKLOADINSTRUCTION_H_
+#pragma once
 
 #include "compiler/StackLocation.h"
 #include "instruction/IntermediateInstruction.h"
@@ -21,5 +20,3 @@ namespace LL2W {
 			bool maySpill() const override { return false; }
 	};
 }
-
-#endif
