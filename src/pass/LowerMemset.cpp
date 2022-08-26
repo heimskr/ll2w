@@ -63,7 +63,7 @@ namespace LL2W::Passes {
 		return replaced;
 	}
 
-	void setupMemsetValue(Function &function, ConstantPtr constant, std::shared_ptr<Instruction> &instruction,
+	void setupMemsetValue(Function &function, const ConstantPtr &constant, std::shared_ptr<Instruction> &instruction,
 	std::shared_ptr<Variable> &variable, bool shouldLoad) {
 		ValuePtr value = constant->value;
 		if (value->isIntLike()) {

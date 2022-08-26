@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	std::string DeferredSourceMoveInstruction::debugExtra() {
-		return std::string(*rs) + "\e[2m[\e[22m" + std::to_string(registerIndex) + "\e[2m]\e[22m \e[2m->\e[22m " +
+		return std::string(*rs) + "\e[2m[\e[22m" + std::to_string(registerIndex) + "\e[2m] ->\e[22m " +
 			std::string(*rd);
 	}
 

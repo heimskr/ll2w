@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** Copies one register into a subregister of a variable. Needs to be replaced with a move instruction after
 	 *  register allocation has been done. */
-	struct DeferredDestinationMoveInstruction: public RType {
+	struct DeferredDestinationMoveInstruction: RType {
 		int registerIndex;
 
 		DeferredDestinationMoveInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rd_,

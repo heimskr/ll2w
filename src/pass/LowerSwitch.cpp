@@ -9,17 +9,17 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	int lowerSwitch(Function &function) {
+	size_t lowerSwitch(Function &function) {
 		Timer timer("LowerSwitch");
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr m0 = function.m0(function.getEntry());
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+		for (const InstructionPtr &instruction: function.linearInstructions) {
+			auto llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
 			if (!llvm || llvm->node->nodeType() != NodeType::Switch)
 				continue;
-			SwitchNode *sw = dynamic_cast<SwitchNode *>(llvm->node);
+			auto *sw = dynamic_cast<SwitchNode *>(llvm->node);
 
 			BasicBlockPtr block = instruction->parent.lock();
 			InstructionPtr last_instruction = instruction;
@@ -38,13 +38,13 @@ namespace LL2W::Passes {
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
 				comp->setOriginalValue(value);
 				auto jump = std::make_shared<JumpConditionalInstruction>(m0, transformed, false);
-				function.insertBefore(instruction, comp, false)->setDebug(llvm)->extract();
-				function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();
+				function.insertBefore(instruction, comp, false)->setDebug(*llvm, true);
+				function.insertBefore(instruction, jump, false)->setDebug(*llvm, true);
 			}
 
 			auto jump = std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*sw->label)),
 				false);
-			function.insertBefore(instruction, jump, "LowerSwitch: default", false)->setDebug(llvm)->extract();
+			function.insertBefore(instruction, jump, "LowerSwitch: default", false)->setDebug(*llvm, true);
 			to_remove.push_back(instruction);
 		}
 

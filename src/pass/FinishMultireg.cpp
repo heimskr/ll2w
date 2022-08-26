@@ -33,11 +33,13 @@ namespace LL2W::Passes {
 			} else if (auto *load = dynamic_cast<LoadRInstruction *>(instruction.get())) {
 				if (load->rd->registers.size() < 2)
 					continue;
+
 				auto m4 = function.mx(4, instruction);
 				auto move = std::make_shared<MoveInstruction>(load->rs, m4);
 				function.insertBefore(instruction, move)->setDebug(load)->extract();
 				auto iter = load->rd->registers.begin();
 				auto bytes_remaining = load->size;
+
 				while (8 <= bytes_remaining) {
 					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
 					auto new_load = std::make_shared<LoadRInstruction>(m4, precolored, 8);
@@ -47,6 +49,7 @@ namespace LL2W::Passes {
 						function.insertBefore(instruction, std::make_shared<AddIInstruction>(m4, 8, m4))
 							->setDebug(load)->extract();
 				}
+
 				for (int size = 4; 0 < size; size /= 2) {
 					if (size <= bytes_remaining) {
 						auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
@@ -58,6 +61,7 @@ namespace LL2W::Passes {
 								->setDebug(load)->extract();
 					}
 				}
+
 				to_remove.push_back(instruction);
 			} else if (auto *store = dynamic_cast<StoreRInstruction *>(instruction.get())) {
 				if (store->rs->registers.size() < 2)

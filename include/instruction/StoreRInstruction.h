@@ -4,7 +4,7 @@
 #include "instruction/SizedInstruction.h"
 
 namespace LL2W {
-	/** $rs -> [$rd] */
+	/** $rs -> [$rt] */
 	struct StoreRInstruction: public RType, public SizedInstruction {
 		StoreRInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, int size_ = 8, int index_ = -1);
 

@@ -10,13 +10,13 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	int lowerSelect(Function &function) {
+	size_t lowerSelect(Function &function) {
 		Timer timer("LowerSelect");
 		std::list<InstructionPtr> to_remove;
 
 		VariablePtr m0 = function.m0(function.getEntry());
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (const InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || llvm->node->nodeType() != NodeType::Select)
 				continue;

@@ -16,6 +16,6 @@ namespace LL2W::Passes {
 	/** Sets up an argument for the Why memset instruction. If shouldLoad is true, the value at the address
 	 *  represented by a global value will be loaded into the argument; otherwise, a global value's address itself will
 	 *  be loaded into the argument. */
-	void setupMemsetValue(Function &, std::shared_ptr<Constant>, std::shared_ptr<Instruction> &,
+	void setupMemsetValue(Function &, const std::shared_ptr<Constant> &, std::shared_ptr<Instruction> &,
 	                      std::shared_ptr<Variable> &, bool shouldLoad);
 }

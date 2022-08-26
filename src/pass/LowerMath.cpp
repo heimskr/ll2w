@@ -214,8 +214,8 @@ namespace LL2W::Passes {
 		}
 	}
 
-	static InstructionPtr insertCarefully(
-		Function &function, InstructionPtr &instruction, VariablePtr &variable, long value) {
+	static InstructionPtr insertCarefully(Function &function, InstructionPtr &instruction, VariablePtr &variable,
+	                                      long value) {
 		if (value < 0 || INT_MAX < value) {
 			const int low  =  ((unsigned long) value)        & 0xffffffff;
 			const int high = (((unsigned long) value) >> 32) & 0xffffffff;

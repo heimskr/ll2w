@@ -1773,8 +1773,10 @@ namespace LL2W {
 			all_vars.push_back(pair.second);
 		for (VariablePtr &var: all_vars) {
 			auto var_parent = var->getParent().lock();
-			if (var->registers.empty() && var_parent)
+
+			if (var->registers.empty() && var_parent != nullptr)
 				var->registers = var_parent->registers;
+
 			if (var->registers.empty()) {
 				for (Variable *alias: var->getAliases())
 					if (!alias->registers.empty()) {

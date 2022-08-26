@@ -118,7 +118,7 @@ namespace LL2W::Passes {
 						long offset = Util::updiv(Getelementptr::compute(constant_type, index_list, &out_type), 8l);
 						if (Util::outOfRange(offset))
 							warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
-						var->type = out_type;
+						var->setType(out_type);
 
 						auto add = std::make_shared<AddIInstruction>(var, int(offset), var);
 						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
@@ -128,7 +128,7 @@ namespace LL2W::Passes {
 						throw std::runtime_error("Invalid type in GetelementPtr: " + std::string(*type));
 				}
 
-				node->type = var->type = std::make_shared<PointerType>(type->copy());
+				var->setType(node->type = std::make_shared<PointerType>(type->copy()));
 			} else if ((tt == TypeType::Array || tt == TypeType::Pointer) && dynamic_index) {
 				// result = (base pointer) + (width * first index value) + (subwidth * second index variable)
 				const int skip = Util::updiv(node->type->width(), 8) * std::get<long>(node->indices[0].value);

@@ -13,10 +13,10 @@
 #include "instruction/Sext8RInstruction.h"
 #include "instruction/Sext16RInstruction.h"
 #include "instruction/Sext32RInstruction.h"
-#include "instruction/SubRInstruction.h"
 #include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
+#include "instruction/SubRInstruction.h"
 #include "pass/LowerIcmp.h"
 #include "pass/MakeCFG.h"
 #include "pass/SetupCalls.h"
@@ -186,14 +186,14 @@ namespace LL2W::Passes {
 			} else {
 				auto jump = std::make_shared<JumpRegisterInstruction>(jump_var, true);
 				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer " +
-					jump_var->plainString())->setDebug(*llvm)->extract();
+					jump_var->plainString(), false)->setDebug(*llvm)->extract();
 			}
 
 			// Move the stack pointer up past the variables that were pushed onto the stack with pushCallValue.
 			if (0 < bytes_pushed) {
 				VariablePtr sp = function.sp(block);
-				auto sub = std::make_shared<AddIInstruction>(sp, bytes_pushed, sp);
-				function.insertBefore(instruction, sub, "SetupCalls: readjust stack pointer", false)
+				auto add = std::make_shared<AddIInstruction>(sp, bytes_pushed, sp);
+				function.insertBefore(instruction, add, "SetupCalls: readjust stack pointer", false)
 					->setDebug(*llvm)->extract();
 			}
 
@@ -241,7 +241,7 @@ namespace LL2W::Passes {
 		signext = signext == 64? 0 : signext;
 
 		auto make_signext = [&](VariablePtr source, VariablePtr destination) -> InstructionPtr {
-			InstructionPtr out = nullptr;
+			InstructionPtr out;
 			switch (signext) {
 				case  0:
 				case 64: return out;
@@ -357,7 +357,7 @@ namespace LL2W::Passes {
 		signext = signext == 64? 0 : signext;
 
 		auto make_signext = [&]() -> InstructionPtr {
-			InstructionPtr out = nullptr;
+			InstructionPtr out;
 			switch (signext) {
 				case  0:
 				case 64: return out;
@@ -378,7 +378,7 @@ namespace LL2W::Passes {
 			// If it's a variable, move it into the argument register.
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
-			auto out =function.insertBefore(instruction, move);
+			auto out = function.insertBefore(instruction, move);
 			out->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext());

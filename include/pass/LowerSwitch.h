@@ -6,5 +6,5 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Lowers the switch instruction. */
-	int lowerSwitch(Function &);
+	size_t lowerSwitch(Function &);
 }

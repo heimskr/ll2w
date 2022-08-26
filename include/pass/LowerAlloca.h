@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERALLOCA_H_
-#define PASS_LOWERALLOCA_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  Returns the number of alloca instructions that were replaced. Must not be called before variable assignment. */
 	int lowerAlloca(Function &);
 }
-
-#endif
