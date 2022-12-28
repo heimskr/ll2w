@@ -519,12 +519,13 @@ digv_item: "name"         ":" LLVMTOK_STRING  { $$ = $1->adopt($3); D($2); }
 digv_list: digv_list "," digv_item { $$ = $1->adopt($3); D($2); }
          | digv_item { $$ = (new AN(llvmParser, LLVM_DIGV_LIST))->adopt($1); };
 
-ditvp_item: "name"  ":" LLVMTOK_STRING     { $$ = $1->adopt($3); D($2); }
-          | "type"  ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
-          | "value" ":" constant           { $$ = $1->adopt($3); D($2); }
-          | "value" ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
-          | "value" ":" "!" LLVMTOK_STRING { $$ = $1->adopt($4); D($2, $3); }
-          | "tag"   ":" any_ident          { $$ = $1->adopt($3); D($2); };
+ditvp_item: "name"      ":" LLVMTOK_STRING     { $$ = $1->adopt($3); D($2); }
+          | "type"      ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
+          | "value"     ":" constant           { $$ = $1->adopt($3); D($2); }
+          | "value"     ":" LLVMTOK_INTBANG    { $$ = $1->adopt($3); D($2); }
+          | "value"     ":" "!" LLVMTOK_STRING { $$ = $1->adopt($4); D($2, $3); }
+          | "tag"       ":" any_ident          { $$ = $1->adopt($3); D($2); }
+          | "defaulted" ":" LLVMTOK_BOOL       { $$ = $1->adopt($3); D($2); };
 ditvp_list: ditvp_list "," ditvp_item { $$ = $1->adopt($3); D($2); }
           | ditvp_item { $$ = (new AN(llvmParser, LLVM_DITVP_LIST))->adopt($1); };
 
@@ -797,7 +798,7 @@ srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
 i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs unibangs
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
-     | "call" "void" dbg_type "(" "metadata" LLVMTOK_INTBANG "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs unibangs
+     | "call" "void" dbg_type "(" "metadata" anybang "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs unibangs
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
      | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs unibangs
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9); }
