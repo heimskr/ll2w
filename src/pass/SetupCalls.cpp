@@ -10,9 +10,7 @@
 #include "instruction/JumpInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "instruction/Sext8RInstruction.h"
-#include "instruction/Sext16RInstruction.h"
-#include "instruction/Sext32RInstruction.h"
+#include "instruction/SextRInstruction.h"
 #include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
@@ -244,14 +242,19 @@ namespace LL2W::Passes {
 			InstructionPtr out;
 			switch (signext) {
 				case  0:
-				case 64: return out;
+				case 64:
+					return out;
 				case  1:
 					// If we're sign extending an i1, we can take advantage of the fact that 0 - 1 = all ones
 					// and 0 - 0 = all zeroes.
-					out = std::make_shared<SubRInstruction>(function.zero(instruction), source, destination); break;
-				case  8: out = std::make_shared<Sext8RInstruction>(source, destination);  break;
-				case 16: out = std::make_shared<Sext16RInstruction>(source, destination); break;
-				case 32: out = std::make_shared<Sext32RInstruction>(source, destination); break;
+					out = std::make_shared<SubRInstruction>(function.zero(instruction), source, destination);
+					break;
+				case  8:
+				case 16:
+				case 32:
+					// TODO!: verify. Do we need to set the destination's type?
+					out = std::make_shared<SextRInstruction>(source, destination);
+					break;
 				default:
 					std::cerr << instruction->debugExtra() << '\n';
 					throw std::runtime_error("Invalid sign extension in pushCallValue: " + std::to_string(signext));
@@ -362,9 +365,16 @@ namespace LL2W::Passes {
 				case  0:
 				case 64: return out;
 				case  1: out = std::make_shared<SubRInstruction>(function.zero(instruction), new_var, new_var); break;
-				case  8: out = std::make_shared<Sext8RInstruction>(new_var, new_var);  break;
-				case 16: out = std::make_shared<Sext16RInstruction>(new_var, new_var); break;
-				case 32: out = std::make_shared<Sext32RInstruction>(new_var, new_var); break;
+				case  8:
+				case 16:
+				case 32: {
+					VariablePtr new_var_alias = function.newVariable(IntType::make(64, true),
+						instruction->parent.lock());
+					new_var_alias->typeOverride = true;
+					new_var_alias->makeAliasOf(new_var);
+					out = std::make_shared<SextRInstruction>(new_var, new_var_alias);
+					break;
+				}
 				default:
 					std::cerr << instruction->debugExtra() << '\n';
 					throw std::runtime_error("Invalid sign extension in setupCallValue: " + std::to_string(signext));
@@ -414,13 +424,13 @@ namespace LL2W::Passes {
 			// TODO, maybe: reduce duplication
 			if (!gep_global) {
 				std::shared_ptr<LocalValue> local;
-				if (LocalValue *gep_local = dynamic_cast<LocalValue *>(gep->variable.get()))
+				if (LocalValue *gep_local = dynamic_cast<LocalValue *>(gep->variable.get())) {
 					local = std::make_shared<LocalValue>(gep_local->getVariable(function));
-				else if (auto subgep = std::dynamic_pointer_cast<GetelementptrValue>(gep->variable))
+				} else if (auto subgep = std::dynamic_pointer_cast<GetelementptrValue>(gep->variable)) {
 					local = function.replaceGetelementptrValue(subgep, instruction);
-				else {
+				} else {
 					warn() << "Not sure what to do when the argument of getelementptr isn't a global or getelementptr."
-					       << "\n    " << std::string(*gep->variable);
+					          "\n    " << std::string(*gep->variable);
 					if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
 						std::cerr << " (" << llvm->node->location << ")";
 					std::cerr << "\n";

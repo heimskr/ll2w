@@ -37,7 +37,7 @@ endif
 all: $(OUTPUT)
 
 test: $(OUTPUT)
-	./$(OUTPUT) ll/sextuple.ll
+	./$(OUTPUT) ll/simplish.ll
 
 $(OUTPUT): $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS)

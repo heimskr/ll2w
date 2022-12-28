@@ -567,9 +567,8 @@ namespace LL2W {
 
 	struct WASMSextNode: WASMInstructionNode {
 		const std::string *rs, *rd;
-		int size;
 
-		WASMSextNode(ASTNode *rs_, ASTNode *rd_, ASTNode *size_);
+		WASMSextNode(ASTNode *rs_, ASTNode *rd_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Sext; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

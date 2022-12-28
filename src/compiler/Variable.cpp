@@ -212,7 +212,8 @@ namespace LL2W {
 #ifdef ADOPT_PARENT_ID
 		id = new_parent->id;
 #endif
-		type = new_parent->type;
+		if (!typeOverride)
+			type = new_parent->type;
 		lastUse = new_parent->lastUse;
 		definingBlocks = new_parent->definingBlocks;
 		usingBlocks = new_parent->usingBlocks;
@@ -349,7 +350,8 @@ namespace LL2W {
 		} else {
 			type = new_type? new_type->copy() : nullptr;
 			for (Variable *alias: aliases)
-				alias->type = type;
+				if (!alias->typeOverride)
+					alias->type = type;
 		}
 	}
 

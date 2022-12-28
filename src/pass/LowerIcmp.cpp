@@ -8,7 +8,7 @@
 #include "instruction/LoadIInstruction.h"
 #include "instruction/LogicalNotRInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "instruction/Sext32RInstruction.h"
+#include "instruction/SextRInstruction.h"
 #include "pass/LowerIcmp.h"
 #include "util/Timer.h"
 
@@ -78,9 +78,15 @@ namespace LL2W::Passes {
 			const int width = node->getType()->width();
 			if (isSigned(cond) && int_type && width < 64) {
 				if (width == 32) {
-					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
+					VariablePtr rs_alias = function.newVariable(IntType::make(64, true), instruction->parent.lock());
+					VariablePtr rt_alias = function.newVariable(IntType::make(64, true), instruction->parent.lock());
+					rs_alias->typeOverride = true;
+					rt_alias->typeOverride = true;
+					rs_alias->makeAliasOf(rs);
+					rt_alias->makeAliasOf(rt);
+					function.insertBefore(instruction, std::make_shared<SextRInstruction>(rs, rs_alias))
 						->setDebug(node)->extract();
-					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rt, rt))
+					function.insertBefore(instruction, std::make_shared<SextRInstruction>(rt, rt_alias))
 						->setDebug(node)->extract();
 				} else {
 					node->debug();
@@ -110,7 +116,10 @@ namespace LL2W::Passes {
 			const int width = node->getType()->width();
 			if ((isSigned(cond) || imm < 0) && int_type && width < 64) {
 				if (width == 32) {
-					function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(rs, rs))
+					VariablePtr rs_alias = function.newVariable(IntType::make(64, true), instruction->parent.lock());
+					rs_alias->typeOverride = true;
+					rs_alias->makeAliasOf(rs);
+					function.insertBefore(instruction, std::make_shared<SextRInstruction>(rs, rs_alias))
 						->setDebug(node)->extract();
 				} else {
 					node->debug();

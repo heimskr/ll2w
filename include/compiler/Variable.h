@@ -40,6 +40,8 @@ namespace LL2W {
 			std::unordered_set<Variable *> phiParents, phiChildren;
 			/** Whether the variable was defined by a ϕ-instruction. */
 			bool fromPhi = false;
+			/** If true, changes to the parent variable's type won't be reflected in this variable. */
+			bool typeOverride = false;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.

@@ -27,9 +27,7 @@
 #include "instruction/OrIInstruction.h"
 #include "instruction/OrRInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "instruction/Sext16RInstruction.h"
-#include "instruction/Sext32RInstruction.h"
-#include "instruction/Sext8RInstruction.h"
+#include "instruction/SextRInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftLeftLogicalInverseIInstruction.h"
 #include "instruction/ShiftLeftLogicalRInstruction.h"
@@ -534,7 +532,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
+			if (llvm == nullptr)
 				continue;
 
 			const NodeType type = llvm->node->nodeType();
@@ -561,18 +559,12 @@ namespace LL2W::Passes {
 					// If we're arithmetic-shifting a smaller value to the right, we need to sign extend it.
 					const int  width	  = shr->type->width();
 					const bool left_local = shr->left->isLocal();
-					if (width == 32 && left_local) {
+					if ((width == 8 || width == 16 || width == 32) && left_local) {
 						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
-						function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(left, left))
-							->setDebug(shr)
-							->extract();
-					} else if (width == 16 && left_local) {
-						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
-						function.insertBefore(instruction, std::make_shared<Sext16RInstruction>(left, left))
-							->setDebug(shr)->extract();
-					} else if (width == 8 && left_local) {
-						VariablePtr left = dynamic_cast<LocalValue *>(shr->left.get())->getVariable(function);
-						function.insertBefore(instruction, std::make_shared<Sext8RInstruction>(left, left))
+						VariablePtr left_alias = function.newVariable(IntType::make(64, true), llvm->parent.lock());
+						left_alias->typeOverride = true;
+						left_alias->makeAliasOf(left);
+						function.insertBefore(instruction, std::make_shared<SextRInstruction>(left, left_alias))
 							->setDebug(shr)->extract();
 					} else if (width < 64 && left_local)
 						warn() << "Arithmetic shift right at " << shr->location << " needs to be sign extended from "

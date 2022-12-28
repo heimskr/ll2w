@@ -99,9 +99,7 @@
 #include "instruction/ShiftRightLogicalIInstruction.h"
 #include "instruction/ShiftRightLogicalInverseIInstruction.h"
 #include "instruction/ShiftRightLogicalRInstruction.h"
-#include "instruction/Sext32RInstruction.h"
-#include "instruction/Sext16RInstruction.h"
-#include "instruction/Sext8RInstruction.h"
+#include "instruction/SextRInstruction.h"
 #include "instruction/TranslateAddressRInstruction.h"
 #include "instruction/PageStackInstruction.h"
 #include "instruction/SvringInstruction.h"
@@ -1318,40 +1316,26 @@ namespace LL2W {
 		}
 	}
 
-	WASMSextNode::WASMSextNode(ASTNode *rs_, ASTNode *rd_, ASTNode *size_):
+	WASMSextNode::WASMSextNode(ASTNode *rs_, ASTNode *rd_):
 	WASMInstructionNode(WASM_SEXTNODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
 		delete rd_;
-		switch (size_->symbol) {
-			case WASMTOK_SEXT32: size = 32; break;
-			case WASMTOK_SEXT16: size = 16; break;
-			case WASMTOK_SEXT8:  size =  8; break;
-			default:
-				throw std::runtime_error("Invalid symbol for WASMSextNode size: " +
-					std::string(wasmParser.getName(size_->symbol)));
-		}
-		delete size_;
 	}
 
 	std::string WASMSextNode::debugExtra() const {
-		return bold("sext" + std::to_string(size)) + " " + cyan(*rs) + dim(" -> ") + cyan(*rd);
+		return bold("sext ") + cyan(*rs) + dim(" -> ") + cyan(*rd);
 	}
 
 	WASMSextNode::operator std::string() const {
-		return "sext" + std::to_string(size) + " " + *rs + " -> " + *rd;
+		return "sext " + *rs + " -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSextNode::convert(Function &function, VarMap &map) {
 		VariablePtr rs_ = convertVariable(function, map, rs);
 		VariablePtr rd_ = convertVariable(function, map, rd);
 
-		switch (size) {
-			case 32: return std::make_unique<Sext32RInstruction>(rs_, rd_);
-			case 16: return std::make_unique<Sext16RInstruction>(rs_, rd_);
-			case  8: return std::make_unique<Sext8RInstruction>(rs_, rd_);
-			default:
-				throw std::runtime_error("Invalid size for WASMSextNode: " + std::to_string(size));
-		}
+		// TODO!: verify. Do we need to set rd_'s type?
+		return std::make_unique<SextRInstruction>(rs_, rd_);
 	}
 
 	WASMTransNode::WASMTransNode(const ASTNode *rs_, const ASTNode *rd_):

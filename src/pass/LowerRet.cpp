@@ -8,6 +8,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/StackPopInstruction.h"
+#include "instruction/TypedPopInstruction.h"
 #include "pass/LowerRet.h"
 #include "util/Timer.h"
 
@@ -69,7 +70,7 @@ namespace LL2W::Passes {
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
 			     iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
-				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(variable), false)
+				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(variable), false)
 					->setDebug(llvm)->extract();
 			}
 

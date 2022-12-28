@@ -298,7 +298,7 @@ op_ei: "%ei" { $$ = new WASMInterruptsNode(true); D($1); };
 
 op_qmem: "?" "mem" "->" reg { $$ = new WASMQueryNode(QueryType::Memory, $4); D($1, $2, $3); };
 
-op_sext: sext_size reg "->" reg { $$ = new WASMSextNode($2, $4, $1); D($3); };
+op_sext: sext_size reg "->" reg { $$ = new WASMSextNode($2, $4); D($1, $3); };
 sext_size: "sext32" | "sext16" | "sext8";
 
 immediate: _immediate { $$ = new WASMImmediateNode($1); };

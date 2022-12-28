@@ -6,9 +6,7 @@
 #include "instruction/LuiInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
-#include "instruction/Sext32RInstruction.h"
-#include "instruction/Sext16RInstruction.h"
-#include "instruction/Sext8RInstruction.h"
+#include "instruction/SextRInstruction.h"
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 #include "instruction/ShiftRightLogicalIInstruction.h"
 #include "instruction/SubIInstruction.h"
@@ -107,17 +105,20 @@ namespace LL2W::Passes {
 		VariablePtr destination = conversion->variable;
 
 		const int from = conversion->from->width(), to = conversion->to->width();
+
+		// TODO!: update properly for the new typed sext instructions
+
 		if (from == 32 && to == 64) {
-			function.insertBefore(instruction, std::make_shared<Sext32RInstruction>(source, destination))
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
 				->setDebug(conversion)->extract();
 		} else if (from == 16 && (to == 32 || to == 64)) {
-			function.insertBefore(instruction, std::make_shared<Sext16RInstruction>(source, destination))
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
 				->setDebug(conversion)->extract();
 			if (to == 32)
 				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
 					->setDebug(conversion)->extract();
 		} else if (from == 8 && (to == 32 || to == 64)) {
-			function.insertBefore(instruction, std::make_shared<Sext8RInstruction>(source, destination))
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
 				->setDebug(conversion)->extract();
 			if (to == 32)
 				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
