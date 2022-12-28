@@ -19,6 +19,8 @@ namespace LL2W {
 	class Type;
 	using TypePtr = std::shared_ptr<Type>;
 
+	std::string whyString(const TypePtr &);
+
 	class Type {
 		public:
 			virtual TypeType typeType() const { return TypeType::None; }
@@ -36,30 +38,50 @@ namespace LL2W {
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 			bool isInt() const;
 			bool isInt(int width) const;
+			/** Returns a Why type string without braces. */
+			virtual std::string whyString() const = 0;
 	};
 
-	struct VoidType: public Type {
+	struct VoidType: Type {
 		TypeType typeType() const override { return TypeType::Void; }
-		VoidType() {}
+		VoidType() = default;
 		operator std::string() override { return "void"; }
 		std::string toString() override { return "void"; }
 		TypePtr copy() const override { return std::make_shared<VoidType>(); }
 		int width() const override { return 0; }
 		int alignment() const override { return 1; }
+		std::string whyString() const override { return "v"; }
 	};
 
-	struct IntType: public Type {
+	struct AnyType: Type {
+		TypeType typeType() const override { return TypeType::Any; }
+		AnyType() = default;
+		operator std::string() override { return "any"; }
+		std::string toString() override { return "any"; }
+		TypePtr copy() const override { return std::make_shared<AnyType>(); }
+		int width() const override { return 64; }
+		int alignment() const override { return 8; }
+		static std::shared_ptr<AnyType> make() { return std::make_shared<AnyType>(); }
+		std::string whyString() const override { return "v"; }
+	};
+
+	struct IntType: Type {
+		enum class Signedness: char {Unknown = 'i', Unsigned = 'u', Signed = 's'};
 		TypeType typeType() const override { return TypeType::Int; }
 		/** The width of the integer in bits. */
 		int intWidth;
-		IntType(int width_): intWidth(width_) {}
+		Signedness signedness = Signedness::Unknown;
+		IntType(int width_, Signedness signedness_ = Signedness::Unknown):
+			intWidth(width_), signedness(signedness_) {}
 		operator std::string() override;
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
 		int width() const override { return Util::upalign(intWidth, 8); }
 		int alignment() const override { return Util::alignToPower(intWidth) / 8; }
 		bool operator==(const Type &other) const override;
-		static std::shared_ptr<IntType> make(int width) { return std::make_shared<IntType>(width); }
+		static std::shared_ptr<IntType> make(int width, Signedness signedness = Signedness::Unknown);
+		static std::shared_ptr<IntType> make(int width, bool is_signed);
+		std::string whyString() const override;
 	};
 
 	struct AggregateType: public Type {
@@ -86,6 +108,7 @@ namespace LL2W {
 		int alignment() const override { return subtype->alignment(); }
 		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
+		std::string whyString() const override;
 	};
 
 	struct VectorType: public ArrayType {
@@ -95,6 +118,7 @@ namespace LL2W {
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<VectorType>(count, subtype->copy()); }
 		bool operator==(const Type &) const override;
+		std::string whyString() const override;
 	};
 
 	struct FloatType: public Type {
@@ -109,6 +133,7 @@ namespace LL2W {
 		int width() const override;
 		int alignment() const override { return Util::alignToPower(width() / 8); }
 		bool operator==(const LL2W::Type &) const override;
+		std::string whyString() const override { return "F"; }
 	};
 
 	struct PointerType: public Type, public HasSubtype {
@@ -121,6 +146,7 @@ namespace LL2W {
 		int alignment() const override { return WhyInfo::pointerWidth; }
 		bool operator==(const Type &) const override;
 		static std::shared_ptr<PointerType> make(TypePtr subtype) { return std::make_shared<PointerType>(subtype); }
+		std::string whyString() const override;
 	};
 
 	class FunctionType: public Type {
@@ -144,6 +170,7 @@ namespace LL2W {
 			int alignment() const override;
 			bool operator==(const Type &) const override;
 			bool operator!=(const Type &) const override;
+			std::string whyString() const override { return "v*"; }
 	};
 
 	struct StructType: AggregateType, std::enable_shared_from_this<StructType>, Makeable<StructType> {
@@ -172,6 +199,7 @@ namespace LL2W {
 		bool operator==(const Type &) const override;
 		/** Assumes that each member in a struct has a width that's a multiple of 8. */
 		std::shared_ptr<StructType> pad();
+		std::string whyString() const override { return "v"; }
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we
@@ -189,6 +217,7 @@ namespace LL2W {
 		int width() const override { return 64; }
 		int alignment() const override;
 		bool operator==(const Type &) const override;
+		std::string whyString() const override { return "G"; }
 	};
 
 	/** During padded struct extraction, it's necessary to read one register from a register pack representing a struct.
@@ -203,6 +232,7 @@ namespace LL2W {
 		int width() const override { return 64; }
 		int alignment() const override { warn() << "Opaque alignment is unspecified!\n"; return 8; }
 		bool operator==(const Type &type) const override { return dynamic_cast<const OpaqueType *>(&type) != nullptr; }
+		std::string whyString() const override { return "O"; }
 	};
 
 	TypePtr getType(const ASTNode *);

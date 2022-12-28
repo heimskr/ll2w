@@ -3,8 +3,8 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct StackPopInstruction: public RType {
-		StackPopInstruction(const VariablePtr &rd_, int index_ = -1);
+	struct TypedPushInstruction: RType {
+		TypedPushInstruction(const VariablePtr &rs_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

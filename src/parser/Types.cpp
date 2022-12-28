@@ -12,6 +12,11 @@
 #include "parser/StructNode.h"
 
 namespace LL2W {
+
+	std::string whyString(const TypePtr &type) {
+		return type == nullptr? "n" : type->whyString();
+	}
+
 	bool Type::isInt() const {
 		return typeType() == TypeType::Int;
 	}
@@ -21,16 +26,38 @@ namespace LL2W {
 	}
 
 	IntType::operator std::string() {
-		return "\e[33mi" + std::to_string(intWidth) + "\e[0m";
+		return std::string("\e[33m") + static_cast<char>(signedness) + std::to_string(intWidth) + "\e[0m";
 	}
 
 	std::string IntType::toString() {
-		return "i" + std::to_string(intWidth);
+		return static_cast<char>(signedness) + std::to_string(intWidth);
 	}
 
 	bool IntType::operator==(const Type &other) const {
 		return this == &other ||
 			(other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth);
+	}
+
+	std::shared_ptr<IntType> IntType::make(int width, Signedness signedness) {
+		return std::make_shared<IntType>(width, signedness);
+	}
+
+	std::shared_ptr<IntType> IntType::make(int width, bool is_signed) {
+		return std::make_shared<IntType>(width, is_signed? Signedness::Signed : Signedness::Unsigned);
+	}
+
+	std::string IntType::whyString() const {
+		std::string out;
+		if (signedness != Signedness::Unknown)
+			out += static_cast<char>(signedness);
+		switch (intWidth) {
+			case  8: out += 'c'; break;
+			case 16: out += 's'; break;
+			case 32: out += 'i'; break;
+			case 64: out += 'l'; break;
+			default: out += std::to_string(intWidth);
+		}
+		return out;
 	}
 
 	ArrayType::operator std::string() {
@@ -51,6 +78,10 @@ namespace LL2W {
 		return false;
 	}
 
+	std::string ArrayType::whyString() const {
+		return subtype->whyString() + '*';
+	}
+
 	VectorType::operator std::string() {
 		return "\e[2m<\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m>\e[0m";
 	}
@@ -67,6 +98,10 @@ namespace LL2W {
 		if (const VectorType *otherVector = dynamic_cast<const VectorType *>(&other))
 			return count == otherVector->count && *otherVector->subtype == *subtype;
 		return false;
+	}
+
+	std::string VectorType::whyString() const {
+		return subtype->whyString() + '<' + std::to_string(count) + '>';
 	}
 
 	FloatType::operator std::string() {
@@ -120,6 +155,10 @@ namespace LL2W {
 	bool PointerType::operator==(const Type &other) const {
 		return this == &other ||
 			(other.typeType() == TypeType::Pointer && *dynamic_cast<const PointerType &>(other).subtype == *subtype);
+	}
+
+	std::string PointerType::whyString() const {
+		return subtype->whyString() + '*';
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {
@@ -375,7 +414,7 @@ namespace LL2W {
 			if (next_width) {
 				int remaining = (next_width - current_width % next_width) % next_width;
 				while (0 < remaining) {
-					out->node->types.push_back(std::make_shared<IntType>(8));
+					out->node->types.push_back(IntType::make(8, false));
 					++padding_items_added;
 					remaining -= 8;
 					current_width += 8;

@@ -101,7 +101,7 @@ namespace LL2W {
 
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
-				IFLV(cast->condition->value, std::make_shared<IntType>(1));
+				IFLV(cast->condition->value, IntType::make(8, false));
 				break;
 			}
 

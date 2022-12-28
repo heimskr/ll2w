@@ -992,7 +992,7 @@ namespace LL2W {
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr definer) {
 		if (WhyInfo::totalRegisters <= index)
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
-		VariablePtr new_var = newVariable(std::make_shared<IntType>(64), definer);
+		VariablePtr new_var = newVariable(AnyType::make(), definer);
 		new_var->setRegisters({index});
 		return new_var;
 
@@ -1074,7 +1074,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::get64(std::shared_ptr<Instruction> before, unsigned long value, bool reindex) {
-		VariablePtr var = newVariable(std::make_shared<IntType>(64), before->parent.lock());
+		VariablePtr var = newVariable(IntType::make(64), before->parent.lock());
 		auto set = std::make_shared<SetInstruction>(var, int(value & 0xffffffff));
 		auto lui = std::make_shared<LuiInstruction>(var, int(value >> 32));
 		insertBefore(before, set, false)->setDebug(before->debugIndex)->extract();
@@ -1686,7 +1686,7 @@ namespace LL2W {
 
 		switch (gep->variable->valueType()) {
 			case ValueType::Global: {
-				VariablePtr var1(newVariable(std::make_shared<IntType>(32))), var2(newVariable(out_type));
+				VariablePtr var1(newVariable(IntType::make(32))), var2(newVariable(out_type));
 				auto set =
 					std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
 				auto addi = std::make_shared<AddIInstruction>(var1, int(offset), var2);
@@ -1734,13 +1734,13 @@ namespace LL2W {
 			case ValueType::Bool:
 			case ValueType::Null:
 			case ValueType::Undef:
-				new_var = newVariable(hint? hint : IntType::make(64));
+				new_var = newVariable(hint? hint : AnyType::make());
 				set = SetInstruction::make(new_var, value->intValue(false));
 				set->setOriginalValue(value);
 				break;
 			case ValueType::Icmp: {
 				auto *icmp = dynamic_cast<IcmpValue *>(value.get());
-				new_var = newVariable(hint? hint : IntType::make(1));
+				new_var = newVariable(hint? hint : IntType::make(8, IntType::Signedness::Unsigned));
 				Passes::lowerIcmp(*this, instruction, icmp->makeNode(new_var).get());
 				break;
 			}

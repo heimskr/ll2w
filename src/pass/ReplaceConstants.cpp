@@ -53,7 +53,7 @@ namespace LL2W::Passes {
 						*value = LocalValue::make(new_var);
 					}
 				} else if (IcmpValue *icmp = dynamic_cast<IcmpValue *>(value->get())) {
-					VariablePtr new_var = function.newVariable(IntType::make(1), instruction->parent.lock());
+					VariablePtr new_var = function.newVariable(IntType::make(8, false), instruction->parent.lock());
 					auto icmp_node = std::make_unique<IcmpNode>(new_var, icmp->cond, icmp->left, icmp->right);
 					lowerIcmp(function, instruction, icmp_node.get());
 					*value = LocalValue::make(new_var);

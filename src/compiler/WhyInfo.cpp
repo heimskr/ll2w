@@ -52,4 +52,8 @@ namespace LL2W {
 
 		return "[" + std::to_string(reg) + "?]";
 	}
+
+	bool WhyInfo::isCalleeSaved(int reg) {
+		return savedOffset <= reg && reg < savedOffset + savedCount;
+	}
 }

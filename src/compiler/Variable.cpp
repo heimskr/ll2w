@@ -87,9 +87,9 @@ namespace LL2W {
 	Variable::operator std::string() const {
 		std::stringstream out;
 		const std::string base;
-		if (registers.empty())
+		if (registers.empty()) {
 			out << "\e[32m%" << *id << "\e[39m";
-		else {
+		} else {
 			out << "\e[92m";
 			if (1 < registers.size())
 				out << "(";
@@ -103,7 +103,7 @@ namespace LL2W {
 			}
 			if (1 < registers.size())
 				out << ")";
-			out << "\e[39;2m:\e[32m" << *id << "\e[39;22m";
+			out << "\e[39;2m:\e[32m" << *id << '{' << whyString(type) << "}\e[39;22m";
 		}
 #ifdef VARIABLE_EXTRA
 		auto sparent = parent.lock();
@@ -137,7 +137,7 @@ namespace LL2W {
 			out += ")";
 			return out;
 		} else if (registers.size() == 1)
-			return "$" + WhyInfo::registerName(*registers.begin());
+			return "$" + WhyInfo::registerName(*registers.begin()) + '{' + whyString(type) + '}';
 		else
 			return *this;
 	}

@@ -170,6 +170,7 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "!DILexicalBlockFile"		{ LLVMRTOKEN(DILBF) }
 "!DILabel"					{ LLVMRTOKEN(DILABEL) }
 "!DIEnumerator"				{ LLVMRTOKEN(DIENUMERATOR) }
+"!DIArgList"				{ LLVMRTOKEN(DIARGLIST) }
 "!heapallocsite"			{ LLVMRTOKEN(HEAPALLOCSITE) }
 "!range"					{ LLVMRTOKEN(RANGE) }
 "!noalias"					{ LLVMRTOKEN(NOALIAS) }
@@ -305,6 +306,8 @@ LLVM_TYPED_PARATTR		("byval"|"byref"|"preallocated"|"sret"|"elementtype")
 "None"						{ LLVMRTOKEN(NONE) }
 "filename"					{ LLVMRTOKEN(FILENAME) }
 "directory"					{ LLVMRTOKEN(DIRECTORY) }
+"checksumkind"				{ LLVMRTOKEN(CHECKSUMKIND) }
+"checksum"					{ LLVMRTOKEN(CHECKSUM) }
 "tag"						{ LLVMRTOKEN(TAG) }
 "baseType"					{ LLVMRTOKEN(BASETYPE) }
 "size"						{ LLVMRTOKEN(SIZE) }

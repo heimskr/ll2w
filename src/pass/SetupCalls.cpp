@@ -263,7 +263,7 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			VariablePtr var = signext? function.newVariable(IntType::make(64)) : local->variable;
+			VariablePtr var = signext? function.newVariable() : local->variable;
 			if (signext)
 				function.insertBefore(instruction, make_signext(local->variable, var));
 			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(var, size, -1))

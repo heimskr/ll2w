@@ -265,6 +265,9 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_NOALIAS "!noalias"
 %token LLVMTOK_ALIAS_SCOPE "!alias.scope"
 %token LLVMTOK_NOUNDEF "noundef"
+%token LLVMTOK_DIARGLIST "!DIArgList"
+%token LLVMTOK_CHECKSUMKIND "checksumkind"
+%token LLVMTOK_CHECKSUM "checksum"
 
 %token LLVM_CONSTANT LLVM_CONVERSION_EXPR LLVM_INITIAL_VALUE_LIST LLVM_ARRAYTYPE LLVM_VECTORTYPE LLVM_POINTERTYPE
 %token LLVM_TYPE_LIST LLVM_FUNCTIONTYPE LLVM_GDEF_EXTRAS LLVM_STRUCTDEF LLVM_ATTRIBUTE_LIST LLVM_RETATTR_LIST
@@ -368,6 +371,9 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":"
               LLVMTOK_STRING ")"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); }
+            | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":" LLVMTOK_STRING 
+              "," "checksumkind" ":" any_ident "," "checksum" ":" LLVMTOK_STRING ")"
+              { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); }
             | metabang "=" metadata_distinct "!DIDerivedType" "(" didt_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DIBasicType" "(" "name" ":" LLVMTOK_STRING "," "size" ":" LLVMTOK_DECIMAL
@@ -802,7 +808,8 @@ i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INT
 dbg_type: "@llvm.dbg.value" | "@llvm.dbg.declare";
 anybang: LLVMTOK_INTBANG
        | "!" any_ident { $$ = $1->adopt($2); }
-       | diexpression;
+       | diexpression
+       | diarglist;
 
 // Example: call void @llvm.assume(i1 true) [ "align"(i8* %10, i64 %9) ]
 i_assume: "call" "void" "@llvm.assume" "(" LLVMTOK_INTTYPE LLVMTOK_BOOL ")" "[" assume_list "]" _cdebug
@@ -815,6 +822,8 @@ diexpression: "!DIExpression" "(" diexpression_list ")" { $$ = $1->adopt($3); D(
 diexpression_list: diexpression_list "," diexpression_item { $$ = $1->adopt($3); D($2); }
                  | diexpression_item { $$ = (new AN(llvmParser, LLVM_DIEXPRESSION_LIST))->adopt($1); };
 diexpression_item: any_ident | LLVMTOK_DECIMAL;
+
+diarglist: "!DIArgList" "(" constant "," constant ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); };
 
 i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };

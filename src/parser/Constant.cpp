@@ -51,7 +51,7 @@ namespace LL2W {
 			type = type_hint;
 			value = std::make_shared<GetelementptrValue>(node);
 		} else if (node->symbol == LLVMTOK_BOOL) {
-			type = IntType::make(1);
+			type = IntType::make(8, false);
 			value = std::make_shared<BoolValue>(node->lexerInfo);
 		} else if (node->symbol != LLVM_CONSTANT) {
 			node->debug();

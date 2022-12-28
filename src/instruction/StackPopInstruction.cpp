@@ -2,7 +2,7 @@
 #include "instruction/StackPopInstruction.h"
 
 namespace LL2W {
-	StackPopInstruction::StackPopInstruction(std::shared_ptr<Variable> rd_, int index_):
+	StackPopInstruction::StackPopInstruction(const VariablePtr &rd_, int index_):
 		RType(nullptr, nullptr, rd_, index_) {}
 
 	std::string StackPopInstruction::debugExtra() {

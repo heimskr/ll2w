@@ -5,6 +5,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubIInstruction.h"
+#include "instruction/TypedPushInstruction.h"
 #include "pass/InsertPrologue.h"
 #include "util/Timer.h"
 
@@ -38,14 +39,14 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions)
 			for (const VariablePtr &variable: instruction->written)
 				for (const int reg: variable->registers)
-					if (!WhyInfo::isSpecialPurpose(reg))
+					if (!WhyInfo::isSpecialPurpose(reg) && WhyInfo::isCalleeSaved(reg))
 						written.insert(reg);
 
 		function.savedRegisters.clear();
 		for (int reg: written) {
 			function.savedRegisters.push_back(reg);
 			VariablePtr variable = function.makePrecoloredVariable(reg, front_block);
-			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false)
+			function.insertBefore(first, std::make_shared<TypedPushInstruction>(variable), false)
 				->setDebug(*first)->extract();
 			function.initialPushedBytes += 8;
 		}

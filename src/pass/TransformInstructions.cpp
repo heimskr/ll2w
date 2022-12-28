@@ -21,7 +21,7 @@ namespace LL2W::Passes {
 			if (auto li = std::dynamic_pointer_cast<LoadIInstruction>(instruction)) {
 				if (li->size == 4 || li->size == 2) {
 					// TODO: verify
-					auto var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(64)),
+					auto var = function.newVariable(std::make_shared<PointerType>(IntType::make(64)),
 						li->parent.lock());
 					auto set = std::make_shared<SetInstruction>(var, li->imm);
 					auto l = std::make_shared<LoadRInstruction>(var, li->rd, li->size);
@@ -47,7 +47,7 @@ namespace LL2W::Passes {
 				}
 			} else if (auto si = std::dynamic_pointer_cast<StoreIInstruction>(instruction)) {
 				if (si->size == 4) {
-					auto var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(64)),
+					auto var = function.newVariable(std::make_shared<PointerType>(IntType::make(64)),
 						si->parent.lock());
 					auto set = std::make_shared<SetInstruction>(var, si->imm);
 					auto s = std::make_shared<StoreRInstruction>(si->rs, var, si->size);
@@ -59,9 +59,9 @@ namespace LL2W::Passes {
 				if (s->size == 3 || s->size == 5 || s->size == 7) {
 					// We have to break stores of strange sizes into multiple byte-sized stores.
 					// TODO: verify.
-					auto ptr_var = function.newVariable(std::make_shared<PointerType>(std::make_shared<IntType>(s->size
-						* 8)), s->parent.lock());
-					auto value_var = function.newVariable(std::make_shared<IntType>(s->size * 8), s->parent.lock());
+					auto ptr_var = function.newVariable(std::make_shared<PointerType>(IntType::make(s->size * 8)),
+						s->parent.lock());
+					auto value_var = function.newVariable(IntType::make(s->size * 8), s->parent.lock());
 					auto ptr_move = std::make_shared<MoveInstruction>(s->rt, ptr_var);
 					auto value_move = std::make_shared<MoveInstruction>(s->rs, value_var);
 					function.insertBefore(s, ptr_move)->setDebug(*s)->extract();

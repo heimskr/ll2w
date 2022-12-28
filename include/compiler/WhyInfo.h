@@ -43,5 +43,6 @@ namespace LL2W {
 		static bool isSpecialPurpose(int);
 		static bool isArgumentRegister(int);
 		static std::string registerName(int);
+		static bool isCalleeSaved(int);
 	};
 }

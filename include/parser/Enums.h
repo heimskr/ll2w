@@ -5,7 +5,10 @@
 #include <unordered_map>
 
 namespace LL2W {
-	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque};
+	enum class TypeType {
+		None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any
+	};
+
 	enum class ValueType {
 		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
 		Undef, Icmp, Logic, Poison
