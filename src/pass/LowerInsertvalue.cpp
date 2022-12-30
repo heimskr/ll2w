@@ -46,14 +46,16 @@ namespace LL2W::Passes {
 			}
 
 			bool skip = false;
-			for (const auto &type: aggregate_struct->node->types)
-				if (type->typeType() != TypeType::Int) {
+			for (const auto &type: aggregate_struct->node->types) {
+				const TypeType tt = type->typeType();
+				if (tt != TypeType::Int && tt != TypeType::Pointer) {
 					skip = true;
 					break;
 				}
+			}
 
 			if (skip) {
-				warn() << "Skipping unsupported insertvalue: " << instruction->debugExtra() << '\n';
+				warn() << "Skipping insertvalue with unsupported types: " << instruction->debugExtra() << '\n';
 				continue;
 			}
 

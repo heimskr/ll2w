@@ -336,8 +336,8 @@ namespace LL2W {
 				return lexerInfo->substr(1, lexerInfo->size() - 2);
 		} else if (symbol == WASMTOK_STRING)
 			return lexerInfo->substr(1, lexerInfo->size() - 2);
-		throw std::runtime_error("extractName() was called on an inappropriate symbol: " +
-			std::string(parser->getName(symbol)));
+		throw std::runtime_error("extractName() was called on an inappropriate symbol at " + std::string(location) +
+			": " + std::string(parser->getName(symbol)));
 	}
 
 	const std::string * ASTNode::extracted() const {
