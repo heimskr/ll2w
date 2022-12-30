@@ -8,9 +8,7 @@
 
 #include "compiler/Function.h"
 #include "instruction/ModRInstruction.h"
-#include "instruction/ModuRInstruction.h"
 #include "instruction/DivRInstruction.h"
-#include "instruction/DivuRInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
 #include "instruction/AndRInstruction.h"
 #include "instruction/OrRInstruction.h"
@@ -27,8 +25,6 @@
 #include "instruction/AddRInstruction.h"
 #include "instruction/SubRInstruction.h"
 #include "instruction/ModIInstruction.h"
-#include "instruction/ModuIInstruction.h"
-#include "instruction/DivuIInstruction.h"
 #include "instruction/DivIInstruction.h"
 #include "instruction/ComparisonIInstruction.h"
 #include "instruction/AndIInstruction.h"
@@ -59,8 +55,6 @@
 #include "instruction/JumpConditionalInstruction.h"
 #include "instruction/JumpRegisterInstruction.h"
 #include "instruction/JumpRegisterConditionalInstruction.h"
-#include "instruction/SizedStackPushInstruction.h"
-#include "instruction/SizedStackPopInstruction.h"
 #include "instruction/MultRInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/DiviIInstruction.h"
@@ -230,26 +224,24 @@ namespace LL2W {
 		return std::make_unique<Label>(*label);
 	}
 
-	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_):
+	RNode::RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_):
 	WASMInstructionNode(WASM_RNODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rt(rt_->lexerInfo), rd(rd_->lexerInfo),
-	operToken(oper_->symbol), isUnsigned(!!unsigned_) {
+	operToken(oper_->symbol) {
 		delete rs_;
 		delete oper_;
 		if (oper_ != rt_)
 			delete rt_;
 		delete rd_;
-		if (unsigned_)
-			delete unsigned_;
 	}
 
 	std::string RNode::debugExtra() const {
-		return cyan(*rs) + " " + dim(*oper) + " " + cyan(*rt) + dim(" -> ") + cyan(*rd) + (isUnsigned? " /u" : "");
+		return cyan(*rs) + " " + dim(*oper) + " " + cyan(*rt) + dim(" -> ") + cyan(*rd);
 	}
 
 	RNode::operator std::string() const {
 		if (*oper == "!" || *oper == "~")
-			return *oper + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
-		return *rs + " " + *oper + " " + *rt + " -> " + *rd + (isUnsigned? " /u" : "");
+			return *oper + *rs + " -> " + *rd;
+		return *rs + " " + *oper + " " + *rt + " -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> RNode::convert(Function &function, VarMap &map) {
@@ -257,25 +249,19 @@ namespace LL2W {
 
 		switch (operToken) {
 			case WASMTOK_PERCENT:
-				if (isUnsigned) return std::make_unique<ModuRInstruction>(conv(rs), conv(rt), conv(rd));
 				return std::make_unique<ModRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_SLASH:
-				if (isUnsigned) return std::make_unique<DivuRInstruction>(conv(rs), conv(rt), conv(rd));
 				return std::make_unique<DivRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_LANGLE:
-				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
-					isUnsigned? IcmpCond::Ult : IcmpCond::Slt);
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Xlt);
 			case WASMTOK_LEQ:
-				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
-					isUnsigned? IcmpCond::Ule : IcmpCond::Sle);
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Xle);
 			case WASMTOK_DEQ:
 				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Eq);
 			case WASMTOK_RANGLE:
-				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
-					isUnsigned? IcmpCond::Ugt : IcmpCond::Sgt);
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Xgt);
 			case WASMTOK_GEQ:
-				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd),
-					isUnsigned? IcmpCond::Uge : IcmpCond::Sge);
+				return std::make_unique<ComparisonRInstruction>(conv(rs), conv(rt), conv(rd), IcmpCond::Xge);
 			case WASMTOK_AND:
 				return std::make_unique<AndRInstruction>(conv(rs), conv(rt), conv(rd));
 			case WASMTOK_OR:
@@ -319,23 +305,21 @@ namespace LL2W {
 		}
 	}
 
-	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_, ASTNode *unsigned_):
+	INode::INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm_, ASTNode *rd_):
 	WASMInstructionNode(WASM_INODE), rs(rs_->lexerInfo), oper(oper_->lexerInfo), rd(rd_->lexerInfo),
-	operToken(oper_->symbol), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	operToken(oper_->symbol), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete oper_;
 		delete imm_;
 		delete rd_;
-		if (unsigned_)
-			delete unsigned_;
 	}
 
 	std::string INode::debugExtra() const {
-		return cyan(*rs) + " " + dim(*oper) + " " + colorize(imm) + dim(" -> ") + cyan(*rd) + (isUnsigned? " /u" : "");
+		return cyan(*rs) + " " + dim(*oper) + " " + colorize(imm) + dim(" -> ") + cyan(*rd);
 	}
 
 	INode::operator std::string() const {
-		return *rs + " " + *oper + " " + toString(imm) + " -> " + *rd + (isUnsigned? " /u" : "");
+		return *rs + " " + *oper + " " + toString(imm) + " -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> INode::convert(Function &function, VarMap &map) {
@@ -343,25 +327,19 @@ namespace LL2W {
 
 		switch (operToken) {
 			case WASMTOK_PERCENT:
-				if (isUnsigned) return std::make_unique<ModuIInstruction>(conv(rs), imm, conv(rd));
 				return std::make_unique<ModIInstruction>(conv(rs), imm, conv(rd));
 			case WASMTOK_SLASH:
-				if (isUnsigned) return std::make_unique<DivuIInstruction>(conv(rs), imm, conv(rd));
 				return std::make_unique<DivIInstruction>(conv(rs), imm, conv(rd));
 			case WASMTOK_LANGLE:
-				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
-					isUnsigned? IcmpCond::Ult : IcmpCond::Slt);
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Xlt);
 			case WASMTOK_LEQ:
-				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
-					isUnsigned? IcmpCond::Ule : IcmpCond::Sle);
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Xle);
 			case WASMTOK_DEQ:
 				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Eq);
 			case WASMTOK_RANGLE:
-				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
-					isUnsigned? IcmpCond::Ugt : IcmpCond::Sgt);
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Xgt);
 			case WASMTOK_GEQ:
-				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd),
-					isUnsigned? IcmpCond::Uge : IcmpCond::Sge);
+				return std::make_unique<ComparisonIInstruction>(conv(rs), imm, conv(rd), IcmpCond::Xge);
 			case WASMTOK_AND:
 				return std::make_unique<AndIInstruction>(conv(rs), imm, conv(rd));
 			case WASMTOK_OR:
@@ -401,60 +379,58 @@ namespace LL2W {
 		}
 	}
 
-	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {
+	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
+	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
 		delete rs_;
 		delete rd_;
-		if (byte_)
-			delete byte_;
 	}
 
-	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, byte_) {}
+	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_):
+		WASMMemoryNode(WASM_COPYNODE, rs_, rd_) {}
 
 	std::string WASMCopyNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
+		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]");
 	}
 
 	WASMCopyNode::operator std::string() const {
-		return "[" + *rs + "] -> [" + *rd + "]" + (isByte? " /b" : "");
+		return "[" + *rs + "] -> [" + *rd + "]";
 	}
 
 	std::unique_ptr<WhyInstruction> WASMCopyNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd), isByte? 1 : 8);
+		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd));
 	}
 
-	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, byte_) {}
+	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_):
+		WASMMemoryNode(WASM_LOADNODE, rs_, rd_) {}
 
 	std::string WASMLoadNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
+		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd);
 	}
 
 	WASMLoadNode::operator std::string() const {
-		return "[" + *rs + "] -> " + *rd + (isByte? " /b" : "");
+		return "[" + *rs + "] -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLoadNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd), isByte? 1 : 8);
+		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd));
 	}
 
-	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
-		WASMMemoryNode(WASM_STORENODE, rs_, rd_, byte_) {}
+	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_):
+		WASMMemoryNode(WASM_STORENODE, rs_, rd_) {}
 
 	std::string WASMStoreNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
+		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]");
 	}
 
 	WASMStoreNode::operator std::string() const {
-		return *rs + " -> [" + *rd + "]" + (isByte? " /b" : "");
+		return *rs + " -> [" + *rd + "]";
 	}
 
 	std::unique_ptr<WhyInstruction> WASMStoreNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd), isByte? 1 : 8);
+		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd));
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
@@ -475,114 +451,56 @@ namespace LL2W {
 		return std::make_unique<SetInstruction>(convertVariable(function, map, rd), imm);
 	}
 
-	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
-	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_):
+	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete imm_;
 		delete rd_;
-		if (byte_)
-			delete byte_;
 	}
 
 	std::string WASMLiNode::debugExtra() const {
-		return dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
+		return dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd);
 	}
 
 	WASMLiNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> " + *rd + (isByte? " /b" : "");
+		return "[" + toString(imm) + "] -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLiNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<LoadIInstruction>(imm, convertVariable(function, map, rd), isByte? 1 : 8);
+		return std::make_unique<LoadIInstruction>(imm, convertVariable(function, map, rd));
 	}
 
-	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
-	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
+	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_):
+	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete imm_;
-		if (byte_)
-			delete byte_;
 	}
 
 	std::string WASMSiNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + colorize(imm) + dim("]") + (isByte? " /b" : "");
+		return cyan(*rs) + dim(" -> [") + colorize(imm) + dim("]");
 	}
 
 	WASMSiNode::operator std::string() const {
-		return *rs + " -> [" + toString(imm) + "]" + (isByte? " /b" : "");
+		return *rs + " -> [" + toString(imm) + "]";
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSiNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<StoreIInstruction>(convertVariable(function, map, rs), imm, isByte? 1 : 8);
+		return std::make_unique<StoreIInstruction>(convertVariable(function, map, rs), imm);
 	}
 
-	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_): WASMLiNode(imm_, rd_, byte_) {
+	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_): WASMLiNode(imm_, rd_) {
 		symbol = WASM_LNINODE;
 	}
 
 	std::string WASMLniNode::debugExtra() const {
-		return dim("[") + colorize(imm) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
+		return dim("[") + colorize(imm) + dim("] -> [") + cyan(*rd) + dim("]");
 	}
 
 	WASMLniNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> [" + *rd + "]" + (isByte? " /b" : "");
+		return "[" + toString(imm) + "] -> [" + *rd + "]";
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLniNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<LoadIndirectIInstruction>(imm, convertVariable(function, map, rd), isByte? 1 : 8);
-	}
-
-	WASMHalfMemoryNode::WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
-	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
-		delete rs_;
-		delete rd_;
-	}
-
-	WASMChNode::WASMChNode(ASTNode *rs_, ASTNode *rd_):
-		WASMHalfMemoryNode(WASM_CHNODE, rs_, rd_) {}
-
-	std::string WASMChNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + " /h";
-	}
-
-	WASMChNode::operator std::string() const {
-		return "[" + *rs + "] -> [" + *rd + "] /h";
-	}
-
-	std::unique_ptr<WhyInstruction> WASMChNode::convert(Function &function, VarMap &map) {
-		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd), 4);
-	}
-
-	WASMLhNode::WASMLhNode(ASTNode *rs_, ASTNode *rd_):
-		WASMHalfMemoryNode(WASM_LHNODE, rs_, rd_) {}
-
-	std::string WASMLhNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd) + " /h";
-	}
-
-	WASMLhNode::operator std::string() const {
-		return "[" + *rs + "] -> " + *rd + " /h";
-	}
-
-	std::unique_ptr<WhyInstruction> WASMLhNode::convert(Function &function, VarMap &map) {
-		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd), 4);
-	}
-
-	WASMShNode::WASMShNode(ASTNode *rs_, ASTNode *rd_):
-		WASMHalfMemoryNode(WASM_SHNODE, rs_, rd_) {}
-
-	std::string WASMShNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + " /h";
-	}
-
-	WASMShNode::operator std::string() const {
-		return *rs + " -> [" + *rd + "] /h";
-	}
-
-	std::unique_ptr<WhyInstruction> WASMShNode::convert(Function &function, VarMap &map) {
-		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd), 4);
+		return std::make_unique<LoadIndirectIInstruction>(imm, convertVariable(function, map, rd));
 	}
 
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rt_):
@@ -770,41 +688,18 @@ namespace LL2W {
 		return std::make_unique<JumpRegisterConditionalInstruction>(conv(rs), conv(rd), link);
 	}
 
-	WASMSizedStackNode::WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push):
-	WASMInstructionNode(WASM_SSNODE), size(size_->atoi()), rs(rs_->lexerInfo), isPush(is_push) {
-		delete size_;
-		delete rs_;
-	}
-
-	std::string WASMSizedStackNode::debugExtra() const {
-		return dim(std::string(isPush? "[" : "]") + ":" + std::to_string(size)) + " " + cyan(*rs);
-	}
-
-	WASMSizedStackNode::operator std::string() const {
-		return std::string(isPush? "[" : "]") + ":" + std::to_string(size) + " " + *rs;
-	}
-
-	std::unique_ptr<WhyInstruction> WASMSizedStackNode::convert(Function &function, VarMap &map) {
-		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		if (isPush)
-			return std::make_unique<SizedStackPushInstruction>(conv(rs), size);
-		return std::make_unique<SizedStackPopInstruction>(conv(rs), size);
-	}
-
-	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_MULTRNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo), isUnsigned(!!unsigned_) {
+	WASMMultRNode::WASMMultRNode(ASTNode *rs_, ASTNode *rt_):
+	WASMInstructionNode(WASM_MULTRNODE), rs(rs_->lexerInfo), rt(rt_->lexerInfo) {
 		delete rs_;
 		delete rt_;
-		if (unsigned_)
-			delete unsigned_;
 	}
 
 	std::string WASMMultRNode::debugExtra() const {
-		return cyan(*rs) + dim(" * ") + cyan(*rt) + (isUnsigned? " /u" : "");
+		return cyan(*rs) + dim(" * ") + cyan(*rt);
 	}
 
 	WASMMultRNode::operator std::string() const {
-		return *rs + " * " + *rt + (isUnsigned? " /u" : "");
+		return *rs + " * " + *rt;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMMultRNode::convert(Function &function, VarMap &map) {
@@ -812,42 +707,37 @@ namespace LL2W {
 		return std::make_unique<MultRInstruction>(conv(rs), conv(rt));
 	}
 
-	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isUnsigned(!!unsigned_) {
+	WASMMultINode::WASMMultINode(ASTNode *rs_, ASTNode *imm_):
+	WASMInstructionNode(WASM_MULTINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete imm_;
-		if (unsigned_)
-			delete unsigned_;
 	}
 
 	std::string WASMMultINode::debugExtra() const {
-		return cyan(*rs) + dim(" * ") + colorize(imm) + (isUnsigned? " /u" : "");
+		return cyan(*rs) + dim(" * ") + colorize(imm);
 	};
 
 	WASMMultINode::operator std::string() const {
-		return *rs + " * " + toString(imm) + (isUnsigned? " /u" : "");
+		return *rs + " * " + toString(imm);
 	}
 
 	std::unique_ptr<WhyInstruction> WASMMultINode::convert(Function &function, VarMap &map) {
 		return std::make_unique<MultIInstruction>(convertVariable(function, map, rs), imm);
 	}
 
-	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_):
-	WASMInstructionNode(WASM_DIVIINODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)),
-	isUnsigned(!!unsigned_) {
+	WASMDiviINode::WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_):
+	WASMInstructionNode(WASM_DIVIINODE), rs(rs_->lexerInfo), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
 		delete rs_;
 		delete rd_;
 		delete imm_;
-		if (unsigned_)
-			delete unsigned_;
 	}
 
 	std::string WASMDiviINode::debugExtra() const {
-		return colorize(imm) + dim(" / ") + cyan(*rs) + dim(" -> ") + cyan(*rd) + (isUnsigned? " /u" : "");
+		return colorize(imm) + dim(" / ") + cyan(*rs) + dim(" -> ") + cyan(*rd);
 	}
 
 	WASMDiviINode::operator std::string() const {
-		return toString(imm) + " / " + *rs + " -> " + *rd + (isUnsigned? " /u" : "");
+		return toString(imm) + " / " + *rs + " -> " + *rd;
 	}
 
 	std::unique_ptr<WhyInstruction> WASMDiviINode::convert(Function &function, VarMap &map) {

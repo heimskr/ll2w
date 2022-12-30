@@ -12,12 +12,13 @@ namespace LL2W {
 	class IType: public WhyInstruction {
 		protected:
 			std::string operDebug(const char *oper) const {
-				return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + colorize(imm) + " \e[2m->\e[0m " +
-					std::string(*rd);
+				return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[22m " + colorize(imm, *rs) +
+					" \e[2m->\e[22m " + std::string(*rd);
 			}
 
 			std::string operString(const char *oper) const {
-				return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm) + " -> " + rd->toString();
+				return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm, *rs) + " -> " +
+					rd->toString();
 			}
 
 		public:

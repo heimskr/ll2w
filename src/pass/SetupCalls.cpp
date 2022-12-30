@@ -11,7 +11,6 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/SextRInstruction.h"
-#include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubRInstruction.h"
@@ -269,7 +268,8 @@ namespace LL2W::Passes {
 			VariablePtr var = signext? function.newVariable() : local->variable;
 			if (signext)
 				function.insertBefore(instruction, make_signext(local->variable, var));
-			function.insertBefore(instruction, std::make_shared<SizedStackPushInstruction>(var, size, -1))
+			// TODO: verify
+			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1))
 				->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Global) {
@@ -279,39 +279,43 @@ namespace LL2W::Passes {
 			auto set = std::make_shared<SetInstruction>(new_var, global->name);
 			if (signext)
 				function.insertBefore(instruction, make_signext(new_var, new_var));
-			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			// TODO: verify
+			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Int) {
 			// Integer-like values
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
 			set->setOriginalValue(constant->value);
-			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			// TODO: verify
+			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext(new_var, new_var));
-			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Bool) {
 			// Booleans
 			std::shared_ptr<BoolValue> bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
-			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			// TODO: verify
+			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
 			if (signext)
 				function.insertBefore(instruction, make_signext(new_var, new_var));
-			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Null || value_type == ValueType::Undef) {
 			// Null and undef values
 			VariablePtr new_var = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
-			auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
+			// TODO: verify
+			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
 			return size;
 		} else if (value_type == ValueType::Getelementptr) {
 			// Getelementptr expressions
@@ -335,8 +339,9 @@ namespace LL2W::Passes {
 				}
 				if (signext)
 					function.insertBefore(instruction, make_signext(new_var, new_var));
-				auto sspush = std::make_shared<SizedStackPushInstruction>(new_var, size, -1);
-				function.insertBefore(instruction, sspush)->setDebug(*instruction)->extract();
+				// TODO: verify
+				auto spush = std::make_shared<StackPushInstruction>(new_var);
+				function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
 				return size;
 			}
 		} else if (constant->conversionSource) {

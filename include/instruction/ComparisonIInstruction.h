@@ -9,7 +9,7 @@
 
 namespace LL2W {
 	/**
-	 * $rs == (<=, <...) $rt -> $rd (/u)
+	 * $rs == (<=, <...) $rt -> $rd
 	 */
 	struct ComparisonIInstruction: public IType<>, public ComparisonInstruction {
 		ComparisonIInstruction(VariablePtr rs_, ValueType imm_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):

@@ -2,14 +2,14 @@
 #include "instruction/LoadIInstruction.h"
 
 namespace LL2W {
-	LoadIInstruction::LoadIInstruction(ValueType imm_, std::shared_ptr<Variable> rd_, int size_, int index_):
-		IType(nullptr, imm_, rd_, index_), SizedInstruction(size_) {}
+	LoadIInstruction::LoadIInstruction(ValueType imm_, const std::shared_ptr<Variable> &rd_, int index_):
+		IType(nullptr, imm_, rd_, index_) {}
 
 	std::string LoadIInstruction::debugExtra() {
-		return "\e[2m[\e[22m" + colorize(imm) + "\e[2m] ->\e[22m " + std::string(*rd) + suffix();
+		return "\e[2m[\e[22m" + colorize(imm, *rs) + "\e[2m] ->\e[22m " + std::string(*rd);
 	}
 
 	std::string LoadIInstruction::toString() const {
-		return "[" + LL2W::toString(imm) + "] -> " + rd->toString() + suffix();
+		return "[" + LL2W::toString(imm, *rs) + "] -> " + rd->toString();
 	}
 }

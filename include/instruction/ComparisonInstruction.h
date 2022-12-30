@@ -10,9 +10,6 @@ namespace LL2W {
 	 * Note that Why currently has no != instruction.
 	 */
 	class ComparisonInstruction {
-		protected:
-			bool isUnsigned() const;
-
 		public:
 			IcmpCond cond;
 

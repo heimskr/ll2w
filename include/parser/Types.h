@@ -40,6 +40,7 @@ namespace LL2W {
 			bool isInt(int width) const;
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
+			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
 	};
 
 	struct VoidType: Type {
@@ -84,7 +85,7 @@ namespace LL2W {
 		std::string whyString() const override;
 	};
 
-	struct AggregateType: public Type {
+	struct AggregateType: Type {
 		virtual TypePtr extractType(std::list<int> indices) const = 0;
 		TypePtr extractType(const std::vector<int> &indices) const {
 			return extractType(std::list<int>(indices.begin(), indices.end()));
@@ -109,9 +110,10 @@ namespace LL2W {
 		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
 		std::string whyString() const override;
+		TypePtr unwrap() const override { return subtype; }
 	};
 
-	struct VectorType: public ArrayType {
+	struct VectorType: ArrayType {
 		TypeType typeType() const override { return TypeType::Vector; }
 		using ArrayType::ArrayType;
 		operator std::string() override;
@@ -121,7 +123,7 @@ namespace LL2W {
 		std::string whyString() const override;
 	};
 
-	struct FloatType: public Type {
+	struct FloatType: Type {
 		TypeType typeType() const override { return TypeType::Float; }
 		enum class Type: int {Half, Float, Double, FP128, x86_FP80, PPC_FP128};
 		FloatType::Type type;
@@ -136,7 +138,7 @@ namespace LL2W {
 		std::string whyString() const override { return "F"; }
 	};
 
-	struct PointerType: public Type, public HasSubtype {
+	struct PointerType: Type, HasSubtype {
 		TypeType typeType() const override { return TypeType::Pointer; }
 		PointerType(TypePtr subtype_): HasSubtype(subtype_) {}
 		operator std::string() override;
@@ -147,6 +149,7 @@ namespace LL2W {
 		bool operator==(const Type &) const override;
 		static std::shared_ptr<PointerType> make(TypePtr subtype) { return std::make_shared<PointerType>(subtype); }
 		std::string whyString() const override;
+		TypePtr unwrap() const override { return subtype; }
 	};
 
 	class FunctionType: public Type {
@@ -223,7 +226,7 @@ namespace LL2W {
 	/** During padded struct extraction, it's necessary to read one register from a register pack representing a struct.
 	 *  This register may contain data from multiple members or from only a fraction of member, and as such has no
 	 *  specific type. However, it's always one register in size. */
-	struct OpaqueType: public Type {
+	struct OpaqueType: Type {
 		TypeType typeType() const override { return TypeType::Opaque; }
 		OpaqueType() {}
 		operator std::string() override { return "\e[1mopaque\e[22m"; }

@@ -13,14 +13,9 @@
 #include "instruction/DivIInstruction.h"
 #include "instruction/DivRInstruction.h"
 #include "instruction/DiviIInstruction.h"
-#include "instruction/DivuIInstruction.h"
-#include "instruction/DivuRInstruction.h"
-#include "instruction/DivuiIInstruction.h"
 #include "instruction/LuiInstruction.h"
 #include "instruction/ModIInstruction.h"
 #include "instruction/ModRInstruction.h"
-#include "instruction/ModuIInstruction.h"
-#include "instruction/ModuRInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/MultIInstruction.h"
 #include "instruction/MultRInstruction.h"
@@ -45,25 +40,27 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	template <typename R, typename I, typename Inv>
+	template <bool Signed>
 	void lowerDiv(Function &function, InstructionPtr &instruction, DivNode *node) {
 		ValuePtr left  = node->left;
 		ValuePtr right = node->right;
 
 		if (left->isLocal()) {
 			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			left_var->setSigned(Signed);
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto div = std::make_shared<R>(left_var, right_var, node->variable);
+				right_var->setSigned(Signed);
+				auto div = std::make_shared<DivRInstruction>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, div);
 				div->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				std::shared_ptr<WhyInstruction> div;
 				if (right->overflows()) {
 					VariablePtr overflow_var = function.get64(instruction, right->longValue());
-					div = std::make_shared<R>(left_var, overflow_var, node->variable);
+					div = std::make_shared<DivRInstruction>(left_var, overflow_var, node->variable);
 				} else {
-					auto idiv = std::make_shared<I>(left_var, right->intValue(), node->variable);
+					auto idiv = std::make_shared<DivIInstruction>(left_var, right->intValue(false), node->variable);
 					idiv->setOriginalValue(right);
 					div = std::move(idiv);
 				}
@@ -76,13 +73,14 @@ namespace LL2W::Passes {
 		} else if (left->isIntLike()) {
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				right_var->setSigned(Signed);
 				InstructionPtr new_instruction;
 
 				if (left->overflows()) {
 					VariablePtr left_var = function.get64(instruction, left->longValue());
-					new_instruction = std::make_shared<R>(left_var, right_var, node->variable);
+					new_instruction = std::make_shared<DivRInstruction>(left_var, right_var, node->variable);
 				} else {
-					auto new_inv = std::make_shared<Inv>(right_var, left->intValue(false), node->variable);
+					auto new_inv = std::make_shared<DivIInstruction>(right_var, left->intValue(false), node->variable);
 					new_inv->setOriginalValue(left);
 					new_instruction = new_inv;
 				}
@@ -483,24 +481,26 @@ namespace LL2W::Passes {
 		}
 	}
 
-	template <typename R, typename I>
-	void lowerRem(Function &function, InstructionPtr &instruction, RemNode *node) {
+	template <bool Signed>
+	static void lowerRem(Function &function, InstructionPtr &instruction, RemNode *node) {
 		ValuePtr left  = node->left;
 		ValuePtr right = node->right;
 
 		if (left->isLocal()) {
 			VariablePtr left_var = dynamic_cast<LocalValue *>(left.get())->variable;
+			left_var->setSigned(Signed);
 			if (right->isLocal()) {
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
-				auto mod = std::make_shared<R>(left_var, right_var, node->variable);
+				right_var->setSigned(Signed);
+				auto mod = std::make_shared<ModRInstruction>(left_var, right_var, node->variable);
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else if (right->isIntLike()) {
 				std::shared_ptr<WhyInstruction> mod;
 				if (right->overflows()) {
 					VariablePtr overflow_var = function.get64(instruction, right->longValue(), false);
-					mod = std::make_shared<R>(left_var, overflow_var, node->variable);
+					mod = std::make_shared<ModRInstruction>(left_var, overflow_var, node->variable);
 				} else {
-					auto imod = std::make_shared<I>(left_var, right->intValue(), node->variable);
+					auto imod = std::make_shared<ModIInstruction>(left_var, right->intValue(), node->variable);
 					imod->setOriginalValue(right);
 					mod = std::move(imod);
 				}
@@ -513,10 +513,11 @@ namespace LL2W::Passes {
 				// Instead of making a backwards immediate modulo instruction, we can just put the immediate value into
 				// $m0 and use the R-type modulo instruction.
 				VariablePtr right_var = dynamic_cast<LocalValue *>(right.get())->variable;
+				right_var->setSigned(Signed);
 				VariablePtr m0 = function.m0(instruction);
 				auto set = std::make_shared<SetInstruction>(m0, left->intValue(false));
 				set->setOriginalValue(left);
-				auto mod = std::make_shared<R>(m0, right_var, node->variable);
+				auto mod = std::make_shared<ModRInstruction>(m0, right_var, node->variable);
 				function.insertBefore(instruction, set)->setDebug(node)->extract();
 				function.insertBefore(instruction, mod)->setDebug(node)->extract();
 			} else
@@ -543,16 +544,16 @@ namespace LL2W::Passes {
 			} else if (type == NodeType::Div) {
 				DivNode *div = dynamic_cast<DivNode *>(llvm->node);
 				if (div->divType == DivNode::DivType::Udiv) {
-					lowerDiv<DivuRInstruction, DivuIInstruction, DivuiIInstruction>(function, instruction, div);
+					lowerDiv<false>(function, instruction, div);
 				} else if (div->divType == DivNode::DivType::Sdiv) {
-					lowerDiv<DivRInstruction, DivIInstruction, DiviIInstruction>(function, instruction, div);
+					lowerDiv<true>(function, instruction, div);
 				}
 			} else if (type == NodeType::Rem) {
 				RemNode *rem = dynamic_cast<RemNode *>(llvm->node);
 				if (rem->remType == RemNode::RemType::Srem)
-					lowerRem<ModRInstruction, ModIInstruction>(function, instruction, rem);
+					lowerRem<true>(function, instruction, rem);
 				else
-					lowerRem<ModuRInstruction, ModuIInstruction>(function, instruction, rem);
+					lowerRem<false>(function, instruction, rem);
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
 				if (shr->shrType == ShrNode::ShrType::Ashr) {

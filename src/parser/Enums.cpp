@@ -96,7 +96,8 @@ namespace LL2W {
 	std::unordered_map<IcmpCond, std::string> cond_op_map {
 		{IcmpCond::Eq,  "=="}, {IcmpCond::Ne,  "!="},
 		{IcmpCond::Ugt, ">"},  {IcmpCond::Uge, ">="}, {IcmpCond::Ult, "<"}, {IcmpCond::Ule, "<="},
-		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="}};
+		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="},
+		{IcmpCond::Xgt, ">"},  {IcmpCond::Xge, ">="}, {IcmpCond::Xlt, "<"}, {IcmpCond::Xle, "<="}};
 
 	std::unordered_map<std::string, IcmpCond> cond_inv_map {
 		{ "eq", IcmpCond::Eq},  { "ne", IcmpCond::Ne},  {"ugt", IcmpCond::Ugt}, {"uge", IcmpCond::Uge},

@@ -2,14 +2,14 @@
 #include "instruction/StoreIInstruction.h"
 
 namespace LL2W {
-	StoreIInstruction::StoreIInstruction(std::shared_ptr<Variable> rs_, ValueType imm_, int size_, int index_):
-		IType(rs_, imm_, nullptr, index_), SizedInstruction(size_) {}
+	StoreIInstruction::StoreIInstruction(const std::shared_ptr<Variable> &rs_, ValueType imm_, int index_):
+		IType(rs_, imm_, nullptr, index_) {}
 
 	std::string StoreIInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m-> [\e[22;91m" + colorize(imm) + "\e[39;2m]\e[22m" + suffix();
+		return std::string(*rs) + " \e[2m-> [\e[22;91m" + colorize(imm, *rs, 1) + "\e[39;2m]\e[22m";
 	}
 
 	std::string StoreIInstruction::toString() const {
-		return rs->toString() + " -> [" + LL2W::toString(imm) + "]" + suffix();
+		return rs->toString() + " -> [" + LL2W::toString(imm, *rs, 1) + "]";
 	}
 }

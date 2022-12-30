@@ -6,10 +6,10 @@ namespace LL2W {
 		IType(rs_, imm_, nullptr, index_) {}
 
 	std::string MultIInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m*\e[0m " + colorize(imm);
+		return std::string(*rs) + " \e[2m*\e[0m " + colorize(imm, *rs);
 	}
 
 	std::string MultIInstruction::toString() const {
-		return rs->toString() + " * " + LL2W::toString(imm);
+		return rs->toString() + " * " + LL2W::toString(imm, *rs);
 	}
 }

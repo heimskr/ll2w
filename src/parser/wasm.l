@@ -93,13 +93,9 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "~&"						{ WASMRTOKEN(NAND) }
 "~|"						{ WASMRTOKEN(NOR) }
 "~x"						{ WASMRTOKEN(XNOR) }
-"/u"						{ WASMRTOKEN(UNSIGNED) }
 "<="						{ WASMRTOKEN(LEQ) }
 "=="						{ WASMRTOKEN(DEQ) }
 ">="						{ WASMRTOKEN(GEQ) }
-"/b"						{ WASMRTOKEN(BYTE) }
-"/h"						{ WASMRTOKEN(HALF) }
-"/s"						{ WASMRTOKEN(SHORT) }
 "!="						{ WASMRTOKEN(NOTEQUAL) }
 "<>"						{ WASMRTOKEN(NOP) }
 "<<"						{ WASMRTOKEN(LL) }

@@ -38,7 +38,7 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(load->rs, m4);
 				function.insertBefore(instruction, move)->setDebug(load)->extract();
 				auto iter = load->rd->registers.begin();
-				auto bytes_remaining = load->size;
+				auto bytes_remaining = load->rd->type->width() / 8;
 
 				while (8 <= bytes_remaining) {
 					auto precolored = function.makePrecoloredVariable(*iter++, load->parent.lock());
@@ -70,7 +70,7 @@ namespace LL2W::Passes {
 				auto move = std::make_shared<MoveInstruction>(store->rt, m4);
 				function.insertBefore(instruction, move)->setDebug(store)->extract();
 				auto iter = store->rs->registers.begin();
-				auto bytes_remaining = store->size;
+				auto bytes_remaining = store->rs->type->width() / 8;
 				while (8 <= bytes_remaining) {
 					auto precolored = function.makePrecoloredVariable(*iter++, store->parent.lock());
 					auto new_store = std::make_shared<StoreRInstruction>(precolored, m4, 8);

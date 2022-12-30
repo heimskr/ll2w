@@ -43,7 +43,7 @@ namespace LL2W {
 	enum class StructForm {Struct, Class, Union};
 	enum class StructShape {Default, Opaque, Packed};
 	enum class Ordering {None, Unordered, Monotonic, Acquire, Release, AcqRel, SeqCst};
-	enum class IcmpCond {Eq, Ne, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle};
+	enum class IcmpCond {Eq, Ne, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle, Xgt, Xge, Xlt, Xle};
 	enum class Conversion {
 		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
 		Addrspacecast};
