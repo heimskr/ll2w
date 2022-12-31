@@ -17,7 +17,7 @@ namespace LL2W {
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
 		BaseNode(llvmParser, LLVM_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		locate(dotident_node);
-		if (distinct = distinct_node != nullptr)
+		if ((distinct = distinct_node != nullptr))
 			delete distinct_node;
 		adopt(dotident_node);
 		adopt(list);
@@ -1139,7 +1139,7 @@ namespace LL2W {
 		if (type == Type::Invalid)
 			return "\e[101minvalid @llvm.dbg.* intrinsic\e[49m";
 		std::stringstream out;
-		out << "\e[91mcall \e[34mvoid @llvm.dbg." << (type == Type::Value? "value" : "declare") << "\e[2m(\e[22;34m";
+		out << "\e[91mcall \e[34mvoid @llvm.dbg." << (type == Type::Value? "value" : "declare") << "\e[39;2m(\e[22;34m";
 		out << "metadata\e[39m " << std::string(*constant) << "\e[2m,\e[22;34m metadata\e[39m ";
 		out << firstMetadata->recursiveStringify() << "\e[2m,\e[22;34m metadata\e[39m ";
 		out << secondMetadata->recursiveStringify() << "\e[2m)\e[22m";

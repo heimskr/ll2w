@@ -101,7 +101,7 @@ namespace LL2W {
 				}
 				case LLVMTOK_DIBT: {
 					const int index = node->front()->atoi();
-					basicTypes.try_emplace(index, TypeSet {std::make_shared<BasicType>(*node)});
+					basicTypes.try_emplace(index, TypeSet{std::make_shared<BasicType>(*node)});
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
