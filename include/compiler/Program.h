@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "compiler/BasicType.h"
 #include "compiler/File.h"
 #include "compiler/Function.h"
 #include "compiler/LexicalBlock.h"
@@ -46,6 +47,7 @@ namespace LL2W {
 			std::map<int, Subprogram> subprograms;
 			std::map<int, LexicalBlock> lexicalBlocks;
 			std::map<int, LocalVariable> localVariables;
+			std::map<int, BasicType> basicTypes;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they

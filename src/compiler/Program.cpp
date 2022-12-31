@@ -98,6 +98,12 @@ namespace LL2W {
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
+				case LLVMTOK_DIBT: {
+					const int index = node->front()->atoi();
+					basicTypes.try_emplace(index, *node);
+					highestIndex = std::max(index, highestIndex);
+					break;
+				}
 			}
 		}
 

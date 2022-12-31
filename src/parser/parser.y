@@ -361,35 +361,27 @@ target_type: "datalayout" | "triple";
 
 metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { D($2, $4, $6); $$ = new MetadataDef($1, $3, $5); }
-            | metabang "=" metadata_distinct "!DIGlobalVariableExpression" "(" "var" ":" LLVMTOK_INTBANG "," "expr" ":"
-              diexpression ")"
+            | metabang "=" metadata_distinct "!DIGlobalVariableExpression" "(" "var" ":" LLVMTOK_INTBANG "," "expr" ":" diexpression ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
             | metabang "=" metadata_distinct "!DIGlobalVariable" "(" digv_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
             | metabang "=" metadata_distinct "!DICompileUnit" "(" dicu_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
-            | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":"
-              LLVMTOK_STRING ")"
+            | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":" LLVMTOK_STRING ")"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13); }
-            | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":" LLVMTOK_STRING 
-              "," "checksumkind" ":" any_ident "," "checksum" ":" LLVMTOK_STRING ")"
+            | metabang "=" metadata_distinct "!DIFile" "(" "filename" ":" LLVMTOK_STRING "," "directory" ":" LLVMTOK_STRING "," "checksumkind" ":" any_ident "," "checksum" ":" LLVMTOK_STRING ")"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); }
             | metabang "=" metadata_distinct "!DIDerivedType" "(" didt_list ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
-            | metabang "=" metadata_distinct "!DIBasicType" "(" "name" ":" LLVMTOK_STRING "," "size" ":" LLVMTOK_DECIMAL
-              "," "encoding" ":" any_ident ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); }
-            | metabang "=" metadata_distinct "!DIBasicType" "(" "tag" ":" any_ident "," "name" ":" LLVMTOK_STRING
-              ")"
+            | metabang "=" metadata_distinct "!DIBasicType" "(" "name" ":" LLVMTOK_STRING "," "size" ":" LLVMTOK_DECIMAL "," "encoding" ":" any_ident ")"
+              { $$ = $4->adopt({$1, $8, $12, $16}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17); }
+            | metabang "=" metadata_distinct "!DIBasicType" "(" "tag" ":" any_ident "," "name" ":" LLVMTOK_STRING ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
-            | metabang "=" "!DIImportedEntity" "(" "tag" ":" any_ident "," "scope" ":" LLVMTOK_INTBANG "," "entity"
-              ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL ")"
+            | metabang "=" "!DIImportedEntity" "(" "tag" ":" any_ident "," "scope" ":" LLVMTOK_INTBANG "," "entity" ":" LLVMTOK_INTBANG "," "file" ":" LLVMTOK_INTBANG "," "line" ":" LLVMTOK_DECIMAL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24); }
-            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang
-              ")"
+            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13); }
-            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang
-              "," "exportSymbols" ":" LLVMTOK_BOOL ")"
+            | metabang "=" metadata_distinct "!DINamespace" "(" "name" ":" LLVMTOK_STRING "," "scope" ":" intnullbang "," "exportSymbols" ":" LLVMTOK_BOOL ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17); }
             | metabang "=" metadata_distinct "!DINamespace" "(" "scope" ":" intnullbang ")"
               { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7, $8, $9); }
@@ -411,16 +403,13 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DIEnumerator" "(" die_list ")"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
-            | metabang "=" metadata_distinct "!DILexicalBlock" "(" "scope" ":" intnullbang "," "file" ":" intnullbang
-              "," "line" ":" LLVMTOK_DECIMAL "," "column" ":" LLVMTOK_DECIMAL ")"
+            | metabang "=" metadata_distinct "!DILexicalBlock" "(" "scope" ":" intnullbang "," "file" ":" intnullbang "," "line" ":" LLVMTOK_DECIMAL "," "column" ":" LLVMTOK_DECIMAL ")"
               { $$ = $4->adopt({$1, $8, $12}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $16, $17, $18, $19, $20, $21); }
             | metabang "=" metadata_distinct "!DITemplateTypeParameter" "(" dittp_list ")"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
-            | metabang "=" metadata_distinct "!DILexicalBlockFile" "(" "scope" ":" intnullbang "," "file" ":"
-              intnullbang "," "discriminator" ":" LLVMTOK_DECIMAL ")"
+            | metabang "=" metadata_distinct "!DILexicalBlockFile" "(" "scope" ":" intnullbang "," "file" ":" intnullbang "," "discriminator" ":" LLVMTOK_DECIMAL ")"
               { $$ = $4->adopt({$1, $8, $12, $16}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17); }
-            | metabang "=" metadata_distinct "!DILabel" "(" "scope" ":" intnullbang "," "name" ":" LLVMTOK_STRING ","
-              "file" ":" intnullbang "," "line" ":" LLVMTOK_DECIMAL ")"
+            | metabang "=" metadata_distinct "!DILabel" "(" "scope" ":" intnullbang "," "name" ":" LLVMTOK_STRING "," "file" ":" intnullbang "," "line" ":" LLVMTOK_DECIMAL ")"
               { $$ = $4->adopt({$1, $8, $12, $16, $20}); D($2, $3, $5, $6, $7, $9, $10, $11, $13, $14, $15, $17, $18, $19, $21); };
 
 didt_item: "size"      ":" LLVMTOK_DECIMAL { $$ = $1->adopt($3); D($2); }
