@@ -81,6 +81,7 @@
 #include "pass/ReplaceConstants.h"
 #include "pass/ReplaceStoresAndLoads.h"
 #include "pass/SetupCalls.h"
+#include "pass/SignChars.h"
 #include "pass/SplitBlocks.h"
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
@@ -947,6 +948,7 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
+		Passes::signChars(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {

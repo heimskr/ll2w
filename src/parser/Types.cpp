@@ -21,8 +21,12 @@ namespace LL2W {
 		return typeType() == TypeType::Int;
 	}
 
-	bool Type::isInt(int width) const {
-		return typeType() == TypeType::Int && dynamic_cast<const IntType *>(this)->intWidth == width;
+	bool Type::isInt(int bit_width) const {
+		return typeType() == TypeType::Int && dynamic_cast<const IntType *>(this)->intWidth == bit_width;
+	}
+
+	bool Type::isPointer() const {
+		return typeType() == TypeType::Pointer;
 	}
 
 	IntType::operator std::string() {

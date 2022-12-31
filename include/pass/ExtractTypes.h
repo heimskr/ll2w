@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstddef>
-
 namespace LL2W {
 	class Function;
 }

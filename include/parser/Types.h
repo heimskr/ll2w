@@ -37,7 +37,8 @@ namespace LL2W {
 			virtual bool operator==(const Type &other) const { return typeType() == other.typeType(); }
 			virtual bool operator!=(const Type &other) const { return !(*this == other); }
 			bool isInt() const;
-			bool isInt(int width) const;
+			bool isInt(int bit_width) const;
+			bool isPointer() const;
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
