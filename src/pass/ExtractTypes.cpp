@@ -82,11 +82,6 @@ namespace LL2W::Passes {
 			}
 		}
 
-		// for (const auto &[var_id, var]: function.variableStore) {
-		// 	info() << *function.name << ": \e[35m%" << *var_id << "\e[39m\n";
-		// 	std::string pad(function.name->size() *0+2 + 2, ' ');
-		// }
-
 		for (InstructionPtr &instruction: to_remove)
 			function.remove(instruction);
 	}

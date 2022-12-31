@@ -25,7 +25,7 @@
 namespace LL2W::Passes {
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
 	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
-		do {
+		for (;;) {
 			// First, we check the call node itself—it sometimes contains the signature of the function.
 			if (call->argumentsExplicit) {
 				if (argument_types)
@@ -60,7 +60,7 @@ namespace LL2W::Passes {
 				AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global));
 				global = alias->aliasTo->front() == '@'? StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
 			} else throw std::runtime_error("Couldn't find signature for function " + *global);
-		} while (true);
+		}
 	}
 
 	void setupCalls(Function &function) {
@@ -154,6 +154,7 @@ namespace LL2W::Passes {
 			for (i = 0; i < reg_max && i < arg_count; ++i) {
 				VariablePtr precolored = function.makePrecoloredVariable(WhyInfo::argumentOffset + i,
 					instruction->parent.lock());
+				precolored->type = call->constants[i]->type;
 				setupCallValue(function, precolored, instruction, call->constants[i]);
 			}
 
