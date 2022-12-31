@@ -20,10 +20,10 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
 		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
-		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze,
+		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare,
 	};
 
-	struct BaseNode: public ASTNode {
+	struct BaseNode: ASTNode {
 		using ASTNode::ASTNode;
 		virtual NodeType nodeType() const = 0;
 	};
@@ -40,14 +40,14 @@ namespace LL2W {
 		ConstantPtr constant;
 	};
 
-	struct MetadataDef: public BaseNode {
+	struct MetadataDef: BaseNode {
 		bool distinct;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Metadata; }
 	};
 
-	struct HeaderNode: public BaseNode {
+	struct HeaderNode: BaseNode {
 		const std::string *label;
 		std::vector<const std::string *> preds;
 		HeaderNode(bool simple, ASTNode *);
@@ -57,7 +57,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Header; }
 	};
 
-	struct AttributesNode: public BaseNode {
+	struct AttributesNode: BaseNode {
 		int index;
 		int allocsizeSize = -1;
 		int allocsizeCount = -1;
@@ -101,7 +101,7 @@ namespace LL2W {
 		ValuePtr cachedConstantValue;
 	};
 
-	struct SelectNode: public InstructionNode, public Reader, public Writer {
+	struct SelectNode: InstructionNode, Reader, Writer {
 		std::unordered_set<Fastmath> fastmath;
 		TypePtr conditionType, firstType, secondType;
 		ValuePtr conditionValue, firstValue, secondValue;
@@ -116,7 +116,7 @@ namespace LL2W {
 		}
 	};
 
-	struct AllocaNode: public InstructionNode, public Reader, public Writer, public HasType {
+	struct AllocaNode: InstructionNode, Reader, Writer, HasType {
 		bool inalloca = false;
 		TypePtr numelementsType = nullptr;
 		ValuePtr numelementsValue = nullptr;
@@ -195,7 +195,7 @@ namespace LL2W {
 		std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
-	struct BrUncondNode: public InstructionNode {
+	struct BrUncondNode: InstructionNode {
 		const std::string *destination;
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
 		BrUncondNode(const std::string &destination_): BrUncondNode(StringSet::intern(destination_)) {}
@@ -204,7 +204,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::BrUncond; }
 	};
 
-	struct BrCondNode: public InstructionNode, public Reader {
+	struct BrCondNode: InstructionNode, Reader {
 		ConstantPtr condition;
 		const std::string *ifTrue, *ifFalse;
 
@@ -245,7 +245,7 @@ namespace LL2W {
 			std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
-	struct CallNode: public CallInvokeNode {
+	struct CallNode: CallInvokeNode {
 		const std::string *tail = nullptr;
 		std::unordered_set<Fastmath> fastmath;
 
@@ -256,7 +256,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Call; }
 	};
 
-	struct AsmNode: public CallInvokeNode {
+	struct AsmNode: CallInvokeNode {
 		const std::string *contents = nullptr;
 		const std::string *constraints = nullptr;
 		bool sideeffect = false;
@@ -270,7 +270,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Asm; }
 	};
 
-	struct InvokeNode: public CallInvokeNode {
+	struct InvokeNode: CallInvokeNode {
 		const std::string *normalLabel, *exceptionLabel;
 
 		InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type,
@@ -280,7 +280,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Invoke; }
 	};
 
-	struct GetelementptrNode: public InstructionNode, public Writer, public Reader, public CachedConstantValue {
+	struct GetelementptrNode: InstructionNode, Writer, Reader, CachedConstantValue {
 		struct Index {
 			long width;
 			std::variant<long, Variable::ID> value;
@@ -303,7 +303,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
-	struct RetNode: public InstructionNode, public Reader {
+	struct RetNode: InstructionNode, Reader {
 		TypePtr type;
 		ValuePtr value;
 
@@ -315,7 +315,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
-	struct LandingpadNode: public InstructionNode, public Writer, public Reader {
+	struct LandingpadNode: InstructionNode, Writer, Reader {
 		struct Clause {
 			enum class ClauseType {Catch, Filter};
 			ClauseType clauseType;
@@ -336,7 +336,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
-	struct ConversionNode: public InstructionNode, public Writer, public Reader {
+	struct ConversionNode: InstructionNode, Writer, Reader {
 		TypePtr from, to;
 		ValuePtr value;
 		Conversion conversionType;
@@ -348,7 +348,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
-	struct BasicMathNode: public InstructionNode, public Writer, public Reader {
+	struct BasicMathNode: InstructionNode, Writer, Reader {
 		const std::string *oper;
 		int operSymbol;
 		bool nuw = false, nsw = false;
@@ -362,7 +362,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
-	struct PhiNode: public InstructionNode, public Reader, public Writer {
+	struct PhiNode: InstructionNode, Reader, Writer {
 		/** Whether all operands are local variables. */
 		bool pure = true;
 		std::unordered_set<Fastmath> fastmath;
@@ -375,7 +375,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override;
 	};
 
-	struct SimpleNode: public InstructionNode, public Writer, public Reader {
+	struct SimpleNode: InstructionNode, Writer, Reader {
 		TypePtr type;
 		ValuePtr left, right;
 		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
@@ -385,7 +385,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&left, &right}; }
 	};
 
-	struct DivNode: public SimpleNode {
+	struct DivNode: SimpleNode {
 		enum class DivType {Sdiv, Udiv};
 		DivType divType;
 		bool exact = false;
@@ -395,7 +395,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Div; }
 	};
 
-	struct RemNode: public SimpleNode {
+	struct RemNode: SimpleNode {
 		enum class RemType {Srem, Urem};
 		RemType remType;
 		bool exact = false;
@@ -421,7 +421,7 @@ namespace LL2W {
 		std::vector<ConstantPtr *> allConstantPointers() override;
 	};
 
-	struct ShrNode: public SimpleNode {
+	struct ShrNode: SimpleNode {
 		enum class ShrType {Lshr, Ashr};
 		ShrType shrType;
 		bool exact = false;
@@ -431,7 +431,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Shr; }
 	};
 
-	struct FMathNode: public SimpleNode {
+	struct FMathNode: SimpleNode {
 		enum class FMathType {Fadd, Fsub, Fmul, Fdiv, Frem};
 		FMathType fmathType;
 		std::unordered_set<Fastmath> fastmath;
@@ -442,7 +442,7 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::FMath; }
 	};
 
-	struct SwitchNode: public InstructionNode, public Reader {
+	struct SwitchNode: InstructionNode, Reader {
 		TypePtr type;
 		ValuePtr value;
 		const std::string *label;
@@ -455,7 +455,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
-	struct ExtractValueNode: public InstructionNode, public Writer, public Reader {
+	struct ExtractValueNode: InstructionNode, Writer, Reader {
 		std::shared_ptr<AggregateType> aggregateType;
 		ValuePtr aggregateValue;
 		std::vector<int> decimals;
@@ -467,7 +467,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue}; }
 	};
 
-	struct InsertValueNode: public InstructionNode, public Writer, public Reader {
+	struct InsertValueNode: InstructionNode, Writer, Reader {
 		TypePtr aggregateType, type;
 		ValuePtr aggregateValue, value;
 		std::vector<int> decimals;
@@ -479,7 +479,7 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&aggregateValue, &value}; }
 	};
 
-	struct ResumeNode: public InstructionNode, public Reader {
+	struct ResumeNode: InstructionNode, Reader {
 		TypePtr type;
 		ValuePtr value;
 		ResumeNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
@@ -489,13 +489,13 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
-	struct UnreachableNode: public InstructionNode {
+	struct UnreachableNode: InstructionNode {
 		UnreachableNode() {}
 		std::string debugExtra() const override { return "\e[91munreachable\e[39m"; }
 		NodeType nodeType() const override { return NodeType::Unreachable; }
 	};
 
-	struct FreezeNode: public InstructionNode, public Writer, public Reader {
+	struct FreezeNode: InstructionNode, Writer, Reader {
 		TypePtr type;
 		ValuePtr value;
 		FreezeNode(ASTNode *result_, ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
@@ -503,6 +503,19 @@ namespace LL2W {
 		NodeType nodeType() const override { return NodeType::Freeze; }
 		std::vector<ValuePtr> allValues() override { return {value}; }
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+	};
+
+	struct DbgDeclareNode: InstructionNode {
+		enum class Type {Invalid, Value, Declare};
+		Type type = Type::Invalid;
+		ConstantPtr constant;
+		// TODO: make actual metadata class maybe?
+		ASTNode *firstMetadata = nullptr;
+		ASTNode *secondMetadata = nullptr;
+		DbgDeclareNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata, ASTNode *second_metadata,
+		               ASTNode *unibangs);
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::DbgDeclare; }
 	};
 
 	ASTNode * ignoreConversion(ASTNode *);

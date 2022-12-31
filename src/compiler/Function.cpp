@@ -44,6 +44,7 @@
 #include "parser/FunctionHeader.h"
 #include "pass/BreakUpBigSets.h"
 #include "pass/CopyArguments.h"
+#include "pass/ExtractTypes.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
 #include "pass/IgnoreIntrinsics.h"
@@ -890,6 +891,7 @@ namespace LL2W {
 		Passes::lowerSelect(*this);
 		initialStackSize = stackSize;
 		extractVariables();
+		Passes::extractTypes(*this);
 		Passes::lowerStackrestore(*this);
 		Passes::makeCFG(*this);
 		Passes::lowerVarargsFirst(*this);

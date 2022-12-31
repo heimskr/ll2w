@@ -37,7 +37,7 @@ endif
 all: $(OUTPUT)
 
 test: $(OUTPUT)
-	./$(OUTPUT) ll/formicine_performance.ll
+	./$(OUTPUT) ll/serial.ll
 
 $(OUTPUT): $(OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS)

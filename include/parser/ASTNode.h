@@ -5,6 +5,7 @@
 #include <list>
 #include <ostream>
 #include <set>
+#include <sstream>
 #include <string>
 
 // #define TRACK_ASTNODES
@@ -26,6 +27,7 @@ namespace LL2W {
 			ASTNode() {}
 			static void onCreate(ASTNode *);
 			static void onDestroy(ASTNode *);
+			void recursiveStringify(std::stringstream &) const;
 
 		public:
 			Parser *parser;
@@ -75,6 +77,7 @@ namespace LL2W {
 			void debug(int indent = 0, bool is_last = false, bool suppress_line = false) const;
 			virtual std::string debugExtra() const;
 			virtual std::string style() const;
+			std::string recursiveStringify() const;
 
 			static void destroy(std::initializer_list<ASTNode *>);
 

@@ -88,7 +88,7 @@ namespace LL2W {
 		std::stringstream out;
 		const std::string base;
 		if (registers.empty()) {
-			out << "\e[32m%" << *id << "\e[39m";
+			out << "\e[32m%" << *id << "\e[2m{" << whyString(type) << "}\e[22;39m";
 		} else {
 			out << "\e[92m";
 			if (1 < registers.size())

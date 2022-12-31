@@ -585,36 +585,36 @@ namespace LL2W {
 		std::stringstream out;
 		if (result)
 			out << getResult() << "\e[2m = ";
-		print(out, "\e[0;34m", tail, " ");
-		out << "\e[0;91mcall\e[0m" << fastmath;
+		print(out, "\e[22;34m", tail, " ");
+		out << "\e[22;91mcall\e[39m" << fastmath;
 		if (!fastmath.empty())
-			out << "\e[0;2m .\e[0m";
-		print(out, " \e[34m", cconv, "\e[0;2m .\e[0m");
+			out << "\e[2m .\e[22m";
+		print(out, " \e[34m", cconv, "\e[39;2m .\e[22m");
 		for (RetAttr attr: retattrs)
-			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
-		print(out, " \e[34mdereferenceable\e[0;2m(\e[0m", dereferenceable, "\e[2m)\e[0m");
+			out << " \e[34m" << retattr_map.at(attr) << "\e[39m";
+		print(out, " \e[34mdereferenceable\e[39;2m(\e[22m", dereferenceable, "\e[2m)\e[22m");
 		if (!retattrs.empty() || dereferenceable != -1)
-			out << " \e[0;2m.\e[0m";
-		print(out, " \e[34maddrspace\e[0;2m(\e[0m", addrspace, "\e[2m)\e[0m");
+			out << " \e[2m.\e[22m";
+		print(out, " \e[34maddrspace\e[39;2m(\e[22m", addrspace, "\e[2m)\e[22m");
 		out << " " << *returnType;
 		if (argumentsExplicit) {
-			out << " \e[1;2m(\e[0m";
+			out << " \e[1;2m(\e[22m";
 			for (auto begin = argumentTypes.cbegin(), iter = begin, end = argumentTypes.cend(); iter != end; ++iter) {
 				if (iter != begin)
-					out << "\e[2m, \e[0m";
+					out << "\e[2m, \e[22m";
 				out << **iter;
 			}
 			if (argumentEllipsis)
-				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[0m";
-			out << "\e[1;2m)\e[0m";
+				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[22m";
+			out << "\e[1;2m)\e[22m";
 		}
-		out << " " << *name << "\e[2m(\e[0m";
+		out << " " << *name << "\e[2m(\e[22m";
 		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
 			if (iter != begin)
-				out << "\e[2m,\e[0m ";
+				out << "\e[2m,\e[22m ";
 			out << **iter;
 		}
-		out << "\e[2m)\e[0m";
+		out << "\e[2m)\e[22m";
 		return out.str();
 	}
 
@@ -1125,6 +1125,26 @@ namespace LL2W {
 	std::string FreezeNode::debugExtra() const {
 		return "\e[34m%" + std::string(*result) + " \e[39;2m= \e[22;91mfreeze\e[39m " + std::string(*type) + ' ' +
 			std::string(*value) + '\n';
+	}
+
+	DbgDeclareNode::DbgDeclareNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata,
+	                               ASTNode *second_metadata, ASTNode *unibangs) {
+		Deleter deleter(unibangs, constant_, type_);
+		handleUnibangs(unibangs);
+		type = type_->symbol == LLVMTOK_DBG_VALUE? Type::Value : Type::Declare;
+		constant = Constant::make(constant_);
+		adopt({firstMetadata = first_metadata, secondMetadata = second_metadata});
+	}
+
+	std::string DbgDeclareNode::debugExtra() const {
+		if (type == Type::Invalid)
+			return "\e[101minvalid @llvm.dbg.* intrinsic\e[49m";
+		std::stringstream out;
+		out << "\e[91mcall \e[34mvoid @llvm.dbg." << (type == Type::Value? "value" : "declare") << "\e[2m(\e[22;34m";
+		out << "metadata\e[39m " << std::string(*constant) << "\e[2m,\e[22;34m metadata\e[39m ";
+		out << firstMetadata->recursiveStringify() << "\e[2m,\e[22;34m metadata\e[39m ";
+		out << secondMetadata->recursiveStringify() << "\e[2m)\e[22m";
+		return out.str();
 	}
 
 	ASTNode * ignoreConversion(ASTNode *node) {

@@ -14,6 +14,8 @@
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubRInstruction.h"
+#include "instruction/TypedPopInstruction.h"
+#include "instruction/TypedPushInstruction.h"
 #include "pass/LowerIcmp.h"
 #include "pass/MakeCFG.h"
 #include "pass/SetupCalls.h"
@@ -130,7 +132,7 @@ namespace LL2W::Passes {
 			if (convention == CallingConvention::Reg16) {
 				for (i = 0; i < arg_count && i < WhyInfo::argumentCount; ++i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(arg_variable), false)
+					function.insertBefore(instruction, std::make_shared<TypedPushInstruction>(arg_variable), false)
 						->setDebug(*llvm)->extract();
 				}
 			}
@@ -202,7 +204,7 @@ namespace LL2W::Passes {
 				// Pop the argument registers from the stack.
 				for (i = std::min(15, arg_count - 1); 0 <= i; --i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<StackPopInstruction>(arg_variable), false)
+					function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(arg_variable), false)
 						->setDebug(*llvm)->extract();
 				}
 			}

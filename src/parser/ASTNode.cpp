@@ -282,6 +282,18 @@ namespace LL2W {
 		return "\e[1m";
 	}
 
+	std::string ASTNode::recursiveStringify() const {
+		std::stringstream ss;
+		recursiveStringify(ss);
+		return ss.str();
+	}
+
+	void ASTNode::recursiveStringify(std::stringstream &ss) const {
+		ss << *lexerInfo;
+		for (const ASTNode *child: *this)
+			child->recursiveStringify(ss);
+	}
+
 	void ASTNode::destroy(std::initializer_list<ASTNode *> to_destroy) {
 		for (ASTNode *node: to_destroy) {
 			if (node)
