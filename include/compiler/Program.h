@@ -8,6 +8,7 @@
 #include "compiler/File.h"
 #include "compiler/Function.h"
 #include "compiler/LexicalBlock.h"
+#include "compiler/LocalVariable.h"
 #include "compiler/Location.h"
 #include "compiler/Subprogram.h"
 #include "parser/AliasDef.h"
@@ -44,6 +45,7 @@ namespace LL2W {
 			std::map<int, Location> locations;
 			std::map<int, Subprogram> subprograms;
 			std::map<int, LexicalBlock> lexicalBlocks;
+			std::map<int, LocalVariable> localVariables;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they

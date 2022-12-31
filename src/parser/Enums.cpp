@@ -105,10 +105,11 @@ namespace LL2W {
 		{"slt", IcmpCond::Slt}, {"sle", IcmpCond::Sle}};
 
 	std::unordered_map<IcmpCond, IcmpCond> cond_rev_map {
-		{IcmpCond::Eq, IcmpCond::Eq}, {IcmpCond::Ne, IcmpCond::Ne}, {IcmpCond::Ugt, IcmpCond::Ult},
+		{IcmpCond::Eq,  IcmpCond::Eq},  {IcmpCond::Ne,  IcmpCond::Ne},  {IcmpCond::Ugt, IcmpCond::Ult},
 		{IcmpCond::Uge, IcmpCond::Ule}, {IcmpCond::Ult, IcmpCond::Ugt}, {IcmpCond::Ule, IcmpCond::Uge},
 		{IcmpCond::Sgt, IcmpCond::Slt}, {IcmpCond::Sge, IcmpCond::Sle}, {IcmpCond::Slt, IcmpCond::Sgt},
-		{IcmpCond::Sle, IcmpCond::Sge}};
+		{IcmpCond::Sle, IcmpCond::Sge}, {IcmpCond::Xge, IcmpCond::Xle}, {IcmpCond::Xgt, IcmpCond::Xlt},
+		{IcmpCond::Xlt, IcmpCond::Xgt}, {IcmpCond::Xle, IcmpCond::Xge}};
 
 	std::unordered_map<Conversion, std::string> conversion_map {
 		{Conversion::None,    "none"},    {Conversion::Trunc,    "trunc"},    {Conversion::Zext,     "zext"},

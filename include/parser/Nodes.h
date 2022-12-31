@@ -505,15 +505,15 @@ namespace LL2W {
 		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
 	};
 
-	struct DbgDeclareNode: InstructionNode {
+	struct DbgIntrinsicNode: InstructionNode {
 		enum class Type {Invalid, Value, Declare};
 		Type type = Type::Invalid;
 		ConstantPtr constant;
 		// TODO: make actual metadata class maybe?
 		ASTNode *firstMetadata = nullptr;
 		ASTNode *secondMetadata = nullptr;
-		DbgDeclareNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata, ASTNode *second_metadata,
-		               ASTNode *unibangs);
+		DbgIntrinsicNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata, ASTNode *second_metadata,
+		                 ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::DbgDeclare; }
 	};

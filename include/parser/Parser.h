@@ -1,9 +1,5 @@
-#ifndef PARSER_PARSER_H_
-#define PARSER_PARSER_H_
-
+#include <cstdio>
 #include <string>
-
-#include <stdio.h>
 
 #include "ASTNode.h"
 
@@ -38,5 +34,3 @@ namespace LL2W {
 
 	extern Parser llvmParser, wasmParser;
 }
-
-#endif

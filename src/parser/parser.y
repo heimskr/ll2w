@@ -404,7 +404,7 @@ metadata_def: metabang "=" metadata_distinct "!{" metadata_list "}"
             | metabang "=" metadata_distinct "!DISubprogram" "(" disubprogram_list ")"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DILocalVariable" "(" dilv_list ")"
-              { $$ = nullptr; D($1, $2, $3, $4, $5, $6, $7); }
+              { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DILocation" "(" dilocation_list ")"
               { $$ = $4->adopt({$1, $6}); D($2, $3, $5, $7); }
             | metabang "=" metadata_distinct "!DITemplateValueParameter" "(" ditvp_list ")"
@@ -796,7 +796,7 @@ _srcloc: srcloc | { $$ = nullptr; };
 srcloc: "," "!srcloc" LLVMTOK_INTBANG { $$ = $3; D($1, $2); };
 
 i_dbg: "call" "void" dbg_type "(" "metadata" constant "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs unibangs
-       { $$ = (new DbgDeclareNode($3, $6, $9, $12, $15))->locate($1); D($1, $2, $4, $5, $7, $8, $10, $11, $13, $14); }
+       { $$ = (new DbgIntrinsicNode($3, $6, $9, $12, $15))->locate($1); D($1, $2, $4, $5, $7, $8, $10, $11, $13, $14); }
      | "call" "void" dbg_type "(" "metadata" anybang "," "metadata" LLVMTOK_INTBANG "," "metadata" anybang ")" _fnattrs unibangs
        { $$ = $3; D($1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15); }
      | "call" "void" "@llvm.dbg.label" "(" "metadata" LLVMTOK_INTBANG ")" _fnattrs unibangs

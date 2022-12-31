@@ -1127,8 +1127,8 @@ namespace LL2W {
 			std::string(*value) + '\n';
 	}
 
-	DbgDeclareNode::DbgDeclareNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata,
-	                               ASTNode *second_metadata, ASTNode *unibangs) {
+	DbgIntrinsicNode::DbgIntrinsicNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata,
+	                                   ASTNode *second_metadata, ASTNode *unibangs) {
 		Deleter deleter(unibangs, constant_, type_);
 		handleUnibangs(unibangs);
 		type = type_->symbol == LLVMTOK_DBG_VALUE? Type::Value : Type::Declare;
@@ -1136,7 +1136,7 @@ namespace LL2W {
 		adopt({firstMetadata = first_metadata, secondMetadata = second_metadata});
 	}
 
-	std::string DbgDeclareNode::debugExtra() const {
+	std::string DbgIntrinsicNode::debugExtra() const {
 		if (type == Type::Invalid)
 			return "\e[101minvalid @llvm.dbg.* intrinsic\e[49m";
 		std::stringstream out;

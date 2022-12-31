@@ -10,7 +10,7 @@ namespace LL2W::Util {
 		char *end;
 		long parsed = strtol(c_str, &end, base);
 		if (c_str + str.length() != end)
-			throw std::invalid_argument("Not an integer: \"" + str + "\"");
+			throw std::invalid_argument("Not an integer: \"" + str + '"');
 		return parsed;
 	}
 

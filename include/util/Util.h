@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <charconv>
 #include <initializer_list>
 #include <iostream>
 #include <set>
@@ -196,6 +197,15 @@ namespace LL2W::Util {
 			os << item;
 		}
 		return os;
+	}
+
+	template <typename T>
+	T parse(std::string_view string, int base = 10) {
+		T out = 0;
+		auto [ptr, err] = std::from_chars(string.data(), string.data() + string.length(), out, base);
+		if (err == std::errc())
+			return out;
+		throw std::invalid_argument("Not an integer: \"" + std::string(string) + '"');
 	}
 }
 
