@@ -1437,7 +1437,6 @@ namespace LL2W {
 			}
 			out << "\n";
 		}
-		out << "\t: $rt\n";
 		return out.str();
 	}
 
