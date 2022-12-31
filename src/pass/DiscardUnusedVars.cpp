@@ -1,0 +1,38 @@
+#include "compiler/Function.h"
+#include "compiler/Instruction.h"
+#include "instruction/Comment.h"
+#include "pass/DiscardUnusedVars.h"
+#include "util/Timer.h"
+
+namespace LL2W::Passes {
+	size_t discardUnusedVars(Function &function) {
+		Timer timer("DiscardUnusedVars");
+
+		size_t discarded = 0;
+		std::list<InstructionPtr> to_remove;
+
+		for (const auto &[var_id, var]: function.variableStore) {
+			if (!var->hasSpecialRegister() && !var->definitions.empty()) {
+				if (!function.getLiveOut(var).empty())
+					continue;
+
+				++discarded;
+
+				for (const auto &weak_definition: var->definitions)
+					to_remove.push_back(weak_definition.lock());
+			}
+		}
+
+		for (const InstructionPtr &instruction: to_remove) {
+			auto iter = std::find(function.linearInstructions.begin(), function.linearInstructions.end(), instruction);
+			if (iter != function.linearInstructions.begin() && std::dynamic_pointer_cast<Comment>(*--iter))
+				function.remove(*iter);
+			function.remove(instruction);
+		}
+
+		static size_t total = 0;
+		success() << total << " + " << discarded << " -> " << (total += discarded) << '\n';
+
+		return discarded;
+	}
+}

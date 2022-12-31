@@ -44,6 +44,7 @@
 #include "parser/FunctionHeader.h"
 #include "pass/BreakUpBigSets.h"
 #include "pass/CopyArguments.h"
+#include "pass/DiscardUnusedVars.h"
 #include "pass/ExtractTypes.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
@@ -949,6 +950,7 @@ namespace LL2W {
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		Passes::signChars(*this);
+		Passes::discardUnusedVars(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
