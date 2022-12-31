@@ -7,6 +7,7 @@
 // #define HIDE_PRINTS
 
 #include "compiler/BasicBlock.h"
+#include "compiler/BasicType.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/PaddedStructs.h"
 #include "compiler/Program.h"
@@ -100,23 +101,44 @@ namespace LL2W {
 				}
 				case LLVMTOK_DIBT: {
 					const int index = node->front()->atoi();
-					basicTypes.try_emplace(index, *node);
+					basicTypes.try_emplace(index, TypeSet {std::make_shared<BasicType>(*node)});
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 			}
 		}
 
-		for (auto &[index, location]: locations)
-			if (subprograms.count(location.scope) != 0)
+		// If we have a line like "!3 = !{!1, !2}" and the list contains any BasicTypes, add each BasicType in the list
+		// to !3's set of BasicTypes. Note that this won't work recursively if the list contains any nodes with an ID
+		// higher than the LHS's ID.
+		static const std::string *nullstr = StringSet::intern("null");
+		for (ASTNode *node: root) {
+			if (auto *def = dynamic_cast<MetadataDef *>(node)) {
+				if (Util::isNumeric(std::string_view(*def->front()->lexerInfo).substr(1))) {
+					const int index = def->front()->atoi();
+					for (ASTNode *subnode: *def->back()) {
+						if (subnode->symbol != LLVMTOK_METABANG || subnode->lexerInfo == nullstr)
+							continue;
+						const int subindex = subnode->atoi();
+						if (basicTypes.contains(subindex))
+							for (const auto &basic_type: basicTypes.at(subindex))
+								basicTypes[index].insert(basic_type);
+					}
+				}
+			}
+		}
+
+		for (auto &[index, location]: locations) {
+			if (subprograms.count(location.scope) != 0) {
 				location.file = subprograms.at(location.scope).file;
-			else if (lexicalBlocks.count(location.scope) != 0) {
+			} else if (lexicalBlocks.count(location.scope) != 0) {
 				location.file = lexicalBlocks.at(location.scope).file;
 				do {
 					location.scope = lexicalBlocks.at(location.scope).scope;
 				} while (lexicalBlocks.count(location.scope) != 0);
 			} else
 				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
+		}
 	}
 
 	Program::~Program() {
@@ -236,7 +258,7 @@ namespace LL2W {
 						changed = true;
 					} else if (data.value->valueType() == ValueType::Global) {
 						const std::string &target = *dynamic_cast<GlobalValue *>(data.value.get())->name;
-						if (global_strings.count(target) != 0) {
+						if (global_strings.contains(target)) {
 							global_strings.emplace(name, global_strings.at(target));
 							changed = true;
 						}

@@ -36,6 +36,7 @@ namespace LL2W::Util {
 
 	bool isNumeric(const std::string &);
 	bool isNumeric(const std::string *);
+	bool isNumeric(std::string_view);
 	bool isNumeric(const char *);
 
 	bool isHex(const char);

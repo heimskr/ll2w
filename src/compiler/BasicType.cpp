@@ -10,4 +10,14 @@ namespace LL2W {
 		size(node.at(2)->atoi()),
 		name(node.at(1)->lexerInfo),
 		encoding(node.at(3)->lexerInfo) {}
+
+	bool BasicType::isSigned() const {
+		if (encoding != nullptr && encoding->find("_signed") != std::string::npos)
+			return true;
+
+		if (name != nullptr && name->find("unsigned") == std::string::npos && name->find("signed") != std::string::npos)
+			return true;
+
+		return false;
+	}
 }

@@ -17,8 +17,7 @@ namespace LL2W {
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
 		BaseNode(llvmParser, LLVM_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
 		locate(dotident_node);
-		distinct = distinct_node != nullptr;
-		if (distinct_node)
+		if (distinct = distinct_node != nullptr)
 			delete distinct_node;
 		adopt(dotident_node);
 		adopt(list);

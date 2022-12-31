@@ -1,23 +1,25 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "compiler/BasicType.h"
 #include "compiler/File.h"
 #include "compiler/Function.h"
 #include "compiler/LexicalBlock.h"
 #include "compiler/LocalVariable.h"
 #include "compiler/Location.h"
 #include "compiler/Subprogram.h"
+#include "compiler/TypeSet.h"
 #include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
 
 namespace LL2W {
 	struct ArrayValue;
 	class  ASTNode;
+	struct BasicType;
 	struct StructValue;
 	struct Value;
 
@@ -47,7 +49,8 @@ namespace LL2W {
 			std::map<int, Subprogram> subprograms;
 			std::map<int, LexicalBlock> lexicalBlocks;
 			std::map<int, LocalVariable> localVariables;
-			std::map<int, BasicType> basicTypes;
+			/** This is a set of shared_ptrs instead of just a shared_ptr because of nodes like "!1 = {!2, !3}". */
+			std::map<int, TypeSet> basicTypes;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they

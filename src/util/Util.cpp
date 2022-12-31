@@ -25,15 +25,23 @@ namespace LL2W::Util {
 	bool isNumeric(const std::string &str) {
 		if (str.empty())
 			return false;
-		for (char c: str) {
-			if (c < '0' || '9' < c)
+		for (char ch: str)
+			if (ch < '0' || '9' < ch)
 				return false;
-		}
 		return true;
 	}
 
 	bool isNumeric(const std::string *str) {
 		return isNumeric(*str);
+	}
+
+	bool isNumeric(std::string_view str) {
+		if (str.empty())
+			return false;
+		for (char ch: str)
+			if (ch < '0' || '9' < ch)
+				return false;
+		return true;
 	}
 
 	bool isNumeric(const char *str) {

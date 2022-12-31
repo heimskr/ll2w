@@ -41,7 +41,7 @@ namespace LL2W {
 	};
 
 	struct MetadataDef: BaseNode {
-		bool distinct;
+		bool distinct = false;
 		MetadataDef(ASTNode *decvar, ASTNode *distinct, ASTNode *list);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Metadata; }
