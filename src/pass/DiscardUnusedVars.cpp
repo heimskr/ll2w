@@ -13,7 +13,7 @@ namespace LL2W::Passes {
 
 		for (const auto &[var_id, var]: function.variableStore) {
 			if (!var->hasSpecialRegister() && !var->definitions.empty()) {
-				if (!function.getLiveOut(var).empty())
+				if (function.isLiveOutAnywhere(var))
 					continue;
 
 				++discarded;
@@ -29,9 +29,6 @@ namespace LL2W::Passes {
 				function.remove(*iter);
 			function.remove(instruction);
 		}
-
-		static size_t total = 0;
-		success() << total << " + " << discarded << " -> " << (total += discarded) << '\n';
 
 		return discarded;
 	}

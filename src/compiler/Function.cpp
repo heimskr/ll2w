@@ -380,7 +380,7 @@ namespace LL2W {
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 #ifdef STRICT_READ_CHECK
-			if (std::shared_ptr<Variable> read = instruction->doesRead(variable)) {
+			if (VariablePtr read = instruction->doesRead(variable)) {
 #else
 			if (instruction->read.count(variable) != 0) {
 #endif
@@ -501,7 +501,7 @@ namespace LL2W {
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 #ifdef STRICT_READ_CHECK
-			if (std::shared_ptr<Variable> read = instruction->doesRead(variable))
+			if (VariablePtr read = instruction->doesRead(variable))
 				if (instruction->canReplaceRead(read))
 					return true;
 #else
@@ -1387,33 +1387,48 @@ namespace LL2W {
 		}
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(std::shared_ptr<Variable> var,
-	std::function<std::unordered_set<std::shared_ptr<Variable>> &(const std::shared_ptr<BasicBlock> &)> getter) const {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(const VariablePtr &var,
+	std::function<std::unordered_set<VariablePtr> &(const std::shared_ptr<BasicBlock> &)> getter) const {
 		Timer timer("GetLive");
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const auto &alias_pointers = var->getAliases();
-		std::unordered_set<std::shared_ptr<Variable>> aliases;
+		std::unordered_set<VariablePtr> aliases;
 		for (const auto &[id, subvar]: variableStore)
-			if (alias_pointers.count(subvar.get()) != 0)
+			if (alias_pointers.contains(subvar.get()))
 				aliases.insert(subvar);
 		aliases.insert(var);
 		for (const auto &alias: aliases)
 			for (const auto &block: blocks)
-				if (getter(block).count(alias) != 0)
+				if (getter(block).contains(alias))
 					out.insert(block);
 		return out;
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(std::shared_ptr<Variable> var) const {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(const VariablePtr &var) const {
 		return getLive(var, [&](const auto &block) -> auto & {
 			return block->liveIn;
 		});
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(std::shared_ptr<Variable> var) const {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(const VariablePtr &var) const {
 		return getLive(var, [&](const auto &block) -> auto & {
 			return block->liveOut;
 		});
+	}
+
+	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {
+		Timer timer("IsLiveOutAnywhere");
+				const auto &alias_pointers = var->getAliases();
+		std::unordered_set<VariablePtr> aliases;
+		for (const auto &[id, subvar]: variableStore)
+			if (alias_pointers.contains(subvar.get()))
+				aliases.insert(subvar);
+		aliases.insert(var);
+		for (const auto &alias: aliases)
+			for (const auto &block: blocks)
+				if (block->liveOut.contains(alias))
+					return true;
+		return false;
 	}
 
 	std::string Function::toString() {
@@ -1445,12 +1460,12 @@ namespace LL2W {
 		out << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
 			if (iter != begin)
-				out << "\e[2m,\e[0m ";
+				out << "\e[2m,\e[22m ";
 			out << *iter->type;
 			if (iter->name)
 				out << " " << *iter->name;
 		}
-		out << "\e[94m)\e[0m";
+		out << "\e[94m)\e[39m";
 		return out.str();
 	}
 
