@@ -1151,4 +1151,53 @@ namespace LL2W {
 			throw std::invalid_argument("Unexpected conversion expr in ignoreConversion: " + *node->lexerInfo);
 		return node->at(0)->at(1);
 	}
+
+// AtomicrmwNode
+
+	std::unordered_map<std::string, AtomicrmwNode::Op> AtomicrmwNode::opMap {
+		{"xchg", Op::Xchg}, {"add",  Op::Add},  {"sub",  Op::Sub},  {"and",  Op::And},  {"nand", Op::Nand},
+		{"or",   Op::Or},   {"xor",  Op::Xor},  {"max",  Op::Max},  {"min",  Op::Min},  {"umax", Op::Umax},
+		{"umin", Op::Umin}, {"fadd", Op::Fadd}, {"fsub", Op::Fsub}, {"fmax", Op::Fmax}, {"fmin", Op::Fmin},
+	};
+
+	AtomicrmwNode::AtomicrmwNode(ASTNode *result_, ASTNode *_volatile_, ASTNode *op_, ASTNode *pointer_type,
+	                             ASTNode *pointer_, ASTNode *type_, ASTNode *value_, ASTNode *syncscope_,
+	                             ASTNode *ordering_, ASTNode *align_, ASTNode *unibangs):
+	opString(op_->lexerInfo) {
+		Deleter deleter(unibangs, _volatile_, op_, pointer_type, pointer_, type_, value_, syncscope_, ordering_,
+		                align_);
+		handleUnibangs(unibangs);
+		result = result_->extracted();
+		op = opMap.at(*opString);
+		pointerType = getType(pointer_type);
+		pointer = getValue(pointer_);
+		type = getType(type_);
+		value = getValue(value_);
+		if (syncscope_ != nullptr)
+			syncscope = syncscope_->extracted();
+		volatile_ = bool(_volatile_);
+		if (align_ != nullptr)
+			align = align_->atoi();
+		for (const std::pair<const Ordering, std::string> &pair: ordering_map)
+			if (*ordering_->lexerInfo == pair.second) {
+				ordering = pair.first;
+				break;
+			}
+	}
+
+	std::string AtomicrmwNode::debugExtra() const {
+		std::stringstream out;
+		out << getResult() << "\e[2m = \e[22;91matomicrmw\e[39m";
+		if (volatile_)
+			out << " \e[38;5;202mvolatile\e[39m";
+		out << " \e[91m" << *opString << "\e[39m " << *pointerType << ' ' << *pointer << "\e[2m,\e[22m " << *type << ' '
+		    << *value;
+		if (syncscope != nullptr)
+			out << " \e[34msyncscope\e[39;2m(\e[22m\"" << *syncscope << "\"\e[2m)\e[22m";
+		if (ordering != Ordering::None)
+			out << " \e[38;5;202m" << ordering_map.at(ordering) << "\e[39m";
+		if (align != -1)
+			out << "\e[2m,\e[22;34m align \e[39m" << align;
+		return out.str();
+	}
 }

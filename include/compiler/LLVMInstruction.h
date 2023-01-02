@@ -19,10 +19,10 @@ namespace LL2W {
 			std::string debugExtra() override;
 			std::string toString() const override;
 
-			bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override;
-			bool canReplaceRead(std::shared_ptr<Variable>) const override;
-			bool replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override;
-			bool canReplaceWritten(std::shared_ptr<Variable>) const override;
+			bool replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) override;
+			bool canReplaceRead(const VariablePtr &) const override;
+			bool replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) override;
+			bool canReplaceWritten(const VariablePtr &) const override;
 
 			bool isPhi() const override;
 			bool holdsLabels() const override;

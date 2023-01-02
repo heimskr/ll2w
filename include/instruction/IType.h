@@ -25,11 +25,11 @@ namespace LL2W {
 			using ValueType = T;
 
 			ValuePtr originalValue;
-			std::shared_ptr<Variable> rs, rd;
+			VariablePtr rs, rd;
 			T imm;
 
 			IType(std::shared_ptr<Variable> rs_, T imm_, std::shared_ptr<Variable> rd_, int index_ = -1):
-				WhyInstruction(index_), rs(rs_), rd(rd_), imm(imm_) {}
+				WhyInstruction(index_), rs(std::move(rs_)), rd(std::move(rd_)), imm(std::move(imm_)) {}
 
 			IType * setOriginalValue(const ValuePtr &value) {
 				originalValue = value;
@@ -52,7 +52,7 @@ namespace LL2W {
 				return {read.size(), written.size()};
 			}
 
-			bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
+			bool replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) override {
 				if (rs->isAliasOf(*to_replace)) {
 					rs = new_var;
 					return true;
@@ -61,11 +61,11 @@ namespace LL2W {
 				return false;
 			}
 
-			bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
+			bool canReplaceRead(const VariablePtr &to_replace) const override {
 				return rs->isAliasOf(*to_replace);
 			}
 
-			bool replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
+			bool replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) override {
 				if (rd->isAliasOf(*to_replace)) {
 					rd = new_var;
 					return true;
@@ -74,7 +74,7 @@ namespace LL2W {
 				return false;
 			}
 
-			bool canReplaceWritten(std::shared_ptr<Variable> to_replace) const override {
+			bool canReplaceWritten(const VariablePtr &to_replace) const override {
 				return rd->isAliasOf(*to_replace);
 			}
 	};

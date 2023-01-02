@@ -2,9 +2,9 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	RType::RType(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rt_, std::shared_ptr<Variable> rd_,
+	RType::RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_,
 	int index_):
-		WhyInstruction(index_), rs(rs_), rt(rt_), rd(rd_) {}
+		WhyInstruction(index_), rs(std::move(rs_)), rt(std::move(rt_)), rd(std::move(rd_)) {}
 
 	std::string RType::operDebug(const char *oper) const {
 		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + std::string(*rt) + " \e[2m->\e[22m " +
@@ -33,7 +33,7 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
-	bool RType::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+	bool RType::replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) {
 		bool changed = false;
 
 		if (rs && rs->isAliasOf(*to_replace)) {
@@ -49,11 +49,11 @@ namespace LL2W {
 		return changed;
 	}
 
-	bool RType::canReplaceRead(std::shared_ptr<Variable> to_replace) const {
+	bool RType::canReplaceRead(const VariablePtr &to_replace) const {
 		return (rs && rs->isAliasOf(*to_replace)) || (rt && rt->isAliasOf(*to_replace));
 	}
 
-	bool RType::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
+	bool RType::replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) {
 		if (rd && rd->isAliasOf(*to_replace)) {
 			rd = new_var;
 			return true;
@@ -62,7 +62,7 @@ namespace LL2W {
 		return false;
 	}
 
-	bool RType::canReplaceWritten(std::shared_ptr<Variable> to_replace) const {
+	bool RType::canReplaceWritten(const VariablePtr &to_replace) const {
 		return rd && rd->isAliasOf(*to_replace);
 	}
 }

@@ -20,7 +20,7 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
 		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
-		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare,
+		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw
 	};
 
 	struct BaseNode: ASTNode {
@@ -516,6 +516,29 @@ namespace LL2W {
 		                 ASTNode *unibangs);
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::DbgDeclare; }
+	};
+
+	struct AtomicrmwNode: InstructionNode, Writer, Reader {
+		enum class Op {Invalid, Xchg, Add, Sub, And, Nand, Or, Xor, Max, Min, Umax, Umin, Fadd, Fsub, Fmax, Fmin};
+		Op op = Op::Invalid;
+		const std::string *opString = nullptr;
+		bool volatile_ = false;
+		TypePtr type;
+		TypePtr pointerType;
+		ValuePtr pointer, value;
+		const std::string *syncscope = nullptr;
+		Ordering ordering = Ordering::None;
+		int64_t align = -1;
+
+		AtomicrmwNode(ASTNode *result_, ASTNode *_volatile_, ASTNode *op_, ASTNode *pointer_type, ASTNode *pointer_,
+		              ASTNode *type_, ASTNode *value_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_,
+		              ASTNode *unibangs);
+		std::string debugExtra() const override;
+		NodeType nodeType() const override { return NodeType::Atomicrmw; }
+		std::vector<ValuePtr> allValues() override { return {pointer, value}; }
+		std::vector<ValuePtr *> allValuePointers() override { return {&pointer, &value}; }
+
+		static std::unordered_map<std::string, Op> opMap;
 	};
 
 	ASTNode * ignoreConversion(ASTNode *);

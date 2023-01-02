@@ -59,7 +59,7 @@ using AN = LL2W::ASTNode;
 %token LLVMTOK_FNATTR_BASIC LLVMTOK_CCONV LLVMTOK_VISIBILITY LLVMTOK_FASTMATH LLVMTOK_STRUCTVAR LLVMTOK_CLASSVAR
 %token LLVMTOK_UNIONVAR LLVMTOK_INTBANG LLVMTOK_ORDERING LLVMTOK_ICMP_COND LLVMTOK_LABEL_COMMENT LLVMTOK_PREDS_COMMENT
 %token LLVMTOK_TAIL LLVMTOK_CONV_OP LLVMTOK_DIV LLVMTOK_REM LLVMTOK_LOGIC LLVMTOK_SHR LLVMTOK_FMATH LLVMTOK_SIMPLE_LABEL
-%token LLVMTOK_NO_PREDS LLVMTOK_HEXADECIMAL LLVMTOK_COMDATTYPE
+%token LLVMTOK_NO_PREDS LLVMTOK_HEXADECIMAL LLVMTOK_COMDATTYPE LLVMTOK_ATOMICOP
 %token LLVMTOK_SOURCE_FILENAME "source_filename"
 %token LLVMTOK_BANG "!"
 %token LLVMTOK_EQUALS "="
@@ -692,7 +692,7 @@ _alias_linkage: LLVMTOK_LINKAGE | { $$ = nullptr; };
 instruction: i_select | i_alloca | i_store | i_store_atomic | i_load | i_load_atomic | i_icmp | i_br_uncond | i_br_cond
            | i_call | i_getelementptr | i_ret | i_invoke | i_landingpad | i_convert | i_basicmath | i_phi | i_div
            | i_rem | i_logic | i_switch | i_shr | i_fmath | i_extractvalue | i_insertvalue | i_resume | i_unreachable
-           | i_dbg | i_assume | i_freeze;
+           | i_dbg | i_assume | i_freeze | i_atomicrmw;
 
 unibangs: unibangs unibang { $$ = $1->adopt($2); } | { $$ = new AN(llvmParser, LLVM_BANGS); }; // applicable to all instructions
 unibang: "," "!prof"          LLVMTOK_INTBANG { $$ = $2->adopt($3); D($1); }
@@ -890,6 +890,11 @@ i_unreachable: "unreachable" _cdebug
                { $$ = (new UnreachableNode())->setDebug($2); D($1); };
 
 i_freeze: result "freeze" type_any value unibangs { $$ = new FreezeNode($1, $3, $4, $5); D($2); };
+
+i_atomicrmw: result "atomicrmw" _volatile atomic_op type_ptr value "," type_any value _syncscope LLVMTOK_ORDERING _align
+             unibangs
+             { $$ = new AtomicrmwNode($1, $3, $4, $5, $6, $8, $9, $10, $11, $12, $13); D($2, $7); };
+atomic_op: LLVMTOK_ATOMICOP | LLVMTOK_FMATH | LLVMTOK_LOGIC | "add" | "sub";
 
 // Constants
 

@@ -18,8 +18,7 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
-	bool JumpRegisterConditionalInstruction::replaceRead(std::shared_ptr<Variable> to_replace,
-	                                                     std::shared_ptr<Variable> new_var) {
+	bool JumpRegisterConditionalInstruction::replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) {
 		bool changed = false;
 
 		if (rs && rs->isAliasOf(*to_replace)) {
@@ -35,15 +34,15 @@ namespace LL2W {
 		return changed;
 	}
 
-	bool JumpRegisterConditionalInstruction::canReplaceRead(std::shared_ptr<Variable> to_replace) const {
+	bool JumpRegisterConditionalInstruction::canReplaceRead(const VariablePtr &to_replace) const {
 		return (rs && rs->isAliasOf(*to_replace)) || (rd && rd->isAliasOf(*to_replace));
 	}
 
-	bool JumpRegisterConditionalInstruction::replaceWritten(std::shared_ptr<Variable>, std::shared_ptr<Variable>) {
+	bool JumpRegisterConditionalInstruction::replaceWritten(const VariablePtr &, const VariablePtr &) {
 		return false;
 	}
 
-	bool JumpRegisterConditionalInstruction::canReplaceWritten(std::shared_ptr<Variable>) const {
+	bool JumpRegisterConditionalInstruction::canReplaceWritten(const VariablePtr &) const {
 		return false;
 	}
 

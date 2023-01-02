@@ -11,13 +11,13 @@ namespace LL2W {
 	struct JType: public WhyInstruction {
 		using ValueType = T;
 
-		std::shared_ptr<Variable> rs;
+		VariablePtr rs;
 		T addr;
 		bool link;
 		bool needsTransformation = false;
 
-		JType(std::shared_ptr<Variable> rs_, T addr_, bool link_, int index_ = -1):
-			WhyInstruction(index_), rs(rs_), addr(addr_), link(link_) {}
+		JType(VariablePtr rs_, T addr_, bool link_, int index_ = -1):
+			WhyInstruction(index_), rs(std::move(rs_)), addr(addr_), link(link_) {}
 
 		ExtractionResult extract(bool force = false) override {
 			if (extracted && !force)
@@ -33,7 +33,7 @@ namespace LL2W {
 			return {read.size(), 0};
 		}
 
-		bool replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) override {
+		bool replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) override {
 			if (rs->isAliasOf(*to_replace)) {
 				rs = new_var;
 				return true;
@@ -42,7 +42,7 @@ namespace LL2W {
 			return false;
 		}
 
-		bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
+		bool canReplaceRead(const VariablePtr &to_replace) const override {
 			return rs->isAliasOf(*to_replace);
 		}
 

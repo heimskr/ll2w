@@ -15,9 +15,9 @@ namespace LL2W {
 			RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_ = -1);
 
 			ExtractionResult extract(bool force = false) override;
-			bool replaceRead(VariablePtr, VariablePtr) override;
-			bool canReplaceRead(VariablePtr) const override;
-			bool replaceWritten(VariablePtr, VariablePtr) override;
-			bool canReplaceWritten(VariablePtr) const override;
+			bool replaceRead(const VariablePtr &, const VariablePtr &) override;
+			bool canReplaceRead(const VariablePtr &) const override;
+			bool replaceWritten(const VariablePtr &, const VariablePtr &) override;
+			bool canReplaceWritten(const VariablePtr &) const override;
 	};
 }

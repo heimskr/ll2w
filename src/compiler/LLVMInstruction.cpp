@@ -6,15 +6,15 @@
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
-#define IFLV(x, t) do { if (std::shared_ptr<LocalValue> local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
+#define IFLV(x, t) do { if (auto local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
 	readname(local_value, (t)); } while (0)
-#define FORV(x...) for (ValuePtr value: {x})
-#define CAST(t) t *cast = dynamic_cast<t *>(node); if (!cast) break
+#define FORV(x...) for (const auto &value: {x})
+#define CAST(t) auto *cast = dynamic_cast<t *>(node); if (!cast) break
 
 namespace LL2W {
 	LLVMInstruction::LLVMInstruction(InstructionNode *node_, int index_, bool owns_node):
 	Instruction(index_), node(node_), ownsNode(owns_node) {
-		if (node_)
+		if (node_ != nullptr)
 			debugIndex = node_->debugIndex;
 	}
 
@@ -36,13 +36,13 @@ namespace LL2W {
 		written.clear();
 		extracted = true;
 
-		auto readname = [&](std::shared_ptr<LocalValue> lv, TypePtr type) {
+		auto readname = [&](const std::shared_ptr<LocalValue> &lv, const TypePtr &type) {
 			if (!secretReads)
 				read.insert(parent.lock()->parent->getVariable(lv->name, type));
 		};
 
-		auto write = [&](const std::string *str, TypePtr type) {
-			if (str && !secretWrites)
+		auto write = [&](const std::string *str, const TypePtr &type) {
+			if (str != nullptr && !secretWrites)
 				written.insert(parent.lock()->parent->getVariable(str, type, parent.lock()));
 		};
 
@@ -111,7 +111,7 @@ namespace LL2W {
 				CAST(CallInvokeNode);
 				write(cast->result, cast->returnType);
 				IFLV(cast->name, nullptr);
-				for (ConstantPtr constant: cast->constants)
+				for (const ConstantPtr &constant: cast->constants)
 					IFLV(constant->value, constant->type);
 				break;
 			}
@@ -200,12 +200,27 @@ namespace LL2W {
 				break;
 			}
 
-			case NodeType::Unreachable: {
+			case NodeType::Unreachable:
+			case NodeType::DbgDeclare:
+				break;
+
+			case NodeType::Atomicrmw: {
+				CAST(AtomicrmwNode);
+				IFLV(cast->value, cast->type);
+				IFLV(cast->pointer, cast->pointerType);
+				write(cast->result, cast->type);
+				break;
+			}
+
+			case NodeType::Switch: {
+				CAST(SwitchNode);
+				IFLV(cast->value, cast->type);
 				break;
 			}
 
 			default:
-				return {-1, -1};
+				node->debug();
+				throw std::runtime_error("Unhandled LLVM instruction");
 		}
 
 		return {read.size(), written.size()};
@@ -219,8 +234,8 @@ namespace LL2W {
 		return "\e[41;37;1mUntranslated node:\e[0m " + node->debugExtra();
 	}
 
-	bool LLVMInstruction::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
-		if (Reader *reader = dynamic_cast<Reader *>(node)) {
+	bool LLVMInstruction::replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) {
+		if (auto *reader = dynamic_cast<Reader *>(node)) {
 			reader->replaceRead(to_replace, new_var);
 			return true;
 		}
@@ -228,12 +243,12 @@ namespace LL2W {
 		return false;
 	}
 
-	bool LLVMInstruction::canReplaceRead(std::shared_ptr<Variable>) const {
+	bool LLVMInstruction::canReplaceRead(const VariablePtr &) const {
 		return dynamic_cast<Reader *>(node) != nullptr;
 	}
 
-	bool LLVMInstruction::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
-		if (Writer *writer = dynamic_cast<Writer *>(node)) {
+	bool LLVMInstruction::replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) {
+		if (auto *writer = dynamic_cast<Writer *>(node)) {
 			writer->replaceWritten(to_replace, new_var);
 			return true;
 		}
@@ -241,7 +256,7 @@ namespace LL2W {
 		return false;
 	}
 
-	bool LLVMInstruction::canReplaceWritten(std::shared_ptr<Variable>) const {
+	bool LLVMInstruction::canReplaceWritten(const VariablePtr &) const {
 		return dynamic_cast<Writer *>(node) != nullptr;
 	}
 
