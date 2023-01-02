@@ -3,8 +3,9 @@
 #include <sstream>
 #include <thread>
 
-#define COMPILE_MULTITHREADED
+// #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
+#define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -204,6 +205,9 @@ namespace LL2W {
 		if (functions.count("@main") == 1 || hasArg("-main"))
 			out << ":: main\n<halt>\n\n";
 		for (std::pair<const std::string, Function *> &pair: functions) {
+#ifdef SINGLE_FUNCTION
+			if (pair.first == SINGLE_FUNCTION)
+#endif
 #ifdef HIDE_PRINTS
 			if (pair.first != "@prc" && pair.first != "@prd" && pair.first != "@strprint")
 #endif

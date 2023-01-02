@@ -1,5 +1,4 @@
-#ifndef PASS_LOADARGUMENTS_H_
-#define PASS_LOADARGUMENTS_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -12,5 +11,3 @@ namespace LL2W::Passes {
 	/** Readjusts skips after the prologue is inserted. */
 	void loadArgumentsReadjust(Function &);
 }
-
-#endif
