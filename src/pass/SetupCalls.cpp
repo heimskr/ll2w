@@ -22,6 +22,8 @@
 #include "util/Timer.h"
 #include "util/Util.h"
 
+// #define PUSH_ARGUMENT_REGISTERS
+
 namespace LL2W::Passes {
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
 	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
@@ -128,6 +130,7 @@ namespace LL2W::Passes {
 			int reg_max = convention == CallingConvention::Reg16? WhyInfo::argumentCount : 0;
 			int arg_count = argument_types.size();
 
+#ifdef PUSH_ARGUMENT_REGISTERS
 			// First, push the current values of the argument registers to the stack.
 			if (convention == CallingConvention::Reg16) {
 				for (i = 0; i < arg_count && i < WhyInfo::argumentCount; ++i) {
@@ -136,6 +139,7 @@ namespace LL2W::Passes {
 						->setDebug(*llvm)->extract();
 				}
 			}
+#endif
 
 			// Next, if applicable, we account for the situation where the jump is to an argument register. Because it
 			// may be overwritten right before the jump, we'd need to copy it to a temporary variable and jump to that.
@@ -200,6 +204,7 @@ namespace LL2W::Passes {
 			if (function.isVariadic())
 				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m2), false);
 
+#ifdef PUSH_ARGUMENT_REGISTERS
 			// TODO: Verify. Previously, this was done regardless of calling convention.
 			if (convention == CallingConvention::Reg16) {
 				// Pop the argument registers from the stack.
@@ -209,6 +214,7 @@ namespace LL2W::Passes {
 						->setDebug(*llvm)->extract();
 				}
 			}
+#endif
 
 			// If the call specified a result variable, move $r0 into that variable.
 			if (call->result) {
