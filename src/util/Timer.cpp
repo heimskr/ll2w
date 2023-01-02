@@ -6,6 +6,7 @@
 namespace LL2W {
 	std::map<std::string, std::chrono::nanoseconds> Timer::times;
 	std::map<std::string, size_t> Timer::counts;
+	std::mutex Timer::mutex;
 
 	Timer::Timer(const std::string &name_):
 		start(std::chrono::system_clock::now()), name(name_) {}
@@ -20,6 +21,7 @@ namespace LL2W {
 
 	void Timer::stop() {
 		if (!stopped) {
+			std::unique_lock lock(mutex);
 			times[name] += difference();
 			++counts[name];
 			stopped = true;
@@ -27,6 +29,8 @@ namespace LL2W {
 	}
 
 	void Timer::summary(double threshold) {
+		std::unique_lock lock(mutex);
+
 		if (!times.empty()) {
 			std::cerr << "Timer summary:\n";
 

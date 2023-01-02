@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,7 @@ namespace LL2W {
 		public:
 			static std::map<std::string, std::chrono::nanoseconds> times;
 			static std::map<std::string, size_t> counts;
+			static std::mutex mutex;
 
 			std::chrono::system_clock::time_point start;
 			const std::string name;
