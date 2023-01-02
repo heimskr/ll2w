@@ -147,6 +147,9 @@ namespace LL2W {
 			/** The number of bytes reserved on the stack for spills. */
 			int spillSize = 0;
 
+			/** Whether all blocks have been minimized to contain exactly one instruction each. */
+			bool blocksAreMinimized = false;
+
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
 			int initialPushedBytes = -1;
 
@@ -178,6 +181,9 @@ namespace LL2W {
 
 			/** Copies use/definition information from the BasicBlocks into the Variables. */
 			void extractVariables(bool reset = false);
+
+			/** Extracts read/written information from all instructions. */
+			void extractInstructions(bool force = false);
 
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
 			 *  instructions. */
@@ -278,6 +284,9 @@ namespace LL2W {
 
 			/** Performs a full set of compiler passes on the function. */
 			void compile();
+
+			/** Force-extracts all instructions and blocks, resets liveness and computes liveness. */
+			void forceLiveness();
 
 			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
 			void precolorArguments(std::list<Interval> &);

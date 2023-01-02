@@ -6,7 +6,7 @@ namespace LL2W {
 		RType(rs_, nullptr, nullptr, index_) {}
 
 	std::string TypedPushInstruction::debugExtra() {
-		return "\e#[2m[\e[22m " + std::string(*rs);
+		return "\e[2m#[\e[22m " + std::string(*rs);
 	}
 
 	std::string TypedPushInstruction::toString() const {

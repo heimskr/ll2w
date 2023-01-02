@@ -1224,7 +1224,7 @@ namespace LL2W {
 		VariablePtr rs_ = convertVariable(function, map, rs);
 		VariablePtr rd_ = convertVariable(function, map, rd);
 
-		// TODO!: verify. Do we need to set rd_'s type?
+		// TODO(typed): verify. Do we need to set rd_'s type?
 		return std::make_unique<SextRInstruction>(rs_, rd_);
 	}
 

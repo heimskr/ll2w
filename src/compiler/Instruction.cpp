@@ -5,8 +5,6 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	Instruction::~Instruction() {}
-
 	bool Instruction::operator<(const Instruction &other) const {
 		return index < other.index;
 	}

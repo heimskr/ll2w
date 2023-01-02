@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "compiler/ExtractionResult.h"
 #include "instruction/InstructionMeta.h"
@@ -36,7 +37,7 @@ namespace LL2W {
 
 			std::unordered_set<InstructionMeta> meta;
 
-			virtual ~Instruction();
+			virtual ~Instruction() = default;
 
 			virtual bool isTerminal() const = 0;
 
@@ -72,6 +73,14 @@ namespace LL2W {
 				return false;
 			}
 
+			/** Attempts to replace a label referenced by the instruction with another label. Should be overridden by
+			 *  any instruction that references labels. */
+			virtual bool replaceLabel(const std::string *to_replace, const std::string *replace_with) {
+				(void) to_replace;
+				(void) replace_with;
+				return false;
+			}
+
 			virtual bool maySpill() const { return true; }
 
 			virtual bool isPhi() const { return false; }
@@ -104,6 +113,20 @@ namespace LL2W {
 				secretReads = reads;
 				secretWrites = writes;
 				return this;
+			}
+
+			virtual std::vector<const std::string *> getLabels() const {
+				return {};
+			}
+
+			/** Returns true if the instruction might (depending on run-time conditions) jump elsewhere or might just
+			 *  continue to the next instruction. */
+			virtual bool canFallThrough() const {
+				return false;
+			}
+
+			virtual bool holdsLabels() const {
+				return false;
 			}
 	};
 

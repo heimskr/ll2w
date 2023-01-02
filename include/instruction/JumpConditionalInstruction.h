@@ -1,5 +1,4 @@
-#ifndef INSTRUCTIONS_JUMPCONDITIONALINSTRUCTION_H_
-#define INSTRUCTIONS_JUMPCONDITIONALINSTRUCTION_H_
+#pragma once
 
 #include <sstream>
 
@@ -10,7 +9,6 @@ namespace LL2W {
 		using JType::JType;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		bool canFallThrough() const override { return true; }
 	};
 }
-
-#endif

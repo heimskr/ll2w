@@ -1,5 +1,7 @@
 #pragma once
 
+#include "compiler/BasicBlock.h"
+#include "compiler/Function.h"
 #include "compiler/Immediate.h"
 #include "compiler/Variable.h"
 #include "instruction/WhyInstruction.h"
@@ -12,6 +14,7 @@ namespace LL2W {
 		std::shared_ptr<Variable> rs;
 		T addr;
 		bool link;
+		bool needsTransformation = false;
 
 		JType(std::shared_ptr<Variable> rs_, T addr_, bool link_, int index_ = -1):
 			WhyInstruction(index_), rs(rs_), addr(addr_), link(link_) {}
@@ -41,6 +44,37 @@ namespace LL2W {
 
 		bool canReplaceRead(std::shared_ptr<Variable> to_replace) const override {
 			return rs->isAliasOf(*to_replace);
+		}
+
+		std::vector<const std::string *> getLabels() const override {
+			if constexpr (std::is_same_v<T, Immediate>) {
+				// TODO: will probably cause compilation failure if there are any subclasses with T != Immediate.
+				if (std::holds_alternative<const std::string *>(addr))
+					return {std::get<const std::string *>(addr)};
+			}
+
+			return {};
+		}
+
+		bool holdsLabels() const override {
+			return std::is_same_v<T, Immediate>;
+		}
+
+		bool replaceLabel(const std::string *to_replace, const std::string *replace_with) override {
+			if constexpr (std::is_same_v<T, Immediate>) {
+				if (std::holds_alternative<const std::string *>(addr)) {
+					const std::string * &label = std::get<const std::string *>(addr);
+					if (label == to_replace) {
+						label = replace_with;
+					} else {
+						Function &function = *parent.lock()->parent;
+						if (*label == function.transformLabel(*to_replace))
+							label = StringSet::intern(function.transformLabel(*replace_with));
+					}
+				}
+			}
+
+			return false;
 		}
 	};
 }

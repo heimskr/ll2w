@@ -24,8 +24,9 @@ namespace LL2W {
 
 	int Variable::weight() const {
 		int sum = 0;
-		for (std::weak_ptr<BasicBlock> use: usingBlocks)
-			sum += use.lock()->estimatedExecutions;
+		for (const std::weak_ptr<BasicBlock> &weak_use: usingBlocks)
+			if (auto use = weak_use.lock())
+				sum += use->estimatedExecutions;
 		return sum;
 	}
 

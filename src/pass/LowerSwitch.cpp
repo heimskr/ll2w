@@ -34,16 +34,16 @@ namespace LL2W::Passes {
 					std::cerr << instruction->debugExtra() << '\n';
 					throw TypeError("Expected int constant in table of switch instruction", type);
 				}
-				const std::string *transformed = StringSet::intern(function.transformLabel(*label));
 				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
 				comp->setOriginalValue(value);
-				auto jump = std::make_shared<JumpConditionalInstruction>(m0, transformed, false);
+				auto jump = std::make_shared<JumpConditionalInstruction>(m0, label, false);
+				jump->needsTransformation = true;
 				function.insertBefore(instruction, comp, false)->setDebug(*llvm, true);
 				function.insertBefore(instruction, jump, false)->setDebug(*llvm, true);
 			}
 
-			auto jump = std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*sw->label)),
-				false);
+			auto jump = std::make_shared<JumpInstruction>(sw->label, false);
+			jump->needsTransformation = true;
 			function.insertBefore(instruction, jump, "LowerSwitch: default", false)->setDebug(*llvm, true);
 			to_remove.push_back(instruction);
 		}

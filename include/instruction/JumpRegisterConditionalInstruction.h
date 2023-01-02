@@ -20,5 +20,7 @@ namespace LL2W {
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+
+		bool canFallThrough() const override { return true; }
 	};
 }

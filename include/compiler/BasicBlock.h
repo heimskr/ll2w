@@ -39,7 +39,7 @@ namespace LL2W {
 			int offset = -1;
 			int estimatedExecutions = 0;
 
-			BasicBlock(Label, const std::vector<Label> &, const std::list<std::shared_ptr<Instruction>> &);
+			BasicBlock(Label, const std::vector<Label> & = {}, const std::list<std::shared_ptr<Instruction>> & = {});
 
 			/** Extracts each instruction in the basic block. Returns a pair containing the total number of reads and
 			 *  the total number of writes in the basic block. */

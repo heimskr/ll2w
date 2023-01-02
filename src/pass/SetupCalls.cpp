@@ -254,7 +254,7 @@ namespace LL2W::Passes {
 				case  8:
 				case 16:
 				case 32:
-					// TODO!: verify. Do we need to set the destination's type?
+					// TODO(typed): verify. Do we need to set the destination's type?
 					out = std::make_shared<SextRInstruction>(source, destination);
 					break;
 				default:

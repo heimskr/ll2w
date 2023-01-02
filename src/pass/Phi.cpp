@@ -25,11 +25,11 @@ namespace LL2W::Passes {
 		// Scan through each instruction in order.
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
-			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || !llvm_instruction->isPhi())
+			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
 				continue;
-			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
-			if (!phi_node)
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null in Function::coalescePhi");
 
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
@@ -40,7 +40,7 @@ namespace LL2W::Passes {
 				for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
 					const LocalValue *local = pair.first->isLocal()?
 						dynamic_cast<LocalValue *>(pair.first.get()) : nullptr;
-					if (local) {
+					if (local != nullptr) {
 						VariablePtr to_alias = function.getVariable(*local->name);
 						// to_alias->makeAliasOf(*target);
 						target->phiParents.insert(to_alias.get());
@@ -115,15 +115,15 @@ namespace LL2W::Passes {
 		std::unordered_set<Variable::ID> visited;
 		for (const auto &[id, var]: function.variableStore) {
 			Variable::ID name = var->originalID;
-			if (visited.count(name) != 0)
+			if (visited.contains(name))
 				continue;
 			visited.insert(name);
 			for (Node *node: dependencies.BFS(*name)) {
-				Variable *nodevar = node->get<Variable *>();
-				if (nodevar == var.get())
-					continue;
-				visited.insert(nodevar->originalID);
-				nodevar->makeAliasOf(var);
+				auto *nodevar = node->get<Variable *>();
+				if (nodevar != var.get()) {
+					visited.insert(nodevar->originalID);
+					nodevar->makeAliasOf(var);
+				}
 			}
 		}
 
@@ -152,14 +152,14 @@ namespace LL2W::Passes {
 			auto instruction = *iter;
 			// bool removed = false;
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
-			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
+			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm_instruction || !llvm_instruction->isPhi()) {
 				++iter;
 				continue;
 			}
 
-			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
-			if (!phi_node)
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null in Function::movePhi");
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
@@ -167,12 +167,23 @@ namespace LL2W::Passes {
 
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
-				BasicBlockPtr block = function.bbMap.at(block_label);
+				BasicBlockPtr block;
+				try {
+					block = function.bbMap.at(block_label);
+				} catch (const std::out_of_range &) {
+					error() << "Couldn't find " << *block_label << " in " << *function.name << "'s bbMap.\n"
+					           "    bbMap entries (" << function.bbMap.size() << "):\n";
+					for (const auto &[bbname, bb]: function.bbMap)
+						std::cerr << "    - " << *bbname << '\n';
+					std::cerr << "    Phi node: " << phi_node->debugExtra() << '\n';
+					throw;
+				}
+
 				InstructionPtr new_instruction;
 
 				std::string comment;
 
-				if (local) {
+				if (local != nullptr) {
 					comment = "MovePhi: " + local->variable->plainString() + " -> " + target->plainString();
 					new_instruction = std::make_shared<MoveInstruction>(local->variable, target);
 					function.categories["MovePhi"].insert(new_instruction);
@@ -211,7 +222,7 @@ namespace LL2W::Passes {
 
 					auto phi_block = llvm_instruction->parent.lock();
 					const std::string *phi_block_label = phi_block->label;
-					if (function.movePhiBlocks.count({block->label, phi_block_label}) != 0) {
+					if (function.movePhiBlocks.contains({block->label, phi_block_label})) {
 						middle_block = function.movePhiBlocks.at({block->label, phi_block_label});
 
 						// At this point, neither lowerSwitch nor lowerRet nor lowerBranches has been called, so we can
@@ -228,13 +239,13 @@ namespace LL2W::Passes {
 								       << *function.name << "'s linear instructions.\n";
 						}
 
-						function.insertBefore(new_instruction, std::make_shared<Comment>(comment));
+						function.comment(new_instruction, comment);
 					} else {
 						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
 						comment += " (in new block " + *new_label + " whose parent is " + *block->label + ")";
 						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
-							std::list<InstructionPtr> {});
+							std::list<InstructionPtr>());
 						middle_block->parent = &function;
 						auto block_iter = std::find(function.blocks.begin(), function.blocks.end(), block);
 						if (block_iter == function.blocks.end())
@@ -243,7 +254,7 @@ namespace LL2W::Passes {
 						function.bbMap.try_emplace(new_label, middle_block);
 						function.bbLabels.insert(new_label);
 
-						BrUncondNode *uncond = new BrUncondNode(phi_block_label);
+						auto *uncond = new BrUncondNode(phi_block_label);
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
 						new_llvm->parent = middle_block;
 
@@ -274,7 +285,7 @@ namespace LL2W::Passes {
 									&cond->ifTrue :
 									((StringSet::unquote(cond->ifFalse) == phi_block_label)?
 									&cond->ifFalse : nullptr);
-								if (!cond_label)
+								if (cond_label == nullptr)
 									error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
 											<< parent_llvm->debugExtra() << '\n';
 								else
@@ -322,13 +333,13 @@ namespace LL2W::Passes {
 		Timer timer("GetDependencies");
 		Graph dependencies;
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (const InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
-			LLVMInstruction *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm_instruction || !llvm_instruction->isPhi())
+			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
 				continue;
-			const PhiNode *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
-			if (!phi_node)
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null");
 
 			if (!dependencies.hasLabel(*phi_node->result))
@@ -367,7 +378,7 @@ namespace LL2W::Passes {
 				if (graph.size() <= WEB_MAX)
 					continue;
 				const auto bridges = graph.bridges();
-				if (bridges.size() == 0) {
+				if (bridges.empty()) {
 					warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph "
 						"components.\n";
 					continue;
@@ -376,24 +387,25 @@ namespace LL2W::Passes {
 				bool min_swap = false;
 				const std::pair<Graph::Label, Graph::Label> *min_pair = nullptr;
 				for (const auto &pair: bridges) {
-					const bool swap = graph[pair.first].out().count(&graph[pair.second]) == 0;
-					if (swap)
+					const bool should_swap = !graph[pair.first].out().contains(&graph[pair.second]);
+					if (should_swap)
 						graph.unlink(pair.second, pair.first);
 					else
 						graph.unlink(pair.first, pair.second);
 					const ssize_t diff =
-						std::abs((long) graph.size() - 2l * (long) graph.undirectedSearch(*graph.begin()->second).size());
-					if (swap)
+						std::abs(static_cast<int64_t>(graph.size()) -
+							2l * static_cast<int64_t>(graph.undirectedSearch(*graph.begin()->second).size()));
+					if (should_swap)
 						graph.link(pair.second, pair.first);
 					else
 						graph.link(pair.first, pair.second);
 					if (diff < min_diff) {
 						min_diff = diff;
 						min_pair = &pair;
-						min_swap = swap;
+						min_swap = should_swap;
 					}
 				}
-				if (!min_pair)
+				if (min_pair == nullptr)
 					throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
 						std::to_string(SSIZE_MAX) + " nodes?");
 				auto source      = function.getVariable(
@@ -405,17 +417,18 @@ namespace LL2W::Passes {
 				std::list<BasicBlockPtr> definers_to_add;
 				for (const auto &definition: destination->definitions) {
 					auto *llvm = dynamic_cast<LLVMInstruction *>(definition.lock().get());
-					if (!llvm || !llvm->isPhi()) {
-						if (insertions.count(definition.lock()) != 0) {
+					if (llvm == nullptr || !llvm->isPhi()) {
+						if (insertions.contains(definition.lock())) {
 							// Sometimes, if the web is still too large, we repeat and run into the non-ϕ definitions we
 							// inserted in a previous iteration. We need to ignore those.
 							continue;
-						} else
-							throw std::runtime_error("Definition of " + std::string(*destination) +
-								" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
+						}
+
+						throw std::runtime_error("Definition of " + std::string(*destination) +
+							" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
 					}
 					auto *phi = dynamic_cast<PhiNode *>(llvm->node);
-					for (auto &[value, block_label]: phi->pairs)
+					for (auto &[value, block_label]: phi->pairs) {
 						if (value->isLocal()) {
 							auto *local = dynamic_cast<LocalValue *>(value.get());
 							if (local->variable && *local->variable == *source) {
@@ -437,6 +450,7 @@ namespace LL2W::Passes {
 								any_done = true;
 							}
 						}
+					}
 				}
 				for (const auto &definition: definitions_to_add)
 					destination->addDefinition(definition);

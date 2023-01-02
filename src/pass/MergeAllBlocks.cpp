@@ -4,8 +4,8 @@
 #include "util/CompilerUtil.h"
 
 namespace LL2W::Passes {
-	void mergeAllBlocks(Function &function) {
-		bool any_changed;
+	size_t mergeAllBlocks(Function &function) {
+		size_t changed_count = 0;
 		bool changed;
 		do {
 			changed = false;
@@ -19,16 +19,21 @@ namespace LL2W::Passes {
 					// an earlier point than intended, which would cause incorrect behavior.
 					if ((*++iter)->preds.size() == 1) {
 						function.mergeBlocks(block, *iter);
-						any_changed = changed = true;
+						changed = true;
+						++changed_count;
 						break;
 					} else --iter;
 				}
 			}
 		} while (changed);
 
-		if (any_changed) {
+		function.blocksAreMinimized = false;
+
+		if (0 < changed_count) {
 			makeCFG(function);
 			function.reindexBlocks();
 		}
+
+		return changed_count;
 	}
 }

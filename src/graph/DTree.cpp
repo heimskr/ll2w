@@ -9,10 +9,17 @@ namespace LL2W {
 	DTree::DTree(Graph &graph, const std::string &label): DTree(graph, graph[label]) {}
 	DTree::DTree(Graph &graph, Node &start) {
 		const size_t gsize = graph.size();
-		std::vector<Node *> stack {&start}, vertex(graph.size(), nullptr);
-		std::unordered_map<Node *, int> semi, size;
-		std::unordered_map<Node *, Node *> ancestor, label, parent, dom, child;
-		std::unordered_map<Node *, std::unordered_set<Node *>> pred, bucket;
+		std::vector<Node *> stack {&start};
+		std::vector<Node *> vertex(gsize, nullptr);
+		std::unordered_map<Node *, int64_t> semi;
+		std::unordered_map<Node *, int64_t> size;
+		std::unordered_map<Node *, Node *> ancestor;
+		std::unordered_map<Node *, Node *> label;
+		std::unordered_map<Node *, Node *> parent;
+		std::unordered_map<Node *, Node *> dom;
+		std::unordered_map<Node *, Node *> child;
+		std::unordered_map<Node *, std::unordered_set<Node *>> pred;
+		std::unordered_map<Node *, std::unordered_set<Node *>> bucket;
 
 		for (Node *node: graph.nodes()) {
 			semi[node] = -1;
@@ -20,7 +27,7 @@ namespace LL2W {
 			ancestor[node] = label[node] = parent[node] = dom[node] = nullptr;
 		}
 
-		int n = -1;
+		int64_t n = -1;
 		std::function<void(Node *)> dfs = [&](Node *v) {
 			semi[v] = ++n;
 			vertex[n] = label[v] = v;
@@ -88,12 +95,12 @@ namespace LL2W {
 					semi[w] = semi[u];
 			}
 
-			if (!w) {
-				graph.renderTo("w_null.png");
+			if (w == nullptr) {
+				graph.renderTo("w_null.svg");
 				throw std::runtime_error("w is null (1)");
 			}
 
-			if (!vertex[semi[w]])
+			if (vertex[semi[w]] == nullptr)
 				throw std::runtime_error("vertex[semi[w]] is null");
 
 			bucket[vertex[semi[w]]].insert(w);
@@ -104,7 +111,7 @@ namespace LL2W {
 				Node *v = *iter;
 				iter = pwbucket.erase(iter);
 				Node *u = eval(v);
-				if (!v)
+				if (v == nullptr)
 					throw std::runtime_error("v is null");
 				dom[v] = semi[u] < semi[v]? u : parent[w];
 			}
@@ -150,16 +157,16 @@ namespace LL2W {
 		if (levels.empty())
 			findLevels();
 
-		int max = nodes.size();
-		for (int i = 0; i < max; ++i)
+		size_t max = nodes.size();
+		for (size_t i = 0; i < max; ++i)
 			nodes[i] = &(*this)[*nodes[i]];
 
-		int smallest_level = levels[*std::min_element(nodes.begin(), nodes.end(), [&](Node *left, Node *right) {
+		size_t smallest_level = levels[*std::min_element(nodes.begin(), nodes.end(), [&](Node *left, Node *right) {
 			return levels[left] < levels[right];
 		})];
 
 		std::function<void()> move_nodes_up = [&]() {
-			for (int i = 0; i < max; ++i) {
+			for (size_t i = 0; i < max; ++i) {
 				while (smallest_level < levels[nodes[i]])
 					nodes[i] = nodes[i]->parent();
 			}
@@ -167,7 +174,7 @@ namespace LL2W {
 
 		std::function<bool()> all_nodes_equal = [&]() {
 			Node *first = nodes[0];
-			for (int i = 1; i < max; ++i) {
+			for (size_t i = 1; i < max; ++i) {
 				if (nodes[i] != first)
 					return false;
 			}
@@ -195,7 +202,7 @@ namespace LL2W {
 		std::unordered_map<Node *, Node *> out;
 		for (Node *node: nodes()) {
 			for (Node *successor: *node) {
-				assert(out.count(successor) == 0);
+				assert(!out.contains(successor));
 				out.insert({successor, node});
 			}
 		}
@@ -226,7 +233,7 @@ namespace LL2W {
 
 	std::unordered_map<std::string, std::unordered_set<std::string>> DTree::strictDominatorLabels() const {
 		std::unordered_map<std::string, std::unordered_set<std::string>> out_map;
-		for (const auto & [node, set]: strictDominators()) {
+		for (const auto &[node, set]: strictDominators()) {
 			const std::string &label = node->label();
 			out_map.insert({label, {}});
 			for (Node *sub: set)

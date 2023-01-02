@@ -75,6 +75,7 @@
 #include "pass/LowerVarargs.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
+#include "pass/MinimizeBlocks.h"
 #include "pass/Phi.h"
 #include "pass/RemoveRedundantMoves.h"
 #include "pass/RemoveUnreachable.h"
@@ -87,6 +88,7 @@
 #include "pass/SplitResultMoves.h"
 #include "pass/StackSkip.h"
 #include "pass/TransformInstructions.h"
+#include "pass/TransformLabels.h"
 #include "pass/TrimBlocks.h"
 #include "pass/UpdateArgumentLoads.h"
 #include "util/CompilerUtil.h"
@@ -223,7 +225,7 @@ namespace LL2W {
 		if (label->front() == '%')
 			return getBlock(StringSet::intern(label->substr(1)));
 		label = StringSet::unquote(label);
-		if (bbMap.count(label) == 0) {
+		if (!bbMap.contains(label)) {
 			if (can_throw) {
 				std::cerr << "Want: " << *label << '\n';
 				for (const auto &[bname, block]: bbMap)
@@ -276,6 +278,11 @@ namespace LL2W {
 						block->written.insert(var);
 					}
 				}
+	}
+
+	void Function::extractInstructions(bool force) {
+		for (const InstructionPtr &instruction: linearInstructions)
+			instruction->extract(force);
 	}
 
 	void Function::relinearize() {
@@ -604,7 +611,7 @@ namespace LL2W {
 		if (linear_warn && linearIter == linearInstructions.end()) {
 			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->debugExtra()
 			       << '\n';
-			throw std::runtime_error("youch");
+			throw std::runtime_error("Couldn't find instruction in linearInstructions in " + *name);
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		if (blockIter == block->instructions.end()) {
@@ -613,18 +620,23 @@ namespace LL2W {
 			std::cerr << "Index: " << block->index << '\n';
 			for (const auto &subblock: blocks)
 				std::cerr << *subblock->label << '[' << subblock->index << "] ";
-			std::cerr << '\n';
-			for (const auto &block_instruction: block->instructions)
-				std::cerr << "    " << block_instruction->debugExtra() << '\n';
+			if (block->instructions.empty()) {
+				std::cerr << "\nInstruction list is empty.\n";
+			} else {
+				std::cerr << "\nInstruction list:\n";
+				for (const auto &block_instruction: block->instructions)
+					std::cerr << "    " << block_instruction->debugExtra() << '\n';
+			}
+			cfg.renderTo("inf_cfg.png");
 			throw std::runtime_error("Instruction not found in block");
 		}
 
 		const bool can_insert_linear = linearIter != linearInstructions.end();
 		if (can_insert_linear) {
 			linearInstructions.insert(linearIter, new_instruction);
-			if (should_relinearize_out)
+			if (should_relinearize_out != nullptr)
 				*should_relinearize_out = false;
-		} else if (should_relinearize_out)
+		} else if (should_relinearize_out != nullptr)
 			*should_relinearize_out = true;
 
 		block->instructions.insert(blockIter, new_instruction);
@@ -709,7 +721,7 @@ namespace LL2W {
 			return nullptr;
 		}
 
-		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *> {block->label},
+		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *>{block->label},
 			std::list<InstructionPtr>());
 		new_block->parent = this;
 		bbLabels.insert(label);
@@ -721,13 +733,19 @@ namespace LL2W {
 				var->addDefiner(new_block);
 			}
 
+			// TODO(typed): verify whether this is needed
+			for (const VariablePtr &var: (*iter)->read) {
+				var->removeUsingBlock(block);
+				var->addUsingBlock(new_block);
+			}
+
 			(*iter)->parent = new_block;
 			new_block->instructions.push_back(*iter);
 			block->instructions.erase(iter++);
 		}
 
 		// Replace the old label with the new label in the preds of all basic blocks.
-		for (BasicBlockPtr &possible_successor: blocks) {
+		for (const BasicBlockPtr &possible_successor: blocks) {
 			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->label);
 			if (predIter != possible_successor->preds.end())
 				*predIter = label;
@@ -752,7 +770,7 @@ namespace LL2W {
 		// We need to update ϕ-instructions.
 		for (auto &possible_llvm: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(possible_llvm.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Phi)
+			if (llvm == nullptr || llvm->node->nodeType() != NodeType::Phi)
 				continue;
 			auto *phi = dynamic_cast<PhiNode *>(llvm->node);
 			for (auto &[value, phi_label]: phi->pairs)
@@ -769,7 +787,7 @@ namespace LL2W {
 
 	void Function::mergeBlocks(BasicBlockPtr before, BasicBlockPtr after) {
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
-		for (BasicBlockPtr &block: blocks) {
+		for (const BasicBlockPtr &block: blocks) {
 			for (const std::string *&pred: block->preds) {
 				if (pred == after->label)
 					pred = before->label;
@@ -777,8 +795,11 @@ namespace LL2W {
 		}
 
 		// Move all instructions from the after-block to the before-block.
-		for (InstructionPtr &instruction: after->instructions)
+		for (const InstructionPtr &instruction: after->instructions) {
 			before->instructions.push_back(instruction);
+			instruction->parent = before;
+		}
+
 		after->instructions.clear();
 
 		// Replace the after-block's label with the before-block's in all instructions.
@@ -787,7 +808,7 @@ namespace LL2W {
 		const std::string *after_p_label  = StringSet::intern("%" + *after->label);
 		const std::string *before_label   = before->label;
 		const std::string *after_label    = after->label;
-		for (InstructionPtr &instruction: linearInstructions) {
+		for (const InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
 				if (branch->destination == after_p_label)
 					branch->destination = before_p_label;
@@ -831,31 +852,28 @@ namespace LL2W {
 
 	void Function::updateInstructionNodes() {
 		Timer timer("UpdateInstructionNodes");
-		for (InstructionPtr &instruction: linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+		for (const InstructionPtr &instruction: linearInstructions) {
+			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm)
 				continue;
 
 			InstructionNode *node = llvm->node;
-			if (Reader *reader = dynamic_cast<Reader *>(node)) {
-				for (std::shared_ptr<LocalValue> value: reader->allLocals()) {
+			if (auto *reader = dynamic_cast<Reader *>(node))
+				for (const std::shared_ptr<LocalValue> &value: reader->allLocals())
 					if (value->variable)
 						value->name = value->variable->id;
-				}
-			}
 
-			if (Writer *writer = dynamic_cast<Writer *>(node)) {
+			if (auto *writer = dynamic_cast<Writer *>(node))
 				if (writer->variable)
 					writer->result = writer->variable->id;
-			}
 		}
 	}
 
 	void Function::resetRegisters(bool respectful) {
-		if (!respectful)
+		if (!respectful) {
 			for (const auto &[id, var]: variableStore)
 				var->setRegisters({});
-		else
+		} else {
 			for (const auto &[id, var]: variableStore) {
 				std::unordered_set<int> to_remove;
 				for (const int reg: var->registers)
@@ -864,6 +882,7 @@ namespace LL2W {
 				for (const int reg: to_remove)
 					var->registers.erase(reg);
 			}
+		}
 	}
 
 	void Function::initialCompile() {
@@ -915,6 +934,9 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
+		Passes::minimizeBlocks(*this);
+		for (BasicBlockPtr &block: blocks)
+			block->extract(true);
 		extractVariables(true);
 		computeLiveness();
 		updateInstructionNodes();
@@ -937,7 +959,7 @@ namespace LL2W {
 		Passes::finishMultireg(*this);
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
-		// Passes::mergeAllBlocks(*this);
+		Passes::mergeAllBlocks(*this);
 		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		const bool naked = isNaked();
@@ -951,6 +973,7 @@ namespace LL2W {
 		Passes::breakUpBigSets(*this);
 		Passes::signChars(*this);
 		Passes::discardUnusedVars(*this);
+		Passes::transformLabels(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
@@ -971,27 +994,26 @@ namespace LL2W {
 		debug();
 #endif
 
-		{
-			Timer timer("RegisterAllocation");
+		Timer timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
-			try {
+		try {
 #endif
-				while (allocator->attempt() != Allocator::Result::Success);
+			while (allocator->attempt() != Allocator::Result::Success);
 #ifdef FN_CATCH_EXCEPTIONS
-			} catch (std::exception &err) {
-				error() << err.what() << "\n";
-				if (parent)
-					LL2W::interactive(*parent, this);
-				throw;
-			}
-#endif
+		} catch (std::exception &err) {
+			error() << err.what() << "\n";
+			if (parent)
+				LL2W::interactive(*parent, this);
+			throw;
 		}
+#endif
+		timer.stop();
 
 		finalCompile();
 
 #ifdef DEBUG_SPILL
-		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[0m. Finished \e[1m" << *name
-		       << "\e[0m.\n\n";
+		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[22m. Finished \e[1m" << *name
+		       << "\e[22m.\n\n";
 #endif
 	}
 
@@ -1013,6 +1035,16 @@ namespace LL2W {
 		if (definer)
 			found->addDefiner(definer);
 		return found;
+	}
+
+	void Function::forceLiveness() {
+		Timer timer("ForceLiveness");
+		extractInstructions(true);
+		for (const BasicBlockPtr &block: blocks)
+			block->extract(true);
+		extractVariables(true);
+		resetLiveness();
+		computeLiveness();
 	}
 
 	void Function::precolorArguments(std::list<Interval> &intervals) {
@@ -1046,8 +1078,8 @@ namespace LL2W {
 				variable->type->width() / 8, 8);
 		}
 
-		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		stackSize += width;
+		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		if (purpose == StackLocation::Purpose::Spill)
 			spillSize += width;
 		return added;
@@ -1531,13 +1563,14 @@ namespace LL2W {
 			stream << headerString() + " \e[94m{\e[39m\n";
 		if (doBlocks) {
 			for (const BasicBlockPtr &block: blocks) {
-				stream << "    \e[2m; \e[4m<label>:\e[1m" << *block->label << "\e[22;2;4m @ " << block->index
+				stream << "    \e[2m; \e[4;1m" << *block->label << "\e[22;2;4m @ " << block->index
 				       << ": preds =";
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 					if (iter != begin)
 						stream << ',';
 					stream << " %" << **iter;
 				}
+				stream << '.';
 				if (blockLiveness) {
 					if (!block->liveIn.empty()) {
 						stream << "; live-in =";
@@ -1599,20 +1632,29 @@ namespace LL2W {
 				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs ("
 				       << var->definitions.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks)
-					stream << " \e[1;2m" << std::setw(2) << *def.lock()->label << "\e[0m";
+					if (auto locked = def.lock())
+						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
+					else
+						stream << " \e[2m??\e[22m";
 				stream << "  \e[0;2muses =";
 				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks)
-					stream << " \e[1;2m" << std::setw(2) << *use.lock()->label << "\e[0m";
+					if (auto locked = use.lock())
+						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
+					else
+						stream << " \e[2m??\e[22m";
 				const int spill_cost = var->spillCost();
 				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
 				       << "\e[0;2m";
 				if (var->definingBlocks.size() > 1)
 					stream << " (multiple defs)";
 				stream << "  pid = \e[1m" << *var->parentID() << "\e[22;2m";
-				stream << "  aliases =\e[1m";
-				for (Variable *alias: var->getAliases())
-					stream << " " << *alias->id;
-				stream << "\e[0m\n";
+				const auto aliases = var->getAliases();
+				if (!aliases.empty()) {
+					stream << "  aliases =\e[1m";
+					for (const Variable *alias: aliases)
+						stream << " " << *alias->id;
+					stream << "\e[22;2m";
+				}
 				if (varLiveness) {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {

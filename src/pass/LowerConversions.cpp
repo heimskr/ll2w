@@ -106,7 +106,7 @@ namespace LL2W::Passes {
 
 		const int from = conversion->from->width(), to = conversion->to->width();
 
-		// TODO!: update properly for the new typed sext instructions
+		// TODO(typed): update properly for the new typed sext instructions
 
 		if (from == 32 && to == 64) {
 			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))

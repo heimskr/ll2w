@@ -248,4 +248,88 @@ namespace LL2W {
 	bool LLVMInstruction::isPhi() const {
 		return node && node->nodeType() == NodeType::Phi;
 	}
+
+	bool LLVMInstruction::holdsLabels() const {
+		switch (node->nodeType()) {
+			case NodeType::BrCond:
+			case NodeType::BrUncond:
+			case NodeType::Switch:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	bool LLVMInstruction::replaceLabel(const std::string *to_replace, const std::string *replace_with) {
+		switch (node->nodeType()) {
+			case NodeType::BrCond: {
+				CAST(BrCondNode);
+				bool changed = false;
+				if (cast->ifFalse == to_replace) {
+					cast->ifFalse = replace_with;
+					changed = true;
+				}
+				if (cast->ifTrue == to_replace) {
+					cast->ifTrue = replace_with;
+					changed = true;
+				}
+				return changed;
+			}
+
+			case NodeType::BrUncond: {
+				CAST(BrUncondNode);
+				if (cast->destination == to_replace) {
+					cast->destination = replace_with;
+					return true;
+				}
+				return false;
+			}
+
+			case NodeType::Switch: {
+				CAST(SwitchNode);
+				bool changed = false;
+				if (cast->label == to_replace) {
+					cast->label = replace_with;
+					changed = true;
+				}
+				for (auto &[type, value, label]: cast->table)
+					if (label == to_replace) {
+						label = replace_with;
+						changed = true;
+					}
+				return changed;
+			}
+
+			default:;
+		}
+
+		return false;
+	}
+
+	std::vector<const std::string *> LLVMInstruction::getLabels() const {
+		switch (node->nodeType()) {
+			case NodeType::BrCond: {
+				CAST(BrCondNode);
+				return {cast->ifFalse, cast->ifTrue};
+			}
+
+			case NodeType::BrUncond: {
+				CAST(BrUncondNode);
+				return {cast->destination};
+			}
+
+			case NodeType::Switch: {
+				CAST(SwitchNode);
+				std::vector<const std::string *> out {cast->label};
+				out.reserve(1 + cast->table.size());
+				for (const auto &[type, value, label]: cast->table)
+					out.push_back(label);
+				return out;
+			}
+
+			default:;
+		}
+
+		return {};
+	}
 }
