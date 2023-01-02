@@ -929,8 +929,6 @@ namespace LL2W {
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
-		if (*name == "@main")
-			debug();
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
@@ -990,13 +988,15 @@ namespace LL2W {
 	}
 
 	void Function::compile() {
+		Timer timer("Function_" + *name);
+
 		initialCompile();
 
 #ifdef DEBUG_ALIASES
 		debug();
 #endif
 
-		Timer timer("RegisterAllocation");
+		Timer regalloc_timer("RegisterAllocation");
 #ifdef FN_CATCH_EXCEPTIONS
 		try {
 #endif
@@ -1009,7 +1009,7 @@ namespace LL2W {
 			throw;
 		}
 #endif
-		timer.stop();
+		regalloc_timer.stop();
 
 		finalCompile();
 
