@@ -25,7 +25,7 @@ namespace LL2W {
 
 	class Program {
 		private:
-			int highestIndex = -1;
+			int64_t highestIndex = -1;
 			std::mutex mutex;
 
 			std::string outputStruct(const StructValue &);
@@ -34,28 +34,30 @@ namespace LL2W {
 			std::string outputArray(const ArrayValue &);
 
 		public:
-			std::unordered_map<std::string, Function *> functions;
+			std::map<std::string, Function *> functions;
 			std::string sourceFilename;
-			std::unordered_map<std::string, FunctionHeader *> declarations;
+			std::map<std::string, FunctionHeader *> declarations;
 			std::map<std::string, GlobalVarDef *> globals; // keys include the '@'
 			/** A set of all globals to which references were emitted while outputting the data section. Doesn't include
 			 *  the '@'. */
 			std::set<std::string> referencedGlobals;
-			std::map<int, std::unordered_set<FnAttr>> fnattrs;
-			std::map<int, std::unordered_set<ParAttr>> parattrs;
-			std::unordered_map<const std::string *, AliasDef *> aliases;
-			std::map<int, File> files;
-			std::map<int, Location> locations;
-			std::map<int, Subprogram> subprograms;
-			std::map<int, LexicalBlock> lexicalBlocks;
-			std::map<int, LocalVariable> localVariables;
+			std::map<int64_t, std::unordered_set<FnAttr>> fnattrs;
+			std::map<int64_t, std::unordered_set<ParAttr>> parattrs;
+			std::map<const std::string *, AliasDef *> aliases;
+			std::map<int64_t, File> files;
+			std::map<int64_t, Location> locations;
+			std::map<int64_t, Subprogram> subprograms;
+			std::map<int64_t, LexicalBlock> lexicalBlocks;
+			std::map<int64_t, LocalVariable> localVariables;
 			/** This is a set of shared_ptrs instead of just a shared_ptr because of nodes like "!1 = {!2, !3}". */
-			std::map<int, TypeSet> basicTypes;
+			std::map<int64_t, TypeSet> basicTypeSets;
+			std::map<int64_t, std::vector<std::shared_ptr<BasicType>>> basicTypeLists;
+			std::map<int64_t, int64_t> subroutineTypes;
 			/** A set of all LLVM debug indices found in the program. */
-			std::set<int> debugIndices;
+			std::set<int64_t> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they
 			 *  return. Names don't contain a leading @. */
-			std::map<std::string, long> simpleFunctions;
+			std::map<std::string, int64_t> simpleFunctions;
 			/** A set of names of functions that do nothing but return void. Names don't contain a leading @. */
 			std::set<std::string> uselessFunctions;
 			/** A map of names of functions that do nothing but return a constant to the constant they return.

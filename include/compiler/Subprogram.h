@@ -7,8 +7,16 @@ namespace LL2W {
 
 	class Subprogram {
 		public:
-			std::string name, linkageName;
-			int scope, file, line, type, scopeLine, unit, declaration, retainedNodes;
+			std::string name;
+			std::string linkageName;
+			int scope = -1;
+			int file = -1;
+			int line = -1;
+			int type = -1;
+			int scopeLine = -1;
+			int unit = -1;
+			int declaration = -1;
+			int retainedNodes = -1;
 			/** The index of the subprogram within the debug data section, not within the LLVM IR. */
 			int index = -1;
 
@@ -19,6 +27,6 @@ namespace LL2W {
 			std::string getName() const;
 
 		private:
-			int parseBang(const ASTNode &);
+			static int parseBang(const ASTNode &);
 	};
 }

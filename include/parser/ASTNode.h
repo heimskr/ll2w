@@ -68,8 +68,8 @@ namespace LL2W {
 			ASTNode * setDebug(ASTNode *);
 			/** Concatenates the lexerInfo fields of every element of the children vector. */
 			std::string concatenate() const;
-			long atoi() const;
-			long atoi(int offset) const;
+			int64_t atoi() const;
+			int64_t atoi(size_t offset) const;
 			std::string unquote() const;
 			bool isType() const;
 			bool isValue() const;

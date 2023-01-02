@@ -218,17 +218,17 @@ namespace LL2W {
 		return out.str();
 	}
 
-	long ASTNode::atoi() const {
+	int64_t ASTNode::atoi() const {
 		if (symbol == LLVMTOK_PVAR || symbol == LLVMTOK_INTBANG || symbol == LLVMTOK_METABANG)
 			return atoi(1);
 		if (std::string_view(*lexerInfo).substr(0, 2) == "0x")
-			return Util::parse<long>(std::string_view(*lexerInfo).substr(2), 16);
+			return Util::parse<int64_t>(std::string_view(*lexerInfo).substr(2), 16);
 		return Util::parseLong(*lexerInfo);
 	}
 
-	long ASTNode::atoi(int offset) const {
+	int64_t ASTNode::atoi(size_t offset) const {
 		try {
-			return Util::parse<long>(std::string_view(*lexerInfo).substr(offset));
+			return Util::parse<int64_t>(std::string_view(*lexerInfo).substr(offset));
 		} catch (const std::invalid_argument &err) {
 			debug();
 			throw;

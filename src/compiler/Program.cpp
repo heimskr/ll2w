@@ -41,7 +41,7 @@ namespace LL2W {
 		}
 
 		for (ASTNode *node: root) {
-			if (!node)
+			if (node == nullptr)
 				continue;
 			switch (node->symbol) {
 				case LLVM_FUNCTION_DEF:
@@ -70,40 +70,52 @@ namespace LL2W {
 					aliases.emplace(node->lexerInfo, dynamic_cast<AliasDef *>(node));
 					break;
 				case LLVMTOK_DIFILE: {
-					const int index = node->front()->atoi();
+					const auto index = node->front()->atoi();
 					files.try_emplace(index, node->at(1)->unquote(), node->at(2)->unquote());
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DILOCATION: {
-					const int index = node->front()->atoi();
+					const auto index = node->front()->atoi();
 					locations.try_emplace(index, *node->at(1));
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DISUBPROGRAM: {
-					const int index = node->front()->atoi();
+					const auto index = node->front()->atoi();
 					subprograms.try_emplace(index, *node->at(1));
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DILB:
 				case LLVMTOK_DILBF: {
-					const int index = node->front()->atoi();
+					const auto index = node->front()->atoi();
 					lexicalBlocks.try_emplace(index, node->at(2)->atoi(), node->at(1)->atoi());
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DILV: {
-					const int index = node->front()->atoi();
+					const auto index = node->front()->atoi();
 					localVariables.try_emplace(index, *node);
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
 				case LLVMTOK_DIBT: {
-					const int index = node->front()->atoi();
-					basicTypes.try_emplace(index, TypeSet{std::make_shared<BasicType>(*node)});
+					const auto index = node->front()->atoi();
+					basicTypeSets.try_emplace(index, TypeSet{std::make_shared<BasicType>(*node)});
+					basicTypeLists.try_emplace(index, std::vector{std::make_shared<BasicType>(*node)});
 					highestIndex = std::max(index, highestIndex);
+					break;
+				}
+				case LLVMTOK_DIST: {
+					const auto index = node->front()->atoi();
+					for (const ASTNode *subnode: *node->back()) {
+						if (subnode->symbol == LLVMTOK_TYPES) {
+							const auto subindex = subnode->front()->atoi();
+							subroutineTypes.emplace(index, subindex);
+							break;
+						}
+					}
 					break;
 				}
 			}
@@ -116,14 +128,17 @@ namespace LL2W {
 		for (ASTNode *node: root) {
 			if (auto *def = dynamic_cast<MetadataDef *>(node)) {
 				if (Util::isNumeric(std::string_view(*def->front()->lexerInfo).substr(1))) {
-					const int index = def->front()->atoi();
+					const auto index = def->front()->atoi();
 					for (ASTNode *subnode: *def->back()) {
 						if (subnode->symbol != LLVMTOK_METABANG || subnode->lexerInfo == nullstr)
 							continue;
-						const int subindex = subnode->atoi();
-						if (basicTypes.contains(subindex))
-							for (const auto &basic_type: basicTypes.at(subindex))
-								basicTypes[index].insert(basic_type);
+						const int64_t subindex = subnode->atoi();
+						if (basicTypeSets.contains(subindex))
+							for (const auto &basic_type: basicTypeSets.at(subindex))
+								basicTypeSets[index].insert(basic_type);
+						if (basicTypeLists.contains(subindex))
+							for (const auto &basic_type: basicTypeLists.at(subindex))
+								basicTypeLists[index].push_back(basic_type);
 					}
 				}
 			}

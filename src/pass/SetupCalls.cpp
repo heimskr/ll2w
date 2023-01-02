@@ -30,38 +30,61 @@ namespace LL2W::Passes {
 		for (;;) {
 			// First, we check the call node itself—it sometimes contains the signature of the function.
 			if (call->argumentsExplicit) {
-				if (argument_types)
+				if (argument_types != nullptr)
 					*argument_types = call->argumentTypes;
 				ellipsis = call->argumentEllipsis;
 				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-				return;
+				break;
 			} else if (function.parent.functions.count("@" + *global) != 0) {
 				// When the arguments aren't explicit, we check the parent program's map of functions.
 				Function &func = *function.parent.functions.at("@" + *global);
 				ellipsis = func.isVariadic();
 				convention = func.getCallingConvention();
-				if (argument_types) {
+				if (argument_types != nullptr) {
 					argument_types->reserve(func.arguments->size());
 					for (FunctionArgument &argument: *func.arguments)
 						argument_types->push_back(argument.type);
 				}
-				return;
+				break;
 			} else if (function.parent.declarations.count(*global) != 0) {
 				// We can also check the map of declarations.
 				FunctionHeader *header = function.parent.declarations.at(*global);
 				ellipsis = header->arguments->ellipsis;
 				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
-				if (argument_types) {
+				if (argument_types != nullptr) {
 					argument_types->reserve(header->arguments->arguments.size());
 					for (FunctionArgument &argument: header->arguments->arguments)
 						argument_types->push_back(argument.type);
 				}
-				return;
+				break;
 			} else if (function.parent.aliases.count(StringSet::intern("@" + *global)) != 0) {
 				// In rare cases, there may be an alias.
 				AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global));
 				global = alias->aliasTo->front() == '@'? StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
 			} else throw std::runtime_error("Couldn't find signature for function " + *global);
+		}
+
+		if (argument_types != nullptr) {
+			if (function.debugIndex == -1) {
+				warn() << "Couldn't find debug index for function " << *function.name << '\n';
+				return;
+			}
+
+			Program &program = function.parent;
+
+			if (!program.subprograms.contains(function.debugIndex)) {
+				warn() << "Couldn't find subprogram for function " << *function.name << '\n';
+				return;
+			}
+
+			Subprogram &subprogram = program.subprograms.at(function.debugIndex);
+
+			if (!program.subroutineTypes.contains(subprogram.type)) {
+				warn() << "Couldn't find subroutine types for function " << *function.name << '\n';
+				return;
+			}
+
+			success() << "All good in " << *function.name << '\n';
 		}
 	}
 

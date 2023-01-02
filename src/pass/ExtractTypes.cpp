@@ -52,12 +52,12 @@ namespace LL2W::Passes {
 						continue;
 
 					const auto &local = function.parent.localVariables.at(bang);
-					if (!function.parent.basicTypes.contains(local.type)) {
+					if (!function.parent.basicTypeSets.contains(local.type)) {
 						// Probably something like !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !x, size: 64).
 						continue;
 					}
 
-					const TypeSet &types = function.parent.basicTypes.at(local.type);
+					const TypeSet &types = function.parent.basicTypeSets.at(local.type);
 					const auto composition = types.getComposition();
 					auto &signedness = std::dynamic_pointer_cast<IntType>(var->type)->signedness;
 
