@@ -28,5 +28,7 @@ namespace LL2W {
 			bool holdsLabels() const override;
 			bool replaceLabel(const std::string *, const std::string *) override;
 			std::vector<const std::string *> getLabels() const override;
+
+			bool isBlockTerminal() const override;
 	};
 }

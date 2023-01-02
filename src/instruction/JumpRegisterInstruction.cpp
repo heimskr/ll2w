@@ -45,7 +45,7 @@ namespace LL2W {
 		return conditionPrefix() + std::string(link? "::" : ":") + " " + rd->toString();
 	}
 
-	bool JumpRegisterInstruction::alwaysTerminal() const {
+	bool JumpRegisterInstruction::isBlockTerminal() const {
 		return condition == Condition::None;
 	}
 }

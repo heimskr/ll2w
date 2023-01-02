@@ -130,6 +130,11 @@ namespace LL2W {
 			virtual bool holdsLabels() const {
 				return false;
 			}
+
+			/** Returns whether the instruction is of a type that ends a basic block. */
+			virtual bool isBlockTerminal() const {
+				return false;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

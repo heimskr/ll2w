@@ -12,7 +12,7 @@ namespace LL2W {
 		return conditionPrefix() + std::string(link? "::" : ":") + " " + LL2W::toString(addr);
 	}
 
-	bool JumpInstruction::alwaysTerminal() const {
+	bool JumpInstruction::isBlockTerminal() const {
 		return condition == Condition::None;
 	}
 }

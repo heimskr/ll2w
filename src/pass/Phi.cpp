@@ -244,7 +244,7 @@ namespace LL2W::Passes {
 						middle_made = block_made = true;
 						const std::string *new_label = function.newLabel();
 						comment += " (in new block " + *new_label + " whose parent is " + *block->label + ")";
-						middle_block = std::make_shared<BasicBlock>(new_label, std::vector {block->label},
+						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->label},
 							std::list<InstructionPtr>());
 						middle_block->parent = &function;
 						auto block_iter = std::find(function.blocks.begin(), function.blocks.end(), block);

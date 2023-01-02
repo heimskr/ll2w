@@ -347,4 +347,17 @@ namespace LL2W {
 
 		return {};
 	}
+
+	bool LLVMInstruction::isBlockTerminal() const {
+		switch (node->nodeType()) {
+			case NodeType::BrCond:
+			case NodeType::BrUncond:
+			case NodeType::Switch:
+			case NodeType::Ret:
+			case NodeType::Unreachable:
+				return true;
+			default:
+				return false;
+		}		
+	}
 }

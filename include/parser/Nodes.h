@@ -20,7 +20,7 @@ namespace LL2W {
 	enum class NodeType {
 		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
 		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
-		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw
+		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw,
 	};
 
 	struct BaseNode: ASTNode {

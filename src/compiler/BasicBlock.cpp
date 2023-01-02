@@ -8,10 +8,10 @@
 
 namespace LL2W {
 	BasicBlock::BasicBlock(Label label_, const std::vector<Label> &preds_,
-	                       const std::list<std::shared_ptr<Instruction>> &instructions_):
+	                       const std::list<InstructionPtr> &instructions_):
 		label(label_), preds(preds_), instructions(instructions_) {}
 
-	void BasicBlock::extract(std::shared_ptr<Instruction> &instruction) {
+	void BasicBlock::extract(const InstructionPtr &instruction) {
 		if (instruction->parent.lock().get() != this)
 			warn() << "Instruction's block is " << *instruction->parent.lock()->label << ", not " << *label << ": "
 			       << instruction->debugExtra() << '\n';
@@ -39,7 +39,7 @@ namespace LL2W {
 		nonPhiWritten.clear();
 		nonPhiRead.clear();
 
-		for (std::shared_ptr<Instruction> &instruction: instructions)
+		for (InstructionPtr &instruction: instructions)
 			extract(instruction);
 
 		return {read.size(), written.size()};
@@ -98,7 +98,7 @@ namespace LL2W {
 			throw std::runtime_error("Unrecognized terminal instruction in BasicBlock::goesTo: " + back->debugExtra());
 	}
 
-	bool BasicBlock::inPhiDefs(std::shared_ptr<Variable> var) const {
+	bool BasicBlock::inPhiDefs(const VariablePtr &var) const {
 		bool found_in_written = false;
 		for (const VariablePtr &other: written)
 			if (*var == *other) {
@@ -113,7 +113,7 @@ namespace LL2W {
 		return true;
 	}
 
-	void BasicBlock::insertBeforeTerminal(std::shared_ptr<Instruction> instruction) {
+	void BasicBlock::insertBeforeTerminal(const InstructionPtr &instruction) {
 		instruction->parent = shared_from_this();
 
 		if (instructions.empty()) {
@@ -126,19 +126,19 @@ namespace LL2W {
 		extract(instruction);
 	}
 
-	bool BasicBlock::isLiveIn(std::shared_ptr<Variable> var) const {
+	bool BasicBlock::isLiveIn(const VariablePtr &var) const {
 		if (0 < liveIn.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> &live_in: liveIn)
+		for (const VariablePtr &live_in: liveIn)
 			if (live_in->id == var->id)
 				return true;
 		return false;
 	}
 
-	bool BasicBlock::isLiveOut(std::shared_ptr<Variable> var) const {
+	bool BasicBlock::isLiveOut(const VariablePtr &var) const {
 		if (0 < liveOut.count(var))
 			return true;
-		for (const std::shared_ptr<Variable> &live_out: liveOut)
+		for (const VariablePtr &live_out: liveOut)
 			if (live_out->id == var->id)
 				return true;
 		return false;

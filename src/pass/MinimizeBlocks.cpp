@@ -7,10 +7,10 @@
 namespace LL2W::Passes {
 	void minimizeBlocks(Function &function, bool remake_cfg) {
 
-		if (*function.name == "@main") {
-			function.debug();
-			std::cerr << "\n\n\e[1m================\e[22m\n\n";
-		}
+		// if (*function.name == "@main") {
+		// 	function.debug();
+		// 	std::cerr << "\n\n\e[1m================\e[22m\n\n";
+		// }
 
 		Timer timer("MinimizeBlocks");
 

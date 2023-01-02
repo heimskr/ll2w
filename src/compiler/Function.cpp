@@ -929,6 +929,8 @@ namespace LL2W {
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
+		if (*name == "@main")
+			debug();
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);

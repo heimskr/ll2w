@@ -1,4 +1,5 @@
 #include "compiler/Function.h"
+#include "compiler/Instruction.h"
 #include "pass/MakeCFG.h"
 #include "pass/MergeAllBlocks.h"
 #include "util/CompilerUtil.h"
@@ -14,7 +15,7 @@ namespace LL2W::Passes {
 			// Iterate through all blocks except the final block.
 			for (auto iter = function.blocks.begin(); iter != pre_end; ++iter) {
 				BasicBlockPtr &block = *iter;
-				if (block->instructions.empty() || !CompilerUtil::isTerminator(block->instructions.back())) {
+				if (block->instructions.empty() || !block->instructions.back()->isBlockTerminal()) {
 					// Don't merge if multiple blocks jump to the next block. That would cause other blocks to jump to
 					// an earlier point than intended, which would cause incorrect behavior.
 					if ((*++iter)->preds.size() == 1) {

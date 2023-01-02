@@ -18,28 +18,31 @@ namespace LL2W {
 	class LLVMInstruction;
 	class Type;
 
+	using InstructionPtr = std::shared_ptr<Instruction>;
+	using VariablePtr = std::shared_ptr<Variable>;
+
 	class BasicBlock: public std::enable_shared_from_this<BasicBlock> {
 		private:
 			bool extracted = false;
-			void extract(std::shared_ptr<Instruction> &);
+			void extract(const InstructionPtr &);
 
 		public:
 			using Label = const std::string *;
 			Label label;
 			int index = -1;
 			std::vector<Label> preds;
-			std::list<std::shared_ptr<Instruction>> instructions;
-			std::set<std::shared_ptr<Variable>> read, written, nonPhiWritten, nonPhiRead;
-			std::unordered_set<std::shared_ptr<Variable>> liveIn, liveOut;
+			std::list<InstructionPtr> instructions;
+			std::set<VariablePtr> read, written, nonPhiWritten, nonPhiRead;
+			std::unordered_set<VariablePtr> liveIn, liveOut;
 			/** A set of all variables used by ϕ-instructions in this block. */
-			std::unordered_set<std::shared_ptr<Variable>> phiUses;
+			std::unordered_set<VariablePtr> phiUses;
 			Node *node = nullptr;
 			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
 			int estimatedExecutions = 0;
 
-			BasicBlock(Label, const std::vector<Label> & = {}, const std::list<std::shared_ptr<Instruction>> & = {});
+			BasicBlock(Label, const std::vector<Label> & = {}, const std::list<InstructionPtr> & = {});
 
 			/** Extracts each instruction in the basic block. Returns a pair containing the total number of reads and
 			 *  the total number of writes in the basic block. */
@@ -53,7 +56,7 @@ namespace LL2W {
 
 			std::vector<std::shared_ptr<BasicBlock>> goesTo() const;
 
-			bool inPhiDefs(std::shared_ptr<Variable>) const;
+			bool inPhiDefs(const VariablePtr &) const;
 
 			/** Returns the number of instructions in the basic block. */
 			size_t size() const { return instructions.size(); }
@@ -61,13 +64,13 @@ namespace LL2W {
 			/** Inserts an instruction right before the basic block's terminal instruction.
 			 *  This function assumes that every basic block has exactly one terminal instruction, but this assumption
 			 *  is false after lowering of terminal instructions. */
-			void insertBeforeTerminal(std::shared_ptr<Instruction>);
+			void insertBeforeTerminal(const InstructionPtr &);
 
 			/** Returns the number of instructions in the basic block that define a variable. */
 			int countDefinitions();
 
-			bool isLiveIn(std::shared_ptr<Variable>) const;
-			bool isLiveOut(std::shared_ptr<Variable>) const;
+			bool isLiveIn(const VariablePtr &) const;
+			bool isLiveOut(const VariablePtr &) const;
 	};
 
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;
