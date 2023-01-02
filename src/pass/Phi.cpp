@@ -10,6 +10,7 @@
 #include "instruction/SetInstruction.h"
 #include "pass/MakeCFG.h"
 #include "pass/Phi.h"
+#include "util/CompilerUtil.h"
 #include "util/Timer.h"
 
 #define REMOVE_OLD_TEMPORARIES
@@ -292,11 +293,11 @@ namespace LL2W::Passes {
 									*cond_label = percent_label;
 							} else if (type == NodeType::Switch) {
 								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
-								if (switch_node->label->substr(1) == *phi_block_label)
+								if (CompilerUtil::labelsMatch(*switch_node->label, *phi_block_label))
 									switch_node->label = percent_label;
 								else
 									for (auto &[type, value, switch_label]: switch_node->table)
-										if (switch_label->substr(1) == *phi_block_label)
+										if (CompilerUtil::labelsMatch(*switch_label, *phi_block_label))
 											switch_label = percent_label;
 							} else
 								error() << "Final instruction of block " << *block->label
