@@ -57,8 +57,8 @@ namespace LL2W::Passes {
 						continue;
 					}
 
-					const TypeSet &types = function.parent.basicTypeSets.at(local.type);
-					const auto composition = types.getComposition();
+					const auto types = function.parent.basicTypeSets.at(local.type);
+					const auto composition = types->getComposition(&function.parent);
 					auto &signedness = std::dynamic_pointer_cast<IntType>(var->type)->signedness;
 
 					switch (composition) {

@@ -3,17 +3,19 @@
 #include <memory>
 #include <set>
 
-namespace LL2W {
-	struct BasicType;
+// #include "compiler/LLVMType.h"
 
-	struct TypeSet: std::set<std::shared_ptr<BasicType>> {
+namespace LL2W {
+	struct LLVMType;
+
+	struct TypeSet: std::set<std::shared_ptr<LLVMType>> {
 		enum class Composition {Invalid, Empty, SignedOnly, UnsignedOnly, Mixed};
-		using std::set<std::shared_ptr<BasicType>>::set;
-		bool anySigned() const;
-		bool anyUnsigned() const;
-		bool allSigned() const;
-		bool allUnsigned() const;
-		bool isMixed() const;
-		Composition getComposition() const;
+		using std::set<std::shared_ptr<LLVMType>>::set;
+		bool anySigned(Program *) const;
+		bool anyUnsigned(Program *) const;
+		bool allSigned(Program *) const;
+		bool allUnsigned(Program *) const;
+		bool isMixed(Program *) const;
+		Composition getComposition(Program *) const;
 	};
 }

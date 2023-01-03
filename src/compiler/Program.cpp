@@ -102,8 +102,12 @@ namespace LL2W {
 				}
 				case LLVMTOK_DIBT: {
 					const auto index = node->front()->atoi();
-					basicTypeSets.try_emplace(index, TypeSet{std::make_shared<BasicType>(*node)});
-					basicTypeLists.try_emplace(index, std::vector{std::make_shared<BasicType>(*node)});
+					basicTypeSets.try_emplace(index, std::make_shared<TypeSet>(TypeSet{
+						std::make_shared<BasicType>(*node)
+					}));
+					basicTypeLists.try_emplace(index, std::vector<std::shared_ptr<LLVMType>>{
+						std::make_shared<BasicType>(*node)
+					});
 					highestIndex = std::max(index, highestIndex);
 					break;
 				}
@@ -120,7 +124,12 @@ namespace LL2W {
 				}
 				case LLVMTOK_DIDT: {
 					const auto index = node->front()->atoi();
-					derivedTypes.try_emplace(index, *node);
+					derivedTypes.try_emplace(index, std::make_shared<DerivedType>(*node));
+					break;
+				}
+				case LLVMTOK_DICT: {
+					const auto index = node->front()->atoi();
+					compositeTypes.try_emplace(index, std::make_shared<CompositeType>(*node));
 					break;
 				}
 			}
@@ -165,9 +174,12 @@ namespace LL2W {
 			for (ASTNode *subnode: *def.back()) {
 				if (subnode->symbol == LLVMTOK_METABANG && subnode->lexerInfo != nullstr) {
 					const int64_t subindex = subnode->atoi();
-					if (basicTypeSets.contains(subindex))
-						for (const auto &basic_type: basicTypeSets.at(subindex))
-							basicTypeSets[index].insert(basic_type);
+					if (basicTypeSets.contains(subindex)) {
+						if (!basicTypeSets.contains(index))
+							basicTypeSets.emplace(index, std::make_shared<TypeSet>());
+						for (const auto &basic_type: *basicTypeSets.at(subindex))
+							basicTypeSets[index]->insert(basic_type);
+					}
 				}
 			}
 		}
@@ -177,29 +189,33 @@ namespace LL2W {
 		if (Util::isNumeric(std::string_view(*def.front()->lexerInfo).substr(1))) {
 			static const std::string *nullstr = StringSet::intern("null");
 			const auto index = def.front()->atoi();
-			info() << index << ':';
+			// info() << index << ':';
 			for (ASTNode *subnode: *def.back()) {
-				std::cerr << ' ' << *subnode->lexerInfo;
+				// std::cerr << ' ' << *subnode->lexerInfo;
 				if (subnode->lexerInfo == nullstr) {
 					basicTypeLists[index].push_back(nullptr);
 				} else if (subnode->symbol == LLVMTOK_METABANG) {
 					try {
 						const int64_t subindex = subnode->atoi();
-						if (!basicTypeSets.contains(subindex)) {
-							error() << "Typeset " << subindex << " not found\n";
-							subnode->debug();
-							continue;
-						}
-						const auto &typeset = basicTypeSets.at(subindex);
-						if (typeset.size() != 1) {
-							error() << "Typeset " << subindex << " has a size of " << typeset.size() << '\n';
+						if (basicTypeSets.contains(subindex)) {
+							const auto &typeset = basicTypeSets.at(subindex);
+							if (typeset->size() != 1)
+								error() << "Typeset " << subindex << " has a size of " << typeset->size() << '\n';
+							else
+								basicTypeLists[index].push_back(*typeset->begin());
+						} else if (derivedTypes.contains(subindex)) {
+							basicTypeLists[index].push_back(derivedTypes.at(subindex));
+						} else if (compositeTypes.contains(subindex)) {
+							basicTypeLists[index].push_back(compositeTypes.at(subindex));
 						} else {
-							basicTypeLists[index].push_back(*typeset.begin());
+							// std::cerr << "\e[2m(\e[2;31mNF\e[39;2m)\e[22m";
+							// error() << "Typeset " << subindex << " not found\n";
+							// subnode->debug();
 						}
 					} catch (const std::invalid_argument &) {}
 				}
 			}
-			std::cerr << '\n';
+			// std::cerr << '\n';
 		}
 	}
 

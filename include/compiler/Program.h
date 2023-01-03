@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "compiler/BasicType.h"
+#include "compiler/CompositeType.h"
 #include "compiler/DerivedType.h"
 #include "compiler/File.h"
 #include "compiler/Function.h"
@@ -20,7 +22,6 @@
 namespace LL2W {
 	struct ArrayValue;
 	class  ASTNode;
-	struct BasicType;
 	struct StructValue;
 	struct Value;
 
@@ -52,11 +53,12 @@ namespace LL2W {
 			std::map<int64_t, Subprogram> subprograms;
 			std::map<int64_t, LexicalBlock> lexicalBlocks;
 			std::map<int64_t, LocalVariable> localVariables;
-			/** This is a set of shared_ptrs instead of just a shared_ptr because of nodes like "!1 = {!2, !3}". */
-			std::map<int64_t, TypeSet> basicTypeSets;
-			std::map<int64_t, std::vector<std::shared_ptr<BasicType>>> basicTypeLists;
+			/** This is a (pointer to a) set of types instead of just one type because of nodes like "!1 = {!2, !3}". */
+			std::map<int64_t, std::shared_ptr<TypeSet>> basicTypeSets;
+			std::map<int64_t, std::vector<std::shared_ptr<LLVMType>>> basicTypeLists;
 			std::map<int64_t, int64_t> subroutineTypes;
-			std::map<int64_t, DerivedType> derivedTypes;
+			std::map<int64_t, std::shared_ptr<DerivedType>> derivedTypes;
+			std::map<int64_t, std::shared_ptr<CompositeType>> compositeTypes;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int64_t> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they

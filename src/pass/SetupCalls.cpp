@@ -1,3 +1,5 @@
+#include <ranges>
+#include <span>
 #include <tuple>
 
 #include "compiler/BasicType.h"
@@ -88,12 +90,19 @@ namespace LL2W::Passes {
 			info() << subprogram.type << ", " << program.subroutineTypes.at(subprogram.type) << '\n';
 
 			try {
-				auto &typelist = program.basicTypeLists.at(program.subroutineTypes.at(subprogram.type));
-				success() << ":)";
-				for (const auto &type: typelist)
-					if (type)
-						std::cerr << ' ' << *type->name;
-				std::cerr << '\n';
+				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
+				auto span = std::span(program.basicTypeLists.at(subroutine_type)).subspan(1);
+				// for (const auto &type: span) {
+				// 	std::cerr << typeid(*type).name() << ' ';
+				// }
+				// std::cerr << '\n';
+				size_t i = 0;
+				for (const auto &type: span) {
+					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
+						int_type->signedness = type->isSigned(&function.parent)?
+							IntType::Signedness::Signed : IntType::Signedness::Unsigned;
+					}
+				}
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";
 				for (const auto &[key, val]: program.basicTypeLists) std::cerr << ' ' << key;

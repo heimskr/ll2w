@@ -2,39 +2,39 @@
 #include "compiler/TypeSet.h"
 
 namespace LL2W {
-	bool TypeSet::anySigned() const {
+	bool TypeSet::anySigned(Program *program) const {
 		for (const auto &type: *this)
-			if (type->isSigned())
+			if (type->isSigned(program))
 				return true;
 		return false;
 	}
 
-	bool TypeSet::anyUnsigned() const {
+	bool TypeSet::anyUnsigned(Program *program) const {
 		for (const auto &type: *this)
-			if (!type->isSigned())
+			if (!type->isSigned(program))
 				return true;
 		return false;
 	}
 
-	bool TypeSet::allSigned() const {
+	bool TypeSet::allSigned(Program *program) const {
 		for (const auto &type: *this)
-			if (!type->isSigned())
+			if (!type->isSigned(program))
 				return false;
 		return true;
 	}
 
-	bool TypeSet::allUnsigned() const {
+	bool TypeSet::allUnsigned(Program *program) const {
 		for (const auto &type: *this)
-			if (type->isSigned())
+			if (type->isSigned(program))
 				return false;
 		return true;
 	}
 
-	bool TypeSet::isMixed() const {
+	bool TypeSet::isMixed(Program *program) const {
 		bool any_signed = false;
 		bool any_unsigned = false;
 		for (const auto &type: *this) {
-			if (type->isSigned()) {
+			if (type->isSigned(program)) {
 				if (any_unsigned)
 					return true;
 				any_signed = true;
@@ -47,10 +47,10 @@ namespace LL2W {
 		return false;
 	}
 
-	TypeSet::Composition TypeSet::getComposition() const {
+	TypeSet::Composition TypeSet::getComposition(Program *program) const {
 		Composition out = Composition::Empty;
 		for (const auto &type: *this) {
-			if (type->isSigned()) {
+			if (type->isSigned(program)) {
 				if (out == Composition::UnsignedOnly)
 					return Composition::Mixed;
 				if (out == Composition::Empty)

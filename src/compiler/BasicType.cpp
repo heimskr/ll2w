@@ -6,12 +6,12 @@
 
 namespace LL2W {
 	BasicType::BasicType(const ASTNode &node):
+		LLVMType(node.at(1)->lexerInfo),
 		id(node.front()->atoi()),
 		size(node.at(2)->atoi()),
-		name(node.at(1)->lexerInfo),
 		encoding(node.at(3)->lexerInfo) {}
 
-	bool BasicType::isSigned() const {
+	bool BasicType::isSigned(Program *) {
 		if (encoding != nullptr && encoding->find("_signed") != std::string::npos)
 			return true;
 
