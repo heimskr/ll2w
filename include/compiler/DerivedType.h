@@ -29,13 +29,13 @@ namespace LL2W {
 
 			DerivedType(const ASTNode &node);
 
-			std::shared_ptr<TypeSet> getBaseType() const;
-			std::shared_ptr<TypeSet> getBaseType(Program &);
+			std::shared_ptr<LLVMType> getBaseType() const;
+			std::shared_ptr<LLVMType> getBaseType(Program &);
 
 			bool isSigned(Program *) override;
 
 		private:
 			/** If empty, then the base type is either "null" or unspecified. */
-			std::optional<std::variant<int64_t, std::shared_ptr<TypeSet>>> baseType;
+			std::optional<std::variant<int64_t, std::shared_ptr<LLVMType>>> baseType;
 	};
 }

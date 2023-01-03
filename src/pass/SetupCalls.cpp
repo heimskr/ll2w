@@ -90,18 +90,24 @@ namespace LL2W::Passes {
 			info() << subprogram.type << ", " << program.subroutineTypes.at(subprogram.type) << '\n';
 
 			try {
+				// info() << "Looking up subroutine type...\n";
 				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
+				// success() << "Found subroutine type.\n";
 				auto span = std::span(program.basicTypeLists.at(subroutine_type)).subspan(1);
+				success() << "Global: " << *global << ", subprogram type: " << subprogram.type << ", subroutine type: " << subroutine_type << ".\n";
 				// for (const auto &type: span) {
 				// 	std::cerr << typeid(*type).name() << ' ';
 				// }
 				// std::cerr << '\n';
 				size_t i = 0;
+				info() << "Span size is " << span.size() << ", argument_types size is " << argument_types->size() << ".\n";
 				for (const auto &type: span) {
+					info() << "Looking up argument type " << i << "...\n";
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->signedness = type->isSigned(&function.parent)?
 							IntType::Signedness::Signed : IntType::Signedness::Unsigned;
 					}
+					success() << "Found argument type " << i << ".\n";
 				}
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";

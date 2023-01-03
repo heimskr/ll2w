@@ -48,8 +48,11 @@ namespace LL2W {
 					functions.emplace(*node->lexerInfo, new Function(*this, *node));
 					break;
 				case LLVMTOK_DECLARE: {
-					ASTNode *header = node->at(0);
-					declarations.emplace(header->lexerInfo->substr(1), dynamic_cast<FunctionHeader *>(header));
+					ASTNode *header_node = node->front();
+					auto *header = dynamic_cast<FunctionHeader *>(header_node);
+					if (header->debugIndex == -1 && 1 < node->size())
+						header->debugIndex = node->at(1)->front()->atoi();
+					declarations.emplace(header->lexerInfo->substr(1), header);
 					break;
 				}
 				case LLVMTOK_SOURCE_FILENAME:

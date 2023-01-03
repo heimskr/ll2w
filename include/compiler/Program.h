@@ -51,6 +51,7 @@ namespace LL2W {
 			std::map<int64_t, File> files;
 			std::map<int64_t, Location> locations;
 			std::map<int64_t, Subprogram> subprograms;
+			std::map<const std::string *, int64_t> subprogramIndices;
 			std::map<int64_t, LexicalBlock> lexicalBlocks;
 			std::map<int64_t, LocalVariable> localVariables;
 			/** This is a (pointer to a) set of types instead of just one type because of nodes like "!1 = {!2, !3}". */

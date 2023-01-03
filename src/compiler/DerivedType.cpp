@@ -54,7 +54,7 @@ namespace LL2W {
 		}
 	}
 
-	std::shared_ptr<TypeSet> DerivedType::getBaseType() const {
+	std::shared_ptr<LLVMType> DerivedType::getBaseType() const {
 		if (!baseType)
 			throw std::runtime_error("DerivedType " + std::to_string(id) + " has no base type");
 
@@ -62,10 +62,10 @@ namespace LL2W {
 			throw std::runtime_error("DerivedType " + std::to_string(id) + " has an integer base type; "
 				"lookup is required");
 
-		return std::get<std::shared_ptr<TypeSet>>(*baseType);
+		return std::get<std::shared_ptr<LLVMType>>(*baseType);
 	}
 
-	std::shared_ptr<TypeSet> DerivedType::getBaseType(Program &program) {
+	std::shared_ptr<LLVMType> DerivedType::getBaseType(Program &program) {
 		if (!baseType)
 			throw std::runtime_error("DerivedType " + std::to_string(id) + " has no base type");
 
@@ -79,31 +79,20 @@ namespace LL2W {
 			}
 
 			if (program.compositeTypes.contains(type_index)) {
-				
+				auto composite = program.compositeTypes.at(type_index);
+				baseType = composite;
+				return composite;
 			}
 
 			throw std::runtime_error("DerivedType " + std::to_string(id) + " couldn't find typeset or composite with "
 				"index " + std::to_string(type_index));
 		}
 
-		return std::get<std::shared_ptr<TypeSet>>(*baseType);
+		return std::get<std::shared_ptr<LLVMType>>(*baseType);
 	}
 
 	bool DerivedType::isSigned(Program *program) {
-		std::shared_ptr<TypeSet> typeset = program == nullptr? getBaseType() : getBaseType(*program);
-		std::optional<bool> is_signed;
-		for (const auto &type: *typeset) {
-			const bool type_is_signed = type->isSigned(program);
-			if (is_signed.has_value()) {
-				if (*is_signed != type_is_signed)
-					throw std::runtime_error("DerivedType " + std::to_string(id) + " has conflicting signednesses");
-			} else
-				is_signed = type_is_signed;
-		}
-
-		if (!is_signed.has_value())
-			throw std::runtime_error("Couldn't find signedness for DerivedType " + std::to_string(id));
-
-		return *is_signed;
+		auto base = program == nullptr? getBaseType() : getBaseType(*program);
+		return base->isSigned(program);
 	}
 }

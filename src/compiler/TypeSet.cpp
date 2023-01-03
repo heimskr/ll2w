@@ -64,4 +64,16 @@ namespace LL2W {
 		}
 		return out;
 	}
+
+	bool TypeSet::isSigned(Program *program) {
+		const Composition composition = getComposition(program);
+		if (composition == Composition::SignedOnly)
+			return true;
+		if (composition == Composition::UnsignedOnly)
+			return false;
+		if (composition == Composition::Mixed)
+			throw std::runtime_error("TypeSet " + std::to_string(id) + " has mixed composition");
+		throw std::runtime_error("TypeSet " + std::to_string(id) + " has invalid composition " +
+			std::to_string(static_cast<int>(composition)));
+	}
 }
