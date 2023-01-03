@@ -69,45 +69,39 @@ namespace LL2W::Passes {
 
 		if (argument_types != nullptr) {
 			if (function.debugIndex == -1) {
-				warn() << "Couldn't find debug index for function " << *function.name << '\n';
+				warn() << "Couldn't find debug index for function " << *global << '\n';
 				return;
 			}
 
 			Program &program = function.parent;
 
-			if (!program.subprograms.contains(function.debugIndex)) {
-				warn() << "Couldn't find subprogram for function " << *function.name << '\n';
+			if (!program.declarations.contains(*global)) {
+				warn() << "Couldn't find declaration for function " << *global << '\n';
 				return;
 			}
 
-			Subprogram &subprogram = program.subprograms.at(function.debugIndex);
+			const FunctionHeader &header = *program.declarations.at(*global);
+
+			if (!program.subprograms.contains(header.debugIndex)) {
+				// warn() << "Couldn't find subprogram for function " << *global << " (debug index " << header.debugIndex << ")\n";
+				return;
+			}
+
+			Subprogram &subprogram = program.subprograms.at(header.debugIndex);
 
 			if (!program.subroutineTypes.contains(subprogram.type)) {
 				warn() << "Couldn't find subroutine types for function " << *function.name << '\n';
 				return;
 			}
 
-			info() << subprogram.type << ", " << program.subroutineTypes.at(subprogram.type) << '\n';
-
 			try {
-				// info() << "Looking up subroutine type...\n";
 				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
-				// success() << "Found subroutine type.\n";
-				auto span = std::span(program.basicTypeLists.at(subroutine_type)).subspan(1);
-				success() << "Global: " << *global << ", subprogram type: " << subprogram.type << ", subroutine type: " << subroutine_type << ".\n";
-				// for (const auto &type: span) {
-				// 	std::cerr << typeid(*type).name() << ' ';
-				// }
-				// std::cerr << '\n';
 				size_t i = 0;
-				info() << "Span size is " << span.size() << ", argument_types size is " << argument_types->size() << ".\n";
-				for (const auto &type: span) {
-					info() << "Looking up argument type " << i << "...\n";
+				for (const auto &type: std::span(program.basicTypeLists.at(subroutine_type)).subspan(1)) {
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->signedness = type->isSigned(&function.parent)?
 							IntType::Signedness::Signed : IntType::Signedness::Unsigned;
 					}
-					success() << "Found argument type " << i << ".\n";
 				}
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";
@@ -210,7 +204,8 @@ namespace LL2W::Passes {
 			for (i = 0; i < reg_max && i < arg_count; ++i) {
 				VariablePtr precolored = function.makePrecoloredVariable(WhyInfo::argumentOffset + i,
 					instruction->parent.lock());
-				precolored->type = call->constants[i]->type;
+				// precolored->type = call->constants[i]->type;
+				precolored->type = argument_types.at(i);
 				setupCallValue(function, precolored, instruction, call->constants[i]);
 			}
 
