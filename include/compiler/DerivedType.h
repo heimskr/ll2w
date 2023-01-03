@@ -33,6 +33,7 @@ namespace LL2W {
 			std::shared_ptr<LLVMType> getBaseType(Program &);
 
 			bool isSigned(Program *) override;
+			operator std::string() override;
 
 		private:
 			/** If empty, then the base type is either "null" or unspecified. */

@@ -21,5 +21,6 @@ namespace LL2W {
 		Composition getComposition(Program *) const;
 
 		bool isSigned(Program *) override;
+		operator std::string() override;
 	};
 }

@@ -1,6 +1,8 @@
 #include "compiler/BasicType.h"
 #include "compiler/TypeSet.h"
 
+#include <sstream>
+
 namespace LL2W {
 	bool TypeSet::anySigned(Program *program) const {
 		for (const auto &type: *this)
@@ -75,5 +77,23 @@ namespace LL2W {
 			throw std::runtime_error("TypeSet " + std::to_string(id) + " has mixed composition");
 		throw std::runtime_error("TypeSet " + std::to_string(id) + " has invalid composition " +
 			std::to_string(static_cast<int>(composition)));
+	}
+
+	TypeSet::operator std::string() {
+		std::ostringstream ss;
+		ss << '!' << id << " = !{";
+		bool first = true;
+		for (const auto &type: *this) {
+			if (first)
+				first = false;
+			else
+				ss << ", ";
+			if (type)
+				ss << '!' << type->id;
+			else
+				ss << "null";
+		}
+		ss << '}';
+		return ss.str();
 	}
 }

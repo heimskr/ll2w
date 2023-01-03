@@ -6,8 +6,7 @@
 
 namespace LL2W {
 	BasicType::BasicType(const ASTNode &node):
-		LLVMType(node.at(1)->lexerInfo),
-		id(node.front()->atoi()),
+		LLVMType(node.front()->atoi(), node.at(1)->lexerInfo),
 		size(node.at(2)->atoi()),
 		encoding(node.at(3)->lexerInfo) {}
 
@@ -19,5 +18,10 @@ namespace LL2W {
 			return true;
 
 		return false;
+	}
+
+	BasicType::operator std::string() {
+		return '!' + std::to_string(id) + " = !DIBasicType(name: " + (name == nullptr? "null" : *name) + ", size: " +
+			std::to_string(size) + ", encoding: " + (encoding == nullptr? "null" : *encoding) + ")";
 	}
 }

@@ -11,6 +11,7 @@ namespace LL2W {
 
 		virtual ~LLVMType() = default;
 		virtual bool isSigned(Program *) = 0;
+		virtual operator std::string() = 0;
 
 		protected:
 			LLVMType(int id_ = -1, const std::string *name_ = nullptr): id(id_), name(name_) {}

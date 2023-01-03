@@ -4,6 +4,8 @@
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
 
+#include <sstream>
+
 namespace LL2W {
 	DerivedType::DerivedType(const ASTNode &node): id(node.front()->atoi()) {
 		for (const ASTNode *item: *node.back()) {
@@ -94,5 +96,50 @@ namespace LL2W {
 	bool DerivedType::isSigned(Program *program) {
 		auto base = program == nullptr? getBaseType() : getBaseType(*program);
 		return base->isSigned(program);
+	}
+
+	DerivedType::operator std::string() {
+		int base_type = -1;
+		try {
+			base_type = getBaseType()->id;
+		} catch (const std::runtime_error &) {}
+
+		std::ostringstream ss;
+		ss << '!' << id << " = !DIDerivedType(tag: ";
+		ss << (tag == nullptr? "null" : *tag);
+		if (base_type != -1)
+			ss << ", baseType: !" << base_type;
+		if (file)
+			ss << ", file: " << *file;
+		if (line)
+			ss << ", line: " << *line;
+		if (scope)
+			ss << ", scope: " << *scope;
+		if (offset)
+			ss << ", offset: " << *offset;
+		if (size)
+			ss << ", size: " << *size;
+		if (align)
+			ss << ", align: " << *align;
+		if (!flags.empty()) {
+			ss << ", flags: ";
+			bool first = true;
+			for (const std::string *flag: flags) {
+				if (first)
+					first = false;
+				else
+					ss << " | ";
+				ss << *flag;
+			}
+		}
+		if (extraData) {
+			ss << ", extraData: ";
+			if (std::holds_alternative<int64_t>(*extraData))
+				ss << std::get<int64_t>(*extraData);
+			else
+				ss << *std::get<std::shared_ptr<Constant>>(*extraData);
+		}
+		ss << ')';
+		return ss.str();
 	}
 }
