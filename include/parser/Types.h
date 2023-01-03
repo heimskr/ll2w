@@ -84,6 +84,13 @@ namespace LL2W {
 		static std::shared_ptr<IntType> make(int width, Signedness signedness = Signedness::Unknown);
 		static std::shared_ptr<IntType> make(int width, bool is_signed);
 		std::string whyString() const override;
+		/** Returns whether the given Type is an IntType with the same width but not necessarily the same signedness. */
+		bool isSimilarTo(const Type &) const;
+		/** If the other type is an IntType and has no signedness, this function copies this IntType's signedness to it.
+		 *  Otherwise, if the other type is an IntType and does have a signedness and this type doesn't, this function
+		 *  copies the other type's signedness to this IntType. If the other type is an IntType and has a defined but
+		 *  different signedness, this function throws std::runtime_error. */
+		void shareSignedness(Type &);
 	};
 
 	struct AggregateType: Type {

@@ -64,6 +64,24 @@ namespace LL2W {
 		return out;
 	}
 
+	bool IntType::isSimilarTo(const Type &other) const {
+		const auto *other_int = dynamic_cast<const IntType *>(&other);
+		return other_int != nullptr && other_int->intWidth == intWidth;
+	}
+
+	void IntType::shareSignedness(Type &other) {
+		if (auto *other_int = dynamic_cast<IntType *>(&other)) {
+			if (other_int->signedness != Signedness::Unknown) {
+				if (signedness != Signedness::Unknown) {
+					if (signedness != other_int->signedness)
+						throw std::runtime_error("Signednesses don't match in IntType::shareSignedness");
+				} else
+					signedness = other_int->signedness;
+			} else if (signedness != Signedness::Unknown)
+				other_int->signedness = signedness;
+		}
+	}
+
 	ArrayType::operator std::string() {
 		return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
 	}

@@ -35,6 +35,7 @@ namespace LL2W::Passes {
 					// which normally translates to something like
 					//     [$t9] -> $ta /3
 					// Why has no instructions for 24-bit loads, so we have to apply a mask here.
+					// TODO(typed): fix?
 					// li->size = 4;
 					auto andi = std::make_shared<AndIInstruction>(li->rd, 0xffffff, li->rd);
 					// I don't use insertAfter all that often. Neat.
@@ -43,6 +44,7 @@ namespace LL2W::Passes {
 			} else if (auto l = std::dynamic_pointer_cast<LoadRInstruction>(instruction)) {
 				const auto l_size = l->rd->type->width() / 8;
 				if (l_size == 3) {
+					// TODO(typed): fix?
 					// l->size = 4;
 					auto andi = std::make_shared<AndIInstruction>(l->rd, 0xffffff, l->rd);
 					function.insertAfter(l, andi)->setDebug(l->debugIndex)->extract();

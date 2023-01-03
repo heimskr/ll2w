@@ -48,6 +48,7 @@
 #include "pass/ExtractTypes.h"
 #include "pass/FillLocalValues.h"
 #include "pass/FinishMultireg.h"
+#include "pass/FixSignedness.h"
 #include "pass/IgnoreIntrinsics.h"
 #include "pass/InsertLabels.h"
 #include "pass/InsertPrologue.h"
@@ -974,6 +975,7 @@ namespace LL2W {
 		Passes::signChars(*this);
 		Passes::discardUnusedVars(*this);
 		Passes::transformLabels(*this);
+		Passes::fixSignedness(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
