@@ -39,6 +39,7 @@ namespace LL2W {
 			bool isInt() const;
 			bool isInt(int bit_width) const;
 			bool isPointer() const;
+			bool isVoid() const;
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }

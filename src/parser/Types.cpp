@@ -29,6 +29,10 @@ namespace LL2W {
 		return typeType() == TypeType::Pointer;
 	}
 
+	bool Type::isVoid() const {
+		return typeType() == TypeType::Void;
+	}
+
 	IntType::operator std::string() {
 		return std::string("\e[33m") + static_cast<char>(signedness) + std::to_string(intWidth) + "\e[0m";
 	}

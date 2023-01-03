@@ -30,17 +30,20 @@
 namespace LL2W::Passes {
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
 	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
+		TypePtr return_type;
+
 		for (;;) {
 			// First, we check the call node itself—it sometimes contains the signature of the function.
 			if (call->argumentsExplicit) {
 				if (argument_types != nullptr)
 					*argument_types = call->argumentTypes;
+				return_type = call->returnType;
 				ellipsis = call->argumentEllipsis;
 				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
 				break;
-			} else if (function.parent.functions.count("@" + *global) != 0) {
+			} else if (function.parent.functions.count('@' + *global) != 0) {
 				// When the arguments aren't explicit, we check the parent program's map of functions.
-				Function &func = *function.parent.functions.at("@" + *global);
+				Function &func = *function.parent.functions.at('@' + *global);
 				ellipsis = func.isVariadic();
 				convention = func.getCallingConvention();
 				if (argument_types != nullptr) {
@@ -48,6 +51,7 @@ namespace LL2W::Passes {
 					for (FunctionArgument &argument: *func.arguments)
 						argument_types->push_back(argument.type);
 				}
+				return_type = func.returnType;
 				break;
 			} else if (function.parent.declarations.count(*global) != 0) {
 				// We can also check the map of declarations.
@@ -59,10 +63,11 @@ namespace LL2W::Passes {
 					for (FunctionArgument &argument: header->arguments->arguments)
 						argument_types->push_back(argument.type);
 				}
+				return_type = header->returnType;
 				break;
-			} else if (function.parent.aliases.count(StringSet::intern("@" + *global)) != 0) {
+			} else if (function.parent.aliases.count(StringSet::intern('@' + *global)) != 0) {
 				// In rare cases, there may be an alias.
-				AliasDef *alias = function.parent.aliases.at(StringSet::intern("@" + *global));
+				AliasDef *alias = function.parent.aliases.at(StringSet::intern('@' + *global));
 				global = alias->aliasTo->front() == '@'? StringSet::intern(alias->aliasTo->substr(1)) : alias->aliasTo;
 			} else
 				throw std::runtime_error("Couldn't find signature for function " + *global);
@@ -104,38 +109,37 @@ namespace LL2W::Passes {
 			try {
 				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
 				size_t i = 0;
-				auto span = std::span(program.basicTypeLists.at(subroutine_type)).subspan(1);
-				if (span.size() > argument_types->size() && span.back()) {
-					error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
-					info() << "Span for subprogram !" << debug_index << " -> " << subprogram.name << ":\n";
-					for (const auto &type: span) {
-						std::cerr << "    ";
-						if (type)
-							std::cerr << std::string(*type) << '\n';
-						else
-							std::cerr << "null\n";
-					}
-					info() << "argument_types:\n";
-					for (const auto &type: *argument_types) {
-						std::cerr << "    ";
-						if (type)
-							std::cerr << std::string(*type) << '\n';
-						else
-							std::cerr << "null\n";
-					}
-				} else if (span.size() != argument_types->size() && (span.empty() || span.back())) {
-					error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
+				std::span span(program.basicTypeLists.at(subroutine_type));
+				if (!return_type->isVoid() || (!span.empty() && !span.front())) {
+					// Skip the return type.
+					span = span.subspan(1);
 				}
 
-				for (size_t s = 0, end = span.size(); s < end; ++s) {
-					const auto &type = span[s];
-					if (s == end - 1 && !type) {
-						// Variadic functions will have a null argument at the end.
-						break;
-					}
+				// if (span.size() != argument_types->size() && (span.empty() || span.back())) {
+				// 	error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
+				// 	info() << "Subprogram !" << debug_index << " -> " << *return_type << ' ' << subprogram.name << ": span = \n";
+				// 	for (const auto &type: span) {
+				// 		std::cerr << "    ";
+				// 		if (type)
+				// 			std::cerr << std::string(*type) << '\n';
+				// 		else
+				// 			std::cerr << "null\n";
+				// 	}
+				// 	info() << "argument_types:\n";
+				// 	for (const auto &type: *argument_types) {
+				// 		std::cerr << "    ";
+				// 		if (type)
+				// 			std::cerr << std::string(*type) << '\n';
+				// 		else
+				// 			std::cerr << "null\n";
+				// 	}
+				// } else if (span.size() != argument_types->size()) {
+				// 	error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
+				// }
 
+				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s) {
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
-						int_type->signedness = type->isSigned(&function.parent)?
+						int_type->signedness = span[s]->isSigned(&function.parent)?
 							IntType::Signedness::Signed : IntType::Signedness::Unsigned;
 					}
 				}
