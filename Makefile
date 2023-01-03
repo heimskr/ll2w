@@ -1,8 +1,8 @@
 CHECK			?= none
 COMPILER		?= clang++
 DEBUGGER		?= lldb
-OPTIMIZATION	?= -O0 -g
-STANDARD		?= c++2a
+OPTIMIZATION	?= -O0 -ggdb3
+STANDARD		?= c++20
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w

@@ -325,12 +325,36 @@ namespace LL2W {
 		return children.end();
 	}
 
+	decltype(ASTNode::children)::reverse_iterator ASTNode::rbegin() {
+		return children.rbegin();
+	}
+
+	decltype(ASTNode::children)::reverse_iterator ASTNode::rend() {
+		return children.rend();
+	}
+
+	decltype(ASTNode::children)::const_reverse_iterator ASTNode::rbegin() const {
+		return children.crbegin();
+	}
+
+	decltype(ASTNode::children)::const_reverse_iterator ASTNode::rend() const {
+		return children.crend();
+	}
+
 	decltype(ASTNode::children)::const_iterator ASTNode::cbegin() const noexcept {
 		return children.cbegin();
 	}
 
 	decltype(ASTNode::children)::const_iterator ASTNode::cend() const noexcept {
 		return children.cend();
+	}
+
+	decltype(ASTNode::children)::const_reverse_iterator ASTNode::crbegin() const noexcept {
+		return children.crbegin();
+	}
+
+	decltype(ASTNode::children)::const_reverse_iterator ASTNode::crend() const noexcept {
+		return children.crend();
 	}
 
 	std::string ASTNode::extractName() const {

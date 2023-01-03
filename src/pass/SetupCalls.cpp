@@ -1,5 +1,6 @@
 #include <tuple>
 
+#include "compiler/BasicType.h"
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Program.h"
@@ -84,7 +85,20 @@ namespace LL2W::Passes {
 				return;
 			}
 
-			success() << "All good in " << *function.name << '\n';
+			info() << subprogram.type << ", " << program.subroutineTypes.at(subprogram.type) << '\n';
+
+			try {
+				auto &typelist = program.basicTypeLists.at(program.subroutineTypes.at(subprogram.type));
+				success() << ":)";
+				for (const auto &type: typelist)
+					if (type)
+						std::cerr << ' ' << *type->name;
+				std::cerr << '\n';
+			} catch (const std::out_of_range &) {
+				info() << "List indices:";
+				for (const auto &[key, val]: program.basicTypeLists) std::cerr << ' ' << key;
+				std::cerr << '\n';
+			}
 		}
 	}
 

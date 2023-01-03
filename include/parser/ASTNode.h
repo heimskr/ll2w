@@ -87,8 +87,14 @@ namespace LL2W {
 			decltype(children)::iterator end();
 			decltype(children)::const_iterator begin() const;
 			decltype(children)::const_iterator end() const;
+			decltype(children)::reverse_iterator rbegin();
+			decltype(children)::reverse_iterator rend();
+			decltype(children)::const_reverse_iterator rbegin() const;
+			decltype(children)::const_reverse_iterator rend() const;
 			decltype(children)::const_iterator cbegin() const noexcept;
 			decltype(children)::const_iterator cend() const noexcept;
+			decltype(children)::const_reverse_iterator crbegin() const noexcept;
+			decltype(children)::const_reverse_iterator crend() const noexcept;
 
 			std::string extractName() const;
 			const std::string * extracted() const;

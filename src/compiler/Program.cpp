@@ -118,31 +118,27 @@ namespace LL2W {
 					}
 					break;
 				}
+				case LLVMTOK_DIDT: {
+					const auto index = node->front()->atoi();
+					derivedTypes.try_emplace(index, *node);
+					break;
+				}
 			}
 		}
 
 		// If we have a line like "!3 = !{!1, !2}" and the list contains any BasicTypes, add each BasicType in the list
-		// to !3's set of BasicTypes. Note that this won't work recursively if the list contains any nodes with an ID
-		// higher than the LHS's ID.
-		static const std::string *nullstr = StringSet::intern("null");
-		for (ASTNode *node: root) {
-			if (auto *def = dynamic_cast<MetadataDef *>(node)) {
-				if (Util::isNumeric(std::string_view(*def->front()->lexerInfo).substr(1))) {
-					const auto index = def->front()->atoi();
-					for (ASTNode *subnode: *def->back()) {
-						if (subnode->symbol != LLVMTOK_METABANG || subnode->lexerInfo == nullstr)
-							continue;
-						const int64_t subindex = subnode->atoi();
-						if (basicTypeSets.contains(subindex))
-							for (const auto &basic_type: basicTypeSets.at(subindex))
-								basicTypeSets[index].insert(basic_type);
-						if (basicTypeLists.contains(subindex))
-							for (const auto &basic_type: basicTypeLists.at(subindex))
-								basicTypeLists[index].push_back(basic_type);
-					}
-				}
-			}
-		}
+		// to !3's set of BasicTypes. Note that this won't work recursively in all instances.
+		for (auto iter = root.rbegin(), rend = root.rend(); iter != rend; ++iter)
+			if (auto *def = dynamic_cast<MetadataDef *>(*iter))
+				handleSets(*def);
+
+		for (ASTNode *node: root)
+			if (auto *def = dynamic_cast<MetadataDef *>(node))
+				handleSets(*def);
+
+		for (ASTNode *node: root)
+			if (auto *def = dynamic_cast<MetadataDef *>(node))
+				handleLists(*def);
 
 		for (auto &[index, location]: locations) {
 			if (subprograms.count(location.scope) != 0) {
@@ -160,6 +156,51 @@ namespace LL2W {
 	Program::~Program() {
 		for (const auto &[fname, function]: functions)
 			delete function;
+	}
+
+	void Program::handleSets(const MetadataDef &def) {
+		if (Util::isNumeric(std::string_view(*def.front()->lexerInfo).substr(1))) {
+			static const std::string *nullstr = StringSet::intern("null");
+			const auto index = def.front()->atoi();
+			for (ASTNode *subnode: *def.back()) {
+				if (subnode->symbol == LLVMTOK_METABANG && subnode->lexerInfo != nullstr) {
+					const int64_t subindex = subnode->atoi();
+					if (basicTypeSets.contains(subindex))
+						for (const auto &basic_type: basicTypeSets.at(subindex))
+							basicTypeSets[index].insert(basic_type);
+				}
+			}
+		}
+	}
+
+	void Program::handleLists(const MetadataDef &def) {
+		if (Util::isNumeric(std::string_view(*def.front()->lexerInfo).substr(1))) {
+			static const std::string *nullstr = StringSet::intern("null");
+			const auto index = def.front()->atoi();
+			info() << index << ':';
+			for (ASTNode *subnode: *def.back()) {
+				std::cerr << ' ' << *subnode->lexerInfo;
+				if (subnode->lexerInfo == nullstr) {
+					basicTypeLists[index].push_back(nullptr);
+				} else if (subnode->symbol == LLVMTOK_METABANG) {
+					try {
+						const int64_t subindex = subnode->atoi();
+						if (!basicTypeSets.contains(subindex)) {
+							error() << "Typeset " << subindex << " not found\n";
+							subnode->debug();
+							continue;
+						}
+						const auto &typeset = basicTypeSets.at(subindex);
+						if (typeset.size() != 1) {
+							error() << "Typeset " << subindex << " has a size of " << typeset.size() << '\n';
+						} else {
+							basicTypeLists[index].push_back(*typeset.begin());
+						}
+					} catch (const std::invalid_argument &) {}
+				}
+			}
+			std::cerr << '\n';
+		}
 	}
 
 	void Program::analyze() {

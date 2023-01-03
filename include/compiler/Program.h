@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "compiler/DerivedType.h"
 #include "compiler/File.h"
 #include "compiler/Function.h"
 #include "compiler/LexicalBlock.h"
@@ -28,6 +29,8 @@ namespace LL2W {
 			int64_t highestIndex = -1;
 			std::mutex mutex;
 
+			void handleSets(const MetadataDef &);
+			void handleLists(const MetadataDef &);
 			std::string outputStruct(const StructValue &);
 			std::string valuePrefix(size_t bitwidth);
 			std::string outputValue(const TypePtr &type, const ValuePtr &value);
@@ -53,6 +56,7 @@ namespace LL2W {
 			std::map<int64_t, TypeSet> basicTypeSets;
 			std::map<int64_t, std::vector<std::shared_ptr<BasicType>>> basicTypeLists;
 			std::map<int64_t, int64_t> subroutineTypes;
+			std::map<int64_t, DerivedType> derivedTypes;
 			/** A set of all LLVM debug indices found in the program. */
 			std::set<int64_t> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they
