@@ -105,10 +105,9 @@ namespace LL2W::Passes {
 				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
 				size_t i = 0;
 				auto span = std::span(program.basicTypeLists.at(subroutine_type)).subspan(1);
-				(span.size() == argument_types->size()? success() : error())
-					<< "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
-				if (span.size() != argument_types->size()) {
-					info() << "Span:\n";
+				if (span.size() > argument_types->size() && span.back()) {
+					error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
+					info() << "Span for subprogram !" << debug_index << " -> " << subprogram.name << ":\n";
 					for (const auto &type: span) {
 						std::cerr << "    ";
 						if (type)
@@ -124,9 +123,17 @@ namespace LL2W::Passes {
 						else
 							std::cerr << "null\n";
 					}
+				} else if (span.size() != argument_types->size() && (span.empty() || span.back())) {
+					error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
 				}
 
-				for (const auto &type: span) {
+				for (size_t s = 0, end = span.size(); s < end; ++s) {
+					const auto &type = span[s];
+					if (s == end - 1 && !type) {
+						// Variadic functions will have a null argument at the end.
+						break;
+					}
+
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->signedness = type->isSigned(&function.parent)?
 							IntType::Signedness::Signed : IntType::Signedness::Unsigned;

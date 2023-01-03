@@ -17,7 +17,6 @@ namespace LL2W {
 	}
 
 	CompositeType::operator std::string() {
-		return '!' + std::to_string(id) + " = !DICompositeType(name: " +
-			(name == nullptr? "null)" : '"' + *name + "\")");
+		return '!' + std::to_string(id) + " = !DICompositeType(name: " + (name == nullptr? "null)" : *name + ')');
 	}
 }
