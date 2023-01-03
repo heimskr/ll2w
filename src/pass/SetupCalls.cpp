@@ -75,19 +75,25 @@ namespace LL2W::Passes {
 
 			Program &program = function.parent;
 
-			if (!program.declarations.contains(*global)) {
+			int debug_index = -1;
+
+			if (auto iter = program.declarations.find(*global); iter != program.declarations.end()) {
+				debug_index = iter->second->debugIndex;
+			} else if (auto iter = program.functions.find('@' + *global); iter != program.functions.end()) {
+				debug_index = iter->second->debugIndex;
+			} else {
 				warn() << "Couldn't find declaration for function " << *global << '\n';
 				return;
 			}
 
-			const FunctionHeader &header = *program.declarations.at(*global);
+			auto subprogram_iter = program.subprograms.find(debug_index);
 
-			if (!program.subprograms.contains(header.debugIndex)) {
-				// warn() << "Couldn't find subprogram for function " << *global << " (debug index " << header.debugIndex << ")\n";
+			if (subprogram_iter == program.subprograms.end()) {
+				// warn() << "Couldn't find subprogram for function " << *global << " (debug index " << debug_index << ")\n";
 				return;
 			}
 
-			Subprogram &subprogram = program.subprograms.at(header.debugIndex);
+			Subprogram &subprogram = subprogram_iter->second;
 
 			if (!program.subroutineTypes.contains(subprogram.type)) {
 				warn() << "Couldn't find subroutine types for function " << *function.name << '\n';
