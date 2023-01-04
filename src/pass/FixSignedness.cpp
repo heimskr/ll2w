@@ -9,6 +9,8 @@
 #include "pass/FixSignedness.h"
 #include "util/Timer.h"
 
+#include <sstream>
+
 namespace LL2W {
 	struct ConflictTablePair {
 		int position;
@@ -25,7 +27,22 @@ namespace LL2W {
 				return false;
 			return operand->id < other.operand->id;
 		}
+
+		operator std::string() const {
+			std::ostringstream ss;
+			ss << '(' << position << ", ";
+			if (operand)
+				ss << *operand;
+			else
+				ss << "\e[1mnull\e[22m";
+			ss << ')';
+			return ss.str();
+		}
 	};
+
+	std::ostream & operator<<(std::ostream &os, const ConflictTablePair &pair) {
+		return os << std::string(pair);
+	}
 }
 
 namespace std {
@@ -64,10 +81,10 @@ namespace LL2W::Passes {
 						changed.insert(instruction);
 					}
 				} catch (const SignednessSharingError &err) {
-					info() << "Offending instruction: " << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n"
-					       << "\e[2m...\e[22m in function \e[1m" << *instruction->parent.lock()->parent->name
-					       << "\e[2m\n";
-					info() << "Types: " << *err.one << " and " << *err.two << '\n';
+					// info() << "Offending instruction: " << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n"
+					//        << "\e[2m...\e[22m in function \e[1m" << *instruction->parent.lock()->parent->name
+					//        << "\e[2m\n";
+					// info() << "Types: " << *err.one << " and " << *err.two << '\n';
 					throw;
 				}
 			}
@@ -82,17 +99,40 @@ namespace LL2W::Passes {
 				throw std::runtime_error("FixSignedness took too long");
 			}
 
-			last_changed = changed;
+			last_changed = std::move(changed);
 		} while (any_changed);
+
+		success() << *function.name << '\n';
 
 		if (last_changed.empty())
 			return;
 
-		std::map<ConflictTablePair, std::vector<std::shared_ptr<RType>>> conflict_map_r;
-		std::map<ConflictTablePair, std::vector<std::shared_ptr<IType>>> conflict_map_i;
+		warn() << "Some left over:\n";
+
+		std::map<ConflictTablePair, std::vector<InstructionPtr>> conflict_map;
 
 		for (const auto &instruction: last_changed) {
-			// if (auto
+			std::cerr << "    " << instruction << '\n';
+			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
+				conflict_map[{0, r_type->rs}].push_back(r_type);
+				conflict_map[{1, r_type->rt}].push_back(r_type);
+				conflict_map[{2, r_type->rd}].push_back(r_type);
+			} else if (auto i_type = std::dynamic_pointer_cast<IType>(instruction)) {
+				conflict_map[{0, i_type->rs}].push_back(i_type);
+				conflict_map[{2, i_type->rd}].push_back(i_type);
+			}
+		}
+
+		info() << "Checking conflicts.\n";
+
+		for (auto iter = conflict_map.begin(), end = conflict_map.end(); iter != end; ++iter) {
+			const auto &pair = iter->first;
+			const auto &list = iter->second;
+			if (1 < list.size()) {
+				warn() << pair << ": size = " << list.size() << '\n';
+				for (const auto &instruction: list)
+					std::cerr << "    " << *instruction << '\n';
+			}
 		}
 	}
 }
