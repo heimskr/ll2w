@@ -481,8 +481,7 @@ namespace LL2W {
 
 	Signedness Variable::getSignedness() const {
 		if (type)
-			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
-				return int_type->getSignedness();
+			return type->getSignedness();
 		return Signedness::Unknown;
 	}
 

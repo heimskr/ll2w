@@ -18,6 +18,7 @@ namespace LL2W {
 
 	class Type;
 	using TypePtr = std::shared_ptr<Type>;
+	using TypeCPtr = std::shared_ptr<const Type>;
 
 	std::string whyString(const TypePtr &);
 
@@ -42,13 +43,16 @@ namespace LL2W {
 			bool isVoid() const;
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
-			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
+			virtual TypePtr unwrap() { return shared_from_this(); }
+			virtual TypeCPtr unwrap() const { return shared_from_this(); }
 			virtual TypePtr unwrapAll() { return shared_from_this(); }
-			virtual std::shared_ptr<const Type> unwrapAll() const { return shared_from_this(); }
+			virtual TypeCPtr unwrapAll() const { return shared_from_this(); }
 			virtual bool shareSignedness(const TypePtr &) { return false; }
 			static std::vector<TypePtr> copyMany(const std::vector<TypePtr> &);
 			virtual bool compatible(const Type &) const { return true; }
 			virtual Signedness getSignedness() const { return Signedness::Unknown; }
+			/** Returns whether the signedness changed. */
+			virtual bool setSignedness(Signedness) { return false; }
 	};
 
 	struct VoidType: Type {
@@ -97,7 +101,7 @@ namespace LL2W {
 		 *  different signedness, this function throws std::runtime_error. */
 		bool shareSignedness(const TypePtr &) override;
 		Signedness getSignedness() const override { return signedness; }
-		bool setSignedness(Signedness);
+		bool setSignedness(Signedness) override;
 		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
 		/** Returns a copy with the opposite signedness. */
 		std::shared_ptr<IntType> invertedCopy() const;
@@ -133,9 +137,10 @@ namespace LL2W {
 		TypePtr extractType(std::list<int>) const override { return subtype->copy(); }
 		bool operator==(const Type &) const override;
 		std::string whyString() const override;
-		TypePtr unwrap() const override { return subtype; }
+		TypePtr unwrap() override { return subtype; }
+		TypeCPtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
-		std::shared_ptr<const Type> unwrapAll() const override { return subtype->unwrapAll(); }
+		TypeCPtr unwrapAll() const override { return subtype->unwrapAll(); }
 	};
 
 	struct VectorType: ArrayType {
@@ -174,12 +179,15 @@ namespace LL2W {
 		bool operator==(const Type &) const override;
 		static std::shared_ptr<PointerType> make(TypePtr subtype) { return std::make_shared<PointerType>(subtype); }
 		std::string whyString() const override;
-		TypePtr unwrap() const override { return subtype; }
+		TypePtr unwrap() override { return subtype; }
+		TypeCPtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
-		std::shared_ptr<const Type> unwrapAll() const override { return subtype->unwrapAll(); }
+		TypeCPtr unwrapAll() const override { return subtype->unwrapAll(); }
 		bool shareSignedness(const TypePtr &) override;
 		bool compatible(const Type &) const override;
 		std::shared_ptr<PointerType> invertedCopy() const;
+		Signedness getSignedness() const override;
+		bool setSignedness(Signedness) override;
 	};
 
 	class FunctionType: public Type {

@@ -266,6 +266,14 @@ namespace LL2W {
 		return std::dynamic_pointer_cast<PointerType>(out);
 	}
 
+	Signedness PointerType::getSignedness() const {
+		return unwrapAll()->getSignedness();
+	}
+
+	bool PointerType::setSignedness(Signedness new_signedness) {
+		return unwrapAll()->setSignedness(new_signedness);
+	}
+
 	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
 		if (node->children.size() == 3 || (1 < node->size() && node->at(1)->symbol == LLVM_TYPE_LIST)) {

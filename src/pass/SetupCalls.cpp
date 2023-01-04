@@ -29,16 +29,18 @@
 
 namespace LL2W::Passes {
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
-	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
+	                        CallingConvention &convention, bool &ellipsis,
+	                        std::vector<TypePtr> *argument_types = nullptr, TypePtr *return_type = nullptr) {
 		Timer timer("ExtractInfo");
-		TypePtr return_type;
+
+		TypePtr ret;
 
 		for (;;) {
 			// First, we check the call node itself—it sometimes contains the signature of the function.
 			if (call->argumentsExplicit) {
 				if (argument_types != nullptr)
 					*argument_types = Type::copyMany(call->argumentTypes);
-				return_type = call->returnType;
+				ret = call->returnType;
 				ellipsis = call->argumentEllipsis;
 				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
 				break;
@@ -52,7 +54,7 @@ namespace LL2W::Passes {
 					for (FunctionArgument &argument: *func.arguments)
 						argument_types->push_back(argument.type->copy());
 				}
-				return_type = func.returnType;
+				ret = func.returnType;
 				break;
 			} else if (function.parent.declarations.count(*global) != 0) {
 				// We can also check the map of declarations.
@@ -64,7 +66,7 @@ namespace LL2W::Passes {
 					for (FunctionArgument &argument: header->arguments->arguments)
 						argument_types->push_back(argument.type->copy());
 				}
-				return_type = header->returnType;
+				ret = header->returnType;
 				break;
 			} else if (function.parent.aliases.count(StringSet::intern('@' + *global)) != 0) {
 				// In rare cases, there may be an alias.
@@ -73,6 +75,9 @@ namespace LL2W::Passes {
 			} else
 				throw std::runtime_error("Couldn't find signature for function " + *global);
 		}
+
+		if (return_type != nullptr)
+			*return_type = ret;
 
 		if (argument_types != nullptr) {
 			if (function.debugIndex == -1) {
@@ -111,7 +116,7 @@ namespace LL2W::Passes {
 				const auto subroutine_type = program.subroutineTypes.at(subprogram.type);
 				size_t i = 0;
 				std::span span(program.basicTypeLists.at(subroutine_type));
-				if (!return_type->isVoid() || (!span.empty() && !span.front())) {
+				if (!ret->isVoid() || (!span.empty() && !span.front())) {
 					// Skip the return type.
 					span = span.subspan(1);
 				}
@@ -182,9 +187,10 @@ namespace LL2W::Passes {
 			CallingConvention convention;
 			std::vector<TypePtr> argument_types;
 			bool ellipsis;
+			TypePtr return_type;
 
 			if (global_uptr) {
-				extractInfo(global_uptr->name, function, call, convention, ellipsis, &argument_types);
+				extractInfo(global_uptr->name, function, call, convention, ellipsis, &argument_types, &return_type);
 			} else {
 				for (ConstantPtr &ptr: call->constants)
 					argument_types.push_back(ptr->type);
@@ -284,9 +290,9 @@ namespace LL2W::Passes {
 
 			// If the call specified a result variable, move $r0 into that variable.
 			if (call->result) {
-				auto move =
-					std::make_shared<MoveInstruction>(function.makePrecoloredVariable(WhyInfo::returnValueOffset,
-						block), function.getVariable(*call->result));
+				auto r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
+				r0->type = return_type;
+				auto move = std::make_shared<MoveInstruction>(r0, function.getVariable(*call->result));
 				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)
 					->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].insert(move);

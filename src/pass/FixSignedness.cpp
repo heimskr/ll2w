@@ -162,6 +162,11 @@ namespace LL2W::Passes {
 #endif
 						bool should_change = instruction->typeMismatch();
 
+						if (should_change)
+							error() << *instruction << '\n';
+						else
+							success() << *instruction << '\n';
+
 						// if (!should_change) {
 						// 	try {
 						// 		instruction->fixSignedness();
@@ -174,7 +179,6 @@ namespace LL2W::Passes {
 							// If a fix does nothing or if attempting to fix causes a signedness sharing error, then we
 							// have to bitcast to an alias with a type override.
 							VariablePtr *operand_ptr = nullptr;
-							// info() << "&operand: " << &operand << '\n';
 							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
 								operand_ptr = &((*rtype).*std::get<RType::RVariablePtr>(variant));
 								std::cerr << "          rs: " << &rtype->rs << '\n';
@@ -188,6 +192,7 @@ namespace LL2W::Passes {
 								std::cerr << "          mp: " << operand_ptr << " -> " << operand_ptr->get() << '\n';
 							} else
 								throw std::runtime_error("Non-R-/I-type in FixSignedness");
+							std::cerr << '\n';
 							info() << "Instruction(" << *instruction << ")\n";
 							VariablePtr &operand = *operand_ptr;
 							TypePtr inverted_copy;
