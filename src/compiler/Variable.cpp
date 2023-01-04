@@ -62,7 +62,7 @@ namespace LL2W {
 			return true;
 		if (id != other.id)
 			return false;
-		if (type == other.type)
+		if (typeOverride || other.typeOverride || type == other.type)
 			return true;
 		if ((type == nullptr) != (other.type == nullptr))
 			return false;

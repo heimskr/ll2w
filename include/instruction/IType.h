@@ -23,6 +23,7 @@ namespace LL2W {
 
 		public:
 			using ValueType = T;
+			using IVariablePtr = VariablePtr IType::*;
 
 			ValuePtr originalValue;
 			VariablePtr rs;
@@ -85,6 +86,16 @@ namespace LL2W {
 				const auto &other_i = dynamic_cast<const IType &>(other);
 				return rs == other_i.rs && imm == other_i.imm && rd == other_i.rd &&
 					originalValue == other_i.originalValue;
+			}
+
+			std::vector<IVariablePtr> findDifferences(const IType &other) const {
+				std::vector<IVariablePtr> out;
+				out.reserve(2);
+				if (*rs != *other.rs)
+					out.push_back(&IType::rs);
+				if (*rd != *other.rd)
+					out.push_back(&IType::rd);
+				return out;
 			}
 	};
 }

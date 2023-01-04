@@ -10,6 +10,7 @@ namespace LL2W {
 			std::string operString(const char *) const;
 
 		public:
+			using RVariablePtr = VariablePtr RType::*;
 			VariablePtr rs;
 			VariablePtr rt;
 			VariablePtr rd;
@@ -22,5 +23,7 @@ namespace LL2W {
 			bool replaceWritten(const VariablePtr &, const VariablePtr &) override;
 			bool canReplaceWritten(const VariablePtr &) const override;
 			bool operator==(const Instruction &) const override;
+
+			std::vector<RVariablePtr> findDifferences(const RType &other) const;
 	};
 }

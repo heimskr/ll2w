@@ -71,4 +71,16 @@ namespace LL2W {
 		const auto &other_r = dynamic_cast<const RType &>(other);
 		return rs == other_r.rs && rt == other_r.rt && rd == other_r.rd;
 	}
+
+	std::vector<RType::RVariablePtr> RType::findDifferences(const RType &other) const {
+		std::vector<RVariablePtr> out;
+		out.reserve(3);
+		if (*rs != *other.rs)
+			out.push_back(&RType::rs);
+		if (*rt != *other.rt)
+			out.push_back(&RType::rt);
+		if (*rd != *other.rd)
+			out.push_back(&RType::rd);
+		return out;
+	}
 }
