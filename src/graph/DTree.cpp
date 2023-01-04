@@ -96,7 +96,7 @@ namespace LL2W {
 			}
 
 			if (w == nullptr) {
-				graph.renderTo("w_null.svg");
+				graph.renderTo("w_null.png");
 				throw std::runtime_error("w is null (1)");
 			}
 

@@ -17,6 +17,7 @@
 #define DEBUG_VAR_LIVENESS
 // #define DEBUG_ALIASES
 #define DEBUG_STACK
+// #define DEBUG_LABELS
 #define STRICT_READ_CHECK
 #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
@@ -223,8 +224,8 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
-		if (label->front() == '%')
-			return getBlock(StringSet::intern(label->substr(1)));
+		// if (label->front() == '%')
+		// 	return getBlock(StringSet::intern(label->substr(1)));
 		label = StringSet::unquote(label);
 		if (!bbMap.contains(label)) {
 			if (can_throw) {
@@ -961,7 +962,6 @@ namespace LL2W {
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
-		Passes::insertLabels(*this);
 		Passes::lowerBranches(*this);
 		const bool naked = isNaked();
 		if (!naked)
@@ -972,8 +972,13 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
+		Passes::minimizeBlocks(*this, true);
+		computeLiveness();
+		debug();
 		Passes::discardUnusedVars(*this);
+		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);
+		Passes::insertLabels(*this);
 		Passes::fixSignedness(*this);
 		Passes::signChars(*this);
 		hackVariables();
@@ -1557,15 +1562,21 @@ namespace LL2W {
 #else
 			false,
 #endif
+#ifdef DEBUG_LABELS
+			true,
+#else
+			false,
+#endif
 			stream
 		);
 	}
 
-	void Function::debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-	                     bool render, bool estimations, bool aliases, bool stack, std::ostream &stream) {
-		if (doBlocks || linear || vars)
+	void Function::debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written,
+	                     bool var_liveness, bool render, bool estimations, bool aliases, bool stack, bool show_labels,
+	                     std::ostream &stream) {
+		if (do_blocks || linear || vars)
 			stream << headerString() + " \e[94m{\e[39m\n";
-		if (doBlocks) {
+		if (do_blocks) {
 			for (const BasicBlockPtr &block: blocks) {
 				stream << "    \e[2m; \e[4;1m" << *block->label << "\e[22;2;4m @ " << block->index
 				       << ": preds =";
@@ -1575,7 +1586,7 @@ namespace LL2W {
 					stream << " %" << **iter;
 				}
 				stream << '.';
-				if (blockLiveness) {
+				if (block_liveness) {
 					if (!block->liveIn.empty()) {
 						stream << "; live-in =";
 						const auto &liveIn = block->liveIn;
@@ -1596,12 +1607,22 @@ namespace LL2W {
 					}
 				}
 				stream << "\e[22;24m\n";
-				if (readWritten)
+				if (read_written)
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 						int read, written;
 						std::tie(read, written) = instruction->extract();
 						stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
 						       << "\e[0m\n";
+						if (show_labels) {
+							if (auto labels = instruction->getLabels(); !labels.empty()) {
+								stream << "    Labels:";
+								for (const auto *label: labels)
+									stream << " \e[1m" << *label << "\e[22m";
+								stream << '\n';
+							} else {
+								stream << "    No labels.\n";
+							}
+						}
 					}
 				else
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions)
@@ -1614,6 +1635,16 @@ namespace LL2W {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
 				stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
+				if (show_labels) {
+					if (auto labels = instruction->getLabels(); !labels.empty()) {
+						stream << "    Labels:";
+						for (const auto *label: labels)
+							stream << " \e[1m" << *label << "\e[22m";
+						stream << '\n';
+					} else {
+						stream << "    No labels.\n";
+					}
+				}
 			}
 		if (vars) {
 			stream << "    \e[2m; Variables:\e[0m\n";
@@ -1659,7 +1690,7 @@ namespace LL2W {
 						stream << " " << *alias->id;
 					stream << "\e[22;2m";
 				}
-				if (varLiveness) {
+				if (var_liveness) {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveIn(var))
@@ -1675,7 +1706,7 @@ namespace LL2W {
 				}
 			}
 		}
-		if (doBlocks || linear || vars)
+		if (do_blocks || linear || vars)
 			stream << "\e[94m}\e[39m\n\n";
 		if (aliases) {
 			stream << "<Aliases>\n";

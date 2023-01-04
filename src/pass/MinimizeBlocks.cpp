@@ -33,14 +33,16 @@ namespace LL2W::Passes {
 				throw std::runtime_error("Instruction has an invalid index even after reindexing");
 			}
 
-			const std::string *new_label = StringSet::intern("M" + std::to_string(index));
+			const std::string *new_label = StringSet::intern('M' + std::to_string(index));
+
+			BasicBlockPtr old_parent = instruction->parent.lock();
 
 			auto new_block = std::make_shared<BasicBlock>(new_label);
 			new_block->parent = &function;
 			added_blocks.emplace(index, new_block);
 
 			// Emplacing won't overwrite a preexisting key's value. This is important here.
-			label_replacements.emplace(instruction->parent.lock()->label, new_label);
+			label_replacements.emplace(old_parent->label, new_label);
 
 			new_block->instructions.emplace_back(instruction);
 			instruction->parent = new_block;
@@ -51,15 +53,24 @@ namespace LL2W::Passes {
 				if (index < instruction_count - 1)
 					predecessors[index + 1].emplace_back(index);
 			} else {
-				if (instruction->canFallThrough())
+				if (instruction->canFallThrough() && index < instruction_count - 1)
 					predecessors[index + 1].emplace_back(index);
 				for (const std::string *label: labels) {
 					BasicBlockPtr block = function.getBlock(label, false);
-					if (block)
-						predecessors[block->instructions.front()->index].emplace_back(index);
+					if (block) {
+						// success() << "Retrieved block " << *block->label << " (lookup label " << *label << ") from block " << *old_parent->label << " (new label " << *new_block->label << ").\n";
+						if (!block->instructions.empty())
+							predecessors[block->instructions.front()->index].emplace_back(index);
+					} else {
+						// error() << "Failed to retrieve " << *label << " from block " << *old_parent->label << " (new label " << *new_block->label << ").\n";
+					}
 				}
 			}
 		}
+
+		// info() << "Label replacements:\n";
+		// for (const auto &[old_label, new_label]: label_replacements)
+		// 	std::cerr << "    " << *old_label << " \e[2m->\e[22m " << *new_label << '\n';
 
 		function.bbLabels.clear();
 		function.bbMap.clear();

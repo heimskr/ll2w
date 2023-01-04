@@ -362,8 +362,9 @@ namespace LL2W {
 			void debug(std::ostream & = std::cerr);
 
 			/** Prints debug information about the function. */
-			void debug(bool doBlocks, bool linear, bool vars, bool blockLiveness, bool readWritten, bool varLiveness,
-			           bool render, bool estimations, bool aliases, bool stack, std::ostream & = std::cerr);
+			void debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written,
+			           bool var_liveness, bool render, bool estimations, bool aliases, bool stack, bool liveness,
+			           std::ostream & = std::cerr);
 
 			/** Prints debug information about the allocated stack locations. */
 			void debugStack(std::ostream & = std::cerr) const;
