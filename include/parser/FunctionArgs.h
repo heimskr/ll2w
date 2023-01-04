@@ -1,5 +1,4 @@
-#ifndef PARSER_FUNCTIONARGS_H_
-#define PARSER_FUNCTIONARGS_H_
+#pragma once
 
 #include <unordered_set>
 #include <vector>
@@ -28,5 +27,3 @@ namespace LL2W {
 		FunctionArgs(ASTNode *list, bool ellipsis_);
 	};
 }
-
-#endif

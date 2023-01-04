@@ -10,5 +10,7 @@ namespace LL2W {
 		bool canReplaceRead(const VariablePtr &) const override;
 		bool replaceWritten(const VariablePtr &, const VariablePtr &) override;
 		bool canReplaceWritten(const VariablePtr &) const override;
+
+		Role rdRole() const override { return Role::Source; }
 	};
 }

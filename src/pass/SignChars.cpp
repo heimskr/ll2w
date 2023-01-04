@@ -13,8 +13,8 @@ namespace LL2W::Passes {
 				type = std::dynamic_pointer_cast<PointerType>(type)->subtype;
 			if (type->isInt(8)) {
 				auto int_type = std::dynamic_pointer_cast<IntType>(type);
-				if (int_type->getSignedness() == IntType::Signedness::Unknown)
-					int_type->setSignedness(IntType::Signedness::Unsigned);
+				if (int_type->getSignedness() == Signedness::Unknown)
+					int_type->setSignedness(Signedness::Unsigned);
 			}
 		}
 	}

@@ -1,5 +1,4 @@
-#ifndef PARSER_PARATTRS_H_
-#define PARSER_PARATTRS_H_
+#pragma once
 
 #include <memory>
 #include <unordered_set>
@@ -27,5 +26,3 @@ namespace LL2W {
 		operator std::string() const;
 	};
 }
-
-#endif

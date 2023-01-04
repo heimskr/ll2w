@@ -25,5 +25,11 @@ namespace LL2W {
 			bool operator==(const Instruction &) const override;
 
 			std::vector<RVariablePtr> findDifferences(const RType &other) const;
+
+			virtual Role rsRole() const { return Role::Source; }
+			virtual Role rtRole() const { return Role::Source; }
+			virtual Role rdRole() const { return Role::Destination; }
+
+			bool typeMismatch() const override;
 	};
 }

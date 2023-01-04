@@ -119,7 +119,7 @@ namespace LL2W::Passes {
 				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s) {
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->setSignedness(span[s]->isSigned(&function.parent)?
-							IntType::Signedness::Signed : IntType::Signedness::Unsigned);
+							Signedness::Signed : Signedness::Unsigned);
 					}
 				}
 			} catch (const std::out_of_range &) {

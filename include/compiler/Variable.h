@@ -139,7 +139,10 @@ namespace LL2W {
 			bool setSigned(bool is_signed);
 
 			/** If this variable has a type and it's an IntType, this function sets its signedness. */
-			bool setSigned(IntType::Signedness);
+			bool setSigned(Signedness);
+
+			/** If this variable has a type and it's an IntType, this function returns its signedness. */
+			Signedness getSignedness() const;
 
 			/** Returns true if the given variable ID is numeric and less than the given number. */
 			static bool isLess(Variable::ID, long);

@@ -17,13 +17,13 @@
 
 namespace LL2W {
 	struct ConflictTablePair {
-		int position;
+		Role role;
 		std::reference_wrapper<VariablePtr> operand;
 
 		bool operator<(const ConflictTablePair &other) const {
-			if (position < other.position)
+			if (static_cast<int>(role) < static_cast<int>(other.role))
 				return true;
-			if (position > other.position)
+			if (static_cast<int>(role) > static_cast<int>(other.role))
 				return false;
 			if (!operand.get() && other.operand.get())
 				return true;
@@ -34,7 +34,7 @@ namespace LL2W {
 
 		operator std::string() const {
 			std::ostringstream ss;
-			ss << '(' << position << ", ";
+			ss << '(' << (role == Role::Source? "src" : "dst") << ", ";
 			if (operand.get())
 				ss << *operand.get();
 			else
@@ -56,9 +56,9 @@ namespace std {
 			if (pair.operand.get()) {
 				std::string to_hash = *pair.operand.get()->id;
 				to_hash += '!';
-				return std::hash<std::string>()(to_hash + std::to_string(pair.position));
+				return std::hash<std::string>()(to_hash + (pair.role == LL2W::Role::Source? "s" : "d"));
 			}
-			return pair.position;
+			return static_cast<int>(pair.role);
 		}
 	};
 }
@@ -124,12 +124,12 @@ namespace LL2W::Passes {
 			std::cerr << "    " << instruction << '\n';
 #endif
 			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
-				conflict_map[{0, r_type->rs}].push_back(r_type);
-				conflict_map[{1, r_type->rt}].push_back(r_type);
-				conflict_map[{2, r_type->rd}].push_back(r_type);
+				conflict_map[{r_type->rsRole(), r_type->rs}].push_back(r_type);
+				conflict_map[{r_type->rtRole(), r_type->rt}].push_back(r_type);
+				conflict_map[{r_type->rdRole(), r_type->rd}].push_back(r_type);
 			} else if (auto i_type = std::dynamic_pointer_cast<IType>(instruction)) {
-				conflict_map[{0, i_type->rs}].push_back(i_type);
-				conflict_map[{2, i_type->rd}].push_back(i_type);
+				conflict_map[{i_type->rsRole(), i_type->rs}].push_back(i_type);
+				conflict_map[{i_type->rdRole(), i_type->rd}].push_back(i_type);
 			}
 		}
 
@@ -141,37 +141,55 @@ namespace LL2W::Passes {
 		do {
 			done = true;
 
-			for (auto iter = conflict_map.begin(), end = conflict_map.end(); iter != end; ++iter) {
-				auto &pair = iter->first;
-				auto &list = iter->second;
+			for (auto map_iter = conflict_map.begin(), end = conflict_map.end(); map_iter != end; ++map_iter) {
+				auto &pair = map_iter->first;
+				auto &list = map_iter->second;
 				if (1 < list.size()) {
 #ifdef DEBUG_FIXEDSIGNEDNESS
 					warn() << pair << ": size = " << list.size() << '\n';
 #endif
-					for (auto iter = list.begin(); iter != list.end();) {
-						const auto &instruction = *iter;
+					for (auto list_iter = list.begin(); list_iter != list.end();) {
+						const auto &instruction = *list_iter;
 #ifdef DEBUG_FIXEDSIGNEDNESS
 						std::cerr << "    " << *instruction << '\n';
 #endif
-						bool fixed = false;
-						try {
-							fixed = instruction->fixSignedness();
-						} catch (const SignednessSharingError &err) {}
+						bool should_change = instruction->typeMismatch();
 
-						if (!fixed) {
+						if (!should_change) {
+							try {
+								instruction->fixSignedness();
+							} catch (const SignednessSharingError &) {
+								should_change = true;
+							}
+						}
+
+						if (should_change) {
 							// If a fix does nothing or if attempting to fix causes a signedness sharing error, then we
 							// have to bitcast to an alias with a type override.
-							VariablePtr &operand = pair.operand;
+							VariablePtr &operand = pair.operand.get();
 							auto int_type = std::dynamic_pointer_cast<IntType>(operand->type);
 							if (!int_type)
 								throw TypeError("Not an IntType", operand->type);
+							info() << "Function: \e[1m" << *function.name << "\e[22m\n";
+							info() << "Old instruction: " << instruction << '\n';
 							auto bitcast = BitcastInstruction::make(operand, function, int_type->invertedCopy(),
 								instruction->parent.lock());
+							info() << "&operand: " << &operand << '\n';
+							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
+								std::cerr << "          rs: " << &rtype->rs << '\n';
+								std::cerr << "          rt: " << &rtype->rt << '\n';
+								std::cerr << "          rd: " << &rtype->rd << '\n';
+							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
+								std::cerr << "          rs: " << &itype->rs << '\n';
+								std::cerr << "          rd: " << &itype->rd << '\n';
+							}
 							operand = bitcast->rd;
+							info() << "New instruction: " << instruction << '\n';
+							info() << "Bitcast:         " << *bitcast << '\n';
 							function.insertBefore(instruction, bitcast);
-							++iter;
+							++list_iter;
 						} else
-							list.erase(iter++);
+							list.erase(list_iter++);
 					}
 				}
 

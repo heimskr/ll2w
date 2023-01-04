@@ -78,4 +78,10 @@ namespace LL2W {
 			out.push_back(&IType::rd);
 		return out;
 	}
+
+	bool IType::typeMismatch() const {
+		if (rs && rd)
+			return rs->getSignedness() != rd->getSignedness();
+		return false;
+	}
 }

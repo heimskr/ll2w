@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERVARARGS_H_
-#define PASS_LOWERVARARGS_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -12,5 +11,3 @@ namespace LL2W::Passes {
 	/** Copies the stack pointer into $m2 at the beginning of the function. */
 	void lowerVarargsSecond(Function &);
 }
-
-#endif

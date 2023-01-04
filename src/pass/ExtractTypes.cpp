@@ -66,10 +66,10 @@ namespace LL2W::Passes {
 							warn() << *var << " is Mixed at " << dbg->location << '\n';
 							break;
 						case TypeSet::Composition::SignedOnly:
-							int_type->setSignedness(IntType::Signedness::Signed);
+							int_type->setSignedness(Signedness::Signed);
 							break;
 						case TypeSet::Composition::UnsignedOnly:
-							int_type->setSignedness(IntType::Signedness::Unsigned);
+							int_type->setSignedness(Signedness::Unsigned);
 							break;
 						case TypeSet::Composition::Empty:
 							warn() << *var << " is Empty at " << dbg->location << '\n';

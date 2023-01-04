@@ -26,4 +26,23 @@ namespace LL2W {
 	Instruction * ComparisonRInstruction::copy() const {
 		return new ComparisonRInstruction(*this);
 	}
+
+	bool ComparisonRInstruction::typeMismatch() const {
+		const auto rs_sign = rs->getSignedness();
+		const auto rt_sign = rt->getSignedness();
+
+		if (signed_conds.contains(cond)) {
+			if (rs_sign == Signedness::Unsigned)
+				return true;
+			if (rt_sign == Signedness::Unsigned)
+				return true;
+		} else if (unsigned_conds.contains(cond)) {
+			if (rs_sign == Signedness::Signed)
+				return true;
+			if (rt_sign == Signedness::Signed)
+				return true;
+		}
+
+		return rs_sign != rt_sign;
+	}
 }

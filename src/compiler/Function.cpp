@@ -1836,7 +1836,7 @@ namespace LL2W {
 				break;
 			case ValueType::Icmp: {
 				auto *icmp = dynamic_cast<IcmpValue *>(value.get());
-				new_var = newVariable(hint? hint : IntType::make(8, IntType::Signedness::Unsigned));
+				new_var = newVariable(hint? hint : IntType::make(8, Signedness::Unsigned));
 				Passes::lowerIcmp(*this, instruction, icmp->makeNode(new_var).get());
 				break;
 			}

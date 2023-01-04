@@ -51,8 +51,14 @@ namespace LL2W {
 	}
 
 	bool IntType::operator==(const Type &other) const {
-		return this == &other ||
-			(other.typeType() == TypeType::Int && dynamic_cast<const IntType &>(other).intWidth == intWidth);
+		if (this == &other)
+			return true;
+
+		if (other.typeType() != TypeType::Int)
+			return false;
+
+		const auto &other_int = dynamic_cast<const IntType &>(other);
+		return intWidth == other_int.intWidth && signedness == other_int.signedness;
 	}
 
 	std::shared_ptr<IntType> IntType::make(int width, Signedness signedness) {
@@ -119,6 +125,10 @@ namespace LL2W {
 		else if (signedness == Signedness::Unsigned)
 			new_signedness = Signedness::Signed;
 		return std::make_shared<IntType>(intWidth, new_signedness);
+	}
+
+	bool IntType::compatible(const Type &other) const {
+		return other.isInt() && signedness == dynamic_cast<const IntType &>(other).signedness;
 	}
 
 	ArrayType::operator std::string() {
@@ -224,6 +234,16 @@ namespace LL2W {
 
 	bool PointerType::shareSignedness(const TypePtr &other) {
 		return unwrapAll()->shareSignedness(other->unwrapAll());
+	}
+
+	bool PointerType::compatible(const Type &other) const {
+		auto other_unwrapped = other.unwrapAll();
+		if (!other_unwrapped->isInt())
+			return true;
+		auto unwrapped = unwrapAll();
+		if (!other_unwrapped->isInt())
+			return true;
+		return dynamic_cast<const IntType &>(*other_unwrapped).compatible(dynamic_cast<const IntType &>(*unwrapped));
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {

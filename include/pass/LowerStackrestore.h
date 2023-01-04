@@ -1,5 +1,4 @@
-#ifndef PASS_LOWERSTACKRESTORE_H_
-#define PASS_LOWERSTACKRESTORE_H_
+#pragma once
 
 namespace LL2W {
 	class Function;
@@ -10,5 +9,3 @@ namespace LL2W::Passes {
 	 *  variable. */
 	void lowerStackrestore(Function &);
 }
-
-#endif

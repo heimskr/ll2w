@@ -468,15 +468,22 @@ namespace LL2W {
 	bool Variable::setSigned(bool is_signed) {
 		if (type)
 			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
-				return int_type->setSignedness(is_signed? IntType::Signedness::Signed : IntType::Signedness::Unsigned);
+				return int_type->setSignedness(is_signed? Signedness::Signed : Signedness::Unsigned);
 		return false;
 	}
 
-	bool Variable::setSigned(IntType::Signedness signedness) {
+	bool Variable::setSigned(Signedness signedness) {
 		if (type)
 			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
 				return int_type->setSignedness(signedness);
 		return false;
+	}
+
+	Signedness Variable::getSignedness() const {
+		if (type)
+			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
+				return int_type->getSignedness();
+		return Signedness::Unknown;
 	}
 
 	void Variable::debug() {

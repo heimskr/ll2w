@@ -146,6 +146,11 @@ namespace LL2W {
 			virtual bool operator==(const Instruction &) const {
 				return false;
 			}
+
+			/** Returns true if the types of the instruction need to be fixed somehow. */
+			virtual bool typeMismatch() const {
+				return false;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

@@ -44,8 +44,10 @@ namespace LL2W {
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
 			virtual TypePtr unwrapAll() { return shared_from_this(); }
+			virtual std::shared_ptr<const Type> unwrapAll() const { return shared_from_this(); }
 			virtual bool shareSignedness(const TypePtr &) { return false; }
 			static std::vector<TypePtr> copyMany(const std::vector<TypePtr> &);
+			virtual bool compatible(const Type &) const { return true; }
 	};
 
 	struct VoidType: Type {
@@ -72,7 +74,6 @@ namespace LL2W {
 	};
 
 	struct IntType: Type {
-		enum class Signedness: char {Unknown = 'i', Unsigned = 'u', Signed = 's'};
 		TypeType typeType() const override { return TypeType::Int; }
 		/** The width of the integer in bits. */
 		int intWidth;
@@ -80,7 +81,7 @@ namespace LL2W {
 			intWidth(width_), signedness(signedness_) {}
 		operator std::string() override;
 		std::string toString() override;
-		TypePtr copy() const override { return std::make_shared<IntType>(intWidth); }
+		TypePtr copy() const override { return std::make_shared<IntType>(intWidth, signedness); }
 		int width() const override { return Util::upalign(intWidth, 8); }
 		int alignment() const override { return Util::alignToPower(intWidth) / 8; }
 		bool operator==(const Type &other) const override;
@@ -99,6 +100,7 @@ namespace LL2W {
 		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
 		/** Returns a copy with the opposite signedness. */
 		std::shared_ptr<IntType> invertedCopy() const;
+		bool compatible(const Type &) const override;
 
 		private:
 			Signedness signedness = Signedness::Unknown;
@@ -132,6 +134,7 @@ namespace LL2W {
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
+		std::shared_ptr<const Type> unwrapAll() const override { return subtype->unwrapAll(); }
 	};
 
 	struct VectorType: ArrayType {
@@ -172,7 +175,9 @@ namespace LL2W {
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
+		std::shared_ptr<const Type> unwrapAll() const override { return subtype->unwrapAll(); }
 		bool shareSignedness(const TypePtr &) override;
+		bool compatible(const Type &) const override;
 	};
 
 	class FunctionType: public Type {

@@ -32,5 +32,9 @@ namespace LL2W {
 			bool canReplaceWritten(const VariablePtr &to_replace) const override;
 			bool operator==(const Instruction &other) const override;
 			std::vector<IVariablePtr> findDifferences(const IType &other) const;
+
+			virtual Role rsRole() const { return Role::Source; }
+			virtual Role rdRole() const { return Role::Destination; }
+			bool typeMismatch() const override;
 	};
 }

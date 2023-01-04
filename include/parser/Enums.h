@@ -1,11 +1,14 @@
-#ifndef PARSER_ENUMS_H_
-#define PARSER_ENUMS_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace LL2W {
+	enum class Signedness: char {Unknown = 'i', Unsigned = 'u', Signed = 's'};
+
+	enum class Role {Source, Destination};
+
 	enum class TypeType {
 		None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any
 	};
@@ -77,5 +80,3 @@ namespace LL2W {
 
 	bool isSigned(IcmpCond);
 }
-
-#endif
