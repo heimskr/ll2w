@@ -10,7 +10,9 @@ namespace LL2W {
 			std::string operString(const char *) const;
 
 		public:
-			VariablePtr rs, rt, rd;
+			VariablePtr rs;
+			VariablePtr rt;
+			VariablePtr rd;
 
 			RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_ = -1);
 
@@ -19,5 +21,6 @@ namespace LL2W {
 			bool canReplaceRead(const VariablePtr &) const override;
 			bool replaceWritten(const VariablePtr &, const VariablePtr &) override;
 			bool canReplaceWritten(const VariablePtr &) const override;
+			bool operator==(const Instruction &) const override;
 	};
 }

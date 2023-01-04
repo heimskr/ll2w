@@ -25,7 +25,8 @@ namespace LL2W {
 			using ValueType = T;
 
 			ValuePtr originalValue;
-			VariablePtr rs, rd;
+			VariablePtr rs;
+			VariablePtr rd;
 			T imm;
 
 			IType(std::shared_ptr<Variable> rs_, T imm_, std::shared_ptr<Variable> rd_, int index_ = -1):
@@ -76,6 +77,14 @@ namespace LL2W {
 
 			bool canReplaceWritten(const VariablePtr &to_replace) const override {
 				return rd->isAliasOf(*to_replace);
+			}
+
+			bool operator==(const Instruction &other) const override {
+				if (typeid(*this) != typeid(other))
+					return false;
+				const auto &other_i = dynamic_cast<const IType &>(other);
+				return rs == other_i.rs && imm == other_i.imm && rd == other_i.rd &&
+					originalValue == other_i.originalValue;
 			}
 	};
 }

@@ -141,6 +141,11 @@ namespace LL2W {
 			}
 
 			virtual Instruction * copy() const = 0;
+
+			/** We care about equality only for regular Why instructions, unless our needs change in the future. */
+			virtual bool operator==(const Instruction &) const {
+				return false;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

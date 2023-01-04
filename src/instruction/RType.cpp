@@ -2,8 +2,7 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	RType::RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_,
-	int index_):
+	RType::RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_):
 		WhyInstruction(index_), rs(std::move(rs_)), rt(std::move(rt_)), rd(std::move(rd_)) {}
 
 	std::string RType::operDebug(const char *oper) const {
@@ -64,5 +63,12 @@ namespace LL2W {
 
 	bool RType::canReplaceWritten(const VariablePtr &to_replace) const {
 		return rd && rd->isAliasOf(*to_replace);
+	}
+
+	bool RType::operator==(const Instruction &other) const {
+		if (typeid(*this) != typeid(other))
+			return false;
+		const auto &other_r = dynamic_cast<const RType &>(other);
+		return rs == other_r.rs && rt == other_r.rt && rd == other_r.rd;
 	}
 }

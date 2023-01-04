@@ -17,7 +17,7 @@ namespace LL2W {
 		bool needsTransformation = false;
 
 		JType(VariablePtr rs_, T addr_, bool link_, int index_ = -1):
-			WhyInstruction(index_), rs(std::move(rs_)), addr(addr_), link(link_) {}
+			WhyInstruction(index_), rs(std::move(rs_)), addr(std::move(addr_)), link(link_) {}
 
 		ExtractionResult extract(bool force = false) override {
 			if (extracted && !force)
@@ -75,6 +75,14 @@ namespace LL2W {
 			}
 
 			return false;
+		}
+
+		bool operator==(const Instruction &other) const override {
+			if (typeid(*this) != typeid(other))
+				return false;
+			const auto &other_j = dynamic_cast<const JType &>(other);
+			return rs == other_j.rs && addr == other_j.addr && link == other_j.link &&
+				needsTransformation == other_j.needsTransformation;
 		}
 	};
 }
