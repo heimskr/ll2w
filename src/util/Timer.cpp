@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 
 #include "util/Timer.h"
@@ -37,12 +38,14 @@ namespace LL2W {
 			std::vector<const std::string *> names;
 			names.reserve(times.size());
 			size_t max_length = 0;
+			constexpr size_t max_max_length = 100;
+			static_assert(3 < max_max_length, "Max max length must be more than 3");
 
 			for (const auto &[name, nanos]: times) {
 				if (nanos.count() / 1e9 < threshold)
 					continue;
 				names.push_back(&name);
-				max_length = std::max(name.size(), max_length);
+				max_length = std::min(std::max(name.size(), max_length), max_max_length);
 			}
 
 			std::sort(names.begin(), names.end(), [](const std::string *left, const std::string *right) {
@@ -51,8 +54,15 @@ namespace LL2W {
 
 			for (const std::string *name: names) {
 				const double nanos = times.at(*name).count();
-				std::cerr << "    \e[1m" << *name << std::string(max_length - name->size(), ' ') << "\e[22m took \e[32m"
-				          << (nanos / 1e9) << "\e[39m seconds";
+				std::string_view view(*name);
+				const char *extra = "";
+				if (max_max_length < view.size()) {
+					view = view.substr(0, max_max_length - 3);
+					extra = "...";
+				}
+
+				std::cerr << "    \e[1m" << view << extra << std::string(max_length - view.size() - strlen(extra), ' ')
+				          << "\e[22m took \e[32m" << (nanos / 1e9) << "\e[39m seconds";
 				const size_t count = counts.at(*name);
 				if (1 < count)
 					std::cerr << " (average: \e[33m" << (nanos / double(count) / 1e9) << "\e[39m over \e[1m" << count

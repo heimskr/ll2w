@@ -21,7 +21,7 @@ namespace LL2W {
 
 	std::string whyString(const TypePtr &);
 
-	class Type {
+	class Type: public std::enable_shared_from_this<Type> {
 		public:
 			virtual TypeType typeType() const { return TypeType::None; }
 			/** Returns an LLVM-style string representation of the type with ANSI styling. */
@@ -43,6 +43,8 @@ namespace LL2W {
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
+			virtual TypePtr unwrapAll() { return shared_from_this(); }
+			virtual void shareSignedness(Type &) {}
 	};
 
 	struct VoidType: Type {
@@ -91,7 +93,7 @@ namespace LL2W {
 		 *  Otherwise, if the other type is an IntType and does have a signedness and this type doesn't, this function
 		 *  copies the other type's signedness to this IntType. If the other type is an IntType and has a defined but
 		 *  different signedness, this function throws std::runtime_error. */
-		void shareSignedness(Type &);
+		void shareSignedness(Type &) override;
 	};
 
 	struct AggregateType: Type {
@@ -120,6 +122,7 @@ namespace LL2W {
 		bool operator==(const Type &) const override;
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
+		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
 	};
 
 	struct VectorType: ArrayType {
@@ -159,6 +162,8 @@ namespace LL2W {
 		static std::shared_ptr<PointerType> make(TypePtr subtype) { return std::make_shared<PointerType>(subtype); }
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
+		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
+		void shareSignedness(Type &) override;
 	};
 
 	class FunctionType: public Type {
@@ -185,7 +190,7 @@ namespace LL2W {
 			std::string whyString() const override { return "v*"; }
 	};
 
-	struct StructType: AggregateType, std::enable_shared_from_this<StructType>, Makeable<StructType> {
+	struct StructType: AggregateType, Makeable<StructType> {
 		bool padded = false;
 		/** Map indices in the struct before padding to the corresponding indices after padding has been inserted.
 		 *  If padded is false, this is empty. */

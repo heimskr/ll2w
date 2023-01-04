@@ -187,6 +187,10 @@ namespace LL2W {
 		return subtype->whyString() + '*';
 	}
 
+	void PointerType::shareSignedness(Type &other) {
+		unwrapAll()->shareSignedness(*other.unwrapAll());
+	}
+
 	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
 		if (node->children.size() == 3 || (1 < node->size() && node->at(1)->symbol == LLVM_TYPE_LIST)) {
@@ -412,7 +416,7 @@ namespace LL2W {
 
 	std::shared_ptr<StructType> StructType::pad() {
 		if (padded)
-			return shared_from_this();
+			return std::dynamic_pointer_cast<StructType>(shared_from_this());
 
 		if (paddedChild)
 			return paddedChild;

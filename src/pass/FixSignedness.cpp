@@ -14,13 +14,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (auto move = std::dynamic_pointer_cast<MoveInstruction>(instruction)) {
-				if (auto rs_int = std::dynamic_pointer_cast<IntType>(move->rs->type))
-					try {
-						rs_int->shareSignedness(*move->rd->type);
-					} catch (const std::runtime_error &) {
-						error() << instruction->debugExtra() << " !" << instruction->debugIndex << '\n';
-						throw;
-					}
+				move->rs->type->shareSignedness(*move->rd->type);
 			}
 		}
 	}
