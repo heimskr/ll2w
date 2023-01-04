@@ -1,14 +1,11 @@
-#ifndef INSTRUCTION_MEMSETRINSTRUCTION_H_
-#define INSTRUCTION_MEMSETRINSTRUCTION_H_
+#pragma once
 
-#include "instruction/RType.h"
+#include "instruction/ThreeSourcesRType.h"
 
 namespace LL2W {
-	struct MemsetInstruction: public RType {
-		using RType::RType;
+	struct MemsetInstruction: public ThreeSourcesRType {
+		using ThreeSourcesRType::ThreeSourcesRType;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif
