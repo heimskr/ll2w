@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string LogicalXnorRInstruction::toString() const {
 		return rs->toString() + " !xx " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * LogicalXnorRInstruction::copy() const {
+		return new LogicalXnorRInstruction(*this);
+	}
 }

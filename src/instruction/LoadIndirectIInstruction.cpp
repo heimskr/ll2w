@@ -2,9 +2,8 @@
 #include "instruction/LoadIndirectIInstruction.h"
 
 namespace LL2W {
-	LoadIndirectIInstruction::LoadIndirectIInstruction(ValueType imm_, const std::shared_ptr<Variable> &rd_,
-	int index_):
-		IType(nullptr, imm_, rd_, index_) {}
+	LoadIndirectIInstruction::LoadIndirectIInstruction(ValueType imm_, VariablePtr rd_, int index_):
+		IType(nullptr, std::move(imm_), std::move(rd_), index_) {}
 
 	std::string LoadIndirectIInstruction::debugExtra() {
 		return "\e[2m[\e[22m" + colorize(imm, *rd) + "\e[2m] -> [\e[22m" + std::string(*rd) + "\e[2m]\e[22m";
@@ -12,5 +11,9 @@ namespace LL2W {
 
 	std::string LoadIndirectIInstruction::toString() const {
 		return "[" + LL2W::toString(imm, *rd) + "] -> [" + rd->toString() + "]";
+	}
+	
+	Instruction * LoadIndirectIInstruction::copy() const {
+		return new LoadIndirectIInstruction(*this);
 	}
 }

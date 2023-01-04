@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string RitIInstruction::toString() const {
 		return "%rit " + LL2W::toString(imm);
 	}
+	
+	Instruction * RitIInstruction::copy() const {
+		return new RitIInstruction(*this);
+	}
 }

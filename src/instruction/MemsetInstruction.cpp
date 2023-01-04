@@ -10,4 +10,8 @@ namespace LL2W {
 	std::string MemsetInstruction::toString() const {
 		return "memset " + rs->toString() + " x " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * MemsetInstruction::copy() const {
+		return new MemsetInstruction(*this);
+	}
 }

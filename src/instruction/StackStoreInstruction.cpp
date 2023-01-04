@@ -26,4 +26,8 @@ namespace LL2W {
 		return location == other.location && (variable->equivalent(*other.variable) ||
 			originalVariable->equivalent(*other.originalVariable));
 	}
+	
+	Instruction * StackStoreInstruction::copy() const {
+		return new StackStoreInstruction(*this);
+	}
 }

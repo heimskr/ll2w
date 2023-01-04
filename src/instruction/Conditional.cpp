@@ -1,7 +1,8 @@
 #include "instruction/Conditional.h"
 
 namespace LL2W {
-	Conditional::Conditional(Condition condition_): condition(condition_) {}
+	Conditional::Conditional(Condition condition_):
+		condition(condition_) {}
 
 	std::string Conditional::conditionPrefix() const {
 		switch (condition) {

@@ -11,4 +11,8 @@ namespace LL2W {
 	std::string Nop::toString() const {
 		return "<>";
 	}
+	
+	Instruction * Nop::copy() const {
+		return new Nop(*this);
+	}
 }

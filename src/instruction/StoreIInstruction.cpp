@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string StoreIInstruction::toString() const {
 		return rs->toString() + " -> [" + LL2W::toString(imm, *rs, 1) + "]";
 	}
+	
+	Instruction * StoreIInstruction::copy() const {
+		return new StoreIInstruction(*this);
+	}
 }

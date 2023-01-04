@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string StackPopInstruction::toString() const {
 		return "] " + rd->toString();
 	}
+	
+	Instruction * StackPopInstruction::copy() const {
+		return new StackPopInstruction(*this);
+	}
 }

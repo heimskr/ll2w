@@ -14,4 +14,8 @@ namespace LL2W {
 		bool out = rs->type->shareSignedness(rt->type);
 		return rt->type->shareSignedness(rd->type) || out;
 	}
+	
+	Instruction * AndRInstruction::copy() const {
+		return new AndRInstruction(*this);
+	}
 }

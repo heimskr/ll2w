@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string LogicalAndRInstruction::toString() const {
 		return rs->toString() + " && " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * LogicalAndRInstruction::copy() const {
+		return new LogicalAndRInstruction(*this);
+	}
 }

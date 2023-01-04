@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SleepRInstruction::toString() const {
 		return "<sleep " + rs->toString() + ">";
 	}
+	
+	Instruction * SleepRInstruction::copy() const {
+		return new SleepRInstruction(*this);
+	}
 }

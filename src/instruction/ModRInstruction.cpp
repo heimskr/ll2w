@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string ModRInstruction::toString() const {
 		return operString("%");
 	}
+	
+	Instruction * ModRInstruction::copy() const {
+		return new ModRInstruction(*this);
+	}
 }

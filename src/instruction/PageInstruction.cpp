@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string PageInstruction::toString() const {
 		return "%page " + std::string(on? "on" : "off");
 	}
+	
+	Instruction * PageInstruction::copy() const {
+		return new PageInstruction(*this);
+	}
 }

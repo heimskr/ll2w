@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string SetInstruction::toString() const {
 		return LL2W::toString(imm, *rd, true) + " -> " + rd->toString();
 	}
+	
+	Instruction * SetInstruction::copy() const {
+		return new SetInstruction(*this);
+	}
 }

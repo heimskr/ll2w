@@ -11,4 +11,8 @@ namespace LL2W {
 	std::string HaltInstruction::toString() const {
 		return "<halt>";
 	}
+	
+	Instruction * HaltInstruction::copy() const {
+		return new HaltInstruction(*this);
+	}
 }

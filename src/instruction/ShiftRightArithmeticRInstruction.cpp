@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string ShiftRightArithmeticRInstruction::toString() const {
 		return rs->toString() + " >> " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * ShiftRightArithmeticRInstruction::copy() const {
+		return new ShiftRightArithmeticRInstruction(*this);
+	}
 }

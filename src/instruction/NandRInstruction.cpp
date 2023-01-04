@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string NandRInstruction::toString() const {
 		return rs->toString() + " ~& " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * NandRInstruction::copy() const {
+		return new NandRInstruction(*this);
+	}
 }

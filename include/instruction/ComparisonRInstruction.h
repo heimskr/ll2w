@@ -15,5 +15,6 @@ namespace LL2W {
 		std::string debugExtra() override;
 		std::string toString() const override;
 		bool fixSignedness() override;
+		Instruction * copy() const override;
 	};
 }

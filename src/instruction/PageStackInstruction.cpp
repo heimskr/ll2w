@@ -16,4 +16,8 @@ namespace LL2W {
 			return std::string(isPush? "[" : "]") + " %page";
 		return ": " + std::string(isPush? "[" : "]") + " %page " + rs->toString();
 	}
+	
+	Instruction * PageStackInstruction::copy() const {
+		return new PageStackInstruction(*this);
+	}
 }

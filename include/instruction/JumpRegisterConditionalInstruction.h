@@ -22,5 +22,6 @@ namespace LL2W {
 		std::string toString() const override;
 
 		bool canFallThrough() const override { return true; }
+		Instruction * copy() const override;
 	};
 }

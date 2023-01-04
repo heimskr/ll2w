@@ -8,11 +8,10 @@ namespace LL2W {
 	struct DeferredSourceMoveInstruction: RType {
 		int registerIndex;
 
-		DeferredSourceMoveInstruction(std::shared_ptr<Variable> rs_, std::shared_ptr<Variable> rd_,
-		int register_index, int index_ = -1):
-			RType(rs_, nullptr, rd_, index_), registerIndex(register_index) {}
+		DeferredSourceMoveInstruction(VariablePtr rs_, VariablePtr rd_, int register_index, int index_ = -1);
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

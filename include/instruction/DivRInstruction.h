@@ -8,5 +8,6 @@ namespace LL2W {
 		using LinkedSTD::LinkedSTD;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

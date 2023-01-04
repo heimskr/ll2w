@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string AddIInstruction::toString() const {
 		return operString("+");
 	}
+	
+	Instruction * AddIInstruction::copy() const {
+		return new AddIInstruction(*this);
+	}
 }

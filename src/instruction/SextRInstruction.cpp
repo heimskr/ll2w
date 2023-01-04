@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SextRInstruction::toString() const {
 		return "sext " + rs->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * SextRInstruction::copy() const {
+		return new SextRInstruction(*this);
+	}
 }

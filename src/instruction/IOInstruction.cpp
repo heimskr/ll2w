@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string IOInstruction::toString() const {
 		return ident? "<io " + *ident + ">" : "<io>";
 	}
+	
+	Instruction * IOInstruction::copy() const {
+		return new IOInstruction(*this);
+	}
 }

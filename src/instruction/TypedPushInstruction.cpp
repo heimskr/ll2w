@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string TypedPushInstruction::toString() const {
 		return "#[ " + rs->toString();
 	}
+	
+	Instruction * TypedPushInstruction::copy() const {
+		return new TypedPushInstruction(*this);
+	}
 }

@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string ShiftRightLogicalRInstruction::toString() const {
 		return rs->toString() + " >>> " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * ShiftRightLogicalRInstruction::copy() const {
+		return new ShiftRightLogicalRInstruction(*this);
+	}
 }

@@ -24,4 +24,8 @@ namespace LL2W {
 			default: return "???";
 		}
 	}
+	
+	Instruction * PrintRInstruction::copy() const {
+		return new PrintRInstruction(*this);
+	}
 }

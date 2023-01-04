@@ -13,4 +13,8 @@ namespace LL2W {
 			return "!" + rs->toString() + ".";
 		return "!" + rs->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * LogicalNotRInstruction::copy() const {
+		return new LogicalNotRInstruction(*this);
+	}
 }

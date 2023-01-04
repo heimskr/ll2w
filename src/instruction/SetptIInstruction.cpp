@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SetptIInstruction::toString() const {
 		return "%setpt " + LL2W::toString(imm);
 	}
+	
+	Instruction * SetptIInstruction::copy() const {
+		return new SetptIInstruction(*this);
+	}
 }

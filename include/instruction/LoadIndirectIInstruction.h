@@ -3,13 +3,12 @@
 #include "instruction/IType.h"
 
 namespace LL2W {
-	/**
-	 * [imm] -> [$rd]
-	 */
+	/** [imm] -> [$rd] */
 	struct LoadIndirectIInstruction: IType<> {
-		LoadIndirectIInstruction(ValueType imm_, const std::shared_ptr<Variable> &rd_, int index_ = -1);
+		LoadIndirectIInstruction(ValueType imm_, VariablePtr rd_, int index_ = -1);
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

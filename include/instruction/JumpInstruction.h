@@ -4,7 +4,7 @@
 #include "instruction/JType.h"
 
 namespace LL2W {
-	struct JumpInstruction: public JType<>, public Conditional {
+	struct JumpInstruction: JType<>, Conditional {
 		JumpInstruction(ValueType addr_, bool link_, Condition condition_ = Condition::None, int index_ = -1);
 
 		std::string debugExtra() override;
@@ -15,5 +15,7 @@ namespace LL2W {
 		bool canFallThrough() const override {
 			return link;
 		}
+
+		Instruction * copy() const override;
 	};
 }

@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string CompareRInstruction::toString() const {
 		return rs->toString() + " ~ " + rt->toString();
 	}
+	
+	Instruction * CompareRInstruction::copy() const {
+		return new CompareRInstruction(*this);
+	}
 }

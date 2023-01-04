@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string OrRInstruction::toString() const {
 		return rs->toString() + " | " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * OrRInstruction::copy() const {
+		return new OrRInstruction(*this);
+	}
 }

@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string TranslateAddressRInstruction::toString() const {
 		return "translate " + rs->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * TranslateAddressRInstruction::copy() const {
+		return new TranslateAddressRInstruction(*this);
+	}
 }

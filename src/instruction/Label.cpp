@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string Label::toString() const {
 		return "@" + name;
 	}
+	
+	Instruction * Label::copy() const {
+		return new Label(*this);
+	}
 }

@@ -16,4 +16,8 @@ namespace LL2W {
 			return "%setpt " + rs->toString();
 		return ": %setpt " + rs->toString() + " " + rt->toString();
 	}
+	
+	Instruction * SetptRInstruction::copy() const {
+		return new SetptRInstruction(*this);
+	}
 }

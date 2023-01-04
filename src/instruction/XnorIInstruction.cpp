@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string XnorIInstruction::toString() const {
 		return rs->toString() + " ~x " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
+	
+	Instruction * XnorIInstruction::copy() const {
+		return new XnorIInstruction(*this);
+	}
 }

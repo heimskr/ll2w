@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SvringInstruction::toString() const {
 		return "%ring -> " + rd->toString();
 	}
+	
+	Instruction * SvringInstruction::copy() const {
+		return new SvringInstruction(*this);
+	}
 }

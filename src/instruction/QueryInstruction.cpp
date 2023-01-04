@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string QueryInstruction::toString() const {
 		return "? " + query_map.at(type) + " -> " + rd->toString();
 	}
+	
+	Instruction * QueryInstruction::copy() const {
+		return new QueryInstruction(*this);
+	}
 }

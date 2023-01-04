@@ -22,4 +22,8 @@ namespace LL2W {
 		}
 		return out;
 	}
+	
+	Instruction * ComparisonRInstruction::copy() const {
+		return new ComparisonRInstruction(*this);
+	}
 }

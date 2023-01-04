@@ -15,5 +15,6 @@ namespace LL2W {
 			SelectInstruction(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, Condition condition_, int index_ = -1);
 			std::string debugExtra() override;
 			std::string toString() const override;
+			Instruction * copy() const override;
 	};
 }

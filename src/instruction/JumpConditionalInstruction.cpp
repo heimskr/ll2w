@@ -10,4 +10,8 @@ namespace LL2W {
 	std::string JumpConditionalInstruction::toString() const {
 		return std::string(link? "::" : ":") + " " + LL2W::toString(addr) + " if " + rs->toString();
 	}
+	
+	Instruction * JumpConditionalInstruction::copy() const {
+		return new JumpConditionalInstruction(*this);
+	}
 }

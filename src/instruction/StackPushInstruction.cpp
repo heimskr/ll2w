@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string StackPushInstruction::toString() const {
 		return "[ " + rs->toString();
 	}
+	
+	Instruction * StackPushInstruction::copy() const {
+		return new StackPushInstruction(*this);
+	}
 }

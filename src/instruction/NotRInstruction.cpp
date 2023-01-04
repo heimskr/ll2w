@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string NotRInstruction::toString() const {
 		return "~" + rs->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * NotRInstruction::copy() const {
+		return new NotRInstruction(*this);
+	}
 }

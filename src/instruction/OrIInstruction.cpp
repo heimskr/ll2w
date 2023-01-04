@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string OrIInstruction::toString() const {
 		return rs->toString() + " | " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
+	
+	Instruction * OrIInstruction::copy() const {
+		return new OrIInstruction(*this);
+	}
 }

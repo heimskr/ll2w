@@ -11,4 +11,8 @@ namespace LL2W {
 	std::string Comment::toString() const {
 		return "// " + text;
 	}
+	
+	Instruction * Comment::copy() const {
+		return new Comment(*this);
+	}
 }

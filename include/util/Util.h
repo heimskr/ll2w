@@ -214,6 +214,12 @@ namespace LL2W::Util {
 			return out;
 		throw std::invalid_argument("Not an integer: \"" + std::string(string) + '"');
 	}
+
+	template <typename T>
+	void copyPointer(T &ptr) {
+		if (ptr)
+			ptr = ptr->copy();
+	}
 }
 
 namespace LL2W {

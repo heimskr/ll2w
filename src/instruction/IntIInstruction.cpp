@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string IntIInstruction::toString() const {
 		return "%int " + LL2W::toString(imm);
 	}
+	
+	Instruction * IntIInstruction::copy() const {
+		return new IntIInstruction(*this);
+	}
 }

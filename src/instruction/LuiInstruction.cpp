@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string LuiInstruction::toString() const {
 		return "lui: " + LL2W::toString(imm, *rd) + " -> " + rd->toString();
 	}
+	
+	Instruction * LuiInstruction::copy() const {
+		return new LuiInstruction(*this);
+	}
 }

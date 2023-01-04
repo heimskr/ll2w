@@ -11,6 +11,7 @@ namespace LL2W {
 			PrintRInstruction(VariablePtr rs_, PrintType, int index_ = -1);
 			std::string debugExtra() override;
 			std::string toString() const override;
+			Instruction * copy() const override;
 
 		private:
 			const char * typeName() const;

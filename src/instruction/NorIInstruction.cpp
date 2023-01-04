@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string NorIInstruction::toString() const {
 		return rs->toString() + " ~| " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
+	
+	Instruction * NorIInstruction::copy() const {
+		return new NorIInstruction(*this);
+	}
 }

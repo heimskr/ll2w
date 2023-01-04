@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SvpgInstruction::toString() const {
 		return "%page -> " + rd->toString();
 	}
+	
+	Instruction * SvpgInstruction::copy() const {
+		return new SvpgInstruction(*this);
+	}
 }

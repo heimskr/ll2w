@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string AndIInstruction::toString() const {
 		return rs->toString() + " & " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
+	
+	Instruction * AndIInstruction::copy() const {
+		return new AndIInstruction(*this);
+	}
 }

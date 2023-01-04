@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string SubRInstruction::toString() const {
 		return rs->toString() + " - " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * SubRInstruction::copy() const {
+		return new SubRInstruction(*this);
+	}
 }

@@ -9,5 +9,6 @@ namespace LL2W {
 		PageInstruction(bool, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

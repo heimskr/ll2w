@@ -10,5 +10,6 @@ namespace LL2W {
 			IType(nullptr, imm_, rd_, index_) {}
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

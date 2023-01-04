@@ -140,7 +140,7 @@ namespace LL2W {
 				return false;
 			}
 
-			virtual std::shared_ptr<Instruction> copy() const = 0;
+			virtual Instruction * copy() const = 0;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

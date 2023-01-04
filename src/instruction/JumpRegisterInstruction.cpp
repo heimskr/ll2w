@@ -48,4 +48,8 @@ namespace LL2W {
 	bool JumpRegisterInstruction::isBlockTerminal() const {
 		return condition == Condition::None;
 	}
+	
+	Instruction * JumpRegisterInstruction::copy() const {
+		return new JumpRegisterInstruction(*this);
+	}
 }

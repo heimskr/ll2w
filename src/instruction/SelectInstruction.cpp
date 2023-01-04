@@ -22,4 +22,8 @@ namespace LL2W {
 		return "[" + rs->toString() + " " + std::string(operMap.at(condition)) + " " + rt->toString() + "] -> " +
 			rd->toString();
 	}
+	
+	Instruction * SelectInstruction::copy() const {
+		return new SelectInstruction(*this);
+	}
 }

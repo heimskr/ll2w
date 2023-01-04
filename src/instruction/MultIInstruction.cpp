@@ -13,4 +13,8 @@ namespace LL2W {
 	std::string MultIInstruction::toString() const {
 		return rs->toString() + " * " + LL2W::toString(imm, *rs);
 	}
+	
+	Instruction * MultIInstruction::copy() const {
+		return new MultIInstruction(*this);
+	}
 }

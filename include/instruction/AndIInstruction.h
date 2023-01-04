@@ -9,5 +9,6 @@ namespace LL2W {
 		std::string debugExtra() override;
 		std::string toString() const override;
 		static int64_t apply(int64_t left, int64_t right) { return left & right; }
+		Instruction * copy() const override;
 	};
 }

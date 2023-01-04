@@ -19,4 +19,8 @@ namespace LL2W {
 			return rs->setSigned(false) || out;
 		return out;
 	}
+	
+	Instruction * ComparisonIInstruction::copy() const {
+		return new ComparisonIInstruction(*this);
+	}
 }

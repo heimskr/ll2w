@@ -358,6 +358,12 @@ namespace LL2W {
 				return true;
 			default:
 				return false;
-		}		
+		}
+	}
+
+	Instruction * LLVMInstruction::copy() const {
+		auto out = std::make_unique<LLVMInstruction>(*this);
+		Util::copyPointer(out->node);
+		return out.release();
 	}
 }

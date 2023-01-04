@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string XorRInstruction::toString() const {
 		return rs->toString() + " x " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * XorRInstruction::copy() const {
+		return new XorRInstruction(*this);
+	}
 }

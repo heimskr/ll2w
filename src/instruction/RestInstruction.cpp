@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string RestInstruction::toString() const {
 		return "<rest>";
 	}
+	
+	Instruction * RestInstruction::copy() const {
+		return new RestInstruction(*this);
+	}
 }

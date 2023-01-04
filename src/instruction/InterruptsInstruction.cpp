@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string InterruptsInstruction::toString() const {
 		return enable? "%ei" : "%di";
 	}
+	
+	Instruction * InterruptsInstruction::copy() const {
+		return new InterruptsInstruction(*this);
+	}
 }

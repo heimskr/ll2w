@@ -20,5 +20,6 @@ namespace LL2W {
 		std::string debugExtra() override;
 		std::string toString() const override;
 		bool isBlockTerminal() const override;
+		Instruction * copy() const override;
 	};
 }

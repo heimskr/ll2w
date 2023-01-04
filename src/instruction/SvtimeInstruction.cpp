@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string SvtimeInstruction::toString() const {
 		return "%time -> " + rd->toString();
 	}
+	
+	Instruction * SvtimeInstruction::copy() const {
+		return new SvtimeInstruction(*this);
+	}
 }

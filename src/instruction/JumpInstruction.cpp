@@ -15,4 +15,8 @@ namespace LL2W {
 	bool JumpInstruction::isBlockTerminal() const {
 		return condition == Condition::None;
 	}
+	
+	Instruction * JumpInstruction::copy() const {
+		return new JumpInstruction(*this);
+	}
 }

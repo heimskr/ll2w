@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string LogicalNorRInstruction::toString() const {
 		return rs->toString() + " !|| " + rt->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * LogicalNorRInstruction::copy() const {
+		return new LogicalNorRInstruction(*this);
+	}
 }

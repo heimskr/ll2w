@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string DivIInstruction::toString() const {
 		return operString("/");
 	}
+	
+	Instruction * DivIInstruction::copy() const {
+		return new DivIInstruction(*this);
+	}
 }

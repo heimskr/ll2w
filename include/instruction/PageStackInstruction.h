@@ -8,5 +8,6 @@ namespace LL2W {
 		PageStackInstruction(bool is_push, VariablePtr rs_ = nullptr, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

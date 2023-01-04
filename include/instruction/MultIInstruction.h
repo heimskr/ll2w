@@ -7,5 +7,6 @@ namespace LL2W {
 		MultIInstruction(VariablePtr rs_, ValueType imm_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

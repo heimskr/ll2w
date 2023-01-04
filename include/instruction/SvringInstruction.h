@@ -8,5 +8,6 @@ namespace LL2W {
 		SvringInstruction(VariablePtr rd_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

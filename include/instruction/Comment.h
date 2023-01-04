@@ -3,7 +3,7 @@
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	struct Comment: public WhyInstruction {
+	struct Comment: WhyInstruction {
 		std::string text;
 
 		Comment(const std::string &text_, int index_ = -1);
@@ -12,5 +12,7 @@ namespace LL2W {
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+
+		Instruction * copy() const override;
 	};
 }

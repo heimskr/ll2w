@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string RingIInstruction::toString() const {
 		return "%ring " + LL2W::toString(imm);
 	}
+	
+	Instruction * RingIInstruction::copy() const {
+		return new RingIInstruction(*this);
+	}
 }

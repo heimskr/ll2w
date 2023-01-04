@@ -12,12 +12,6 @@
 
 namespace LL2W {
 
-	template <typename T>
-	void copyShared(T &ptr) {
-		if (ptr)
-			ptr = ptr->copy();
-	}
-
 // MetadataDef
 
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
@@ -225,12 +219,12 @@ namespace LL2W {
 
 	InstructionNode * SelectNode::copy() const {
 		auto out = std::make_unique<SelectNode>(*this);
-		copyShared(out->conditionType);
-		copyShared(out->conditionValue);
-		copyShared(out->firstType);
-		copyShared(out->firstValue);
-		copyShared(out->secondType);
-		copyShared(out->secondValue);
+		Util::copyPointer(out->conditionType);
+		Util::copyPointer(out->conditionValue);
+		Util::copyPointer(out->firstType);
+		Util::copyPointer(out->firstValue);
+		Util::copyPointer(out->secondType);
+		Util::copyPointer(out->secondValue);
 		return out.release();
 	}
 
@@ -272,8 +266,8 @@ namespace LL2W {
 
 	InstructionNode * AllocaNode::copy() const {
 		auto out = std::make_unique<AllocaNode>(*this);
-		copyShared(out->numelementsType);
-		copyShared(out->numelementsValue);
+		Util::copyPointer(out->numelementsType);
+		Util::copyPointer(out->numelementsValue);
 		return out.release();
 	}
 
@@ -359,8 +353,8 @@ namespace LL2W {
 
 	InstructionNode * StoreNode::copy() const {
 		auto out = std::make_unique<StoreNode>(*this);
-		copyShared(out->source);
-		copyShared(out->destination);
+		Util::copyPointer(out->source);
+		Util::copyPointer(out->destination);
 		return out.release();
 	}
 
@@ -449,8 +443,8 @@ namespace LL2W {
 
 	InstructionNode * LoadNode::copy() const {
 		auto out = std::make_unique<LoadNode>(*this);
-		copyShared(out->type);
-		copyShared(out->constant);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->constant);
 		return out.release();
 	}
 
@@ -495,8 +489,8 @@ namespace LL2W {
 
 	InstructionNode * IcmpNode::copy() const {
 		auto out = std::make_unique<IcmpNode>(*this);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -534,7 +528,7 @@ namespace LL2W {
 
 	InstructionNode * BrCondNode::copy() const {
 		auto out = std::make_unique<BrCondNode>(*this);
-		copyShared(out->condition);
+		Util::copyPointer(out->condition);
 		return out.release();
 	}
 
@@ -844,9 +838,9 @@ namespace LL2W {
 
 	InstructionNode * GetelementptrNode::copy() const {
 		auto out = std::make_unique<GetelementptrNode>(*this);
-		copyShared(out->type);
-		copyShared(out->pointerType);
-		copyShared(out->cachedConstantValue);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->pointerType);
+		Util::copyPointer(out->cachedConstantValue);
 		return out.release();
 	}
 
@@ -871,8 +865,8 @@ namespace LL2W {
 
 	InstructionNode * RetNode::copy() const {
 		auto out = std::make_unique<RetNode>(*this);
-		copyShared(out->type);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -896,8 +890,8 @@ namespace LL2W {
 
 	LandingpadNode::Clause * LandingpadNode::Clause::copy() const {
 		auto out = std::make_unique<LandingpadNode::Clause>(*this);
-		copyShared(out->type);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -940,7 +934,7 @@ namespace LL2W {
 
 	InstructionNode * LandingpadNode::copy() const {
 		auto out = std::make_unique<LandingpadNode>(*this);
-		copyShared(out->type);
+		Util::copyPointer(out->type);
 		out->clauses.clear();
 		for (const auto &clause: clauses)
 			out->clauses.emplace_back(clause? clause->copy() : nullptr);
@@ -973,9 +967,9 @@ namespace LL2W {
 
 	InstructionNode * ConversionNode::copy() const {
 		auto out = std::make_unique<ConversionNode>(*this);
-		copyShared(out->from);
-		copyShared(out->to);
-		copyShared(out->value);
+		Util::copyPointer(out->from);
+		Util::copyPointer(out->to);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -1004,9 +998,9 @@ namespace LL2W {
 
 	InstructionNode * BasicMathNode::copy() const {
 		auto out = std::make_unique<BasicMathNode>(*this);
-		copyShared(out->type);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1050,7 +1044,7 @@ namespace LL2W {
 
 	InstructionNode * PhiNode::copy() const {
 		auto out = std::make_unique<PhiNode>(*this);
-		copyShared(out->type);
+		Util::copyPointer(out->type);
 		out->pairs.clear();
 		for (const auto &[value, string]: pairs)
 			out->pairs.emplace_back(value? value->copy() : nullptr, string);
@@ -1087,9 +1081,9 @@ namespace LL2W {
 
 	InstructionNode * DivNode::copy() const {
 		auto out = std::make_unique<DivNode>(*this);
-		copyShared(out->type);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1104,9 +1098,9 @@ namespace LL2W {
 
 	InstructionNode * RemNode::copy() const {
 		auto out = std::make_unique<RemNode>(*this);
-		copyShared(out->type);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1151,8 +1145,8 @@ namespace LL2W {
 
 	InstructionNode * LogicNode::copy() const {
 		auto out = std::make_unique<LogicNode>(*this);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1167,9 +1161,9 @@ namespace LL2W {
 
 	InstructionNode * ShrNode::copy() const {
 		auto out = std::make_unique<ShrNode>(*this);
-		copyShared(out->type);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1208,9 +1202,9 @@ namespace LL2W {
 
 	InstructionNode * FMathNode::copy() const {
 		auto out = std::make_unique<FMathNode>(*this);
-		copyShared(out->type);
-		copyShared(out->left);
-		copyShared(out->right);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->left);
+		Util::copyPointer(out->right);
 		return out.release();
 	}
 
@@ -1243,8 +1237,8 @@ namespace LL2W {
 
 	InstructionNode * SwitchNode::copy() const {
 		auto out = std::make_unique<SwitchNode>(*this);
-		copyShared(out->type);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->value);
 		out->table.clear();
 		for (const auto &[t, v, s]: table)
 			out->table.emplace_back(t? t->copy() : nullptr, v? v->copy() : nullptr, s);
@@ -1282,7 +1276,7 @@ namespace LL2W {
 		auto out = std::make_unique<ExtractValueNode>(*this);
 		if (out->aggregateType)
 			out->aggregateType = std::dynamic_pointer_cast<AggregateType>(out->aggregateType);
-		copyShared(out->aggregateValue);
+		Util::copyPointer(out->aggregateValue);
 		return out.release();
 	}
 
@@ -1312,10 +1306,10 @@ namespace LL2W {
 
 	InstructionNode * InsertValueNode::copy() const {
 		auto out = std::make_unique<InsertValueNode>(*this);
-		copyShared(out->aggregateType);
-		copyShared(out->type);
-		copyShared(out->aggregateValue);
-		copyShared(out->value);
+		Util::copyPointer(out->aggregateType);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->aggregateValue);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -1334,8 +1328,8 @@ namespace LL2W {
 
 	InstructionNode * ResumeNode::copy() const {
 		auto out = std::make_unique<ResumeNode>(*this);
-		copyShared(out->type);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -1356,8 +1350,8 @@ namespace LL2W {
 
 	InstructionNode * FreezeNode::copy() const {
 		auto out = std::make_unique<FreezeNode>(*this);
-		copyShared(out->type);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 
@@ -1385,9 +1379,9 @@ namespace LL2W {
 
 	InstructionNode * DbgIntrinsicNode::copy() const {
 		auto out = std::make_unique<DbgIntrinsicNode>(*this);
-		copyShared(out->constant);
-		copyShared(out->firstMetadata);
-		copyShared(out->secondMetadata);
+		Util::copyPointer(out->constant);
+		Util::copyPointer(out->firstMetadata);
+		Util::copyPointer(out->secondMetadata);
 		return out.release();
 	}
 
@@ -1442,10 +1436,10 @@ namespace LL2W {
 
 	InstructionNode * AtomicrmwNode::copy() const {
 		auto out = std::make_unique<AtomicrmwNode>(*this);
-		copyShared(out->type);
-		copyShared(out->pointerType);
-		copyShared(out->pointer);
-		copyShared(out->value);
+		Util::copyPointer(out->type);
+		Util::copyPointer(out->pointerType);
+		Util::copyPointer(out->pointer);
+		Util::copyPointer(out->value);
 		return out.release();
 	}
 

@@ -7,5 +7,6 @@ namespace LL2W {
 		RingRInstruction(VariablePtr rs_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

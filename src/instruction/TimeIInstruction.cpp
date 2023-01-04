@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string TimeIInstruction::toString() const {
 		return "%time " + LL2W::toString(imm);
 	}
+	
+	Instruction * TimeIInstruction::copy() const {
+		return new TimeIInstruction(*this);
+	}
 }

@@ -54,4 +54,8 @@ namespace LL2W {
 	std::string JumpRegisterConditionalInstruction::toString() const {
 		return std::string(link? "::" : ":") + " " + rd->toString() + " if " + rs->toString();
 	}
+	
+	Instruction * JumpRegisterConditionalInstruction::copy() const {
+		return new JumpRegisterConditionalInstruction(*this);
+	}
 }

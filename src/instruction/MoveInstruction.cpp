@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string MoveInstruction::toString() const {
 		return rs->toString() + " -> " + rd->toString();
 	}
+	
+	Instruction * MoveInstruction::copy() const {
+		return new MoveInstruction(*this);
+	}
 }

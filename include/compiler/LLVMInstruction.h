@@ -30,5 +30,7 @@ namespace LL2W {
 			std::vector<const std::string *> getLabels() const override;
 
 			bool isBlockTerminal() const override;
+
+			Instruction * copy() const override;
 	};
 }

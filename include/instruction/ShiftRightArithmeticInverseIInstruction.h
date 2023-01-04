@@ -8,5 +8,6 @@ namespace LL2W {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

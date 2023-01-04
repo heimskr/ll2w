@@ -12,4 +12,8 @@ namespace LL2W {
 	std::string TypedPopInstruction::toString() const {
 		return "#] " + rd->toString();
 	}
+	
+	Instruction * TypedPopInstruction::copy() const {
+		return new TypedPopInstruction(*this);
+	}
 }
