@@ -99,6 +99,28 @@ namespace LL2W {
 		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="},
 		{IcmpCond::Xgt, ">"},  {IcmpCond::Xge, ">="}, {IcmpCond::Xlt, "<"}, {IcmpCond::Xle, "<="}};
 
+// #define USE_SUBSCRIPTS
+
+#ifdef USE_SUBSCRIPTS
+#define U(s) s "ᵤ"
+#define S(s) s "ₛ"
+#define X(s) s "ₓ"
+#else
+#define U(s) s "u"
+#define S(s) s "s"
+#define X(s) s "x"
+#endif
+
+	std::unordered_map<IcmpCond, std::string> cond_op_map_with_sign {
+		{IcmpCond::Eq, "=="}, {IcmpCond::Ne, "!="},
+		{IcmpCond::Ugt, U(">")}, {IcmpCond::Uge, U(">=")}, {IcmpCond::Ult, U("<")}, {IcmpCond::Ule, U("<=")},
+		{IcmpCond::Sgt, S(">")}, {IcmpCond::Sge, S(">=")}, {IcmpCond::Slt, S("<")}, {IcmpCond::Sle, S("<=")},
+		{IcmpCond::Xgt, X(">")}, {IcmpCond::Xge, X(">=")}, {IcmpCond::Xlt, X("<")}, {IcmpCond::Xle, X("<=")}};
+
+#undef X
+#undef S
+#undef U
+
 	std::unordered_map<std::string, IcmpCond> cond_inv_map {
 		{ "eq", IcmpCond::Eq},  { "ne", IcmpCond::Ne},  {"ugt", IcmpCond::Ugt}, {"uge", IcmpCond::Uge},
 		{"ult", IcmpCond::Ult}, {"ule", IcmpCond::Ule}, {"sgt", IcmpCond::Sgt}, {"sge", IcmpCond::Sge},

@@ -10,8 +10,8 @@ namespace LL2W {
 		return rs->toString() + " & " + rt->toString() + " -> " + rd->toString();
 	}
 
-	void AndRInstruction::fixSignedness() {
-		rs->type->shareSignedness(rt->type);
-		rt->type->shareSignedness(rd->type);
+	bool AndRInstruction::fixSignedness() {
+		bool out = rs->type->shareSignedness(rt->type);
+		return rt->type->shareSignedness(rd->type) || out;
 	}
 }

@@ -33,6 +33,14 @@ namespace LL2W {
 		return typeType() == TypeType::Void;
 	}
 
+	std::vector<TypePtr> Type::copyMany(const std::vector<TypePtr> &types) {
+		std::vector<TypePtr> out;
+		out.reserve(types.size());
+		for (const auto &type: types)
+			out.push_back(type->copy());
+		return out;
+	}
+
 	IntType::operator std::string() {
 		return std::string("\e[33m") + static_cast<char>(signedness) + std::to_string(intWidth) + "\e[0m";
 	}
@@ -73,7 +81,7 @@ namespace LL2W {
 		return other_int != nullptr && other_int->intWidth == intWidth;
 	}
 
-	void IntType::shareSignedness(const TypePtr &other) {
+	bool IntType::shareSignedness(const TypePtr &other) {
 		if (auto other_int = std::dynamic_pointer_cast<IntType>(other)) {
 			if (other_int->signedness != Signedness::Unknown) {
 				if (signedness != Signedness::Unknown) {
@@ -85,16 +93,28 @@ namespace LL2W {
 						       << "\e[22m";
 						throw std::runtime_error("Signednesses don't match in IntType::shareSignedness");
 					}
-				} else
-					setSignedness(other_int->getSignedness());
-			} else if (signedness != Signedness::Unknown)
+
+					return false;
+				}
+
+				setSignedness(other_int->getSignedness());
+				return true;
+			}
+
+			if (signedness != Signedness::Unknown) {
 				other_int->setSignedness(getSignedness());
+				return true;
+			}
 		}
+
+		return false;
 	}
 
-	void IntType::setSignedness(Signedness new_signedness) {
+	bool IntType::setSignedness(Signedness new_signedness) {
+		const bool out = signedness != new_signedness;
 		signedness = new_signedness;
 		signednessBacktrace = Util::getBacktrace();
+		return out;
 	}
 
 	ArrayType::operator std::string() {
@@ -198,8 +218,8 @@ namespace LL2W {
 		return subtype->whyString() + '*';
 	}
 
-	void PointerType::shareSignedness(const TypePtr &other) {
-		unwrapAll()->shareSignedness(other->unwrapAll());
+	bool PointerType::shareSignedness(const TypePtr &other) {
+		return unwrapAll()->shareSignedness(other->unwrapAll());
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {

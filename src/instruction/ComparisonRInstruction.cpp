@@ -11,14 +11,15 @@ namespace LL2W {
 		return rs->toString() + " " + cond_op_map.at(cond) + " " + rt->toString() + " -> " + rd->toString();
 	}
 
-	void ComparisonRInstruction::fixSignedness() {
-		rd->setSigned(false);
+	bool ComparisonRInstruction::fixSignedness() {
+		bool out = rd->setSigned(false);
 		if (signed_conds.contains(cond)) {
-			rs->setSigned(true);
-			rt->setSigned(true);
+			out = rs->setSigned(true) || out;
+			out = rt->setSigned(true) || out;
 		} else if (unsigned_conds.contains(cond)) {
-			rs->setSigned(false);
-			rt->setSigned(false);
+			out = rs->setSigned(false) || out;
+			out = rt->setSigned(false) || out;
 		}
+		return out;
 	}
 }

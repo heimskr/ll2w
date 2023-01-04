@@ -136,7 +136,9 @@ namespace LL2W {
 				return false;
 			}
 
-			virtual void fixSignedness() {}
+			virtual bool fixSignedness() {
+				return false;
+			}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

@@ -10,7 +10,7 @@ namespace LL2W {
 		return operString("+");
 	}
 
-	void AddIInstruction::fixSignedness() {
-		rs->type->shareSignedness(rd->type);
+	bool AddIInstruction::fixSignedness() {
+		return rs->type->shareSignedness(rd->type);
 	}
 }

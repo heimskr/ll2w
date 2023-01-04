@@ -10,8 +10,8 @@ namespace LL2W {
 		return operString("+");
 	}
 
-	void AddRInstruction::fixSignedness() {
-		rs->type->shareSignedness(rt->type);
-		rt->type->shareSignedness(rd->type);
+	bool AddRInstruction::fixSignedness() {
+		const bool out = rs->type->shareSignedness(rt->type);
+		return rt->type->shareSignedness(rd->type) || out;
 	}
 }

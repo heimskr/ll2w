@@ -1,24 +1,19 @@
-#ifndef INSTRUCTION_COMPARISONIINSTRUCTION_H_
-#define INSTRUCTION_COMPARISONIINSTRUCTION_H_
-
-#include <unordered_map>
+#pragma once
 
 #include "instruction/ComparisonInstruction.h"
 #include "instruction/IType.h"
 #include "parser/Enums.h"
 
+#include <unordered_map>
+
 namespace LL2W {
-	/**
-	 * $rs == (<=, <...) $rt -> $rd
-	 */
+	/** $rs == (<=, <...) $rt -> $rd */
 	struct ComparisonIInstruction: public IType<>, public ComparisonInstruction {
 		ComparisonIInstruction(VariablePtr rs_, ValueType imm_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):
 			IType(rs_, imm_, rd_, index_), ComparisonInstruction(cond_) {}
 
 		std::string debugExtra() override;
 		std::string toString() const override;
-		void fixSignedness() override;
+		bool fixSignedness() override;
 	};
 }
-
-#endif

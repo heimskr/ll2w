@@ -30,13 +30,14 @@
 namespace LL2W::Passes {
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
 	                        CallingConvention &convention, bool &ellipsis, std::vector<TypePtr> *argument_types) {
+		Timer timer("ExtractInfo");
 		TypePtr return_type;
 
 		for (;;) {
 			// First, we check the call node itself—it sometimes contains the signature of the function.
 			if (call->argumentsExplicit) {
 				if (argument_types != nullptr)
-					*argument_types = call->argumentTypes;
+					*argument_types = Type::copyMany(call->argumentTypes);
 				return_type = call->returnType;
 				ellipsis = call->argumentEllipsis;
 				convention = ellipsis? CallingConvention::StackOnly : CallingConvention::Reg16;
@@ -49,7 +50,7 @@ namespace LL2W::Passes {
 				if (argument_types != nullptr) {
 					argument_types->reserve(func.arguments->size());
 					for (FunctionArgument &argument: *func.arguments)
-						argument_types->push_back(argument.type);
+						argument_types->push_back(argument.type->copy());
 				}
 				return_type = func.returnType;
 				break;
@@ -61,7 +62,7 @@ namespace LL2W::Passes {
 				if (argument_types != nullptr) {
 					argument_types->reserve(header->arguments->arguments.size());
 					for (FunctionArgument &argument: header->arguments->arguments)
-						argument_types->push_back(argument.type);
+						argument_types->push_back(argument.type->copy());
 				}
 				return_type = header->returnType;
 				break;

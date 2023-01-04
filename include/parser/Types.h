@@ -44,7 +44,8 @@ namespace LL2W {
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
 			virtual TypePtr unwrapAll() { return shared_from_this(); }
-			virtual void shareSignedness(const TypePtr &) {}
+			virtual bool shareSignedness(const TypePtr &) { return false; }
+			static std::vector<TypePtr> copyMany(const std::vector<TypePtr> &);
 	};
 
 	struct VoidType: Type {
@@ -92,9 +93,9 @@ namespace LL2W {
 		 *  Otherwise, if the other type is an IntType and does have a signedness and this type doesn't, this function
 		 *  copies the other type's signedness to this IntType. If the other type is an IntType and has a defined but
 		 *  different signedness, this function throws std::runtime_error. */
-		void shareSignedness(const TypePtr &) override;
+		bool shareSignedness(const TypePtr &) override;
 		Signedness getSignedness() const { return signedness; }
-		void setSignedness(Signedness);
+		bool setSignedness(Signedness);
 		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
 
 		private:
@@ -169,7 +170,7 @@ namespace LL2W {
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
-		void shareSignedness(const TypePtr &) override;
+		bool shareSignedness(const TypePtr &) override;
 	};
 
 	class FunctionType: public Type {
