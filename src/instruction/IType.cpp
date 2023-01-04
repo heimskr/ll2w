@@ -12,7 +12,7 @@ namespace LL2W {
 	}
 
 	IType::IType(VariablePtr rs_, Immediate imm_, VariablePtr rd_, int index_):
-		WhyInstruction(index_), rs(std::move(rs_)), rd(std::move(rd_)), imm(std::move(imm_)) {}
+		HasSD(std::move(rs_), std::move(rd_), index_), imm(std::move(imm_)) {}
 
 	IType * IType::setOriginalValue(const ValuePtr &value) {
 		originalValue = value;

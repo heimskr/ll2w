@@ -4,11 +4,13 @@
 
 #include "compiler/Immediate.h"
 #include "compiler/Variable.h"
+#include "parser/Enums.h"
 #include "parser/Values.h"
+#include "instruction/HasSD.h"
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	class IType: public WhyInstruction {
+	class IType: public HasSD<WhyInstruction> {
 		protected:
 			std::string operDebug(const char *oper) const;
 			std::string operString(const char *oper) const;
@@ -33,8 +35,6 @@ namespace LL2W {
 			bool operator==(const Instruction &other) const override;
 			std::vector<IVariablePtr> findDifferences(const IType &other) const;
 
-			virtual Role rsRole() const { return Role::Source; }
-			virtual Role rdRole() const { return Role::Destination; }
 			bool typeMismatch() const override;
 	};
 }
