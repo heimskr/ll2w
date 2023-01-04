@@ -972,10 +972,10 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
-		Passes::signChars(*this);
 		Passes::discardUnusedVars(*this);
 		Passes::transformLabels(*this);
 		Passes::fixSignedness(*this);
+		Passes::signChars(*this);
 		hackVariables();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
