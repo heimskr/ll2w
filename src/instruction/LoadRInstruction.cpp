@@ -4,7 +4,7 @@
 namespace LL2W {
 	LoadRInstruction::LoadRInstruction(const std::shared_ptr<Variable> &rs_, const std::shared_ptr<Variable> &rd_,
 	int index_):
-		RType(rs_, nullptr, rd_, index_) {}
+		LinkedSD(rs_, nullptr, rd_, index_) {}
 
 	std::string LoadRInstruction::debugExtra() {
 		return "\e[2m[\e[0;91m" + std::string(*rs) + "\e[0;2m] ->\e[0m " + std::string(*rd);

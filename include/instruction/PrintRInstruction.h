@@ -8,7 +8,7 @@ namespace LL2W {
 		public:
 			PrintType type;
 
-			PrintRInstruction(std::shared_ptr<Variable> rs_, PrintType, int index_ = -1);
+			PrintRInstruction(VariablePtr rs_, PrintType, int index_ = -1);
 			std::string debugExtra() override;
 			std::string toString() const override;
 

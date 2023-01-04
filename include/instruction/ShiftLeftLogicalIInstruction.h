@@ -1,10 +1,12 @@
 #pragma once
 
 #include "instruction/IType.h"
+#include "instruction/LinkedSD.h"
 
 namespace LL2W {
-	struct ShiftLeftLogicalIInstruction: public IType<> {
-		using IType::IType;
+	/** $rs << imm -> $rd */
+	struct ShiftLeftLogicalIInstruction: LinkedSD<IType<>> {
+		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

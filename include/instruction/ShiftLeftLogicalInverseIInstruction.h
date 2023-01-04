@@ -3,7 +3,8 @@
 #include "instruction/IType.h"
 
 namespace LL2W {
-	struct ShiftLeftLogicalInverseIInstruction: public IType<> {
+	/** imm << $rs -> $rd */
+	struct ShiftLeftLogicalInverseIInstruction: IType<> {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;

@@ -1,19 +1,16 @@
-#ifndef INSTRUCTION_LOGICALNOTRINSTRUCTION_H_
-#define INSTRUCTION_LOGICALNOTRINSTRUCTION_H_
+#pragma once
 
-#include "instruction/RType.h"
+#include "instruction/LinkedSTD.h"
 
 namespace LL2W {
-	struct LogicalNotRInstruction: public RType {
+	struct LogicalNotRInstruction: LinkedSTD<> {
 		LogicalNotRInstruction(VariablePtr rs_, VariablePtr rd_, int index_ = -1):
-			RType(rs_, nullptr, rd_, index_) {}
+			LinkedSTD(std::move(rs_), nullptr, std::move(rd_), index_) {}
 
-		LogicalNotRInstruction(VariablePtr rs_, int index_ = -1):
-			RType(rs_, nullptr, rs_, index_) {}
+		LogicalNotRInstruction(const VariablePtr &rs_, int index_ = -1):
+			LinkedSTD(rs_, nullptr, rs_, index_) {}
 
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif

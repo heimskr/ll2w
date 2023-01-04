@@ -3,9 +3,10 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	/** setpt $rs */
-	struct SetptRInstruction: public RType {
-		SetptRInstruction(VariablePtr rs_, VariablePtr rt_, int index_ = -1): RType(rs_, rt_, nullptr, index_) {}
+	/** %setpt $rs
+	 *  : %setpt $rs $rt */
+	struct SetptRInstruction: RType {
+		SetptRInstruction(VariablePtr rs_, VariablePtr rt_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

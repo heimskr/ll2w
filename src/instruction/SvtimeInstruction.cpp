@@ -2,8 +2,8 @@
 #include "instruction/SvtimeInstruction.h"
 
 namespace LL2W {
-	SvtimeInstruction::SvtimeInstruction(std::shared_ptr<Variable> rd_, int index_):
-		RType(nullptr, nullptr, rd_, index_) {}
+	SvtimeInstruction::SvtimeInstruction(VariablePtr rd_, int index_):
+		RType(nullptr, nullptr, std::move(rd_), index_) {}
 
 	std::string SvtimeInstruction::debugExtra() {
 		return "\e[36m%time\e[39m \e[2m->\e[22m " + std::string(*rd);

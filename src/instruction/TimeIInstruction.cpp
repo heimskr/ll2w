@@ -2,6 +2,9 @@
 #include "instruction/TimeIInstruction.h"
 
 namespace LL2W {
+	TimeIInstruction::TimeIInstruction(ValueType imm_, int index_):
+		IType(nullptr, std::move(imm_), nullptr, index_) {}
+
 	std::string TimeIInstruction::debugExtra() {
 		return "\e[36m%time\e[39m " + colorize(imm);
 	}

@@ -3,11 +3,9 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	/**
-	 * page -> $rd
-	 */
-	struct SvpgInstruction: public RType {
-		SvpgInstruction(VariablePtr rd_, int index_ = -1): RType(nullptr, nullptr, rd_, index_) {}
+	/** %page -> $rd */
+	struct SvpgInstruction: RType {
+		SvpgInstruction(VariablePtr rd_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

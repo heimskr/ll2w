@@ -13,7 +13,6 @@ namespace LL2W {
 
 	bool ComparisonIInstruction::fixSignedness() {
 		const bool out = rd->setSigned(false);
-		// const bool out = false;
 		if (signed_conds.contains(cond))
 			return rs->setSigned(true) || out;
 		if (unsigned_conds.contains(cond))

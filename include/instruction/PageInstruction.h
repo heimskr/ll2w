@@ -3,7 +3,7 @@
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct PageInstruction: public RType {
+	struct PageInstruction: RType {
 		bool on;
 
 		PageInstruction(bool, int index_ = -1);

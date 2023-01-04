@@ -82,7 +82,7 @@ namespace LL2W {
 	}
 
 	bool IntType::shareSignedness(const TypePtr &other) {
-		if (auto other_int = std::dynamic_pointer_cast<IntType>(other)) {
+		if (auto other_int = std::dynamic_pointer_cast<IntType>(other->unwrapAll())) {
 			if (other_int->signedness != Signedness::Unknown) {
 				if (signedness != Signedness::Unknown) {
 					if (signedness != other_int->signedness) {

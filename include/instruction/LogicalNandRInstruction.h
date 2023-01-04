@@ -1,10 +1,10 @@
 #pragma once
 
-#include "instruction/RType.h"
+#include "instruction/LinkedSTD.h"
 
 namespace LL2W {
-	struct LogicalNandRInstruction: public RType {
-		using RType::RType;
+	struct LogicalNandRInstruction: LinkedSTD<> {
+		using LinkedSTD::LinkedSTD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	RingRInstruction::RingRInstruction(std::shared_ptr<Variable> rs_, int index_):
-		RType(rs_, nullptr, nullptr, index_) {}
+		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
 	std::string RingRInstruction::debugExtra() {
 		return "\e[36m%ring\e[39m " + std::string(*rs);

@@ -9,8 +9,4 @@ namespace LL2W {
 	std::string MoveInstruction::toString() const {
 		return rs->toString() + " -> " + rd->toString();
 	}
-
-	bool MoveInstruction::fixSignedness() {
-		return rs->type->shareSignedness(rd->type);
-	}
 }

@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	PrintRInstruction::PrintRInstruction(std::shared_ptr<Variable> rs_, PrintType type_, int index_):
-		RType(rs_, nullptr, nullptr, index_), type(type_) {}
+		RType(std::move(rs_), nullptr, nullptr, index_), type(type_) {}
 
 	std::string PrintRInstruction::debugExtra() {
 		

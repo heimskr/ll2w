@@ -2,8 +2,8 @@
 #include "instruction/SleepRInstruction.h"
 
 namespace LL2W {
-	SleepRInstruction::SleepRInstruction(std::shared_ptr<Variable> rs_, int index_):
-		RType(rs_, nullptr, nullptr, index_) {}
+	SleepRInstruction::SleepRInstruction(VariablePtr rs_, int index_):
+		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
 	std::string SleepRInstruction::debugExtra() {
 		return "<\e[36msleep\e[39m " + std::string(*rs) + ">";

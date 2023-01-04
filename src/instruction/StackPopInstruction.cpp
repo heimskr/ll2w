@@ -2,8 +2,8 @@
 #include "instruction/StackPopInstruction.h"
 
 namespace LL2W {
-	StackPopInstruction::StackPopInstruction(const VariablePtr &rd_, int index_):
-		RType(nullptr, nullptr, rd_, index_) {}
+	StackPopInstruction::StackPopInstruction(VariablePtr rd_, int index_):
+		RType(nullptr, nullptr, std::move(rd_), index_) {}
 
 	std::string StackPopInstruction::debugExtra() {
 		return "\e[2m]\e[22m " + std::string(*rd);

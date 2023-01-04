@@ -1,13 +1,13 @@
 #pragma once
 
 #include "instruction/IType.h"
+#include "instruction/LinkedSD.h"
 
 namespace LL2W {
-	struct AndIInstruction: public IType<> {
-		using IType::IType;
+	struct AndIInstruction: LinkedSD<IType<>> {
+		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 		static int64_t apply(int64_t left, int64_t right) { return left & right; }
-		bool fixSignedness() override;
 	};
 }

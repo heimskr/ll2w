@@ -13,4 +13,8 @@ namespace LL2W {
 	std::string CopyRInstruction::toString() const {
 		return "[" + rs->toString() + "] -> [" + rd->toString() + "]";
 	}
+
+	bool CopyRInstruction::fixSignedness() {
+		return rs->type->shareSignedness(rd->type);
+	}
 }

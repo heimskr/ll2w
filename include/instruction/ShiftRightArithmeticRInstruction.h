@@ -1,14 +1,13 @@
-#ifndef INSTRUCTION_SHIFTRIGHTARITHMETICRINSTRUCTION_H_
-#define INSTRUCTION_SHIFTRIGHTARITHMETICRINSTRUCTION_H_
+#pragma once
 
+#include "instruction/LinkedSD.h"
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct ShiftRightArithmeticRInstruction: public RType {
-		using RType::RType;
+	/** $rs >> $rt -> $rd */
+	struct ShiftRightArithmeticRInstruction: LinkedSD<RType> {
+		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif

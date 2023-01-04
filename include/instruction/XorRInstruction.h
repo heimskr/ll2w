@@ -1,14 +1,13 @@
-#ifndef INSTRUCTION_XORRINSTRUCTION_H_
-#define INSTRUCTION_XORRINSTRUCTION_H_
+#pragma once
 
+#include "instruction/LinkedSTD.h"
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct XorRInstruction: public RType {
-		using RType::RType;
+	/** $rs x $rt -> $rd */
+	struct XorRInstruction: LinkedSTD<> {
+		using LinkedSTD::LinkedSTD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif

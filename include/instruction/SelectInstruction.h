@@ -1,9 +1,8 @@
-#ifndef INSTRUCTION_SELECTINSTRUCTION_H_
-#define INSTRUCTION_SELECTINSTRUCTION_H_
-
-#include <unordered_map>
+#pragma once
 
 #include "instruction/RType.h"
+
+#include <unordered_map>
 
 namespace LL2W {
 	class SelectInstruction: public RType {
@@ -18,5 +17,3 @@ namespace LL2W {
 			std::string toString() const override;
 	};
 }
-
-#endif

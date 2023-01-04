@@ -2,6 +2,9 @@
 #include "instruction/RitIInstruction.h"
 
 namespace LL2W {
+	RitIInstruction::RitIInstruction(ValueType imm_, int index_):
+		IType(nullptr, std::move(imm_), nullptr, index_) {}
+
 	std::string RitIInstruction::debugExtra() {
 		return "\e[36m%rit\e[39m " + colorize(imm);
 	}

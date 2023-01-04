@@ -4,13 +4,10 @@
 #include "parser/Enums.h"
 
 namespace LL2W {
-	/**
-	 * ? type -> $rd
-	 */
-	struct QueryInstruction: public RType {
+	/** ? type -> $rd */
+	struct QueryInstruction: RType {
 		QueryType type;
-		QueryInstruction(QueryType type_, VariablePtr rd_, int index_ = -1):
-			RType(nullptr, nullptr, rd_, index_), type(type_) {}
+		QueryInstruction(QueryType, VariablePtr rd_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};

@@ -1,3 +1,4 @@
+#include "compiler/Variable.h"
 #include "instruction/ModRInstruction.h"
 
 namespace LL2W {

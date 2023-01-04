@@ -14,10 +14,7 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			const std::string old = instruction->debugExtra();
 			try {
-				if (instruction->fixSignedness())
-					// info() << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n \e[1;2m→\e[22m  "
-					// 	<< instruction->debugExtra() << '\n'
-					;
+				instruction->fixSignedness();
 			} catch (const std::exception &) {
 				info() << "Offending instruction: " << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
 				std::cerr << "... in function " << *instruction->parent.lock()->parent->name << '\n';
