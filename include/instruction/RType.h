@@ -1,11 +1,9 @@
 #pragma once
 
-#include "instruction/HasSD.h"
 #include "instruction/WhyInstruction.h"
-#include "parser/Enums.h"
 
 namespace LL2W {
-	class RType: public HasSD<WhyInstruction> {
+	class RType: public WhyInstruction {
 		protected:
 			using VariablePtr = std::shared_ptr<Variable>;
 			std::string operDebug(const char *) const;
@@ -28,7 +26,9 @@ namespace LL2W {
 
 			std::vector<RVariablePtr> findDifferences(const RType &other) const;
 
+			virtual Role rsRole() const { return Role::Source; }
 			virtual Role rtRole() const { return Role::Source; }
+			virtual Role rdRole() const { return Role::Destination; }
 
 			bool typeMismatch() const override;
 	};

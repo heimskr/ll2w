@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	RType::RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_):
-		HasSD(std::move(rs_), std::move(rd_), index_), rt(std::move(rt_)) {}
+		WhyInstruction(index_), rs(std::move(rs_)), rt(std::move(rt_)), rd(std::move(rd_)) {}
 
 	std::string RType::operDebug(const char *oper) const {
 		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[0m " + std::string(*rt) + " \e[2m->\e[22m " +
