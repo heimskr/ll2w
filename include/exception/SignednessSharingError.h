@@ -6,17 +6,17 @@
 namespace LL2W {
 	class Type;
 
-	using TypeCPtr = std::shared_ptr<const Type>;
+	using TypePtr = std::shared_ptr<Type>;
 
 	class SignednessSharingError: public std::exception {
 		private:
 			const std::string whatStr;
 
 		public:
-			const TypeCPtr one;
-			const TypeCPtr two;
+			const TypePtr one;
+			const TypePtr two;
 
-			SignednessSharingError(std::string what_str, TypeCPtr one_, TypeCPtr two_);
+			SignednessSharingError(std::string what_str, TypePtr one_, TypePtr two_);
 			const char * what() const throw();
 	};
 }

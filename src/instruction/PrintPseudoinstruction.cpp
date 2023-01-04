@@ -3,7 +3,7 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	PrintPseudoinstruction::PrintPseudoinstruction(ValueType imm_, int index_):
+	PrintPseudoinstruction::PrintPseudoinstruction(Immediate imm_, int index_):
 		IType(nullptr, imm_, nullptr, index_) {}
 
 	PrintPseudoinstruction::PrintPseudoinstruction(const std::string *text_, bool, int index_):

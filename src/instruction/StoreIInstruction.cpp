@@ -2,7 +2,7 @@
 #include "instruction/StoreIInstruction.h"
 
 namespace LL2W {
-	StoreIInstruction::StoreIInstruction(VariablePtr rs_, ValueType imm_, int index_):
+	StoreIInstruction::StoreIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
 	std::string StoreIInstruction::debugExtra() {

@@ -2,7 +2,7 @@
 #include "instruction/TimeIInstruction.h"
 
 namespace LL2W {
-	TimeIInstruction::TimeIInstruction(ValueType imm_, int index_):
+	TimeIInstruction::TimeIInstruction(Immediate imm_, int index_):
 		IType(nullptr, std::move(imm_), nullptr, index_) {}
 
 	std::string TimeIInstruction::debugExtra() {

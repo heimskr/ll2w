@@ -5,7 +5,7 @@
 
 namespace LL2W {
 	/** imm / $rs -> $rd */
-	struct DiviIInstruction: LinkedSD<IType<>> {
+	struct DiviIInstruction: LinkedSD<IType> {
 		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;

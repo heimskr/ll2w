@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	/** $rs * imm */
-	MultIInstruction::MultIInstruction(VariablePtr rs_, ValueType imm_, int index_):
+	MultIInstruction::MultIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
 	std::string MultIInstruction::debugExtra() {

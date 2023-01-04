@@ -5,7 +5,7 @@
 
 namespace LL2W {
 	/** $rs << imm -> $rd */
-	struct ShiftLeftLogicalIInstruction: LinkedSD<IType<>> {
+	struct ShiftLeftLogicalIInstruction: LinkedSD<IType> {
 		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;

@@ -8,94 +8,29 @@
 #include "instruction/WhyInstruction.h"
 
 namespace LL2W {
-	template <typename T = Immediate>
 	class IType: public WhyInstruction {
 		protected:
-			std::string operDebug(const char *oper) const {
-				return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[22m " + colorize(imm, *rs) +
-					" \e[2m->\e[22m " + std::string(*rd);
-			}
-
-			std::string operString(const char *oper) const {
-				return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm, *rs) + " -> " +
-					rd->toString();
-			}
+			std::string operDebug(const char *oper) const;
+			std::string operString(const char *oper) const;
 
 		public:
-			using ValueType = T;
 			using IVariablePtr = VariablePtr IType::*;
 
 			ValuePtr originalValue;
 			VariablePtr rs;
 			VariablePtr rd;
-			T imm;
+			Immediate imm;
 
-			IType(std::shared_ptr<Variable> rs_, T imm_, std::shared_ptr<Variable> rd_, int index_ = -1):
-				WhyInstruction(index_), rs(std::move(rs_)), rd(std::move(rd_)), imm(std::move(imm_)) {}
+			IType(VariablePtr rs_, Immediate imm_, VariablePtr rd_, int index_ = -1);
 
-			IType * setOriginalValue(const ValuePtr &value) {
-				originalValue = value;
-				return this;
-			}
+			IType * setOriginalValue(const ValuePtr &);
 
-			ExtractionResult extract(bool force = false) override {
-				if (extracted && !force)
-					return {read.size(), written.size()};
-
-				read.clear();
-				written.clear();
-				extracted = true;
-
-				if (rs && !secretReads)
-					read.insert(rs);
-				if (rd && !secretWrites)
-					written.insert(rd);
-
-				return {read.size(), written.size()};
-			}
-
-			bool replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) override {
-				if (rs->isAliasOf(*to_replace)) {
-					rs = new_var;
-					return true;
-				}
-
-				return false;
-			}
-
-			bool canReplaceRead(const VariablePtr &to_replace) const override {
-				return rs->isAliasOf(*to_replace);
-			}
-
-			bool replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) override {
-				if (rd->isAliasOf(*to_replace)) {
-					rd = new_var;
-					return true;
-				}
-
-				return false;
-			}
-
-			bool canReplaceWritten(const VariablePtr &to_replace) const override {
-				return rd->isAliasOf(*to_replace);
-			}
-
-			bool operator==(const Instruction &other) const override {
-				if (typeid(*this) != typeid(other))
-					return false;
-				const auto &other_i = dynamic_cast<const IType &>(other);
-				return rs == other_i.rs && imm == other_i.imm && rd == other_i.rd &&
-					originalValue == other_i.originalValue;
-			}
-
-			std::vector<IVariablePtr> findDifferences(const IType &other) const {
-				std::vector<IVariablePtr> out;
-				out.reserve(2);
-				if (*rs != *other.rs)
-					out.push_back(&IType::rs);
-				if (*rd != *other.rd)
-					out.push_back(&IType::rd);
-				return out;
-			}
+			ExtractionResult extract(bool force = false) override;
+			bool replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) override;
+			bool canReplaceRead(const VariablePtr &to_replace) const override;
+			bool replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) override;
+			bool canReplaceWritten(const VariablePtr &to_replace) const override;
+			bool operator==(const Instruction &other) const override;
+			std::vector<IVariablePtr> findDifferences(const IType &other) const;
 	};
 }

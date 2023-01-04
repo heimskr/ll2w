@@ -4,8 +4,8 @@
 
 namespace LL2W {
 	/** %time imm */
-	struct TimeIInstruction: IType<> {
-		TimeIInstruction(ValueType imm_, int index_ = -1);
+	struct TimeIInstruction: IType {
+		TimeIInstruction(Immediate imm_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 		Instruction * copy() const override;

@@ -2,7 +2,7 @@
 #include "instruction/CompareIInstruction.h"
 
 namespace LL2W {
-	CompareIInstruction::CompareIInstruction(VariablePtr rs_, ValueType imm_, int index_):
+	CompareIInstruction::CompareIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
 	std::string CompareIInstruction::debugExtra() {

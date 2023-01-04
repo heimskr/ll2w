@@ -4,7 +4,7 @@
 
 namespace LL2W {
 	/** imm >> $rs -> $rd */
-	struct ShiftRightArithmeticInverseIInstruction: IType<> {
+	struct ShiftRightArithmeticInverseIInstruction: IType {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;

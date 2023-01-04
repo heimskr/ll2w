@@ -67,9 +67,7 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// TODO: should this be == 0?
 			if (instruction->meta.count(InstructionMeta::LoadArgumentsSkip) != 0) {
-				if (IType<int> *itype = dynamic_cast<IType<int> *>(instruction.get()))
-					itype->imm += function.initialPushedBytes;
-				else if (auto *itype = dynamic_cast<IType<Immediate> *>(instruction.get()))
+				if (auto itype = std::dynamic_pointer_cast<IType>(instruction))
 					if (std::holds_alternative<int>(itype->imm))
 						std::get<int>(itype->imm) += function.initialPushedBytes;
 				function.comment(instruction, "Augmented by " + std::to_string(function.initialPushedBytes) + " bytes");

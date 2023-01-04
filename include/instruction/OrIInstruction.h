@@ -4,7 +4,7 @@
 #include "instruction/LinkedSD.h"
 
 namespace LL2W {
-	struct OrIInstruction: LinkedSD<IType<>> {
+	struct OrIInstruction: LinkedSD<IType> {
 		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;

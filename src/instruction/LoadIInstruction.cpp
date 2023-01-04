@@ -2,7 +2,7 @@
 #include "instruction/LoadIInstruction.h"
 
 namespace LL2W {
-	LoadIInstruction::LoadIInstruction(ValueType imm_, VariablePtr rd_, int index_):
+	LoadIInstruction::LoadIInstruction(Immediate imm_, VariablePtr rd_, int index_):
 		IType(nullptr, std::move(imm_), std::move(rd_), index_) {}
 
 	std::string LoadIInstruction::debugExtra() {

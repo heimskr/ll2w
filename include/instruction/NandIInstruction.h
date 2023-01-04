@@ -5,7 +5,7 @@
 
 namespace LL2W {
 	/** $rs ~& $rt -> $rd */
-	struct NandIInstruction: LinkedSD<IType<>> {
+	struct NandIInstruction: LinkedSD<IType> {
 		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
 		std::string toString() const override;

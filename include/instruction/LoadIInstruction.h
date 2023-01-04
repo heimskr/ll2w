@@ -6,8 +6,8 @@ namespace LL2W {
 	/**
 	 * [imm] -> $rd
 	 */
-	struct LoadIInstruction: IType<> {
-		LoadIInstruction(ValueType imm_, VariablePtr rd_, int index_ = -1);
+	struct LoadIInstruction: IType {
+		LoadIInstruction(Immediate imm_, VariablePtr rd_, int index_ = -1);
 
 		std::string debugExtra() override;
 		std::string toString() const override;

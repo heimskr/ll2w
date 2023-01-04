@@ -4,8 +4,8 @@
 
 namespace LL2W {
 	/** %rit imm */
-	struct RitIInstruction: IType<> {
-		RitIInstruction(ValueType imm_, int index_ = -1);
+	struct RitIInstruction: IType {
+		RitIInstruction(Immediate imm_, int index_ = -1);
 		std::string debugExtra() override;
 		std::string toString() const override;
 		Instruction * copy() const override;

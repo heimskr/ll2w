@@ -2,7 +2,7 @@
 #include "instruction/RingIInstruction.h"
 
 namespace LL2W {
-	RingIInstruction::RingIInstruction(ValueType imm_, int index_):
+	RingIInstruction::RingIInstruction(Immediate imm_, int index_):
 		IType(nullptr, std::move(imm_), nullptr, index_) {}
 
 	std::string RingIInstruction::debugExtra() {
