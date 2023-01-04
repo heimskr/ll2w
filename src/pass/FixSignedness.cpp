@@ -2,6 +2,7 @@
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
+#include "exception/SignednessSharingError.h"
 #include "instruction/ComparisonIInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
 #include "instruction/MoveInstruction.h"
@@ -29,9 +30,10 @@ namespace LL2W::Passes {
 							instruction->debugExtra());
 						changed.insert(instruction);
 					}
-				} catch (const std::exception &) {
-					info() << "Offending instruction: " << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
-					std::cerr << "... in function " << *instruction->parent.lock()->parent->name << '\n';
+				} catch (const SignednessSharingError &err) {
+					info() << "Offending instruction: " << old << " \e[1m!" << instruction->debugIndex << "\e[22m\n"
+					       << "\e[2m...\e[22m in function \e[1m" << *instruction->parent.lock()->parent->name
+					       << "\e[2m\n";
 					throw;
 				}
 			}

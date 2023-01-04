@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "parser/Types.h"
+
+#include <stdexcept>
 
 namespace LL2W {
 	class TypeError: public std::exception {

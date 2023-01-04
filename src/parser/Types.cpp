@@ -5,6 +5,7 @@
 
 #include "options.h"
 #include "compiler/PaddedStructs.h"
+#include "exception/SignednessSharingError.h"
 #include "parser/ASTNode.h"
 #include "parser/Lexer.h"
 #include "parser/Parser.h"
@@ -91,7 +92,8 @@ namespace LL2W {
 						       << Util::translateBacktrace(other_int->signednessBacktrace) << "\e[22m";
 						info() << "Current backtrace:\n\e[2m" << Util::translateBacktrace(Util::getBacktrace())
 						       << "\e[22m";
-						throw std::runtime_error("Signednesses don't match in IntType::shareSignedness");
+						throw SignednessSharingError("Signednesses don't match in IntType::shareSignedness",
+							shared_from_this(), other);
 					}
 
 					return false;
