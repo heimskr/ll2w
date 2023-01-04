@@ -36,26 +36,28 @@ namespace LL2W::Passes {
 		const ValueType condition_type = br->condition->value->valueType();
 		if (condition_type == ValueType::Bool) {
 			const BoolValue *boolval = dynamic_cast<BoolValue *>(br->condition->value.get());
-			function.insertBefore(instruction, std::make_shared<JumpInstruction>(
-				StringSet::intern(function.transformLabel(boolval->value? *br->ifTrue : *br->ifFalse)), false))
-				->setDebug(*br)->extract();
+			auto jump = std::make_shared<JumpInstruction>(StringSet::unquote(boolval->value? br->ifTrue : br->ifFalse),
+				false);
+			function.insertBefore(instruction, jump)->setDebug(*br)->extract();
 		} else if (condition_type != ValueType::Local) {
 			br->debug();
 			throw std::runtime_error("Expected a pvar for the condition of a conditional jump, got " +
 				getName(condition_type));
 		} else {
-			function.insertBefore(instruction, std::make_shared<JumpConditionalInstruction>(
-				dynamic_cast<LocalValue *>(br->condition->value.get())->variable,
-				StringSet::intern(function.transformLabel(*br->ifTrue)), false))->setDebug(*br)->extract();
-			function.insertBefore(instruction,
-				std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->ifFalse)), false))
-				->setDebug(*br)->extract();
+			const auto &variable = dynamic_cast<LocalValue *>(br->condition->value.get())->variable;
+			auto conditional = std::make_shared<JumpConditionalInstruction>(variable, StringSet::unquote(br->ifTrue),
+				false);
+			conditional->needsTransformation = true;
+			function.insertBefore(instruction, conditional)->setDebug(*br)->extract();
+			auto unconditional = std::make_shared<JumpInstruction>(StringSet::unquote(br->ifFalse), false);
+			unconditional->needsTransformation = true;
+			function.insertBefore(instruction, unconditional)->setDebug(*br)->extract();
 		}
 	}
 
 	void lowerBranch(Function &function, InstructionPtr &instruction, BrUncondNode *br) {
-		function.insertBefore(instruction,
-			std::make_shared<JumpInstruction>(StringSet::intern(function.transformLabel(*br->destination)), false))
-			->setDebug(*br)->extract();
+		auto jump = std::make_shared<JumpInstruction>(StringSet::unquote(br->destination), false);
+		jump->needsTransformation = true;
+		function.insertBefore(instruction, jump)->setDebug(*br)->extract();
 	}
 }
