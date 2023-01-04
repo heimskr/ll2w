@@ -3,8 +3,8 @@
 
 namespace LL2W {
 	std::string ComparisonRInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m" + cond_op_map.at(cond) + "\e[22m " + std::string(*rt) + " \e[2m->\e[22m "
-			+ std::string(*rd);
+		return std::string(*rs) + " \e[2m" + cond_op_map_with_sign.at(cond) + "\e[22m " + std::string(*rt) +
+			" \e[2m->\e[22m " + std::string(*rd);
 	}
 
 	std::string ComparisonRInstruction::toString() const {

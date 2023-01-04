@@ -1,14 +1,12 @@
-#ifndef INSTRUCTION_DIVRINSTRUCTION_H_
-#define INSTRUCTION_DIVRINSTRUCTION_H_
+#pragma once
 
-#include "instruction/RType.h"
+#include "instruction/LinkedSTD.h"
 
 namespace LL2W {
-	struct DivRInstruction: public RType {
-		using RType::RType;
+	/** $rs / $rt -> $rd */
+	struct DivRInstruction: LinkedSTD<> {
+		using LinkedSTD::LinkedSTD;
 		std::string debugExtra() override;
 		std::string toString() const override;
 	};
 }
-
-#endif

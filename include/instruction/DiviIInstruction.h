@@ -4,6 +4,7 @@
 #include "instruction/LinkedSD.h"
 
 namespace LL2W {
+	/** imm / $rs -> $rd */
 	struct DiviIInstruction: LinkedSD<IType<>> {
 		using LinkedSD::LinkedSD;
 		std::string debugExtra() override;
