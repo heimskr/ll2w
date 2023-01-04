@@ -86,16 +86,9 @@ namespace LL2W {
 		if (auto other_int = std::dynamic_pointer_cast<IntType>(other->unwrapAll())) {
 			if (other_int->signedness != Signedness::Unknown) {
 				if (signedness != Signedness::Unknown) {
-					if (signedness != other_int->signedness) {
-						info() << "This (" << *this << "):\n\e[2m" << Util::translateBacktrace(signednessBacktrace);
-						info() << "\e[22mOther (" << *other_int << "):\n\e[2m"
-						       << Util::translateBacktrace(other_int->signednessBacktrace) << "\e[22m";
-						info() << "Current backtrace:\n\e[2m" << Util::translateBacktrace(Util::getBacktrace())
-						       << "\e[22m";
+					if (signedness != other_int->signedness)
 						throw SignednessSharingError("Signednesses don't match in IntType::shareSignedness",
-							shared_from_this(), other);
-					}
-
+							std::dynamic_pointer_cast<IntType>(shared_from_this()), other_int);
 					return false;
 				}
 

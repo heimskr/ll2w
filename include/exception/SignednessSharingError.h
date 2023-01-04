@@ -4,19 +4,21 @@
 #include <stdexcept>
 
 namespace LL2W {
-	class Type;
+	struct IntType;
 
-	using TypePtr = std::shared_ptr<Type>;
+	using IntTypePtr = std::shared_ptr<IntType>;
 
 	class SignednessSharingError: public std::exception {
 		private:
 			const std::string whatStr;
 
 		public:
-			const TypePtr one;
-			const TypePtr two;
+			const IntTypePtr one;
+			const IntTypePtr two;
 
-			SignednessSharingError(std::string what_str, TypePtr one_, TypePtr two_);
+			SignednessSharingError(std::string what_str, IntTypePtr one_, IntTypePtr two_);
 			const char * what() const throw();
+
+			void printMore() const;
 	};
 }

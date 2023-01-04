@@ -85,7 +85,7 @@ namespace LL2W::Passes {
 					//        << "\e[2m...\e[22m in function \e[1m" << *instruction->parent.lock()->parent->name
 					//        << "\e[2m\n";
 					// info() << "Types: " << *err.one << " and " << *err.two << '\n';
-					throw;
+					// throw;
 				}
 			}
 
