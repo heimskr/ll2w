@@ -116,28 +116,6 @@ namespace LL2W::Passes {
 					span = span.subspan(1);
 				}
 
-				// if (span.size() != argument_types->size() && (span.empty() || span.back())) {
-				// 	error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
-				// 	info() << "Subprogram !" << debug_index << " -> " << *return_type << ' ' << subprogram.name << ": span = \n";
-				// 	for (const auto &type: span) {
-				// 		std::cerr << "    ";
-				// 		if (type)
-				// 			std::cerr << std::string(*type) << '\n';
-				// 		else
-				// 			std::cerr << "null\n";
-				// 	}
-				// 	info() << "argument_types:\n";
-				// 	for (const auto &type: *argument_types) {
-				// 		std::cerr << "    ";
-				// 		if (type)
-				// 			std::cerr << std::string(*type) << '\n';
-				// 		else
-				// 			std::cerr << "null\n";
-				// 	}
-				// } else if (span.size() != argument_types->size()) {
-				// 	error() << "Span size = " << span.size() << ", argument_types size = " << argument_types->size() << '\n';
-				// }
-
 				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s) {
 					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->setSignedness(span[s]->isSigned(&function.parent)?
