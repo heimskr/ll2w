@@ -103,7 +103,7 @@ namespace LL2W::Util {
 	template <typename S>
 	bool hasOverlap(const S &first, const S &second) {
 		for (const auto &item: first)
-			if (second.count(item) != 0)
+			if (second.contains(item))
 				return true;
 		return false;
 	}
@@ -120,7 +120,7 @@ namespace LL2W::Util {
 		if (first.size() != second.size())
 			return false;
 		for (const T &item: first)
-			if (second.count(item) == 0)
+			if (!second.contains(item))
 				return false;
 		return true;
 	}

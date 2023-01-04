@@ -139,7 +139,7 @@ namespace LL2W {
 	}
 
 	ASTNode * ASTNode::copy() const {
-		ASTNode *out = new ASTNode();
+		auto *out = new ASTNode;
 		out->symbol = symbol;
 		out->location = location;
 		out->lexerInfo = lexerInfo;
