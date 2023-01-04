@@ -48,6 +48,7 @@ namespace LL2W {
 			virtual bool shareSignedness(const TypePtr &) { return false; }
 			static std::vector<TypePtr> copyMany(const std::vector<TypePtr> &);
 			virtual bool compatible(const Type &) const { return true; }
+			virtual Signedness getSignedness() const { return Signedness::Unknown; }
 	};
 
 	struct VoidType: Type {
@@ -95,7 +96,7 @@ namespace LL2W {
 		 *  copies the other type's signedness to this IntType. If the other type is an IntType and has a defined but
 		 *  different signedness, this function throws std::runtime_error. */
 		bool shareSignedness(const TypePtr &) override;
-		Signedness getSignedness() const { return signedness; }
+		Signedness getSignedness() const override { return signedness; }
 		bool setSignedness(Signedness);
 		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
 		/** Returns a copy with the opposite signedness. */
@@ -117,7 +118,7 @@ namespace LL2W {
 	struct HasSubtype {
 		TypePtr subtype;
 		HasSubtype() = delete;
-		HasSubtype(const TypePtr &subtype_): subtype(subtype_) {}
+		HasSubtype(TypePtr subtype_): subtype(std::move(subtype_)) {}
 	};
 
 	struct ArrayType: AggregateType, HasSubtype, Makeable<ArrayType> {
@@ -164,7 +165,7 @@ namespace LL2W {
 
 	struct PointerType: Type, HasSubtype {
 		TypeType typeType() const override { return TypeType::Pointer; }
-		PointerType(TypePtr subtype_): HasSubtype(subtype_) {}
+		PointerType(TypePtr subtype_): HasSubtype(std::move(subtype_)) {}
 		operator std::string() override;
 		std::string toString() override;
 		TypePtr copy() const override { return std::make_shared<PointerType>(subtype->copy()); }
@@ -178,6 +179,7 @@ namespace LL2W {
 		std::shared_ptr<const Type> unwrapAll() const override { return subtype->unwrapAll(); }
 		bool shareSignedness(const TypePtr &) override;
 		bool compatible(const Type &) const override;
+		std::shared_ptr<PointerType> invertedCopy() const;
 	};
 
 	class FunctionType: public Type {

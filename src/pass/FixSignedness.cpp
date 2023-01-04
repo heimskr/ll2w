@@ -78,7 +78,7 @@ namespace LL2W::Passes {
 			for (InstructionPtr &instruction: function.linearInstructions) {
 				const std::string old = instruction->debugExtra();
 				try {
-					if (instruction->fixSignedness()) {
+					if (instruction->fixSignedness() || instruction->typeMismatch()) {
 						// any_changed = true;
 						changed_pairs.emplace_back(old + " \e[1m!" + std::to_string(instruction->debugIndex) + "\e[22m",
 							instruction->debugExtra());
@@ -126,12 +126,17 @@ namespace LL2W::Passes {
 			std::cerr << "    " << instruction << '\n';
 #endif
 			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
-				conflict_map[{r_type->rsRole(), r_type->rs}].emplace_back(r_type, &RType::rs);
-				conflict_map[{r_type->rtRole(), r_type->rt}].emplace_back(r_type, &RType::rt);
-				conflict_map[{r_type->rdRole(), r_type->rd}].emplace_back(r_type, &RType::rd);
+				if (r_type->rs)
+					conflict_map[{r_type->rsRole(), r_type->rs}].emplace_back(r_type, &RType::rs);
+				if (r_type->rt)
+					conflict_map[{r_type->rtRole(), r_type->rt}].emplace_back(r_type, &RType::rt);
+				if (r_type->rd)
+					conflict_map[{r_type->rdRole(), r_type->rd}].emplace_back(r_type, &RType::rd);
 			} else if (auto i_type = std::dynamic_pointer_cast<IType>(instruction)) {
-				conflict_map[{i_type->rsRole(), i_type->rs}].emplace_back(i_type, &IType::rs);
-				conflict_map[{i_type->rdRole(), i_type->rd}].emplace_back(i_type, &IType::rd);
+				if (i_type->rs)
+					conflict_map[{i_type->rsRole(), i_type->rs}].emplace_back(i_type, &IType::rs);
+				if (i_type->rs)
+					conflict_map[{i_type->rdRole(), i_type->rd}].emplace_back(i_type, &IType::rd);
 			}
 		}
 
@@ -144,7 +149,6 @@ namespace LL2W::Passes {
 			done = true;
 
 			for (auto map_iter = conflict_map.begin(), end = conflict_map.end(); map_iter != end; ++map_iter) {
-				auto &key = map_iter->first;
 				auto &list = map_iter->second;
 				if (1 < list.size()) {
 #ifdef DEBUG_FIXEDSIGNEDNESS
@@ -176,25 +180,34 @@ namespace LL2W::Passes {
 								std::cerr << "          rs: " << &rtype->rs << '\n';
 								std::cerr << "          rt: " << &rtype->rt << '\n';
 								std::cerr << "          rd: " << &rtype->rd << '\n';
-								std::cerr << "          mp: " << operand_ptr << '\n';
+								std::cerr << "          mp: " << operand_ptr << " -> " << operand_ptr->get() << '\n';
 							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
 								operand_ptr = &((*itype).*std::get<IType::IVariablePtr>(variant));
 								std::cerr << "          rs: " << &itype->rs << '\n';
 								std::cerr << "          rd: " << &itype->rd << '\n';
-								std::cerr << "          mp: " << operand_ptr << '\n';
+								std::cerr << "          mp: " << operand_ptr << " -> " << operand_ptr->get() << '\n';
 							} else
 								throw std::runtime_error("Non-R-/I-type in FixSignedness");
+							info() << "Instruction(" << *instruction << ")\n";
 							VariablePtr &operand = *operand_ptr;
-							auto int_type = std::dynamic_pointer_cast<IntType>(operand->type);
-							if (!int_type)
-								throw TypeError("Not an IntType", operand->type);
+							TypePtr inverted_copy;
+
+							if (auto int_type = std::dynamic_pointer_cast<IntType>(operand->type)) {
+								inverted_copy = int_type->invertedCopy();
+							} else if (auto ptr_type = std::dynamic_pointer_cast<PointerType>(operand->type)) {
+								inverted_copy = ptr_type->invertedCopy();
+							} else {
+								error() << *operand->type << '\n';
+								throw TypeError("Not an IntType or PointerType", operand->type);
+							}
 							info() << "Function: \e[1m" << *function.name << "\e[22m\n";
-							info() << "Old instruction: " << instruction << '\n';
-							auto bitcast = BitcastInstruction::make(operand, function, int_type->invertedCopy(),
+							info() << "Old instruction: " << instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
+							auto bitcast = BitcastInstruction::make(operand, function, inverted_copy,
 								instruction->parent.lock());
+							bitcast->setDebug(*instruction)->extract();
 							operand = bitcast->rd;
 							info() << "New instruction: " << instruction << '\n';
-							info() << "Bitcast:         " << *bitcast << '\n';
+							info() << "Bitcast:         " << *bitcast << " \e[1m!" << bitcast->debugIndex << "\e[22m\n";
 							function.insertBefore(instruction, bitcast);
 							++list_iter;
 						} else

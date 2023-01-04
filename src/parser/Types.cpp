@@ -246,6 +246,26 @@ namespace LL2W {
 		return dynamic_cast<const IntType &>(*other_unwrapped).compatible(dynamic_cast<const IntType &>(*unwrapped));
 	}
 
+	std::shared_ptr<PointerType> PointerType::invertedCopy() const {
+		size_t depth = 1;
+		auto ptr_type = std::dynamic_pointer_cast<const PointerType>(shared_from_this());
+		TypePtr last_subtype = ptr_type->subtype;
+		while ((ptr_type = std::dynamic_pointer_cast<PointerType>(last_subtype))) {
+			++depth;
+			last_subtype = ptr_type->subtype;
+		}
+
+		auto int_ptr = std::dynamic_pointer_cast<IntType>(last_subtype);
+		if (!int_ptr)
+			return std::dynamic_pointer_cast<PointerType>(copy());
+
+		TypePtr out = int_ptr->invertedCopy();
+		for (size_t i = 0; i < depth; ++i)
+			out = std::make_shared<PointerType>(std::move(out));
+
+		return std::dynamic_pointer_cast<PointerType>(out);
+	}
+
 	FunctionType::FunctionType(const ASTNode *node) {
 		returnType = getType(node->at(0));
 		if (node->children.size() == 3 || (1 < node->size() && node->at(1)->symbol == LLVM_TYPE_LIST)) {
