@@ -2,7 +2,7 @@
 #include "instruction/AndIInstruction.h"
 
 namespace LL2W {
-	std::string AndIInstruction::debugExtra() {
+	std::string AndIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m&\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

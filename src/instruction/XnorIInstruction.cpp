@@ -2,7 +2,7 @@
 #include "instruction/XnorIInstruction.h"
 
 namespace LL2W {
-	std::string XnorIInstruction::debugExtra() {
+	std::string XnorIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m~x\e[22m " + colorize(imm, *rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 

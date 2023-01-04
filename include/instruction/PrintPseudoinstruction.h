@@ -8,7 +8,7 @@ namespace LL2W {
 		PrintPseudoinstruction(Immediate imm_, int index_ = -1);
 		PrintPseudoinstruction(const std::string *text_, bool dummy, int index = -1);
 		PrintPseudoinstruction(const std::string &text_, int index = -1);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

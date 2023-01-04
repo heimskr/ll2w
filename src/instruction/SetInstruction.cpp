@@ -2,7 +2,7 @@
 #include "instruction/SetInstruction.h"
 
 namespace LL2W {
-	std::string SetInstruction::debugExtra() {
+	std::string SetInstruction::debugExtra() const {
 		return "\e[91m" + colorize(imm, *rd, true) + " \e[0;2m->\e[0;32m " + std::string(*rd) + "\e[0m";
 	}
 

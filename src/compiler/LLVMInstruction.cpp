@@ -226,7 +226,7 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
-	std::string LLVMInstruction::debugExtra() {
+	std::string LLVMInstruction::debugExtra() const {
 		return node->debugExtra();
 	}
 

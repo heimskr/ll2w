@@ -2,7 +2,7 @@
 #include "instruction/ShiftLeftLogicalIInstruction.h"
 
 namespace LL2W {
-	std::string ShiftLeftLogicalIInstruction::debugExtra() {
+	std::string ShiftLeftLogicalIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m<<\e[22m " + colorize(imm) + "{ul} \e[2m->\e[22m " + std::string(*rd);
 	}
 

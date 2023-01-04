@@ -5,7 +5,7 @@ namespace LL2W {
 	TypedPushInstruction::TypedPushInstruction(VariablePtr rs_, int index_):
 		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
-	std::string TypedPushInstruction::debugExtra() {
+	std::string TypedPushInstruction::debugExtra() const {
 		return "\e[2m#[\e[22m " + std::string(*rs);
 	}
 

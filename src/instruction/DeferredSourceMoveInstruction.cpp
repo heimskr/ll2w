@@ -6,7 +6,7 @@ namespace LL2W {
 	                                                             int index_):
 		RType(std::move(rs_), nullptr, std::move(rd_), index_), registerIndex(register_index) {}
 
-	std::string DeferredSourceMoveInstruction::debugExtra() {
+	std::string DeferredSourceMoveInstruction::debugExtra() const {
 		return std::string(*rs) + "\e[2m[\e[22m" + std::to_string(registerIndex) + "\e[2m] ->\e[22m " +
 			std::string(*rd);
 	}

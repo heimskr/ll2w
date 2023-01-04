@@ -2,7 +2,7 @@
 #include "instruction/JumpConditionalInstruction.h"
 
 namespace LL2W {
-	std::string JumpConditionalInstruction::debugExtra() {
+	std::string JumpConditionalInstruction::debugExtra() const {
 		return "\e[2m" + std::string(link? "::" : ":") + "\e[0m " + colorize(addr) + " \e[2mif\e[22m " +
 			std::string(*rs);
 	}

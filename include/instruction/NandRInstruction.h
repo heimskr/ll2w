@@ -6,7 +6,7 @@
 namespace LL2W {
 	struct NandRInstruction: LinkedSTD<> {
 		using LinkedSTD::LinkedSTD;
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

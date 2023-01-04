@@ -7,7 +7,7 @@ namespace LL2W {
 		const std::string *ident = nullptr;
 
 		IOInstruction(const std::string *ident_, int index_ = -1);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

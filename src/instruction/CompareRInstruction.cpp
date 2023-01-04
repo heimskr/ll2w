@@ -5,7 +5,7 @@ namespace LL2W {
 	CompareRInstruction::CompareRInstruction(VariablePtr rs_, VariablePtr rt_, int index_):
 		RType(rs_, rt_, nullptr, index_) {}
 
-	std::string CompareRInstruction::debugExtra() {
+	std::string CompareRInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m~\e[22m " + std::string(*rt);
 	}
 

@@ -2,7 +2,7 @@
 #include "instruction/NorIInstruction.h"
 
 namespace LL2W {
-	std::string NorIInstruction::debugExtra() {
+	std::string NorIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m~|\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

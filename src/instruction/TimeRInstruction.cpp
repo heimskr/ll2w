@@ -5,7 +5,7 @@ namespace LL2W {
 	TimeRInstruction::TimeRInstruction(VariablePtr rs_, int index_):
 		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
-	std::string TimeRInstruction::debugExtra() {
+	std::string TimeRInstruction::debugExtra() const {
 		return "\e[36m%time\e[39m " + std::string(*rs);
 	}
 

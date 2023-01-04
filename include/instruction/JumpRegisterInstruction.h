@@ -17,7 +17,7 @@ namespace LL2W {
 		bool replaceWritten(const VariablePtr &, const VariablePtr &) override;
 		bool canReplaceWritten(const VariablePtr &) const override;
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		bool isBlockTerminal() const override;
 		Instruction * copy() const override;

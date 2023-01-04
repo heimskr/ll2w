@@ -6,7 +6,7 @@ namespace LL2W {
 	MultIInstruction::MultIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
-	std::string MultIInstruction::debugExtra() {
+	std::string MultIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m*\e[0m " + colorize(imm, *rs);
 	}
 

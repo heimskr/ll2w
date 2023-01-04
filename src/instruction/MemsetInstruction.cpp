@@ -2,7 +2,7 @@
 #include "instruction/MemsetInstruction.h"
 
 namespace LL2W {
-	std::string MemsetInstruction::debugExtra() {
+	std::string MemsetInstruction::debugExtra() const {
 		return "\e[36mmemset\e[39m " + std::string(*rs) + " x " + std::string(*rt) + " \e[2m->\e[22m "
 		       + std::string(*rd);
 	}

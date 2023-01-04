@@ -6,7 +6,7 @@ namespace LL2W {
 	/** %rit imm */
 	struct RitIInstruction: IType {
 		RitIInstruction(Immediate imm_, int index_ = -1);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

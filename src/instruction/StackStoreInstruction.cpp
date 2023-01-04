@@ -18,7 +18,7 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
-	std::string StackStoreInstruction::debugExtra() {
+	std::string StackStoreInstruction::debugExtra() const {
 		return "\e[1m[store " + std::string(*variable) + "\e[1m to " + std::to_string(location.offset) + "]\e[22m";
 	}
 

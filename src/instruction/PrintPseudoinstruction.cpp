@@ -12,7 +12,7 @@ namespace LL2W {
 	PrintPseudoinstruction::PrintPseudoinstruction(const std::string &text_, int index_):
 		PrintPseudoinstruction(StringSet::intern(text_), false, index_) {}
 
-	std::string PrintPseudoinstruction::debugExtra() {
+	std::string PrintPseudoinstruction::debugExtra() const {
 		return "<\e[36mp\e[39m \"" + (text? *text : colorize(imm, false)) + "\">";
 	}
 

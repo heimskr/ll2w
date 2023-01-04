@@ -2,7 +2,7 @@
 #include "instruction/DiviIInstruction.h"
 
 namespace LL2W {
-	std::string DiviIInstruction::debugExtra() {
+	std::string DiviIInstruction::debugExtra() const {
 		return colorize(imm, *rs) + " \e[2m/\e[22m " + std::string(*rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 

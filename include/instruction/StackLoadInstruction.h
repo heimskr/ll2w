@@ -14,7 +14,7 @@ namespace LL2W {
 			IntermediateInstruction(index_), result(result_), location(location_) {}
 
 		ExtractionResult extract(bool force = false) override;
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 
 		bool maySpill() const override { return false; }
 		Instruction * copy() const override;

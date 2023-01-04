@@ -2,7 +2,7 @@
 #include "instruction/XorIInstruction.h"
 
 namespace LL2W {
-	std::string XorIInstruction::debugExtra() {
+	std::string XorIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2mx\e[22m " + colorize(imm, *rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 

@@ -8,7 +8,7 @@ namespace LL2W {
 	struct QueryInstruction: RType {
 		QueryType type;
 		QueryInstruction(QueryType, VariablePtr rd_, int index_ = -1);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

@@ -2,7 +2,7 @@
 #include "instruction/LogicalXnorIInstruction.h"
 
 namespace LL2W {
-	std::string LogicalXnorIInstruction::debugExtra() {
+	std::string LogicalXnorIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m!xx\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

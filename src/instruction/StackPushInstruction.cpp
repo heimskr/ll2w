@@ -5,7 +5,7 @@ namespace LL2W {
 	StackPushInstruction::StackPushInstruction(VariablePtr rs_, int index_):
 		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
-	std::string StackPushInstruction::debugExtra() {
+	std::string StackPushInstruction::debugExtra() const {
 		return "\e[2m[\e[22m " + std::string(*rs);
 	}
 

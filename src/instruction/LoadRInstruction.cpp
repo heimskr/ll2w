@@ -5,7 +5,7 @@ namespace LL2W {
 	LoadRInstruction::LoadRInstruction(VariablePtr rs_, VariablePtr rd_, int index_):
 		LinkedSD(std::move(rs_), nullptr, std::move(rd_), index_) {}
 
-	std::string LoadRInstruction::debugExtra() {
+	std::string LoadRInstruction::debugExtra() const {
 		return "\e[2m[\e[0;91m" + std::string(*rs) + "\e[0;2m] ->\e[0m " + std::string(*rd);
 	}
 

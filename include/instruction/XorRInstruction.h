@@ -7,7 +7,7 @@ namespace LL2W {
 	/** $rs x $rt -> $rd */
 	struct XorRInstruction: LinkedSTD<> {
 		using LinkedSTD::LinkedSTD;
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

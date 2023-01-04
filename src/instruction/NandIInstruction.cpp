@@ -2,7 +2,7 @@
 #include "instruction/NandIInstruction.h"
 
 namespace LL2W {
-	std::string NandIInstruction::debugExtra() {
+	std::string NandIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m~&\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

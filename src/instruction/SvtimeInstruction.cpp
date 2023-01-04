@@ -5,7 +5,7 @@ namespace LL2W {
 	SvtimeInstruction::SvtimeInstruction(VariablePtr rd_, int index_):
 		RType(nullptr, nullptr, std::move(rd_), index_) {}
 
-	std::string SvtimeInstruction::debugExtra() {
+	std::string SvtimeInstruction::debugExtra() const {
 		return "\e[36m%time\e[39m \e[2m->\e[22m " + std::string(*rd);
 	}
 

@@ -5,7 +5,7 @@ namespace LL2W {
 	CompareIInstruction::CompareIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
-	std::string CompareIInstruction::debugExtra() {
+	std::string CompareIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m~\e[22m " + colorize(imm, *rs);
 	}
 

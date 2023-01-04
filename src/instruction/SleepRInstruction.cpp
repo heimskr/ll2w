@@ -5,7 +5,7 @@ namespace LL2W {
 	SleepRInstruction::SleepRInstruction(VariablePtr rs_, int index_):
 		RType(std::move(rs_), nullptr, nullptr, index_) {}
 
-	std::string SleepRInstruction::debugExtra() {
+	std::string SleepRInstruction::debugExtra() const {
 		return "<\e[36msleep\e[39m " + std::string(*rs) + ">";
 	}
 

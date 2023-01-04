@@ -2,7 +2,7 @@
 #include "instruction/LogicalOrRInstruction.h"
 
 namespace LL2W {
-	std::string LogicalOrRInstruction::debugExtra() {
+	std::string LogicalOrRInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m||\e[0m " + std::string(*rt) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

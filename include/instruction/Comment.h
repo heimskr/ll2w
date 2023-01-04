@@ -10,7 +10,7 @@ namespace LL2W {
 
 		bool showDebug() const override { return false; }
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 
 		Instruction * copy() const override;

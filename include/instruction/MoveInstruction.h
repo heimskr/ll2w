@@ -9,7 +9,7 @@ namespace LL2W {
 		MoveInstruction(VariablePtr rs_, VariablePtr rd_, int index_ = -1):
 			LinkedSD(rs_, nullptr, rd_, index_) {}
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

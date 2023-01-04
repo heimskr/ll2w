@@ -2,7 +2,7 @@
 #include "instruction/MoveInstruction.h"
 
 namespace LL2W {
-	std::string MoveInstruction::debugExtra() {
+	std::string MoveInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 

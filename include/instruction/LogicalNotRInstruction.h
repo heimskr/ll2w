@@ -10,7 +10,7 @@ namespace LL2W {
 		LogicalNotRInstruction(const VariablePtr &rs_, int index_ = -1):
 			LinkedSTD(rs_, nullptr, rs_, index_) {}
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

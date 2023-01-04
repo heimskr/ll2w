@@ -2,7 +2,7 @@
 #include "instruction/AddRInstruction.h"
 
 namespace LL2W {
-	std::string AddRInstruction::debugExtra() {
+	std::string AddRInstruction::debugExtra() const {
 		return operDebug("+");
 	}
 

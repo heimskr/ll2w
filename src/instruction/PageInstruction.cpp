@@ -5,7 +5,7 @@ namespace LL2W {
 	PageInstruction::PageInstruction(bool on_, int index_):
 		RType(nullptr, nullptr, nullptr, index_), on(on_) {}
 
-	std::string PageInstruction::debugExtra() {
+	std::string PageInstruction::debugExtra() const {
 		return "\e[36m%page\e[39m " + std::string(on? "on" : "off");
 	}
 

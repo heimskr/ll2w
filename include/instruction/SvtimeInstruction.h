@@ -6,7 +6,7 @@ namespace LL2W {
 	/** %time -> $rd */
 	struct SvtimeInstruction: RType {
 		SvtimeInstruction(VariablePtr rd_, int index_ = -1);
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

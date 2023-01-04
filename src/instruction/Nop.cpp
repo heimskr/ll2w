@@ -4,7 +4,7 @@
 namespace LL2W {
 	Nop::Nop(int index_): WhyInstruction(index_) {}
 
-	std::string Nop::debugExtra() {
+	std::string Nop::debugExtra() const {
 		return "<>";
 	}
 

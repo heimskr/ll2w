@@ -5,7 +5,7 @@ namespace LL2W {
 	RestInstruction::RestInstruction(int index_):
 		RType(nullptr, nullptr, nullptr, index_) {}
 
-	std::string RestInstruction::debugExtra() {
+	std::string RestInstruction::debugExtra() const {
 		return "<\e[36mrest\e[39m>";
 	}
 

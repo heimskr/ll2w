@@ -56,4 +56,12 @@ namespace LL2W {
 	Instruction * Instruction::setDebug(const ASTNode *node) {
 		return setDebug(node->debugIndex);
 	}
+
+	std::ostream & operator<<(std::ostream &os, const Instruction &instruction) {
+		return os << instruction.debugExtra();
+	}
+
+	std::ostream & operator<<(std::ostream &os, const InstructionPtr &instruction) {
+		return os << instruction->debugExtra();
+	}
 }

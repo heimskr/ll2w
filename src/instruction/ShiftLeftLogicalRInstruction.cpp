@@ -2,7 +2,7 @@
 #include "instruction/ShiftLeftLogicalRInstruction.h"
 
 namespace LL2W {
-	std::string ShiftLeftLogicalRInstruction::debugExtra() {
+	std::string ShiftLeftLogicalRInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m<<\e[0m " + std::string(*rt) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

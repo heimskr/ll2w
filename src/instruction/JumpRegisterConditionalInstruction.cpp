@@ -46,7 +46,7 @@ namespace LL2W {
 		return false;
 	}
 
-	std::string JumpRegisterConditionalInstruction::debugExtra() {
+	std::string JumpRegisterConditionalInstruction::debugExtra() const {
 		return "\e[2m" + std::string(link? "::" : ":") + "\e[0m " + std::string(*rd) + " \e[2mif\e[22m " +
 			std::string(*rs);
 	}

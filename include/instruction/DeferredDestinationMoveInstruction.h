@@ -10,7 +10,7 @@ namespace LL2W {
 
 		DeferredDestinationMoveInstruction(VariablePtr rs_, VariablePtr rd_, int register_index, int index_ = -1);
 
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;
 	};

@@ -37,7 +37,7 @@ namespace LL2W {
 		return false;
 	}
 
-	std::string JumpRegisterInstruction::debugExtra() {
+	std::string JumpRegisterInstruction::debugExtra() const {
 		return "\e[2m" + conditionPrefix() + std::string(link? "::" : ":") + "\e[0m " + std::string(*rd);
 	}
 

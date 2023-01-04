@@ -2,7 +2,7 @@
 #include "instruction/OrIInstruction.h"
 
 namespace LL2W {
-	std::string OrIInstruction::debugExtra() {
+	std::string OrIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m|\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
 	}
 

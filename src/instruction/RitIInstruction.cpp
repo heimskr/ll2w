@@ -5,7 +5,7 @@ namespace LL2W {
 	RitIInstruction::RitIInstruction(Immediate imm_, int index_):
 		IType(nullptr, std::move(imm_), nullptr, index_) {}
 
-	std::string RitIInstruction::debugExtra() {
+	std::string RitIInstruction::debugExtra() const {
 		return "\e[36m%rit\e[39m " + colorize(imm);
 	}
 

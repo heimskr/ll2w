@@ -5,7 +5,7 @@ namespace LL2W {
 	TypedPopInstruction::TypedPopInstruction(VariablePtr rd_, int index_):
 		RType(nullptr, nullptr, std::move(rd_), index_) {}
 
-	std::string TypedPopInstruction::debugExtra() {
+	std::string TypedPopInstruction::debugExtra() const {
 		return "\e[2m#]\e[22m " + std::string(*rd);
 	}
 

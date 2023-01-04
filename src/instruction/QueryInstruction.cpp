@@ -5,7 +5,7 @@ namespace LL2W {
 	QueryInstruction::QueryInstruction(QueryType type_, VariablePtr rd_, int index_):
 		RType(nullptr, nullptr, std::move(rd_), index_), type(type_) {}
 
-	std::string QueryInstruction::debugExtra() {
+	std::string QueryInstruction::debugExtra() const {
 		return "? \e[36m" + query_map.at(type) + "\e[39m \e[2m->\e[22m " + std::string(*rd);
 	}
 

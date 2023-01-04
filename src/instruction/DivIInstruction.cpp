@@ -2,7 +2,7 @@
 #include "instruction/DivIInstruction.h"
 
 namespace LL2W {
-	std::string DivIInstruction::debugExtra() {
+	std::string DivIInstruction::debugExtra() const {
 		return operDebug("/");
 	}
 

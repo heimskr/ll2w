@@ -17,7 +17,7 @@ namespace LL2W {
 		return {read.size(), written.size()};
 	}
 
-	std::string StackLoadInstruction::debugExtra() {
+	std::string StackLoadInstruction::debugExtra() const {
 		return "\e[1m[load  " + std::string(*result) + "\e[1m from " + std::to_string(location.offset) + "]\e[22m";
 	}
 	

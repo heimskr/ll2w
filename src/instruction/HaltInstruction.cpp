@@ -4,7 +4,7 @@
 namespace LL2W {
 	HaltInstruction::HaltInstruction(int index_): RType(nullptr, nullptr, nullptr, index_) {}
 
-	std::string HaltInstruction::debugExtra() {
+	std::string HaltInstruction::debugExtra() const {
 		return "<\e[36mhalt\e[39m>";
 	}
 

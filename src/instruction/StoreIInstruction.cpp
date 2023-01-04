@@ -5,7 +5,7 @@ namespace LL2W {
 	StoreIInstruction::StoreIInstruction(VariablePtr rs_, Immediate imm_, int index_):
 		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
 
-	std::string StoreIInstruction::debugExtra() {
+	std::string StoreIInstruction::debugExtra() const {
 		return std::string(*rs) + " \e[2m-> [\e[22;91m" + colorize(imm, *rs, 1) + "\e[39;2m]\e[22m";
 	}
 

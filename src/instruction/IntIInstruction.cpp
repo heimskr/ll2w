@@ -2,7 +2,7 @@
 #include "instruction/IntIInstruction.h"
 
 namespace LL2W {
-	std::string IntIInstruction::debugExtra() {
+	std::string IntIInstruction::debugExtra() const {
 		return "\e[36m%int\e[39m " + colorize(imm);
 	}
 

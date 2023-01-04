@@ -15,7 +15,7 @@ namespace LL2W {
 			location(location_), variable(variable_), originalVariable(variable_) {}
 
 		ExtractionResult extract(bool force = false) override;
-		std::string debugExtra() override;
+		std::string debugExtra() const override;
 
 		bool operator==(const StackStoreInstruction &) const;
 		Instruction * copy() const override;

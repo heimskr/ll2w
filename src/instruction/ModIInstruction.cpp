@@ -1,7 +1,7 @@
 #include "instruction/ModIInstruction.h"
 
 namespace LL2W {
-	std::string ModIInstruction::debugExtra() {
+	std::string ModIInstruction::debugExtra() const {
 		return operDebug("%");
 	}
 

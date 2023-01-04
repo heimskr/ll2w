@@ -13,7 +13,7 @@ namespace LL2W {
 	int index_):
 		RType(rs_, rt_, rd_, index_), condition(condition_) {}
 
-	std::string SelectInstruction::debugExtra() {
+	std::string SelectInstruction::debugExtra() const {
 		return "\e[2m[\e[22m" + std::string(*rs) + " " + std::string(operMap.at(condition)) + " " + std::string(*rt) +
 			"\e[2m] ->\e[22m " + std::string(*rd);
 	}

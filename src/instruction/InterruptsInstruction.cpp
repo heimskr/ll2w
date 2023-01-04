@@ -5,7 +5,7 @@ namespace LL2W {
 	InterruptsInstruction::InterruptsInstruction(bool enable_, int index_):
 		RType(nullptr, nullptr, nullptr, index_), enable(enable_) {}
 
-	std::string InterruptsInstruction::debugExtra() {
+	std::string InterruptsInstruction::debugExtra() const {
 		return "\e[34m" + std::string(enable? "%ei" : "%di") + "\e[39m";
 	}
 

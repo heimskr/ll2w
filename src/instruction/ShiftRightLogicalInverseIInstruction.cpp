@@ -2,7 +2,7 @@
 #include "instruction/ShiftRightLogicalInverseIInstruction.h"
 
 namespace LL2W {
-	std::string ShiftRightLogicalInverseIInstruction::debugExtra() {
+	std::string ShiftRightLogicalInverseIInstruction::debugExtra() const {
 		return colorize(imm, *rd) + " \e[2m>>>\e[22m " + std::string(*rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 
