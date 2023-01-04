@@ -11,7 +11,7 @@ namespace LL2W {
 
 		public:
 			TypePtr type;
-			TypeError(const std::string &what_str, TypePtr type_ = nullptr);
+			TypeError(std::string what_str, TypePtr type_ = nullptr);
 			const char * what() const throw();
 	};
 }

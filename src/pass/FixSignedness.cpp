@@ -3,6 +3,8 @@
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Program.h"
 #include "exception/SignednessSharingError.h"
+#include "exception/TypeError.h"
+#include "instruction/BitcastInstruction.h"
 #include "instruction/ComparisonIInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
 #include "instruction/MoveInstruction.h"
@@ -11,28 +13,30 @@
 
 #include <sstream>
 
+// #define DEBUG_FIXEDSIGNEDNESS
+
 namespace LL2W {
 	struct ConflictTablePair {
 		int position;
-		VariablePtr operand;
+		std::reference_wrapper<VariablePtr> operand;
 
 		bool operator<(const ConflictTablePair &other) const {
 			if (position < other.position)
 				return true;
 			if (position > other.position)
 				return false;
-			if (!operand && other.operand)
+			if (!operand.get() && other.operand.get())
 				return true;
-			if (!other.operand)
+			if (!other.operand.get())
 				return false;
-			return operand->id < other.operand->id;
+			return operand.get()->id < other.operand.get()->id;
 		}
 
 		operator std::string() const {
 			std::ostringstream ss;
 			ss << '(' << position << ", ";
-			if (operand)
-				ss << *operand;
+			if (operand.get())
+				ss << *operand.get();
 			else
 				ss << "\e[1mnull\e[22m";
 			ss << ')';
@@ -49,8 +53,8 @@ namespace std {
 	template <>
 	struct hash<LL2W::ConflictTablePair> {
 		size_t operator()(const LL2W::ConflictTablePair &pair) const {
-			if (pair.operand) {
-				std::string to_hash = *pair.operand->id;
+			if (pair.operand.get()) {
+				std::string to_hash = *pair.operand.get()->id;
 				to_hash += '!';
 				return std::hash<std::string>()(to_hash + std::to_string(pair.position));
 			}
@@ -102,17 +106,23 @@ namespace LL2W::Passes {
 			last_changed = std::move(changed);
 		} while (any_changed);
 
+#ifdef DEBUG_FIXEDSIGNEDNESS
 		success() << *function.name << '\n';
+#endif
 
 		if (last_changed.empty())
 			return;
 
+#ifdef DEBUG_FIXEDSIGNEDNESS
 		warn() << "Some left over:\n";
+#endif
 
-		std::map<ConflictTablePair, std::vector<InstructionPtr>> conflict_map;
+		std::map<ConflictTablePair, std::list<InstructionPtr>> conflict_map;
 
 		for (const auto &instruction: last_changed) {
+#ifdef DEBUG_FIXEDSIGNEDNESS
 			std::cerr << "    " << instruction << '\n';
+#endif
 			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
 				conflict_map[{0, r_type->rs}].push_back(r_type);
 				conflict_map[{1, r_type->rt}].push_back(r_type);
@@ -123,16 +133,51 @@ namespace LL2W::Passes {
 			}
 		}
 
+#ifdef DEBUG_FIXEDSIGNEDNESS
 		info() << "Checking conflicts.\n";
+#endif
 
-		for (auto iter = conflict_map.begin(), end = conflict_map.end(); iter != end; ++iter) {
-			const auto &pair = iter->first;
-			const auto &list = iter->second;
-			if (1 < list.size()) {
-				warn() << pair << ": size = " << list.size() << '\n';
-				for (const auto &instruction: list)
-					std::cerr << "    " << *instruction << '\n';
+		bool done = true;
+		do {
+			done = true;
+
+			for (auto iter = conflict_map.begin(), end = conflict_map.end(); iter != end; ++iter) {
+				auto &pair = iter->first;
+				auto &list = iter->second;
+				if (1 < list.size()) {
+#ifdef DEBUG_FIXEDSIGNEDNESS
+					warn() << pair << ": size = " << list.size() << '\n';
+#endif
+					for (auto iter = list.begin(); iter != list.end();) {
+						const auto &instruction = *iter;
+#ifdef DEBUG_FIXEDSIGNEDNESS
+						std::cerr << "    " << *instruction << '\n';
+#endif
+						bool fixed = false;
+						try {
+							fixed = instruction->fixSignedness();
+						} catch (const SignednessSharingError &err) {}
+
+						if (!fixed) {
+							// If a fix does nothing or if attempting to fix causes a signedness sharing error, then we
+							// have to bitcast to an alias with a type override.
+							VariablePtr &operand = pair.operand;
+							auto int_type = std::dynamic_pointer_cast<IntType>(operand->type);
+							if (!int_type)
+								throw TypeError("Not an IntType", operand->type);
+							auto bitcast = BitcastInstruction::make(operand, function, int_type->invertedCopy(),
+								instruction->parent.lock());
+							operand = bitcast->rd;
+							function.insertBefore(instruction, bitcast);
+							++iter;
+						} else
+							list.erase(iter++);
+					}
+				}
+
+				if (1 < list.size())
+					done = false;
 			}
-		}
+		} while (!done);
 	}
 }

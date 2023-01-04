@@ -97,6 +97,8 @@ namespace LL2W {
 		Signedness getSignedness() const { return signedness; }
 		bool setSignedness(Signedness);
 		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
+		/** Returns a copy with the opposite signedness. */
+		std::shared_ptr<IntType> invertedCopy() const;
 
 		private:
 			Signedness signedness = Signedness::Unknown;

@@ -112,6 +112,15 @@ namespace LL2W {
 		return out;
 	}
 
+	std::shared_ptr<IntType> IntType::invertedCopy() const {
+		Signedness new_signedness = Signedness::Unknown;
+		if (signedness == Signedness::Signed)
+			new_signedness = Signedness::Unsigned;
+		else if (signedness == Signedness::Unsigned)
+			new_signedness = Signedness::Signed;
+		return std::make_shared<IntType>(intWidth, new_signedness);
+	}
+
 	ArrayType::operator std::string() {
 		return "\e[2m[\e[0m" + std::to_string(count) + " \e[2mx\e[0m " + std::string(*subtype) + "\e[2m]\e[0m";
 	}
