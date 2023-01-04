@@ -17,11 +17,10 @@ namespace LL2W::Passes {
 					continue;
 
 				++discarded;
-
-				info() << "Discarding " << *var << " in " << *function.name << '\n';
+				// info() << "Discarding " << *var << " in " << *function.name << '\n';
 
 				for (const auto &weak_definition: var->definitions) {
-					std::cerr << "    " << weak_definition.lock()->debugExtra() << '\n';
+					// std::cerr << "    " << weak_definition.lock()->debugExtra() << '\n';
 					to_remove.push_back(weak_definition.lock());
 				}
 			}

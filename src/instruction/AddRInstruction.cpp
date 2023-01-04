@@ -9,4 +9,9 @@ namespace LL2W {
 	std::string AddRInstruction::toString() const {
 		return operString("+");
 	}
+
+	void AddRInstruction::fixSignedness() {
+		rs->type->shareSignedness(rt->type);
+		rt->type->shareSignedness(rd->type);
+	}
 }

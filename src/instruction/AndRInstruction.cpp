@@ -9,4 +9,9 @@ namespace LL2W {
 	std::string AndRInstruction::toString() const {
 		return rs->toString() + " & " + rt->toString() + " -> " + rd->toString();
 	}
+
+	void AndRInstruction::fixSignedness() {
+		rs->type->shareSignedness(rt->type);
+		rt->type->shareSignedness(rd->type);
+	}
 }

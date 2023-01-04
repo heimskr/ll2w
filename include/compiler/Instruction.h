@@ -135,6 +135,8 @@ namespace LL2W {
 			virtual bool isBlockTerminal() const {
 				return false;
 			}
+
+			virtual void fixSignedness() {}
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

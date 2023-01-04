@@ -44,7 +44,7 @@ namespace LL2W {
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() const { throw std::runtime_error("Can't unwrap subtypeless type"); }
 			virtual TypePtr unwrapAll() { return shared_from_this(); }
-			virtual void shareSignedness(Type &) {}
+			virtual void shareSignedness(const TypePtr &) {}
 	};
 
 	struct VoidType: Type {
@@ -75,7 +75,6 @@ namespace LL2W {
 		TypeType typeType() const override { return TypeType::Int; }
 		/** The width of the integer in bits. */
 		int intWidth;
-		Signedness signedness = Signedness::Unknown;
 		IntType(int width_, Signedness signedness_ = Signedness::Unknown):
 			intWidth(width_), signedness(signedness_) {}
 		operator std::string() override;
@@ -93,7 +92,14 @@ namespace LL2W {
 		 *  Otherwise, if the other type is an IntType and does have a signedness and this type doesn't, this function
 		 *  copies the other type's signedness to this IntType. If the other type is an IntType and has a defined but
 		 *  different signedness, this function throws std::runtime_error. */
-		void shareSignedness(Type &) override;
+		void shareSignedness(const TypePtr &) override;
+		Signedness getSignedness() const { return signedness; }
+		void setSignedness(Signedness);
+		const auto & getSignednessBacktrace() const { return signednessBacktrace; }
+
+		private:
+			Signedness signedness = Signedness::Unknown;
+			std::vector<std::string> signednessBacktrace;
 	};
 
 	struct AggregateType: Type {
@@ -163,7 +169,7 @@ namespace LL2W {
 		std::string whyString() const override;
 		TypePtr unwrap() const override { return subtype; }
 		TypePtr unwrapAll() override { return subtype->unwrapAll(); }
-		void shareSignedness(Type &) override;
+		void shareSignedness(const TypePtr &) override;
 	};
 
 	class FunctionType: public Type {

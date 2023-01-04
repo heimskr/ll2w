@@ -126,6 +126,10 @@ namespace LL2W {
 	std::unordered_map<std::string, LogicType> logic_inv_map {
 		{"and", LogicType::And}, {"or", LogicType::Or}, {"xor", LogicType::Xor}};
 
+	std::unordered_set<IcmpCond> signed_conds {IcmpCond::Sgt, IcmpCond::Sge, IcmpCond::Sle, IcmpCond::Slt};
+
+	std::unordered_set<IcmpCond> unsigned_conds {IcmpCond::Ugt, IcmpCond::Uge, IcmpCond::Ule, IcmpCond::Ult};
+
 	bool isSigned(IcmpCond cond) {
 		switch (cond) {
 			case IcmpCond::Sge:

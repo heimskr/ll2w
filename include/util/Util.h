@@ -1,6 +1,10 @@
 #pragma once
 
+#include "util/strnatcmp.h"
+#include "util/WeakCompare.h"
+
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <initializer_list>
 #include <iostream>
@@ -13,13 +17,15 @@
 #include <unordered_set>
 #include <vector>
 
-#include "util/strnatcmp.h"
-#include "util/WeakCompare.h"
-
 namespace LL2W::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
 	long parseLong(const char *, int base = 10);
+
+	std::string getExecutablePath();
+	std::string readAll(std::string_view command);
+	std::vector<std::string> getBacktrace();
+	std::string translateBacktrace(const std::vector<std::string> &);
 
 	template <typename T>
 	inline T upalign(T num, long alignment) {

@@ -1,14 +1,11 @@
-#ifndef INSTRUCTION_COMPARISONINSTRUCTION_H_
-#define INSTRUCTION_COMPARISONINSTRUCTION_H_
-
-#include <stdexcept>
+#pragma once
 
 #include "parser/Enums.h"
 
+#include <stdexcept>
+
 namespace LL2W {
-	/**
-	 * Note that Why currently has no != instruction.
-	 */
+	/** Note that Why currently has no != instruction. */
 	class ComparisonInstruction {
 		public:
 			IcmpCond cond;
@@ -19,5 +16,3 @@ namespace LL2W {
 			}
 	};
 }
-
-#endif

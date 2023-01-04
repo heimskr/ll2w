@@ -59,17 +59,17 @@ namespace LL2W::Passes {
 
 					const auto types = function.parent.basicTypeSets.at(local.type);
 					const auto composition = types->getComposition(&function.parent);
-					auto &signedness = std::dynamic_pointer_cast<IntType>(var->type)->signedness;
+					auto int_type = std::dynamic_pointer_cast<IntType>(var->type);
 
 					switch (composition) {
 						case TypeSet::Composition::Mixed:
 							warn() << *var << " is Mixed at " << dbg->location << '\n';
 							break;
 						case TypeSet::Composition::SignedOnly:
-							signedness = IntType::Signedness::Signed;
+							int_type->setSignedness(IntType::Signedness::Signed);
 							break;
 						case TypeSet::Composition::UnsignedOnly:
-							signedness = IntType::Signedness::Unsigned;
+							int_type->setSignedness(IntType::Signedness::Unsigned);
 							break;
 						case TypeSet::Composition::Empty:
 							warn() << *var << " is Empty at " << dbg->location << '\n';

@@ -359,7 +359,9 @@ namespace LL2W {
 			std::string headerString() const;
 
 			/** Prints debug information about the function. */
-			void debug(std::ostream & = std::cerr);
+			void debug(std::ostream &);
+
+			void debug() { debug(std::cerr); }
 
 			/** Prints debug information about the function. */
 			void debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written,

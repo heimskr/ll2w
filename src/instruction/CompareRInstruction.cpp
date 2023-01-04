@@ -6,7 +6,7 @@ namespace LL2W {
 		RType(rs_, rt_, nullptr, index_) {}
 
 	std::string CompareRInstruction::debugExtra() {
-		return std::string(*rs) + " \e[2m~\e[0m " + std::string(*rt);
+		return std::string(*rs) + " \e[2m~\e[22m " + std::string(*rt);
 	}
 
 	std::string CompareRInstruction::toString() const {

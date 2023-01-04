@@ -73,17 +73,28 @@ namespace LL2W {
 		return other_int != nullptr && other_int->intWidth == intWidth;
 	}
 
-	void IntType::shareSignedness(Type &other) {
-		if (auto *other_int = dynamic_cast<IntType *>(&other)) {
+	void IntType::shareSignedness(const TypePtr &other) {
+		if (auto other_int = std::dynamic_pointer_cast<IntType>(other)) {
 			if (other_int->signedness != Signedness::Unknown) {
 				if (signedness != Signedness::Unknown) {
-					if (signedness != other_int->signedness)
+					if (signedness != other_int->signedness) {
+						info() << "This (" << *this << "):\n\e[2m" << Util::translateBacktrace(signednessBacktrace);
+						info() << "\e[22mOther (" << *other_int << "):\n\e[2m"
+						       << Util::translateBacktrace(other_int->signednessBacktrace) << "\e[22m";
+						info() << "Current backtrace:\n\e[2m" << Util::translateBacktrace(Util::getBacktrace())
+						       << "\e[22m";
 						throw std::runtime_error("Signednesses don't match in IntType::shareSignedness");
+					}
 				} else
-					signedness = other_int->signedness;
+					setSignedness(other_int->getSignedness());
 			} else if (signedness != Signedness::Unknown)
-				other_int->signedness = signedness;
+				other_int->setSignedness(getSignedness());
 		}
+	}
+
+	void IntType::setSignedness(Signedness new_signedness) {
+		signedness = new_signedness;
+		signednessBacktrace = Util::getBacktrace();
 	}
 
 	ArrayType::operator std::string() {
@@ -187,8 +198,8 @@ namespace LL2W {
 		return subtype->whyString() + '*';
 	}
 
-	void PointerType::shareSignedness(Type &other) {
-		unwrapAll()->shareSignedness(*other.unwrapAll());
+	void PointerType::shareSignedness(const TypePtr &other) {
+		unwrapAll()->shareSignedness(other->unwrapAll());
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {

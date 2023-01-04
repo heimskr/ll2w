@@ -7,6 +7,7 @@ namespace LL2W {
 		using IType::IType;
 		std::string debugExtra() override;
 		std::string toString() const override;
-		static long apply(long left, long right) { return left + right; }
+		static int64_t apply(int64_t left, int64_t right) { return left + right; }
+		void fixSignedness() override;
 	};
 }

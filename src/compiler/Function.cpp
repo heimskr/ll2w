@@ -974,7 +974,6 @@ namespace LL2W {
 		Passes::breakUpBigSets(*this);
 		Passes::minimizeBlocks(*this, true);
 		computeLiveness();
-		debug();
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);
@@ -987,7 +986,7 @@ namespace LL2W {
 				auto lock = parent.getLock();
 				parent.debugIndices.insert(instruction->debugIndex);
 			}
-			if (!dynamic_cast<WhyInstruction *>(instruction.get()))
+			if (dynamic_cast<WhyInstruction *>(instruction.get()) == nullptr)
 				error() << "Untranslated instruction in " << *name << ":\n\n    " << instruction->debugExtra()
 				        << "\n\n";
 		}

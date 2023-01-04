@@ -1,5 +1,4 @@
-#ifndef INSTRUCTION_ANDRINSTRUCTION_H_
-#define INSTRUCTION_ANDRINSTRUCTION_H_
+#pragma once
 
 #include "instruction/RType.h"
 
@@ -8,7 +7,6 @@ namespace LL2W {
 		using RType::RType;
 		std::string debugExtra() override;
 		std::string toString() const override;
+		void fixSignedness() override;
 	};
 }
-
-#endif

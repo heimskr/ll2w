@@ -23,7 +23,8 @@ namespace LL2W::Passes {
 						changed = true;
 						++changed_count;
 						break;
-					} else --iter;
+					}
+					--iter;
 				}
 			}
 		} while (changed);

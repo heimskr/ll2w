@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace LL2W {
 	enum class TypeType {
@@ -70,6 +71,8 @@ namespace LL2W {
 	extern std::unordered_map<QueryType,  std::string> query_map;
 	extern std::unordered_map<LogicType,  std::string> logic_map;
 	extern std::unordered_map<std::string,  LogicType> logic_inv_map;
+	extern std::unordered_set<IcmpCond> signed_conds;
+	extern std::unordered_set<IcmpCond> unsigned_conds;
 
 	bool isSigned(IcmpCond);
 }

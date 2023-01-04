@@ -10,4 +10,12 @@ namespace LL2W {
 	std::string ComparisonIInstruction::toString() const {
 		return rs->toString() + " " + cond_op_map.at(cond) + " " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
+
+	void ComparisonIInstruction::fixSignedness() {
+		rd->setSigned(false);
+		if (signed_conds.contains(cond))
+			rs->setSigned(true);
+		else if (unsigned_conds.contains(cond))
+			rs->setSigned(false);
+	}
 }

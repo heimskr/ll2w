@@ -17,6 +17,7 @@ namespace LL2W {
 
 		std::string debugExtra() override;
 		std::string toString() const override;
+		void fixSignedness() override;
 	};
 }
 
