@@ -16,11 +16,11 @@
 // #define DEBUG_FIXEDSIGNEDNESS
 
 namespace LL2W {
-	struct ConflictTablePair {
+	struct ConflictTableKey {
 		Role role;
 		std::reference_wrapper<VariablePtr> operand;
 
-		bool operator<(const ConflictTablePair &other) const {
+		bool operator<(const ConflictTableKey &other) const {
 			if (static_cast<int>(role) < static_cast<int>(other.role))
 				return true;
 			if (static_cast<int>(role) > static_cast<int>(other.role))
@@ -44,15 +44,15 @@ namespace LL2W {
 		}
 	};
 
-	std::ostream & operator<<(std::ostream &os, const ConflictTablePair &pair) {
+	std::ostream & operator<<(std::ostream &os, const ConflictTableKey &pair) {
 		return os << std::string(pair);
 	}
 }
 
 namespace std {
 	template <>
-	struct hash<LL2W::ConflictTablePair> {
-		size_t operator()(const LL2W::ConflictTablePair &pair) const {
+	struct hash<LL2W::ConflictTableKey> {
+		size_t operator()(const LL2W::ConflictTableKey &pair) const {
 			if (pair.operand.get()) {
 				std::string to_hash = *pair.operand.get()->id;
 				to_hash += '!';
@@ -117,19 +117,21 @@ namespace LL2W::Passes {
 		warn() << "Some left over:\n";
 #endif
 
-		std::map<ConflictTablePair, std::list<InstructionPtr>> conflict_map;
+		using MPVariant = std::variant<RType::RVariablePtr, IType::IVariablePtr>;
+
+		std::map<ConflictTableKey, std::list<std::pair<InstructionPtr, MPVariant>>> conflict_map;
 
 		for (const auto &instruction: last_changed) {
 #ifdef DEBUG_FIXEDSIGNEDNESS
 			std::cerr << "    " << instruction << '\n';
 #endif
 			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
-				conflict_map[{r_type->rsRole(), r_type->rs}].push_back(r_type);
-				conflict_map[{r_type->rtRole(), r_type->rt}].push_back(r_type);
-				conflict_map[{r_type->rdRole(), r_type->rd}].push_back(r_type);
+				conflict_map[{r_type->rsRole(), r_type->rs}].emplace_back(r_type, &RType::rs);
+				conflict_map[{r_type->rtRole(), r_type->rt}].emplace_back(r_type, &RType::rt);
+				conflict_map[{r_type->rdRole(), r_type->rd}].emplace_back(r_type, &RType::rd);
 			} else if (auto i_type = std::dynamic_pointer_cast<IType>(instruction)) {
-				conflict_map[{i_type->rsRole(), i_type->rs}].push_back(i_type);
-				conflict_map[{i_type->rdRole(), i_type->rd}].push_back(i_type);
+				conflict_map[{i_type->rsRole(), i_type->rs}].emplace_back(i_type, &IType::rs);
+				conflict_map[{i_type->rdRole(), i_type->rd}].emplace_back(i_type, &IType::rd);
 			}
 		}
 
@@ -142,31 +144,47 @@ namespace LL2W::Passes {
 			done = true;
 
 			for (auto map_iter = conflict_map.begin(), end = conflict_map.end(); map_iter != end; ++map_iter) {
-				auto &pair = map_iter->first;
+				auto &key = map_iter->first;
 				auto &list = map_iter->second;
 				if (1 < list.size()) {
 #ifdef DEBUG_FIXEDSIGNEDNESS
-					warn() << pair << ": size = " << list.size() << '\n';
+					warn() << key << ": size = " << list.size() << '\n';
 #endif
 					for (auto list_iter = list.begin(); list_iter != list.end();) {
-						const auto &instruction = *list_iter;
+						const auto &instruction = list_iter->first;
+						const auto &variant = list_iter->second;
 #ifdef DEBUG_FIXEDSIGNEDNESS
 						std::cerr << "    " << *instruction << '\n';
 #endif
 						bool should_change = instruction->typeMismatch();
 
-						if (!should_change) {
-							try {
-								instruction->fixSignedness();
-							} catch (const SignednessSharingError &) {
-								should_change = true;
-							}
-						}
+						// if (!should_change) {
+						// 	try {
+						// 		instruction->fixSignedness();
+						// 	} catch (const SignednessSharingError &) {
+						// 		should_change = true;
+						// 	}
+						// }
 
 						if (should_change) {
 							// If a fix does nothing or if attempting to fix causes a signedness sharing error, then we
 							// have to bitcast to an alias with a type override.
-							VariablePtr &operand = pair.operand.get();
+							VariablePtr *operand_ptr = nullptr;
+							// info() << "&operand: " << &operand << '\n';
+							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
+								operand_ptr = &((*rtype).*std::get<RType::RVariablePtr>(variant));
+								std::cerr << "          rs: " << &rtype->rs << '\n';
+								std::cerr << "          rt: " << &rtype->rt << '\n';
+								std::cerr << "          rd: " << &rtype->rd << '\n';
+								std::cerr << "          mp: " << operand_ptr << '\n';
+							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
+								operand_ptr = &((*itype).*std::get<IType::IVariablePtr>(variant));
+								std::cerr << "          rs: " << &itype->rs << '\n';
+								std::cerr << "          rd: " << &itype->rd << '\n';
+								std::cerr << "          mp: " << operand_ptr << '\n';
+							} else
+								throw std::runtime_error("Non-R-/I-type in FixSignedness");
+							VariablePtr &operand = *operand_ptr;
 							auto int_type = std::dynamic_pointer_cast<IntType>(operand->type);
 							if (!int_type)
 								throw TypeError("Not an IntType", operand->type);
@@ -174,15 +192,6 @@ namespace LL2W::Passes {
 							info() << "Old instruction: " << instruction << '\n';
 							auto bitcast = BitcastInstruction::make(operand, function, int_type->invertedCopy(),
 								instruction->parent.lock());
-							info() << "&operand: " << &operand << '\n';
-							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
-								std::cerr << "          rs: " << &rtype->rs << '\n';
-								std::cerr << "          rt: " << &rtype->rt << '\n';
-								std::cerr << "          rd: " << &rtype->rd << '\n';
-							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
-								std::cerr << "          rs: " << &itype->rs << '\n';
-								std::cerr << "          rd: " << &itype->rd << '\n';
-							}
 							operand = bitcast->rd;
 							info() << "New instruction: " << instruction << '\n';
 							info() << "Bitcast:         " << *bitcast << '\n';
