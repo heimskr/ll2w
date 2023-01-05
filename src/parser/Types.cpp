@@ -237,11 +237,15 @@ namespace LL2W {
 	}
 
 	bool PointerType::compatible(const Type &other) const {
+		// Void pointers are compatible with any other pointers of any depth.
+		if (other.isPointer() && (subtype->isVoid() || other.unwrap()->isVoid()))
+			return true;
+
 		auto other_unwrapped = other.unwrapAll();
 		if (!other_unwrapped->isInt())
 			return true;
 		auto unwrapped = unwrapAll();
-		if (!other_unwrapped->isInt())
+		if (!unwrapped->isInt())
 			return true;
 		return dynamic_cast<const IntType &>(*other_unwrapped).compatible(dynamic_cast<const IntType &>(*unwrapped));
 	}

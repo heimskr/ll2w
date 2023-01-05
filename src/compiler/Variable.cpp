@@ -485,6 +485,10 @@ namespace LL2W {
 		return Signedness::Unknown;
 	}
 
+	bool Variable::compatible(const Variable &other) const {
+		return !type || !other.type || type->compatible(*other.type);
+	}
+
 	void Variable::debug() {
 		std::cerr << "Debug information for " << *this << " in function \e[1m";
 		if (!definingBlocks.empty()) {

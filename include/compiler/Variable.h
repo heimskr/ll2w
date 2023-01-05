@@ -144,6 +144,10 @@ namespace LL2W {
 			/** If this variable has a type and it's an IntType, this function returns its signedness. */
 			Signedness getSignedness() const;
 
+			/** Returns whether this variable's type is compatible with the other variable's type.
+			 *  If either type is missing, this function returns true. */
+			bool compatible(const Variable &) const;
+
 			/** Returns true if the given variable ID is numeric and less than the given number. */
 			static bool isLess(Variable::ID, long);
 	};

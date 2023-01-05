@@ -81,7 +81,7 @@ namespace LL2W {
 
 	bool IType::typeMismatch() const {
 		if (rs && rd)
-			return rs->getSignedness() != rd->getSignedness();
+			return !rs->compatible(*rd);
 		return false;
 	}
 }

@@ -86,11 +86,13 @@ namespace LL2W {
 
 	bool RType::typeMismatch() const {
 		if (rs && rt)
-			return rs->getSignedness() != rt->getSignedness();
+			return !rs->compatible(*rt);
 		if (rs && rd) {
-			if (rs->getSignedness() != rd->getSignedness())
+			// const bool out = rs->getSignedness() != rd->getSignedness();
+			const bool out = !rs->compatible(*rd);
+			if (out)
 				info() << *this << "\n    rs[" << char(rs->getSignedness()) << "], rt[" << char(rd->getSignedness()) << "]\n";
-			return rs->getSignedness() != rd->getSignedness();
+			return out;
 		}
 		return false;
 	}

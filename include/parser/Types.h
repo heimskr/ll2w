@@ -63,6 +63,7 @@ namespace LL2W {
 		TypePtr copy() const override { return std::make_shared<VoidType>(); }
 		int width() const override { return 0; }
 		int alignment() const override { return 1; }
+		static std::shared_ptr<VoidType> make() { return std::make_shared<VoidType>(); }
 		std::string whyString() const override { return "v"; }
 	};
 

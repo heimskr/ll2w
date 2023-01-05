@@ -1947,7 +1947,9 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::fp(BasicBlockPtr block) {
-		return makePrecoloredVariable(WhyInfo::framePointerOffset, block);
+		auto out = makePrecoloredVariable(WhyInfo::framePointerOffset, block);
+		out->type = PointerType::make(VoidType::make());
+		return out;
 	}
 
 	VariablePtr Function::fp(InstructionPtr instruction) {
@@ -1955,7 +1957,9 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::sp(BasicBlockPtr block) {
-		return makePrecoloredVariable(WhyInfo::stackPointerOffset, block);
+		auto out = makePrecoloredVariable(WhyInfo::stackPointerOffset, block);
+		out->type = PointerType::make(VoidType::make());
+		return out;
 	}
 
 	VariablePtr Function::sp(InstructionPtr instruction) {
