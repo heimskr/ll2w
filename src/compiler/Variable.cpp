@@ -489,6 +489,10 @@ namespace LL2W {
 		return !type || !other.type || type->compatible(*other.type);
 	}
 
+	bool Variable::isVoid() const {
+		return !type || type->isVoid();
+	}
+
 	void Variable::debug() {
 		std::cerr << "Debug information for " << *this << " in function \e[1m";
 		if (!definingBlocks.empty()) {

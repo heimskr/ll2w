@@ -25,6 +25,9 @@ namespace LL2W {
 	}
 
 	bool ComparisonIInstruction::typeMismatch() const {
+		if (rs->isVoid())
+			return false;
+
 		if (signed_conds.contains(cond)) {
 			if (rs->getSignedness() == Signedness::Unsigned)
 				return true;

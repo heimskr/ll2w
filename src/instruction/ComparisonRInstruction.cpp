@@ -28,6 +28,9 @@ namespace LL2W {
 	}
 
 	bool ComparisonRInstruction::typeMismatch() const {
+		if (rs->isVoid() || rt->isVoid())
+			return false;
+
 		const auto rs_sign = rs->getSignedness();
 		const auto rt_sign = rt->getSignedness();
 

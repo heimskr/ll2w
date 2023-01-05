@@ -148,6 +148,9 @@ namespace LL2W {
 			 *  If either type is missing, this function returns true. */
 			bool compatible(const Variable &) const;
 
+			/** Returns whether the type is missing or void. */
+			bool isVoid() const;
+
 			/** Returns true if the given variable ID is numeric and less than the given number. */
 			static bool isLess(Variable::ID, long);
 	};

@@ -128,7 +128,7 @@ namespace LL2W {
 	}
 
 	bool IntType::compatible(const Type &other) const {
-		return other.isInt() && signedness == dynamic_cast<const IntType &>(other).signedness;
+		return other.isVoid() || (other.isInt() && signedness == dynamic_cast<const IntType &>(other).signedness);
 	}
 
 	ArrayType::operator std::string() {
