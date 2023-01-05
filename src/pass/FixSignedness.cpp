@@ -78,7 +78,7 @@ namespace LL2W::Passes {
 			for (InstructionPtr &instruction: function.linearInstructions) {
 				const std::string old = instruction->debugExtra();
 				try {
-					if (instruction->fixSignedness() || instruction->typeMismatch()) {
+					if (instruction->fixSignedness()) { // || instruction->typeMismatch()) {
 						// any_changed = true;
 						changed_pairs.emplace_back(old + " \e[1m!" + std::to_string(instruction->debugIndex) + "\e[22m",
 							instruction->debugExtra());
@@ -163,9 +163,9 @@ namespace LL2W::Passes {
 						bool should_change = instruction->typeMismatch();
 
 						if (should_change)
-							error() << *instruction << '\n';
+							error() << "Need to change " << *instruction << '\n';
 						else
-							success() << *instruction << '\n';
+							success() << "No need to change " << *instruction << '\n';
 
 						// if (!should_change) {
 						// 	try {
