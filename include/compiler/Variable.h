@@ -98,19 +98,21 @@ namespace LL2W {
 			void setLastUse(decltype(lastUse));
 			void setRegisters(const decltype(registers) &);
 
+			/** Returns true if the variable has one register and that register is an argument register. */
+			bool isArgumentRegister() const;
 			/** Returns true if the variable has at least one register that is special purpose. */
 			bool hasSpecialRegister() const;
 			/** Returns true if the variable has at least one register that isn't special purpose. */
 			bool hasNonSpecialRegister() const;
 			/** Returns the number of non-special-purpose registers. */
-			int nonSpecialCount() const;
+			size_t nonSpecialCount() const;
 			/** Returns true if the variable has at least one register and all registers are special-purpose. */
 			bool allRegistersSpecial() const;
 			/** Returns true if this variable has the same set of registers as the argument. */
 			bool compareRegisters(const Variable &) const;
 			/** Returns the number of registers required to contain all the variable's data. Not useful if the variable
 			 *  has no type information. */
-			int registersRequired(bool may_warn = true) const;
+			size_t registersRequired(bool may_warn = true) const;
 			/** Returns true if the variable has been assigned more than one register. */
 			bool multireg() const;
 			/** Returns a string containing all the assigned registers.

@@ -375,23 +375,27 @@ namespace LL2W {
 	VARSETTER(LastUse, decltype(Variable::lastUse), use, lastUse);
 	VARSETTER(Registers, const decltype(Variable::registers) &, new_registers, registers);
 
+	bool Variable::isArgumentRegister() const {
+		return registers.size() == 1 && WhyInfo::isArgumentRegister(*registers.begin());
+	}
+
 	bool Variable::hasSpecialRegister() const {
-		for (const int reg: registers)
+		for (const auto reg: registers)
 			if (WhyInfo::isSpecialPurpose(reg))
 				return true;
 		return false;
 	}
 
 	bool Variable::hasNonSpecialRegister() const {
-		for (const int reg: registers)
+		for (const auto reg: registers)
 			if (!WhyInfo::isSpecialPurpose(reg))
 				return true;
 		return false;
 	}
 
-	int Variable::nonSpecialCount() const {
-		int count = 0;
-		for (const int reg: registers)
+	size_t Variable::nonSpecialCount() const {
+		size_t count = 0;
+		for (const auto reg: registers)
 			if (!WhyInfo::isSpecialPurpose(reg))
 				++count;
 		return count;
@@ -411,7 +415,7 @@ namespace LL2W {
 		return true;
 	}
 
-	int Variable::registersRequired(bool may_warn) const {
+	size_t Variable::registersRequired(bool may_warn) const {
 		static std::unordered_set<Variable::ID> warned;
 		if (!type) {
 			if (may_warn) {
@@ -426,7 +430,7 @@ namespace LL2W {
 			}
 			return 1;
 		}
-		return Util::updiv(type->width(), 64);
+		return static_cast<size_t>(Util::updiv(type->width(), 64));
 	}
 
 	bool Variable::multireg() const {
@@ -467,15 +471,13 @@ namespace LL2W {
 
 	bool Variable::setSigned(bool is_signed) {
 		if (type)
-			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
-				return int_type->setSignedness(is_signed? Signedness::Signed : Signedness::Unsigned);
+			return type->setSignedness(is_signed? Signedness::Signed : Signedness::Unsigned);
 		return false;
 	}
 
 	bool Variable::setSigned(Signedness signedness) {
 		if (type)
-			if (auto int_type = std::dynamic_pointer_cast<IntType>(type))
-				return int_type->setSignedness(signedness);
+			return type->setSignedness(signedness);
 		return false;
 	}
 

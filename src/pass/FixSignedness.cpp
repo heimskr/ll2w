@@ -8,6 +8,7 @@
 #include "instruction/ComparisonIInstruction.h"
 #include "instruction/ComparisonRInstruction.h"
 #include "instruction/MoveInstruction.h"
+#include "instruction/SetInstruction.h"
 #include "pass/FixSignedness.h"
 #include "util/Timer.h"
 
@@ -64,8 +65,8 @@ namespace std {
 }
 
 namespace LL2W::Passes {
-	void fixSignedness(Function &function) {
-		Timer timer("FixSignedness");
+	static void fixSignedness1(Function &function) {
+		Timer timer("FixSignedness1");
 		bool any_changed = false;
 		std::vector<std::pair<std::string, std::string>> changed_pairs;
 		std::unordered_set<InstructionPtr> last_changed;
@@ -224,5 +225,33 @@ namespace LL2W::Passes {
 					done = false;
 			}
 		} while (!done);
+	}
+
+	static void fixSignedness2(Function &function) {
+		Timer timer("FixSignedness2");
+
+		for (InstructionPtr &instruction: function.linearInstructions) {
+			VariablePtr rd;
+
+			if (auto move = std::dynamic_pointer_cast<MoveInstruction>(instruction))
+				rd = move->rd;
+			else if (auto set = std::dynamic_pointer_cast<SetInstruction>(instruction))
+				rd = set->rd;
+
+			// Sign argument registers that are moved into.
+			if (rd && rd->isArgumentRegister()) {
+				info() << *instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
+				if (rd->getSignedness() == Signedness::Unknown) {
+					rd->setSigned(true);
+					success() << *instruction << '\n';
+				}
+			}
+		}
+	}
+
+	void fixSignedness(Function &function) {
+		fixSignedness1(function);
+		fixSignedness2(function);
+		fixSignedness1(function);
 	}
 }
