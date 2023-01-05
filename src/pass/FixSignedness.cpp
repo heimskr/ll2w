@@ -164,7 +164,7 @@ namespace LL2W::Passes {
 						bool should_change = instruction->typeMismatch();
 
 						if (should_change)
-							error() << "Need to change " << *instruction << '\n';
+							warn() << "Need to change " << *instruction << '\n';
 						else
 							success() << "No need to change " << *instruction << '\n';
 

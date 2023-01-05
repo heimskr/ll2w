@@ -10,9 +10,8 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Lowers conversion instructions. */
-	int lowerConversions(Function &);
+	size_t lowerConversions(Function &);
 
-	void lowerBasicConversion(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 	void lowerTrunc(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 	void lowerSext(Function &, std::shared_ptr<Instruction> &, ConversionNode *);
 }

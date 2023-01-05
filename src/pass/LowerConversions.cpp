@@ -3,6 +3,7 @@
 #include "compiler/LLVMInstruction.h"
 #include "instruction/AndIInstruction.h"
 #include "instruction/AndRInstruction.h"
+#include "instruction/BitcastInstruction.h"
 #include "instruction/LuiInstruction.h"
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
@@ -17,7 +18,18 @@
 #include "util/Util.h"
 
 namespace LL2W::Passes {
-	int lowerConversions(Function &function) {
+	template <typename I = MoveInstruction>
+	void lowerBasicConversion(Function &function, InstructionPtr &instruction, ConversionNode *node) {
+		if (!node->value->isLocal())
+			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
+		VariablePtr source = dynamic_cast<LocalValue *>(node->value.get())->variable;
+		node->variable->setType(node->to);
+		auto new_instruction = std::make_shared<I>(source, node->variable);
+		function.insertBefore(instruction, new_instruction);
+		new_instruction->setDebug(node)->extract();
+	}
+
+	size_t lowerConversions(Function &function) {
 		Timer timer("LowerConversions");
 		std::list<InstructionPtr> to_remove;
 
@@ -31,6 +43,8 @@ namespace LL2W::Passes {
 
 			switch (type) {
 				case Conversion::Bitcast:
+					lowerBasicConversion<BitcastInstruction>(function, instruction, conversion);
+					break;
 				case Conversion::Zext:
 				case Conversion::Ptrtoint:
 				case Conversion::Inttoptr:
@@ -54,16 +68,6 @@ namespace LL2W::Passes {
 			function.remove(instruction);
 
 		return to_remove.size();
-	}
-
-	void lowerBasicConversion(Function &function, InstructionPtr &instruction, ConversionNode *node) {
-		if (!node->value->isLocal())
-			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
-		VariablePtr source = dynamic_cast<LocalValue *>(node->value.get())->variable;
-		node->variable->setType(node->to);
-		auto move = std::make_shared<MoveInstruction>(source, node->variable);
-		function.insertBefore(instruction, move);
-		move->setDebug(node)->extract();
 	}
 
 	void lowerTrunc(Function &function, InstructionPtr &instruction, ConversionNode *conversion) {
