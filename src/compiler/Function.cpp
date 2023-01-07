@@ -939,10 +939,7 @@ namespace LL2W {
 #endif
 		Passes::lowerSwitch(*this);
 		Passes::minimizeBlocks(*this);
-		for (BasicBlockPtr &block: blocks)
-			block->extract(true);
-		extractVariables(true);
-		computeLiveness();
+		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
 		initialDone = true;
@@ -964,6 +961,7 @@ namespace LL2W {
 		Passes::removeRedundantMoves(*this);
 		Passes::removeUselessBranches(*this);
 		Passes::mergeAllBlocks(*this);
+		forceLiveness();
 		Passes::lowerBranches(*this);
 		const bool naked = isNaked();
 		if (!naked)
@@ -979,10 +977,12 @@ namespace LL2W {
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);
+		forceLiveness();
 		Passes::insertLabels(*this);
 		Passes::fixSignedness(*this);
 		Passes::signChars(*this);
 		hackVariables();
+		forceLiveness();
 		for (InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
 				auto lock = parent.getLock();
