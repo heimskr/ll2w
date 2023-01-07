@@ -247,20 +247,21 @@ namespace LL2W {
 		std::vector<std::thread> threads;
 		threads.reserve(functions.size());
 
-		for (std::pair<const std::string, Function *> &pair: functions)
-			threads.emplace_back(std::thread([&]() {
+		for (auto &pair: functions)
+			threads.emplace_back(std::thread([&] {
+				pthread_setname_np(pthread_self(), pair.second->name->c_str());
 				pair.second->compile();
 			}));
 
 		for (std::thread &thread: threads)
 			thread.join();
 #else
-		for (std::pair<const std::string, Function *> &pair: functions) {
+		for (auto &[name, function]: functions) {
 #ifdef SINGLE_FUNCTION
-			if (*pair.second->name == SINGLE_FUNCTION) {
+			if (*function->name == SINGLE_FUNCTION) {
 #endif
-				// std::cerr << "Compiling " << *pair.second->name << "...\n";
-				pair.second->compile();
+				// std::cerr << "Compiling " << *function->name << "...\n";
+				function->compile();
 #ifdef SINGLE_FUNCTION
 			}
 #endif
