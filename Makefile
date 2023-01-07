@@ -7,6 +7,7 @@ WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
 LDFLAGS			?= -pthread
+LTOPT			?= -flto
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp
@@ -40,7 +41,7 @@ test: $(OUTPUT)
 	./$(OUTPUT) ll/serial.ll
 
 $(OUTPUT): $(OBJECTS)
-	$(COMPILER) -o $@ $^ $(LDFLAGS)
+	$(COMPILER) $(LTOPT) -o $@ $^ $(LDFLAGS)
 
 $(LLVMLEXCPP): $(LLVMFLEXSRC) $(LLVMPARSEHDR)
 	flex --prefix=llvm --outfile=$(LLVMLEXCPP) $(LLVMFLEXSRC)
@@ -67,7 +68,7 @@ $(WASMPARSECPP:.cpp=.o): $(WASMPARSECPP) $(WASMPARSEHDR)
 	$(COMPILER) $(CFLAGS) $(LEXFLAGS) -c $< -o $@
 
 %.o: %.cpp include/yyparse.h include/wasmparse.h
-	$(COMPILER) $(CFLAGS) -c $< -o $@
+	$(COMPILER) $(CFLAGS) $(LTOPT) -c $< -o $@
 
 clean:
 	rm -f $(OUTPUT) src/*.o src/**/*.o graph_*.png \
