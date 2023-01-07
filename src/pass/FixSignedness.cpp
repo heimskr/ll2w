@@ -168,17 +168,9 @@ namespace LL2W::Passes {
 						else
 							success() << "No need to change " << *instruction << '\n';
 
-						// if (!should_change) {
-						// 	try {
-						// 		instruction->fixSignedness();
-						// 	} catch (const SignednessSharingError &) {
-						// 		should_change = true;
-						// 	}
-						// }
-
 						if (should_change) {
-							// If a fix does nothing or if attempting to fix causes a signedness sharing error, then we
-							// have to bitcast to an alias with a type override.
+							// If the fixes we tried previously have done nothing, then we/ have to bitcast to an alias
+							// with a type override.
 							VariablePtr *operand_ptr = nullptr;
 							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
 								operand_ptr = &((*rtype).*std::get<RType::RVariablePtr>(variant));
@@ -240,10 +232,10 @@ namespace LL2W::Passes {
 
 			// Sign argument registers that are moved into.
 			if (rd && rd->isArgumentRegister()) {
-				info() << *instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
+				// info() << *instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
 				if (rd->getSignedness() == Signedness::Unknown) {
 					rd->setSigned(true);
-					success() << *instruction << '\n';
+					// success() << *instruction << '\n';
 				}
 			}
 		}

@@ -10,14 +10,17 @@ namespace LL2W {
 		size(node.at(2)->atoi()),
 		encoding(node.at(3)->lexerInfo) {}
 
-	bool BasicType::isSigned(Program *) {
+	Signedness BasicType::getSignedness(Program *) {
 		if (encoding != nullptr && encoding->find("_signed") != std::string::npos)
-			return true;
+			return Signedness::Signed;
 
-		if (name != nullptr && name->find("unsigned") == std::string::npos && name->find("signed") != std::string::npos)
-			return true;
+		if (name != nullptr && name->find("unsigned") != std::string::npos)
+			return Signedness::Unsigned;
 
-		return false;
+		if (name != nullptr && name->find("signed") != std::string::npos)
+			return Signedness::Signed;
+
+		return Signedness::Unknown;
 	}
 
 	BasicType::operator std::string() {

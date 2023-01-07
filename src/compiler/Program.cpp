@@ -3,7 +3,7 @@
 #include <sstream>
 #include <thread>
 
-// #define COMPILE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 

@@ -13,7 +13,7 @@ namespace LL2W {
 
 		BasicType(const ASTNode &node);
 
-		bool isSigned(Program *) override;
+		Signedness getSignedness(Program *) override;
 		operator std::string() override;
 	};
 }

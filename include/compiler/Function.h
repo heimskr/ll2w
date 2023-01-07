@@ -193,7 +193,7 @@ namespace LL2W {
 			Variable::ID newLabel() const;
 
 			/** Produces a new variable with an as yet unused label. */
-			VariablePtr newVariable(TypePtr = nullptr, BasicBlockPtr = nullptr);
+			VariablePtr newVariable(const TypePtr &, const BasicBlockPtr & = nullptr);
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
 			bool spill(VariablePtr, bool doDebug = false);

@@ -3,11 +3,9 @@
 #include <memory>
 #include <set>
 
-// #include "compiler/LLVMType.h"
+#include "compiler/LLVMType.h"
 
 namespace LL2W {
-	struct LLVMType;
-
 	struct TypeSet: std::set<std::shared_ptr<LLVMType>>, LLVMType {
 		enum class Composition {Invalid, Empty, SignedOnly, UnsignedOnly, Mixed};
 
@@ -20,7 +18,7 @@ namespace LL2W {
 		bool isMixed(Program *) const;
 		Composition getComposition(Program *) const;
 
-		bool isSigned(Program *) override;
+		Signedness getSignedness(Program *) override;
 		operator std::string() override;
 	};
 }

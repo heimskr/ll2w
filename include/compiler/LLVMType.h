@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "parser/Enums.h"
+
 namespace LL2W {
 	class Program;
 
@@ -10,7 +12,7 @@ namespace LL2W {
 		const std::string *name = nullptr;
 
 		virtual ~LLVMType() = default;
-		virtual bool isSigned(Program *) = 0;
+		virtual Signedness getSignedness(Program *) = 0;
 		virtual operator std::string() = 0;
 
 		protected:

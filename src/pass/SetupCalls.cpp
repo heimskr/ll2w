@@ -121,12 +121,9 @@ namespace LL2W::Passes {
 					span = span.subspan(1);
 				}
 
-				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s) {
-					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
-						int_type->setSignedness(span[s]->isSigned(&function.parent)?
-							Signedness::Signed : Signedness::Unsigned);
-					}
-				}
+				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s)
+					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++)))
+						int_type->setSignedness(span[s]->getSignedness(&function.parent));
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";
 				for (const auto &[key, val]: program.basicTypeLists) std::cerr << ' ' << key;
@@ -318,7 +315,7 @@ namespace LL2W::Passes {
 		int signext = constant->parattrs.signext? constant->type->width() : 0;
 		signext = signext == 64? 0 : signext;
 
-		auto make_signext = [&](VariablePtr source, VariablePtr destination) -> InstructionPtr {
+		auto make_signext = [&](const VariablePtr &source, const VariablePtr &destination) -> InstructionPtr {
 			InstructionPtr out;
 			switch (signext) {
 				case  0:
@@ -346,7 +343,7 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Local) {
 			// Local variables
 			std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(constant->value);
-			VariablePtr var = signext? function.newVariable() : local->variable;
+			VariablePtr var = signext? function.newVariable(constant->type) : local->variable;
 			if (signext)
 				function.insertBefore(instruction, make_signext(local->variable, var));
 			// TODO: verify

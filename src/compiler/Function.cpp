@@ -312,7 +312,9 @@ namespace LL2W {
 		return interned;
 	}
 
-	VariablePtr Function::newVariable(TypePtr type, std::shared_ptr<BasicBlock> definer) {
+	VariablePtr Function::newVariable(const TypePtr &type, const BasicBlockPtr &definer) {
+		if (!type)
+			throw std::invalid_argument("Can't call Function::newVariable with a null type");
 		return getVariable(newLabel(), type, definer);
 	}
 
@@ -1131,12 +1133,20 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(Variable::ID id, bool add_arguments) {
-		if (variableStore.count(id) != 0)
+		if (variableStore.contains(id))
 			return variableStore.at(id);
 		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && isArgument(id))
 			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
 		else if (extraVariables.count(id) != 0)
 			return extraVariables.at(id);
+		info() << "variableStore:";
+		for (const auto &[name, var]: variableStore) {
+			if (*name == *id)
+				std::cerr << " \e[32m" << *name << '(' << name << ':' << id << ")\e[39m";
+			else
+				std::cerr << ' ' << *name;
+		}
+		std::cerr << '\n';
 		throw std::out_of_range("Couldn't find variable with ID " + *id + " in function " + *name);
 	}
 

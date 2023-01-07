@@ -812,7 +812,7 @@ diexpression_list: diexpression_list "," diexpression_item { $$ = $1->adopt($3);
                  | diexpression_item { $$ = (new AN(llvmParser, LLVM_DIEXPRESSION_LIST))->adopt($1); };
 diexpression_item: any_ident | LLVMTOK_DECIMAL;
 
-diarglist: "!DIArgList" "(" constant "," constant ")" { $$ = $1->adopt({$3, $5}); D($2, $4, $6); };
+diarglist: "!DIArgList" "(" constants ")" { $$ = $1->adopt({$3}); D($2, $4); };
 
 i_getelementptr: result "getelementptr" _inbounds type_any "," constant gep_indices unibangs
                { auto loc = $1->location; $$ = (new GetelementptrNode($1, $3, $4, $6, $7, $8))->locate(loc); D($2, $5); };

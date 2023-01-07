@@ -1,8 +1,11 @@
 #include "parser/StringSet.h"
 
+#include <mutex>
+
 namespace LL2W {
 	std::unordered_set<std::string> StringSet::set;
 	StringSet set;
+	std::mutex stringsetMutex;
 
 	StringSet::StringSet() {
 		StringSet::set.max_load_factor(0.5);
@@ -13,6 +16,7 @@ namespace LL2W {
 	}
 
 	const std::string * StringSet::intern(const std::string &str) {
+		std::unique_lock lock(stringsetMutex);
 		auto handle = set.insert(str);
 		return &*handle.first;
 	}

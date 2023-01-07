@@ -13,7 +13,7 @@ namespace LL2W {
 
 		/** Composite types are things like classes and arrays that don't have signedness as an inherent property.
 		 *  Or so I'm assuming... */
-		bool isSigned(Program *) override { return false; }
+		Signedness getSignedness(Program *) override { return Signedness::Unknown; }
 		operator std::string() override;
 	};
 }

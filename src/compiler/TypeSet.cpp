@@ -6,28 +6,28 @@
 namespace LL2W {
 	bool TypeSet::anySigned(Program *program) const {
 		for (const auto &type: *this)
-			if (type->isSigned(program))
+			if (type->getSignedness(program) == Signedness::Signed)
 				return true;
 		return false;
 	}
 
 	bool TypeSet::anyUnsigned(Program *program) const {
 		for (const auto &type: *this)
-			if (!type->isSigned(program))
+			if (type->getSignedness(program) == Signedness::Unsigned)
 				return true;
 		return false;
 	}
 
 	bool TypeSet::allSigned(Program *program) const {
 		for (const auto &type: *this)
-			if (!type->isSigned(program))
+			if (type->getSignedness(program) != Signedness::Signed)
 				return false;
 		return true;
 	}
 
 	bool TypeSet::allUnsigned(Program *program) const {
 		for (const auto &type: *this)
-			if (type->isSigned(program))
+			if (type->getSignedness(program) != Signedness::Unsigned)
 				return false;
 		return true;
 	}
@@ -36,11 +36,12 @@ namespace LL2W {
 		bool any_signed = false;
 		bool any_unsigned = false;
 		for (const auto &type: *this) {
-			if (type->isSigned(program)) {
+			const auto signedness = type->getSignedness(program);
+			if (signedness == Signedness::Signed) {
 				if (any_unsigned)
 					return true;
 				any_signed = true;
-			} else {
+			} else if (signedness == Signedness::Unsigned) {
 				if (any_signed)
 					return true;
 				any_unsigned = true;
@@ -52,12 +53,13 @@ namespace LL2W {
 	TypeSet::Composition TypeSet::getComposition(Program *program) const {
 		Composition out = Composition::Empty;
 		for (const auto &type: *this) {
-			if (type->isSigned(program)) {
+			const auto signedness = type->getSignedness(program);
+			if (signedness == Signedness::Signed) {
 				if (out == Composition::UnsignedOnly)
 					return Composition::Mixed;
 				if (out == Composition::Empty)
 					out = Composition::SignedOnly;
-			} else {
+			} else if (signedness == Signedness::Unsigned) {
 				if (out == Composition::SignedOnly)
 					return Composition::Mixed;
 				if (out == Composition::Empty)
@@ -67,14 +69,15 @@ namespace LL2W {
 		return out;
 	}
 
-	bool TypeSet::isSigned(Program *program) {
+	Signedness TypeSet::getSignedness(Program *program) {
 		const Composition composition = getComposition(program);
 		if (composition == Composition::SignedOnly)
-			return true;
+			return Signedness::Signed;
 		if (composition == Composition::UnsignedOnly)
-			return false;
-		if (composition == Composition::Mixed)
-			throw std::runtime_error("TypeSet " + std::to_string(id) + " has mixed composition");
+			return Signedness::Unsigned;
+		if (composition == Composition::Mixed || composition == Composition::Empty)
+			// throw std::runtime_error("TypeSet " + std::to_string(id) + " has mixed composition");
+			return Signedness::Unknown;
 		throw std::runtime_error("TypeSet " + std::to_string(id) + " has invalid composition " +
 			std::to_string(static_cast<int>(composition)));
 	}

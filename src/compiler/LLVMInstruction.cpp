@@ -6,6 +6,8 @@
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
+/** If the first argument is castable to a LocalValue, this macro calls readname with the LocalValue and the provided
+ *  type. */
 #define IFLV(x, t) do { if (auto local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
 	readname(local_value, (t)); } while (0)
 #define FORV(x...) for (const auto &value: {x})
@@ -214,6 +216,12 @@ namespace LL2W {
 
 			case NodeType::Switch: {
 				CAST(SwitchNode);
+				IFLV(cast->value, cast->type);
+				break;
+			}
+
+			case NodeType::Freeze: {
+				CAST(FreezeNode);
 				IFLV(cast->value, cast->type);
 				break;
 			}

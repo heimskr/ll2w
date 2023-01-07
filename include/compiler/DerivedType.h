@@ -32,7 +32,7 @@ namespace LL2W {
 			std::shared_ptr<LLVMType> getBaseType() const;
 			std::shared_ptr<LLVMType> getBaseType(Program &);
 
-			bool isSigned(Program *) override;
+			Signedness getSignedness(Program *) override;
 			operator std::string() override;
 
 		private:

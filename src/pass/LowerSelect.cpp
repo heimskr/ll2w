@@ -45,13 +45,20 @@ namespace LL2W::Passes {
 
 			// If the false-condition is an integer-like constant, we need to put it in a register.
 			if (select->secondValue->isIntLike()) {
-				right_var = function.newVariable(select->firstType, instruction->parent.lock());
+				right_var = function.newVariable(select->secondType, instruction->parent.lock());
 				auto set = std::make_shared<SetInstruction>(right_var, select->secondValue->intValue(false));
 				set->setOriginalValue(select->secondValue);
 				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else if (select->secondValue->isLocal()) {
 				right_var = dynamic_cast<LocalValue *>(select->secondValue.get())->variable;
+			} else if (select->secondValue->isGlobal()) {
+				right_var = function.newVariable(select->secondType, instruction->parent.lock());
+				auto global = std::dynamic_pointer_cast<GlobalValue>(select->secondValue);
+				auto set = std::make_shared<SetInstruction>(right_var, global->name);
+				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else {
+				select->debug();
+				info() << typeid(*select->secondValue).name() << '\n';
 				throw std::runtime_error("Invalid false-value in select instruction: " +
 					std::string(*select->secondValue));
 			}

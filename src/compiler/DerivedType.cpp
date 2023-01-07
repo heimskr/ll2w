@@ -1,5 +1,6 @@
 #include "compiler/DerivedType.h"
 #include "compiler/Program.h"
+#include "exception/MissingTypeError.h"
 #include "parser/ASTNode.h"
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
@@ -58,7 +59,7 @@ namespace LL2W {
 
 	std::shared_ptr<LLVMType> DerivedType::getBaseType() const {
 		if (!baseType)
-			throw std::runtime_error("DerivedType " + std::to_string(id) + " has no base type");
+			throw MissingTypeError("DerivedType " + std::to_string(id) + " has no base type");
 
 		if (std::holds_alternative<int64_t>(*baseType))
 			throw std::runtime_error("DerivedType " + std::to_string(id) + " has an integer base type; "
@@ -69,7 +70,7 @@ namespace LL2W {
 
 	std::shared_ptr<LLVMType> DerivedType::getBaseType(Program &program) {
 		if (!baseType)
-			throw std::runtime_error("DerivedType " + std::to_string(id) + " has no base type");
+			throw MissingTypeError("DerivedType " + std::to_string(id) + " has no base type");
 
 		if (std::holds_alternative<int64_t>(*baseType)) {
 			const auto type_index = std::get<int64_t>(*baseType);
@@ -86,16 +87,26 @@ namespace LL2W {
 				return composite;
 			}
 
-			throw std::runtime_error("DerivedType " + std::to_string(id) + " couldn't find typeset or composite with "
-				"index " + std::to_string(type_index));
+			if (program.derivedTypes.contains(type_index)) {
+				auto derived = program.derivedTypes.at(type_index);
+				baseType = derived;
+				return derived;
+			}
+
+			throw std::runtime_error("DerivedType " + std::to_string(id) + " couldn't find DerivedType, TypeSet or "
+				"CompositeType with index " + std::to_string(type_index));
 		}
 
 		return std::get<std::shared_ptr<LLVMType>>(*baseType);
 	}
 
-	bool DerivedType::isSigned(Program *program) {
-		auto base = program == nullptr? getBaseType() : getBaseType(*program);
-		return base->isSigned(program);
+	Signedness DerivedType::getSignedness(Program *program) {
+		try {
+			auto base = program == nullptr? getBaseType() : getBaseType(*program);
+			return base->getSignedness(program);
+		} catch (const MissingTypeError &) {
+			return Signedness::Unknown;
+		}
 	}
 
 	DerivedType::operator std::string() {
