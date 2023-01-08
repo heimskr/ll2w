@@ -9,6 +9,7 @@
 #include "compiler/Variable.h"
 #include "exception/NoChoiceError.h"
 #include "graph/UncolorableError.h"
+#include "instruction/IntermediateInstruction.h"
 #include "pass/MakeCFG.h"
 #include "pass/SplitBlocks.h"
 #include "util/Timer.h"
@@ -113,7 +114,9 @@ namespace LL2W {
 #endif
 
 		for (const std::pair<const std::string, Node *> &pair: interference) {
-			VariablePtr ptr = pair.second->get<VariablePtr>();
+			if (!pair.second->data.has_value())
+				continue;
+			auto ptr = pair.second->get<VariablePtr>();
 #ifdef DEBUG_COLORING
 			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> ( ";
 			for (const int color: pair.second->colors) std::cerr << color << ' ';
@@ -352,14 +355,14 @@ namespace LL2W {
 				continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
 				const auto index = bptr.lock()->index;
-				if (sets[index].count(parent_id) == 0) {
+				if (!sets[index].contains(parent_id)) {
 					vecs[index].push_back(parent_id);
 					sets[index].insert(parent_id);
 				}
 			}
 			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
 				const auto index = bptr.lock()->index;
-				if (sets[index].count(parent_id) == 0) {
+				if (!sets[index].contains(parent_id)) {
 					vecs[index].push_back(parent_id);
 					sets[index].insert(parent_id);
 				}
@@ -369,16 +372,9 @@ namespace LL2W {
 		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
 			auto &vec = vecs[block->index];
 			auto &set = sets[block->index];
-			for (const VariablePtr &var: block->liveIn) {
+			for (const VariablePtr &var: block->allLive) {
 				const Variable::ID parent_id = var->parentID();
-				if (var->registers.empty() && set.count(parent_id) == 0) {
-					vec.push_back(parent_id);
-					set.insert(parent_id);
-				}
-			}
-			for (const VariablePtr &var: block->liveOut) {
-				const Variable::ID parent_id = var->parentID();
-				if (var->registers.empty() && set.count(parent_id) == 0) {
+				if (var->registers.empty() && !set.contains(parent_id)) {
 					vec.push_back(parent_id);
 					set.insert(parent_id);
 				}
@@ -399,6 +395,32 @@ namespace LL2W {
 				}
 		}
 #endif
+
+		// With all that out of the way, we have to add some precolored nodes to tell the graph coloring algorithm not
+		// to assign certain registers to certain variables. As of this writing, only unclobber instructions cause
+		// precolored nodes to be made.
+		int precolored_added = 0;
+		for (const InstructionPtr &instruction: function->linearInstructions) {
+			if (auto intermediate = std::dynamic_pointer_cast<IntermediateInstruction>(instruction)) {
+				// TODO: maybe we'll have to care about precoloredReads someday. Probably not.
+				intermediate->extractPrecolored();
+				const auto &written = intermediate->precoloredWritten;
+				if (written.empty())
+					continue;
+
+				const std::string label = "__ll2w_pc" + std::to_string(precolored_added++);
+				Node &node = interference.addNode(label);
+				node.colors = {written.begin(), written.end()};
+				// Assumption: each basic block contains one instruction (i.e., they've all been minimized).
+				// Though does that assumption matter here?
+				BasicBlockPtr block = intermediate->parent.lock();
+				for (const VariablePtr &var: block->allLive) {
+					const auto &pid = *var->parentID();
+					if (interference.hasLabel(pid))
+						interference.link(label, pid, true);
+				}
+			}
+		}
 
 #ifdef DEBUG_COLORING
 		std::cerr << "Made " << links << " link" << (links == 1? "" : "s") << ".\n";

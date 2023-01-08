@@ -209,6 +209,16 @@ namespace LL2W::Passes {
 			}
 #endif
 
+			// Clobber caller-saved registers as necessary.
+			std::vector<std::shared_ptr<Clobber>> clobbers;
+			ClobberMap clobbers_by_reg;
+			for (int offset = 0; offset < WhyInfo::temporaryCount; ++offset) {
+				const int reg = WhyInfo::temporaryOffset + offset;
+				auto clobber = function.clobber(instruction, reg);
+				clobbers.push_back(clobber);
+				clobbers_by_reg.emplace(reg, clobber);
+			}
+
 			// Next, if applicable, we account for the situation where the jump is to an argument register. Because it
 			// may be overwritten right before the jump, we'd need to copy it to a temporary variable and jump to that.
 			VariablePtr jump_var;
@@ -294,6 +304,10 @@ namespace LL2W::Passes {
 					->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].insert(move);
 			}
+
+			// Unclobber the temporary registers we clobbered earlier.
+			for (auto iter = clobbers.rbegin(), end = clobbers.rend(); iter != end; ++iter)
+				function.unclobber(instruction, *iter);
 
 			to_remove.push_back(instruction);
 			function.reindexInstructions();

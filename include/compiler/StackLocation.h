@@ -9,7 +9,7 @@ namespace LL2W {
 	class Variable;
 
 	struct StackLocation {
-		enum class Purpose {Spill, Alloca};
+		enum class Purpose {Spill, Alloca, Clobber};
 		
 		Function *function = nullptr;
 		Purpose purpose;

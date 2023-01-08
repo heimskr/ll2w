@@ -36,6 +36,7 @@ ll2w
 .dep
 *.png
 *.svg
+*.pdf
 .DS_Store
 .vscode
 /include/parser/yyparse*

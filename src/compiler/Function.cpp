@@ -33,6 +33,7 @@
 #include "compiler/Program.h"
 #include "exception/NoChoiceError.h"
 #include "instruction/AddIInstruction.h"
+#include "instruction/Clobber.h"
 #include "instruction/Comment.h"
 #include "instruction/Label.h"
 #include "instruction/LuiInstruction.h"
@@ -56,6 +57,7 @@
 #include "pass/LoadArguments.h"
 #include "pass/LowerAlloca.h"
 #include "pass/LowerBranches.h"
+#include "pass/LowerClobber.h"
 #include "pass/LowerConversions.h"
 #include "pass/LowerExtractvalue.h"
 #include "pass/LowerFreeze.h"
@@ -963,6 +965,8 @@ namespace LL2W {
 		Passes::mergeAllBlocks(*this);
 		forceLiveness();
 		Passes::lowerBranches(*this);
+		Passes::lowerClobber(*this);
+		Passes::lowerStack(*this);
 		const bool naked = isNaked();
 		if (!naked)
 			Passes::insertPrologue(*this);
@@ -1078,7 +1082,8 @@ namespace LL2W {
 		}
 	}
 
-	StackLocation & Function::addToStack(VariablePtr variable, StackLocation::Purpose purpose, int width) {
+	StackLocation & Function::addToStack(const VariablePtr &variable, StackLocation::Purpose purpose, int64_t width,
+	                                     int64_t align) {
 		for (auto &[offset, location]: stack)
 			if (*location.variable == *variable && location.purpose == purpose)
 				return location;
@@ -1088,7 +1093,10 @@ namespace LL2W {
 				variable->type->width() / 8, 8);
 		}
 
-		stackSize += width;
+		if (align == 0)
+			align = 1;
+
+		stackSize = Util::upalign(stackSize + width, align);
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
 		if (purpose == StackLocation::Purpose::Spill)
 			spillSize += width;
@@ -1303,18 +1311,26 @@ namespace LL2W {
 		for (const auto &[name, var]: variableStore)
 			if (!var->hasSpecialRegister())
 				for (const auto &block: blocks) {
-					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveIn.insert(var);
-					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+						block->allLive.insert(var);
+					}
+					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveOut.insert(var);
+						block->allLive.insert(var);
+					}
 				}
 		for (const auto &[name, var]: extraVariables)
 			if (!var->hasSpecialRegister())
 				for (const auto &block: blocks) {
-					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveIn.insert(var);
-					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var))
+						block->allLive.insert(var);
+					}
+					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveOut.insert(var);
+						block->allLive.insert(var);
+					}
 				}
 	}
 
@@ -1365,6 +1381,7 @@ namespace LL2W {
 		for (auto &block: blocks) {
 			block->liveIn  = std::unordered_set<VariablePtr>(in[block->label].cbegin(),  in[block->label].cend());
 			block->liveOut = std::unordered_set<VariablePtr>(out[block->label].cbegin(), out[block->label].cend());
+			block->allLive = Util::merge(block->liveIn, block->liveOut);
 		}
 	}
 
@@ -1383,16 +1400,17 @@ namespace LL2W {
 			if (instruction->isPhi())
 				continue;
 			// if def(v) ∈ B (φ excluded) then return
-			if (instruction->written.count(var) != 0 && !var->fromPhi)
+			if (instruction->written.contains(var) && !var->fromPhi)
 				return;
 		}
 
 		// if v ∈ LiveIn(B) then return
-		if (block->liveIn.count(var) != 0)
+		if (block->liveIn.contains(var))
 			return;
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
+		block->allLive.insert(var);
 
 		// if v ∈ PhiDefs(B) then return
 		if (block->inPhiDefs(var))
@@ -1404,6 +1422,7 @@ namespace LL2W {
 				BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
 				// LiveOut(P) = LiveOut(P) ∪ {v}
 				p->liveOut.insert(var);
+				p->allLive.insert(var);
 				upAndMark(p, var);
 			}
 		} catch (std::out_of_range &) {
@@ -1434,6 +1453,7 @@ namespace LL2W {
 		for (BasicBlockPtr &block: blocks) {
 			block->liveIn.clear();
 			block->liveOut.clear();
+			block->allLive.clear();
 		}
 	}
 
@@ -1898,7 +1918,7 @@ namespace LL2W {
 							break;
 						}
 					if (var->registers.empty())
-						warn() << "hackVariables: last resort failed\n";
+						warn() << "hackVariables: last resort failed for " << *var << '\n';
 				}
 			} else
 				for (Variable *alias: var->getAliases())
@@ -1930,6 +1950,20 @@ namespace LL2W {
 		Location location(subprogram.line, 1, debugIndex);
 		location.file = subprogram.file;
 		parent.locations.emplace(initialDebugIndex, location);
+	}
+
+	std::shared_ptr<Clobber> Function::clobber(const InstructionPtr &instruction, int reg) {
+		auto out = Clobber::make(reg);
+		insertBefore(instruction, out)->setDebug(*instruction);
+		return out;
+	}
+
+	std::shared_ptr<Unclobber>
+	Function::unclobber(const InstructionPtr &instruction, const std::shared_ptr<Clobber> &clob) {
+		auto out = Unclobber::make(clob->reg);
+		clob->unclobber = out;
+		insertBefore(instruction, out)->setDebug(*instruction, true);
+		return out;
 	}
 
 	VariablePtr Function::mx(unsigned char index, BasicBlockPtr block) {

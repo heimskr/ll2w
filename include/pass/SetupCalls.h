@@ -5,10 +5,13 @@
 namespace LL2W {
 	class Function;
 	class Instruction;
+	struct Clobber;
 	struct Constant;
 }
 
 namespace LL2W::Passes {
+	using ClobberMap = std::unordered_map<int, std::shared_ptr<Clobber>>;
+
 	/** Copies arguments into the argument registers or onto the stack as necessary before each call. */
 	void setupCalls(Function &);
 

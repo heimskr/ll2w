@@ -8,11 +8,14 @@ namespace LL2W {
 
 	struct StackStoreInstruction: IntermediateInstruction {
 		StackLocation location;
-		std::shared_ptr<Variable> variable, originalVariable;
+		std::shared_ptr<Variable> variable;
+		std::shared_ptr<Variable> originalVariable;
 
-		StackStoreInstruction(const StackLocation &location_, std::shared_ptr<Variable> variable_, int index_ = -1):
+		StackStoreInstruction(StackLocation location_, std::shared_ptr<Variable> variable_, int index_ = -1):
 			IntermediateInstruction(index_),
-			location(location_), variable(variable_), originalVariable(variable_) {}
+			location(std::move(location_)),
+			variable(variable_),
+			originalVariable(std::move(variable_)) {}
 
 		ExtractionResult extract(bool force = false) override;
 		std::string debugExtra() const override;

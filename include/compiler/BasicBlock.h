@@ -34,6 +34,8 @@ namespace LL2W {
 			std::list<InstructionPtr> instructions;
 			std::set<VariablePtr> read, written, nonPhiWritten, nonPhiRead;
 			std::unordered_set<VariablePtr> liveIn, liveOut;
+			/** Contains everything in liveIn and liveOut. */
+			std::unordered_set<std::shared_ptr<Variable>> allLive;
 			/** A set of all variables used by ϕ-instructions in this block. */
 			std::unordered_set<VariablePtr> phiUses;
 			Node *node = nullptr;

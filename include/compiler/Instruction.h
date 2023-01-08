@@ -117,6 +117,10 @@ namespace LL2W {
 				return this;
 			}
 
+			Instruction * setSecret() {
+				return setSecret(true, true);
+			}
+
 			virtual std::vector<const std::string *> getLabels() const {
 				return {};
 			}

@@ -21,6 +21,8 @@ namespace LL2W {
 	class ColoringAllocator;
 	struct FunctionArgs;
 	class Program;
+	struct Clobber;
+	struct Unclobber;
 
 	using InstructionPtr = std::shared_ptr<Instruction>;
 
@@ -128,6 +130,9 @@ namespace LL2W {
 			 *  result registers into variables in case the variable is larger than one physical register and the move
 			 *  needs to be split up after register allocation. */
 			std::unordered_map<std::string, std::unordered_set<InstructionPtr>> categories;
+
+			/** Stores stack locations for register clobbering. */
+			std::unordered_map<int, const StackLocation *> clobbers;
 
 			/** The control-flow graph computed by makeCFG. */
 			CFG cfg;
@@ -295,7 +300,8 @@ namespace LL2W {
 			void precolorArguments();
 
 			/** Assigns or looks up a stack location for a given variable. The width parameter is in bytes. */
-			StackLocation & addToStack(VariablePtr, StackLocation::Purpose, int width = -1);
+			StackLocation & addToStack(const VariablePtr &, StackLocation::Purpose, int64_t width = -1,
+			                           int64_t align = 1);
 
 			/** Removes an instruction from the function. */
 			void remove(InstructionPtr);
@@ -390,6 +396,10 @@ namespace LL2W {
 
 			void makeInitialDebugIndex();
 
+			std::shared_ptr<Clobber> clobber(const InstructionPtr &, int reg);
+
+			std::shared_ptr<Unclobber> unclobber(const InstructionPtr &, const std::shared_ptr<Clobber> &);
+
 			/** Convenience method for creating a precolored assembler register. */
 			VariablePtr mx(unsigned char, BasicBlockPtr);
 
@@ -431,5 +441,19 @@ namespace LL2W {
 
 			/** Convenience method for creating a precolored $lo register. */
 			VariablePtr lo(InstructionPtr);
+
+			template <typename Ins, bool Reindex = true, typename... Args>
+			std::shared_ptr<Ins> insertBefore(const InstructionPtr &anchor, Args &&...args) {
+				auto out = std::make_shared<Ins>(std::forward<Args>(args)...);
+				insertBefore(anchor, out, Reindex)->setDebug(*anchor, true);
+				return out;
+			}
+
+			template <typename Ins, bool Reindex = true, typename... Args>
+			std::shared_ptr<Ins> insertAfter(const InstructionPtr &anchor, Args &&...args) {
+				auto out = std::make_shared<Ins>(std::forward<Args>(args)...);
+				insertAfter(anchor, out, Reindex)->setDebug(*anchor, true);
+				return out;
+			}
 	};
 }
