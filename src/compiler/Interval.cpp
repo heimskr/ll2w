@@ -67,7 +67,7 @@ namespace LL2W {
 
 	int Interval::getStartpoint() const {
 		assert(startpoint != -1);
-		return endpoint;
+		return startpoint;
 		// if (auto locked = firstDefinition.lock())
 		// 	return locked->index;
 		// error() << "Interval for variable ";
