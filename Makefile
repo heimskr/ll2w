@@ -7,7 +7,7 @@ WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
 LDFLAGS			?= -pthread
-LTOPT			?= -flto
+LTOPT			?=
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
 LLVMLEXCPP		:= src/parser/yylex.cpp
