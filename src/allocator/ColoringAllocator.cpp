@@ -22,7 +22,7 @@
 // #define SELECT_CHAITIN
 
 namespace LL2W {
-	ColoringAllocator::Result ColoringAllocator::attempt() {
+	Allocator::Result ColoringAllocator::attempt() {
 		++attempts;
 #ifdef DEBUG_COLORING
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";

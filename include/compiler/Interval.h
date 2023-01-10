@@ -13,11 +13,12 @@ namespace LL2W {
 		std::weak_ptr<Variable> variable;
 		std::set<int> registers;
 
-		Interval(std::shared_ptr<Variable>);
+		Interval(const std::shared_ptr<Variable> &);
 		int startpoint() const;
 		int endpoint() const;
 
 		std::set<int> & setRegisters(const std::set<int> &);
+		void applyRegisters();
 
 		operator std::string() const;
 	};

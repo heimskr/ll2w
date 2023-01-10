@@ -6,13 +6,13 @@
 #include "compiler/Variable.h"
 
 namespace LL2W {
-	Interval::Interval(VariablePtr var): variable(var) {
+	Interval::Interval(const VariablePtr &var): variable(var) {
 		firstDefinition = *std::min_element(var->definingBlocks.begin(), var->definingBlocks.end(),
-			[&](const std::weak_ptr<BasicBlock> &left, const std::weak_ptr<BasicBlock> &right) {
+			[](const auto &left, const auto &right) {
 				return left.lock()->index < right.lock()->index;
 			});
 		auto last_use_iter = std::max_element(var->usingBlocks.begin(), var->usingBlocks.end(),
-			[&](const std::weak_ptr<BasicBlock> &left, const std::weak_ptr<BasicBlock> &right) {
+			[](const auto &left, const auto &right) {
 				return left.lock()->index < right.lock()->index;
 			});
 		// Some variables have no uses. For these variables, we consider the defining block to be the last user.
@@ -28,9 +28,16 @@ namespace LL2W {
 	}
 
 	std::set<int> & Interval::setRegisters(const std::set<int> &new_registers) {
-		if (variable.lock())
-			variable.lock()->setRegisters(new_registers);
-		return registers = new_registers;
+		if (auto locked = variable.lock())
+			locked->setRegisters(new_registers);
+		if (&registers != &new_registers)
+			registers = new_registers;
+		return registers;
+	}
+
+	void Interval::applyRegisters() {
+		if (auto locked = variable.lock())
+			locked->setRegisters(registers);
 	}
 
 	Interval::operator std::string() const {
