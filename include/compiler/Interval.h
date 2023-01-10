@@ -19,6 +19,7 @@ namespace LL2W {
 
 		std::set<int> & setRegisters(const std::set<int> &);
 		void applyRegisters();
+		size_t registersRequired() const;
 
 		operator std::string() const;
 	};

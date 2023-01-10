@@ -242,13 +242,16 @@ namespace LL2W {
 				}
 			} else if (Util::isAny(first, {"pig", "interference", "🐖", "🐗", "🐷", "🐽"})) {
 				GET_FN();
-				if (function->allocator->interference.empty()) {
-					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
-				} else {
-					function->allocator->interference.renderTo("interference_" + Util::escape(*function->name)
-						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".svg");
-					info() << "Rendering the interference graph in the background.\n";
-				}
+				if (auto *coloring = dynamic_cast<ColoringAllocator *>(function->allocator)) {
+					if (coloring->interference.empty()) {
+						warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+					} else {
+						coloring->interference.renderTo("interference_" + Util::escape(*function->name) + "_x" +
+							std::to_string(coloring->getAttempts()) + ".svg");
+						info() << "Rendering the interference graph in the background.\n";
+					}
+				} else
+					error() << "Can't render interference graph: allocator isn't a ColoringAllocator\n";
 			} else if (Util::isAny(first, {"pcfg"})) {
 				GET_FN();
 				if (function->cfg.empty()) {
@@ -259,63 +262,72 @@ namespace LL2W {
 				}
 			} else if (Util::isAny(first, {"hd", "highest"})) {
 				GET_FN();
-				if (function->allocator->interference.empty()) {
-					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
-				} else {
-					size_t max = SIZE_MAX;
-					if (!rest.empty()) {
-						if (!Util::isNumeric(rest)) {
-							error() << "Invalid limit specified.\n";
-							std::cerr << PROMPT;
-							continue;
+				if (auto *coloring = dynamic_cast<ColoringAllocator *>(function->allocator)) {
+					if (coloring->interference.empty()) {
+						warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+					} else {
+						size_t max = SIZE_MAX;
+						if (!rest.empty()) {
+							if (!Util::isNumeric(rest)) {
+								error() << "Invalid limit specified.\n";
+								std::cerr << PROMPT;
+								continue;
+							}
+							max = Util::parseLong(rest);
 						}
-						max = Util::parseLong(rest);
-					}
 
-					std::vector<std::pair<int, Node *>> nodes;
-					for (Node *node: function->allocator->interference.nodes())
-						nodes.push_back({node->degree(), node});
-					std::sort(nodes.begin(), nodes.end(), [](const auto &left, const auto &right) {
-						return left.first > right.first;
-					});
-					if (nodes.size() < max)
-						max = nodes.size();
-					for (size_t i = 0; i < max; ++i)
-						std::cerr << DASH " %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
-				}
+						std::vector<std::pair<int, Node *>> nodes;
+						for (Node *node: coloring->interference.nodes())
+							nodes.push_back({node->degree(), node});
+						std::sort(nodes.begin(), nodes.end(), [](const auto &left, const auto &right) {
+							return left.first > right.first;
+						});
+						if (nodes.size() < max)
+							max = nodes.size();
+						for (size_t i = 0; i < max; ++i)
+							std::cerr << DASH " %" << nodes[i].second->label() << ": " << nodes[i].first << "\n";
+					}
+				} else
+					error() << "Allocator isn't a ColoringAllocator.\n";
 			} else if (Util::isAny(first, {"m", "make", "mig"})) {
 				GET_FN();
-				function->allocator->makeInterferenceGraph();
-				info() << "Generated an interference graph for \e[1m" << *function->name << "\e[22m.\n";
+				if (auto *coloring = dynamic_cast<ColoringAllocator *>(function->allocator)) {
+					coloring->makeInterferenceGraph();
+					info() << "Generated an interference graph for \e[1m" << *function->name << "\e[22m.\n";
+				} else
+					error() << "Allocator isn't a ColoringAllocator.\n";
 			} else if (Util::isAny(first, {"e", "ed", "edges"})) {
 				GET_FN();
-				if (function->allocator->interference.empty()) {
-					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
-				} else if (rest.empty()) {
-					error() << "Please specify a node label.\n";
-				} else {
-					if (rest.front() == '%')
-						rest.erase(0, 1);
-					Graph &interference = function->allocator->interference;
-					if (!interference.hasLabel(rest)) {
-						error() << "Couldn't find \e[1m%" << rest << "\e[22m.\n";
+				if (auto *coloring = dynamic_cast<ColoringAllocator *>(function->allocator)) {
+					if (coloring->interference.empty()) {
+						warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
+					} else if (rest.empty()) {
+						error() << "Please specify a node label.\n";
 					} else {
-						bool first = true;
-						const auto all_edges = interference[rest].allEdges();
-						std::vector<const std::string *> labels;
-						labels.reserve(all_edges.size());
-						for (Node *neighbor: all_edges)
-							labels.push_back(&neighbor->label());
-						for (const std::string *label: Util::nsort(labels)) {
-							if (!first)
-								std::cerr << " ";
-							else
-								first = false;
-							std::cerr << label;
+						if (rest.front() == '%')
+							rest.erase(0, 1);
+						Graph &interference = coloring->interference;
+						if (!interference.hasLabel(rest)) {
+							error() << "Couldn't find \e[1m%" << rest << "\e[22m.\n";
+						} else {
+							bool first = true;
+							const auto all_edges = interference[rest].allEdges();
+							std::vector<const std::string *> labels;
+							labels.reserve(all_edges.size());
+							for (Node *neighbor: all_edges)
+								labels.push_back(&neighbor->label());
+							for (const std::string *label: Util::nsort(labels)) {
+								if (!first)
+									std::cerr << " ";
+								else
+									first = false;
+								std::cerr << label;
+							}
+							std::cerr << "\n";
 						}
-						std::cerr << "\n";
 					}
-				}
+				} else
+					error() << "Allocator isn't a ColoringAllocator.\n";
 			} else if (Util::isAny(first, {"v", "var", "variable"})) {
 				GET_FN();
 				if (!rest.empty() && rest.front() == '%')

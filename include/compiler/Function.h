@@ -19,9 +19,10 @@
 namespace LL2W {
 	class ASTNode;
 	class ColoringAllocator;
-	struct FunctionArgs;
+	class LinearScanAllocator;
 	class Program;
 	struct Clobber;
+	struct FunctionArgs;
 	struct Unclobber;
 
 	using InstructionPtr = std::shared_ptr<Instruction>;
@@ -164,7 +165,7 @@ namespace LL2W {
 			int debugIndex = -1;
 			int initialDebugIndex = -1;
 
-			ColoringAllocator *allocator = nullptr;
+			Allocator *allocator = nullptr;
 
 			bool initialDone = false, allocationDone = false, finalDone = false;
 

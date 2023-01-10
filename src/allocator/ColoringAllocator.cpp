@@ -29,6 +29,8 @@ namespace LL2W {
 #endif
 
 		makeInterferenceGraph();
+		Timer timer("ColoringAllocator::attempt");
+
 		try {
 			interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
 				WhyInfo::savedOffset + WhyInfo::savedCount - 1);

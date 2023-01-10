@@ -24,10 +24,12 @@ namespace LL2W {
 
 		private:
 			std::set<IntervalPtr, LinearScanEndCompare> active;
+			size_t activeRegisterCount;
 			std::set<int> freeRegisters;
 
 			void resetFreeRegisters();
 			std::vector<IntervalPtr> getIntervals() const;
 			void expireOldIntervals(const IntervalPtr &);
+			bool spillAtInterval(const IntervalPtr &);
 	};
 }

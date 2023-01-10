@@ -72,3 +72,7 @@ namespace LL2W {
 		}
 	}
 }
+
+extern "C" void timer_summary() {
+	LL2W::Timer::summary();
+}

@@ -28,3 +28,5 @@ namespace LL2W {
 			bool stopped = false;
 	};
 }
+
+extern "C" void timer_summary();

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
+#define USE_LINEAR_SCAN
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
@@ -26,6 +27,7 @@
 // #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
+#include "allocator/LinearScanAllocator.h"
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
@@ -111,7 +113,11 @@ namespace LL2W {
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
 		returnType = header->returnType;
+#ifdef USE_LINEAR_SCAN
+		allocator = new LinearScanAllocator(*this);
+#else
 		allocator = new ColoringAllocator(*this);
+#endif
 		debugIndex = header->debugIndex;
 	}
 
@@ -1934,8 +1940,15 @@ namespace LL2W {
 							var->registers = other->registers;
 							break;
 						}
-					if (var->registers.empty())
-						warn() << "hackVariables: last resort failed for " << *var << '\n';
+					if (var->registers.empty()) {
+						warn() << "hackVariables: last resort failed for " << *var << " in function \e[1m" << *name;
+						if (variableStore.contains(var->id))
+							std::cerr << "\e[22m's variableStore\n";
+						else if (extraVariables.contains(var->id))
+							std::cerr << "\e[22m's extraVariables\n";
+						else
+							std::cerr << "\e[22m somewhere\n";
+					}
 				}
 			} else
 				for (Variable *alias: var->getAliases())
