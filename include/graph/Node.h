@@ -49,8 +49,13 @@ namespace LL2W {
 			Node(Graph *, const std::string &);
 
 			template <typename T>
-			T get() const {
-				return std::any_cast<T>(data);
+			const T & get() const {
+				return *std::any_cast<T>(&data);
+			}
+
+			template <typename T>
+			T & get() {
+				return *std::any_cast<T>(&data);
 			}
 
 			Node & setColorsNeeded(int);
