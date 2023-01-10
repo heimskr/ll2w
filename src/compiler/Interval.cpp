@@ -68,29 +68,11 @@ namespace LL2W {
 	int Interval::getStartpoint() const {
 		assert(startpoint != -1);
 		return startpoint;
-		// if (auto locked = firstDefinition.lock())
-		// 	return locked->index;
-		// error() << "Interval for variable ";
-		// if (auto locked = variable.lock())
-		// 	std::cerr << *locked;
-		// else
-		// 	std::cerr << "(null)";
-		// std::cerr << " has no first definition.\n";
-		// throw std::logic_error("Can't find interval startpoint");
 	}
 
 	int Interval::getEndpoint() const {
 		assert(endpoint != -1);
 		return endpoint;
-		// if (auto locked = lastUse.lock())
-		// 	return locked->index;
-		// error() << "Interval for variable ";
-		// if (auto locked = variable.lock())
-		// 	std::cerr << *locked;
-		// else
-		// 	std::cerr << "(null)";
-		// std::cerr << " has no last use.\n";
-		// throw std::logic_error("Can't find interval last use");
 	}
 
 	std::set<int> & Interval::setRegisters(const std::set<int> &new_registers) {

@@ -1511,7 +1511,7 @@ namespace LL2W {
 
 	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {
 		Timer timer("IsLiveOutAnywhere");
-				const auto &alias_pointers = var->getAliases();
+		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<VariablePtr> aliases;
 		for (const auto &[id, subvar]: variableStore)
 			if (alias_pointers.contains(subvar.get()))
