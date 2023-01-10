@@ -9,12 +9,12 @@
 namespace LL2W {
 	VariablePtr Allocator::selectLowestSpillCost() const {
 		VariablePtr ptr;
-		int lowest = INT_MAX;
+		int64_t lowest = INT64_MAX;
 		for (const auto &[id, var]: function->variableStore) {
 			if (var->allRegistersSpecial())
 				continue;
 			var->clearSpillCost();
-			const int cost = var->spillCost();
+			const auto cost = var->spillCost();
 			if (cost != -1 && !triedIDs.contains(var->id) && cost < lowest && !var->isSimple()) {
 				lowest = cost;
 				ptr = var;

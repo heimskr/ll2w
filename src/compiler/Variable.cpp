@@ -18,19 +18,22 @@ namespace LL2W {
 		return strnatcmp(left->id->c_str(), right->id->c_str()) == -1;
 	}
 
-	Variable::Variable(ID id_, TypePtr type_, const WeakSet<BasicBlock> &defining_blocks,
-	const WeakSet<BasicBlock> &using_blocks):
-		originalID(id_), id(id_), type(type_), definingBlocks(defining_blocks), usingBlocks(using_blocks) {}
+	Variable::Variable(ID id_, TypePtr type_, WeakSet<BasicBlock> defining_blocks, WeakSet<BasicBlock> using_blocks):
+		originalID(id_),
+		id(id_),
+		type(type_),
+		definingBlocks(std::move(defining_blocks)),
+		usingBlocks(std::move(using_blocks)) {}
 
-	int Variable::weight() const {
-		int sum = 0;
+	int64_t Variable::weight() const {
+		int64_t sum = 0;
 		for (const std::weak_ptr<BasicBlock> &weak_use: usingBlocks)
 			if (auto use = weak_use.lock())
-				sum += use->estimatedExecutions;
+				sum += static_cast<int64_t>(use->estimatedExecutions);
 		return sum;
 	}
 
-	int Variable::spillCost() {
+	int64_t Variable::spillCost() {
 		if (spillCost_.has_value())
 			return spillCost_.value();
 
@@ -42,7 +45,7 @@ namespace LL2W {
 		// infinite spill cost.
 		if (definitions.size() == 1 && uses.size() == 1) {
 			if (uses.begin()->lock()->index == definitions.begin()->lock()->index + 1)
-				return *(spillCost_ = INT_MAX);
+				return *(spillCost_ = INT64_MAX);
 		}
 
 		return *(spillCost_ = weight());

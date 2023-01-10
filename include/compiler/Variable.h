@@ -25,7 +25,7 @@ namespace LL2W {
 			std::list<Instruction *> useOrder;
 			std::set<Variable *, VariableCompare> aliases;
 			std::weak_ptr<Variable> parent;
-			std::optional<int> spillCost_;
+			std::optional<int64_t> spillCost_;
 
 		public:
 			using ID = const std::string *;
@@ -46,14 +46,14 @@ namespace LL2W {
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(ID id_, TypePtr type_ = nullptr,
-			         const WeakSet<BasicBlock> &defining_blocks = {}, const WeakSet<BasicBlock> &using_blocks = {});
+			Variable(ID id_, TypePtr type_ = nullptr, WeakSet<BasicBlock> defining_blocks = {},
+			         WeakSet<BasicBlock> using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
-			int weight() const;
+			int64_t weight() const;
 
 			/** Calculates the variable's spill cost. */
-			int spillCost();
+			int64_t spillCost();
 			void clearSpillCost();
 
 			/** Returns whether the variable has only one using block and whose single using block is the same as its

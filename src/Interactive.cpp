@@ -346,14 +346,12 @@ namespace LL2W {
 					info() << "Using blocks:\n";
 					for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
 						std::cerr << DASH " %" << *use.lock()->label << "\n";
-					const int spill_cost = variable->spillCost();
-					info() << "Spill cost: \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
-							<< "\e[22m\n";
+					const auto spill_cost = variable->spillCost();
+					info() << "Spill cost: \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost))
+					       << "\e[22m\n";
 					bool live_in_anywhere = false, live_out_anywhere = false;
-					const std::vector<BasicBlockPtr> sorted_blocks = Util::nsort(function->blocks,
-						[](const BasicBlockPtr &block) -> const std::string & {
-							return *block->label;
-						}, true);
+					const auto sorted_blocks = Util::nsort(function->blocks,
+						[](const BasicBlockPtr &block) -> const auto & { return *block->label; }, true);
 					for (const BasicBlockPtr &block: sorted_blocks)
 						if (block->isLiveIn(variable)) {
 							live_in_anywhere = true;

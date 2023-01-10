@@ -1723,8 +1723,8 @@ namespace LL2W {
 						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
 					else
 						stream << " \e[2m??\e[22m";
-				const int spill_cost = var->spillCost();
-				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT_MAX? "∞" : std::to_string(spill_cost))
+				const auto spill_cost = var->spillCost();
+				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost))
 				       << "\e[0;2m";
 				if (var->definingBlocks.size() > 1)
 					stream << " (multiple defs)";

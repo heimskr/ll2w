@@ -176,8 +176,8 @@ namespace LL2W {
 			if (var->allRegistersSpecial() || !function->canSpill(var))
 				continue;
 			var->clearSpillCost();
-			const int cost = var->spillCost();
-			if (cost == INT_MAX)
+			const auto cost = var->spillCost();
+			if (cost == INT64_MAX)
 				continue;
 			const size_t degree = node->degree();
 			const int64_t chaitin = static_cast<int64_t>(cost * 10000l / degree);
