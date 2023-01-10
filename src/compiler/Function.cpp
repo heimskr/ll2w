@@ -1437,15 +1437,32 @@ namespace LL2W {
 
 	void Function::computeLivenessUAM() {
 		Timer timer("ComputeLivenessUAM");
-		for (BasicBlockPtr &block: blocks) {
+		for (const BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
-			for (VariablePtr var: block->phiUses) {
+			for (const VariablePtr &var: block->phiUses) {
 				block->liveOut.insert(var);
 				upAndMark(block, var);
 			}
-			for (VariablePtr var: block->nonPhiRead)
+			for (const VariablePtr &var: block->nonPhiRead)
 				upAndMark(block, var);
+		}
+
+		timer.stop();
+		hackLiveness();
+	}
+
+	void Function::hackLiveness() {
+		Timer timer("HackLiveness");
+		for (const auto &[id, var]: variableStore) {
+			const auto &defines = var->definingBlocks;
+			const auto &uses = var->usingBlocks;
+			if (defines.size() == 1 && uses.size() == 1 && defines.begin()->lock() == uses.begin()->lock())
+				for (const BasicBlockPtr &block: blocks) {
+					block->liveIn.erase(var);
+					block->liveOut.erase(var);
+					block->allLive.erase(var);
+				}
 		}
 	}
 

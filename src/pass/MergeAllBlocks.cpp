@@ -8,6 +8,7 @@ namespace LL2W::Passes {
 	size_t mergeAllBlocks(Function &function) {
 		size_t changed_count = 0;
 		bool changed;
+
 		do {
 			changed = false;
 			auto pre_end = function.blocks.end();

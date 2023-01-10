@@ -17,6 +17,11 @@
 #include <unordered_set>
 #include <vector>
 
+int strnatcmp(const std::string &left, const std::string &right);
+int strnatcmp(const std::string *left, const std::string *right);
+int strnatcasecmp(const std::string &left, const std::string &right);
+int strnatcasecmp(const std::string *left, const std::string *right);
+
 namespace LL2W::Util {
 	long parseLong(const std::string &, int base = 10);
 	long parseLong(const std::string *, int base = 10);
@@ -125,16 +130,16 @@ namespace LL2W::Util {
 		return true;
 	}
 
-	template <typename C>
-	std::vector<std::string> nsort(const C &container, const bool sensitive = true) {
-		std::vector<std::string> out(container.begin(), container.end());
+	template <template <typename...> typename C, typename T, template <typename...> typename O = std::vector>
+	auto nsort(const C<T> &container, const bool sensitive = true) {
+		O<T> out(container.cbegin(), container.cend());
 		if (sensitive)
-			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
-				return strnatcmp(a.c_str(), b.c_str()) == -1;
+			std::sort(out.begin(), out.end(), [](const auto &a, const auto &b) {
+				return strnatcmp(a, b) == -1;
 			});
 		else
-			std::sort(out.begin(), out.end(), [](const std::string &a, const std::string &b) {
-				return strnatcasecmp(a.c_str(), b.c_str()) == -1;
+			std::sort(out.begin(), out.end(), [](const auto &a, const auto &b) {
+				return strnatcasecmp(a, b) == -1;
 			});
 
 		return out;

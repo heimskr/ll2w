@@ -1,15 +1,15 @@
+#include "allocator/ColoringAllocator.h"
+#include "compiler/Program.h"
+#include "pass/MergeAllBlocks.h"
+#include "util/Util.h"
+#include "Interactive.h"
+
+#include <climits>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <tuple>
-
-#include <limits.h>
-
-#include "allocator/ColoringAllocator.h"
-#include "compiler/Program.h"
-#include "util/Util.h"
-#include "Interactive.h"
 
 #define PROMPT "\e[2m>>\e[22m ";
 #define DASH "\e[2m-\e[22m"
@@ -64,10 +64,12 @@ namespace LL2W {
 					{"final                 ", "Performs final compilation on the selected function."},
 					{"hd <limit>            ", "Prints the interference graph nodes in descending order of degree."},
 					{"init                  ", "Performs initial compilation on the selected function."},
+					{"mb                    ", "Runs the MergeAllBlocks pass."},
 					{"mig                   ", "Makes an interference graph for the selected function."},
 					{"pig                   ", "Renders the selected function's interference graph."},
 					{"pcfg                  ", "Renders the selected function's control flow graph."},
 					{"reset                 ", "Resets the selected function's compilation status flags."},
+					{"rl                    ", "Resets the selected function's liveness data."},
 					{"spill <variable>      ", "Spills a variable in the selected function."},
 					{"stack                 ", "Prints the selected function's stack allocations."},
 					{"status                ", "Prints the selected function's status flags."},
@@ -244,7 +246,7 @@ namespace LL2W {
 					warn() << "The interference graph is empty. Try \e[1mattempt\e[22m.\n";
 				} else {
 					function->allocator->interference.renderTo("interference_" + Util::escape(*function->name)
-						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".pdf");
+						+ "_x" + std::to_string(function->allocator->getAttempts()) + ".svg");
 					info() << "Rendering the interference graph in the background.\n";
 				}
 			} else if (Util::isAny(first, {"pcfg"})) {
@@ -252,7 +254,7 @@ namespace LL2W {
 				if (function->cfg.empty()) {
 					warn() << "The control flow graph is empty. Try \e[1minit\e[22m.\n";
 				} else {
-					function->cfg.renderTo("./cfg_" + Util::escape(*function->name) + ".pdf");
+					function->cfg.renderTo("./cfg_" + Util::escape(*function->name) + ".svg");
 					info() << "Rendering the CFG in the background.\n";
 				}
 			} else if (Util::isAny(first, {"hd", "highest"})) {
@@ -299,12 +301,17 @@ namespace LL2W {
 						error() << "Couldn't find \e[1m%" << rest << "\e[22m.\n";
 					} else {
 						bool first = true;
-						for (Node *neighbor: interference[rest].allEdges()) {
+						const auto all_edges = interference[rest].allEdges();
+						std::vector<const std::string *> labels;
+						labels.reserve(all_edges.size());
+						for (Node *neighbor: all_edges)
+							labels.push_back(&neighbor->label());
+						for (const std::string *label: Util::nsort(labels)) {
 							if (!first)
 								std::cerr << " ";
 							else
 								first = false;
-							std::cerr << neighbor->label();
+							std::cerr << label;
 						}
 						std::cerr << "\n";
 					}
@@ -378,14 +385,31 @@ namespace LL2W {
 				function->extractVariables(true);
 				function->computeLiveness();
 				info() << "Recomputed liveness data for \e[1m" << *function->name << "\e[22m.\n";
+			} else if (Util::isAny(first, {"mb", "merge", "mergeblocks"})) {
+				GET_FN();
+				const size_t result = Passes::mergeAllBlocks(*function);
+				info() << "Merged blocks " << result << " time" << (result == 1? "" : "s") << ".\n";
 			} else error() << "Unknown command: \"" << line << "\"\n";
 			std::cerr << PROMPT;
 		}
 	}
 
 	void printStackLocation(const StackLocation &location) {
-		std::cerr << "\e[1m" << std::right << std::setw(4) << location.offset << "\e[22m: "
-		          << (location.purpose == StackLocation::Purpose::Alloca? "alloca" : "spill ") << " (width="
-		          << location.width << ", align=" << location.align << ") for " << *location.variable << "\n";
+		std::cerr << "\e[1m" << std::right << std::setw(4) << location.offset << "\e[22m: ";
+		switch (location.purpose) {
+			case StackLocation::Purpose::Alloca:
+				std::cerr << "alloca ";
+				break;
+			case StackLocation::Purpose::Spill:
+				std::cerr << "spill  ";
+				break;
+			case StackLocation::Purpose::Clobber:
+				std::cerr << "clobber";
+				break;
+			default:
+				std::cerr << "? (" << static_cast<int>(location.purpose) << ')';
+		}
+		std::cerr << " (width=" << location.width << ", align=" << location.align << ") for " << *location.variable
+		          << '\n';
 	}
 }

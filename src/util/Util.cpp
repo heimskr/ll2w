@@ -154,3 +154,19 @@ namespace LL2W::Util {
 		return out;
 	}
 }
+
+int strnatcmp(const std::string &left, const std::string &right) {
+	return strnatcmp(left.c_str(), right.c_str());
+}
+
+int strnatcmp(const std::string *left, const std::string *right) {
+	return strnatcmp(left->c_str(), right->c_str());
+}
+
+int strnatcasecmp(const std::string &left, const std::string &right) {
+	return strnatcasecmp(left.c_str(), right.c_str());
+}
+
+int strnatcasecmp(const std::string *left, const std::string *right) {
+	return strnatcasecmp(left->c_str(), right->c_str());
+}
