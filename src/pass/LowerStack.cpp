@@ -24,6 +24,7 @@ namespace LL2W::Passes {
 		VariablePtr base = function.fp(function.getEntry());
 		// VariablePtr base = function.mx(8, function.getEntry());
 		VariablePtr m2 = function.mx(2, function.getEntry());
+		m2->type = PointerType::make(VoidType::make());
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (StackStoreInstruction *stack_store = dynamic_cast<StackStoreInstruction *>(instruction.get())) {

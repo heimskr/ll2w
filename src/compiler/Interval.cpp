@@ -9,12 +9,11 @@
 #include <algorithm>
 
 namespace LL2W {
-	Interval::Interval(const VariablePtr &var): variable(var) {
+	Interval::Interval(Function &function_, const VariablePtr &var): variable(var) {
 		Timer timer("Interval::Interval");
-		auto *function = var->getFunction();
-		assert(function);
-		startpoint = calculateStartpoint(*function);
-		endpoint = calculateEndpoint(*function);
+		function = &function_;
+		startpoint = calculateStartpoint(function_);
+		endpoint = calculateEndpoint(function_);
 
 		// firstDefinition = *std::min_element(var->definingBlocks.begin(), var->definingBlocks.end(),
 		// 	[](const auto &left, const auto &right) {
@@ -45,16 +44,20 @@ namespace LL2W {
 	// 	return out;
 	// }
 
-	int Interval::guess() const {
+	int Interval::guess() {
 		auto locked_var = variable.lock();
 		assert(locked_var);
-		assert(!locked_var->definingBlocks.empty());
+		if (locked_var->definingBlocks.empty()) {
+			// Sometimes variables get spilled out of existence.
+			valid = false;
+			return -1;
+		}
 		auto locked_block = locked_var->definingBlocks.begin()->lock();
 		assert(locked_block);
 		return locked_block->index;
 	}
 
-	int Interval::calculateStartpoint(Function &function) const {
+	int Interval::calculateStartpoint(Function &function) {
 		auto locked = variable.lock();
 		assert(locked);
 		constexpr static auto live_ptr = &BasicBlock::liveOut;
@@ -64,14 +67,14 @@ namespace LL2W {
 		return calc != INT_MAX? calc : guess();
 	}
 
-	int Interval::calculateEndpoint(Function &function) const {
+	int Interval::calculateEndpoint(Function &function) {
 		auto locked = variable.lock();
 		assert(locked);
 		constexpr static auto live_ptr = &BasicBlock::liveIn;
-		int calc = getFirst(function, locked, live_ptr).value_or(0);
+		int calc = getFirst(function, locked, live_ptr).value_or(INT_MIN);
 		for (Variable *alias: locked->getAliases())
-			calc = std::max(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(0));
-		return calc != 0? calc : guess();
+			calc = std::max(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(INT_MIN));
+		return calc != INT_MIN? calc : guess();
 	}
 
 	int Interval::getStartpoint() const {

@@ -165,7 +165,14 @@ namespace LL2W {
 
 			Allocator *allocator = nullptr;
 
-			bool initialDone = false, allocationDone = false, finalDone = false;
+			bool initialDone = false;
+			bool allocationDone = false;
+			bool finalDone = false;
+
+			/** If true, newVariable will throw an exception. */
+			bool variableFreeze = false;
+
+			int lastArtificialLabel = -1;
 
 			Allocator::Result lastAllocationResult;
 
@@ -197,7 +204,7 @@ namespace LL2W {
 			void relinearize();
 
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
-			Variable::ID newLabel() const;
+			Variable::ID newLabel();
 
 			/** Produces a new variable with an as yet unused label. */
 			VariablePtr newVariable(const TypePtr &, const BasicBlockPtr & = nullptr);

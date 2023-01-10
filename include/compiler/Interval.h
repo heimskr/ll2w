@@ -16,7 +16,7 @@ namespace LL2W {
 		std::weak_ptr<Variable> variable;
 		std::set<int> registers;
 
-		Interval(const std::shared_ptr<Variable> &);
+		Interval(Function &, const std::shared_ptr<Variable> &);
 		int getStartpoint() const;
 		int getEndpoint() const;
 
@@ -25,15 +25,18 @@ namespace LL2W {
 		size_t registersRequired() const;
 
 		operator std::string() const;
+		operator bool() const { return valid; }
 
 		private:
+			Function *function = nullptr;
 			int startpoint = -1;
 			int endpoint = -1;
+			bool valid = true;
 
 			std::optional<int> getFirst(Function &, const std::shared_ptr<Variable> &, BasicBlock::LivePtr) const;
-			int guess() const;
-			int calculateStartpoint(Function &) const;
-			int calculateEndpoint(Function &) const;
+			int guess();
+			int calculateStartpoint(Function &);
+			int calculateEndpoint(Function &);
 	};
 
 	std::ostream & operator<<(std::ostream &, const Interval &);

@@ -306,21 +306,13 @@ namespace LL2W {
 			}
 	}
 
-	Variable::ID Function::newLabel() const {
-		int label = getArity();
-		const std::string *interned;
-		for (;;) {
-			interned = StringSet::intern(std::to_string(label));
-			if (0 < variableStore.count(interned) + extraVariables.count(interned) + bbLabels.count(interned))
-				++label;
-			else
-				break;
-		}
-
-		return interned;
+	Variable::ID Function::newLabel() {
+		return StringSet::intern('#' + std::to_string(++lastArtificialLabel));
 	}
 
 	VariablePtr Function::newVariable(const TypePtr &type, const BasicBlockPtr &definer) {
+		if (variableFreeze)
+			throw std::logic_error("Can't call Function::newVariable when variableFreeze is true");
 		if (!type)
 			throw std::invalid_argument("Can't call Function::newVariable with a null type");
 		return getVariable(newLabel(), type, definer);
@@ -371,9 +363,10 @@ namespace LL2W {
 				insertAfter(definition, store, false);
 				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString() +
 					" into location=" + std::to_string(location.offset)));
-				VariablePtr new_var = mx(6, definition);
-				definition->replaceWritten(variable, new_var);
-				store->variable = new_var;
+				VariablePtr m6 = mx(6, definition);
+				definition->replaceWritten(variable, m6);
+				definition->extract();
+				store->variable = m6;
 				store->extract();
 				out = true;
 #ifdef DEBUG_SPILL
@@ -1019,7 +1012,10 @@ namespace LL2W {
 #ifdef FN_CATCH_EXCEPTIONS
 		try {
 #endif
-			while (allocator->attempt() != Allocator::Result::Success);
+			while (allocator->attempt() != Allocator::Result::Success) {
+				extractInstructions();
+				extractVariables();
+			}
 #ifdef FN_CATCH_EXCEPTIONS
 		} catch (std::exception &err) {
 			error() << err.what() << "\n";
@@ -1030,18 +1026,23 @@ namespace LL2W {
 #endif
 		regalloc_timer.stop();
 
+		variableFreeze = true;
+
 		finalCompile();
 
 #ifdef DEBUG_SPILL
 		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[22m. Finished \e[1m" << *name
-		       << "\e[22m.\n\n";
+		       << "\e[22m.\n";
 #endif
 	}
 
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr definer) {
 		if (WhyInfo::totalRegisters <= index)
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
+		const bool old_freeze = variableFreeze;
+		variableFreeze = false;
 		VariablePtr new_var = newVariable(AnyType::make(), definer);
+		variableFreeze = old_freeze;
 		new_var->setRegisters({index});
 		return new_var;
 
@@ -1050,7 +1051,7 @@ namespace LL2W {
 	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr definer) {
 		if (WhyInfo::assemblerCount <= index)
 			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
-		if (assemblerVariables.count(index) == 0)
+		if (!assemblerVariables.contains(index))
 			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, definer));
 		VariablePtr &found = assemblerVariables.at(index);
 		if (definer)

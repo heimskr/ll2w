@@ -26,11 +26,13 @@ namespace LL2W {
 			expireOldIntervals(i);
 			const auto required = i->registersRequired();
 			if (R < activeRegisterCount + required) {
-				if (!spillAtInterval(i)) {
-					warn() << "Not spilling " << *i << '\n';
-					result = Result::NotSpilled;
+				spillAtInterval(i);
+				result = Result::Spilled;
+				// if (!spillAtInterval(i)) {
+					// warn() << "Not spilling " << *i << '\n';
+					// result = Result::NotSpilled;
 					// break;
-				}
+				// }
 			} else {
 				assert(i->registers.empty());
 				i->registers.clear();
@@ -56,7 +58,8 @@ namespace LL2W {
 			if (i->registers.empty())
 				error(std::cerr, false) << *i << " in \e[1m" << *function->name << "\e[22m\n";
 			else
-				success() << *i << " in \e[1m" << *function->name << "\e[22m\n";
+				// success() << *i << " in \e[1m" << *function->name << "\e[22m\n"
+				;
 			i->applyRegisters();
 		}
 
@@ -81,13 +84,12 @@ namespace LL2W {
 		std::unordered_set<VariablePtr> inserted;
 		for (const auto &[id, variable]: function->variableStore)
 			if (!variable->isAlias() && !variable->allRegistersSpecial() && !inserted.contains(variable)) {
-				inserted.insert(variable);
-				out.emplace_back(std::make_shared<Interval>(variable));
-			}
-		for (const auto &[id, variable]: function->variableStore)
-			if (!variable->isAlias() && !variable->allRegistersSpecial() && !inserted.contains(variable)) {
-				inserted.insert(variable);
-				out.emplace_back(std::make_shared<Interval>(variable));
+				variable->setRegisters({});
+				auto interval = std::make_shared<Interval>(*function, variable);
+				if (*interval) {
+					inserted.insert(variable);
+					out.emplace_back(interval);
+				}
 			}
 		std::sort(out.begin(), out.end(), [](const IntervalPtr &left, const IntervalPtr &right) {
 			return left->getStartpoint() < right->getStartpoint();
@@ -146,6 +148,7 @@ namespace LL2W {
 			warn() << "Couldn't spill interval " << *i << " in LinearScanAllocator::spillAtInterval("
 					<< (__LINE__ - 5) << ")\n";
 		}
+
 		return spilled;
 	}
 
