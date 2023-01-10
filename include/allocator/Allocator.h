@@ -24,6 +24,7 @@ namespace LL2W {
 			Allocator(Function &function_): function(&function_) {}
 			virtual ~Allocator() = default;
 
+			virtual bool needsCFG() const { return false; }
 			virtual Result attempt() = 0;
 			int getAttempts() const { return attempts; }
 			int getSpillCount() const { return spillCount; }

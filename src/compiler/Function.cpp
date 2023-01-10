@@ -941,6 +941,7 @@ namespace LL2W {
 		Passes::movePhi(*this);
 		for (BasicBlockPtr &block: blocks)
 			block->extract(true);
+		extractVariables(true);
 #else
 		Passes::cutPhi(*this);
 		Passes::coalescePhi(*this, true);
@@ -1065,17 +1066,6 @@ namespace LL2W {
 		extractVariables(true);
 		resetLiveness();
 		computeLiveness();
-	}
-
-	void Function::precolorArguments(std::list<Interval> &intervals) {
-		if (getCallingConvention() == CallingConvention::Reg16) {
-			const int max = std::min(16, getArity());
-			int reg = WhyInfo::argumentOffset - 1;
-			for (Interval &interval: intervals)
-				// TODO: change to support non-numeric argument variables
-				if (interval.variable.lock()->isLess(max))
-					interval.setRegisters({++reg});
-		}
 	}
 
 	void Function::precolorArguments() {
@@ -1432,10 +1422,13 @@ namespace LL2W {
 				upAndMark(p, var);
 			}
 		} catch (std::out_of_range &) {
-			std::cerr << "Couldn't find block " << *block->label << ".";
-			for (const auto &pair: bbNodeMap)
-				std::cerr << " " << *pair.first->label;
-			std::cerr << "\n";
+			std::cerr << "Couldn't find block " << *block->label << " in " << *name << " while computing liveness.\n";
+			if (!bbNodeMap.empty()) {
+				std::cerr << "bbNodeMap:";
+				for (const auto &pair: bbNodeMap)
+					std::cerr << ' ' << *pair.first->label;
+				std::cerr << '\n';
+			}
 			debug();
 			throw;
 		}
@@ -1480,8 +1473,8 @@ namespace LL2W {
 		}
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(const VariablePtr &var,
-	std::function<std::unordered_set<VariablePtr> &(const std::shared_ptr<BasicBlock> &)> getter) const {
+	std::unordered_set<std::shared_ptr<BasicBlock>>
+	Function::getLive(const VariablePtr &var, BasicBlock::LivePtr lptr) const {
 		Timer timer("GetLive");
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const auto &alias_pointers = var->getAliases();
@@ -1492,21 +1485,19 @@ namespace LL2W {
 		aliases.insert(var);
 		for (const auto &alias: aliases)
 			for (const auto &block: blocks)
-				if (getter(block).contains(alias))
+				if (((*block).*lptr).contains(alias))
 					out.insert(block);
 		return out;
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveIn(const VariablePtr &var) const {
-		return getLive(var, [&](const auto &block) -> auto & {
-			return block->liveIn;
-		});
+	std::unordered_set<std::shared_ptr<BasicBlock>>
+	Function::getLiveIn(const VariablePtr &var) const {
+		return getLive(var, &BasicBlock::liveIn);
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLiveOut(const VariablePtr &var) const {
-		return getLive(var, [&](const auto &block) -> auto & {
-			return block->liveOut;
-		});
+	std::unordered_set<std::shared_ptr<BasicBlock>>
+	Function::getLiveOut(const VariablePtr &var) const {
+		return getLive(var, &BasicBlock::liveOut);
 	}
 
 	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {

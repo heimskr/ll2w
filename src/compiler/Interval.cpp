@@ -28,41 +28,50 @@ namespace LL2W {
 		// lastUse = last_use_iter == var->usingBlocks.end()? firstDefinition : *last_use_iter;
 	}
 
-	int Interval::getFirst(Function &function, const std::shared_ptr<Variable> &var, BlockLivePtr lptr) const {
+	std::optional<int>
+	Interval::getFirst(Function &function, const std::shared_ptr<Variable> &var, BasicBlock::LivePtr lptr) const {
 		for (const auto &block: function.blocks)
 			if ((block.get()->*lptr).contains(var))
 				return block->index;
-		return INT_MAX;
+		return std::nullopt;
 	}
 
-	int Interval::calculatePoint(Function &function, BlockLivePtr lptr) const {
-		auto locked = variable.lock();
-		assert(locked);
-		int out = getFirst(function, locked, lptr);
-		for (Variable *alias: locked->getAliases())
-			out = std::min(out, getFirst(function, alias->shared_from_this(), lptr));
-		return out;
-	}
+	// int Interval::calculatePoint(Function &function, BlockLivePtr lptr, const std::function<int(int, int)> &fn) const {
+	// 	auto locked = variable.lock();
+	// 	assert(locked);
+	// 	int out = getFirst(function, locked, lptr);
+	// 	for (Variable *alias: locked->getAliases())
+	// 		out = fn(out, getFirst(function, alias->shared_from_this(), lptr));
+	// 	return out;
+	// }
 
 	int Interval::guess() const {
 		auto locked_var = variable.lock();
 		assert(locked_var);
-		assert(locked_var->definingBlocks.size() == 1);
+		assert(!locked_var->definingBlocks.empty());
 		auto locked_block = locked_var->definingBlocks.begin()->lock();
 		assert(locked_block);
 		return locked_block->index;
 	}
 
 	int Interval::calculateStartpoint(Function &function) const {
-		if (const int calculated = calculatePoint(function, &BasicBlock::liveIn); calculated != INT_MAX)
-			return calculated;
-		return guess();
+		auto locked = variable.lock();
+		assert(locked);
+		constexpr static auto live_ptr = &BasicBlock::liveOut;
+		int calc = getFirst(function, locked, live_ptr).value_or(INT_MAX);
+		for (Variable *alias: locked->getAliases())
+			calc = std::min(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(INT_MAX));
+		return calc != INT_MAX? calc : guess();
 	}
 
 	int Interval::calculateEndpoint(Function &function) const {
-		if (const int calculated = calculatePoint(function, &BasicBlock::liveOut); calculated != INT_MAX)
-			return calculated;
-		return guess();
+		auto locked = variable.lock();
+		assert(locked);
+		constexpr static auto live_ptr = &BasicBlock::liveIn;
+		int calc = getFirst(function, locked, live_ptr).value_or(0);
+		for (Variable *alias: locked->getAliases())
+			calc = std::max(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(0));
+		return calc != 0? calc : guess();
 	}
 
 	int Interval::getStartpoint() const {

@@ -58,9 +58,9 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else {
 				select->debug();
-				info() << typeid(*select->secondValue).name() << '\n';
-				throw std::runtime_error("Invalid false-value in select instruction: " +
-					std::string(*select->secondValue));
+				auto &value = *select->secondValue;
+				info() << typeid(value).name() << '\n';
+				throw std::runtime_error("Invalid false-value in select instruction: " + std::string(value));
 			}
 
 			// Next, we need to compare the i1 value with zero.

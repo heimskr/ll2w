@@ -1,5 +1,6 @@
 #include <cstdlib>
 
+#include "allocator/ColoringAllocator.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -10,6 +11,7 @@
 namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {
 		Timer timer("MakeCFG");
+
 		function.cfg.clear();
 		function.cfg.name = "CFG for " + *function.name;
 		function.bbNodeMap.clear();

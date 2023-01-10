@@ -2,12 +2,12 @@
 
 #include "compiler/BasicBlock.h"
 
+#include <functional>
 #include <memory>
 #include <ostream>
 #include <set>
 
 namespace LL2W {
-	class BasicBlock;
 	class Function;
 	class Variable;
 
@@ -30,10 +30,8 @@ namespace LL2W {
 			int startpoint = -1;
 			int endpoint = -1;
 
-			using BlockLivePtr = std::unordered_set<VariablePtr> BasicBlock::*;
-			int getFirst(Function &, const std::shared_ptr<Variable> &, BlockLivePtr) const;
+			std::optional<int> getFirst(Function &, const std::shared_ptr<Variable> &, BasicBlock::LivePtr) const;
 			int guess() const;
-			int calculatePoint(Function &, BlockLivePtr) const;
 			int calculateStartpoint(Function &) const;
 			int calculateEndpoint(Function &) const;
 	};

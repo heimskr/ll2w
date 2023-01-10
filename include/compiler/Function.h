@@ -9,7 +9,6 @@
 #include "allocator/Allocator.h"
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
-#include "compiler/Interval.h"
 #include "compiler/StackLocation.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
@@ -76,8 +75,7 @@ namespace LL2W {
 
 			void upAndMark(BasicBlockPtr, VariablePtr);
 
-			std::unordered_set<BasicBlockPtr> getLive(const VariablePtr &,
-				std::function<std::unordered_set<VariablePtr> &(const BasicBlockPtr &)>) const;
+			std::unordered_set<BasicBlockPtr> getLive(const VariablePtr &, BasicBlock::LivePtr) const;
 
 		public:
 			Program &parent;
@@ -296,9 +294,6 @@ namespace LL2W {
 
 			/** Force-extracts all instructions and blocks, resets liveness and computes liveness. */
 			void forceLiveness();
-
-			/** Assigns special argument registers to variables in a list of intervals as appropriate. */
-			void precolorArguments(std::list<Interval> &);
 
 			/** Assigns special argument registers to all variables as appropriate. */
 			void precolorArguments();

@@ -35,7 +35,8 @@ namespace LL2W::Passes {
 				lowerLoad(function, instruction, *llvm);
 			else if (llvm->node->nodeType() == NodeType::Store) {
 				lowerStore(function, instruction, *llvm);
-			} else continue;
+			} else
+				continue;
 
 			to_remove.push_back(instruction);
 			++replaced_count;
@@ -92,7 +93,7 @@ namespace LL2W::Passes {
 
 	void lowerStore(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		auto lock = function.parent.getLock();
-		StoreNode *node = dynamic_cast<StoreNode *>(llvm.node);
+		auto *node = dynamic_cast<StoreNode *>(llvm.node);
 
 		ConstantPtr converted = node->destination->convert();
 		if (!converted->value)

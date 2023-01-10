@@ -28,6 +28,8 @@ namespace LL2W {
 
 		public:
 			using Label = const std::string *;
+			using LivePtr = std::unordered_set<VariablePtr> BasicBlock::*;
+
 			Label label;
 			int index = -1;
 			std::vector<Label> preds;

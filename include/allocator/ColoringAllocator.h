@@ -15,6 +15,8 @@ namespace LL2W {
 
 			using Allocator::Allocator;
 
+			bool needsCFG() const override { return true; }
+
 			/** Creates an interference graph of all the function's variables. */
 			void makeInterferenceGraph();
 

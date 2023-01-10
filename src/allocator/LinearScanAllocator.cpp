@@ -27,16 +27,19 @@ namespace LL2W {
 			const auto required = i->registersRequired();
 			if (R < activeRegisterCount + required) {
 				if (!spillAtInterval(i)) {
+					warn() << "Not spilling " << *i << '\n';
 					result = Result::NotSpilled;
-					break;
+					// break;
 				}
 			} else {
+				assert(i->registers.empty());
 				i->registers.clear();
 
 				for (size_t j = 0; j < required; ++j) {
 					const auto iter = freeRegisters.begin();
 					assert(iter != freeRegisters.end());
 					i->registers.insert(*iter);
+					// info() << "Inserting " << *iter << " into " << *i << " (new size " << i->registers.size() << ", empty = " << std::boolalpha << i->registers.empty() << ")\n";
 					freeRegisters.erase(iter);
 				}
 
@@ -45,8 +48,17 @@ namespace LL2W {
 			}
 		}
 
-		for (const IntervalPtr &i: intervals)
+		for (const IntervalPtr &i: intervals) {
+			// if (i->registers.empty())
+			// 	warn() << "No registers were allocated for interval " << *i << " in function " << *function->name
+			// 	       << '\n';
+			// info() << *i << " empty -> " << std::boolalpha << i->registers.empty() << '\n';
+			if (i->registers.empty())
+				error(std::cerr, false) << *i << " in \e[1m" << *function->name << "\e[22m\n";
+			else
+				success() << *i << " in \e[1m" << *function->name << "\e[22m\n";
 			i->applyRegisters();
+		}
 
 		return result;
 	}
@@ -63,11 +75,20 @@ namespace LL2W {
 
 	std::vector<IntervalPtr> LinearScanAllocator::getIntervals() const {
 		assert(function != nullptr);
+		Timer timer("GetIntervals");
 		std::vector<IntervalPtr> out;
 		out.reserve(function->variableStore.size());
+		std::unordered_set<VariablePtr> inserted;
 		for (const auto &[id, variable]: function->variableStore)
-			if (!variable->isAlias() && !variable->allRegistersSpecial())
+			if (!variable->isAlias() && !variable->allRegistersSpecial() && !inserted.contains(variable)) {
+				inserted.insert(variable);
 				out.emplace_back(std::make_shared<Interval>(variable));
+			}
+		for (const auto &[id, variable]: function->variableStore)
+			if (!variable->isAlias() && !variable->allRegistersSpecial() && !inserted.contains(variable)) {
+				inserted.insert(variable);
+				out.emplace_back(std::make_shared<Interval>(variable));
+			}
 		std::sort(out.begin(), out.end(), [](const IntervalPtr &left, const IntervalPtr &right) {
 			return left->getStartpoint() < right->getStartpoint();
 		});
@@ -82,9 +103,9 @@ namespace LL2W {
 				break;
 			to_erase.push_back(j);
 			freeRegisters.insert(j->registers.cbegin(), j->registers.cend());
-			// TODO(typed): verify
 			activeRegisterCount -= j->registers.size();
-			j->registers.clear();
+			// TODO(typed): verify
+			// j->registers.clear();
 		}
 
 		for (const IntervalPtr &j: to_erase) {
@@ -109,7 +130,7 @@ namespace LL2W {
 				afterSpill();
 			} else {
 				warn() << "Couldn't spill interval " << *spill << " in LinearScanAllocator::spillAtInterval("
-				       << (__LINE__ - 3) << ")\n";
+				       << (__LINE__ - 5) << ")\n";
 			}
 			active.erase(spill);
 			active.insert(i);
@@ -123,7 +144,7 @@ namespace LL2W {
 			afterSpill();
 		} else {
 			warn() << "Couldn't spill interval " << *i << " in LinearScanAllocator::spillAtInterval("
-					<< (__LINE__ - 3) << ")\n";
+					<< (__LINE__ - 5) << ")\n";
 		}
 		return spilled;
 	}

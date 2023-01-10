@@ -3,7 +3,7 @@
 #include "graph/Graph.h"
 
 namespace LL2W {
-	struct CFG: public Graph {
+	struct CFG: Graph {
 		/** Node data: std::shared_ptr<BasicBlock> */
 	};
 }
