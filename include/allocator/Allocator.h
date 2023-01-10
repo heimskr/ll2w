@@ -17,7 +17,7 @@ namespace LL2W {
 			std::unordered_set<std::string> triedLabels;
 
 		public:
-			enum class Result: int {Spilled = 1, NotSpilled = 2, Success = 3};
+			enum class Result {Invalid = 0, Spilled, NotSpilled, Success};
 
 			std::shared_ptr<Variable> lastSpill, lastSpillAttempt;
 
@@ -31,11 +31,13 @@ namespace LL2W {
 			/** Selects the variable with the lowest spill cost. */
 			std::shared_ptr<Variable> selectLowestSpillCost() const;
 			std::shared_ptr<Variable> selectMostLive(int *liveness_out = nullptr) const;
-			std::shared_ptr<Variable> selectChaitin() const;
 
 			static std::string stringify(Result result) {
 				return result == Result::Spilled? "Spilled" : (result == Result::NotSpilled? "NotSpilled" :
 					(result == Result::Success? "Success" : "?"));
 			}
+
+			const decltype(triedIDs)    & getTriedIDs()    const { return triedIDs;    }
+			const decltype(triedLabels) & getTriedLabels() const { return triedLabels; }
 	};
 }

@@ -27,8 +27,5 @@ namespace LL2W {
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
 			 *  colorable, it returns Success. */
 			Result attempt() override;
-
-			const decltype(triedIDs)    & getTriedIDs()    const { return triedIDs;    }
-			const decltype(triedLabels) & getTriedLabels() const { return triedLabels; }
 	};
 }
