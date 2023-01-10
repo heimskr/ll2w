@@ -20,7 +20,7 @@ namespace LL2W {
 		bool operator()(const Variable *left, const Variable *right) const;
 	};
 
-	class Variable {
+	class Variable: public std::enable_shared_from_this<Variable> {
 		private:
 			std::list<Instruction *> useOrder;
 			std::set<Variable *, VariableCompare> aliases;
@@ -155,6 +155,8 @@ namespace LL2W {
 
 			/** Returns true if the given variable ID is numeric and less than the given number. */
 			static bool isLess(Variable::ID, long);
+
+			bool isAlias() const;
 	};
 
 	std::ostream & operator<<(std::ostream &, const LL2W::Variable &);

@@ -498,6 +498,10 @@ namespace LL2W {
 		return !type || type->isVoid();
 	}
 
+	bool Variable::isAlias() const {
+		return parent.lock() != nullptr;
+	}
+
 	void Variable::debug() {
 		std::cerr << "Debug information for " << *this << " in function \e[1m";
 		if (!definingBlocks.empty()) {

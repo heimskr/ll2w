@@ -7,7 +7,7 @@
 
 namespace LL2W {
 	bool LinearScanEndCompare::operator()(const IntervalPtr &left, const IntervalPtr &right) const {
-		return left->endpoint() < right->endpoint();
+		return left->getEndpoint() < right->getEndpoint();
 	}
 
 	Allocator::Result LinearScanAllocator::attempt() {
@@ -66,10 +66,10 @@ namespace LL2W {
 		std::vector<IntervalPtr> out;
 		out.reserve(function->variableStore.size());
 		for (const auto &[id, variable]: function->variableStore)
-			if (!variable->allRegistersSpecial())
+			if (!variable->isAlias() && !variable->allRegistersSpecial())
 				out.emplace_back(std::make_shared<Interval>(variable));
 		std::sort(out.begin(), out.end(), [](const IntervalPtr &left, const IntervalPtr &right) {
-			return left->startpoint() < right->startpoint();
+			return left->getStartpoint() < right->getStartpoint();
 		});
 		return out;
 	}
@@ -78,7 +78,7 @@ namespace LL2W {
 		std::vector<IntervalPtr> to_erase;
 
 		for (const IntervalPtr &j: active) {
-			if (i->startpoint() <= j->endpoint())
+			if (i->getStartpoint() <= j->getEndpoint())
 				break;
 			to_erase.push_back(j);
 			freeRegisters.insert(j->registers.cbegin(), j->registers.cend());
@@ -99,7 +99,7 @@ namespace LL2W {
 		auto iter = active.end();
 		auto spill = *--iter;
 
-		if (i->endpoint() < spill->endpoint()) {
+		if (i->getEndpoint() < spill->getEndpoint()) {
 			i->registers = spill->registers;
 			spill->registers.clear();
 			auto locked = spill->variable.lock();
