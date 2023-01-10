@@ -31,5 +31,6 @@ namespace LL2W {
 			std::vector<IntervalPtr> getIntervals() const;
 			void expireOldIntervals(const IntervalPtr &);
 			bool spillAtInterval(const IntervalPtr &);
+			void afterSpill();
 	};
 }

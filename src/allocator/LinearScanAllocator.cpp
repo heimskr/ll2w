@@ -105,11 +105,12 @@ namespace LL2W {
 			auto locked = spill->variable.lock();
 			assert(locked);
 			const bool spilled = function->spill(locked);
-			if (spilled)
-				++spillCount;
-			else
+			if (spilled) {
+				afterSpill();
+			} else {
 				warn() << "Couldn't spill interval " << *spill << " in LinearScanAllocator::spillAtInterval("
 				       << (__LINE__ - 3) << ")\n";
+			}
 			active.erase(spill);
 			active.insert(i);
 			return spilled;
@@ -118,11 +119,18 @@ namespace LL2W {
 		auto locked = i->variable.lock();
 		assert(locked);
 		const bool spilled = function->spill(locked);
-		if (spilled)
-			++spillCount;
-		else
+		if (spilled) {
+			afterSpill();
+		} else {
 			warn() << "Couldn't spill interval " << *i << " in LinearScanAllocator::spillAtInterval("
 					<< (__LINE__ - 3) << ")\n";
+		}
 		return spilled;
+	}
+
+	void LinearScanAllocator::afterSpill() {
+		++spillCount;
+		assert(function);
+		function->forceLiveness();
 	}
 }
