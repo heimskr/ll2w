@@ -46,7 +46,7 @@ namespace LL2W {
 	}
 
 	bool JumpRegisterInstruction::isBlockTerminal() const {
-		return condition == Condition::None;
+		return condition == Condition::None && !link;
 	}
 	
 	Instruction * JumpRegisterInstruction::copy() const {
