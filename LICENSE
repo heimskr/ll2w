@@ -17,7 +17,7 @@ unless the changes are really cool and don't negate any of the terms in this lic
     in part if the lawsuit(s) occurred after the first use of this software.
 
 (5) Rewriting all or part of this software in any version or variation of the Python, Ruby, JavaScript, TypeScript,
-    Scala, AutoHotkey or PHP programming languages is forbidden under this license.
+    Lua, AutoHotkey or PHP programming languages is forbidden under this license.
 
 (6) Using space characters instead of horizontal tab characters for source code indentation in any work that
     incorporates this software in whole or in part constitutes a violation of this license, with the exception of any
