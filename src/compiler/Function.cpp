@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#define USE_LINEAR_SCAN
+// #define USE_LINEAR_SCAN
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
 #define DEBUG_VARS
@@ -949,6 +949,9 @@ namespace LL2W {
 		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
 		Passes::coalescePhi(*this);
 #endif
+
+		if (*name == "@main")
+			debug();
 	}
 
 	void Function::finalCompile() {

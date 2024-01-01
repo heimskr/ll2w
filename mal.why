@@ -1,0 +1,891 @@
+#meta
+name: "mal.c"
+
+#debug
+
+#text
+
+%data
+
+%align 8
+@.str.1
+%string "~ %lu\x0A\x00"
+
+%align 8
+@.str.10
+%fill 1 0
+
+%align 8
+@.str.11
+%string "s\x00"
+
+%align 8
+@.str.2
+%string "block->next: %s\x0A\x00"
+
+%align 8
+@.str.3
+%string "yes\x00"
+
+%align 8
+@.str.4
+%string "no\x00"
+
+%align 8
+@.str.5
+%string "block->size: %lu\x0A\x00"
+
+%align 8
+@.str.6
+%string "       size: %lu\x0A\x00"
+
+%align 8
+@.str.7
+%string "mal.c\x00"
+
+%align 8
+@.str.8
+%string "block_ptr->free == 0\x00"
+
+%align 8
+@.str.9
+%string "\x0A\x1B[36mMerged\x1B[0m \x1B[1m%d\x1B[0m block%s.\x0A\x00"
+
+%align 8
+@__func__.fr
+%string "fr\x00"
+
+%align 8
+@end
+%fill 8 0
+
+%align 8
+@global_base
+%fill 8 0
+
+%align 8
+@memory
+%fill 8 0
+
+%align 8
+@str
+%string "\x1B[38;5;226mSetting global_base\x1B[0m.\x00"
+
+
+%code
+
+@find_free_block
+	@__find_free_block_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	$sp{v*} -> $fp{v*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	// LowerMemory(load @ 68:3): [global] -> %var
+	[global_base{v**}] -> $t2{v*}
+	: __find_free_block_labelM16 if $t1{v*}
+	: __find_free_block_labelM19
+	@__find_free_block_labelM16
+	// MovePhi: intlike -> %19 (in new block #9 whose parent is 2)
+	0{v*} -> $t5{v*}
+	: __find_free_block_labelM56
+	@__find_free_block_labelM19
+	// MovePhi: %3 -> %6 (in new block #8 whose parent is 2)
+	$t2{v*} -> $t4{v*}
+	: __find_free_block_labelM22
+	@__find_free_block_labelM22
+	: __find_free_block_labelM40 if $t2{i}
+	: __find_free_block_labelM30
+	@__find_free_block_labelM30
+	: __find_free_block_labelM40 if $t1{l}
+	: __find_free_block_labelM37
+	@__find_free_block_labelM37
+	// MovePhi: %6 -> %19 (in new block #11 whose parent is 10)
+	$t4{v*} -> $t5{v*}
+	: __find_free_block_labelM56
+	@__find_free_block_labelM40
+	// LowerMemory: %6 -> [%0]
+	$t4{v*} -> [$t0{v**}]
+	// LowerMemory(load @ 88:3): [%15] -> %16
+	[$t1{v**}] -> $t2{v*}
+	: __find_free_block_labelM50 if $t1{v*}
+	: __find_free_block_labelM53
+	@__find_free_block_labelM50
+	// MovePhi: intlike -> %19 (in new block #10 whose parent is 14)
+	0{v*} -> $t5{v*}
+	: __find_free_block_labelM56
+	@__find_free_block_labelM53
+	// MovePhi: %16 -> %6 (in new block #7 whose parent is 14)
+	$t2{v*} -> $t4{v*}
+	: __find_free_block_labelM22
+	@__find_free_block_labelM56
+	$fp{v*} -> $sp{v*}
+	$t5{v*} -> $r0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@fr
+	@__fr_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	#[ $s0{v}
+	#[ $s1{v}
+	#[ $s2{v}
+	#[ $s3{v}
+	#[ $s4{v}
+	#[ $s5{v}
+	#[ $s6{v}
+	$sp{v*} -> $fp{v*}
+	// CopyArguments: $a0:#1 -> %0
+	$a0{uc*} -> $t0{uc*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	: __fr_labelM146 if $t1{uc*}
+	: __fr_labelM19
+	@__fr_labelM19
+	bc $t1{uc*} -> $s2{i*}
+	: __fr_labelM33 if $t0{i}
+	: __fr_labelM28
+	@__fr_labelM28
+	&__func__.fr{sc*} -> $a0{sc*}
+	&.str.7{sc*} -> $a1{sc*}
+	125{si} -> $a2{si}
+	&.str.8{sc*} -> $a3{sc*}
+	:: __assert_rtn
+	@__fr_labelM33
+	// LowerMemory: imm -> $m1
+	1{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%5]
+	$m1{v} -> [$s2{i*}]
+	// LowerMemory(load @ 444:3): [global] -> %var
+	[global_base{v**}] -> $t0{v*}
+	: __fr_labelM146 if $t1{v*}
+	: __fr_labelM42
+	@__fr_labelM42
+	// LowerGetelementptr(449:3): struct-type: %struct.block_meta* -> %13, indices=0,1
+	$t0{v*} -> $t2{v**}
+	$t2{v**} + 8{v**} -> $t2{v**}
+	// LowerMemory(load @ 450:3): [%13] -> %14
+	[$t2{v**}] -> $t1{v*}
+	: __fr_labelM146 if $t3{v*}
+	: __fr_labelM50
+	@__fr_labelM50
+	// MovePhi: %14 -> %17 (in new block #18 whose parent is 12)
+	$t1{v*} -> $s0{v*}
+	// MovePhi: %13 -> %18
+	$t2{v**} -> $s1{v**}
+	// MovePhi: intlike -> %19
+	0{i} -> $s3{i}
+	// MovePhi: %10 -> %20
+	$t0{v*} -> $s4{v*}
+	: __fr_labelM59
+	@__fr_labelM59
+	: __fr_labelM67 if $t0{i}
+	: __fr_labelM72
+	@__fr_labelM67
+	// MovePhi: %17 -> %42
+	$s0{v*} -> $s6{v*}
+	: __fr_labelM111
+	@__fr_labelM72
+	: __fr_labelM80 if $t0{i}
+	: __fr_labelM85
+	@__fr_labelM80
+	// MovePhi: %17 -> %42
+	$s0{v*} -> $s6{v*}
+	: __fr_labelM111
+	@__fr_labelM85
+	// LowerMemory: %34 -> [%32]
+	$t3{l} -> [$t0{l*}]
+	// LowerMemory: %37 -> [%38]
+	$t1{l} -> [$t0{l*}]
+	// MovePhi: %20 -> %42
+	$s4{v*} -> $s6{v*}
+	@__fr_labelM111
+	// LowerGetelementptr(489:3): struct-type: %struct.block_meta* -> %43, indices=0,1
+	$s6{v*} -> $t0{v**}
+	$t0{v**} + 8{v**} -> $t0{v**}
+	// LowerMemory(load @ 490:3): [%43] -> %44
+	[$t0{v**}] -> $t1{v*}
+	: __fr_labelM128 if $t2{v*}
+	: __fr_labelM119
+	@__fr_labelM119
+	// MovePhi: %44 -> %17 (in new block #17 whose parent is 40)
+	$t1{v*} -> $s0{v*}
+	// MovePhi: %43 -> %18
+	$t0{v**} -> $s1{v**}
+	// MovePhi: %41 -> %19
+	$s5{i} -> $s3{i}
+	// MovePhi: %42 -> %20
+	$s6{v*} -> $s4{v*}
+	: __fr_labelM59
+	@__fr_labelM128
+	: __fr_labelM132 if $t0{i}
+	: __fr_labelM146
+	@__fr_labelM132
+	$t0{i} ~ 0{i}
+	[ $t0{uc*}
+	[ $s5{i}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 24{v*} -> $sp{v*}
+	@__fr_labelM146
+	$fp{v*} -> $sp{v*}
+	#] $s6{v}
+	#] $s5{v}
+	#] $s4{v}
+	#] $s3{v}
+	#] $s2{v}
+	#] $s1{v}
+	#] $s0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@get_block_ptr
+	@__get_block_ptr_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	$sp{v*} -> $fp{v*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	$fp{v*} -> $sp{v*}
+	$t0{v*} -> $r0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@mal
+	@__mal_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	#[ $s0{v}
+	#[ $s1{v}
+	#[ $s2{v}
+	#[ $s3{v}
+	#[ $s4{v}
+	#[ $s5{v}
+	#[ $s6{v}
+	$sp{v*} -> $fp{v*}
+	// CopyArguments: $a0:#1 -> %0
+	$a0{l} -> $s0{l}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	: __mal_labelM19 if $t0{l}
+	: __mal_labelM37
+	@__mal_labelM19
+	// MovePhi: intlike -> %135 (in new block #43 whose parent is 1)
+	0{uc*} -> $s6{uc*}
+	: __mal_labelM427
+	@__mal_labelM22
+	// LowerMemory(load @ 145:3): [global] -> %var
+	[global_base{v**}] -> $t0{v*}
+	: __mal_labelM30 if $t1{v*}
+	: __mal_labelM27
+	@__mal_labelM27
+	// MovePhi: %4 -> %29 (in new block #40 whose parent is 3)
+	$t0{v*} -> $s4{v*}
+	: __mal_labelM97
+	@__mal_labelM30
+	// LowerMemory(load @ 150:3): [global] -> %var
+	[end{uc**}] -> $t1{uc*}
+	$t0{l} % 32{l} -> $t2{l}
+	: __mal_labelM37 if $t0{l}
+	: __mal_labelM40
+	@__mal_labelM37
+	// MovePhi: %7 -> %15 (in new block #38 whose parent is 6)
+	$t1{uc*} -> $s1{uc*}
+	: __mal_labelM50
+	@__mal_labelM40
+	$t2{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(158:3): pointer-type -> %13
+	$t0{l} * 1{l}
+	// LowerMemory: %13 -> [global]
+	$t0{uc*} -> [end{uc**}]
+	// MovePhi: %13 -> %15
+	$t0{uc*} -> $s1{uc*}
+	@__mal_labelM50
+	// LowerMemory: %0 -> [%16]
+	$s0{l} -> [$t0{l*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%18]
+	$m1{v} -> [$t1{v**}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%20]
+	$m1{v} -> [$t1{i*}]
+	// LowerGetelementptr(172:3): pointer-type -> %21
+	$s0{l} * 1{l}
+	// LowerMemory: %23 -> [global]
+	$t0{uc*} -> [end{uc**}]
+	: __mal_labelM84 if $t0{uc*}
+	: __mal_labelM87
+	@__mal_labelM84
+	// MovePhi: intlike -> %135 (in new block #44 whose parent is 14)
+	0{uc*} -> $s6{uc*}
+	: __mal_labelM427
+	@__mal_labelM87
+	&str{sc*} -> $a0{sc*}
+	:: puts
+	// LowerMemory: %15 -> [global]
+	$s1{uc*} -> [global_base{uc**}]
+	// MovePhi: %26 -> %131
+	$s0{v*} -> $s5{v*}
+	: __mal_labelM421
+	@__mal_labelM97
+	: __mal_labelM112 if $t0{i}
+	: __mal_labelM105
+	@__mal_labelM105
+	: __mal_labelM112 if $t0{l}
+	: __mal_labelM238
+	@__mal_labelM112
+	// LowerMemory(load @ 200:3): [%38] -> %39
+	[$t0{v**}] -> $t1{v*}
+	: __mal_labelM123 if $t0{v*}
+	: __mal_labelM120
+	@__mal_labelM120
+	// MovePhi: %39 -> %29 (in new block #39 whose parent is 37)
+	$t1{v*} -> $s4{v*}
+	: __mal_labelM97
+	@__mal_labelM123
+	// LowerGetelementptr(205:3): struct-type: %struct.block_meta* -> %42, indices=0,1
+	$s4{v*} -> $s1{v**}
+	$s1{v**} + 8{v**} -> $s1{v**}
+	// LowerGetelementptr(210:3): pointer-type -> %47
+	$t2{l} * 1{l}
+	// LowerGetelementptr(213:3): pointer-type -> %50
+	$t2{l} * 1{l}
+	// Clobber $t0
+	// LowerStack: base - offset -> $m2 for $t0:#47
+	$fp{v*} - 16{v*} -> $m2{v*}
+	// LowerStack: $t0:#47 -> [$m2]
+	$t0{v} -> [$m2{v*}]
+	// Clobber $t2
+	// LowerStack: base - offset -> $m2 for $t2:#48
+	$fp{v*} - 24{v*} -> $m2{v*}
+	// LowerStack: $t2:#48 -> [$m2]
+	$t2{v} -> [$m2{v*}]
+	[ $t0{l}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 16{v*} -> $sp{v*}
+	// Unclobber $t2
+	// LowerStack: base - offset -> $m2 for $t2:#48
+	$fp{v*} - 24{v*} -> $m2{v*}
+	// LowerStack: [$m2] -> $t2:#48
+	[$m2{v*}] -> $t2{v}
+	// Unclobber $t0
+	// LowerStack: base - offset -> $m2 for $t0:#47
+	$fp{v*} - 16{v*} -> $m2{v*}
+	// LowerStack: [$m2] -> $t0:#47
+	[$m2{v*}] -> $t0{v}
+	// LowerMemory(load @ 216:3): [global] -> %var
+	[end{uc**}] -> $t0{uc*}
+	$t1{l} % 32{l} -> $t2{l}
+	: __mal_labelM181 if $t1{l}
+	: __mal_labelM184
+	@__mal_labelM181
+	// MovePhi: %53 -> %61 (in new block #41 whose parent is 41)
+	$t0{uc*} -> $s2{uc*}
+	: __mal_labelM194
+	@__mal_labelM184
+	$t2{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(224:3): pointer-type -> %59
+	$t1{l} * 1{l}
+	// LowerMemory: %59 -> [global]
+	$t1{uc*} -> [end{uc**}]
+	// MovePhi: %59 -> %61
+	$t1{uc*} -> $s2{uc*}
+	@__mal_labelM194
+	// LowerMemory: %61 -> [%63]
+	$s2{uc*} -> [$t0{uc**}]
+	// LowerMemory: %0 -> [%64]
+	$s0{l} -> [$t0{l*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%66]
+	$m1{v} -> [$t2{v**}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%68]
+	$m1{v} -> [$t2{i*}]
+	// LowerGetelementptr(241:3): pointer-type -> %69
+	$s0{l} * 1{l}
+	// LowerMemory: %71 -> [global]
+	$t0{uc*} -> [end{uc**}]
+	: __mal_labelM232 if $t0{uc*}
+	: __mal_labelM235
+	@__mal_labelM232
+	// MovePhi: intlike -> %135 (in new block #45 whose parent is 60)
+	0{uc*} -> $s6{uc*}
+	: __mal_labelM427
+	@__mal_labelM235
+	// MovePhi: %62 -> %131 (in new block #42 whose parent is 60)
+	$t1{v*} -> $s5{v*}
+	: __mal_labelM421
+	@__mal_labelM238
+	// LowerGetelementptr(249:3): struct-type: %struct.block_meta* -> %74, indices=0,2
+	$s4{v*} -> $s1{i*}
+	$s1{i*} + 16{i*} -> $s1{i*}
+	// LowerGetelementptr(250:3): struct-type: %struct.block_meta* -> %75, indices=0,0
+	$s4{v*} -> $s2{l*}
+	// LowerGetelementptr(251:3): struct-type: %struct.block_meta* -> %76, indices=0,1
+	$s4{v*} -> $s3{v**}
+	$s3{v**} + 8{v**} -> $s3{v**}
+	$t1{v*} ~ 0{v*}
+	// Clobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: $t1:#49 -> [$m2]
+	$t1{v} -> [$m2{v*}]
+	[ $t0{uc*}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 16{v*} -> $sp{v*}
+	// Unclobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: [$m2] -> $t1:#49
+	[$m2{v*}] -> $t1{v}
+	// Clobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: $t1:#49 -> [$m2]
+	$t1{v} -> [$m2{v*}]
+	[ $t0{l}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 16{v*} -> $sp{v*}
+	// Unclobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: [$m2] -> $t1:#49
+	[$m2{v*}] -> $t1{v}
+	// Clobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: $t1:#49 -> [$m2]
+	$t1{v} -> [$m2{v*}]
+	[ $s0{l}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 16{v*} -> $sp{v*}
+	// Unclobber $t1
+	// LowerStack: base - offset -> $m2 for $t1:#49
+	$fp{v*} - 32{v*} -> $m2{v*}
+	// LowerStack: [$m2] -> $t1:#49
+	[$m2{v*}] -> $t1{v}
+	// LowerMemory(load @ 259:3): [%75] -> %84
+	[$s2{l*}] -> $t1{l}
+	: __mal_labelM315 if $t2{l}
+	: __mal_labelM415
+	@__mal_labelM315
+	bc $s4{v*} -> $t2{uc*}
+	// LowerGetelementptr(266:3): pointer-type -> %89
+	$s0{l} * 1{l}
+	$t4{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(273:3): pointer-type -> %96
+	$t4{l} * 1{l}
+	$t5{l} ~ 0{l}
+	[$t3{l} != $t0{l}] -> $t4{l}
+	$t3{v*} -> $t5{l}
+	: __mal_labelM377 if $t0{v*}
+	: __mal_labelM344
+	@__mal_labelM344
+	: __mal_labelM353 if $t2{i}
+	: __mal_labelM415
+	@__mal_labelM353
+	// LowerMemory: %109 -> [%110]
+	$t2{l} -> [$t1{l*}]
+	// LowerMemory: %101 -> [%113]
+	$t5{l} -> [$t3{l*}]
+	// LowerMemory: imm -> $m1
+	1{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%114]
+	$m1{v} -> [$t2{i*}]
+	// LowerMemory: %98 -> [%111]
+	$t4{l} -> [$t1{l*}]
+	// LowerMemory: %0 -> [%75]
+	$s0{l} -> [$s2{l*}]
+	: __mal_labelM415
+	@__mal_labelM377
+	// LowerGetelementptr(304:3): pointer-type -> %116
+	$t1{l} * 1{l}
+	$t2{l} - $t4{l} -> $t0{l}
+	: __mal_labelM390 if $t3{i}
+	: __mal_labelM415
+	@__mal_labelM390
+	// LowerMemory: %124 -> [%125]
+	$t0{l} -> [$t2{l*}]
+	// LowerMemory: imm -> $m1
+	1{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%126]
+	$m1{v} -> [$t0{i*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%127]
+	$m1{v} -> [$t0{v**}]
+	// LowerMemory: %0 -> [%75]
+	$s0{l} -> [$s2{l*}]
+	// LowerMemory: %98 -> [%128]
+	$t4{l} -> [$t0{l*}]
+	@__mal_labelM415
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%74]
+	$m1{v} -> [$s1{i*}]
+	// MovePhi: %29 -> %131
+	$s4{v*} -> $s5{v*}
+	@__mal_labelM421
+	// MovePhi: %133 -> %135
+	$t1{uc*} -> $s6{uc*}
+	@__mal_labelM427
+	$fp{v*} -> $sp{v*}
+	$s6{uc*} -> $r0{v}
+	#] $s6{v}
+	#] $s5{v}
+	#] $s4{v}
+	#] $s3{v}
+	#] $s2{v}
+	#] $s1{v}
+	#] $s0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@mem_init
+	@__mem_init_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	#[ $s0{v}
+	$sp{v*} -> $fp{v*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	$t1{sl} -> $a0{sl}
+	4{sl} -> $a1{sl}
+	:: calloc
+	$t2{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(33:3): pointer-type -> %8
+	$t0{l} * 1{l}
+	$t1{l} ~ 0{l}
+	// LowerMemory: %9 -> [global]
+	$t1{uc*} -> [memory{uc**}]
+	// LowerMemory: %10 -> [global]
+	$t0{l} -> [end{l*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [global]
+	$m1{v} -> [global_base{v*}]
+	$t1{uc*} == 0{uc*} -> $m3{v}
+	$fp{v*} -> $sp{v*}
+	$t1{i} -> $r0{v}
+	#] $s0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@memsplit
+	@__memsplit_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	$sp{v*} -> $fp{v*}
+	// CopyArguments: $a0:#1 -> %0
+	$a0{v*} -> $t0{v*}
+	// CopyArguments: $a1:#2 -> %1
+	$a1{l} -> $t2{l}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	// LowerGetelementptr(346:3): struct-type: %struct.block_meta* -> %3, indices=0,0
+	$t0{v*} -> $t5{l*}
+	// LowerMemory(load @ 347:3): [%3] -> %4
+	[$t5{l*}] -> $t4{l}
+	: __memsplit_labelM19 if $t1{l}
+	: __memsplit_labelM122
+	@__memsplit_labelM19
+	bc $t0{v*} -> $t1{uc*}
+	// LowerGetelementptr(354:3): pointer-type -> %9
+	$t2{l} * 1{l}
+	$t8{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(361:3): pointer-type -> %16
+	$t8{l} * 1{l}
+	$t6{l} ~ 0{l}
+	[$t7{l} != $t3{l}] -> $t6{l}
+	// LowerGetelementptr(364:3): struct-type: %struct.block_meta* -> %19, indices=0,1
+	$t0{v*} -> $t3{v**}
+	$t3{v**} + 8{v**} -> $t3{v**}
+	$t7{v*} -> $t8{l}
+	: __memsplit_labelM84 if $t0{v*}
+	: __memsplit_labelM51
+	@__memsplit_labelM51
+	: __memsplit_labelM60 if $t4{i}
+	: __memsplit_labelM122
+	@__memsplit_labelM60
+	// LowerMemory: %30 -> [%31]
+	$t4{l} -> [$t0{l*}]
+	// LowerMemory: %22 -> [%34]
+	$t8{l} -> [$t4{l*}]
+	// LowerMemory: imm -> $m1
+	1{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%35]
+	$m1{v} -> [$t3{i*}]
+	// LowerMemory: %18 -> [%32]
+	$t6{l} -> [$t0{l*}]
+	// LowerMemory: %1 -> [%3]
+	$t2{l} -> [$t5{l*}]
+	: __memsplit_labelM122
+	@__memsplit_labelM84
+	// LowerGetelementptr(393:3): pointer-type -> %37
+	$t4{l} * 1{l}
+	$t1{l} - $t6{l} -> $t4{l}
+	: __memsplit_labelM97 if $t7{i}
+	: __memsplit_labelM122
+	@__memsplit_labelM97
+	// LowerMemory: %45 -> [%46]
+	$t4{l} -> [$t1{l*}]
+	// LowerMemory: imm -> $m1
+	1{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%47]
+	$m1{v} -> [$t1{i*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%48]
+	$m1{v} -> [$t1{v**}]
+	// LowerMemory: %1 -> [%3]
+	$t2{l} -> [$t5{l*}]
+	// LowerMemory: %18 -> [%49]
+	$t6{l} -> [$t0{l*}]
+	@__memsplit_labelM122
+	$fp{v*} -> $sp{v*}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@merge_blocks
+	@__merge_blocks_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	#[ $s0{v}
+	#[ $s1{v}
+	$sp{v*} -> $fp{v*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	// LowerMemory(load @ 513:3): [global] -> %var
+	[global_base{v**}] -> $t0{v*}
+	: __merge_blocks_labelM14 if $t2{v*}
+	: __merge_blocks_labelM17
+	@__merge_blocks_labelM14
+	// MovePhi: intlike -> %45 (in new block #18 whose parent is 0)
+	0{i} -> $s1{i}
+	: __merge_blocks_labelM132
+	@__merge_blocks_labelM17
+	// LowerGetelementptr(518:3): struct-type: %struct.block_meta* -> %4, indices=0,1
+	$t0{v*} -> $t2{v**}
+	$t2{v**} + 8{v**} -> $t2{v**}
+	// LowerMemory(load @ 519:3): [%4] -> %5
+	[$t2{v**}] -> $t5{v*}
+	: __merge_blocks_labelM25 if $t3{v*}
+	: __merge_blocks_labelM37
+	@__merge_blocks_labelM25
+	: __merge_blocks_labelM109
+	@__merge_blocks_labelM28
+	// MovePhi: %5 -> %8 (in new block #12 whose parent is 3)
+	$t5{v*} -> $t1{v*}
+	// MovePhi: %4 -> %9
+	$t2{v**} -> $t6{v**}
+	// MovePhi: intlike -> %10
+	0{i} -> $t7{i}
+	// MovePhi: %1 -> %11
+	$t0{v*} -> $t8{v*}
+	: __merge_blocks_labelM37
+	@__merge_blocks_labelM37
+	: __merge_blocks_labelM45 if $t0{i}
+	: __merge_blocks_labelM50
+	@__merge_blocks_labelM45
+	// MovePhi: %10 -> %32 (in new block #14 whose parent is 7)
+	$t7{i} -> $t4{i}
+	// MovePhi: %8 -> %33
+	$t1{v*} -> $t9{v*}
+	: __merge_blocks_labelM100
+	@__merge_blocks_labelM50
+	: __merge_blocks_labelM58 if $t2{i}
+	: __merge_blocks_labelM63
+	@__merge_blocks_labelM58
+	// MovePhi: %10 -> %32 (in new block #13 whose parent is 15)
+	$t7{i} -> $t4{i}
+	// MovePhi: %8 -> %33
+	$t1{v*} -> $t9{v*}
+	: __merge_blocks_labelM100
+	@__merge_blocks_labelM63
+	// LowerMemory: %25 -> [%23]
+	$t5{l} -> [$t3{l*}]
+	// LowerMemory: %28 -> [%29]
+	$t0{l} -> [$t2{l*}]
+	// MovePhi: %30 -> %32
+	$t0{i} -> $t4{i}
+	// MovePhi: %11 -> %33
+	$t8{v*} -> $t9{v*}
+	@__merge_blocks_labelM89
+	// LowerGetelementptr(558:3): struct-type: %struct.block_meta* -> %34, indices=0,1
+	$t9{v*} -> $t2{v**}
+	$t2{v**} + 8{v**} -> $t2{v**}
+	// LowerMemory(load @ 559:3): [%34] -> %35
+	[$t2{v**}] -> $t3{v*}
+	: __merge_blocks_labelM97 if $t0{v*}
+	: __merge_blocks_labelM100
+	@__merge_blocks_labelM97
+	: __merge_blocks_labelM109
+	@__merge_blocks_labelM100
+	// MovePhi: %35 -> %8 (in new block #11 whose parent is 31)
+	$t3{v*} -> $t1{v*}
+	// MovePhi: %34 -> %9
+	$t2{v**} -> $t6{v**}
+	// MovePhi: %32 -> %10
+	$t4{i} -> $t7{i}
+	// MovePhi: %33 -> %11
+	$t9{v*} -> $t8{v*}
+	: __merge_blocks_labelM37
+	@__merge_blocks_labelM109
+	: __merge_blocks_labelM116 if $t0{i}
+	: __merge_blocks_labelM113
+	@__merge_blocks_labelM113
+	// MovePhi: %38 -> %45 (in new block #17 whose parent is 37)
+	$s0{i} -> $s1{i}
+	: __merge_blocks_labelM132
+	@__merge_blocks_labelM116
+	$t0{i} ~ 0{i}
+	[ $t0{uc*}
+	[ $s0{i}
+	[ $t0{uc*}
+	:: printf
+	// SetupCalls: readjust stack pointer
+	$sp{v*} + 24{v*} -> $sp{v*}
+	// MovePhi: %38 -> %45
+	$s0{i} -> $s1{i}
+	@__merge_blocks_labelM132
+	$fp{v*} -> $sp{v*}
+	$s1{i} -> $r0{v}
+	#] $s1{v}
+	#] $s0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@realign
+	@__realign_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	$sp{v*} -> $fp{v*}
+	// CopyArguments: $a0:#1 -> %0
+	$a0{uc**} -> $t0{uc**}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	// LowerMemory(load @ 49:3): [%0] -> %2
+	[$t0{uc**}] -> $t3{uc*}
+	$t2{l} % 32{l} -> $t1{l}
+	: __realign_labelM16 if $t2{l}
+	: __realign_labelM19
+	@__realign_labelM16
+	// MovePhi: %2 -> %10 (in new block #8 whose parent is 1)
+	$t3{uc*} -> $t4{uc*}
+	: __realign_labelM29
+	@__realign_labelM19
+	$t1{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(57:3): pointer-type -> %8
+	$t1{l} * 1{l}
+	// LowerMemory: %8 -> [%0]
+	$t1{uc*} -> [$t0{uc**}]
+	// MovePhi: %8 -> %10
+	$t1{uc*} -> $t4{uc*}
+	@__realign_labelM29
+	$fp{v*} -> $sp{v*}
+	$t4{uc*} -> $r0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
+@request_space
+	@__request_space_labelM0
+	[ $rt{v}
+	[ $fp{v*}
+	[ $m5{v}
+	$sp{v*} -> $m5{v}
+	$sp{v*} -> $fp{v*}
+	// CopyArguments: $a0:#1 -> %0
+	$a0{v*} -> $t0{v*}
+	// InsertStackSkip
+	$sp{v*} - 8{v*} -> $sp{v*}
+	// LowerMemory(load @ 99:3): [global] -> %var
+	[end{uc**}] -> $t3{uc*}
+	$t1{l} % 32{l} -> $t4{l}
+	: __request_space_labelM18 if $t1{l}
+	: __request_space_labelM21
+	@__request_space_labelM18
+	// MovePhi: %3 -> %11 (in new block #11 whose parent is 2)
+	$t3{uc*} -> $t5{uc*}
+	: __request_space_labelM31
+	@__request_space_labelM21
+	$t4{l} - 32{l} -> $m0{v}
+	// LowerGetelementptr(107:3): pointer-type -> %9
+	$t1{l} * 1{l}
+	// LowerMemory: %9 -> [global]
+	$t1{uc*} -> [end{uc**}]
+	// MovePhi: %9 -> %11
+	$t1{uc*} -> $t5{uc*}
+	@__request_space_labelM31
+	: __request_space_labelM41 if $t3{v*}
+	: __request_space_labelM35
+	@__request_space_labelM35
+	// LowerMemory: %11 -> [%16]
+	$t5{uc*} -> [$t0{uc**}]
+	@__request_space_labelM41
+	// LowerMemory: %1 -> [%18]
+	$t2{l} -> [$t0{l*}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%20]
+	$m1{v} -> [$t3{v**}]
+	// LowerMemory: imm -> $m1
+	0{v} -> $m1{v}
+	// LowerMemory: $m1 -> [%22]
+	$m1{v} -> [$t3{i*}]
+	// LowerGetelementptr(132:3): pointer-type -> %23
+	$t2{l} * 1{l}
+	// LowerMemory: %25 -> [global]
+	$t2{uc*} -> [end{uc**}]
+	$fp{v*} -> $sp{v*}
+	$t1{v*} -> $r0{v}
+	] $m5{v}
+	] $fp{v*}
+	] $rt{v}
+	: $rt{v}
+
