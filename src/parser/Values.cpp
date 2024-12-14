@@ -81,15 +81,15 @@ namespace LL2W {
 
 	VectorValue::operator std::string() {
 		std::stringstream out;
-		out << "\e[2m<\e[0m";
+		out << "\e[2m<\e[22m";
 		auto begin = values.cbegin();
 		for (auto iter = begin, end = values.cend(); iter != end; ++iter) {
 			const std::pair<TypePtr, ValuePtr> &pair = *iter;
 			if (iter != begin)
-				out << "\e[2m,\e[0m ";
+				out << "\e[2m,\e[22m ";
 			out << std::string(*pair.first) << " " << std::string(*pair.second);
 		}
-		out << "\e[2m>\e[0m";
+		out << "\e[2m>\e[22m";
 		return out.str();
 	}
 
@@ -158,16 +158,17 @@ namespace LL2W {
 	GetelementptrValue::operator std::string() {
 		std::stringstream out;
 		out << "\e[91mgetelementptr\e[0m";
-		if (inbounds)
+		if (inbounds) {
 			out << " \e[91minbounds\e[0m";
-		out << " \e[2m(\e[0m" << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType) << " "
-		    << std::string(*variable);
+		}
+		out << " \e[2m(\e[0m" << std::string(*type) << "\e[2m,\e[0m " << std::string(*ptrType) << " " << std::string(*variable);
 		for (const auto &decimal: decimals) {
 			out << "\e[2m,\e[0m \e[33mi" << decimal.first << " \e[32m";
-			if (std::holds_alternative<Variable::ID>(decimal.second))
+			if (std::holds_alternative<Variable::ID>(decimal.second)) {
 				out << *std::get<Variable::ID>(decimal.second);
-			else
+			} else {
 				out << std::get<long>(decimal.second);
+			}
 			out << "\e[0m";
 		}
 		out << "\e[2m)\e[0m";
@@ -241,25 +242,29 @@ namespace LL2W {
 
 	ValuePtr StructValue::copy() const {
 		std::vector<std::shared_ptr<Constant>> constants_copy;
-		for (ConstantPtr constant: constants)
+		for (ConstantPtr constant: constants) {
 			constants_copy.push_back(constant->copy());
+		}
 		return std::make_shared<StructValue>(std::move(constants_copy), packed);
 	}
 
 	StructValue::operator std::string() {
 		std::stringstream out;
 		out << "\e[2m";
-		if (packed)
+		if (packed) {
 			out << '<';
+		}
 		out << "{\e[22m";
 		for (auto begin = constants.cbegin(), iter = begin, end = constants.cend(); iter != end; ++iter) {
-			if (iter != begin)
+			if (iter != begin) {
 				out << "\e[2m,\e[22m ";
+			}
 			out << std::string(**iter);
 		}
 		out << "\e[2m}";
-		if (packed)
+		if (packed) {
 			out << '>';
+		}
 		out << "\e[22m";
 		return out.str();
 	}
@@ -276,23 +281,31 @@ namespace LL2W {
 		}
 	}
 
+	ArrayValue::ArrayValue(const llvm::ConstantDataArray &llvm_data_array) {
+		for (unsigned i = 0; i < llvm_data_array.getNumElements(); ++i) {
+			constants.push_back(Constant::fromLLVM(*llvm_data_array.getElementAsConstant(i)));
+		}
+	}
+
 	ValuePtr ArrayValue::copy() const {
 		std::vector<ConstantPtr> constants_copy;
 		constants_copy.reserve(constants.size());
-		for (ConstantPtr constant: constants)
+		for (ConstantPtr constant: constants) {
 			constants_copy.push_back(constant->copy());
+		}
 		return std::make_shared<ArrayValue>(constants_copy);
 	}
 
 	ArrayValue::operator std::string() {
 		std::stringstream out;
-		out << "\e[2m[\e[0m";
+		out << "\e[2m[\e[22m";
 		for (auto begin = constants.cbegin(), iter = begin, end = constants.cend(); iter != end; ++iter) {
-			if (iter != begin)
-				out << "\e[2m,\e[0m ";
+			if (iter != begin) {
+				out << "\e[2m,\e[22m ";
+			}
 			out << std::string(**iter);
 		}
-		out << "\e[2m]\e[0m";
+		out << "\e[2m]\e[22m";
 		return out.str();
 	}
 

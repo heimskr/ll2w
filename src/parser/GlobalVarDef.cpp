@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <print>
 #include <sstream>
 
 namespace LL2W {
@@ -20,7 +21,11 @@ namespace LL2W {
 		addrspace = static_cast<int>(llvm_var.getAddressSpace());
 		externallyInitialized = llvm_var.isExternallyInitialized();
 		isConstant = llvm_var.isConstant();
-		constant = Constant::fromLLVM(*llvm_var.getInitializer());
+		if (llvm_var.hasInitializer()) {
+			constant = Constant::fromLLVM(*llvm_var.getInitializer());
+		} else {
+			constant = Constant::make(std::make_shared<OpaqueType>(), GlobalValue::make(llvm_var.getName().str()));
+		}
 		type = Type::fromLLVM(*llvm_var.getValueType());
 	}
 
@@ -98,10 +103,11 @@ namespace LL2W {
 			delete global_or_constant;
 		}
 
-		if (type_or_constant->symbol == LLVM_CONSTANT)
+		if (type_or_constant->symbol == LLVM_CONSTANT) {
 			constant = std::make_shared<Constant>(type_or_constant);
-		else
+		} else {
 			type = getType(type_or_constant);
+		}
 		delete type_or_constant;
 
 		for (ASTNode *extra: *gdef_extras) {
@@ -110,8 +116,9 @@ namespace LL2W {
 			} else if (extra->symbol == LLVMTOK_COMDAT) {
 				if (!extra->empty()) {
 					const std::string *str = extra->at(0)->lexerInfo;
-					if (str->empty() || str->front() != '$')
+					if (str->empty() || str->front() != '$') {
 						llvmerror("Comdat expected to begin with \"$\"");
+					}
 					comdat = str;
 				}
 			} else if (!extra) {

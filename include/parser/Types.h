@@ -198,7 +198,7 @@ namespace LL2W {
 		Signedness getSignedness() const override;
 		bool setSignedness(Signedness) override;
 
-		static std::shared_ptr<PointerType> getOpaque();
+		static std::shared_ptr<PointerType> makeOpaque();
 	};
 
 	class FunctionType: public Type, public Makeable<FunctionType> {

@@ -23,7 +23,9 @@
 
 #include "main.h"
 #include <atomic>
+#include <format>
 #include <iostream>
+#include <print>
 #include <sstream>
 #include <thread>
 
@@ -361,15 +363,15 @@ namespace LL2W {
 					def.constant->type->toString());
 		}
 
-		bool changed;
+		bool changed{};
 
 		do {
 			changed = false;
 			for (const auto &[name, data]: global_data) {
 				if (data.value) {
-					const std::string stringified = outputValue(data.constant->type, data.value);
+					std::string stringified = outputValue(data.constant->type, data.value);
 					if (!stringified.empty()) {
-						global_strings.emplace(name, stringified);
+						global_strings.emplace(name, std::move(stringified));
 						changed = true;
 					} else if (data.value->valueType() == ValueType::Global) {
 						const std::string &target = *dynamic_cast<GlobalValue *>(data.value.get())->name;
@@ -400,8 +402,9 @@ namespace LL2W {
 
 		if (!global_data.empty()) {
 			error() << "Couldn't translate global constants (is there a loop?):\n";
-			for (const auto &[name, data]: global_data)
-				std::cerr << "- " << name << " @ " << data.location;
+			for (const auto &[name, data]: global_data) {
+				std::println(std::cerr, "- {} @ {}", name, std::string(data.location));
+			}
 			throw std::runtime_error("Global constant translation failed");
 		}
 	}
@@ -470,7 +473,7 @@ namespace LL2W {
 			case ValueType::CString:
 				return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
 			case ValueType::Array:
-				return outputArray(*dynamic_cast<ArrayValue *>(value.get()));
+				return outputArray(dynamic_cast<ArrayValue &>(*value.get()));
 			case ValueType::Int: {
 				const auto int_width = dynamic_cast<IntType *>(type.get())->bitWidth;
 				const std::string stringified = std::to_string(dynamic_cast<IntValue *>(value.get())->longValue());
@@ -524,8 +527,7 @@ namespace LL2W {
 					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got "
 						"type " + value_map.at(gep->variable->valueType()) + " instead");
 
-				return "%8b " + *dynamic_cast<GlobalValue *>(gep->variable.get())->name + "+" + std::to_string(offset) +
-					(comment_changed? comment : "");
+				return "%8b " + *dynamic_cast<GlobalValue &>(*gep->variable).name + "+" + std::to_string(offset) + (comment_changed? comment : "");
 			}
 			default:
 				std::cerr << *value << '\n';

@@ -6,9 +6,11 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <iostream>
+#include <print>
 #include <sstream>
 
 namespace LL2W {
@@ -102,24 +104,28 @@ namespace LL2W {
 	}
 
 	ConstantPtr Constant::convert() const {
-		if (value)
+		if (value) {
 			return copy();
+		}
+
 		if (!conversionSource) {
 			std::cerr << *this << "\n";
 			throw std::runtime_error("Constant has neither a value nor a conversion source in Constant::convert()");
 		}
+
 		if (conversion != Conversion::Ptrtoint && conversion != Conversion::Inttoptr &&
 		    conversion != Conversion::Bitcast) {
 			std::cerr << *this << "\n";
 			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map[conversion]);
 		}
+
 		if (!conversionSource->value) {
 			// TODO: recursive conversion?
 			std::cerr << *this << "\n";
 			throw std::runtime_error("Conversion source has no value in Constant::convert()");
 		}
-		return std::make_shared<Constant>(conversionType->copy(), conversionSource->value->copy(), parattrs,
-			Conversion::None, nullptr, nullptr);
+
+		return Constant::make(conversionType->copy(), conversionSource->value->copy(), parattrs, Conversion::None, nullptr, nullptr);
 	}
 
 	Constant::operator std::string() const {
@@ -159,19 +165,43 @@ namespace LL2W {
 		}
 
 		if (auto *data_constant = llvm::dyn_cast<llvm::ConstantDataArray>(&llvm_value)) {
+			out->type = Type::fromLLVM(*data_constant->getType());
+
+			if (data_constant->isCString()) {
+				out->value = CStringValue::make(data_constant->getAsCString());
+			} else {
+				out->value = ArrayValue::make(*data_constant);
+			}
+
 			return out;
 		}
 
 		if (auto *expr_constant = llvm::dyn_cast<llvm::ConstantExpr>(&llvm_value)) {
-			return out;
+			std::string_view op = expr_constant->getOpcodeName();
+			if (op == "getelementptr") {
+				// llvm::raw_os_ostream os(std::cerr);
+				// llvm_value.getType()->print(os, true);
+				// std::println(std::cerr);
+				out->type = Type::fromLLVM(*llvm_value.getType());
+				const llvm::Constant *base = expr_constant->getOperand(0);
+				std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals;
+				for (unsigned i = 1; i < expr_constant->getNumOperands(); ++i) {
+					llvm::ConstantInt &decimal = llvm::cast<llvm::ConstantInt>(*expr_constant->getOperand(i));
+					decimals.emplace_back(decimal.getBitWidth(), static_cast<long>(decimal.getZExtValue()));
+				}
+				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, PointerType::makeOpaque(), Type::fromLLVM(*base->getType()), Constant::fromLLVM(*base)->value, std::move(decimals));
+				return out;
+			}
 		}
 
 		if (auto *global_constant = llvm::dyn_cast<llvm::GlobalVariable>(&llvm_value)) {
+			out->type = Type::fromLLVM(*global_constant->getType());
+			out->value = GlobalValue::make(global_constant->getName().str());
 			return out;
 		}
 
 		if (auto *null_constant = llvm::dyn_cast<llvm::ConstantPointerNull>(&llvm_value)) {
-			out->type = PointerType::getOpaque();
+			out->type = PointerType::makeOpaque();
 			out->value = std::make_shared<NullValue>();
 			return out;
 		}

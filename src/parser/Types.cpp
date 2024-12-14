@@ -39,7 +39,7 @@ namespace LL2W {
 
 	TypePtr Type::fromLLVM(const llvm::Type &llvm_type) {
 		if (llvm_type.isPointerTy()) {
-			return PointerType::getOpaque();
+			return PointerType::makeOpaque();
 		}
 
 		if (llvm_type.isVoidTy()) {
@@ -339,7 +339,7 @@ namespace LL2W {
 		return unwrapAll()->setSignedness(new_signedness);
 	}
 
-	std::shared_ptr<PointerType> PointerType::getOpaque() {
+	std::shared_ptr<PointerType> PointerType::makeOpaque() {
 		return std::make_shared<PointerType>(std::make_shared<OpaqueType>());
 	}
 

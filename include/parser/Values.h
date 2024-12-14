@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <format>
 #include <memory>
 #include <string>
 #include <utility>
@@ -13,6 +14,7 @@
 
 namespace llvm {
 	class ConstantArray;
+	class ConstantDataArray;
 	class ConstantStruct;
 	class Value;
 }
@@ -113,7 +115,7 @@ namespace LL2W {
 
 	struct VariableValue: Value {
 		protected:
-			VariableValue(const std::string *name_): name(name_) {}
+			VariableValue(const std::string *name): name(name) {}
 
 		public:
 			const std::string *name = nullptr;
@@ -122,8 +124,8 @@ namespace LL2W {
 
 	struct LocalValue: VariableValue, Makeable<LocalValue> {
 		std::shared_ptr<Variable> variable = nullptr;
-		LocalValue(const std::string *name_): VariableValue(name_) {}
-		LocalValue(const std::string &name_): LocalValue(StringSet::intern(name_)) {}
+		LocalValue(const std::string *name): VariableValue(name) {}
+		LocalValue(const std::string &name): LocalValue(StringSet::intern(name)) {}
 		LocalValue(std::shared_ptr<Variable>);
 		LocalValue(const ASTNode *node);
 		ValueType valueType() const override { return ValueType::Local; }
@@ -134,8 +136,8 @@ namespace LL2W {
 	};
 
 	struct GlobalValue: VariableValue, Makeable<GlobalValue> {
-		GlobalValue(const std::string *name_): VariableValue(name_) {}
-		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
+		GlobalValue(const std::string *name): VariableValue(name) {}
+		GlobalValue(const std::string &name): GlobalValue(StringSet::intern(name)) {}
 		GlobalValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::Global; }
 		ValuePtr copy() const override { return std::make_shared<GlobalValue>(name); }
@@ -216,6 +218,7 @@ namespace LL2W {
 		ArrayValue(std::vector<ConstantPtr> constants):
 			constants(std::move(constants)) {}
 		ArrayValue(const llvm::ConstantArray &);
+		ArrayValue(const llvm::ConstantDataArray &);
 		ValueType valueType() const override { return ValueType::Array; }
 		ValuePtr copy() const override;
 		operator std::string() override;
