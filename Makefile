@@ -2,11 +2,11 @@ CHECK			?= none
 COMPILER		?= clang++
 DEBUGGER		?= lldb
 OPTIMIZATION	?= -O0 -ggdb3
-STANDARD		?= c++20
+STANDARD		?= c++23
 WARNINGS		?= -Wall -Wextra
 CFLAGS			:= -std=$(STANDARD) $(OPTIMIZATION) $(WARNINGS) -Iinclude
 OUTPUT			?= ll2w
-LDFLAGS			?= -pthread
+LDFLAGS			?= -pthread -lLLVM
 LTOPT			?=
 
 LEXFLAGS		:= -Wno-sign-compare -Wno-register
@@ -27,6 +27,8 @@ BISON_OPTIONS	:= --color=always
 SOURCES			:= $(shell find src/**/*.cpp src/*.cpp)
 OBJECTS			:= $(SOURCES:.cpp=.o) $(LLVMLEXCPP:.cpp=.o) $(LLVMPARSECPP:.cpp=.o) $(WASMLEXCPP:.cpp=.o) $(WASMPARSECPP:.cpp=.o)
 
+TESTFILE		?= ll/serial.ll
+
 ifeq ($(CHECK), asan)
 	COMPILER := $(COMPILER) -fsanitize=address -fno-common
 else ifeq ($(CHECK), msan)
@@ -38,7 +40,7 @@ endif
 all: $(OUTPUT)
 
 test: $(OUTPUT)
-	./$(OUTPUT) ll/serial.ll
+	./$(OUTPUT) $(TESTFILE)
 
 $(OUTPUT): $(OBJECTS)
 	$(COMPILER) $(LTOPT) -o $@ $^ $(LDFLAGS)

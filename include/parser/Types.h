@@ -13,6 +13,10 @@
 #include "util/Makeable.h"
 #include "util/Util.h"
 
+namespace llvm {
+	class StructType;
+}
+
 namespace LL2W {
 	class StructNode;
 
@@ -216,32 +220,39 @@ namespace LL2W {
 	};
 
 	struct StructType: AggregateType, Makeable<StructType> {
-		bool padded = false;
-		/** Map indices in the struct before padding to the corresponding indices after padding has been inserted.
-		 *  If padded is false, this is empty. */
-		std::map<int, int> paddingMap;
-		std::shared_ptr<StructType> paddedChild;
-		static std::unordered_map<std::string, std::shared_ptr<StructType>> knownStructs;
-		TypeType typeType() const override { return TypeType::Struct; }
-		const std::string *name;
-		StructForm form = StructForm::Struct;
-		StructShape shape = StructShape::Default;
-		std::shared_ptr<StructNode> node;
-		StructType(const std::string *name_, StructForm form_ = StructForm::Struct,
-		           StructShape shape_ = StructShape::Default);
-		StructType(std::shared_ptr<StructNode>);
-		StructType(const StructNode *);
-		operator std::string() override;
-		std::string toString() override;
-		TypePtr copy() const override;
-		int width() const override;
-		int alignment() const override;
-		TypePtr extractType(std::list<int> indices) const override;
-		std::string barename() const;
-		bool operator==(const Type &) const override;
-		/** Assumes that each member in a struct has a width that's a multiple of 8. */
-		std::shared_ptr<StructType> pad();
-		std::string whyString() const override { return "v"; }
+		public:
+			bool padded = false;
+			/** Map indices in the struct before padding to the corresponding indices after padding has been inserted.
+			 *  If padded is false, this is empty. */
+			std::map<int, int> paddingMap;
+			std::shared_ptr<StructType> paddedChild;
+			static std::unordered_map<std::string, std::shared_ptr<StructType>> knownStructs;
+			TypeType typeType() const override { return TypeType::Struct; }
+			std::string name;
+			StructForm form = StructForm::Struct;
+			StructShape shape = StructShape::Default;
+			std::shared_ptr<StructNode> node;
+
+			StructType(std::string_view name, StructForm = StructForm::Struct, StructShape = StructShape::Default);
+			StructType(std::shared_ptr<StructNode>);
+			StructType(const StructNode *);
+			StructType(const llvm::StructType &);
+
+			operator std::string() override;
+			std::string toString() override;
+			TypePtr copy() const override;
+			int width() const override;
+			int alignment() const override;
+			TypePtr extractType(std::list<int> indices) const override;
+			std::string barename() const;
+			bool operator==(const Type &) const override;
+			/** Assumes that each member in a struct has a width that's a multiple of 8. */
+			std::shared_ptr<StructType> pad();
+			std::string whyString() const override { return "v"; }
+
+		private:
+			static StructForm getForm(const llvm::StructType &);
+			static StructShape getShape(const llvm::StructType &);
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we

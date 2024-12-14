@@ -1,8 +1,3 @@
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-#include <stdexcept>
-
 #include "options.h"
 #include "compiler/PaddedStructs.h"
 #include "exception/SignednessSharingError.h"
@@ -11,6 +6,13 @@
 #include "parser/Parser.h"
 #include "parser/Types.h"
 #include "parser/StructNode.h"
+
+#include <llvm/IR/DerivedTypes.h>
+
+#include <iostream>
+#include <cstdlib>
+#include <sstream>
+#include <stdexcept>
 
 namespace LL2W {
 
@@ -384,28 +386,41 @@ namespace LL2W {
 
 	std::unordered_map<std::string, std::shared_ptr<StructType>> StructType::knownStructs = {};
 
-	StructType::StructType(const std::string *name_, StructForm form_, StructShape shape_):
-		name(name_), form(form_), shape(shape_) {}
+	StructType::StructType(std::string_view name, StructForm form, StructShape shape):
+		name(name),
+		form(form),
+		shape(shape) {}
 
 	StructType::StructType(std::shared_ptr<StructNode> node_):
-		name(node_->name), form(node_->form), shape(node_->shape), node(node_) {}
+		name(*node_->name),
+		form(node_->form),
+		shape(node_->shape),
+		node(node_) {}
 
-	StructType::StructType(const StructNode *node_): StructType(std::shared_ptr<StructNode>(node_->copy())) {}
+	StructType::StructType(const StructNode *node_):
+		StructType(std::shared_ptr<StructNode>(node_->copy())) {}
+
+	StructType::StructType(const llvm::StructType &llvm_struct):
+		name(llvm_struct.getName()),
+		form(getForm(llvm_struct)),
+		shape(getShape(llvm_struct)) {}
+
+
 
 	StructType::operator std::string() {
-		if (*name == "[anon]" && node)
+		if (name == "[anon]" && node)
 			return node->typeString();
-		if (name->at(1) == '"')
-			return "\e[32m%\e[33m" + name->substr(1) + "\e[39m";
-		return "\e[32m" + *name + "\e[39m";
+		if (name.at(1) == '"')
+			return "\e[32m%\e[33m" + name.substr(1) + "\e[39m";
+		return "\e[32m" + name + "\e[39m";
 	}
 
 	std::string StructType::toString() {
-		if (*name == "[anon]" && node)
+		if (name == "[anon]" && node)
 			return node->typeStringPlain();
-		if (name->at(1) == '"')
-			return "%" + name->substr(1);
-		return *name;
+		if (name.at(1) == '"')
+			return "%" + name.substr(1);
+		return name;
 	}
 
 	TypePtr StructType::copy() const {
@@ -476,8 +491,12 @@ namespace LL2W {
 	}
 
 	std::string StructType::barename() const {
-		const std::string out = name->front() == '%'? name->substr(1) : *name;
-		return out.front() == '"'? out.substr(1, out.size() - 2) : out;
+		std::string out = name.front() == '%'? name.substr(1) : name;
+		if (out.front() == '"') {
+			out.erase(out.size() - 1, 1);
+			out.erase(0, 1);
+		}
+		return out;
 	}
 
 	bool StructType::operator==(const Type &other) const {
@@ -489,7 +508,7 @@ namespace LL2W {
 		const StructType &otherstruct = dynamic_cast<const StructType &>(other);
 		if (form != otherstruct.form || shape != otherstruct.shape)
 			return false;
-		if ((name && name != otherstruct.name) || (!name && otherstruct.name))
+		if ((!name.empty() && name != otherstruct.name) || (name.empty() && !otherstruct.name.empty()))
 			return false;
 		if (node) {
 			if (!otherstruct.node || node->types.size() != otherstruct.node->types.size())
@@ -508,8 +527,7 @@ namespace LL2W {
 		if (paddedChild)
 			return paddedChild;
 
-		auto out = std::make_shared<StructType>(
-			*name == "[anon]"? name : StringSet::intern(*name + "$padded"), form, StructShape::Default);
+		auto out = std::make_shared<StructType>(name != "[anon]"? name + "$padded" : name, form, StructShape::Default);
 
 		out->node = std::make_shared<StructNode>(StructShape::Packed);
 
@@ -544,6 +562,32 @@ namespace LL2W {
 		return out;
 	}
 
+	StructForm StructType::getForm(const llvm::StructType &llvm_struct) {
+		std::string_view name = llvm_struct.getName();
+
+		if (name.starts_with("union.")) {
+			return StructForm::Union;
+		}
+
+		if (name.starts_with("class.")) {
+			return StructForm::Class;
+		}
+
+		return StructForm::Struct;
+	}
+
+	StructShape StructType::getShape(const llvm::StructType &llvm_struct) {
+		if (llvm_struct.isOpaque()) {
+			return StructShape::Opaque;
+		}
+
+		if (llvm_struct.isPacked()) {
+			return StructShape::Packed;
+		}
+
+		return StructShape::Default;
+	}
+
 	int GlobalTemporaryType::alignment() const {
 		throw std::runtime_error("Calling GlobalTemporaryType::alignment() is invalid");
 	}
@@ -563,9 +607,9 @@ namespace LL2W {
 			case LLVMTOK_FLOATTYPE: return std::make_shared<FloatType>(FloatType::getType(*node->lexerInfo));
 			case LLVM_POINTERTYPE:  return std::make_shared<PointerType>(getType(node->at(0)));
 			case LLVMTOK_VOID:      return std::make_shared<VoidType>();
-			case LLVMTOK_STRUCTVAR: return std::make_shared<StructType>(node->lexerInfo, StructForm::Struct);
-			case LLVMTOK_CLASSVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Class);
-			case LLVMTOK_UNIONVAR:  return std::make_shared<StructType>(node->lexerInfo, StructForm::Union);
+			case LLVMTOK_STRUCTVAR: return std::make_shared<StructType>(*node->lexerInfo, StructForm::Struct);
+			case LLVMTOK_CLASSVAR:  return std::make_shared<StructType>(*node->lexerInfo, StructForm::Class);
+			case LLVMTOK_UNIONVAR:  return std::make_shared<StructType>(*node->lexerInfo, StructForm::Union);
 			case LLVM_STRUCTDEF:    return std::make_shared<StructType>(dynamic_cast<const StructNode *>(node));
 			case LLVMTOK_GVAR:      return std::make_shared<GlobalTemporaryType>(node);
 			case LLVM_ARRAYTYPE:

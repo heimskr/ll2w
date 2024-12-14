@@ -93,10 +93,11 @@ void compile(const std::string &filename, bool show_debug) {
 	file.seekg(0, std::ios::beg);
 	text.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-	LL2W::llvmParser.in(text);
-	LL2W::llvmParser.debug(false, false);
-	LL2W::llvmParser.parse();
-	LL2W::Program prog(*LL2W::llvmParser.root);
+	// LL2W::llvmParser.in(text);
+	// LL2W::llvmParser.debug(false, false);
+	// LL2W::llvmParser.parse();
+	// LL2W::Program prog(*LL2W::llvmParser.root);
+	LL2W::Program prog(text);
 #ifdef INTERACTIVE
 	(void) show_debug;
 	LL2W::interactive(prog);

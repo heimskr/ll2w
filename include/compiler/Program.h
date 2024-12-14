@@ -71,7 +71,9 @@ namespace LL2W {
 			 *  Names don't contain a leading @. */
 			std::map<std::string, std::shared_ptr<Value>> constantReturningFunctions;
 
+			Program(std::string_view);
 			Program(const ASTNode &);
+
 			~Program();
 
 			/** Populates simpleFunctions. */

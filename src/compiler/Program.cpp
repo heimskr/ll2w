@@ -1,8 +1,3 @@
-#include <atomic>
-#include <iostream>
-#include <sstream>
-#include <thread>
-
 // #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
@@ -18,7 +13,17 @@
 #include "parser/StructNode.h"
 #include "parser/Values.h"
 #include "util/Util.h"
+
+#include <llvm/AsmParser/LLParser.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/SmallVectorMemoryBuffer.h>
+#include <llvm/Support/SourceMgr.h>
+
 #include "main.h"
+#include <atomic>
+#include <iostream>
+#include <sstream>
+#include <thread>
 
 namespace LL2W {
 	struct GlobalData {
@@ -28,6 +33,17 @@ namespace LL2W {
 		GlobalData(const ConstantPtr &constant_, const ValuePtr &value_, const ASTLocation &location_):
 			constant(constant_), value(value_), location(location_) {}
 	};
+
+	Program::Program(std::string_view source_code) {
+		llvm::LLVMContext context;
+		llvm::SMDiagnostic err;
+		llvm::SmallVector<char> vector(source_code.begin(), source_code.end());
+		std::unique_ptr<llvm::Module> llvm_module = llvm::getLazyIRModule(std::make_unique<llvm::SmallVectorMemoryBuffer>(std::move(vector)), err, context);
+
+		for (llvm::StructType *llvm_struct: llvm_module->getIdentifiedStructTypes()) {
+			StructType::knownStructs.emplace(llvm_struct->getName(), std::make_shared<StructType>(*llvm_struct));
+		}
+	}
 
 	Program::Program(const ASTNode &root) {
 		// Look for all struct definitions.
