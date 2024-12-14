@@ -61,7 +61,7 @@ namespace LL2W {
 			}
 
 			if (auto *function = llvm::dyn_cast<llvm::Function>(value)) {
-				functions.emplace(symbol.getKey().str(), new Function(*this, *function)); // TODO: memleak
+				functions.emplace(symbol.getKey().str(), new Function(*this, function)); // TODO: memleak
 				continue;
 			}
 
@@ -69,11 +69,8 @@ namespace LL2W {
 				aliases.emplace(StringSet::intern(symbol.getKey().str()), new AliasDef(*alias));
 				continue;
 			}
-			// info() << "struct: " << value->getType()->print)
 
-			// getTypeID() << " " << symbol.getKey().str().substr(0, 64) << "\n";
-			str = std::to_string(value->getValueID());
-			info() << "struct: " << str << "\n";
+			warn() << "Symbol type: " << value->getValueID() << "\n";
 		}
 	}
 

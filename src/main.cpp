@@ -98,7 +98,7 @@ void compile(const std::string &filename, bool show_debug) {
 	// LL2W::llvmParser.parse();
 	// LL2W::Program prog(*LL2W::llvmParser.root);
 	LL2W::Program prog(text);
-	return;
+	// return;
 #ifdef INTERACTIVE
 	(void) show_debug;
 	LL2W::interactive(prog);

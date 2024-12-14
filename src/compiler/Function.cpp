@@ -126,25 +126,27 @@ namespace LL2W {
 		debugIndex = header->debugIndex;
 	}
 
-	Function::Function(Program &program, const llvm::Function &function): parent(program) {
-		name = StringSet::intern(function.getName().str());
-		variadic = function.isVarArg();
-		arguments = new std::vector<FunctionArgument>;
-		llvm::raw_os_ostream os(std::cout);
-		for (const llvm::Argument &argument: function.args()) {
-			llvm::Type *type = argument.getType();
-			if (type->isMetadataTy()) {
-				continue;
+	Function::Function(Program &program, const llvm::Function *function):
+		llvmFunction(function),
+		parent(program) {
+			name = StringSet::intern(function->getName().str());
+			variadic = function->isVarArg();
+			arguments = new std::vector<FunctionArgument>;
+			llvm::raw_os_ostream os(std::cout);
+			for (const llvm::Argument &argument: function->args()) {
+				llvm::Type *type = argument.getType();
+				if (type->isMetadataTy()) {
+					continue;
+				}
+				arguments->emplace_back(LL2W::Type::fromLLVM(*type), argument.getName().str());
 			}
-			arguments->emplace_back(LL2W::Type::fromLLVM(*type), argument.getName().str());
-		}
-		returnType = LL2W::Type::fromLLVM(*function.getReturnType());
+			returnType = LL2W::Type::fromLLVM(*function->getReturnType());
 #ifdef USE_LINEAR_SCAN
-		allocator = new LinearScanAllocator(*this);
+			allocator = new LinearScanAllocator(*this);
 #else
-		allocator = new ColoringAllocator(*this);
+			allocator = new ColoringAllocator(*this);
 #endif
-	}
+		}
 
 	Function::~Function() {
 		if (allocator) {
@@ -177,8 +179,9 @@ namespace LL2W {
 						case ValueType::Global:
 						case ValueType::Double:
 							// info() << "Constant: " << *name << " (" << *ret->value << ")\n";
-							if (value_out)
+							if (value_out) {
 								*value_out = ret->value;
+							}
 							return analyzedType = Type::Constant;
 						case ValueType::Local: {
 							const Variable::ID pvar = dynamic_cast<const LocalValue *>(ret->value.get())->name;
@@ -193,8 +196,9 @@ namespace LL2W {
 									// info() << "Simple: " << *name << " (" << *simple_index_out << ")\n";
 								} // else info() << "Simple: " << *name << '\n';
 								return analyzedType = Type::Simple;
-							} else
+							} else {
 								info() << "Not simple: " << *name << '\n';
+							}
 							break;
 						}
 						default:
@@ -228,9 +232,11 @@ namespace LL2W {
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
-				for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written})
-					for (VariablePtr vptr: *variables)
+				for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written}) {
+					for (VariablePtr vptr: *variables) {
 						variableStore.insert({vptr->id, vptr});
+					}
+				}
 			}
 		};
 
@@ -242,8 +248,9 @@ namespace LL2W {
 				preds.clear();
 				instructions.clear();
 				const HeaderNode *header = dynamic_cast<const HeaderNode *>(child);
-				if (!header)
+				if (!header) {
 					throw std::runtime_error("header is null in Function::extractBlocks");
+				}
 				label = header->label;
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
@@ -259,14 +266,13 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
-		// if (label->front() == '%')
-		// 	return getBlock(StringSet::intern(label->substr(1)));
 		label = StringSet::unquote(label);
 		if (!bbMap.contains(label)) {
 			if (can_throw) {
 				std::cerr << "Want: " << *label << '\n';
-				for (const auto &[bname, block]: bbMap)
+				for (const auto &[bname, block]: bbMap) {
 					std::cerr << "- " << *bname << '\n';
+				}
 				throw std::runtime_error("Couldn't find block " + *label + " in function " + *name);
 			}
 			return nullptr;
@@ -276,8 +282,8 @@ namespace LL2W {
 
 	void Function::extractVariables(bool reset) {
 		Timer timer("ExtractVariables");
-		if (reset)
-			for (auto &map: {variableStore, extraVariables})
+		if (reset) {
+			for (auto &map: {variableStore, extraVariables}) {
 				for (const auto &[id, var]: map) {
 					var->setUsingBlocks({});
 					var->setDefiningBlocks({});
@@ -285,12 +291,16 @@ namespace LL2W {
 					var->setUses({});
 					var->setLastUse({});
 				}
+			}
+		}
 
 		for (BasicBlockPtr &block: blocks) {
-			for (VariablePtr read_var: block->read)
+			for (VariablePtr read_var: block->read) {
 				read_var->addUsingBlock(block);
-			for (VariablePtr written_var: block->written)
+			}
+			for (VariablePtr written_var: block->written) {
 				written_var->addDefiner(block);
+			}
 			for (std::shared_ptr<Instruction> &instruction: block->instructions) {
 				for (VariablePtr read_var: instruction->read) {
 					read_var->setLastUse(instruction);
@@ -301,8 +311,8 @@ namespace LL2W {
 			}
 		}
 
-		for (auto &map: {variableStore, extraVariables})
-			for (const auto &[id, var]: map)
+		for (auto &map: {variableStore, extraVariables}) {
+			for (const auto &[id, var]: map) {
 				if (var->definingBlocks.empty()) {
 					// Function arguments aren't defined by any instruction.
 					// They're implicitly defined in the first block.
@@ -315,22 +325,26 @@ namespace LL2W {
 						block->written.insert(var);
 					}
 				}
+			}
+		}
 	}
 
 	void Function::extractInstructions(bool force) {
-		for (const InstructionPtr &instruction: linearInstructions)
+		for (const InstructionPtr &instruction: linearInstructions) {
 			instruction->extract(force);
+		}
 	}
 
 	void Function::relinearize() {
 		Timer timer("Relinearize");
 		linearInstructions.clear();
 		int index = -1;
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			for (InstructionPtr &instruction: block->instructions) {
 				instruction->index = ++index;
 				linearInstructions.push_back(instruction);
 			}
+		}
 	}
 
 	Variable::ID Function::newLabel() {
@@ -338,10 +352,12 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::newVariable(const TypePtr &type, const BasicBlockPtr &definer) {
-		if (variableFreeze)
+		if (variableFreeze) {
 			throw std::logic_error("Can't call Function::newVariable when variableFreeze is true");
-		if (!type)
+		}
+		if (!type) {
 			throw std::invalid_argument("Can't call Function::newVariable with a null type");
+		}
 		return getVariable(newLabel(), type, definer);
 	}
 
@@ -362,8 +378,9 @@ namespace LL2W {
 			InstructionPtr definition = weak_definition.lock();
 			// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
 			// definition here.
-			if (definition->isPhi())
+			if (definition->isPhi()) {
 				continue;
+			}
 #ifdef DEBUG_SPILL
 			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
 			          << definition->index << ", OID: " << variable->originalID << ")\n";
@@ -373,8 +390,9 @@ namespace LL2W {
 			bool should_insert = true;
 
 			// Skip comments.
-			while (next && dynamic_cast<Comment *>(next.get()) != nullptr)
+			while (next && dynamic_cast<Comment *>(next.get()) != nullptr) {
 				next = after(next);
+			}
 
 			if (next) {
 				auto other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
@@ -409,12 +427,14 @@ namespace LL2W {
 		}
 
 #ifdef DEBUG_SPILL
-		if (!out)
+		if (!out) {
 			std::cerr << "  No stores inserted for " << *variable << ".\n";
+		}
 #endif
 
-		if (doDebug)
+		if (doDebug) {
 			debug();
+		}
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
@@ -435,10 +455,12 @@ namespace LL2W {
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
 				          << " in " << old_extra;
-				if (par)
+				if (par) {
 					std::cerr << " in block " << *par->label;
-				if (replaced)
+				}
+				if (replaced) {
 					std::cerr << " (now " << instruction->debugExtra() << ")";
+				}
 				std::cerr << "\n";
 #endif
 				if (replaced) {
@@ -472,8 +494,9 @@ namespace LL2W {
 		// TODO: can some of this be targeted to just the spilled variable?
 		reindexInstructions();
 		resetLiveness();
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->extract(true);
+		}
 		extractVariables(true); // Reset stale use/define data.
 		computeLiveness();
 		markSpilled(variable);
@@ -489,23 +512,26 @@ namespace LL2W {
 	}
 
 	bool Function::canSpill(VariablePtr variable) {
-		if (variable->definitions.empty() || isSpilled(variable))
+		if (variable->definitions.empty() || isSpilled(variable)) {
 			return false;
+		}
 
 		// If the only definition is a stack store, the variable can't be spilled.
 		if (variable->definitions.size() == 1) {
 			InstructionPtr single_def = variable->definitions.begin()->lock();
 			auto *store = dynamic_cast<StackStoreInstruction *>(single_def.get());
-			if (store && store->variable == variable)
+			if (store && store->variable == variable) {
 				return false;
+			}
 		}
 
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
 			// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
 			// definition here.
-			if (definition->isPhi())
+			if (definition->isPhi()) {
 				continue;
+			}
 
 			bool created;
 			const StackLocation &location = getSpill(variable, true, &created);
@@ -514,13 +540,15 @@ namespace LL2W {
 			bool should_insert = true;
 
 			// Skip comments.
-			while (next && dynamic_cast<Comment *>(next.get()) != nullptr)
+			while (next && dynamic_cast<Comment *>(next.get()) != nullptr) {
 				next = after(next);
+			}
 
 			if (next) {
 				auto other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next);
-				if (other_store && *other_store == *store)
+				if (other_store && *other_store == *store) {
 					should_insert = false;
+				}
 			}
 
 			if (created) {
@@ -533,19 +561,23 @@ namespace LL2W {
 				stack.erase(location.offset);
 			}
 
-			if (should_insert)
+			if (should_insert) {
 				return true;
+			}
 		}
 
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 			InstructionPtr &instruction = *iter;
 #ifdef STRICT_READ_CHECK
-			if (VariablePtr read = instruction->doesRead(variable))
-				if (instruction->canReplaceRead(read))
+			if (VariablePtr read = instruction->doesRead(variable)) {
+				if (instruction->canReplaceRead(read)) {
 					return true;
+				}
+			}
 #else
-			if (instruction->read.count(variable) != 0 && instruction->canReplaceRead(variable))
+			if (instruction->read.count(variable) != 0 && instruction->canReplaceRead(variable)) {
 				return true;
+			}
 #endif
 		}
 
@@ -558,13 +590,17 @@ namespace LL2W {
 
 	std::shared_ptr<Instruction> Function::firstInstruction(bool includeComments) {
 		if (includeComments) {
-			for (InstructionPtr &instruction: blocks.front()->instructions)
-				if (!dynamic_cast<Label *>(instruction.get()))
+			for (InstructionPtr &instruction: blocks.front()->instructions) {
+				if (!dynamic_cast<Label *>(instruction.get())) {
 					return instruction;
+				}
+			}
 		} else {
-			for (InstructionPtr &instruction: blocks.front()->instructions)
-				if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get()))
+			for (InstructionPtr &instruction: blocks.front()->instructions) {
+				if (!dynamic_cast<Label *>(instruction.get()) && !dynamic_cast<Comment *>(instruction.get())) {
 					return instruction;
+				}
+			}
 		}
 		return nullptr;
 	}
@@ -588,13 +624,16 @@ namespace LL2W {
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
 
-		if (new_instruction->debugIndex == -1)
+		if (new_instruction->debugIndex == -1) {
 			new_instruction->debugIndex = base->debugIndex;
+		}
 
-		if (reindex)
+		if (reindex) {
 			// There used to be a + 1 here, but I removed it because I believe it gets incremented in the loop shortly
 			// before the end of this function anyway.
 			new_instruction->index = base->index;
+		}
+
 		new_instruction->parent = base->parent;
 		std::list<InstructionPtr>::iterator iter;
 
@@ -615,49 +654,51 @@ namespace LL2W {
 			linearInstructions.insert(iter, new_instruction);
 
 			if (reindex) {
-				for (auto end = linearInstructions.end(); iter != end; ++iter)
+				for (auto end = linearInstructions.end(); iter != end; ++iter) {
 					++(*iter)->index;
+				}
 			}
 		}
 
 		return new_instruction;
 	}
 
-	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex,
-	                                      bool linear_warn, bool *should_relinearize_out) {
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex, bool linear_warn, bool *should_relinearize_out) {
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
 			error() << base->debugExtra() << "\n";
 			throw std::runtime_error("Couldn't lock instruction's parent block");
 		}
 
-		if (block->parent != this)
+		if (block->parent != this) {
 			throw std::runtime_error("Block parent isn't equal to this in Function::insertBefore");
+		}
 
-		if (new_instruction->debugIndex == -1)
+		if (new_instruction->debugIndex == -1) {
 			new_instruction->debugIndex = base->debugIndex;
+		}
 
 		new_instruction->parent = base->parent;
 
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
 		if (linear_warn && linearIter == linearInstructions.end()) {
-			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->debugExtra()
-			       << '\n';
+			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->debugExtra() << '\n';
 			throw std::runtime_error("Couldn't find instruction in linearInstructions in " + *name);
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		if (blockIter == block->instructions.end()) {
-			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": "
-			       << base->debugExtra() << '\n';
+			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": " << base->debugExtra() << '\n';
 			std::cerr << "Index: " << block->index << '\n';
-			for (const auto &subblock: blocks)
+			for (const auto &subblock: blocks) {
 				std::cerr << *subblock->label << '[' << subblock->index << "] ";
+			}
 			if (block->instructions.empty()) {
 				std::cerr << "\nInstruction list is empty.\n";
 			} else {
 				std::cerr << "\nInstruction list:\n";
-				for (const auto &block_instruction: block->instructions)
+				for (const auto &block_instruction: block->instructions) {
 					std::cerr << "    " << block_instruction->debugExtra() << '\n';
+				}
 			}
 			cfg.renderTo("inf_cfg.png");
 			throw std::runtime_error("Instruction not found in block");
@@ -666,31 +707,32 @@ namespace LL2W {
 		const bool can_insert_linear = linearIter != linearInstructions.end();
 		if (can_insert_linear) {
 			linearInstructions.insert(linearIter, new_instruction);
-			if (should_relinearize_out != nullptr)
+			if (should_relinearize_out != nullptr) {
 				*should_relinearize_out = false;
-		} else if (should_relinearize_out != nullptr)
+			}
+		} else if (should_relinearize_out != nullptr) {
 			*should_relinearize_out = true;
+		}
 
 		block->instructions.insert(blockIter, new_instruction);
 
 		if (reindex && can_insert_linear) {
 			new_instruction->index = base->index;
-			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter)
+			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter) {
 				++(*linearIter)->index;
+			}
 		}
 
 		return new_instruction;
 	}
 
-	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text,
-	                            bool reindex) {
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &text, bool reindex) {
 		insertBefore(base, new_instruction, false);
 		comment(new_instruction, text, reindex);
 		return new_instruction;
 	}
 
-	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text,
-	                            bool reindex) {
+	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *text, bool reindex) {
 		insertBefore(base, new_instruction, std::string(text), reindex);
 		return new_instruction;
 	}
@@ -717,8 +759,9 @@ namespace LL2W {
 					BasicBlockPtr next = after(block);
 					if (next) {
 						const std::string destination = branch->destination->substr(1);
-						if (*next->label == destination)
+						if (*next->label == destination) {
 							remove(back);
+						}
 					}
 				} else throw std::runtime_error("branch is null in Function::removeUselessBranch");
 			}
@@ -779,8 +822,9 @@ namespace LL2W {
 		// Replace the old label with the new label in the preds of all basic blocks.
 		for (const BasicBlockPtr &possible_successor: blocks) {
 			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->label);
-			if (predIter != possible_successor->preds.end())
+			if (predIter != possible_successor->preds.end()) {
 				*predIter = label;
+			}
 		}
 
 		// Insert the new block after the original block.
@@ -794,20 +838,24 @@ namespace LL2W {
 		branch->parent = block;
 		block->instructions.push_back(branch);
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
-		if (iter == linearInstructions.end())
+		if (iter == linearInstructions.end()) {
 			warn() << "Couldn't find instruction in Function::splitBlock: " << instruction->debugExtra() << '\n';
+		}
 		++iter;
 		linearInstructions.insert(iter, branch);
 
 		// We need to update ϕ-instructions.
 		for (auto &possible_llvm: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(possible_llvm.get());
-			if (llvm == nullptr || llvm->node->nodeType() != NodeType::Phi)
+			if (llvm == nullptr || llvm->node->nodeType() != NodeType::Phi) {
 				continue;
+			}
 			auto *phi = dynamic_cast<PhiNode *>(llvm->node);
-			for (auto &[value, phi_label]: phi->pairs)
-				if (phi_label == block->label)
+			for (auto &[value, phi_label]: phi->pairs) {
+				if (phi_label == block->label) {
 					phi_label = label;
+				}
+			}
 		}
 
 		block->extract(true);
@@ -821,8 +869,9 @@ namespace LL2W {
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (const BasicBlockPtr &block: blocks) {
 			for (const std::string *&pred: block->preds) {
-				if (pred == after->label)
+				if (pred == after->label) {
 					pred = before->label;
+				}
 			}
 		}
 
@@ -842,19 +891,24 @@ namespace LL2W {
 		const std::string *after_label    = after->label;
 		for (const InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
-				if (branch->destination == after_p_label)
+				if (branch->destination == after_p_label) {
 					branch->destination = before_p_label;
+				}
 			} else if (BrCondNode *branch = CompilerUtil::brCondCast(instruction)) {
-				if (branch->ifTrue == after_p_label)
+				if (branch->ifTrue == after_p_label) {
 					branch->ifTrue = before_p_label;
-				if (branch->ifFalse == after_p_label)
+				}
+				if (branch->ifFalse == after_p_label) {
 					branch->ifFalse = before_p_label;
+				}
 			} else if (SwitchNode *sw = CompilerUtil::switchCast(instruction)) {
-				if (sw->label == after_label)
+				if (sw->label == after_label) {
 					sw->label = before_label;
+				}
 				for (std::tuple<TypePtr, ValuePtr, const std::string *> &tuple: sw->table) {
-					if (std::get<2>(tuple) == after_label)
+					if (std::get<2>(tuple) == after_label) {
 						std::get<2>(tuple) = before_label;
+					}
 				}
 			}
 		}
@@ -875,44 +929,59 @@ namespace LL2W {
 	}
 
 	std::string Function::transformLabel(const std::string &str) const {
-		const std::string end = str.front() == '%'? str.substr(1) : str;
+		std::string_view end(str);
+		if (end.front() == '%') {
+			end.remove_prefix(1);
+		}
 		// Some lambdas will have names like "@\"_ZZ11kernel_mainENK3$_0clEm\""
-		if (1 < name->size() && (*name)[1] == '"')
-			return "\"__" + name->substr(2, name->size() - 3) + "_label" + end + "\"";
-		return "__" + name->substr(1) + "_label" + end;
+		std::string_view name_view(*name);
+		if (1 < name->size() && (*name)[1] == '"') {
+			return std::format("\"__{}_label{}\"", name_view.substr(2, name_view.size() - 3), end);
+		}
+		return std::format("__{}_label{}", name_view.substr(1), end);
 	}
 
 	void Function::updateInstructionNodes() {
 		Timer timer("UpdateInstructionNodes");
 		for (const InstructionPtr &instruction: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
+			if (!llvm) {
 				continue;
+			}
 
 			InstructionNode *node = llvm->node;
-			if (auto *reader = dynamic_cast<Reader *>(node))
-				for (const std::shared_ptr<LocalValue> &value: reader->allLocals())
-					if (value->variable)
+			if (auto *reader = dynamic_cast<Reader *>(node)) {
+				for (const std::shared_ptr<LocalValue> &value: reader->allLocals()) {
+					if (value->variable) {
 						value->name = value->variable->id;
+					}
+				}
+			}
 
-			if (auto *writer = dynamic_cast<Writer *>(node))
-				if (writer->variable)
+			if (auto *writer = dynamic_cast<Writer *>(node)) {
+				if (writer->variable) {
 					writer->result = writer->variable->id;
+				}
+			}
 		}
 	}
 
 	void Function::resetRegisters(bool respectful) {
 		if (!respectful) {
-			for (const auto &[id, var]: variableStore)
+			for (const auto &[id, var]: variableStore) {
 				var->setRegisters({});
+			}
 		} else {
 			for (const auto &[id, var]: variableStore) {
 				std::unordered_set<int> to_remove;
-				for (const int reg: var->registers)
-					if (!WhyInfo::isSpecialPurpose(reg))
+				for (const int reg: var->registers) {
+					if (!WhyInfo::isSpecialPurpose(reg)) {
 						to_remove.insert(reg);
-				for (const int reg: to_remove)
+					}
+				}
+				for (const int reg: to_remove) {
 					var->registers.erase(reg);
+				}
 			}
 		}
 	}
@@ -925,13 +994,15 @@ namespace LL2W {
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);
 		Passes::lowerStacksave(*this);
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->extract();
+		}
 		Passes::trimBlocks(*this);
 		Passes::splitBlocks(*this);
 		Passes::copyArguments(*this);
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->extract(true);
+		}
 		Passes::replaceConstants(*this);
 		Passes::lowerAlloca(*this);
 		Passes::loadArguments(*this);
@@ -955,12 +1026,14 @@ namespace LL2W {
 		Passes::lowerInlineAsm(*this);
 		Passes::lowerExtractvalue(*this);
 		Passes::transformInstructions(*this);
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->extract(true);
+		}
 #ifdef MOVE_PHI
 		Passes::movePhi(*this);
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->extract(true);
+		}
 		extractVariables(true);
 #else
 		Passes::cutPhi(*this);
@@ -977,8 +1050,9 @@ namespace LL2W {
 		Passes::coalescePhi(*this);
 #endif
 
-		if (*name == "@main")
+		if (*name == "@main") {
 			debug();
+		}
 	}
 
 	void Function::finalCompile() {
@@ -998,11 +1072,13 @@ namespace LL2W {
 		Passes::lowerClobber(*this);
 		Passes::lowerStack(*this);
 		const bool naked = isNaked();
-		if (!naked)
+		if (!naked) {
 			Passes::insertPrologue(*this);
+		}
 		Passes::loadArgumentsReadjust(*this);
-		if (!naked)
+		if (!naked) {
 			Passes::lowerRet(*this);
+		}
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
@@ -1022,9 +1098,9 @@ namespace LL2W {
 				auto lock = parent.getLock();
 				parent.debugIndices.insert(instruction->debugIndex);
 			}
-			if (dynamic_cast<WhyInstruction *>(instruction.get()) == nullptr)
-				error() << "Untranslated instruction in " << *name << ":\n\n    " << instruction->debugExtra()
-				        << "\n\n";
+			if (dynamic_cast<WhyInstruction *>(instruction.get()) == nullptr) {
+				error() << "Untranslated instruction in " << *name << ":\n\n    " << instruction->debugExtra() << "\n\n";
+			}
 		}
 		finalDone = true;
 	}
@@ -1049,8 +1125,9 @@ namespace LL2W {
 #ifdef FN_CATCH_EXCEPTIONS
 		} catch (std::exception &err) {
 			error() << err.what() << "\n";
-			if (parent)
+			if (parent) {
 				LL2W::interactive(*parent, this);
+			}
 			throw;
 		}
 #endif
@@ -1061,39 +1138,42 @@ namespace LL2W {
 		finalCompile();
 
 #ifdef DEBUG_SPILL
-		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[22m. Finished \e[1m" << *name
-		       << "\e[22m.\n";
+		info() << "Total spills: \e[1m" << allocator->getSpillCount() << "\e[22m. Finished \e[1m" << *name << "\e[22m.\n";
 #endif
 	}
 
 	VariablePtr Function::makePrecoloredVariable(unsigned char index, BasicBlockPtr definer) {
-		if (WhyInfo::totalRegisters <= index)
+		if (WhyInfo::totalRegisters <= index) {
 			throw std::invalid_argument("Index too high: " + std::to_string(index));
+		}
 		const bool old_freeze = variableFreeze;
 		variableFreeze = false;
 		VariablePtr new_var = newVariable(AnyType::make(), definer);
 		variableFreeze = old_freeze;
 		new_var->setRegisters({index});
 		return new_var;
-
 	}
 
 	VariablePtr Function::makeAssemblerVariable(unsigned char index, BasicBlockPtr definer) {
-		if (WhyInfo::assemblerCount <= index)
+		if (WhyInfo::assemblerCount <= index) {
 			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
-		if (!assemblerVariables.contains(index))
+		}
+		if (!assemblerVariables.contains(index)) {
 			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, definer));
+		}
 		VariablePtr &found = assemblerVariables.at(index);
-		if (definer)
+		if (definer) {
 			found->addDefiner(definer);
+		}
 		return found;
 	}
 
 	void Function::forceLiveness() {
 		Timer timer("ForceLiveness");
 		extractInstructions(true);
-		for (const BasicBlockPtr &block: blocks)
+		for (const BasicBlockPtr &block: blocks) {
 			block->extract(true);
+		}
 		extractVariables(true);
 		resetLiveness();
 		computeLiveness();
@@ -1104,29 +1184,32 @@ namespace LL2W {
 			const int max = std::min(16, getArity());
 			int reg = WhyInfo::argumentOffset - 1;
 			// TODO: change to support non-numeric argument variables
-			for (int i = 0; i < max; ++i)
+			for (int i = 0; i < max; ++i) {
 				variableStore.at(StringSet::intern(std::to_string(i)))->setRegisters({++reg});
+			}
 		}
 	}
 
-	StackLocation & Function::addToStack(const VariablePtr &variable, StackLocation::Purpose purpose, int64_t width,
-	                                     int64_t align) {
-		for (auto &[offset, location]: stack)
-			if (*location.variable == *variable && location.purpose == purpose)
+	StackLocation & Function::addToStack(const VariablePtr &variable, StackLocation::Purpose purpose, int64_t width, int64_t align) {
+		for (auto &[offset, location]: stack) {
+			if (*location.variable == *variable && location.purpose == purpose) {
 				return location;
-
-		if (width == -1) {
-			width = !variable || !variable->type? 8 : Util::upalign(variable->type->width() < 8? 1 :
-				variable->type->width() / 8, 8);
+			}
 		}
 
-		if (align == 0)
+		if (width == -1) {
+			width = !variable || !variable->type? 8 : Util::upalign(variable->type->width() < 8? 1 : variable->type->width() / 8, 8);
+		}
+
+		if (align == 0) {
 			align = 1;
+		}
 
 		stackSize = Util::upalign(stackSize + width, align);
 		auto &added = stack.emplace(stackSize, StackLocation(this, variable, purpose, stackSize, width)).first->second;
-		if (purpose == StackLocation::Purpose::Spill)
+		if (purpose == StackLocation::Purpose::Spill) {
 			spillSize += width;
+		}
 		return added;
 	}
 
@@ -1137,8 +1220,9 @@ namespace LL2W {
 			auto iter = found;
 			++iter;
 			linearInstructions.erase(found);
-			for (auto end = linearInstructions.end(); iter != end; ++iter)
+			for (auto end = linearInstructions.end(); iter != end; ++iter) {
 				--(*iter)->index;
+			}
 		}
 
 		for (auto &[id, var]: variableStore) {
@@ -1162,25 +1246,35 @@ namespace LL2W {
 		auto lui = std::make_shared<LuiInstruction>(var, int(value >> 32));
 		insertBefore(before, set, false)->setDebug(before->debugIndex)->extract();
 		insertBefore(before, lui, false)->setDebug(before->debugIndex)->extract();
-		if (reindex)
+		if (reindex) {
 			reindexInstructions();
+		}
 		return var;
 	}
 
 	VariablePtr Function::getVariable(Variable::ID id, bool add_arguments) {
-		if (variableStore.contains(id))
+		if (variableStore.contains(id)) {
 			return variableStore.at(id);
-		else if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && isArgument(id))
-			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
-		else if (extraVariables.count(id) != 0)
-			return extraVariables.at(id);
-		info() << "variableStore:";
-		for (const auto &[name, var]: variableStore) {
-			if (*name == *id)
-				std::cerr << " \e[32m" << *name << '(' << name << ':' << id << ")\e[39m";
-			else
-				std::cerr << ' ' << *name;
 		}
+
+		if (add_arguments && getCallingConvention() == CallingConvention::Reg16 && isArgument(id)) {
+			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
+		}
+
+		if (extraVariables.count(id) != 0) {
+			return extraVariables.at(id);
+		}
+
+		info() << "variableStore:";
+
+		for (const auto &[name, var]: variableStore) {
+			if (*name == *id) {
+				std::cerr << " \e[32m" << *name << '(' << name << ':' << id << ")\e[39m";
+			} else {
+				std::cerr << ' ' << *name;
+			}
+		}
+
 		std::cerr << '\n';
 		throw std::out_of_range("Couldn't find variable with ID " + *id + " in function " + *name);
 	}
@@ -1192,19 +1286,21 @@ namespace LL2W {
 	VariablePtr Function::getVariable(Variable::ID id, const TypePtr type, BasicBlockPtr definer) {
 		const size_t vcount = variableStore.count(id), ecount = extraVariables.count(id);
 		if (vcount == 0 && ecount == 0) {
-			auto out =
-				variableStore.emplace(id, std::make_shared<Variable>(id, type? type->copy() : nullptr)).first->second;
-			if (definer)
+			auto out = variableStore.emplace(id, std::make_shared<Variable>(id, type? type->copy() : nullptr)).first->second;
+			if (definer) {
 				out->addDefiner(definer);
+			}
 			return out;
 		}
 		VariablePtr out;
-		if (ecount)
+		if (ecount) {
 			out = extraVariables.at(id);
-		else
+		} else {
 			out = variableStore.at(id);
-		if (definer)
+		}
+		if (definer) {
 			out->addDefiner(definer);
+		}
 		return out;
 	}
 
@@ -1221,8 +1317,9 @@ namespace LL2W {
 	}
 
 	bool Function::isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var) {
-		if (!djGraph.has_value())
+		if (!djGraph.has_value()) {
 			throw std::runtime_error("Can't compute liveness with merge sets when the DJ graph is empty");
+		}
 
 		// if (var->definingBlocks.size() != 1) {
 		// 	warn() << "Variable " << *var << " has " << var->definingBlocks.size() << " defining blocks, not 1.\n";
@@ -1239,13 +1336,15 @@ namespace LL2W {
 		// for t ∈ uses(a)
 		for (auto weak_t: var->usingBlocks) {
 			auto t = weak_t.lock();
-			if (!t)
+			if (!t) {
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
+			}
 			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M^r (n)
-				if (m_r.count(&(*djGraph)[*t->label]) != 0)
+				if (m_r.count(&(*djGraph)[*t->label]) != 0) {
 					return true;
+				}
 				auto t_node = &(*djGraph)[*t->label];
 				if (!t_node) {
 					// error() << "t_node (" << *t->label << ") is null in isLiveInUsingMergeSet\n";
@@ -1280,8 +1379,9 @@ namespace LL2W {
 			// return uses(a)\def(a) = ∅
 			// At least, I assume the use of φ in the PDF actually refers to the empty set.
 			auto difference = var->usingBlocks;
-			for (const auto &weak_block: var->definingBlocks)
+			for (const auto &weak_block: var->definingBlocks) {
 				difference.erase(weak_block);
+			}
 			return !difference.empty();
 		}
 
@@ -1300,13 +1400,15 @@ namespace LL2W {
 		// for t ∈ uses(a)
 		for (auto weak_t: var->usingBlocks) {
 			auto t = weak_t.lock();
-			if (!t)
+			if (!t) {
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
+			}
 			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M_s(n)
-				if (m_s.count(&(*djGraph)[*t->label]) != 0)
+				if (m_s.count(&(*djGraph)[*t->label]) != 0) {
 					return true;
+				}
 				auto t_node = &(*djGraph)[*t->label];
 				if (!t_node) {
 					// error() << "t_node (" << *t->label << ") is null in isLiveOutUsingMergeSet\n";
@@ -1328,15 +1430,16 @@ namespace LL2W {
 	void Function::computeLivenessMS() {
 		Timer timer("ComputeLivenessMS");
 
-		if (!djGraph.has_value())
+		if (!djGraph.has_value()) {
 			throw std::runtime_error("Can't compute liveness with merge sets when the DJ graph is empty");
+		}
 
 		auto mergesets = djGraph->getMergeSets();
 		// There must be a better way than this brute-force approach. I'm just not smart enough to find it.
 		// This is obviously O(bv), where b is the number of basic blocks and v is the number of variables.
 		// I'm guessing that's around 45,000 for vsnprintf. That's absurd.
-		for (const auto &[name, var]: variableStore)
-			if (!var->hasSpecialRegister())
+		for (const auto &[name, var]: variableStore) {
+			if (!var->hasSpecialRegister()) {
 				for (const auto &block: blocks) {
 					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveIn.insert(var);
@@ -1347,8 +1450,10 @@ namespace LL2W {
 						block->allLive.insert(var);
 					}
 				}
-		for (const auto &[name, var]: extraVariables)
-			if (!var->hasSpecialRegister())
+			}
+		}
+		for (const auto &[name, var]: extraVariables) {
+			if (!var->hasSpecialRegister()) {
 				for (const auto &block: blocks) {
 					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
 						block->liveIn.insert(var);
@@ -1359,6 +1464,8 @@ namespace LL2W {
 						block->allLive.insert(var);
 					}
 				}
+			}
+		}
 	}
 
 	void Function::computeLivenessTraditional() {
@@ -1374,9 +1481,11 @@ namespace LL2W {
 			Timer subtimer("GoesTo");
 			for (auto &block: blocks) {
 				goes_to.try_emplace(block->label);
-				for (auto &other: blocks)
-					if (Util::contains(other->preds, block->label))
+				for (auto &other: blocks) {
+					if (Util::contains(other->preds, block->label)) {
 						goes_to[block->label].push_back(other);
+					}
+				}
 			}
 		}
 
@@ -1386,13 +1495,17 @@ namespace LL2W {
 				in_[n]  = in[n];
 				out_[n] = out[n];
 				in[n] = block->read;
-				for (auto &var: out[n])
-					if (block->written.count(var) == 0)
+				for (auto &var: out[n]) {
+					if (block->written.count(var) == 0) {
 						in[n].insert(var);
+					}
+				}
 				out[n].clear();
-				for (auto &succ: goes_to.at(n))
-					for (auto &var: in[succ->label])
+				for (auto &succ: goes_to.at(n)) {
+					for (auto &var: in[succ->label]) {
 						out[n].insert(var);
+					}
+				}
 			}
 
 			working = false;
@@ -1424,24 +1537,28 @@ namespace LL2W {
 
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
 		for (const auto &instruction: block->instructions) {
-			if (instruction->isPhi())
+			if (instruction->isPhi()) {
 				continue;
+			}
 			// if def(v) ∈ B (φ excluded) then return
-			if (instruction->written.contains(var) && !var->fromPhi)
+			if (instruction->written.contains(var) && !var->fromPhi) {
 				return;
+			}
 		}
 
 		// if v ∈ LiveIn(B) then return
-		if (block->liveIn.contains(var))
+		if (block->liveIn.contains(var)) {
 			return;
+		}
 
 		// LiveIn(B) = LiveIn(B) ∪ {v}
 		block->liveIn.insert(var);
 		block->allLive.insert(var);
 
 		// if v ∈ PhiDefs(B) then return
-		if (block->inPhiDefs(var))
+		if (block->inPhiDefs(var)) {
 			return;
+		}
 
 		// for each P ∈ CFG_preds(B) do
 		try {
@@ -1456,8 +1573,9 @@ namespace LL2W {
 			std::cerr << "Couldn't find block " << *block->label << " in " << *name << " while computing liveness.\n";
 			if (!bbNodeMap.empty()) {
 				std::cerr << "bbNodeMap:";
-				for (const auto &pair: bbNodeMap)
+				for (const auto &pair: bbNodeMap) {
 					std::cerr << ' ' << *pair.first->label;
+				}
 				std::cerr << '\n';
 			}
 			debug();
@@ -1474,8 +1592,9 @@ namespace LL2W {
 				block->liveOut.insert(var);
 				upAndMark(block, var);
 			}
-			for (const VariablePtr &var: block->nonPhiRead)
+			for (const VariablePtr &var: block->nonPhiRead) {
 				upAndMark(block, var);
+			}
 		}
 
 		timer.stop();
@@ -1487,12 +1606,13 @@ namespace LL2W {
 		for (const auto &[id, var]: variableStore) {
 			const auto &defines = var->definingBlocks;
 			const auto &uses = var->usingBlocks;
-			if (defines.size() == 1 && uses.size() == 1 && defines.begin()->lock() == uses.begin()->lock())
+			if (defines.size() == 1 && uses.size() == 1 && defines.begin()->lock() == uses.begin()->lock()) {
 				for (const BasicBlockPtr &block: blocks) {
 					block->liveIn.erase(var);
 					block->liveOut.erase(var);
 					block->allLive.erase(var);
 				}
+			}
 		}
 	}
 
@@ -1504,20 +1624,24 @@ namespace LL2W {
 		}
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>>
-	Function::getLive(const VariablePtr &var, BasicBlock::LivePtr lptr) const {
+	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(const VariablePtr &var, BasicBlock::LivePtr lptr) const {
 		Timer timer("GetLive");
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<VariablePtr> aliases;
-		for (const auto &[id, subvar]: variableStore)
-			if (alias_pointers.contains(subvar.get()))
+		for (const auto &[id, subvar]: variableStore) {
+			if (alias_pointers.contains(subvar.get())) {
 				aliases.insert(subvar);
+			}
+		}
 		aliases.insert(var);
-		for (const auto &alias: aliases)
-			for (const auto &block: blocks)
-				if (((*block).*lptr).contains(alias))
+		for (const auto &alias: aliases) {
+			for (const auto &block: blocks) {
+				if (((*block).*lptr).contains(alias)) {
 					out.insert(block);
+				}
+			}
+		}
 		return out;
 	}
 
@@ -1535,14 +1659,19 @@ namespace LL2W {
 		Timer timer("IsLiveOutAnywhere");
 		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<VariablePtr> aliases;
-		for (const auto &[id, subvar]: variableStore)
-			if (alias_pointers.contains(subvar.get()))
+		for (const auto &[id, subvar]: variableStore) {
+			if (alias_pointers.contains(subvar.get())) {
 				aliases.insert(subvar);
+			}
+		}
 		aliases.insert(var);
-		for (const auto &alias: aliases)
-			for (const auto &block: blocks)
-				if (block->liveOut.contains(alias))
+		for (const auto &alias: aliases) {
+			for (const auto &block: blocks) {
+				if (block->liveOut.contains(alias)) {
 					return true;
+				}
+			}
+		}
 		return false;
 	}
 
@@ -1560,10 +1689,11 @@ namespace LL2W {
 			const int dbg = instruction->debugIndex;
 			if (dbg != -1 && instruction->showDebug()) {
 				auto lock = parent.getLock();
-				if (parent.locations.count(dbg) != 0)
+				if (parent.locations.count(dbg) != 0) {
 					out << " !" << parent.locations.at(dbg).index;
-				else
+				} else {
 					warn() << "Couldn't find location for !" << dbg << "\n";
+				}
 			}
 			out << "\n";
 		}
@@ -1574,11 +1704,13 @@ namespace LL2W {
 		std::stringstream out;
 		out << *returnType << " \e[35m" << *name << "\e[94m(\e[39m";
 		for (auto begin = arguments->begin(), iter = begin, end = arguments->end(); iter != end; ++iter) {
-			if (iter != begin)
+			if (iter != begin) {
 				out << "\e[2m,\e[22m ";
+			}
 			out << *iter->type;
-			if (iter->name)
+			if (iter->name) {
 				out << " " << *iter->name;
+			}
 		}
 		out << "\e[94m)\e[39m";
 		return out.str();
@@ -1645,18 +1777,19 @@ namespace LL2W {
 		);
 	}
 
-	void Function::debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written,
-	                     bool var_liveness, bool render, bool estimations, bool aliases, bool stack, bool show_labels,
-	                     std::ostream &stream) {
-		if (do_blocks || linear || vars)
+	void Function::debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written, bool var_liveness, bool render,
+	                     bool estimations, bool aliases, bool stack, bool show_labels, std::ostream &stream) {
+		if (do_blocks || linear || vars) {
 			stream << headerString() + " \e[94m{\e[39m\n";
+		}
+
 		if (do_blocks) {
 			for (const BasicBlockPtr &block: blocks) {
-				stream << "    \e[2m; \e[4;1m" << *block->label << "\e[22;2;4m @ " << block->index
-				       << ": preds =";
+				stream << "    \e[2m; \e[4;1m" << *block->label << "\e[22;2;4m @ " << block->index << ": preds =";
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
-					if (iter != begin)
+					if (iter != begin) {
 						stream << ',';
+					}
 					stream << " %" << **iter;
 				}
 				stream << '.';
@@ -1665,8 +1798,9 @@ namespace LL2W {
 						stream << "; live-in =";
 						const auto &liveIn = block->liveIn;
 						for (auto begin = liveIn.begin(), iter = begin, end = liveIn.end(); iter != end; ++iter) {
-							if (iter != begin)
+							if (iter != begin) {
 								stream << ',';
+							}
 							stream << " %" << *(*iter)->id;
 						}
 					}
@@ -1674,37 +1808,40 @@ namespace LL2W {
 						stream << "; live-out =";
 						const auto &liveOut = block->liveOut;
 						for (auto begin = liveOut.begin(), iter = begin, end = liveOut.end(); iter != end; ++iter) {
-							if (iter != begin)
+							if (iter != begin) {
 								stream << ',';
+							}
 							stream << " %" << *(*iter)->id;
 						}
 					}
 				}
 				stream << "\e[22;24m\n";
-				if (read_written)
+				if (read_written) {
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 						int read, written;
 						std::tie(read, written) = instruction->extract();
-						stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written
-						       << "\e[0m\n";
+						stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
 						if (show_labels) {
 							if (auto labels = instruction->getLabels(); !labels.empty()) {
 								stream << "    Labels:";
-								for (const auto *label: labels)
+								for (const auto *label: labels) {
 									stream << " \e[1m" << *label << "\e[22m";
+								}
 								stream << '\n';
 							} else {
 								stream << "    No labels.\n";
 							}
 						}
 					}
-				else
-					for (const std::shared_ptr<Instruction> &instruction: block->instructions)
+				} else {
+					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
 						stream << "    " << instruction->debugExtra() << "\n";
+					}
+				}
 				stream << "\n";
 			}
 		}
-		if (linear)
+		if (linear) {
 			for (const std::shared_ptr<Instruction> &instruction: linearInstructions) {
 				int read, written;
 				std::tie(read, written) = instruction->extract();
@@ -1712,14 +1849,16 @@ namespace LL2W {
 				if (show_labels) {
 					if (auto labels = instruction->getLabels(); !labels.empty()) {
 						stream << "    Labels:";
-						for (const auto *label: labels)
+						for (const auto *label: labels) {
 							stream << " \e[1m" << *label << "\e[22m";
+						}
 						stream << '\n';
 					} else {
 						stream << "    No labels.\n";
 					}
 				}
 			}
+		}
 		if (vars) {
 			stream << "    \e[2m; Variables:\e[0m\n";
 
@@ -1734,132 +1873,155 @@ namespace LL2W {
 			all_vars.insert(extraVariables.cbegin(), extraVariables.cend());
 
 			for (auto &[id, var]: all_vars) {
-				if (extraVariables.count(id) != 0)
+				if (extraVariables.count(id) != 0) {
 					stream << "\e[31m[e]\e[39m";
-				else
+				} else {
 					stream << "   ";
-				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs ("
-				       << var->definitions.size() << ") =";
-				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks)
-					if (auto locked = def.lock())
+				}
+				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
+				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks) {
+					if (auto locked = def.lock()) {
 						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
-					else
+					} else {
 						stream << " \e[2m??\e[22m";
+					}
+				}
 				stream << "  \e[0;2muses =";
-				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks)
-					if (auto locked = use.lock())
+				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks) {
+					if (auto locked = use.lock()) {
 						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
-					else
+					} else {
 						stream << " \e[2m??\e[22m";
+					}
+				}
 				const auto spill_cost = var->spillCost();
-				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost))
-				       << "\e[0;2m";
-				if (var->definingBlocks.size() > 1)
+				stream << "\e[2m  cost = \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost)) << "\e[0;2m";
+				if (var->definingBlocks.size() > 1) {
 					stream << " (multiple defs)";
+				}
 				stream << "  pid = \e[1m" << *var->parentID() << "\e[22;2m";
 				const auto aliases = var->getAliases();
 				if (!aliases.empty()) {
 					stream << "  aliases =\e[1m";
-					for (const Variable *alias: aliases)
+					for (const Variable *alias: aliases) {
 						stream << " " << *alias->id;
+					}
 					stream << "\e[22;2m";
 				}
 				if (var_liveness) {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveIn(var))
+						if (block->isLiveIn(var)) {
 							stream << " %" << *block->label;
+						}
 					}
 					stream << "\e[0m\n";
 					stream << "    \e[2m;      \e[31mout =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveOut(var))
+						if (block->isLiveOut(var)) {
 							stream << " %" << *block->label;
+						}
 					}
 					stream << "\e[0m\n";
 				}
 			}
 		}
-		if (do_blocks || linear || vars)
+		if (do_blocks || linear || vars) {
 			stream << "\e[94m}\e[39m\n\n";
+		}
 		if (aliases) {
 			stream << "<Aliases>\n";
 			for (auto &[id, var]: variableStore) {
 				stream << *id << " = " << *var;
-				if (auto vparent = var->getParent().lock())
+				if (auto vparent = var->getParent().lock()) {
 					stream << "(parent = " << *vparent << ")";
+				}
 				stream << ":";
-				for (Variable *alias: var->getAliases())
+				for (Variable *alias: var->getAliases()) {
 					stream << " " << *alias;
+				}
 				stream << "\n";
 			}
 			stream << "</Aliases>\n";
 		}
 		if (render) {
 			stream << "Rendering.\n";
-			if (estimations)
+			if (estimations) {
 				for (Node *node: cfg.nodes()) {
 					if (node->data.has_value()) {
-						BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock();
-						if (bb)
+						if (BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock()) {
 							node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
+						}
 					}
 				}
+			}
 			cfg.renderTo("graph_" + *name + ".png");
-			if (dTree.has_value())
+			if (dTree.has_value()) {
 				dTree->renderTo("graph_D_" + *name + ".png");
-			if (djGraph.has_value())
+			}
+			if (djGraph.has_value()) {
 				djGraph->renderTo("graph_DJ_" + *name + ".png");
+			}
 		}
-		if (stack)
+		if (stack) {
 			debugStack(stream);
+		}
 	}
 
 	void Function::debugStack(std::ostream &stream) const {
-		for (const std::pair<const int, StackLocation> &pair: stack)
+		for (const std::pair<const int, StackLocation> &pair: stack) {
 			stream << pair.first << '[' << pair.second.width << "]:" << *pair.second.variable << ' ';
+		}
 		stream << '\n';
 	}
 
 	bool Function::isNaked() const {
+		if (!astnode) {
+			return naked.value();
+		}
 		const FunctionHeader *header = dynamic_cast<const FunctionHeader *>(astnode->children.front());
-		if (header->fnattrs.count(FnAttr::naked) != 0)
+		if (header->fnattrs.count(FnAttr::naked) != 0) {
 			return true;
-		if (header->fnattrsIndex == -1)
+		}
+		if (header->fnattrsIndex == -1) {
 			return false;
+		}
 		auto lock = parent.getLock();
 		return parent.fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable, bool create, bool *created) {
-		if (created)
+		if (created) {
 			*created = false;
-		for (std::pair<const int, StackLocation> &pair: stack)
-			if (pair.second.variable->id == variable->id && pair.second.purpose == StackLocation::Purpose::Spill)
+		}
+		for (std::pair<const int, StackLocation> &pair: stack) {
+			if (pair.second.variable->id == variable->id && pair.second.purpose == StackLocation::Purpose::Spill) {
 				return pair.second;
+			}
+		}
 		if (create) {
-			if (created)
+			if (created) {
 				*created = true;
+			}
 			return addToStack(variable, StackLocation::Purpose::Spill);
 		}
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
 	}
 
-	std::shared_ptr<LocalValue> Function::replaceGetelementptrValue(std::shared_ptr<GetelementptrValue> gep,
-	InstructionPtr instruction) {
+	std::shared_ptr<LocalValue> Function::replaceGetelementptrValue(std::shared_ptr<GetelementptrValue> gep, InstructionPtr instruction) {
 		TypePtr out_type;
 
-		const std::list<long> indices = Getelementptr::getLongIndices(*gep);
+		std::list<long> indices = Getelementptr::getLongIndices(*gep);
 
-		const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, indices, &out_type), 8l);
-		if (Util::outOfRange(offset))
+		const long offset = Util::updiv(Getelementptr::compute(gep->ptrType, std::move(indices), &out_type), 8l);
+		if (Util::outOfRange(offset)) {
 			warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+		}
 
 		switch (gep->variable->valueType()) {
 			case ValueType::Global: {
 				VariablePtr var1(newVariable(IntType::make(32))), var2(newVariable(out_type));
-				auto set =
-					std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
+				auto set = std::make_shared<SetInstruction>(var1, dynamic_cast<GlobalValue *>(gep->variable.get())->name);
 				auto addi = std::make_shared<AddIInstruction>(var1, int(offset), var2);
 				insertBefore(instruction, set)->setDebug(*instruction)->extract();
 				insertBefore(instruction, addi)->setDebug(*instruction)->extract();
@@ -1867,8 +2029,7 @@ namespace LL2W {
 			}
 			case ValueType::Local: {
 				VariablePtr new_var(newVariable(out_type));
-				auto addi = AddIInstruction::make(dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this),
-					int(offset), new_var);
+				auto addi = AddIInstruction::make(dynamic_cast<LocalValue *>(gep->variable.get())->getVariable(*this), int(offset), new_var);
 				insertBefore(instruction, addi)->setDebug(*instruction)->extract();
 				return LocalValue::make(new_var);
 			}
@@ -1877,8 +2038,7 @@ namespace LL2W {
 
 		if (gep->variable->isIntLike()) {
 			VariablePtr new_var(newVariable(out_type));
-			insertBefore(instruction, SetInstruction::make(new_var, gep->variable->intValue() + int(offset)))
-				->setDebug(*instruction)->extract();
+			insertBefore(instruction, SetInstruction::make(new_var, gep->variable->intValue() + int(offset)))->setDebug(*instruction)->extract();
 			return LocalValue::make(new_var);
 		}
 
@@ -1891,8 +2051,7 @@ namespace LL2W {
 
 		switch (value->valueType()) {
 			case ValueType::Getelementptr:
-				return replaceGetelementptrValue(std::dynamic_pointer_cast<GetelementptrValue>(value), instruction)
-					->getVariable(*this);
+				return replaceGetelementptrValue(std::dynamic_pointer_cast<GetelementptrValue>(value), instruction)->getVariable(*this);
 			case ValueType::Local:
 				return dynamic_cast<LocalValue *>(value.get())->variable;
 			case ValueType::Global: {
@@ -1922,15 +2081,16 @@ namespace LL2W {
 				break;
 			}
 			default:
-				throw std::runtime_error("Unhandled value in Function::makeVariable: " +
-					value_map.at(value->valueType()));
+				throw std::runtime_error("Unhandled value in Function::makeVariable: " + value_map.at(value->valueType()));
 		}
 
-		if (!new_var)
+		if (!new_var) {
 			throw std::runtime_error("new_var is null at the end of Function::makeVariable");
+		}
 
-		if (set)
+		if (set) {
 			insertBefore(instruction, set)->setDebug(*instruction)->extract();
+		}
 
 		return new_var;
 	}
@@ -1938,58 +2098,76 @@ namespace LL2W {
 	void Function::hackVariables() {
 		Timer timer("HackVariables");
 		std::list<VariablePtr> all_vars;
-		for (auto &pair: extraVariables)
+
+		for (auto &pair: extraVariables) {
 			all_vars.push_back(pair.second);
-		for (auto &pair: variableStore)
+		}
+
+		for (auto &pair: variableStore) {
 			all_vars.push_back(pair.second);
+		}
+
 		for (VariablePtr &var: all_vars) {
 			auto var_parent = var->getParent().lock();
 
-			if (var->registers.empty() && var_parent != nullptr)
+			if (var->registers.empty() && var_parent != nullptr) {
 				var->registers = var_parent->registers;
+			}
 
 			if (var->registers.empty()) {
-				for (Variable *alias: var->getAliases())
+				for (Variable *alias: var->getAliases()) {
 					if (!alias->registers.empty()) {
 						var->registers = alias->registers;
 						break;
 					}
+				}
 				// As a last resort, if this variable *still* has no register assigned, check all other known variables
 				// for a variable with the same id and try to absorb its register assignment.
 				if (var->registers.empty()) {
-					for (VariablePtr &other: all_vars)
+					for (VariablePtr &other: all_vars) {
 						if (other != var && other->id == var->id && !other->registers.empty()) {
 							var->registers = other->registers;
 							break;
 						}
+					}
 					if (var->registers.empty()) {
 						warn() << "hackVariables: last resort failed for " << *var << " in function \e[1m" << *name;
-						if (variableStore.contains(var->id))
+						if (variableStore.contains(var->id)) {
 							std::cerr << "\e[22m's variableStore\n";
-						else if (extraVariables.contains(var->id))
+						} else if (extraVariables.contains(var->id)) {
 							std::cerr << "\e[22m's extraVariables\n";
-						else
+						} else {
 							std::cerr << "\e[22m somewhere\n";
+						}
 					}
 				}
-			} else
-				for (Variable *alias: var->getAliases())
-					if (alias->registers.empty())
+			} else {
+				for (Variable *alias: var->getAliases()) {
+					if (alias->registers.empty()) {
 						alias->registers = var->registers;
+					}
+				}
+			}
 		}
 	}
 
 	Graph Function::makeDependencyGraph() const {
 		Timer timer("Function::makeDependencyGraph");
 		Graph dependencies;
-		for (const auto &[id, var]: variableStore)
-			dependencies.addNode(*var->originalID).data = var.get();
+
 		for (const auto &[id, var]: variableStore) {
-			for (Variable *phi_parent: var->phiParents)
-				dependencies[*phi_parent->originalID].link(dependencies[*var->originalID], true);
-			for (Variable *child: var->phiChildren)
-				dependencies[*var->originalID].link(dependencies[*child->originalID], true);
+			dependencies.addNode(*var->originalID).data = var.get();
 		}
+
+		for (const auto &[id, var]: variableStore) {
+			for (Variable *phi_parent: var->phiParents) {
+				dependencies[*phi_parent->originalID].link(dependencies[*var->originalID], true);
+			}
+			for (Variable *child: var->phiChildren) {
+				dependencies[*var->originalID].link(dependencies[*child->originalID], true);
+			}
+		}
+
 		return dependencies;
 	}
 

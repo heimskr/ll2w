@@ -54,7 +54,9 @@ namespace LL2W {
 			std::shared_ptr<FunctionArgs> argumentsNode = nullptr;
 
 			/** Contains the AST node this object was constructed from. */
-			const ASTNode *astnode;
+			const ASTNode *astnode = nullptr;
+			const llvm::Function *llvmFunction = nullptr;
+			std::optional<bool> naked;
 
 			int initialStackSize = 0;
 
@@ -185,7 +187,7 @@ namespace LL2W {
 			Function(const Function &) = delete;
 			Function(Function &&) = delete;
 			Function(Program &, const ASTNode &);
-			Function(Program &, const llvm::Function &);
+			Function(Program &, const llvm::Function *);
 
 			~Function();
 

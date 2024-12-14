@@ -16,13 +16,15 @@
 namespace LL2W {
 	LLVMInstruction::LLVMInstruction(InstructionNode *node_, int index_, bool owns_node):
 	Instruction(index_), node(node_), ownsNode(owns_node) {
-		if (node_ != nullptr)
+		if (node_ != nullptr) {
 			debugIndex = node_->debugIndex;
+		}
 	}
 
 	LLVMInstruction::~LLVMInstruction() {
-		if (ownsNode)
+		if (ownsNode) {
 			delete node;
+		}
 	}
 
 	bool LLVMInstruction::isTerminal() const {
@@ -31,21 +33,24 @@ namespace LL2W {
 	}
 
 	ExtractionResult LLVMInstruction::extract(bool force) {
-		if (extracted && !force)
+		if (extracted && !force) {
 			return {read.size(), written.size()};
+		}
 
 		read.clear();
 		written.clear();
 		extracted = true;
 
 		auto readname = [&](const std::shared_ptr<LocalValue> &lv, const TypePtr &type) {
-			if (!secretReads)
+			if (!secretReads) {
 				read.insert(parent.lock()->parent->getVariable(lv->name, type));
+			}
 		};
 
 		auto write = [&](const std::string *str, const TypePtr &type) {
-			if (str != nullptr && !secretWrites)
+			if (str != nullptr && !secretWrites) {
 				written.insert(parent.lock()->parent->getVariable(str, type, parent.lock()));
+			}
 		};
 
 		switch (node->nodeType()) {
@@ -83,16 +88,18 @@ namespace LL2W {
 			case NodeType::Icmp: {
 				CAST(IcmpNode);
 				write(cast->result, cast->getType());
-				for (ValuePtr *value: cast->allValuePointers())
+				for (ValuePtr *value: cast->allValuePointers()) {
 					IFLV(*value, cast->getType());
+				}
 				break;
 			}
 
 			case NodeType::Logic: {
 				CAST(LogicNode);
 				write(cast->result, cast->getType());
-				for (ValuePtr *value: cast->allValuePointers())
+				for (ValuePtr *value: cast->allValuePointers()) {
 					IFLV(*value, cast->getType());
+				}
 				break;
 			}
 
@@ -113,8 +120,9 @@ namespace LL2W {
 				CAST(CallInvokeNode);
 				write(cast->result, cast->returnType);
 				IFLV(cast->name, nullptr);
-				for (const ConstantPtr &constant: cast->constants)
+				for (const ConstantPtr &constant: cast->constants) {
 					IFLV(constant->value, constant->type);
+				}
 				break;
 			}
 
@@ -122,13 +130,15 @@ namespace LL2W {
 				CAST(GetelementptrNode);
 				write(cast->result, std::make_shared<PointerType>(cast->type));
 				if (!secretReads) {
-					if (auto *local = dynamic_cast<LocalValue *>(cast->allValues().front().get()))
+					if (auto *local = dynamic_cast<LocalValue *>(cast->allValues().front().get())) {
 						read.insert(parent.lock()->parent->getVariable(local->name, cast->constant->convert()->type));
+					}
 					for (auto [width, value, minrange, pvar]: cast->indices) {
 						// Because we're assuming that these variables have already been defined earlier in the
 						// function, we can get them from the Function that contains this Instruction.
-						if (pvar)
+						if (pvar) {
 							read.insert(parent.lock()->parent->getVariable(std::get<Variable::ID>(value), true));
+						}
 					}
 				}
 				break;

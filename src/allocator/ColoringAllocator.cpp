@@ -202,7 +202,9 @@ namespace LL2W {
 	void ColoringAllocator::makeInterferenceGraph() {
 		Timer timer("MakeInterferenceGraph");
 		interference.clear();
+#ifdef DEBUG_COLORING
 		size_t links = 0;
+#endif
 
 		for (const auto &[id, var]: function->variableStore) {
 #ifdef DEBUG_COLORING
@@ -348,7 +350,9 @@ namespace LL2W {
 				for (size_t j = i + 1; j < size; ++j)
 					if (interference.hasLabel(*vec[i]) && interference.hasLabel(*vec[j])) {
 						interference.link(*vec[i], *vec[j], true);
+#ifdef DEBUG_COLORING
 						++links;
+#endif
 					}
 		}
 #endif
