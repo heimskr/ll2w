@@ -24,7 +24,7 @@ namespace LL2W {
 	enum class Preemption {Default, DsoPreemptable, DsoLocal};
 	enum class Visibility {Default, Hidden, Protected};
 	enum class DllStorageClass {None, Import, Export};
-	enum class ThreadLocal {None, LocalDynamic, InitialExec, LocalExec};
+	enum class ThreadLocalMode {None, LocalDynamic, InitialExec, LocalExec, GeneralDynamic};
 	enum class UnnamedAddr {Default, Unnamed, LocalUnnamed};
 	enum class CConv {
 		Default, ccc, cxx_fast_tlscc, fastcc, ghccc, swiftcc, preserve_allcc, preserve_mostcc, x86_vectorcallcc, cc10,

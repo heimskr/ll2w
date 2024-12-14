@@ -1,11 +1,29 @@
+#include "parser/EnumConversion.h"
+#include "parser/GlobalVarDef.h"
+#include "parser/Parser.h"
+
+#include <llvm/IR/GlobalVariable.h>
+
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
 
-#include "parser/GlobalVarDef.h"
-#include "parser/Parser.h"
-
 namespace LL2W {
+	GlobalVarDef::GlobalVarDef(const llvm::GlobalVariable &llvm_var) {
+		name = llvm_var.getName().str();
+		linkage = getLinkage(llvm_var.getLinkage());
+		preemption = llvm_var.isDSOLocal()? Preemption::DsoLocal : Preemption::Default;
+		visibility = getVisibility(llvm_var.getVisibility());
+		dllStorageClass = getDllStorageClass(llvm_var.getDLLStorageClass());
+		threadLocal = getThreadLocalMode(llvm_var.getThreadLocalMode());
+		unnamedAddr = getUnnamedAddr(llvm_var.getUnnamedAddr());
+		addrspace = static_cast<int>(llvm_var.getAddressSpace());
+		externallyInitialized = llvm_var.isExternallyInitialized();
+		isConstant = llvm_var.isConstant();
+		constant = Constant::fromLLVM(llvm_var.getInitializer());
+		type = Type::fromLLVM(*llvm_var.getValueType());
+	}
+
 	GlobalVarDef::GlobalVarDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
 	                           ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr,
 	                           ASTNode *addrspace_, ASTNode *externally_initialized, ASTNode *global_or_constant,
@@ -49,11 +67,11 @@ namespace LL2W {
 		if (thread_local_) {
 			const std::string &tl = *thread_local_->at(0)->lexerInfo;
 			if (tl == "localdynamic")
-				threadLocal = ThreadLocal::LocalDynamic;
+				threadLocal = ThreadLocalMode::LocalDynamic;
 			else if (tl == "initialexec")
-				threadLocal = ThreadLocal::InitialExec;
+				threadLocal = ThreadLocalMode::InitialExec;
 			else if (tl == "localexec")
-				threadLocal = ThreadLocal::LocalExec;
+				threadLocal = ThreadLocalMode::LocalExec;
 			delete thread_local_;
 		}
 
@@ -124,9 +142,9 @@ namespace LL2W {
 			default:;
 		}
 		switch (threadLocal) {
-			case ThreadLocal::LocalDynamic: out << " localdynamic"; break;
-			case ThreadLocal::InitialExec:  out << " initialexec"; break;
-			case ThreadLocal::LocalExec:    out << " localexec"; break;
+			case ThreadLocalMode::LocalDynamic: out << " localdynamic"; break;
+			case ThreadLocalMode::InitialExec:  out << " initialexec"; break;
+			case ThreadLocalMode::LocalExec:    out << " localexec"; break;
 			default:;
 		}
 		switch (unnamedAddr) {

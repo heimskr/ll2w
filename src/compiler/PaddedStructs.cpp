@@ -14,36 +14,45 @@
 
 namespace LL2W::PaddedStructs {
 	int getOffset(const StructType &type, int index) {
-		if (index == 0)
+		if (index == 0) {
 			return 0;
-		int offset = 0;
-		std::shared_ptr<StructNode> node = type.node;
-		if (!node)
+		}
+
+		if (!type.node && !type.types) {
 			return getOffset(*StructType::knownStructs.at(type.barename()), index);
+		}
+
+		int offset = 0;
+		const std::vector<TypePtr> &types = type.types? *type.types : type.node->types;
+
 		if (type.shape == StructShape::Packed) {
-			for (int i = 0; i < index; ++i)
-				offset += node->types.at(i)->width();
+			for (int i = 0; i < index; ++i) {
+				offset += types.at(i)->width();
+			}
 		} else {
 #ifdef STRUCT_PAD_CUSTOM
 			int i = 0;
-			for (const TypePtr &subtype: type.node->types) {
+			for (const TypePtr &subtype: types) {
 				const int align = subtype->alignment() * 8;
 				const int width = subtype->width();
-				if (align == 0 || width == 0)
+				if (align == 0 || width == 0) {
 					continue;
+				}
 				offset = LL2W::Util::upalign(offset, align);
-				if (i++ == index)
+				if (i++ == index) {
 					return offset;
+				}
 				offset += width;
 			}
 #elif defined(STRUCT_PAD_X86)
 			for (int i = 0; i < index; ++i) {
-				const int width = node->types.at(i)->width();
+				const int width = types.at(i)->width();
 				offset = Util::upalign(offset, width) + width;
 			}
 #else
-			for (int i = 0; i < index; ++i)
-				offset += node->types.at(i)->width();
+			for (int i = 0; i < index; ++i) {
+				offset += types.at(i)->width();
+			}
 #endif
 		}
 		return offset;
@@ -59,7 +68,7 @@ namespace LL2W::PaddedStructs {
 		TypePtr type = source->type;
 		if (!type)
 			throw std::runtime_error("PaddedStructs::extract: source variable has no type");
-		
+
 		StructType *initial_struct_type = dynamic_cast<StructType *>(type.get());
 		if (!initial_struct_type)
 			throw std::runtime_error("PaddedStructs::extract: source variable type isn't StructType");

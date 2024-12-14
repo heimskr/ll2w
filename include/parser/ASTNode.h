@@ -24,7 +24,6 @@ namespace LL2W {
 
 	class ASTNode {
 		private:
-			ASTNode() {}
 			static void onCreate(ASTNode *);
 			static void onDestroy(ASTNode *);
 			void recursiveStringify(std::stringstream &) const;
@@ -38,6 +37,7 @@ namespace LL2W {
 			std::list<ASTNode *> children;
 			int debugIndex = -1;
 
+			ASTNode() = default;
 			ASTNode(Parser &, int sym, const ASTLocation &loc, const char *info);
 			ASTNode(Parser &, int sym, const ASTLocation &loc, const std::string *info);
 			ASTNode(Parser &, int sym, const char *info);

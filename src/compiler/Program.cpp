@@ -15,6 +15,8 @@
 #include "util/Util.h"
 
 #include <llvm/AsmParser/LLParser.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/ValueSymbolTable.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/SmallVectorMemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
@@ -42,6 +44,25 @@ namespace LL2W {
 
 		for (llvm::StructType *llvm_struct: llvm_module->getIdentifiedStructTypes()) {
 			StructType::knownStructs.emplace(llvm_struct->getName(), std::make_shared<StructType>(*llvm_struct));
+		}
+
+		for (const auto &symbol: llvm_module->getValueSymbolTable()) {
+			// info() << "key: " << symbol.getKey().str() << "\n";
+			llvm::Value *value = symbol.getValue();
+
+			std::string str = "";
+			llvm::raw_string_ostream os(str);
+			if (auto *var = llvm::dyn_cast<llvm::GlobalVariable>(value)) {
+				// info() <<" array: " << array->print
+				if (var->hasInitializer()) {
+
+				}
+			}
+			// info() << "struct: " << value->getType()->print)
+
+			// getTypeID() << " " << symbol.getKey().str().substr(0, 64) << "\n";
+			// str = std::to_string(value->getValueID());
+			info() << "struct: " << str << "\n";
 		}
 	}
 

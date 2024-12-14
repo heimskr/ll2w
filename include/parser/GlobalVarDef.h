@@ -6,13 +6,17 @@
 #include "Types.h"
 #include "Constant.h"
 
+namespace llvm {
+	class GlobalVariable;
+}
+
 namespace LL2W {
 	struct GlobalVarDef: public ASTNode {
 		Linkage linkage = Linkage::Default;
 		Preemption preemption = Preemption::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
-		ThreadLocal threadLocal = ThreadLocal::None;
+		ThreadLocalMode threadLocal = ThreadLocalMode::None;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		int addrspace = -1;
 		bool externallyInitialized = false;
@@ -23,10 +27,13 @@ namespace LL2W {
 		ConstantPtr constant = nullptr;
 		TypePtr type = nullptr;
 
+		std::string name;
 		const std::string *section = nullptr;
 		const std::string *comdat = nullptr;
 
 		using N = ASTNode *;
+
+		GlobalVarDef(const llvm::GlobalVariable &);
 		GlobalVarDef(N gvar, N linkage_, N preemption_, N visibility_, N dll_storage_class, N thread_local_,
 		             N unnamed_addr, N addrspace_, N externally_initialized_, N global_or_constant_, N type_or_constant,
 		             N gdef_extras_);

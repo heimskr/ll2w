@@ -50,11 +50,11 @@ namespace LL2W {
 		if (thread_local_) {
 			const std::string &tl = *thread_local_->at(0)->lexerInfo;
 			if (tl == "localdynamic")
-				threadLocal = ThreadLocal::LocalDynamic;
+				threadLocal = ThreadLocalMode::LocalDynamic;
 			else if (tl == "initialexec")
-				threadLocal = ThreadLocal::InitialExec;
+				threadLocal = ThreadLocalMode::InitialExec;
 			else if (tl == "localexec")
-				threadLocal = ThreadLocal::LocalExec;
+				threadLocal = ThreadLocalMode::LocalExec;
 			delete thread_local_;
 		}
 
@@ -108,9 +108,9 @@ namespace LL2W {
 			default:;
 		}
 		switch (threadLocal) {
-			case ThreadLocal::LocalDynamic: out << " localdynamic"; break;
-			case ThreadLocal::InitialExec:  out << " initialexec"; break;
-			case ThreadLocal::LocalExec:    out << " localexec"; break;
+			case ThreadLocalMode::LocalDynamic: out << " localdynamic"; break;
+			case ThreadLocalMode::InitialExec:  out << " initialexec"; break;
+			case ThreadLocalMode::LocalExec:    out << " localexec"; break;
 			default:;
 		}
 		switch (unnamedAddr) {

@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <format>
 #include <sstream>
 #include <stdexcept>
 
@@ -25,7 +26,7 @@ namespace LL2W {
 	}
 
 	bool Type::isInt(int bit_width) const {
-		return typeType() == TypeType::Int && dynamic_cast<const IntType *>(this)->intWidth == bit_width;
+		return typeType() == TypeType::Int && dynamic_cast<const IntType *>(this)->bitWidth == bit_width;
 	}
 
 	bool Type::isPointer() const {
@@ -34,6 +35,63 @@ namespace LL2W {
 
 	bool Type::isVoid() const {
 		return typeType() == TypeType::Void;
+	}
+
+	TypePtr Type::fromLLVM(const llvm::Type &llvm_type) {
+		if (llvm_type.isPointerTy()) {
+			return PointerType::getOpaque();
+		}
+
+		if (llvm_type.isVoidTy()) {
+			return VoidType::make();
+		}
+
+		if (auto *int_type = llvm::dyn_cast<llvm::IntegerType>(&llvm_type)) {
+			return IntType::make(static_cast<int>(int_type->getBitWidth()));
+		}
+
+		if (auto *array_type = llvm::dyn_cast<llvm::ArrayType>(&llvm_type)) {
+			return ArrayType::make(static_cast<ssize_t>(array_type->getNumElements()), Type::fromLLVM(*array_type->getElementType()));
+		}
+
+		if (auto *struct_type = llvm::dyn_cast<llvm::StructType>(&llvm_type)) {
+			return StructType::make(*struct_type);
+		}
+
+		if (auto *function_type = llvm::dyn_cast<llvm::FunctionType>(&llvm_type)) {
+			std::vector<TypePtr> params;
+			params.reserve(function_type->getNumParams());
+			for (auto iter = function_type->param_begin(), end = function_type->param_end(); iter != end; ++iter) {
+				params.emplace_back(Type::fromLLVM(**iter));
+			}
+			return FunctionType::make(Type::fromLLVM(*function_type->getReturnType()), std::move(params), function_type->isVarArg());
+		}
+
+		if (auto *fixed_vector_type = llvm::dyn_cast<llvm::FixedVectorType>(&llvm_type)) {
+			return VectorType::make(fixed_vector_type->getNumElements(), Type::fromLLVM(*fixed_vector_type->getElementType()));
+		}
+
+		if (llvm_type.isFloatTy()) {
+			return FloatType::make(FloatType::Type::Float);
+		}
+
+		if (llvm_type.isDoubleTy()) {
+			return FloatType::make(FloatType::Type::Double);
+		}
+
+		if (llvm_type.isX86_FP80Ty()) {
+			return FloatType::make(FloatType::Type::x86_FP80);
+		}
+
+		if (llvm_type.isHalfTy()) {
+			return FloatType::make(FloatType::Type::Half);
+		}
+
+		if (llvm_type.isFP128Ty()) {
+			return FloatType::make(FloatType::Type::FP128);
+		}
+
+		throw std::invalid_argument(std::format("Invalid LLVM type: {}", llvm_type.getTypeID()));
 	}
 
 	std::vector<TypePtr> Type::copyMany(const std::vector<TypePtr> &types) {
@@ -45,11 +103,11 @@ namespace LL2W {
 	}
 
 	IntType::operator std::string() {
-		return std::string("\e[33m") + static_cast<char>(signedness) + std::to_string(intWidth) + "\e[0m";
+		return std::string("\e[33m") + static_cast<char>(signedness) + std::to_string(bitWidth) + "\e[0m";
 	}
 
 	std::string IntType::toString() {
-		return static_cast<char>(signedness) + std::to_string(intWidth);
+		return static_cast<char>(signedness) + std::to_string(bitWidth);
 	}
 
 	bool IntType::operator==(const Type &other) const {
@@ -60,14 +118,14 @@ namespace LL2W {
 			return false;
 
 		const auto &other_int = dynamic_cast<const IntType &>(other);
-		return intWidth == other_int.intWidth && signedness == other_int.signedness;
+		return bitWidth == other_int.bitWidth && signedness == other_int.signedness;
 	}
 
-	std::shared_ptr<IntType> IntType::make(int width, Signedness signedness) {
+	std::shared_ptr<IntType> IntType::make(ssize_t width, Signedness signedness) {
 		return std::make_shared<IntType>(width, signedness);
 	}
 
-	std::shared_ptr<IntType> IntType::make(int width, bool is_signed) {
+	std::shared_ptr<IntType> IntType::make(ssize_t width, bool is_signed) {
 		return std::make_shared<IntType>(width, is_signed? Signedness::Signed : Signedness::Unsigned);
 	}
 
@@ -75,19 +133,19 @@ namespace LL2W {
 		std::string out;
 		if (signedness != Signedness::Unknown)
 			out += static_cast<char>(signedness);
-		switch (intWidth) {
+		switch (bitWidth) {
 			case  8: out += 'c'; break;
 			case 16: out += 's'; break;
 			case 32: out += 'i'; break;
 			case 64: out += 'l'; break;
-			default: out += std::to_string(intWidth);
+			default: out += std::to_string(bitWidth);
 		}
 		return out;
 	}
 
 	bool IntType::isSimilarTo(const Type &other) const {
 		const auto *other_int = dynamic_cast<const IntType *>(&other);
-		return other_int != nullptr && other_int->intWidth == intWidth;
+		return other_int != nullptr && other_int->bitWidth == bitWidth;
 	}
 
 	bool IntType::shareSignedness(const TypePtr &other) {
@@ -126,7 +184,7 @@ namespace LL2W {
 			new_signedness = Signedness::Unsigned;
 		else if (signedness == Signedness::Unsigned)
 			new_signedness = Signedness::Signed;
-		return std::make_shared<IntType>(intWidth, new_signedness);
+		return std::make_shared<IntType>(bitWidth, new_signedness);
 	}
 
 	bool IntType::compatible(const Type &other) const {
@@ -203,12 +261,13 @@ namespace LL2W {
 		throw std::invalid_argument("Unknown float type: " + str);
 	}
 
-	int FloatType::width() const {
+	ssize_t FloatType::width() const {
 		switch (type) {
 			case FloatType::Type::Half:   return WhyInfo::halfFloatWidth;
 			case FloatType::Type::Float:  return WhyInfo::floatWidth;
 			case FloatType::Type::Double: return WhyInfo::doubleWidth;
-			default: return WhyInfo::doubleWidth;
+			default:
+				return WhyInfo::doubleWidth;
 		}
 	}
 
@@ -278,6 +337,10 @@ namespace LL2W {
 
 	bool PointerType::setSignedness(Signedness new_signedness) {
 		return unwrapAll()->setSignedness(new_signedness);
+	}
+
+	std::shared_ptr<PointerType> PointerType::getOpaque() {
+		return std::make_shared<PointerType>(std::make_shared<OpaqueType>());
 	}
 
 	FunctionType::FunctionType(const ASTNode *node) {
@@ -405,21 +468,23 @@ namespace LL2W {
 		form(getForm(llvm_struct)),
 		shape(getShape(llvm_struct)) {}
 
-
-
 	StructType::operator std::string() {
-		if (name == "[anon]" && node)
+		if (name == "[anon]" && node) {
 			return node->typeString();
-		if (name.at(1) == '"')
+		}
+		if (name.at(1) == '"') {
 			return "\e[32m%\e[33m" + name.substr(1) + "\e[39m";
+		}
 		return "\e[32m" + name + "\e[39m";
 	}
 
 	std::string StructType::toString() {
-		if (name == "[anon]" && node)
+		if (name == "[anon]" && node) {
 			return node->typeStringPlain();
-		if (name.at(1) == '"')
+		}
+		if (name.at(1) == '"') {
 			return "%" + name.substr(1);
+		}
 		return name;
 	}
 
@@ -431,18 +496,26 @@ namespace LL2W {
 		return out;
 	}
 
-	int StructType::width() const {
-		int out = 0;
-		if (!node) {
+	ssize_t StructType::width() const {
+		if (!node && !types) {
 			// This is likely a named struct rather than a literal struct.
 			return knownStructs.at(barename())->width();
 		}
 
 #ifdef STRUCT_PAD_CUSTOM
-		return PaddedStructs::getOffset(*this, node->types.size());
+		if (types) {
+			return PaddedStructs::getOffset(*this, types->size());
+		}
+
+		if (node) {
+			return PaddedStructs::getOffset(*this, node->types.size());
+		}
+
+		throw std::runtime_error("Can't find struct width with custom padding");
 #elif defined(STRUCT_PAD_X86)
+		ssize_t out = 0;
 		int largest = 0;
-		for (const TypePtr &type: node->types) {
+		for (const TypePtr &type: types.value()) {
 			const int width = type->width();
 			if (width == 0)
 				continue;
@@ -452,11 +525,13 @@ namespace LL2W {
 		}
 		if (largest != 0 && out % largest != 0)
 			out += largest - (out % largest);
+		return out;
 #else
+		ssize_t out = 0;
 		for (const TypePtr &type: node->types)
 			out += type->width();
-#endif
 		return out;
+#endif
 	}
 
 	int StructType::alignment() const {
@@ -531,7 +606,7 @@ namespace LL2W {
 
 		out->node = std::make_shared<StructNode>(StructShape::Packed);
 
-		int largest = 1, current_width = 0, padding_items_added = 0;
+		ssize_t largest = 1, current_width = 0, padding_items_added = 0;
 		for (TypePtr &subtype: node->types)
 			largest = std::max(largest, subtype->width());
 

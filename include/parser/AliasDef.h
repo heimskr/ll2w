@@ -11,7 +11,7 @@ namespace LL2W {
 		Preemption preemption = Preemption::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
-		ThreadLocal threadLocal = ThreadLocal::None;
+		ThreadLocalMode threadLocal = ThreadLocalMode::None;
 		UnnamedAddr unnamedAddr = UnnamedAddr::Default;
 		TypePtr type, ptrType;
 		const std::string *aliasTo = nullptr;
