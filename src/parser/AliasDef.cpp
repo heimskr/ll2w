@@ -1,9 +1,14 @@
-#include <sstream>
-
 #include "parser/AliasDef.h"
 #include "parser/Constant.h"
+#include "parser/EnumConversion.h"
 #include "parser/Parser.h"
 #include "parser/Lexer.h"
+
+#include <llvm/IR/GlobalAlias.h>
+#include <llvm/IR/GlobalObject.h>
+
+#include <print>
+#include <sstream>
 
 namespace LL2W {
 	AliasDef::AliasDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
@@ -90,6 +95,18 @@ namespace LL2W {
 			value_node->debug();
 			throw std::runtime_error("Unexpected value node in AliasDef");
 		}
+	}
+
+	AliasDef::AliasDef(const llvm::GlobalAlias &llvm_alias) {
+		name = StringSet::intern(llvm_alias.getName().str());
+		linkage = getLinkage(llvm_alias.getLinkage());
+		preemption = llvm_alias.isDSOLocal()? Preemption::DsoLocal : Preemption::Default;
+		visibility = getVisibility(llvm_alias.getVisibility());
+		dllStorageClass = getDllStorageClass(llvm_alias.getDLLStorageClass());
+		threadLocal = getThreadLocalMode(llvm_alias.getThreadLocalMode());
+		unnamedAddr = getUnnamedAddr(llvm_alias.getUnnamedAddr());
+		ptrType = Type::fromLLVM(*llvm_alias.getType());
+		type = Type::fromLLVM(*llvm_alias.getAliaseeObject()->getValueType());
 	}
 
 	std::string AliasDef::debugExtra() const {

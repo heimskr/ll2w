@@ -15,6 +15,10 @@
 #include "graph/DTree.h"
 #include "parser/FunctionArgs.h"
 
+namespace llvm {
+	class Function;
+}
+
 namespace LL2W {
 	class ASTNode;
 	class ColoringAllocator;
@@ -174,11 +178,14 @@ namespace LL2W {
 
 			int lastArtificialLabel = -1;
 
+			std::optional<bool> variadic;
+
 			Allocator::Result lastAllocationResult;
 
 			Function(const Function &) = delete;
 			Function(Function &&) = delete;
 			Function(Program &, const ASTNode &);
+			Function(Program &, const llvm::Function &);
 
 			~Function();
 

@@ -4,6 +4,10 @@
 #include "Enums.h"
 #include "Types.h"
 
+namespace llvm {
+	class GlobalAlias;
+}
+
 namespace LL2W {
 	struct AliasDef: public ASTNode {
 		const std::string *name = nullptr;
@@ -19,6 +23,8 @@ namespace LL2W {
 		AliasDef(ASTNode *gvar, ASTNode *linkage_, ASTNode *preemption_, ASTNode *visibility_,
 		         ASTNode *dll_storage_class, ASTNode *thread_local_, ASTNode *unnamed_addr, ASTNode *type_,
 		         ASTNode *value_node);
+
+		AliasDef(const llvm::GlobalAlias &);
 
 		std::string debugExtra() const override;
 	};

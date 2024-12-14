@@ -179,9 +179,6 @@ namespace LL2W {
 		if (auto *expr_constant = llvm::dyn_cast<llvm::ConstantExpr>(&llvm_value)) {
 			std::string_view op = expr_constant->getOpcodeName();
 			if (op == "getelementptr") {
-				// llvm::raw_os_ostream os(std::cerr);
-				// llvm_value.getType()->print(os, true);
-				// std::println(std::cerr);
 				out->type = Type::fromLLVM(*llvm_value.getType());
 				const llvm::Constant *base = expr_constant->getOperand(0);
 				std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals;
@@ -192,6 +189,8 @@ namespace LL2W {
 				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, PointerType::makeOpaque(), Type::fromLLVM(*base->getType()), Constant::fromLLVM(*base)->value, std::move(decimals));
 				return out;
 			}
+
+			throw std::runtime_error(std::format("Unknown ConstantExpr opcode: {}", op));
 		}
 
 		if (auto *global_constant = llvm::dyn_cast<llvm::GlobalVariable>(&llvm_value)) {

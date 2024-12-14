@@ -8,16 +8,14 @@
 
 namespace LL2W {
 	class FunctionArgument {
-		private:
-			FunctionArgument(TypePtr type_, const std::string *name_): type(type_), name(name_) {}
-			FunctionArgument(TypePtr type_, const std::string &name_);
-
 		public:
 			TypePtr type;
 			std::unordered_set<ParAttr> parattrs;
 			const std::string *name = nullptr;
 			const std::string *originalName = nullptr;
 
+			FunctionArgument(TypePtr type_, const std::string *name_): type(type_), name(name_) {}
+			FunctionArgument(TypePtr type_, const std::string &name_);
 			FunctionArgument(ASTNode *);
 	};
 

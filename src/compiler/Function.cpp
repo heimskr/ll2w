@@ -1,9 +1,3 @@
-#include <climits>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <unistd.h>
-
 // #define USE_LINEAR_SCAN
 #define DEBUG_BLOCKS
 // #define DEBUG_LINEAR
@@ -103,12 +97,23 @@
 #include "util/Util.h"
 #include "Interactive.h"
 
+#include <llvm/IR/Function.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <climits>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <print>
+#include <unistd.h>
+
 namespace LL2W {
 	Function::Function(Program &program, const ASTNode &node): parent(program) {
 		name = node.lexerInfo;
 		FunctionHeader *header = dynamic_cast<FunctionHeader *>(node.front());
-		if (!header)
+		if (!header) {
 			throw std::runtime_error("header is null in Function::Function");
+		}
 		argumentsNode = header->arguments;
 		arguments = &argumentsNode->arguments;
 		astnode = &node;
@@ -121,14 +126,36 @@ namespace LL2W {
 		debugIndex = header->debugIndex;
 	}
 
+	Function::Function(Program &program, const llvm::Function &function): parent(program) {
+		name = StringSet::intern(function.getName().str());
+		variadic = function.isVarArg();
+		arguments = new std::vector<FunctionArgument>;
+		llvm::raw_os_ostream os(std::cout);
+		for (const llvm::Argument &argument: function.args()) {
+			llvm::Type *type = argument.getType();
+			if (type->isMetadataTy()) {
+				continue;
+			}
+			arguments->emplace_back(LL2W::Type::fromLLVM(*type), argument.getName().str());
+		}
+		returnType = LL2W::Type::fromLLVM(*function.getReturnType());
+#ifdef USE_LINEAR_SCAN
+		allocator = new LinearScanAllocator(*this);
+#else
+		allocator = new ColoringAllocator(*this);
+#endif
+	}
+
 	Function::~Function() {
-		if (allocator)
+		if (allocator) {
 			delete allocator;
+		}
 	}
 
 	Allocator::Result Function::attemptAllocation() {
-		if ((lastAllocationResult = allocator->attempt()) == Allocator::Result::Success)
+		if ((lastAllocationResult = allocator->attempt()) == Allocator::Result::Success) {
 			allocationDone = true;
+		}
 		return lastAllocationResult;
 	}
 
@@ -844,7 +871,7 @@ namespace LL2W {
 	}
 
 	bool Function::isVariadic() const {
-		return argumentsNode? argumentsNode->ellipsis : false;
+		return argumentsNode? argumentsNode->ellipsis : variadic && *variadic;
 	}
 
 	std::string Function::transformLabel(const std::string &str) const {

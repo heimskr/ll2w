@@ -52,16 +52,28 @@ namespace LL2W {
 			// info() << "key: " << symbol.getKey().str() << "\n";
 			llvm::Value *value = symbol.getValue();
 
-			std::string str = "";
+			std::string str;
 			llvm::raw_string_ostream os(str);
+
 			if (auto *var = llvm::dyn_cast<llvm::GlobalVariable>(value)) {
 				globals.emplace(symbol.getKey().str(), new GlobalVarDef(*var)); // TODO: memleak
+				continue;
+			}
+
+			if (auto *function = llvm::dyn_cast<llvm::Function>(value)) {
+				functions.emplace(symbol.getKey().str(), new Function(*this, *function)); // TODO: memleak
+				continue;
+			}
+
+			if (auto *alias = llvm::dyn_cast<llvm::GlobalAlias>(value)) {
+				aliases.emplace(StringSet::intern(symbol.getKey().str()), new AliasDef(*alias));
+				continue;
 			}
 			// info() << "struct: " << value->getType()->print)
 
 			// getTypeID() << " " << symbol.getKey().str().substr(0, 64) << "\n";
-			// str = std::to_string(value->getValueID());
-			// info() << "struct: " << str << "\n";
+			str = std::to_string(value->getValueID());
+			info() << "struct: " << str << "\n";
 		}
 	}
 
@@ -334,11 +346,12 @@ namespace LL2W {
 		std::map<std::string, std::string> global_strings;
 
 		for (const std::pair<const std::string, GlobalVarDef *> &pair: globals) {
-			const std::string name = pair.first.substr(1);
+			const std::string &name = pair.first;
 			GlobalVarDef *global = pair.second;
 
-			if (global->linkage == Linkage::External)
+			if (global->linkage == Linkage::External) {
 				continue;
+			}
 
 			ConstantPtr constant = global->constant;
 
@@ -356,11 +369,12 @@ namespace LL2W {
 			if (auto *array = dynamic_cast<const ArrayType *>(def.constant->type.get())) {
 				out << "%align 8\n\n@__ctors_start\n%8b llvm.global_ctors\n\n";
 				out << "@__ctors_end\n%8b llvm.global_ctors + " << (24 * array->count) << "\n\n";
-			} else if (!def.constant->type)
+			} else if (!def.constant->type) {
 				throw std::runtime_error("@llvm.global_ctors was expected to be an array but has no type");
-			else
+			} else {
 				throw std::runtime_error("@llvm.global_ctors was expected to be an array but is " +
 					def.constant->type->toString());
+			}
 		}
 
 		bool changed{};
@@ -394,10 +408,11 @@ namespace LL2W {
 
 		for (const auto &[name, stringified]: global_strings) {
 			out << "%align 8\n";
-			if (stringified.empty())
+			if (stringified.empty()) {
 				out << '@' << name << "\n%8b 0\n\n";
-			else
+			} else {
 				out << '@' << name << '\n' << stringified << "\n\n";
+			}
 		}
 
 		if (!global_data.empty()) {
@@ -424,10 +439,11 @@ namespace LL2W {
 
 		if (packed) {
 			for (const ConstantPtr &constant: constants) {
-				if (first)
+				if (first) {
 					first = false;
-				else
+				} else {
 					out += '\n';
+				}
 				out += outputValue(constant->type, constant->value);
 			}
 		} else {
@@ -435,10 +451,11 @@ namespace LL2W {
 			auto stype = std::make_shared<StructType>(snode);
 			int sum = 0, i = 0;
 			for (const ConstantPtr &constant: constants) {
-				if (first)
+				if (first) {
 					first = false;
-				else
+				} else {
 					out += '\n';
+				}
 				const int offset = PaddedStructs::getOffset(stype, i++) / 8;
 				const int difference = offset - sum;
 				if (difference < 0) {
@@ -456,8 +473,10 @@ namespace LL2W {
 	}
 
 	std::string Program::valuePrefix(size_t bitwidth) {
-		if (bitwidth % 8 != 0)
+		if (bitwidth % 8 != 0) {
 			throw std::runtime_error("Int width (" + std::to_string(bitwidth) + "b) isn't a multiple of 8");
+		}
+
 		switch (bitwidth / 8) {
 			case 8: return "%8b ";
 			case 4: return "%4b ";
@@ -577,13 +596,18 @@ namespace LL2W {
 
 	int Program::symbolSize(const std::string &name) const {
 		GlobalVarDef *def = globals.at(name);
-		if (def->type)
+
+		if (def->type) {
 			return def->type->width();
+		}
+
 		if (def->constant) {
-			if (def->constant->type)
+			if (def->constant->type) {
 				return def->constant->type->width();
+			}
 			throw std::runtime_error("Type is null in constant of global " + name);
 		}
+
 		throw std::runtime_error("Type and constant are both null for global " + name);
 	}
 
