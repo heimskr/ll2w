@@ -1,8 +1,3 @@
-#include <climits>
-#include <iostream>
-#include <sstream>
-#include <unordered_map>
-
 #include "compiler/Function.h"
 #include "compiler/Variable.h"
 #include "parser/ASTNode.h"
@@ -15,6 +10,14 @@
 #include "parser/Constant.h"
 #include "util/Deleter.h"
 #include "util/Util.h"
+
+#include <llvm/IR/Constants.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <climits>
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
 
 #define THROW_ON_OVERFLOW // More like THROWVERFLOW am I right :^)
 
@@ -224,8 +227,16 @@ namespace LL2W {
 
 	StructValue::StructValue(const ASTNode *node) {
 		packed = *node->lexerInfo == "<";
-		for (const ASTNode *sub: *node->at(0))
+		for (const ASTNode *sub: *node->at(0)) {
 			constants.push_back(std::make_shared<Constant>(sub));
+		}
+	}
+
+	StructValue::StructValue(const llvm::ConstantStruct &llvm_struct) {
+		packed = llvm::cast<llvm::StructType>(*llvm_struct.getType()).isPacked();
+		for (const llvm::Value *op: llvm_struct.operand_values()) {
+			constants.emplace_back(Constant::fromLLVM(*op));
+		}
 	}
 
 	ValuePtr StructValue::copy() const {
@@ -254,8 +265,15 @@ namespace LL2W {
 	}
 
 	ArrayValue::ArrayValue(const ASTNode *node) {
-		for (const ASTNode *sub: *node)
-			constants.push_back(std::make_shared<Constant>(sub));
+		for (const ASTNode *sub: *node) {
+			constants.push_back(Constant::make(sub));
+		}
+	}
+
+	ArrayValue::ArrayValue(const llvm::ConstantArray &llvm_array) {
+		for (const llvm::Value *value: llvm_array.operand_values()) {
+			constants.push_back(Constant::fromLLVM(*value));
+		}
 	}
 
 	ValuePtr ArrayValue::copy() const {
@@ -278,21 +296,24 @@ namespace LL2W {
 		return out.str();
 	}
 
-	CStringValue::CStringValue(const ASTNode *node): CStringValue(StringSet::intern(node->extractName())) {}
+	CStringValue::CStringValue(const ASTNode *node):
+		CStringValue(node->extractName()) {}
 
 	std::string CStringValue::reescape() const {
 		std::string out;
-		for (size_t i = 0, max = value->size(); i < max; ++i) {
-			const char ch0 = (*value)[i];
+		for (size_t i = 0, max = value.size(); i < max; ++i) {
+			const char ch0 = value[i];
 			if (i < max - 2) {
-				const char ch1 = (*value)[i + 1], ch2 = (*value)[i + 2];
+				const char ch1 = value[i + 1], ch2 = value[i + 2];
 				if (ch0 == '\\' && Util::isHex(ch1) && Util::isHex(ch2)) {
 					out += std::string("\\x") + ch1 + ch2;
 					i += 2;
-				} else
+				} else {
 					out += ch0;
-			} else
+				}
+			} else {
 				out += ch0;
+			}
 		}
 		return out;
 	}

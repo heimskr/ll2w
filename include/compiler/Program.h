@@ -23,7 +23,7 @@ namespace LL2W {
 	struct ArrayValue;
 	class  ASTNode;
 	struct StructValue;
-	struct Value;
+	class Value;
 
 	class Program {
 		private:

@@ -20,7 +20,7 @@ namespace LL2W {
 		addrspace = static_cast<int>(llvm_var.getAddressSpace());
 		externallyInitialized = llvm_var.isExternallyInitialized();
 		isConstant = llvm_var.isConstant();
-		constant = Constant::fromLLVM(llvm_var.getInitializer());
+		constant = Constant::fromLLVM(*llvm_var.getInitializer());
 		type = Type::fromLLVM(*llvm_var.getValueType());
 	}
 

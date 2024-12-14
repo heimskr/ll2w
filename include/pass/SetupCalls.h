@@ -6,7 +6,7 @@ namespace LL2W {
 	class Function;
 	class Instruction;
 	struct Clobber;
-	struct Constant;
+	class Constant;
 }
 
 namespace LL2W::Passes {

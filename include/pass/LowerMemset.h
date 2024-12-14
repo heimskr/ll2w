@@ -3,7 +3,7 @@
 #include <memory>
 
 namespace LL2W {
-	struct Constant;
+	class Constant;
 	class Function;
 	class Instruction;
 	class Variable;

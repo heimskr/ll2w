@@ -259,6 +259,9 @@ namespace LL2W {
 		private:
 			static StructForm getForm(const llvm::StructType &);
 			static StructShape getShape(const llvm::StructType &);
+			static std::vector<TypePtr> getTypes(const llvm::StructType &);
+			std::string typeString() const;
+			std::string typeStringPlain() const;
 	};
 
 	/** Global variables are specified without a type indicator. This means that when we encounter a global variable, we

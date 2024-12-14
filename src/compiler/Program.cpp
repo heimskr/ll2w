@@ -53,16 +53,13 @@ namespace LL2W {
 			std::string str = "";
 			llvm::raw_string_ostream os(str);
 			if (auto *var = llvm::dyn_cast<llvm::GlobalVariable>(value)) {
-				// info() <<" array: " << array->print
-				if (var->hasInitializer()) {
-
-				}
+				globals.emplace(symbol.getKey().str(), new GlobalVarDef(*var)); // TODO: memleak
 			}
 			// info() << "struct: " << value->getType()->print)
 
 			// getTypeID() << " " << symbol.getKey().str().substr(0, 64) << "\n";
 			// str = std::to_string(value->getValueID());
-			info() << "struct: " << str << "\n";
+			// info() << "struct: " << str << "\n";
 		}
 	}
 
@@ -475,7 +472,7 @@ namespace LL2W {
 			case ValueType::Array:
 				return outputArray(*dynamic_cast<ArrayValue *>(value.get()));
 			case ValueType::Int: {
-				const auto int_width = dynamic_cast<IntType *>(type.get())->intWidth;
+				const auto int_width = dynamic_cast<IntType *>(type.get())->bitWidth;
 				const std::string stringified = std::to_string(dynamic_cast<IntValue *>(value.get())->longValue());
 				return valuePrefix(int_width) + stringified;
 			}

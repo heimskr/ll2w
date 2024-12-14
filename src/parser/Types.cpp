@@ -91,7 +91,7 @@ namespace LL2W {
 			return FloatType::make(FloatType::Type::FP128);
 		}
 
-		throw std::invalid_argument(std::format("Invalid LLVM type: {}", llvm_type.getTypeID()));
+		throw std::invalid_argument(std::format("Invalid LLVM type: {}", static_cast<int>(llvm_type.getTypeID())));
 	}
 
 	std::vector<TypePtr> Type::copyMany(const std::vector<TypePtr> &types) {
@@ -458,7 +458,8 @@ namespace LL2W {
 		name(*node_->name),
 		form(node_->form),
 		shape(node_->shape),
-		node(node_) {}
+		node(node_),
+		types(node_->types) {}
 
 	StructType::StructType(const StructNode *node_):
 		StructType(std::shared_ptr<StructNode>(node_->copy())) {}
@@ -466,11 +467,12 @@ namespace LL2W {
 	StructType::StructType(const llvm::StructType &llvm_struct):
 		name(llvm_struct.getName()),
 		form(getForm(llvm_struct)),
-		shape(getShape(llvm_struct)) {}
+		shape(getShape(llvm_struct)),
+		types(getTypes(llvm_struct)) {}
 
 	StructType::operator std::string() {
-		if (name == "[anon]" && node) {
-			return node->typeString();
+		if (name == "[anon]" || name.empty()) {
+			return typeString();
 		}
 		if (name.at(1) == '"') {
 			return "\e[32m%\e[33m" + name.substr(1) + "\e[39m";
@@ -479,8 +481,8 @@ namespace LL2W {
 	}
 
 	std::string StructType::toString() {
-		if (name == "[anon]" && node) {
-			return node->typeStringPlain();
+		if (name == "[anon]" || name.empty()) {
+			return typeStringPlain();
 		}
 		if (name.at(1) == '"') {
 			return "%" + name.substr(1);
@@ -493,6 +495,7 @@ namespace LL2W {
 		out->padded = padded;
 		out->paddingMap = paddingMap;
 		out->paddedChild = paddedChild;
+		out->types = types;
 		return out;
 	}
 
@@ -517,19 +520,23 @@ namespace LL2W {
 		int largest = 0;
 		for (const TypePtr &type: types.value()) {
 			const int width = type->width();
-			if (width == 0)
+			if (width == 0) {
 				continue;
+			}
 			out += width + ((width - (out % width)) % width);
-			if (largest < width)
+			if (largest < width) {
 				largest = width;
+			}
 		}
-		if (largest != 0 && out % largest != 0)
+		if (largest != 0 && out % largest != 0) {
 			out += largest - (out % largest);
+		}
 		return out;
 #else
 		ssize_t out = 0;
-		for (const TypePtr &type: node->types)
+		for (const TypePtr &type: types.value()) {
 			out += type->width();
+		}
 		return out;
 #endif
 	}
@@ -661,6 +668,57 @@ namespace LL2W {
 		}
 
 		return StructShape::Default;
+	}
+
+	std::vector<TypePtr> StructType::getTypes(const llvm::StructType &llvm_struct) {
+		const unsigned count = llvm_struct.getNumElements();
+		std::vector<TypePtr> out(count);
+		for (unsigned i = 0; i < count; ++i) {
+			out[i] = Type::fromLLVM(*llvm_struct.getElementType(i));
+		}
+		return out;
+	}
+
+	std::string StructType::typeString() const {
+		if (node) {
+			return node->typeString();
+		}
+
+		if (!types) {
+			throw std::runtime_error("Struct has no type information available");
+		}
+
+		std::stringstream out;
+		out << "\e[2m{\e[0m";
+		auto begin = types->begin(), end = types->end();
+		for (auto iter = begin; iter != end; ++iter) {
+			if (iter != begin)
+				out << "\e[2m, \e[0m";
+			out << std::string(**iter);
+		}
+		out << "\e[2m}\e[0m";
+		return out.str();
+	}
+
+	std::string StructType::typeStringPlain() const {
+		if (node) {
+			return node->typeStringPlain();
+		}
+
+		if (!types) {
+			throw std::runtime_error("Struct has no type information available");
+		}
+
+		std::stringstream out;
+		out << "{";
+		auto begin = types->begin(), end = types->end();
+		for (auto iter = begin; iter != end; ++iter) {
+			if (iter != begin)
+				out << ", ";
+			out << (*iter)->toString();
+		}
+		out << "}";
+		return out.str();
 	}
 
 	int GlobalTemporaryType::alignment() const {

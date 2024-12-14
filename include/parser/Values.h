@@ -11,36 +11,43 @@
 #include "Enums.h"
 #include "util/Makeable.h"
 
+namespace llvm {
+	class ConstantArray;
+	class ConstantStruct;
+	class Value;
+}
+
 namespace LL2W {
 	class ASTNode;
 	class Type;
-	struct Constant;
+	class Constant;
 	class Variable;
 	class Function;
 	struct IcmpNode;
 	struct LogicNode;
 
-	struct Value;
+	class Value;
 	using ValuePtr = std::shared_ptr<Value>;
 	using ConstantPtr = std::shared_ptr<Constant>;
 
-	struct Value {
-		virtual operator std::string() = 0;
-		virtual ~Value() = default;
-		virtual ValueType valueType() const = 0;
-		virtual ValuePtr copy() const = 0;
-		bool isInt() const;
-		bool isBool() const;
-		bool isNull() const;
-		bool isLocal() const;
-		bool isGlobal() const;
-		bool isGetelementptr() const;
-		virtual bool isIntLike() const { return false; }
-		virtual long longValue() const { throw std::runtime_error("Value isn't int-like"); }
-		int intValue(bool can_warn = true);
-		bool overflows() const;
-		/* Stringifies the Value into something that can be put in a #data section. */
-		virtual std::string compile() const = 0;
+	class Value {
+		public:
+			virtual operator std::string() = 0;
+			virtual ~Value() = default;
+			virtual ValueType valueType() const = 0;
+			virtual ValuePtr copy() const = 0;
+			bool isInt() const;
+			bool isBool() const;
+			bool isNull() const;
+			bool isLocal() const;
+			bool isGlobal() const;
+			bool isGetelementptr() const;
+			virtual bool isIntLike() const { return false; }
+			virtual long longValue() const { throw std::runtime_error("Value isn't int-like"); }
+			int intValue(bool can_warn = true);
+			bool overflows() const;
+			/* Stringifies the Value into something that can be put in a #data section. */
+			virtual std::string compile() const = 0;
 	};
 
 	struct DoubleValue: Value {
@@ -126,7 +133,7 @@ namespace LL2W {
 		std::shared_ptr<Variable> getVariable(Function &);
 	};
 
-	struct GlobalValue: VariableValue {
+	struct GlobalValue: VariableValue, Makeable<GlobalValue> {
 		GlobalValue(const std::string *name_): VariableValue(name_) {}
 		GlobalValue(const std::string &name_): GlobalValue(&name_) {}
 		GlobalValue(const ASTNode *);
@@ -190,35 +197,39 @@ namespace LL2W {
 		std::string compile() const override { return "0"; }
 	};
 
-	struct StructValue: Value {
+	struct StructValue: Value, Makeable<StructValue> {
 		std::vector<ConstantPtr> constants;
 		bool packed = false;
 		StructValue(const ASTNode *);
-		StructValue(const std::vector<ConstantPtr> &constants_, bool packed_ = false):
-			constants(constants_), packed(packed_) {}
+		StructValue(std::vector<ConstantPtr> constants, bool packed = false):
+			constants(std::move(constants)), packed(packed) {}
+		StructValue(const llvm::ConstantStruct &);
 		ValueType valueType() const override { return ValueType::Struct; }
 		ValuePtr copy() const override;
 		operator std::string() override;
 		std::string compile() const override { return "UNSUPPORTED (Struct)"; }
 	};
 
-	struct ArrayValue: Value {
+	struct ArrayValue: Value, Makeable<ArrayValue> {
 		std::vector<ConstantPtr> constants;
 		ArrayValue(const ASTNode *);
-		ArrayValue(const std::vector<ConstantPtr> &constants_): constants(constants_) {}
+		ArrayValue(std::vector<ConstantPtr> constants):
+			constants(std::move(constants)) {}
+		ArrayValue(const llvm::ConstantArray &);
 		ValueType valueType() const override { return ValueType::Array; }
 		ValuePtr copy() const override;
 		operator std::string() override;
 		std::string compile() const override { return "UNSUPPORTED (Array)"; }
 	};
 
-	struct CStringValue: Value {
-		const std::string *value;
-		CStringValue(const std::string *value_): value(value_) {}
+	struct CStringValue: Value, Makeable<CStringValue> {
+		std::string value;
+		CStringValue(std::string_view value):
+			value(value) {}
 		CStringValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::CString; }
 		ValuePtr copy() const override { return std::make_shared<CStringValue>(value); }
-		operator std::string() override { return "\e[34mc\e[33m\"" + *value + "\"\e[0m"; }
+		operator std::string() override { return "\e[34mc\e[33m\"" + std::string(value) + "\"\e[0m"; }
 		// Replaces LLVM-style escapes (e.g., "\1B") with WASM-style escapes (e.g., "\x1B").
 		std::string reescape() const;
 		std::string compile() const override { return "\"" + reescape() + "\""; }

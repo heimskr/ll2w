@@ -5,7 +5,7 @@
 #include "parser/ASTNode.h"
 
 namespace LL2W {
-	struct Constant;
+	class Constant;
 	class Function;
 	class Instruction;
 	class LLVMInstruction;

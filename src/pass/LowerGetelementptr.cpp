@@ -87,7 +87,7 @@ namespace LL2W::Passes {
 							: function.getVariable(std::to_string(std::get<long>(index.value)));
 						if (tt == TypeType::Pointer || tt == TypeType::Array) {
 							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
-							auto mult = std::make_shared<MultIInstruction>(pvar, type->width());
+							auto mult = std::make_shared<MultIInstruction>(pvar, static_cast<int>(type->width()));
 							auto add = std::make_shared<AddRInstruction>(var, lo, var);
 							function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location)
 								+ "): pointer/array, pvar -> " + var->plainString())->setDebug(node)->extract();

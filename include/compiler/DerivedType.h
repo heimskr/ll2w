@@ -10,7 +10,7 @@
 
 namespace LL2W {
 	class  ASTNode;
-	struct Constant;
+	class Constant;
 	class  Program;
 	struct TypeSet;
 

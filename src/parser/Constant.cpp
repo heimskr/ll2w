@@ -1,15 +1,25 @@
-#include <iostream>
-#include <sstream>
-
 #include "parser/ASTNode.h"
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
 #include "util/Util.h"
 
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Function.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <iostream>
+#include <sstream>
+
 namespace LL2W {
-	Constant::Constant(TypePtr type_, ValuePtr value_, const ParAttrs &parattrs_, Conversion conversion_,
+	Constant::Constant() = default;
+
+	Constant::Constant(TypePtr type, ValuePtr value):
+		type(std::move(type)), value(std::move(value)) {}
+
+	Constant::Constant(TypePtr type, ValuePtr value, const ParAttrs &parattrs_, Conversion conversion_,
 	                   ConstantPtr conversion_source, TypePtr conversion_type):
-		type(type_), value(value_), parattrs(parattrs_), conversion(conversion_),
+		type(std::move(type)), value(std::move(value)), parattrs(parattrs_), conversion(conversion_),
 		conversionSource(conversion_source), conversionType(conversion_type) {}
 
 	Constant::Constant(const ASTNode *node, TypePtr type_hint) {
@@ -125,6 +135,64 @@ namespace LL2W {
 			    << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
 		}
 		return out.str();
+	}
+
+	ConstantPtr Constant::fromLLVM(const llvm::Value &llvm_value) {
+		ConstantPtr out = std::shared_ptr<Constant>(new Constant);
+
+		if (auto *int_constant = llvm::dyn_cast<llvm::ConstantInt>(&llvm_value)) {
+			out->type = IntType::make(int_constant->getBitWidth());
+			out->value = IntValue::make(int_constant->getZExtValue());
+			return out;
+		}
+
+		if (auto *struct_constant = llvm::dyn_cast<llvm::ConstantStruct>(&llvm_value)) {
+			out->type = StructType::make(*struct_constant->getType());
+			out->value = StructValue::make(*struct_constant);
+			return out;
+		}
+
+		if (auto *array_constant = llvm::dyn_cast<llvm::ConstantArray>(&llvm_value)) {
+			out->type = ArrayType::make(array_constant->getNumOperands(), Type::fromLLVM(*array_constant->getType()));
+			out->value = ArrayValue::make(*array_constant);
+			return out;
+		}
+
+		if (auto *data_constant = llvm::dyn_cast<llvm::ConstantDataArray>(&llvm_value)) {
+			return out;
+		}
+
+		if (auto *expr_constant = llvm::dyn_cast<llvm::ConstantExpr>(&llvm_value)) {
+			return out;
+		}
+
+		if (auto *global_constant = llvm::dyn_cast<llvm::GlobalVariable>(&llvm_value)) {
+			return out;
+		}
+
+		if (auto *null_constant = llvm::dyn_cast<llvm::ConstantPointerNull>(&llvm_value)) {
+			out->type = PointerType::getOpaque();
+			out->value = std::make_shared<NullValue>();
+			return out;
+		}
+
+		if (auto *function_value = llvm::dyn_cast<llvm::Function>(&llvm_value)) {
+			out->type = Type::fromLLVM(*function_value->getType());
+			out->value = std::make_shared<GlobalValue>(function_value->getName().str());
+			return out;
+		}
+
+		if (auto *zero_value = llvm::dyn_cast<llvm::ConstantAggregateZero>(&llvm_value)) {
+			out->type = Type::fromLLVM(*zero_value->getType());
+			out->value = std::make_shared<ZeroinitializerValue>();
+			return out;
+		}
+
+		llvm::raw_os_ostream os(std::cerr);
+		llvm_value.print(os, true);
+		std::cerr << std::endl;
+		std::println(std::cerr, "valueID = {}", static_cast<int>(llvm_value.getValueID()));
+		throw std::invalid_argument("Invalid LLVM constant");
 	}
 
 	std::ostream & operator<<(std::ostream &os, const Constant &constant) {
