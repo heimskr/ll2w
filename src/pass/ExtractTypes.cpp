@@ -8,7 +8,7 @@
 namespace LL2W::Passes {
 	static DbgIntrinsicNode * getDbg(const InstructionPtr &instruction) {
 		auto llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-		return llvm? dynamic_cast<DbgIntrinsicNode *>(llvm->node) : nullptr;
+		return llvm? dynamic_cast<DbgIntrinsicNode *>(llvm->getNode()) : nullptr;
 	}
 
 	static bool isIntbang(const std::string &str) {
@@ -47,7 +47,7 @@ namespace LL2W::Passes {
 
 					if (!var->type)
 						throw std::runtime_error("Variable " + std::string(*var) + " has no type");
-					
+
 					if (!var->type->isInt())
 						continue;
 

@@ -1,34 +1,45 @@
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/LLVMInstruction.h"
 #include "compiler/Variable.h"
 #include "parser/Nodes.h"
 #include "util/Util.h"
 
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/Support/raw_ostream.h>
+
+#include <iostream>
+
 /** If the first argument is castable to a LocalValue, this macro calls readname with the LocalValue and the provided
  *  type. */
 #define IFLV(x, t) do { if (auto local_value = std::dynamic_pointer_cast<LocalValue>((x))) \
 	readname(local_value, (t)); } while (0)
 #define FORV(x...) for (const auto &value: {x})
-#define CAST(t) auto *cast = dynamic_cast<t *>(node); if (!cast) break
+#define CAST(t) auto *cast = dynamic_cast<t *>(getNode()); if (!cast) break
 
 namespace LL2W {
-	LLVMInstruction::LLVMInstruction(InstructionNode *node_, int index_, bool owns_node):
-	Instruction(index_), node(node_), ownsNode(owns_node) {
-		if (node_ != nullptr) {
-			debugIndex = node_->debugIndex;
+	LLVMInstruction::LLVMInstruction(InstructionNode *source, int index, bool owns_node):
+		Instruction(index),
+		source(source),
+		ownsNode(owns_node) {
+			if (source != nullptr) {
+				debugIndex = source->debugIndex;
+			}
 		}
-	}
+
+	LLVMInstruction::LLVMInstruction(llvm::Instruction *source, int index):
+		Instruction(index),
+		source(source),
+		ownsNode(false) {}
 
 	LLVMInstruction::~LLVMInstruction() {
-		if (ownsNode) {
-			delete node;
+		if (ownsNode && std::holds_alternative<InstructionNode *>(source)) {
+			delete std::get<InstructionNode *>(source);
 		}
 	}
 
 	bool LLVMInstruction::isTerminal() const {
-		const NodeType type = node->nodeType();
+		const NodeType type = getNode()->nodeType();
 		return type == NodeType::Ret || type == NodeType::Unreachable;
 	}
 
@@ -52,6 +63,8 @@ namespace LL2W {
 				written.insert(parent.lock()->parent->getVariable(str, type, parent.lock()));
 			}
 		};
+
+		auto *node = getNode();
 
 		switch (node->nodeType()) {
 			case NodeType::Select: {
@@ -245,14 +258,24 @@ namespace LL2W {
 	}
 
 	std::string LLVMInstruction::debugExtra() const {
-		return node->debugExtra();
+		if (!isFromLLVM()) {
+			return getNode()->debugExtra();
+		}
+
+		std::string out;
+		llvm::raw_string_ostream os(out);
+		getLLVM()->print(os);
+		return out;
 	}
 
 	std::string LLVMInstruction::toString() const {
+		auto *node = getNode();
 		return "\e[41;37;1mUntranslated node:\e[0m " + node->debugExtra();
 	}
 
 	bool LLVMInstruction::replaceRead(const VariablePtr &to_replace, const VariablePtr &new_var) {
+		auto *node = getNode();
+
 		if (auto *reader = dynamic_cast<Reader *>(node)) {
 			reader->replaceRead(to_replace, new_var);
 			return true;
@@ -262,10 +285,12 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::canReplaceRead(const VariablePtr &) const {
+		auto *node = getNode();
 		return dynamic_cast<Reader *>(node) != nullptr;
 	}
 
 	bool LLVMInstruction::replaceWritten(const VariablePtr &to_replace, const VariablePtr &new_var) {
+		auto *node = getNode();
 		if (auto *writer = dynamic_cast<Writer *>(node)) {
 			writer->replaceWritten(to_replace, new_var);
 			return true;
@@ -275,14 +300,17 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::canReplaceWritten(const VariablePtr &) const {
+		auto *node = getNode();
 		return dynamic_cast<Writer *>(node) != nullptr;
 	}
 
 	bool LLVMInstruction::isPhi() const {
+		auto *node = getNode();
 		return node && node->nodeType() == NodeType::Phi;
 	}
 
 	bool LLVMInstruction::holdsLabels() const {
+		auto *node = getNode();
 		switch (node->nodeType()) {
 			case NodeType::BrCond:
 			case NodeType::BrUncond:
@@ -294,6 +322,7 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::replaceLabel(const std::string *to_replace, const std::string *replace_with) {
+		auto *node = getNode();
 		switch (node->nodeType()) {
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
@@ -340,7 +369,23 @@ namespace LL2W {
 	}
 
 	std::vector<const std::string *> LLVMInstruction::getLabels() const {
-		switch (node->nodeType()) {
+		if (isFromLLVM()) {
+			auto *instruction = getLLVM();
+			if (auto *branch = llvm::dyn_cast<llvm::BranchInst>(instruction)) {
+				if (branch->isConditional()) {
+					llvm::Value *if_true = branch->getOperand(1);
+					llvm::Value *if_false = branch->getOperand(2);
+					// TODO
+				} else {
+					llvm::Value *destination = branch->getOperand(0);
+					// TODO
+				}
+			}
+
+			return {};
+		}
+
+		switch (getNode()->nodeType()) {
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
 				return {cast->ifFalse, cast->ifTrue};
@@ -367,7 +412,7 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::isBlockTerminal() const {
-		switch (node->nodeType()) {
+		switch (getNode()->nodeType()) {
 			case NodeType::BrCond:
 			case NodeType::BrUncond:
 			case NodeType::Switch:
@@ -381,7 +426,27 @@ namespace LL2W {
 
 	Instruction * LLVMInstruction::copy() const {
 		auto out = std::make_unique<LLVMInstruction>(*this);
-		Util::copyPointer(out->node);
+		if (std::holds_alternative<InstructionNode *>(source)) {
+			Util::copyPointer(std::get<InstructionNode *>(out->source));
+		}
 		return out.release();
+	}
+
+	InstructionNode * LLVMInstruction::getNode() const {
+		if (!std::holds_alternative<InstructionNode *>(source)) {
+			throw std::runtime_error("getNode() failed: not holding an InstructionNode");
+		}
+		return std::get<InstructionNode *>(source);
+	}
+
+	llvm::Instruction * LLVMInstruction::getLLVM() const {
+		if (!std::holds_alternative<llvm::Instruction *>(source)) {
+			throw std::runtime_error("getLLVM() failed: not holding an llvm::Instruction");
+		}
+		return std::get<llvm::Instruction *>(source);
+	}
+
+	bool LLVMInstruction::isFromLLVM() const {
+		return std::holds_alternative<llvm::Instruction *>(source);
 	}
 }

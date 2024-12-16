@@ -77,7 +77,7 @@ namespace LL2W::PaddedStructs {
 		if (!llvm)
 			throw std::runtime_error("PaddedStructs::extract not called on an LLVM instruction");
 
-		ExtractValueNode *evnode = dynamic_cast<ExtractValueNode *>(llvm->node);
+		ExtractValueNode *evnode = dynamic_cast<ExtractValueNode *>(llvm->getNode());
 		if (!evnode)
 			throw std::runtime_error("PaddedStructs::extract not called on an extractvalue node");
 

@@ -15,9 +15,9 @@ namespace LL2W {
 		return intern(std::string(str));
 	}
 
-	const std::string * StringSet::intern(const std::string &str) {
+	const std::string * StringSet::intern(std::string str) {
 		std::unique_lock lock(stringsetMutex);
-		auto handle = set.insert(str);
+		auto handle = set.insert(std::move(str));
 		return &*handle.first;
 	}
 

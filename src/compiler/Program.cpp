@@ -38,18 +38,16 @@ namespace LL2W {
 			constant(constant_), value(value_), location(location_) {}
 	};
 
-	Program::Program(std::string_view source_code) {
-		llvm::LLVMContext context;
+	Program::Program(std::string_view source_code, llvm::LLVMContext &context) {
 		llvm::SMDiagnostic err;
 		llvm::SmallVector<char> vector(source_code.begin(), source_code.end());
-		std::unique_ptr<llvm::Module> llvm_module = llvm::getLazyIRModule(std::make_unique<llvm::SmallVectorMemoryBuffer>(std::move(vector)), err, context);
+		llvmModule = llvm::getLazyIRModule(std::make_unique<llvm::SmallVectorMemoryBuffer>(std::move(vector)), err, context);
 
-		for (llvm::StructType *llvm_struct: llvm_module->getIdentifiedStructTypes()) {
+		for (llvm::StructType *llvm_struct: llvmModule->getIdentifiedStructTypes()) {
 			StructType::knownStructs.emplace(llvm_struct->getName(), std::make_shared<StructType>(*llvm_struct));
 		}
 
-		for (const auto &symbol: llvm_module->getValueSymbolTable()) {
-			// info() << "key: " << symbol.getKey().str() << "\n";
+		for (const auto &symbol: llvmModule->getValueSymbolTable()) {
 			llvm::Value *value = symbol.getValue();
 
 			std::string str;
@@ -60,17 +58,20 @@ namespace LL2W {
 				continue;
 			}
 
-			if (auto *function = llvm::dyn_cast<llvm::Function>(value)) {
-				functions.emplace(symbol.getKey().str(), new Function(*this, function)); // TODO: memleak
-				continue;
-			}
-
 			if (auto *alias = llvm::dyn_cast<llvm::GlobalAlias>(value)) {
 				aliases.emplace(StringSet::intern(symbol.getKey().str()), new AliasDef(*alias));
 				continue;
 			}
 
+			if (llvm::isa<llvm::Function>(*value)) {
+				continue;
+			}
+
 			warn() << "Symbol type: " << value->getValueID() << "\n";
+		}
+
+		for (llvm::Function &function: *llvmModule) {
+			functions.emplace(function.getName().str(), new Function(*this, &function)); // TODO: memleak
 		}
 	}
 

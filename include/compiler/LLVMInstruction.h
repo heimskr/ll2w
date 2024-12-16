@@ -2,15 +2,22 @@
 
 #include "compiler/Instruction.h"
 
+#include <variant>
+
+namespace llvm {
+	class Instruction;
+}
+
 namespace LL2W {
 	class InstructionNode;
 
 	class LLVMInstruction: public Instruction {
 		public:
-			InstructionNode *node;
+			std::variant<InstructionNode *, llvm::Instruction *> source;
 			bool ownsNode = false;
 
-			LLVMInstruction(InstructionNode *node_, int index_, bool owns_node = false);
+			LLVMInstruction(InstructionNode *source, int index, bool owns_node = false);
+			LLVMInstruction(llvm::Instruction *source, int index);
 
 			virtual ~LLVMInstruction();
 
@@ -32,5 +39,9 @@ namespace LL2W {
 			bool isBlockTerminal() const override;
 
 			Instruction * copy() const override;
+
+			InstructionNode * getNode() const;
+			llvm::Instruction * getLLVM() const;
+			bool isFromLLVM() const;
 	};
 }

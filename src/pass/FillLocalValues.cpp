@@ -8,18 +8,22 @@ namespace LL2W::Passes {
 		Timer timer("FillLocalValues");
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
+			if (!llvm) {
 				continue;
+			}
 
-			InstructionNode *node = llvm->node;
+			InstructionNode *node = llvm->getNode();
+
 			if (Reader *reader = dynamic_cast<Reader *>(node)) {
-				for (std::shared_ptr<LocalValue> value: reader->allLocals())
+				for (std::shared_ptr<LocalValue> value: reader->allLocals()) {
 					value->variable = function.getVariable(*value->name);
+				}
 			}
 
 			if (Writer *writer = dynamic_cast<Writer *>(node)) {
-				if (writer->result)
+				if (writer->result) {
 					writer->variable = function.getVariable(*writer->result);
+				}
 			}
 		}
 	}

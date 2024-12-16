@@ -12,12 +12,14 @@ namespace LL2W::Passes {
 		auto end = function.linearInstructions.end();
 		for (auto iter = function.linearInstructions.begin(); iter != end; ++iter) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(iter->get());
-			if (llvm && llvm->node->nodeType() == NodeType::Unreachable)
+			if (llvm && llvm->getNode()->nodeType() == NodeType::Unreachable) {
 				to_remove.push_back(iter);
+			}
 		}
 
-		for (auto &iter: to_remove)
+		for (auto &iter: to_remove) {
 			function.linearInstructions.erase(iter);
+		}
 
 		return to_remove.size();
 	}

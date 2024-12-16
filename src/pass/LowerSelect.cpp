@@ -18,9 +18,9 @@ namespace LL2W::Passes {
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Select)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Select)
 				continue;
-			SelectNode *select = dynamic_cast<SelectNode *>(llvm->node);
+			SelectNode *select = dynamic_cast<SelectNode *>(llvm->getNode());
 
 			VariablePtr left_var, right_var;
 

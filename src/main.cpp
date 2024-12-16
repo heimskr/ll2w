@@ -1,9 +1,3 @@
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <string>
-
 #include "compiler/PaddedStructs.h"
 #include "compiler/Program.h"
 #include "graph/DJGraph.h"
@@ -19,6 +13,14 @@
 #include "parser/Nodes.h"
 #include "parser/StructNode.h"
 #include "parser/Types.h"
+
+#include <llvm/IR/LLVMContext.h>
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
 
 // #define DEBUGMODE
 // #define INTERACTIVE
@@ -97,7 +99,8 @@ void compile(const std::string &filename, bool show_debug) {
 	// LL2W::llvmParser.debug(false, false);
 	// LL2W::llvmParser.parse();
 	// LL2W::Program prog(*LL2W::llvmParser.root);
-	LL2W::Program prog(text);
+	llvm::LLVMContext context;
+	LL2W::Program prog(text, context);
 	// return;
 #ifdef INTERACTIVE
 	(void) show_debug;

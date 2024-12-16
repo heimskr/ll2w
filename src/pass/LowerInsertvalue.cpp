@@ -16,10 +16,11 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::InsertValue)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::InsertValue) {
 				continue;
+			}
 
-			InsertValueNode *iv = dynamic_cast<InsertValueNode *>(llvm->node);
+			InsertValueNode *iv = dynamic_cast<InsertValueNode *>(llvm->getNode());
 
 			// TODO: Actually implement this instead of using this dodgy hack to get optimized Thurisaz to compile.
 			// For now, we support structs containing some number of integers of width <= 64. Each item in the
@@ -67,8 +68,7 @@ namespace LL2W::Passes {
 			if (avtype == ValueType::Undef || avtype == ValueType::Poison || avtype == ValueType::Local) {
 				ValuePtr value = iv->value;
 				ValueType valuetype = value->valueType();
-				const std::string comment = " -> " + destination->registersString() + "[" +
-					std::to_string(iv->decimals.front()) + "]";
+				std::string comment = std::format(" -> {}[{}]", destination->registersString(), iv->decimals.front());
 				if (value->isIntLike()) {
 					auto set = std::make_shared<SetInstruction>(reg, value->intValue(false));
 					set->setOriginalValue(value);
@@ -77,8 +77,7 @@ namespace LL2W::Passes {
 				} else if (valuetype == ValueType::Local) {
 					VariablePtr source = dynamic_cast<LocalValue *>(value.get())->variable;
 					auto move = std::make_shared<MoveInstruction>(source, reg);
-					function.insertBefore(instruction, move, "LowerInsertvalue: local: " + source->plainString() +
-						comment)->setDebug(*instruction)->extract();
+					function.insertBefore(instruction, move, "LowerInsertvalue: local: " + source->plainString() + comment)->setDebug(*instruction)->extract();
 					// function.insertBefore(move, std::make_shared<PrintPseudoinstruction>("@"));
 				} else {
 					warn() << "Skipping insertvalue with unsupported value type: " << instruction->debugExtra() << '\n';
@@ -93,8 +92,9 @@ namespace LL2W::Passes {
 			++changed;
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return changed;
 	}

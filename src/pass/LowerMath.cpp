@@ -536,26 +536,26 @@ namespace LL2W::Passes {
 			if (llvm == nullptr)
 				continue;
 
-			const NodeType type = llvm->node->nodeType();
+			const NodeType type = llvm->getNode()->nodeType();
 			if (type == NodeType::BasicMath) {
-				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->node));
+				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->getNode()));
 			} else if (type == NodeType::Logic) {
-				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->node));
+				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->getNode()));
 			} else if (type == NodeType::Div) {
-				DivNode *div = dynamic_cast<DivNode *>(llvm->node);
+				DivNode *div = dynamic_cast<DivNode *>(llvm->getNode());
 				if (div->divType == DivNode::DivType::Udiv) {
 					lowerDiv<false>(function, instruction, div);
 				} else if (div->divType == DivNode::DivType::Sdiv) {
 					lowerDiv<true>(function, instruction, div);
 				}
 			} else if (type == NodeType::Rem) {
-				RemNode *rem = dynamic_cast<RemNode *>(llvm->node);
+				RemNode *rem = dynamic_cast<RemNode *>(llvm->getNode());
 				if (rem->remType == RemNode::RemType::Srem)
 					lowerRem<true>(function, instruction, rem);
 				else
 					lowerRem<false>(function, instruction, rem);
 			} else if (type == NodeType::Shr) {
-				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->node);
+				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->getNode());
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
 					// If we're arithmetic-shifting a smaller value to the right, we need to sign extend it.
 					const int  width	  = shr->type->width();

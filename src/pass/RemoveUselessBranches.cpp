@@ -14,8 +14,8 @@ namespace LL2W::Passes {
 				continue;
 			InstructionPtr &back = block->instructions.back();
 			if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
-				if (llback->node->nodeType() == NodeType::BrUncond) {
-					if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
+				if (llback->getNode()->nodeType() == NodeType::BrUncond) {
+					if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->getNode())) {
 						auto next = iter;
 						++next;
 						if (next != end) {

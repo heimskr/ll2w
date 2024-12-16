@@ -30,10 +30,10 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Getelementptr)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Getelementptr)
 				continue;
 
-			GetelementptrNode *node = dynamic_cast<GetelementptrNode *>(llvm->node);
+			GetelementptrNode *node = dynamic_cast<GetelementptrNode *>(llvm->getNode());
 			// In all the getelementptr instructions I've seen, the source argument has always been a pvar, never a
 			// gvar. The indices have been either two decimals or one pvar, but this could be just a quirk of the
 			// example program I've been using (ll/fat.ll), as most of the types are the same struct type. However, I

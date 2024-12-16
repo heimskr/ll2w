@@ -12,12 +12,14 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Freeze)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Freeze) {
 				continue;
+			}
 
-			auto *sw = dynamic_cast<FreezeNode *>(llvm->node);
-			if (!sw->value->isLocal())
+			auto *sw = dynamic_cast<FreezeNode *>(llvm->getNode());
+			if (!sw->value->isLocal()) {
 				throw std::runtime_error("Expected the operand of a freeze instruction to be a pvar");
+			}
 
 			auto local = std::dynamic_pointer_cast<LocalValue>(sw->value);
 			auto variable = local->getVariable(function);
@@ -29,8 +31,9 @@ namespace LL2W::Passes {
 
 		if (!to_remove.empty()) {
 			function.reindexInstructions();
-			for (InstructionPtr &instruction: to_remove)
+			for (InstructionPtr &instruction: to_remove) {
 				function.remove(instruction);
+			}
 		}
 
 		return to_remove.size();

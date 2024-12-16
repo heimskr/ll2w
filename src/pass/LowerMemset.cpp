@@ -22,11 +22,11 @@ namespace LL2W::Passes {
 		for (auto iter = linear.begin(), end = linear.end(); iter != end;) {
 			InstructionPtr &instruction = *iter;
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Call) {
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Call) {
 				++iter;
 				continue;
 			}
-			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
+			CallNode *call = dynamic_cast<CallNode *>(llvm->getNode());
 			if (!call->name->isGlobal()) {
 				++iter;
 				continue;

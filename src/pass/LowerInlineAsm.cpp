@@ -23,11 +23,11 @@ namespace LL2W::Passes {
 
 		for (auto iter = function.linearInstructions.begin(); iter != function.linearInstructions.end(); ++iter) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(iter->get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Asm)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Asm)
 				continue;
 
 			++count;
-			AsmNode *asm_node = dynamic_cast<AsmNode *>(llvm->node);
+			AsmNode *asm_node = dynamic_cast<AsmNode *>(llvm->getNode());
 
 			std::string text;
 			text.reserve(asm_node->contents->size() - 2);
@@ -105,10 +105,10 @@ namespace LL2W::Passes {
 					auto copy = iter;
 					for (++copy; copy != function.linearInstructions.end(); ++copy) {
 						LLVMInstruction *inner_llvm = dynamic_cast<LLVMInstruction *>(copy->get());
-						if (!inner_llvm || inner_llvm->node->nodeType() != NodeType::ExtractValue)
+						if (!inner_llvm || inner_llvm->getNode()->nodeType() != NodeType::ExtractValue)
 							break;
 
-						ExtractValueNode *extract = dynamic_cast<ExtractValueNode *>(inner_llvm->node);
+						ExtractValueNode *extract = dynamic_cast<ExtractValueNode *>(inner_llvm->getNode());
 						if (*extract->aggregateType != *asm_node->returnType)
 							break;
 

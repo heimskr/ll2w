@@ -17,9 +17,9 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::ExtractValue)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::ExtractValue)
 				continue;
-			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->node);
+			ExtractValueNode *ev = dynamic_cast<ExtractValueNode *>(llvm->getNode());
 
 			ValueType aggregate_type = ev->aggregateValue->valueType();
 
@@ -60,5 +60,5 @@ namespace LL2W::Passes {
 		return changed;
 	}
 
-	
+
 }

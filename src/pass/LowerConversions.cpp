@@ -35,10 +35,10 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Conversion)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Conversion)
 				continue;
-			
-			ConversionNode *conversion = dynamic_cast<ConversionNode *>(llvm->node);
+
+			ConversionNode *conversion = dynamic_cast<ConversionNode *>(llvm->getNode());
 			const Conversion type = conversion->conversionType;
 
 			switch (type) {

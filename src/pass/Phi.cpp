@@ -29,7 +29,7 @@ namespace LL2W::Passes {
 			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
 				continue;
-			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
 			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null in Function::coalescePhi");
 
@@ -159,7 +159,7 @@ namespace LL2W::Passes {
 				continue;
 			}
 
-			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
 			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null in Function::movePhi");
 
@@ -278,9 +278,9 @@ namespace LL2W::Passes {
 					if (middle_made) {
 						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
 						if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
-							auto type = parent_llvm->node->nodeType();
+							auto type = parent_llvm->getNode()->nodeType();
 							if (type == NodeType::BrCond) {
-								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->node);
+								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->getNode());
 								const std::string **cond_label =
 									(StringSet::unquote(cond->ifTrue) == phi_block_label)?
 									&cond->ifTrue :
@@ -292,7 +292,7 @@ namespace LL2W::Passes {
 								else
 									*cond_label = percent_label;
 							} else if (type == NodeType::Switch) {
-								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->node);
+								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->getNode());
 								if (CompilerUtil::labelsMatch(*switch_node->label, *phi_block_label))
 									switch_node->label = percent_label;
 								else
@@ -339,7 +339,7 @@ namespace LL2W::Passes {
 			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
 				continue;
-			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->node);
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
 			if (phi_node == nullptr)
 				throw std::runtime_error("phi_node is null");
 
@@ -428,7 +428,7 @@ namespace LL2W::Passes {
 						throw std::runtime_error("Definition of " + std::string(*destination) +
 							" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
 					}
-					auto *phi = dynamic_cast<PhiNode *>(llvm->node);
+					auto *phi = dynamic_cast<PhiNode *>(llvm->getNode());
 					for (auto &[value, block_label]: phi->pairs) {
 						if (value->isLocal()) {
 							auto *local = dynamic_cast<LocalValue *>(value.get());

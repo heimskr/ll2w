@@ -19,9 +19,9 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Icmp)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Icmp)
 				continue;
-			lowerIcmp(function, instruction, dynamic_cast<IcmpNode *>(llvm->node));
+			lowerIcmp(function, instruction, dynamic_cast<IcmpNode *>(llvm->getNode()));
 			to_remove.push_back(instruction);
 		}
 
@@ -62,7 +62,7 @@ namespace LL2W::Passes {
 
 		VariablePtr rs = dynamic_cast<LocalValue *>(value1.get())->variable;
 		VariablePtr rd = node->variable;
-		
+
 		const ValueType type2 = value2->valueType();
 		if (type2 == ValueType::Local || type2 == ValueType::Global) {
 			VariablePtr rt;

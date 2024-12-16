@@ -19,7 +19,7 @@ namespace LL2W::Passes {
 		std::list<InstructionPtr> to_remove;
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
-				if (CallNode *call = dynamic_cast<CallNode *>(llvm->node)) {
+				if (CallNode *call = dynamic_cast<CallNode *>(llvm->getNode())) {
 					if (!call->name->isGlobal())
 						continue;
 					GlobalValue *global = dynamic_cast<GlobalValue *>(call->name.get());

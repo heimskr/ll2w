@@ -16,21 +16,25 @@ namespace LL2W::Passes {
 	int lowerRet(Function &function) {
 		Timer timer("LowerRet");
 		std::list<InstructionPtr> to_remove;
-		
+
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm)
+			if (!llvm) {
 				continue;
-			if (llvm->node->nodeType() == NodeType::Unreachable)
+			}
+			if (llvm->getNode()->nodeType() == NodeType::Unreachable) {
 				to_remove.push_back(instruction);
-			if (llvm->node->nodeType() != NodeType::Ret)
+			}
+			if (llvm->getNode()->nodeType() != NodeType::Ret) {
 				continue;
+			}
 
-			RetNode *ret = dynamic_cast<RetNode *>(llvm->node);
+			RetNode *ret = dynamic_cast<RetNode *>(llvm->getNode());
 
 			BasicBlockPtr block = instruction->parent.lock();
-			if (!block)
+			if (!block) {
 				throw std::runtime_error("Couldn't lock instruction parent in LowerRet");
+			}
 
 			VariablePtr fp = function.fp(block);
 			VariablePtr sp = function.sp(block);
@@ -38,8 +42,7 @@ namespace LL2W::Passes {
 			VariablePtr r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
 
 			// $fp -> $sp
-			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp), false)
-				->setDebug(llvm)->extract();
+			function.insertBefore(instruction, std::make_shared<MoveInstruction>(fp, sp), false)->setDebug(llvm)->extract();
 
 			// Put the return value into $r0.
 			if (ret->value->isIntLike()) {
@@ -57,12 +60,10 @@ namespace LL2W::Passes {
 					for (size_t i = 0; i < var->registers.size(); ++i) {
 						auto subvar = function.makePrecoloredVariable(*iter++, block);
 						auto retreg = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, block);
-						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false)
-							->setDebug(llvm)->extract();
+						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false)->setDebug(llvm)->extract();
 					}
 				} else {
-					function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false)
-						->setDebug(llvm)->extract();
+					function.insertBefore(instruction, std::make_shared<MoveInstruction>(var, r0), false)->setDebug(llvm)->extract();
 				}
 			}
 
@@ -70,22 +71,17 @@ namespace LL2W::Passes {
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
 			     iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
-				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(variable), false)
-					->setDebug(llvm)->extract();
+				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(variable), false)->setDebug(llvm)->extract();
 			}
 
 			// Insert the epilogue (minus the jump).
 			VariablePtr m5 = function.mx(5, block);
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m5), false)
-				->setDebug(llvm)->extract(); // ] $m5
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false)
-				->setDebug(llvm)->extract(); // ] $fp
-			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false)
-				->setDebug(llvm)->extract(); // ] $rt
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(m5), false)->setDebug(llvm)->extract(); // ] $m5
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(fp), false)->setDebug(llvm)->extract(); // ] $fp
+			function.insertBefore(instruction, std::make_shared<StackPopInstruction>(rt), false)->setDebug(llvm)->extract(); // ] $rt
 
 			// Jump to the return address.
-			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false), false)
-				->setDebug(llvm)->extract();
+			function.insertBefore(instruction, std::make_shared<JumpRegisterInstruction>(rt, false), false)->setDebug(llvm)->extract();
 			to_remove.push_back(instruction);
 		}
 

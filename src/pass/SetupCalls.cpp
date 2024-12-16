@@ -141,9 +141,9 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// Look for a call instruction.
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (!llvm || llvm->node->nodeType() != NodeType::Call)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Call)
 				continue;
-			CallNode *call = dynamic_cast<CallNode *>(llvm->node);
+			CallNode *call = dynamic_cast<CallNode *>(llvm->getNode());
 			BasicBlockPtr block = instruction->parent.lock();
 
 			VariableValue *name_value = dynamic_cast<VariableValue *>(call->name.get());
@@ -529,7 +529,7 @@ namespace LL2W::Passes {
 					warn() << "Not sure what to do when the argument of getelementptr isn't a global or getelementptr."
 					          "\n    " << std::string(*gep->variable);
 					if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get()))
-						std::cerr << " (" << llvm->node->location << ")";
+						std::cerr << " (" << llvm->getNode()->location << ")";
 					std::cerr << "\n";
 					return function.insertBefore(instruction, InvalidInstruction::make());
 				}

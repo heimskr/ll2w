@@ -40,8 +40,9 @@ namespace LL2W::Util {
 	template <typename T>
 	inline T alignToPower(T num) {
 		num--;
-		for (size_t i = 1; i < 8 * sizeof(T); ++i)
+		for (size_t i = 1; i < 8 * sizeof(T); ++i) {
 			num |= num >> i;
+		}
 		return num + 1;
 	}
 
@@ -64,10 +65,11 @@ namespace LL2W::Util {
 		std::stringstream ss;
 		bool first = true;
 		for (const T &item: container) {
-			if (first)
+			if (first) {
 				first = false;
-			else
+			} else {
 				ss << delimiter;
+			}
 			ss << item;
 		}
 		return ss.str();
@@ -87,9 +89,11 @@ namespace LL2W::Util {
 
 	template <typename T, typename S>
 	bool isAny(const T &thing, std::initializer_list<S> list) {
-		for (const S &other: list)
-			if (thing == other)
+		for (const S &other: list) {
+			if (thing == other) {
 				return true;
+			}
+		}
 		return false;
 	}
 
@@ -97,50 +101,59 @@ namespace LL2W::Util {
 	template <typename S>
 	S merge(const S &first, const S &second) {
 		S out;
-		for (const auto &item: first)
+		for (const auto &item: first) {
 			out.insert(item);
-		for (const auto &item: second)
+		}
+		for (const auto &item: second) {
 			out.insert(item);
+		}
 		return out;
 	}
 
 	/** Returns whether two sets have any items in common. */
 	template <typename S>
 	bool hasOverlap(const S &first, const S &second) {
-		for (const auto &item: first)
-			if (second.contains(item))
+		for (const auto &item: first) {
+			if (second.contains(item)) {
 				return true;
+			}
+		}
 		return false;
 	}
 
 	/** Adds all items from one set into another. */
 	template <typename D, typename S>
 	void absorb(D &destination, const S &source) {
-		for (const auto &item: source)
+		for (const auto &item: source) {
 			destination.insert(item);
+		}
 	}
 
 	template <typename T, template <typename...> typename C>
 	bool equal(const C<T> &first, const C<T> &second) {
-		if (first.size() != second.size())
+		if (first.size() != second.size()) {
 			return false;
-		for (const T &item: first)
-			if (!second.contains(item))
+		}
+		for (const T &item: first) {
+			if (!second.contains(item)) {
 				return false;
+			}
+		}
 		return true;
 	}
 
 	template <template <typename...> typename C, typename T, template <typename...> typename O = std::vector>
 	auto nsort(const C<T> &container, const bool sensitive = true) {
 		O<T> out(container.cbegin(), container.cend());
-		if (sensitive)
+		if (sensitive) {
 			std::sort(out.begin(), out.end(), [](const auto &a, const auto &b) {
 				return strnatcmp(a, b) == -1;
 			});
-		else
+		} else {
 			std::sort(out.begin(), out.end(), [](const auto &a, const auto &b) {
 				return strnatcasecmp(a, b) == -1;
 			});
+		}
 
 		return out;
 	}
@@ -148,14 +161,15 @@ namespace LL2W::Util {
 	template <typename C, typename F, std::enable_if_t<!std::is_same<F, bool>::value, int> = 0>
 	auto nsort(const C &container, F get, const bool sensitive = true) {
 		std::vector<typename C::value_type> out(container.begin(), container.end());
-		if (sensitive)
+		if (sensitive) {
 			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
 				return strnatcmp(get(a).c_str(), get(b).c_str()) == -1;
 			});
-		else
+		} else {
 			std::sort(out.begin(), out.end(), [get](const auto &a, const auto &b) {
 				return strnatcasecmp(get(a).c_str(), get(b).c_str()) == -1;
 			});
+		}
 
 		return out;
 	}
@@ -164,14 +178,15 @@ namespace LL2W::Util {
 	std::vector<typename M::value_type> mapnsort(const M &map, const bool sensitive = true) {
 		using pair_type = std::pair<std::string, typename M::mapped_type>;
 		std::vector<pair_type> vec(map.begin(), map.end());
-		if (sensitive)
+		if (sensitive) {
 			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
 				return strnatcmp(a.first.c_str(), b.first.c_str()) == -1;
 			});
-		else
+		} else {
 			std::sort(vec.begin(), vec.end(), [](const pair_type &a, const pair_type &b) {
 				return strnatcasecmp(a.first.c_str(), b.first.c_str()) == -1;
 			});
+		}
 
 		// I don't think there's any other way to cast A<B<C, D>> to A<B<const C, D>>.
 		return *reinterpret_cast<std::vector<typename M::value_type> *>(&vec);
@@ -179,20 +194,23 @@ namespace LL2W::Util {
 
 	template <typename C, typename N>
 	bool contains(const C &container, const N &needle) {
-		for (const auto &item: container)
-			if (item == needle)
+		for (const auto &item: container) {
+			if (item == needle) {
 				return true;
+			}
+		}
 		return false;
 	}
 
 	template <typename T>
 	std::ostream & out(std::ostream &os, const std::unordered_set<T> &set) {
 		bool first = true;
-		for (auto &&item: set) {
-			if (first)
+		for (const auto &item: set) {
+			if (first) {
 				first = false;
-			else
+			} else {
 				os << ' ';
+			}
 			os << item;
 		}
 		return os;
@@ -201,11 +219,12 @@ namespace LL2W::Util {
 	template <typename T>
 	std::ostream & out(std::ostream &os, const std::set<T> &set) {
 		bool first = true;
-		for (auto &&item: set) {
-			if (first)
+		for (const auto &item: set) {
+			if (first) {
 				first = false;
-			else
+			} else {
 				os << ' ';
+			}
 			os << item;
 		}
 		return os;
@@ -215,30 +234,34 @@ namespace LL2W::Util {
 	T parse(std::string_view string, int base = 10) {
 		T out = 0;
 		auto [ptr, err] = std::from_chars(string.data(), string.data() + string.length(), out, base);
-		if (err == std::errc())
+		if (err == std::errc{}) {
 			return out;
-		throw std::invalid_argument("Not an integer: \"" + std::string(string) + '"');
+		}
+		throw std::invalid_argument(std::format("Not an integer: \"{}\"", string));
 	}
 
 	template <typename T>
 	void copyPointer(T &ptr) {
-		if (ptr)
+		if (ptr) {
 			ptr = ptr->copy();
+		}
 	}
 }
 
 namespace LL2W {
 	inline std::ostream & warn(std::ostream &stream = std::cerr, bool with_text = true) {
 		stream << "\e[2m[\e[22;33m!\e[39;2m]\e[22m ";
-		if (with_text)
+		if (with_text) {
 			stream << "\e[33mWarning:\e[39m ";
+		}
 		return stream;
 	}
 
 	inline std::ostream & error(std::ostream &stream = std::cerr, bool with_text = true) {
 		stream << "\e[2m[\e[22;31m!\e[39;2m]\e[22m ";
-		if (with_text)
+		if (with_text) {
 			stream << "\e[31mError:\e[39m ";
+		}
 		return stream;
 	}
 

@@ -28,9 +28,9 @@ namespace LL2W::Passes {
 		// Loop over all instructions, ignoring everything except allocas.
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->node->nodeType() != NodeType::Alloca)
+			if (!llvm || llvm->getNode()->nodeType() != NodeType::Alloca)
 				continue;
-			AllocaNode *alloca = dynamic_cast<AllocaNode *>(llvm->node);
+			AllocaNode *alloca = dynamic_cast<AllocaNode *>(llvm->getNode());
 
 			// First, mark the alloca instruction for removal.
 			to_remove.push_back(instruction);

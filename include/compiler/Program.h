@@ -1,11 +1,5 @@
 #pragma once
 
-#include <list>
-#include <memory>
-#include <mutex>
-#include <unordered_map>
-#include <unordered_set>
-
 #include "compiler/BasicType.h"
 #include "compiler/CompositeType.h"
 #include "compiler/DerivedType.h"
@@ -18,6 +12,17 @@
 #include "compiler/TypeSet.h"
 #include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
+
+#include <list>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <unordered_set>
+
+namespace llvm {
+	class LLVMContext;
+	class Module;
+}
 
 namespace LL2W {
 	struct ArrayValue;
@@ -70,8 +75,9 @@ namespace LL2W {
 			/** A map of names of functions that do nothing but return a constant to the constant they return.
 			 *  Names don't contain a leading @. */
 			std::map<std::string, std::shared_ptr<Value>> constantReturningFunctions;
+			std::unique_ptr<llvm::Module> llvmModule;
 
-			Program(std::string_view);
+			Program(std::string_view, llvm::LLVMContext &);
 			Program(const ASTNode &);
 
 			~Program();

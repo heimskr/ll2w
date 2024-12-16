@@ -56,14 +56,19 @@ namespace LL2W {
 	void BasicBlock::extractPhi() {
 		phiUses.clear();
 
-		if (instructions.empty())
+		if (instructions.empty()) {
 			return;
+		}
 
-		if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instructions.front().get()))
-			if (PhiNode *phi = dynamic_cast<PhiNode *>(llvm->node))
-				for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs)
-					if (pair.first->valueType() == ValueType::Local)
+		if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instructions.front().get())) {
+			if (PhiNode *phi = dynamic_cast<PhiNode *>(llvm->getNode())) {
+				for (const std::pair<ValuePtr, const std::string *> &pair: phi->pairs) {
+					if (pair.first->valueType() == ValueType::Local) {
 						phiUses.insert(dynamic_cast<LocalValue *>(pair.first.get())->variable);
+					}
+				}
+			}
+		}
 
 		// for (InstructionPtr instruction: parent->categories["MovePhi"])
 		// 	if (instruction->parent.lock().get() == this)
@@ -78,17 +83,17 @@ namespace LL2W {
 			return {};
 		const auto back = instructions.back();
 		if (auto *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
-			const NodeType type = llvm->node->nodeType();
+			const NodeType type = llvm->getNode()->nodeType();
 			if (type == NodeType::BrUncond) {
-				return {parent->getBlock(dynamic_cast<BrUncondNode *>(llvm->node)->destination)};
+				return {parent->getBlock(dynamic_cast<BrUncondNode *>(llvm->getNode())->destination)};
 			} else if (type == NodeType::BrCond) {
-				const auto *cond = dynamic_cast<BrCondNode *>(llvm->node);
+				const auto *cond = dynamic_cast<BrCondNode *>(llvm->getNode());
 				return {parent->getBlock(cond->ifTrue), parent->getBlock(cond->ifFalse)};
 			} else if (type == NodeType::Ret) {
 				return {};
 			} else if (type == NodeType::Switch) {
 				std::vector<std::shared_ptr<BasicBlock>> out;
-				for (const auto &[type, value, switch_label]: dynamic_cast<SwitchNode *>(llvm->node)->table)
+				for (const auto &[type, value, switch_label]: dynamic_cast<SwitchNode *>(llvm->getNode())->table)
 					out.push_back(parent->getBlock(switch_label));
 				return out;
 			} else

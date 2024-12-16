@@ -126,7 +126,7 @@ namespace LL2W {
 		debugIndex = header->debugIndex;
 	}
 
-	Function::Function(Program &program, const llvm::Function *function):
+	Function::Function(Program &program, llvm::Function *function):
 		llvmFunction(function),
 		parent(program) {
 			name = StringSet::intern(function->getName().str());
@@ -146,6 +146,7 @@ namespace LL2W {
 #else
 			allocator = new ColoringAllocator(*this);
 #endif
+			warn() << "I am " << function->getName().str() << " and my size is " << function->size() << "\n";
 		}
 
 	Function::~Function() {
@@ -167,7 +168,7 @@ namespace LL2W {
 		if (linearInstructions.size() == 1) {
 			const auto &only = linearInstructions.front();
 			if (const auto *llvm = dynamic_cast<const LLVMInstruction *>(only.get())) {
-				if (const auto *ret = dynamic_cast<const RetNode *>(llvm->node)) {
+				if (const auto *ret = dynamic_cast<const RetNode *>(llvm->getNode())) {
 					switch (ret->value->valueType()) {
 						case ValueType::Void:
 							// info() << "Useless: " << *name << '\n';
@@ -188,8 +189,7 @@ namespace LL2W {
 							if (isArgument(pvar)) {
 								if (simple_index_out) {
 									if (!Util::isNumeric(pvar)) {
-										warn() << "Argument pvar isn't numeric; not classifying function as simple: "
-											<< *pvar << '\n';
+										warn() << "Argument pvar isn't numeric; not classifying function as simple: " << *pvar << '\n';
 										break;
 									}
 									*simple_index_out = Util::parseLong(pvar);
@@ -212,6 +212,32 @@ namespace LL2W {
 	}
 
 	void Function::extractBlocks() {
+		if (astnode) {
+			extractBlocksASTNode();
+		} else {
+			extractBlocksLLVM();
+		}
+	}
+
+	void Function::extractBlocksLLVM() {
+		assert(llvmFunction != nullptr);
+
+		info() << "hej " << *name << ". " << llvmFunction->size() << "\n";
+
+		auto &entry = llvmFunction->getEntryBlock();
+		info() << "entry: {" << entry.getName().str() << "}\n";
+
+		for (llvm::BasicBlock &block: *llvmFunction) {
+			llvm::StringRef ref = block.getName();
+			std::println("{{{}}} ({})", ref.str(), ref.empty());
+			for (llvm::Instruction &instruction: block) {
+
+			}
+		}
+	}
+
+	void Function::extractBlocksASTNode() {
+		assert(astnode != nullptr);
 		const std::string *label = StringSet::intern(std::to_string(arguments->size()));
 		std::vector<const std::string *> preds {};
 		std::list<std::shared_ptr<Instruction>> instructions;
@@ -754,8 +780,8 @@ namespace LL2W {
 		InstructionPtr &back = block->instructions.back();
 
 		if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
-			if (llback->node->nodeType() == NodeType::BrUncond) {
-				if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->node)) {
+			if (llback->getNode()->nodeType() == NodeType::BrUncond) {
+				if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->getNode())) {
 					BasicBlockPtr next = after(block);
 					if (next) {
 						const std::string destination = branch->destination->substr(1);
@@ -847,10 +873,10 @@ namespace LL2W {
 		// We need to update ϕ-instructions.
 		for (auto &possible_llvm: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(possible_llvm.get());
-			if (llvm == nullptr || llvm->node->nodeType() != NodeType::Phi) {
+			if (llvm == nullptr || llvm->getNode()->nodeType() != NodeType::Phi) {
 				continue;
 			}
-			auto *phi = dynamic_cast<PhiNode *>(llvm->node);
+			auto *phi = dynamic_cast<PhiNode *>(llvm->getNode());
 			for (auto &[value, phi_label]: phi->pairs) {
 				if (phi_label == block->label) {
 					phi_label = label;
@@ -949,7 +975,7 @@ namespace LL2W {
 				continue;
 			}
 
-			InstructionNode *node = llvm->node;
+			InstructionNode *node = llvm->getNode();
 			if (auto *reader = dynamic_cast<Reader *>(node)) {
 				for (const std::shared_ptr<LocalValue> &value: reader->allLocals()) {
 					if (value->variable) {

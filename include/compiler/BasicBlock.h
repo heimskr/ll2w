@@ -10,6 +10,10 @@
 
 #include "parser/Nodes.h"
 
+namespace llvm {
+	class BasicBlock;
+}
+
 namespace LL2W {
 	class Instruction;
 	class Variable;
@@ -45,6 +49,7 @@ namespace LL2W {
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
 			int estimatedExecutions = 0;
+			llvm::BasicBlock *llvmBlock = nullptr;
 
 			BasicBlock(Label, const std::vector<Label> & = {}, const std::list<InstructionPtr> & = {});
 
