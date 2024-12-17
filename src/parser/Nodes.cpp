@@ -205,6 +205,18 @@ namespace LL2W {
 			return new SelectNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::SExtInst>(llvm)) {
+			return new ConversionNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::TruncInst>(llvm)) {
+			return new ConversionNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::ZExtInst>(llvm)) {
+			return new ConversionNode(*inst);
+		}
+
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			return new UnreachableNode;
 		}
@@ -250,16 +262,18 @@ namespace LL2W {
 		std::vector<std::shared_ptr<LocalValue>> out;
 		out.reserve(values.size());
 		for (ValuePtr value: values) {
-			if (value && value->isLocal())
+			if (value && value->isLocal()) {
 				out.push_back(std::dynamic_pointer_cast<LocalValue>(value));
+			}
 		}
 		return out;
 	}
 
 	void Reader::replaceRead(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
 		for (std::shared_ptr<LocalValue> value: allLocals()) {
-			if (value->variable->id == to_replace->id)
+			if (value->variable->id == to_replace->id) {
 				value->variable = new_var;
+			}
 		}
 	}
 
@@ -270,9 +284,9 @@ namespace LL2W {
 	}
 
 	void Writer::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {
-		if (!variable || variable->id != to_replace->id)
-			return;
-		variable = new_var;
+		if (variable && variable->id == to_replace->id) {
+			variable = new_var;
+		}
 	}
 
 // SelectNode
@@ -288,8 +302,7 @@ namespace LL2W {
 		secondValue = Constant::fromLLVM(*inst.getFalseValue())->value;
 	}
 
-	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
-	                       ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs) {
+	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, condition_type, condition_value, type1, val1, type2, val2);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
@@ -302,15 +315,17 @@ namespace LL2W {
 		secondValue = getValue(val2);
 	}
 
-	SelectNode::SelectNode(const std::string *result_, std::unordered_set<Fastmath> fastmath_, TypePtr condition_type,
-	                       TypePtr first_type, TypePtr second_type, ValuePtr condition_value, ValuePtr first_value,
-	                       ValuePtr second_value, int debug_index):
-	fastmath(std::move(fastmath_)), conditionType(std::move(condition_type)), firstType(std::move(first_type)),
-	secondType(std::move(second_type)), conditionValue(std::move(condition_value)),
-	firstValue(std::move(first_value)), secondValue(std::move(second_value)) {
-		result = result_;
-		debugIndex = debug_index;
-	}
+	SelectNode::SelectNode(const std::string *result_, std::unordered_set<Fastmath> fastmath_, TypePtr condition_type, TypePtr first_type, TypePtr second_type, ValuePtr condition_value, ValuePtr first_value, ValuePtr second_value, int debug_index):
+		fastmath(std::move(fastmath_)),
+		conditionType(std::move(condition_type)),
+		firstType(std::move(first_type)),
+		secondType(std::move(second_type)),
+		conditionValue(std::move(condition_value)),
+		firstValue(std::move(first_value)),
+		secondValue(std::move(second_value)) {
+			result = result_;
+			debugIndex = debug_index;
+		}
 
 	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
@@ -1201,12 +1216,31 @@ namespace LL2W {
 
 // ConversionNode
 
+	ConversionNode::ConversionNode(const llvm::Instruction &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		from = Type::fromLLVM(*inst.getOperand(0)->getType());
+		to = Type::fromLLVM(*inst.getType());
+		value = Constant::fromLLVM(*inst.getOperand(0))->value;
+	}
+
 	ConversionNode::ConversionNode(const llvm::PtrToIntInst &inst):
-		conversionType(Conversion::Ptrtoint) {
-			result = StringSet::intern(getOperandName(inst));
-			from = Type::fromLLVM(*inst.getOperand(0)->getType());
-			to = Type::fromLLVM(*inst.getType());
-			value = Constant::fromLLVM(*inst.getOperand(0))->value;
+		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {
+			conversionType = Conversion::Ptrtoint;
+		}
+
+	ConversionNode::ConversionNode(const llvm::SExtInst &inst):
+		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {
+			conversionType = Conversion::Sext;
+		}
+
+	ConversionNode::ConversionNode(const llvm::TruncInst &inst):
+		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {
+			conversionType = Conversion::Trunc;
+		}
+
+	ConversionNode::ConversionNode(const llvm::ZExtInst &inst):
+		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {
+			conversionType = Conversion::Zext;
 		}
 
 	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,

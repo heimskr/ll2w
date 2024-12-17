@@ -29,6 +29,9 @@ namespace llvm {
 	class SelectInst;
 	class StoreInst;
 	class SwitchInst;
+	class TruncInst;
+	class SExtInst;
+	class ZExtInst;
 }
 
 namespace LL2W {
@@ -398,19 +401,26 @@ namespace LL2W {
 	};
 
 	struct ConversionNode: InstructionNode, Writer, Reader {
-		TypePtr from;
-		TypePtr to;
-		ValuePtr value;
-		Conversion conversionType;
+		protected:
+			ConversionNode(const llvm::Instruction &);
 
-		ConversionNode(const llvm::PtrToIntInst &);
-		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_, ASTNode *unibangs);
+		public:
+			TypePtr from;
+			TypePtr to;
+			ValuePtr value;
+			Conversion conversionType;
 
-		std::string debugExtra() const override;
-		NodeType nodeType() const override { return NodeType::Conversion; }
-		std::vector<ValuePtr> allValues() override { return {value}; }
-		std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
-		InstructionNode * copy() const override;
+			ConversionNode(const llvm::PtrToIntInst &);
+			ConversionNode(const llvm::SExtInst &);
+			ConversionNode(const llvm::TruncInst &);
+			ConversionNode(const llvm::ZExtInst &);
+			ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_, ASTNode *unibangs);
+
+			std::string debugExtra() const override;
+			NodeType nodeType() const override { return NodeType::Conversion; }
+			std::vector<ValuePtr> allValues() override { return {value}; }
+			std::vector<ValuePtr *> allValuePointers() override { return {&value}; }
+			InstructionNode * copy() const override;
 	};
 
 	struct BasicMathNode: InstructionNode, Writer, Reader {
