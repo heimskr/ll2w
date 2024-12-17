@@ -176,6 +176,10 @@ namespace LL2W {
 			return new StoreNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::LoadInst>(llvm)) {
+			return new LoadNode(*inst);
+		}
+
 		llvm::raw_os_ostream os(std::cerr);
 		llvm->print(os);
 		std::cerr << std::endl;
@@ -323,8 +327,7 @@ namespace LL2W {
 		ordering = getOrdering(inst.getOrdering());
 	}
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_,
-	                     ASTNode *bangs) {
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(source_, destination_, volatile__, align_, bangs);
 		atomic = false;
 		source = std::make_shared<Constant>(source_);
@@ -338,8 +341,7 @@ namespace LL2W {
 		handleBangs(bangs);
 	}
 
-	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_,
-	                     ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
+	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(source_, destination_, ordering_, align_, volatile__, syncscope_);
 		atomic = true;
 		source = std::make_shared<Constant>(source_);
@@ -412,8 +414,16 @@ namespace LL2W {
 
 // LoadNode
 
-	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
-	                   ASTNode *bangs) {
+	LoadNode::LoadNode(const llvm::LoadInst &inst) {
+		volatile_ = inst.isVolatile();
+		atomic = inst.isAtomic();
+		type = Type::fromLLVM(*inst.getType());
+		constant = Constant::fromLLVM(*inst.getOperand(0));
+		align = static_cast<decltype(align)>(inst.getAlign().value());
+		ordering = getOrdering(inst.getOrdering());
+	}
+
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(result_, type_, constant_, volatile__, align_, bangs);
 		atomic = false;
 		result = result_->extracted();
@@ -421,28 +431,30 @@ namespace LL2W {
 		constant = std::make_shared<Constant>(constant_);
 		volatile_ = bool(volatile__);
 
-		if (align_)
+		if (align_) {
 			align = align_->atoi();
+		}
 
 		handleBangs(bangs);
 	}
 
-	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_,
-	                   ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
+	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(result_, type_, constant_, align_, ordering_, syncscope_, volatile__);
 		atomic = true;
 		result = result_->extracted();
 		type = getType(type_);
 		constant = std::make_shared<Constant>(constant_);
 		align = align_->atoi();
-		for (const std::pair<const Ordering, std::string> &pair: ordering_map)
+		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
 			}
+		}
 
-		if (syncscope_)
+		if (syncscope_) {
 			syncscope = StringSet::intern(syncscope_->extractName());
+		}
 
 		volatile_ = bool(volatile__);
 

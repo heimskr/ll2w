@@ -18,6 +18,7 @@ namespace llvm {
 	class AllocaInst;
 	class CallInst;
 	class Instruction;
+	class LoadInst;
 	class ReturnInst;
 	class StoreInst;
 }
@@ -160,8 +161,7 @@ namespace LL2W {
 
 			StoreNode(const llvm::StoreInst &);
 			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_, ASTNode *bangs);
-			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_,
-					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
+			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);
 			std::string debugExtra() const override;
 			NodeType nodeType() const override { return NodeType::Store; }
 			std::vector<ValuePtr> allValues() override;
@@ -179,16 +179,21 @@ namespace LL2W {
 			bool volatile_ = false, atomic = false;
 			TypePtr type;
 			ConstantPtr constant;
-			int align = -1, nontemporalIndex = -1, invariantLoadIndex = -1, invariantGroupIndex = -1,
-				nonnullIndex = -1, tbaa = -1;
-			const std::string *dereferenceable = nullptr, *dereferenceableOrNull = nullptr, *bangAlign = nullptr;
+			int align = -1;
+			int nontemporalIndex = -1;
+			int invariantLoadIndex = -1;
+			int invariantGroupIndex = -1;
+			int nonnullIndex = -1;
+			int tbaa = -1;
+			const std::string *dereferenceable = nullptr;
+			const std::string *dereferenceableOrNull = nullptr;
+			const std::string *bangAlign = nullptr;
 			const std::string *syncscope = nullptr;
 			Ordering ordering = Ordering::None;
 
-			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_,
-					ASTNode *bangs);
-			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_,
-					ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
+			LoadNode(const llvm::LoadInst &);
+			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_, ASTNode *bangs);
+			LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *invariant_group);
 			std::string debugExtra() const override;
 			NodeType nodeType() const override { return NodeType::Load; }
 			std::vector<ValuePtr> allValues() override { return {constant->value}; }
