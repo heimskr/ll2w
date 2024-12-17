@@ -8,6 +8,7 @@
 #include "util/Deleter.h"
 #include "util/Util.h"
 
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/FMF.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_os_ostream.h>
@@ -184,6 +185,14 @@ namespace LL2W {
 			return new ConversionNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::ICmpInst>(llvm)) {
+			return new IcmpNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::GetElementPtrInst>(llvm)) {
+			return new GetelementptrNode(*inst);
+		}
+
 		if (auto *inst = llvm::dyn_cast<llvm::BinaryOperator>(llvm)) {
 			using enum llvm::Instruction::BinaryOps;
 			switch (inst->getOpcode()) {
@@ -195,10 +204,6 @@ namespace LL2W {
 				default:
 					break;
 			}
-		}
-
-		if (auto *inst = llvm::dyn_cast<llvm::ICmpInst>(llvm)) {
-			return new IcmpNode(*inst);
 		}
 
 		error();
@@ -628,6 +633,7 @@ namespace LL2W {
 // CallInvokeNode
 
 	CallInvokeNode::CallInvokeNode(const llvm::CallInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
 		cconv = getCConv(inst.getCallingConv());
 
 		for (const auto &attr_list: inst.getAttributes()) {
@@ -946,6 +952,23 @@ namespace LL2W {
 	}
 
 // GetelementptrNode
+
+	GetelementptrNode::GetelementptrNode(const llvm::GetElementPtrInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		inbounds = inst.isInBounds();
+		type = Type::fromLLVM(*inst.getType());
+		constant = Constant::fromLLVM(*inst.getPointerOperand());
+		pointerType = constant->type->copy();
+		for (const auto &index: inst.indices()) {
+			if (const auto *constant_int = llvm::dyn_cast<llvm::ConstantInt>(index.get())) {
+				indices.emplace_back(constant_int->getBitWidth(), static_cast<long>(constant_int->getValue().getRawData()[0]), false, false);
+			} else {
+				error();
+				dump(*index);
+				throw std::runtime_error("Unhandled getelementptr index (probably a pvar)");
+			}
+		}
+	}
 
 	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_,
 	                                     ASTNode *indices_, ASTNode *unibangs) {

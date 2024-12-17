@@ -18,6 +18,7 @@ namespace llvm {
 	class AllocaInst;
 	class BinaryOperator;
 	class CallInst;
+	class GetElementPtrInst;
 	class ICmpInst;
 	class Instruction;
 	class LoadInst;
@@ -331,12 +332,14 @@ namespace LL2W {
 		};
 
 		bool inbounds = false;
-		TypePtr type, pointerType;
+		TypePtr type;
+		TypePtr pointerType;
 		ConstantPtr constant;
 		std::vector<Index> indices;
 
-		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_, ASTNode *indices_,
-		                  ASTNode *unibangs);
+		GetelementptrNode(const llvm::GetElementPtrInst &);
+		GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_, ASTNode *indices_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Getelementptr; }
 		std::vector<ValuePtr> allValues() override;
