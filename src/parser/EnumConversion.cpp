@@ -324,6 +324,7 @@ namespace LL2W {
 			case InReg: return Inreg;
 			case NoAlias: return Noalias;
 			case NonNull: return Nonnull;
+			case NoUndef: return Noundef;
 			default:
 				throw std::invalid_argument("Invalid return attribute");
 		}

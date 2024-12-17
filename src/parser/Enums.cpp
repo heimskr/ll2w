@@ -53,7 +53,7 @@ namespace {
 	namespace RetAttrMap {
 		using enum LL2W::RetAttr;
 		std::unordered_map<LL2W::RetAttr, std::string> map{
-			{Zeroext, "zeroext"}, {Signext, "signext"}, {Inreg, "inreg"}, {Noalias, "noalias"}, {Nonnull, "nonnull"},
+			{Zeroext, "zeroext"}, {Signext, "signext"}, {Inreg, "inreg"}, {Noalias, "noalias"}, {Nonnull, "nonnull"}, {Noundef, "noundef"},
 		};
 	}
 
