@@ -344,4 +344,24 @@ namespace LL2W {
 				throw std::invalid_argument("Invalid atomic ordering");
 		}
 	}
+
+	IcmpCond getIcmpCond(llvm::CmpInst::Predicate cond) {
+		using enum IcmpCond;
+		using enum llvm::CmpInst::Predicate;
+
+		switch (cond) {
+			case ICMP_EQ: return Eq;
+			case ICMP_NE: return Ne;
+			case ICMP_UGT: return Ugt;
+			case ICMP_UGE: return Uge;
+			case ICMP_ULT: return Ult;
+			case ICMP_ULE: return Ule;
+			case ICMP_SGT: return Sgt;
+			case ICMP_SGE: return Sge;
+			case ICMP_SLT: return Slt;
+			case ICMP_SLE: return Sle;
+			default:
+				throw std::invalid_argument("Invalid icmp condition");
+		}
+	}
 }

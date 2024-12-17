@@ -18,6 +18,7 @@ namespace llvm {
 	class AllocaInst;
 	class BinaryOperator;
 	class CallInst;
+	class ICmpInst;
 	class Instruction;
 	class LoadInst;
 	class PtrToIntInst;
@@ -209,9 +210,11 @@ namespace LL2W {
 		IcmpCond cond;
 		ConstantPtr left, right;
 
+		IcmpNode(const llvm::ICmpInst &);
 		IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		IcmpNode(const std::string *result_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_);
 		IcmpNode(VariablePtr variable_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_);
+
 		TypePtr getType() const { return left->type; }
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Icmp; }

@@ -197,9 +197,12 @@ namespace LL2W {
 			}
 		}
 
-		llvm::raw_os_ostream os(std::cerr);
-		llvm->print(os);
-		std::cerr << std::endl;
+		if (auto *inst = llvm::dyn_cast<llvm::ICmpInst>(llvm)) {
+			return new IcmpNode(*inst);
+		}
+
+		error();
+		dump(*llvm);
 		throw std::invalid_argument("Unhandled LLVM instruction");
 	}
 
@@ -532,6 +535,13 @@ namespace LL2W {
 	}
 
 // IcmpNode
+
+	IcmpNode::IcmpNode(const llvm::ICmpInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		cond = getIcmpCond(inst.getPredicate());
+		left = Constant::fromLLVM(*inst.getOperand(0));
+		right = Constant::fromLLVM(*inst.getOperand(1));
+	}
 
 	IcmpNode::IcmpNode(ASTNode *result_, ASTNode *cond_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, cond_, left_, right_);
