@@ -202,6 +202,10 @@ namespace LL2W {
 			}
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::PHINode>(llvm)) {
+			return new PhiNode(*inst);
+		}
+
 		if (auto *inst = llvm::dyn_cast<llvm::BinaryOperator>(llvm)) {
 			using enum llvm::Instruction::BinaryOps;
 			switch (inst->getOpcode()) {
@@ -1242,6 +1246,16 @@ namespace LL2W {
 	}
 
 // PhiNode
+
+	PhiNode::PhiNode(const llvm::PHINode &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		type = Type::fromLLVM(*inst.getType());
+		for (unsigned i = 0, max = inst.getNumIncomingValues(); i < max; ++i) {
+			llvm::BasicBlock *block = inst.getIncomingBlock(i);
+			llvm::Value *incoming = inst.getIncomingValue(i);
+			pairs.emplace_back(Constant::fromLLVM(*incoming)->value, StringSet::intern(getOperandName(*block)));
+		}
+	}
 
 	PhiNode::PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, type_, pairs_);

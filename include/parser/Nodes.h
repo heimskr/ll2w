@@ -23,6 +23,7 @@ namespace llvm {
 	class ICmpInst;
 	class Instruction;
 	class LoadInst;
+	class PHINode;
 	class PtrToIntInst;
 	class ReturnInst;
 	class StoreInst;
@@ -433,6 +434,7 @@ namespace LL2W {
 		TypePtr type;
 		std::vector<std::pair<ValuePtr, const std::string *>> pairs;
 
+		PhiNode(const llvm::PHINode &);
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs);
 
 		std::string debugExtra() const override;
