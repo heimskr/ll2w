@@ -1037,7 +1037,7 @@ namespace LL2W {
 		inbounds = inst.isInBounds();
 		type = Type::fromLLVM(*inst.getType());
 		constant = Constant::fromLLVM(*inst.getPointerOperand());
-		pointerType = constant->type->copy();
+		pointerType = PointerType::make(Type::fromLLVM(*inst.getSourceElementType()));
 		for (const auto &index: inst.indices()) {
 			if (const auto *constant_int = llvm::dyn_cast<llvm::ConstantInt>(index.get())) {
 				indices.emplace_back(constant_int->getBitWidth(), static_cast<long>(constant_int->getValue().getRawData()[0]), false, false);
