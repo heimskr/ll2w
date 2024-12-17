@@ -22,14 +22,14 @@ namespace LL2W::Passes {
 
 		for (int i = 0; i < arity; ++i) {
 			VariablePtr source = function.ax(i, entry);
-			VariablePtr destination = function.getVariable(std::to_string(i));
-			if (!function.arguments)
+			VariablePtr destination = function.getVariable(StringSet::intern('%' + std::to_string(i)), true);
+			if (!function.arguments) {
 				warn() << "Function " << *function.name << " has no arguments information.\n";
-			else
+			} else {
 				source->type = destination->type = function.arguments->at(i).type;
+			}
 			auto move = std::make_shared<MoveInstruction>(source, destination);
-			function.insertBefore(first, move, "CopyArguments: " + source->plainString() + " -> " +
-				destination->plainString(), false)->setDebug(debug_index)->extract();
+			function.insertBefore(first, move, "CopyArguments: " + source->plainString() + " -> " + destination->plainString(), false)->setDebug(debug_index)->extract();
 		}
 
 		function.reindexInstructions();

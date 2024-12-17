@@ -9,11 +9,18 @@
 
 namespace LL2W::Util {
 	long parseLong(const std::string &str, int base) {
+		if (str.empty()) {
+			throw std::invalid_argument("Can't parse empty string as integer");
+		}
 		const char *c_str = str.c_str();
+		if (str[0] == '%') {
+			++c_str;
+		}
 		char *end;
 		long parsed = strtol(c_str, &end, base);
-		if (c_str + str.length() != end)
+		if (c_str + str.length() - (str[0] == '%'? 1 : 0) != end) {
 			throw std::invalid_argument("Not an integer: \"" + str + '"');
+		}
 		return parsed;
 	}
 

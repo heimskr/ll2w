@@ -8,6 +8,7 @@
 #include "util/Deleter.h"
 #include "util/Util.h"
 
+#include <llvm/IR/InlineAsm.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/FMF.h>
 #include <llvm/IR/Instructions.h>
@@ -161,10 +162,6 @@ namespace LL2W {
 	}
 
 	InstructionNode * InstructionNode::fromLLVM(llvm::Instruction *llvm) {
-		if (auto *inst = llvm::dyn_cast<llvm::CallInst>(llvm)) {
-			return new CallNode(*inst);
-		}
-
 		if (auto *inst = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
 			return new RetNode(*inst);
 		}
@@ -219,6 +216,14 @@ namespace LL2W {
 
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			return new UnreachableNode;
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::CallInst>(llvm)) {
+			if (inst->isInlineAsm()) {
+				return new AsmNode(*inst);
+			} else {
+				return new CallNode(*inst);
+			}
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
@@ -724,9 +729,7 @@ namespace LL2W {
 		for (unsigned i = 0, max = inst.getNumOperands(); i < max; ++i) {
 			llvm::Value *operand = inst.getOperand(i);
 			if (i + 1 == max) {
-				std::string name_string;
-				llvm::raw_string_ostream os(name_string);
-				operand->printAsOperand(os, false);
+				std::string name_string = getOperandName(*operand);
 
 				if (name_string.empty()) {
 					throw std::runtime_error("Callee operand name is empty");
@@ -736,6 +739,8 @@ namespace LL2W {
 					name = std::make_shared<GlobalValue>(name_string);
 				} else if (name_string[0] == '%') {
 					name = std::make_shared<LocalValue>(name_string);
+				} else if (llvm::isa<llvm::InlineAsm>(*operand)) {
+					continue;
 				} else {
 					throw std::runtime_error("Invalid callee operand name");
 				}
@@ -947,21 +952,29 @@ namespace LL2W {
 
 // AsmNode
 
+	AsmNode::AsmNode(const llvm::CallInst &inst):
+		CallInvokeNode(inst) {
+			llvm::InlineAsm *asm_value = llvm::cast<llvm::InlineAsm>(inst.getOperand(0));
+			contents = StringSet::intern(asm_value->getAsmString());
+			constraints = StringSet::intern(asm_value->getConstraintString());
+			sideeffect = asm_value->hasSideEffects();
+			alignstack = asm_value->isAlignStack();
+		}
+
 	AsmNode::AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
 	                 ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
 	                 ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs):
-	                 CallInvokeNode(_result, nullptr, _retattrs, nullptr, return_type, _args, nullptr, _constants,
-	                                attribute_list, unibangs) {
-		Deleter deleter(asm_string, _sideeffect, _alignstack, _inteldialect, _srcloc, asm_constraints);
-		contents = asm_string->lexerInfo;
-		sideeffect = bool(_sideeffect);
-		alignstack = bool(_alignstack);
-		constraints = asm_constraints->lexerInfo;
+		CallInvokeNode(_result, nullptr, _retattrs, nullptr, return_type, _args, nullptr, _constants, attribute_list, unibangs) {
+			Deleter deleter(asm_string, _sideeffect, _alignstack, _inteldialect, _srcloc, asm_constraints);
+			contents = asm_string->lexerInfo;
+			sideeffect = bool(_sideeffect);
+			alignstack = bool(_alignstack);
+			constraints = asm_constraints->lexerInfo;
 
-		if (_srcloc) {
-			srcloc = _srcloc->atoi();
+			if (_srcloc) {
+				srcloc = _srcloc->atoi();
+			}
 		}
-	}
 
 	std::string AsmNode::debugExtra() const {
 		return "???";
@@ -978,12 +991,11 @@ namespace LL2W {
 	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 	                       ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
 	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs):
-	                       CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant,
-	                                      _constants, attribute_list, unibangs) {
-		Deleter deleter(normal_label, exception_label);
-		normalLabel = StringSet::intern(normal_label->extractName());
-		exceptionLabel = StringSet::intern(exception_label->extractName());
-	}
+		CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant, _constants, attribute_list, unibangs) {
+			Deleter deleter(normal_label, exception_label);
+			normalLabel = StringSet::intern(normal_label->extractName());
+			exceptionLabel = StringSet::intern(exception_label->extractName());
+		}
 
 	std::string InvokeNode::debugExtra() const {
 		std::stringstream out;

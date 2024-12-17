@@ -1227,7 +1227,7 @@ namespace LL2W {
 			int reg = WhyInfo::argumentOffset - 1;
 			// TODO: change to support non-numeric argument variables
 			for (int i = 0; i < max; ++i) {
-				variableStore.at(StringSet::intern(std::to_string(i)))->setRegisters({++reg});
+				variableStore.at(StringSet::intern('%' + std::to_string(i)))->setRegisters({++reg});
 			}
 		}
 	}

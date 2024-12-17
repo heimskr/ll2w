@@ -306,6 +306,7 @@ namespace LL2W {
 		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
 		         ASTNode *attribute_list, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Call; }
 		InstructionNode * copy() const override;
@@ -318,9 +319,11 @@ namespace LL2W {
 		bool alignstack = false;
 		int srcloc = -1;
 
+		AsmNode(const llvm::CallInst &);
 		AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
 		        ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
 		        ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Asm; }
 		InstructionNode * copy() const override;

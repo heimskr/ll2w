@@ -2,6 +2,7 @@
 // #define HIDE_PRINTS
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
+#define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"

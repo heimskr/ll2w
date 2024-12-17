@@ -751,9 +751,8 @@ namespace LL2W {
 			case LLVM_VECTORTYPE:
 				return std::make_shared<VectorType>(atoi(node->at(0)->lexerInfo->c_str()),getType(node->at(1)));
 			default:
-				throw std::invalid_argument("Couldn't create Type from a node with symbol " +
-				                            std::string(llvmParser.getName(node->symbol)) + " (" +
-				                            std::to_string(node->symbol) + ")");
+				throw std::invalid_argument(std::format("Couldn't create Type from a node with symbol {} ({})", llvmParser.getName(node->symbol), node->symbol));
+
 		}
 	}
 
