@@ -472,22 +472,26 @@ namespace LL2W {
 	};
 
 	struct DivNode: SimpleNode {
-		enum class DivType {Sdiv, Udiv};
-		DivType divType;
+		enum class DivType {Invalid, Sdiv, Udiv};
+		DivType divType = DivType::Invalid;
 		bool exact = false;
-		DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-		        ASTNode *unibangs);
+
+		DivNode(const llvm::BinaryOperator &);
+		DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+
 		const char * typeName() const override { return divType == DivType::Sdiv? "sdiv" : "udiv"; }
 		NodeType nodeType() const override { return NodeType::Div; }
 		InstructionNode * copy() const override;
 	};
 
 	struct RemNode: SimpleNode {
-		enum class RemType {Srem, Urem};
-		RemType remType;
+		enum class RemType {Invalid, Srem, Urem};
+		RemType remType = RemType::Invalid;
 		bool exact = false;
-		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-		        ASTNode *unibangs);
+
+		RemNode(const llvm::BinaryOperator &);
+		RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+
 		const char * typeName() const override { return remType == RemType::Srem? "srem" : "urem"; }
 		NodeType nodeType() const override { return NodeType::Rem; }
 		InstructionNode * copy() const override;

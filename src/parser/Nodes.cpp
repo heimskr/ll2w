@@ -245,6 +245,12 @@ namespace LL2W {
 				case LShr:
 				case AShr:
 					return new ShrNode(*inst);
+				case SRem:
+				case URem:
+					return new RemNode(*inst);
+				case SDiv:
+				case UDiv:
+					return new DivNode(*inst);
 				default:
 					break;
 			}
@@ -1390,12 +1396,18 @@ namespace LL2W {
 
 // DivNode
 
-	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_,  ASTNode *type_, ASTNode *left_, ASTNode *right_,
-	                 ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
-		Deleter deleter(exact_, div);
-		exact = bool(exact_);
-		divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
+	DivNode::DivNode(const llvm::BinaryOperator &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		divType = inst.getOpcode() == llvm::Instruction::BinaryOps::SDiv? DivType::Sdiv : DivType::Udiv;
+		exact = inst.isExact();
 	}
+
+	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_,  ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
+			Deleter deleter(exact_, div);
+			exact = bool(exact_);
+			divType = *div->lexerInfo == "sdiv"? DivType::Sdiv : DivType::Udiv;
+		}
 
 	InstructionNode * DivNode::copy() const {
 		auto out = std::make_unique<DivNode>(*this);
@@ -1407,12 +1419,18 @@ namespace LL2W {
 
 // RemNode
 
-	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-	                 ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
-		Deleter deleter(exact_, rem);
-		exact = bool(exact_);
-		remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
+	RemNode::RemNode(const llvm::BinaryOperator &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		remType = inst.getOpcode() == llvm::Instruction::BinaryOps::SRem? RemType::Srem : RemType::Urem;
+		exact = inst.isExact();
 	}
+
+	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
+			Deleter deleter(exact_, rem);
+			exact = bool(exact_);
+			remType = *rem->lexerInfo == "srem"? RemType::Srem : RemType::Urem;
+		}
 
 	InstructionNode * RemNode::copy() const {
 		auto out = std::make_unique<RemNode>(*this);
