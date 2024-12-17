@@ -192,7 +192,8 @@ namespace LL2W {
 		std::shared_ptr<LogicNode> makeNode(std::shared_ptr<Variable>) const;
 	};
 
-	struct VoidValue: Value {
+	struct VoidValue: Value, Makeable<VoidValue> {
+		VoidValue() = default;
 		ValueType valueType() const override { return ValueType::Void; }
 		ValuePtr copy() const override { return std::make_shared<VoidValue>(); }
 		operator std::string() override { return "void"; }

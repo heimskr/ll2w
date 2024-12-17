@@ -944,7 +944,13 @@ namespace LL2W {
 // RetNode
 
 	RetNode::RetNode(const llvm::ReturnInst &llvm) {
-
+		if (llvm::Value *return_value = llvm.getReturnValue()) {
+			type = Type::fromLLVM(*return_value->getType());
+			value = Constant::fromLLVM(*return_value)->value;
+		} else {
+			type = VoidType::make();
+			value = VoidValue::make();
+		}
 	}
 
 	RetNode::RetNode(ASTNode *unibangs): type(std::make_shared<VoidType>()), value(std::make_shared<VoidValue>()) {
