@@ -160,12 +160,16 @@ namespace LL2W {
 	}
 
 	InstructionNode * InstructionNode::fromLLVM(llvm::Instruction *llvm) {
-		if (auto *call = llvm::dyn_cast<llvm::CallInst>(llvm)) {
-			return new CallNode(*call);
+		if (auto *inst = llvm::dyn_cast<llvm::CallInst>(llvm)) {
+			return new CallNode(*inst);
 		}
 
-		if (auto *ret = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
-			return new RetNode(*ret);
+		if (auto *inst = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
+			return new RetNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::AllocaInst>(llvm)) {
+			return new AllocaNode(*inst);
 		}
 
 		llvm::raw_os_ostream os(std::cerr);
@@ -252,6 +256,16 @@ namespace LL2W {
 	}
 
 // AllocaNode
+
+	AllocaNode::AllocaNode(const llvm::AllocaInst &inst) {
+		inalloca = inst.isUsedWithInAlloca();
+		const llvm::Value *array_size = inst.getArraySize();
+		assert(array_size != nullptr);
+		numelementsType = Type::fromLLVM(*array_size->getType());
+		numelementsValue = Constant::fromLLVM(*array_size)->value;
+		align = static_cast<decltype(align)>(inst.getAlign().value());
+		addrspace = static_cast<decltype(addrspace)>(inst.getAddressSpace());
+	}
 
 	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 	                       ASTNode *addrspace_, ASTNode *unibangs) {
@@ -559,20 +573,20 @@ namespace LL2W {
 
 // CallInvokeNode
 
-	CallInvokeNode::CallInvokeNode(const llvm::CallInst &llvm) {
-		cconv = getCConv(llvm.getCallingConv());
+	CallInvokeNode::CallInvokeNode(const llvm::CallInst &inst) {
+		cconv = getCConv(inst.getCallingConv());
 
-		for (const auto &attr_list: llvm.getAttributes()) {
+		for (const auto &attr_list: inst.getAttributes()) {
 			for (const auto &attr: attr_list) {
 				const llvm::Attribute::AttrKind kind = attr.getKindAsEnum();
-				if (llvm.hasRetAttr(kind)) {
+				if (inst.hasRetAttr(kind)) {
 					retattrs.insert(getRetAttr(kind));
 				}
 			}
 		}
 
-		for (unsigned i = 0, max = llvm.getNumOperands(); i < max; ++i) {
-			llvm::Value *operand = llvm.getOperand(i);
+		for (unsigned i = 0, max = inst.getNumOperands(); i < max; ++i) {
+			llvm::Value *operand = inst.getOperand(i);
 			if (i + 1 == max) {
 				std::string name_string;
 				llvm::raw_string_ostream os(name_string);
@@ -589,12 +603,12 @@ namespace LL2W {
 				} else {
 					throw std::runtime_error("Invalid callee operand name");
 				}
-			} else {
-				constants.push_back(Constant::fromLLVM(*operand));
+			} else if (ConstantPtr constant = Constant::fromLLVM(*operand)) {
+				constants.push_back(constant);
 			}
 		}
 
-		llvm::FunctionType *function_type = llvm.getFunctionType();
+		llvm::FunctionType *function_type = inst.getFunctionType();
 		returnType = Type::fromLLVM(*function_type->getReturnType());
 		argumentEllipsis = function_type->isVarArg();
 	}
@@ -729,10 +743,10 @@ namespace LL2W {
 
 // CallNode
 
-	CallNode::CallNode(const llvm::CallInst &llvm):
-		CallInvokeNode(llvm) {
-			tail = getTailCallKind(llvm.getTailCallKind());
-			fastmath = getFastmath(llvm.getFastMathFlags());
+	CallNode::CallNode(const llvm::CallInst &inst):
+		CallInvokeNode(inst) {
+			tail = getTailCallKind(inst.getTailCallKind());
+			fastmath = getFastmath(inst.getFastMathFlags());
 		}
 
 	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
@@ -943,8 +957,8 @@ namespace LL2W {
 
 // RetNode
 
-	RetNode::RetNode(const llvm::ReturnInst &llvm) {
-		if (llvm::Value *return_value = llvm.getReturnValue()) {
+	RetNode::RetNode(const llvm::ReturnInst &inst) {
+		if (llvm::Value *return_value = inst.getReturnValue()) {
 			type = Type::fromLLVM(*return_value->getType());
 			value = Constant::fromLLVM(*return_value)->value;
 		} else {

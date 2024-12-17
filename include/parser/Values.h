@@ -239,7 +239,7 @@ namespace LL2W {
 		std::string compile() const override { return "\"" + reescape() + "\""; }
 	};
 
-	struct ZeroinitializerValue: Value {
+	struct ZeroinitializerValue: Value, Makeable<ZeroinitializerValue> {
 		ZeroinitializerValue() = default;
 		ValueType valueType() const override { return ValueType::Zeroinitializer; }
 		ValuePtr copy() const override { return std::make_shared<ZeroinitializerValue>(); }
@@ -247,7 +247,7 @@ namespace LL2W {
 		std::string compile() const override { return "0"; }
 	};
 
-	struct UndefValue: Value {
+	struct UndefValue: Value, Makeable<UndefValue> {
 		UndefValue() = default;
 		ValueType valueType() const override { return ValueType::Undef; }
 		ValuePtr copy() const override { return std::make_shared<UndefValue>(); }
@@ -257,7 +257,7 @@ namespace LL2W {
 		std::string compile() const override { return "0"; }
 	};
 
-	struct PoisonValue: Value {
+	struct PoisonValue: Value, Makeable<PoisonValue> {
 		PoisonValue() = default;
 		ValueType valueType() const override { return ValueType::Poison; }
 		ValuePtr copy() const override { return std::make_shared<PoisonValue>(); }

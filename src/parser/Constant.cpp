@@ -7,6 +7,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/GlobalVariable.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <iostream>
@@ -213,14 +214,50 @@ namespace LL2W {
 
 		if (auto *zero_value = llvm::dyn_cast<llvm::ConstantAggregateZero>(&llvm_value)) {
 			out->type = Type::fromLLVM(*zero_value->getType());
-			out->value = std::make_shared<ZeroinitializerValue>();
+			out->value = ZeroinitializerValue::make();
 			return out;
 		}
 
-		llvm::raw_os_ostream os(std::cerr);
+		if (llvm::isa<llvm::UndefValue>(llvm_value)) {
+			out->type = nullptr;
+			out->value = UndefValue::make();
+			return out;
+		}
+
+		if (llvm::isa<llvm::MetadataAsValue>(llvm_value)) {
+			return out;
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::AllocaInst>(&llvm_value)) {
+			std::string name;
+			llvm::raw_string_ostream os(name);
+			inst->printAsOperand(os, false);
+			out->type = PointerType::make(Type::fromLLVM(*inst->getAllocatedType()));
+			out->value = LocalValue::make(name);
+			return out;
+		}
+
+		// if (auto *inst = llvm::dyn_cast<llvm::Instruction>(&llvm_value)) {
+		// 	std::string name;
+		// 	llvm::raw_string_ostream os(name);
+		// 	inst->printAsOperand(os, false);
+		// 	out->value = LocalValue::make(name);
+		// 	return out;
+		// }
+
+		if (auto *argument = llvm::dyn_cast<llvm::Argument>(&llvm_value)) {
+			std::string name;
+			llvm::raw_string_ostream os(name);
+			argument->printAsOperand(os, false);
+			out->type = Type::fromLLVM(*argument->getType());
+			out->value = LocalValue::make(name);
+			return out;
+		}
+
+		llvm::raw_os_ostream os(error() << "Constant: ");
 		llvm_value.print(os, true);
 		std::cerr << std::endl;
-		std::println(std::cerr, "valueID = {}", static_cast<int>(llvm_value.getValueID()));
+		std::println(error() << "ValueID: ", "{}", static_cast<int>(llvm_value.getValueID()));
 		throw std::invalid_argument("Invalid LLVM constant");
 	}
 

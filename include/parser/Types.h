@@ -35,7 +35,7 @@ namespace LL2W {
 			virtual operator std::string() = 0;
 			/** Returns an LLVM-style string representation of the type without ANSI styling. */
 			virtual std::string toString() = 0;
-			virtual ~Type() {}
+			virtual ~Type() = default;
 			virtual TypePtr copy() const = 0;
 			/** Returns the width of the type in bits. */
 			virtual ssize_t width() const = 0;
@@ -285,9 +285,9 @@ namespace LL2W {
 	/** During padded struct extraction, it's necessary to read one register from a register pack representing a struct.
 	 *  This register may contain data from multiple members or from only a fraction of member, and as such has no
 	 *  specific type. However, it's always one register in size. */
-	struct OpaqueType: Type {
+	struct OpaqueType: Type, Makeable<OpaqueType> {
 		TypeType typeType() const override { return TypeType::Opaque; }
-		OpaqueType() {}
+		OpaqueType() = default;
 		operator std::string() override { return "\e[1mopaque\e[22m"; }
 		std::string toString() override { return "opaque"; }
 		TypePtr copy() const override { return std::make_shared<OpaqueType>(); }

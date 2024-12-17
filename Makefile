@@ -1,5 +1,6 @@
 CHECK			?= none
 COMPILER		?= clang++
+LINKER			?= $(COMPILER) -fuse-ld=mold
 DEBUGGER		?= lldb
 OPTIMIZATION	?= -O0 -ggdb3
 STANDARD		?= c++23
@@ -43,7 +44,7 @@ test: $(OUTPUT)
 	./$(OUTPUT) $(TESTFILE)
 
 $(OUTPUT): $(OBJECTS)
-	$(COMPILER) $(LTOPT) -o $@ $^ $(LDFLAGS)
+	$(LINKER) $(LTOPT) -o $@ $^ $(LDFLAGS)
 
 $(LLVMLEXCPP): $(LLVMFLEXSRC) $(LLVMPARSEHDR)
 	flex --prefix=llvm --outfile=$(LLVMLEXCPP) $(LLVMFLEXSRC)

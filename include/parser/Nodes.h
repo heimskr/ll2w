@@ -15,6 +15,7 @@
 #include <variant>
 
 namespace llvm {
+	class AllocaInst;
 	class CallInst;
 	class Instruction;
 	class ReturnInst;
@@ -125,11 +126,12 @@ namespace LL2W {
 
 	struct AllocaNode: InstructionNode, Reader, Writer, HasType {
 		bool inalloca = false;
-		TypePtr numelementsType = nullptr;
-		ValuePtr numelementsValue = nullptr;
+		TypePtr numelementsType;
+		ValuePtr numelementsValue;
 		int align = -1;
 		int addrspace = -1;
 
+		AllocaNode(const llvm::AllocaInst &);
 		AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
 		           ASTNode *addrspace_, ASTNode *unibangs);
 		std::string debugExtra() const override;
@@ -144,9 +146,14 @@ namespace LL2W {
 			void handleBangs(ASTNode *);
 
 		public:
-			bool volatile_ = false, atomic = false;
-			ConstantPtr source, destination;
-			int align = -1, nontemporalIndex = -1, invariantGroupIndex = -1, tbaa = -1;
+			bool volatile_ = false;
+			bool atomic = false;
+			ConstantPtr source;
+			ConstantPtr destination;
+			int align = -1;
+			int nontemporalIndex = -1;
+			int invariantGroupIndex = -1;
+			int tbaa = -1;
 			const std::string *syncscope = nullptr;
 			Ordering ordering = Ordering::None;
 

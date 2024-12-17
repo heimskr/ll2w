@@ -9,7 +9,7 @@ namespace {
 		using enum LL2W::TypeType;
 		std::unordered_map<LL2W::TypeType, std::string> map{
 			{None, "None"}, {Void, "Void"}, {Int, "Int"}, {Array, "Array"}, {Vector, "Vector"}, {Float, "Float"}, {Pointer, "Pointer"}, {Function, "Function"},
-			{Struct, "Struct"}, {GlobalTemporary, "GlobalTemporary"},
+			{Struct, "Struct"}, {GlobalTemporary, "GlobalTemporary"}, {Any, "Any"}, {Opaque, "Opaque"},
 		};
 	}
 

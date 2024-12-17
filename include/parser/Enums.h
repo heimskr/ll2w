@@ -18,7 +18,7 @@ namespace LL2W {
 	enum class Role {Source, Destination};
 
 	enum class TypeType {
-		None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any
+		None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any,
 	};
 
 	enum class ValueType {
