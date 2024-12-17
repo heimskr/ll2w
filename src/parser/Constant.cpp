@@ -237,13 +237,14 @@ namespace LL2W {
 			return out;
 		}
 
-		// if (auto *inst = llvm::dyn_cast<llvm::Instruction>(&llvm_value)) {
-		// 	std::string name;
-		// 	llvm::raw_string_ostream os(name);
-		// 	inst->printAsOperand(os, false);
-		// 	out->value = LocalValue::make(name);
-		// 	return out;
-		// }
+		if (auto *inst = llvm::dyn_cast<llvm::Instruction>(&llvm_value)) {
+			std::string name;
+			llvm::raw_string_ostream os(name);
+			inst->printAsOperand(os, false);
+			out->type = Type::fromLLVM(*inst->getType());
+			out->value = LocalValue::make(name);
+			return out;
+		}
 
 		if (auto *argument = llvm::dyn_cast<llvm::Argument>(&llvm_value)) {
 			std::string name;

@@ -3,6 +3,8 @@
 #include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
+#include <llvm/Support/raw_os_ostream.h>
+
 #include <algorithm>
 #include <array>
 #include <charconv>
@@ -300,5 +302,12 @@ namespace LL2W {
 
 	inline void debugger() {
 		raise(SIGTRAP);
+	}
+
+	template <typename T>
+	void dump(const T &item, std::ostream &os = std::cerr) {
+		llvm::raw_os_ostream raw(os);
+		item.print(raw);
+		(raw << "\n").flush();
 	}
 }

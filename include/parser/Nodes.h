@@ -19,6 +19,7 @@ namespace llvm {
 	class CallInst;
 	class Instruction;
 	class ReturnInst;
+	class StoreInst;
 }
 
 namespace LL2W {
@@ -157,6 +158,7 @@ namespace LL2W {
 			const std::string *syncscope = nullptr;
 			Ordering ordering = Ordering::None;
 
+			StoreNode(const llvm::StoreInst &);
 			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_, ASTNode *bangs);
 			StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_,
 					ASTNode *ordering_, ASTNode *align_, ASTNode *bangs);

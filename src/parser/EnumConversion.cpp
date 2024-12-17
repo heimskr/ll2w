@@ -328,4 +328,20 @@ namespace LL2W {
 				throw std::invalid_argument("Invalid return attribute");
 		}
 	}
+
+	Ordering getOrdering(llvm::AtomicOrdering ordering) {
+		using enum llvm::AtomicOrdering;
+
+		switch (ordering) {
+			case NotAtomic: return Ordering::None;
+			case Unordered: return Ordering::Unordered;
+			case Monotonic: return Ordering::Monotonic;
+			case Acquire: return Ordering::Acquire;
+			case Release: return Ordering::Release;
+			case AcquireRelease: return Ordering::AcqRel;
+			case SequentiallyConsistent: return Ordering::SeqCst;
+			default:
+				throw std::invalid_argument("Invalid atomic ordering");
+		}
+	}
 }

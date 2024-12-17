@@ -25,4 +25,5 @@ namespace LL2W {
 	CConv getCConv(unsigned);
 	CConv getCConv(std::string_view);
 	RetAttr getRetAttr(llvm::Attribute::AttrKind);
+	Ordering getOrdering(llvm::AtomicOrdering);
 }

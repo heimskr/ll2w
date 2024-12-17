@@ -172,6 +172,10 @@ namespace LL2W {
 			return new AllocaNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::StoreInst>(llvm)) {
+			return new StoreNode(*inst);
+		}
+
 		llvm::raw_os_ostream os(std::cerr);
 		llvm->print(os);
 		std::cerr << std::endl;
@@ -309,6 +313,15 @@ namespace LL2W {
 	}
 
 // StoreNode
+
+	StoreNode::StoreNode(const llvm::StoreInst &inst) {
+		volatile_ = inst.isVolatile();
+		atomic = inst.isAtomic();
+		source = Constant::fromLLVM(*inst.getOperand(0));
+		destination = Constant::fromLLVM(*inst.getOperand(1));
+		align = static_cast<decltype(align)>(inst.getAlign().value());
+		ordering = getOrdering(inst.getOrdering());
+	}
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_,
 	                     ASTNode *bangs) {
