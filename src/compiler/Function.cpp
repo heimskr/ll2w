@@ -230,11 +230,17 @@ namespace LL2W {
 
 			std::list<InstructionPtr> instructions;
 			for (llvm::Instruction &instruction: block) {
-				instructions.push_back(std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true));
-				linearInstructions.push_back(instructions.back());
+				auto llvm = std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true);
+				instructions.push_back(llvm);
+				linearInstructions.push_back(std::move(llvm));
 			}
 
-			blocks.push_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
+			BasicBlockPtr new_block = blocks.emplace_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
+
+			for (const InstructionPtr &instruction: new_block->instructions) {
+				instruction->parent = new_block;
+			}
+
 			info() << "Pushed block " << *label << ".\n";
 		}
 	}
