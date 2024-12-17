@@ -156,11 +156,59 @@ namespace LL2W {
 	}
 
 	CConv getCConv(llvm::CallingConv::ID conv) {
+		using enum CConv;
+
 		switch (conv) {
-			case llvm::CallingConv::C: return CConv::ccc;
-			case llvm::CallingConv::CXX_FAST_TLS: return CConv::cxx_fast_tlscc;
+			case llvm::CallingConv::C:
+				return ccc;
+			case llvm::CallingConv::CXX_FAST_TLS:
+				return cxx_fast_tlscc;
+			case llvm::CallingConv::Fast:
+				return fastcc;
+			case llvm::CallingConv::GHC:
+				return ghccc;
+			case llvm::CallingConv::Swift:
+				return swiftcc;
+			case llvm::CallingConv::PreserveAll:
+				return preserve_allcc;
+			case llvm::CallingConv::PreserveMost:
+				return preserve_mostcc;
+			case llvm::CallingConv::X86_VectorCall:
+				return x86_vectorcallcc;
+			case llvm::CallingConv::ARM_APCS:
+				return arm_apcscc;
+			case llvm::CallingConv::Cold:
+				return coldcc;
+			case llvm::CallingConv::PTX_Device:
+				return ptx_device;
+			case llvm::CallingConv::X86_StdCall:
+				return x86_stdcallcc;
+			case llvm::CallingConv::AnyReg:
+				return anyregcc;
+			case llvm::CallingConv::MSP430_INTR:
+				return msp430_intrcc;
+			case llvm::CallingConv::PTX_Kernel:
+				return ptx_kernel;
+			case llvm::CallingConv::SPIR_FUNC:
+				return spir_func;
+			case llvm::CallingConv::Win64:
+				return x86_64_win64cc;
+			case llvm::CallingConv::ARM_AAPCS_VFP:
+				return arm_aapcs_vfpcc;
+			case llvm::CallingConv::Intel_OCL_BI:
+				return intel_ocl_bicc;
+			case llvm::CallingConv::X86_64_SysV:
+				return x86_64_sysvcc;
+			case llvm::CallingConv::X86_FastCall:
+				return x86_fastcallcc;
+			case llvm::CallingConv::X86_ThisCall:
+				return x86_thiscallcc;
+			case llvm::CallingConv::ARM_AAPCS:
+				return arm_aapcscc;
+			case llvm::CallingConv::SPIR_KERNEL:
+				return spir_kernel;
 			default:
-				return CConv::ccc;
+				throw std::invalid_argument("Invalid calling convention");
 		}
 	}
 }
