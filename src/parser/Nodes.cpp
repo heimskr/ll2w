@@ -201,6 +201,10 @@ namespace LL2W {
 			return new SwitchNode(*inst);
 		}
 
+		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
+			return new UnreachableNode;
+		}
+
 		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
 			if (inst->isConditional()) {
 				return new BrCondNode(*inst);

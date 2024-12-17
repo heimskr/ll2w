@@ -315,16 +315,16 @@ namespace LL2W {
 	}
 
 	RetAttr getRetAttr(llvm::Attribute::AttrKind kind) {
-		using enum RetAttr;
 		using enum llvm::Attribute::AttrKind;
 
 		switch (kind) {
-			case ZExt: return Zeroext;
-			case SExt: return Signext;
-			case InReg: return Inreg;
-			case NoAlias: return Noalias;
-			case NonNull: return Nonnull;
-			case NoUndef: return Noundef;
+			case ZExt: return RetAttr::Zeroext;
+			case SExt: return RetAttr::Signext;
+			case InReg: return RetAttr::Inreg;
+			case NoAlias: return RetAttr::Noalias;
+			case NonNull: return RetAttr::Nonnull;
+			case NoUndef: return RetAttr::Noundef;
+			case Dereferenceable: return RetAttr::Dereferenceable;
 			default:
 				throw std::invalid_argument("Invalid return attribute");
 		}
