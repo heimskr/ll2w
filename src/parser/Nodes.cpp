@@ -286,7 +286,7 @@ namespace LL2W {
 // Writer
 
 	std::string Writer::getResult() const {
-		return "\e[32m" + (variable? std::string(*variable) : "%" + *result) + "\e[0m";
+		return "\e[32m" + (variable? std::string(*variable) : *result) + "\e[0m";
 	}
 
 	void Writer::replaceWritten(std::shared_ptr<Variable> to_replace, std::shared_ptr<Variable> new_var) {

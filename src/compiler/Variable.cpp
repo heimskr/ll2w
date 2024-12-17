@@ -148,7 +148,7 @@ namespace LL2W {
 
 	std::string Variable::plainString() const {
 		if (registers.empty())
-			return "%" + *id;
+			return *id;
 		else if (registers.size() == 1)
 			return "$" + WhyInfo::registerName(*registers.begin()) + ":" + *id;
 		else {

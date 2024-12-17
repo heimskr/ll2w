@@ -94,7 +94,6 @@ namespace LL2W {
 	}
 
 	LocalValue::LocalValue(const std::string *name):
-		// VariableValue(name->at(0) == '%'? StringSet::intern(name->substr(1)) : name) {}
 		VariableValue(name) {}
 
 	LocalValue::LocalValue(VariablePtr variable_):
@@ -104,7 +103,7 @@ namespace LL2W {
 		LocalValue(node->lexerInfo) {}
 
 	LocalValue::operator std::string() {
-		return "\e[32m" + (variable? std::string(*variable) : "%" + *name) + "\e[39m";
+		return "\e[32m" + (variable? std::string(*variable) : *name) + "\e[39m";
 	}
 
 	VariablePtr LocalValue::getVariable(Function &function) {

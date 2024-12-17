@@ -2174,13 +2174,13 @@ namespace LL2W {
 						}
 					}
 					if (var->registers.empty()) {
-						warn() << "hackVariables: last resort failed for " << *var << " in function \e[1m" << *name;
+						warn() << "hackVariables: last resort failed for " << *var << " in function \e[1m" << *name << "\e[22m";
 						if (variableStore.contains(var->id)) {
-							std::cerr << "\e[22m's variableStore\n";
+							std::cerr << "'s variableStore\n";
 						} else if (extraVariables.contains(var->id)) {
-							std::cerr << "\e[22m's extraVariables\n";
+							std::cerr << "'s extraVariables\n";
 						} else {
-							std::cerr << "\e[22m somewhere\n";
+							std::cerr << " somewhere\n";
 						}
 					}
 				}

@@ -369,22 +369,6 @@ namespace LL2W {
 	}
 
 	std::vector<const std::string *> LLVMInstruction::getLabels() const {
-		if (isFromLLVM()) {
-			auto *instruction = getLLVM();
-			if (auto *branch = llvm::dyn_cast<llvm::BranchInst>(instruction)) {
-				if (branch->isConditional()) {
-					llvm::Value *if_true = branch->getOperand(1);
-					llvm::Value *if_false = branch->getOperand(2);
-					// TODO
-				} else {
-					llvm::Value *destination = branch->getOperand(0);
-					// TODO
-				}
-			}
-
-			return {};
-		}
-
 		switch (getNodeType()) {
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
