@@ -92,10 +92,8 @@ namespace LL2W::Getelementptr {
 					throw std::runtime_error("Unable to index a struct with a pvar except in the first position");
 				}
 				std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
-				std::shared_ptr<StructNode> snode = stype->node;
-				if (!snode) {
+				if (!stype->types) {
 					stype = StructType::knownStructs.at(stype->barename());
-					snode = stype->node;
 				}
 				const long index = std::get<long>(front);
 				const long offset = Util::updiv(PaddedStructs::getOffset(stype, index), 8);
@@ -106,7 +104,7 @@ namespace LL2W::Getelementptr {
 				if (offset != 0) {
 					function.insertBefore(instruction, AddIInstruction::make(out_var, int(offset), out_var))->setDebug(*instruction, true);
 				}
-				insert_mutating(function, snode->types.at(index), indices, instruction, out_var, out_type);
+				insert_mutating(function, stype->types.value().at(index), indices, instruction, out_var, out_type);
 				break;
 			}
 			default:
