@@ -94,7 +94,8 @@ namespace LL2W {
 	}
 
 	LocalValue::LocalValue(const std::string *name):
-		VariableValue(name->at(0) == '%'? StringSet::intern(name->substr(1)) : name) {}
+		// VariableValue(name->at(0) == '%'? StringSet::intern(name->substr(1)) : name) {}
+		VariableValue(name) {}
 
 	LocalValue::LocalValue(VariablePtr variable_):
 		VariableValue(variable_->id), variable(std::move(variable_)) {}

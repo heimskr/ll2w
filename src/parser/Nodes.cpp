@@ -735,7 +735,7 @@ namespace LL2W {
 				if (name_string[0] == '@') {
 					name = std::make_shared<GlobalValue>(name_string);
 				} else if (name_string[0] == '%') {
-					name = std::make_shared<LocalValue>(name_string.substr(1));
+					name = std::make_shared<LocalValue>(name_string);
 				} else {
 					throw std::runtime_error("Invalid callee operand name");
 				}

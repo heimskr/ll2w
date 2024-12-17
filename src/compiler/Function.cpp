@@ -1092,9 +1092,9 @@ namespace LL2W {
 		Passes::coalescePhi(*this);
 #endif
 
-		if (*name == "@main") {
-			debug();
-		}
+		// if (*name == "@main") {
+		// 	debug();
+		// }
 	}
 
 	void Function::finalCompile() {
