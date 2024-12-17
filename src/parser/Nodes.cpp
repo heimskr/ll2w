@@ -226,6 +226,9 @@ namespace LL2W {
 				case Or:
 				case Xor:
 					return new LogicNode(*inst);
+				case LShr:
+				case AShr:
+					return new ShrNode(*inst);
 				default:
 					break;
 			}
@@ -1425,12 +1428,20 @@ namespace LL2W {
 
 // ShrNode
 
-	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-	                 ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
-		Deleter deleter(exact_, shr);
-		exact = bool(exact_);
-		shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
+	ShrNode::ShrNode(const llvm::BinaryOperator &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		exact = inst.isExact();
+		shrType = inst.getOpcode() == llvm::Instruction::BinaryOps::AShr? ShrType::Ashr : ShrType::Lshr;
+		left = Constant::fromLLVM(*inst.getOperand(0))->value;
+		right = Constant::fromLLVM(*inst.getOperand(1))->value;
 	}
+
+	ShrNode::ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
+			Deleter deleter(exact_, shr);
+			exact = bool(exact_);
+			shrType = *shr->lexerInfo == "lshr"? ShrType::Lshr : ShrType::Ashr;
+		}
 
 	InstructionNode * ShrNode::copy() const {
 		auto out = std::make_unique<ShrNode>(*this);
@@ -1442,18 +1453,18 @@ namespace LL2W {
 
 // FMathNode
 
-	FMathNode::FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_,
-	                     ASTNode *right_, ASTNode *unibangs): SimpleNode(result_, type_, left_, right_, unibangs) {
-		const std::string &fmath_name = *fmath->lexerInfo;
-		Deleter deleter(fmath, flags);
-		if (fmath_name == "fadd") fmathType = FMathType::Fadd;
-		else if (fmath_name == "fsub") fmathType = FMathType::Fsub;
-		else if (fmath_name == "fmul") fmathType = FMathType::Fmul;
-		else if (fmath_name == "fdiv") fmathType = FMathType::Fdiv;
-		else if (fmath_name == "frem") fmathType = FMathType::Frem;
-		else throw std::invalid_argument("Invalid FMathType: \"" + fmath_name + "\"");
-		getFastmath(fastmath, flags);
-	}
+	FMathNode::FMathNode(ASTNode *result_, ASTNode *fmath, ASTNode *flags, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
+		SimpleNode(result_, type_, left_, right_, unibangs) {
+			const std::string &fmath_name = *fmath->lexerInfo;
+			Deleter deleter(fmath, flags);
+			if (fmath_name == "fadd") fmathType = FMathType::Fadd;
+			else if (fmath_name == "fsub") fmathType = FMathType::Fsub;
+			else if (fmath_name == "fmul") fmathType = FMathType::Fmul;
+			else if (fmath_name == "fdiv") fmathType = FMathType::Fdiv;
+			else if (fmath_name == "frem") fmathType = FMathType::Frem;
+			else throw std::invalid_argument("Invalid FMathType: \"" + fmath_name + "\"");
+			getFastmath(fastmath, flags);
+		}
 
 	const char * FMathNode::typeName() const {
 		switch (fmathType) {

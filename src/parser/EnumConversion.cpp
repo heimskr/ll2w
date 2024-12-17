@@ -325,6 +325,7 @@ namespace LL2W {
 			case NonNull: return RetAttr::Nonnull;
 			case NoUndef: return RetAttr::Noundef;
 			case Dereferenceable: return RetAttr::Dereferenceable;
+			case FirstIntAttr: return RetAttr::Firstint;
 			default:
 				throw std::invalid_argument("Invalid return attribute");
 		}

@@ -449,6 +449,7 @@ namespace LL2W {
 		TypePtr type;
 		ValuePtr left;
 		ValuePtr right;
+		SimpleNode() = default;
 		SimpleNode(ASTNode *result_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		virtual const char * typeName() const = 0;
 		std::string debugExtra() const override;
@@ -498,11 +499,12 @@ namespace LL2W {
 	};
 
 	struct ShrNode: SimpleNode {
-		enum class ShrType {Lshr, Ashr};
-		ShrType shrType;
+		enum class ShrType {Invalid, Lshr, Ashr};
+		ShrType shrType = ShrType::Invalid;
 		bool exact = false;
-		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_,
-		        ASTNode *unibangs);
+
+		ShrNode(const llvm::BinaryOperator &);
+		ShrNode(ASTNode *result_, ASTNode *shr, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		const char * typeName() const override { return shrType == ShrType::Lshr? "lshr" : "ashr"; }
 		NodeType nodeType() const override { return NodeType::Shr; }
 		InstructionNode * copy() const override;
