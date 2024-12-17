@@ -16,6 +16,7 @@
 
 namespace llvm {
 	class AllocaInst;
+	class BinaryOperator;
 	class CallInst;
 	class Instruction;
 	class LoadInst;
@@ -384,8 +385,8 @@ namespace LL2W {
 		Conversion conversionType;
 
 		ConversionNode(const llvm::PtrToIntInst &);
-		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
-		               ASTNode *unibangs);
+		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Conversion; }
 		std::vector<ValuePtr> allValues() override { return {value}; }
@@ -394,14 +395,17 @@ namespace LL2W {
 	};
 
 	struct BasicMathNode: InstructionNode, Writer, Reader {
-		const std::string *oper;
-		int operSymbol;
-		bool nuw = false, nsw = false;
+		const std::string *oper = nullptr;
+		int operSymbol = -1;
+		bool nuw = false;
+		bool nsw = false;
 		TypePtr type;
 		ValuePtr left;
 		ValuePtr right;
-		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_,
-		              ASTNode *right_, ASTNode *unibangs);
+
+		BasicMathNode(const llvm::BinaryOperator &);
+		BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BasicMath; }
 		std::vector<ValuePtr> allValues() override { return {left, right}; }
@@ -415,7 +419,9 @@ namespace LL2W {
 		std::unordered_set<Fastmath> fastmath;
 		TypePtr type;
 		std::vector<std::pair<ValuePtr, const std::string *>> pairs;
+
 		PhiNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *type_, ASTNode *pairs_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Phi; }
 		std::vector<ValuePtr> allValues() override;

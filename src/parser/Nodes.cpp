@@ -184,6 +184,19 @@ namespace LL2W {
 			return new ConversionNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::BinaryOperator>(llvm)) {
+			using enum llvm::Instruction::BinaryOps;
+			switch (inst->getOpcode()) {
+				case Sub:
+				case Add:
+				case Shl:
+				case Mul:
+					return new BasicMathNode(*inst);
+				default:
+					break;
+			}
+		}
+
 		llvm::raw_os_ostream os(std::cerr);
 		llvm->print(os);
 		std::cerr << std::endl;
@@ -1135,8 +1148,17 @@ namespace LL2W {
 
 // BasicMathNode
 
-	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_,
-	                             ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
+	BasicMathNode::BasicMathNode(const llvm::BinaryOperator &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		oper = StringSet::intern(inst.getOpcodeName());
+		nuw = inst.hasNoUnsignedWrap();
+		nsw = inst.hasNoSignedWrap();
+		type = Type::fromLLVM(*inst.getType());
+		left = Constant::fromLLVM(*inst.getOperand(0))->value;
+		right = Constant::fromLLVM(*inst.getOperand(1))->value;
+	}
+
+	BasicMathNode::BasicMathNode(ASTNode *result_, ASTNode *oper_, bool nuw_, bool nsw_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, oper_, type_, left_, right_);
 		handleUnibangs(unibangs);
 		oper = oper_->lexerInfo;
@@ -1151,8 +1173,7 @@ namespace LL2W {
 
 	std::string BasicMathNode::debugExtra() const {
 		std::stringstream out;
-		out << getResult() << "\e[2m = \e[0;91m" << *oper << " " << *type << " " << *left << "\e[2m,\e[0m "
-		    << *right;
+		out << getResult() << "\e[2m = \e[0;91m" << *oper << " " << *type << " " << *left << "\e[2m,\e[0m " << *right;
 		return out.str();
 	}
 
