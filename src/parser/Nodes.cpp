@@ -201,6 +201,10 @@ namespace LL2W {
 			return new SwitchNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::SelectInst>(llvm)) {
+			return new SelectNode(*inst);
+		}
+
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			return new UnreachableNode;
 		}
@@ -272,6 +276,17 @@ namespace LL2W {
 	}
 
 // SelectNode
+
+	SelectNode::SelectNode(const llvm::SelectInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		fastmath = getFastmath(inst.getFastMathFlags());
+		conditionType = Type::fromLLVM(*inst.getCondition()->getType());
+		firstType = Type::fromLLVM(*inst.getTrueValue()->getType());
+		secondType = Type::fromLLVM(*inst.getFalseValue()->getType());
+		conditionValue = Constant::fromLLVM(*inst.getCondition())->value;
+		firstValue = Constant::fromLLVM(*inst.getTrueValue())->value;
+		secondValue = Constant::fromLLVM(*inst.getFalseValue())->value;
+	}
 
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
 	                       ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs) {

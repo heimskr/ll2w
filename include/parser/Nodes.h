@@ -26,6 +26,7 @@ namespace llvm {
 	class PHINode;
 	class PtrToIntInst;
 	class ReturnInst;
+	class SelectInst;
 	class StoreInst;
 	class SwitchInst;
 }
@@ -116,14 +117,17 @@ namespace LL2W {
 
 	struct SelectNode: InstructionNode, Reader, Writer {
 		std::unordered_set<Fastmath> fastmath;
-		TypePtr conditionType, firstType, secondType;
-		ValuePtr conditionValue, firstValue, secondValue;
+		TypePtr conditionType;
+		TypePtr firstType;
+		TypePtr secondType;
+		ValuePtr conditionValue;
+		ValuePtr firstValue;
+		ValuePtr secondValue;
 
-		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value,
-		           ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs);
-		SelectNode(const std::string *result_, std::unordered_set<Fastmath>, TypePtr condition_type, TypePtr first_type,
-		           TypePtr second_type, ValuePtr condition_value, ValuePtr first_value, ValuePtr second_value,
-		           int debug_index);
+		SelectNode(const llvm::SelectInst &);
+		SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs);
+		SelectNode(const std::string *result_, std::unordered_set<Fastmath>, TypePtr condition_type, TypePtr first_type, TypePtr second_type, ValuePtr condition_value, ValuePtr first_value, ValuePtr second_value, int debug_index);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Select; }
 		std::vector<ValuePtr> allValues() override { return {conditionValue, firstValue, secondValue}; }
