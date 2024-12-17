@@ -1,17 +1,32 @@
-#include <cstdlib>
-#include <iostream>
-#include <sstream>
-
 #include "parser/FunctionHeader.h"
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "parser/Types.h"
 #include "util/Deleter.h"
 
+#include <llvm/IR/Function.h>
+
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
+
 // TODO: reduce duplication of GlobalVarDef code
 
 namespace LL2W {
 	FunctionHeader::FunctionHeader() = default;
+
+	FunctionHeader::FunctionHeader(const llvm::Function &llvm) {
+		name = StringSet::intern(getOperandName(llvm));
+		arguments = std::make_shared<FunctionArgs>(llvm.isVarArg());
+		for (const llvm::Argument &argument: llvm.args()) {
+			llvm::Type *type = argument.getType();
+			if (type->isMetadataTy()) {
+				continue;
+			}
+			arguments->arguments.emplace_back(LL2W::Type::fromLLVM(*type), argument.getName().str());
+		}
+		returnType = LL2W::Type::fromLLVM(*llvm.getReturnType());
+	}
 
 	FunctionHeader::FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv,
 	                               N _retattrs, N type, N function_name, N function_args, N unnamed_addr, N _fnattrs,

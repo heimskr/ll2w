@@ -64,7 +64,8 @@ namespace LL2W {
 				continue;
 			}
 
-			if (llvm::isa<llvm::Function>(*value)) {
+			if (auto *function = llvm::dyn_cast<llvm::Function>(value)) {
+				declarations.emplace('@' + symbol.getKey().str(), new FunctionHeader(*function));
 				continue;
 			}
 

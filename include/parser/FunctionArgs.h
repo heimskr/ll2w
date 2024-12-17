@@ -22,6 +22,7 @@ namespace LL2W {
 	struct FunctionArgs: public ASTNode {
 		bool ellipsis;
 		std::vector<FunctionArgument> arguments;
-		FunctionArgs(ASTNode *list, bool ellipsis_);
+		FunctionArgs(bool ellipsis);
+		FunctionArgs(ASTNode *list, bool ellipsis);
 	};
 }

@@ -21,9 +21,12 @@ namespace LL2W::Passes {
 			}
 
 			GlobalValue *global_name = dynamic_cast<GlobalValue *>(call->name.get());
-			if (global_name->name->substr(0, 14) == "llvm.lifetime.") {
+
+			std::string_view name(*global_name->name);
+
+			if (name.starts_with("@llvm.lifetime.") || name.starts_with("@llvm.dbg.")) {
 				to_remove.push_back(instruction);
-			} else if (*global_name->name == "llvm.experimental.noalias.scope.decl") {
+			} else if (name == "@llvm.experimental.noalias.scope.decl") {
 				to_remove.push_back(instruction);
 			}
 		}

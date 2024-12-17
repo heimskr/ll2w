@@ -129,10 +129,9 @@ namespace LL2W {
 	Function::Function(Program &program, llvm::Function *function):
 		llvmFunction(function),
 		parent(program) {
-			name = StringSet::intern(function->getName().str());
+			name = StringSet::intern('@' + function->getName().str());
 			variadic = function->isVarArg();
 			arguments = new std::vector<FunctionArgument>;
-			llvm::raw_os_ostream os(std::cout);
 			for (const llvm::Argument &argument: function->args()) {
 				llvm::Type *type = argument.getType();
 				if (type->isMetadataTy()) {
@@ -223,6 +222,7 @@ namespace LL2W {
 
 		info() << "Function: " << *name << ". " << llvmFunction->size() << "\n";
 		std::vector<const std::string *> preds;
+		int block_index = -1;
 		int instruction_index = -1;
 
 		for (llvm::BasicBlock &block: *llvmFunction) {
@@ -236,12 +236,18 @@ namespace LL2W {
 			}
 
 			BasicBlockPtr new_block = blocks.emplace_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
+			new_block->parent = this;
+			new_block->index = ++block_index;
 
 			for (const InstructionPtr &instruction: new_block->instructions) {
 				instruction->parent = new_block;
+				instruction->extract();
+				for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written}) {
+					for (VariablePtr vptr: *variables) {
+						variableStore.insert({vptr->id, vptr});
+					}
+				}
 			}
-
-			info() << "Pushed block " << *label << ".\n";
 		}
 	}
 

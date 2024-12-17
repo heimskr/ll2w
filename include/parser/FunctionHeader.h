@@ -29,6 +29,7 @@ namespace LL2W {
 
 		using N = ASTNode *;
 		FunctionHeader();
+		FunctionHeader(const llvm::Function &);
 		FunctionHeader(N _linkage, N _preemption, N _visibility, N _dll_storage_class, N _cconv, N _retattrs, N type,
 		               N function_name, N function_args, N unnamed_addr, N _fnattrs, N _section, N _comdat, N _align,
 		               N _personality, N debug);
