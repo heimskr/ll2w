@@ -163,7 +163,7 @@ namespace LL2W {
 			case DllStorageClass::Export: out << " export"; break;
 			default:;
 		}
-		if (cconv != CConv::Default)
+		if (cconv != CConv::ccc)
 			out << " " << cconv_map.at(cconv);
 		for (RetAttr retattr: retattrs)
 			out << " " << retattr_map.at(retattr);

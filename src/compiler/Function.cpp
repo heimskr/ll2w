@@ -146,7 +146,6 @@ namespace LL2W {
 #else
 			allocator = new ColoringAllocator(*this);
 #endif
-			warn() << "I am " << function->getName().str() << " and my size is " << function->size() << "\n";
 		}
 
 	Function::~Function() {
@@ -222,28 +221,35 @@ namespace LL2W {
 	void Function::extractBlocksLLVM() {
 		assert(llvmFunction != nullptr);
 
-		info() << "hej " << *name << ". " << llvmFunction->size() << "\n";
-
-		auto &entry = llvmFunction->getEntryBlock();
-		info() << "entry: {" << entry.getName().str() << "}\n";
+		info() << "Function: " << *name << ". " << llvmFunction->size() << "\n";
+		std::vector<const std::string *> preds;
+		int instruction_index = -1;
 
 		for (llvm::BasicBlock &block: *llvmFunction) {
-			llvm::StringRef ref = block.getName();
-			std::println("{{{}}} ({})", ref.str(), ref.empty());
-			for (llvm::Instruction &instruction: block) {
+			std::string label;
+			llvm::raw_string_ostream os(label);
+			block.printAsOperand(os, false);
+			const std::string *interned = StringSet::intern(std::move(label));
 
+			std::list<InstructionPtr> instructions;
+			for (llvm::Instruction &instruction: block) {
+				instructions.push_back(std::make_shared<LLVMInstruction>(&instruction, ++instruction_index));
+				linearInstructions.push_back(instructions.back());
 			}
+
+			blocks.push_back(std::make_shared<BasicBlock>(interned, std::move(preds), std::move(instructions)));
+			info() << "Pushed " << *interned << ".\n";
 		}
 	}
 
 	void Function::extractBlocksASTNode() {
 		assert(astnode != nullptr);
 		const std::string *label = StringSet::intern(std::to_string(arguments->size()));
-		std::vector<const std::string *> preds {};
+		std::vector<const std::string *> preds;
 		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
-		int instructionIndex = -1;
-		int blockIndex = -1;
+		int instruction_index = -1;
+		int block_index = -1;
 		linearInstructions.clear();
 		bbLabels.clear();
 		bbMap.clear();
@@ -252,7 +258,7 @@ namespace LL2W {
 		std::function<void(BasicBlockPtr)> finishBlock = [&](BasicBlockPtr block) {
 			block->offset = offset;
 			block->parent = this;
-			block->index = ++blockIndex;
+			block->index = ++block_index;
 			bbLabels.insert(block->label);
 			bbMap.emplace(block->label, block);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
@@ -280,7 +286,7 @@ namespace LL2W {
 				label = header->label;
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
-				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, ++instructionIndex));
+				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, ++instruction_index));
 				linearInstructions.push_back(instructions.back());
 			}
 		}
@@ -409,7 +415,7 @@ namespace LL2W {
 			}
 #ifdef DEBUG_SPILL
 			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
-			          << definition->index << ", OID: " << variable->originalID << ")\n";
+					  << definition->index << ", OID: " << variable->originalID << ")\n";
 #endif
 			auto store = std::make_shared<StackStoreInstruction>(location, variable);
 			auto next = after(definition);
@@ -447,7 +453,7 @@ namespace LL2W {
 				comment(after(definition), "Spill: no store inserted here for " + variable->plainString());
 #ifdef DEBUG_SPILL
 				std::cerr << "    \e[1mNot\e[22m inserting a stack store after definition: " << store->debugExtra()
-				          << "\n";
+						  << "\n";
 #endif
 			}
 		}
@@ -480,7 +486,7 @@ namespace LL2W {
 				BasicBlockPtr par = instruction->parent.lock();
 				std::cerr << "    Creating new variable: " << *new_var << "\n";
 				std::cerr << "    " << (replaced? "Replaced" : "Didn't replace")
-				          << " in " << old_extra;
+						  << " in " << old_extra;
 				if (par) {
 					std::cerr << " in block " << *par->label;
 				}
@@ -502,7 +508,7 @@ namespace LL2W {
 					out = true;
 #ifdef DEBUG_SPILL
 				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
-				          << load->debugExtra() << "\n";
+						  << load->debugExtra() << "\n";
 #endif
 					markSpilled(new_var);
 				} else {
@@ -690,6 +696,7 @@ namespace LL2W {
 	}
 
 	InstructionPtr Function::insertBefore(InstructionPtr base, InstructionPtr new_instruction, bool reindex, bool linear_warn, bool *should_relinearize_out) {
+		assert(base != nullptr);
 		BasicBlockPtr block = base->parent.lock();
 		if (!block) {
 			error() << base->debugExtra() << "\n";
@@ -780,7 +787,7 @@ namespace LL2W {
 		InstructionPtr &back = block->instructions.back();
 
 		if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
-			if (llback->getNode()->nodeType() == NodeType::BrUncond) {
+			if (llback->getNodeType() == NodeType::BrUncond) {
 				if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->getNode())) {
 					BasicBlockPtr next = after(block);
 					if (next) {
@@ -811,7 +818,7 @@ namespace LL2W {
 		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label
-		          << " & " << *label << "\n";
+				  << " & " << *label << "\n";
 #endif
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
@@ -873,7 +880,7 @@ namespace LL2W {
 		// We need to update ϕ-instructions.
 		for (auto &possible_llvm: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(possible_llvm.get());
-			if (llvm == nullptr || llvm->getNode()->nodeType() != NodeType::Phi) {
+			if (llvm == nullptr || llvm->getNodeType() != NodeType::Phi) {
 				continue;
 			}
 			auto *phi = dynamic_cast<PhiNode *>(llvm->getNode());
@@ -1804,7 +1811,7 @@ namespace LL2W {
 	}
 
 	void Function::debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written, bool var_liveness, bool render,
-	                     bool estimations, bool aliases, bool stack, bool show_labels, std::ostream &stream) {
+						 bool estimations, bool aliases, bool stack, bool show_labels, std::ostream &stream) {
 		if (do_blocks || linear || vars) {
 			stream << headerString() + " \e[94m{\e[39m\n";
 		}
@@ -2003,8 +2010,9 @@ namespace LL2W {
 
 	bool Function::isNaked() const {
 		if (!astnode) {
-			return naked.value();
+			return naked? *naked : false;
 		}
+
 		const FunctionHeader *header = dynamic_cast<const FunctionHeader *>(astnode->children.front());
 		if (header->fnattrs.count(FnAttr::naked) != 0) {
 			return true;

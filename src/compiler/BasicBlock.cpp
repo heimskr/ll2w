@@ -83,7 +83,7 @@ namespace LL2W {
 			return {};
 		const auto back = instructions.back();
 		if (auto *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
-			const NodeType type = llvm->getNode()->nodeType();
+			const NodeType type = llvm->getNodeType();
 			if (type == NodeType::BrUncond) {
 				return {parent->getBlock(dynamic_cast<BrUncondNode *>(llvm->getNode())->destination)};
 			} else if (type == NodeType::BrCond) {

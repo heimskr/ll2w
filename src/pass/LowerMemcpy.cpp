@@ -26,7 +26,7 @@ namespace LL2W::Passes {
 		for (auto iter = linear.begin(), end = linear.end(); iter != end;) {
 			InstructionPtr &instruction = *iter;
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::Call) {
+			if (!llvm || llvm->getNodeType() != NodeType::Call) {
 				++iter;
 				continue;
 			}

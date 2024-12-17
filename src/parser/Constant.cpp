@@ -116,7 +116,7 @@ namespace LL2W {
 		if (conversion != Conversion::Ptrtoint && conversion != Conversion::Inttoptr &&
 		    conversion != Conversion::Bitcast) {
 			std::cerr << *this << "\n";
-			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map[conversion]);
+			throw std::runtime_error("Unsupported conversion in Constant::convert(): " + conversion_map.at(conversion));
 		}
 
 		if (!conversionSource->value) {

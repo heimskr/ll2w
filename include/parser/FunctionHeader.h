@@ -14,7 +14,7 @@ namespace LL2W {
 		Preemption preemption = Preemption::Default;
 		Visibility visibility = Visibility::Default;
 		DllStorageClass dllStorageClass = DllStorageClass::None;
-		CConv cconv = CConv::Default;
+		CConv cconv = CConv::ccc;
 		Deref deref = Deref::Default;
 		std::unordered_set<RetAttr> retattrs;
 		int dereferenceableBytes = -1;

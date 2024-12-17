@@ -16,7 +16,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::InsertValue) {
+			if (!llvm || llvm->getNodeType() != NodeType::InsertValue) {
 				continue;
 			}
 

@@ -1,10 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <tuple>
-#include <unordered_set>
-#include <variant>
-
 #include "compiler/Variable.h"
 #include "parser/ASTNode.h"
 #include "parser/Enums.h"
@@ -14,14 +9,18 @@
 #include "parser/Constant.h"
 #include "util/Makeable.h"
 
+#include <memory>
+#include <tuple>
+#include <unordered_set>
+#include <variant>
+
+namespace llvm {
+	class CallInst;
+	class Instruction;
+}
+
 namespace LL2W {
 	class Variable;
-
-	enum class NodeType {
-		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
-		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
-		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw,
-	};
 
 	struct BaseNode: ASTNode {
 		using ASTNode::ASTNode;
@@ -80,6 +79,8 @@ namespace LL2W {
 			InstructionNode();
 			std::string style() const override { return "\e[36m"; }
 			virtual InstructionNode * copy() const = 0;
+
+			static InstructionNode * fromLLVM(llvm::Instruction *);
 	};
 
 	struct Reader {
@@ -230,6 +231,7 @@ namespace LL2W {
 
 	class CallInvokeNode: public InstructionNode, public Writer, public Reader {
 		protected:
+			CallInvokeNode(const llvm::CallInst &);
 			CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
 			               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
 			               ASTNode *attribute_list, ASTNode *unibangs);
@@ -260,9 +262,10 @@ namespace LL2W {
 	};
 
 	struct CallNode: CallInvokeNode {
-		const std::string *tail = nullptr;
+		TailCallKind tail = TailCallKind::None;
 		std::unordered_set<Fastmath> fastmath;
 
+		CallNode(const llvm::CallInst &);
 		CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
 		         ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
 		         ASTNode *attribute_list, ASTNode *unibangs);

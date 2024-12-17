@@ -1,5 +1,8 @@
 #include "parser/EnumConversion.h"
 
+#include <llvm/IR/CallingConv.h>
+#include <llvm/IR/FMF.h>
+
 namespace LL2W {
 	Linkage getLinkage(llvm::GlobalValue::LinkageTypes type) {
 		using enum Linkage;
@@ -74,5 +77,90 @@ namespace LL2W {
 		}
 
 		throw std::invalid_argument("Invalid unnamed addr");
+	}
+
+	TailCallKind getTailCallKind(llvm::CallInst::TailCallKind kind) {
+		using enum TailCallKind;
+		using enum llvm::CallInst::TailCallKind;
+
+		switch (kind) {
+			case TCK_None: return None;
+			case TCK_Tail: return Tail;
+			case TCK_MustTail: return MustTail;
+			case TCK_NoTail: return NoTail;
+		}
+
+		throw std::invalid_argument("Invalid tail call kind");
+	}
+
+	TailCallKind getTailCallKind(std::string_view kind) {
+		using enum TailCallKind;
+
+		if (kind.empty() || kind == "none") {
+			return None;
+		}
+
+		if (kind == "tail") {
+			return Tail;
+		}
+
+		if (kind == "musttail") {
+			return MustTail;
+		}
+
+		if (kind == "notail") {
+			return NoTail;
+		}
+
+		throw std::invalid_argument("Invalid tail call kind");
+	}
+
+	std::unordered_set<Fastmath> getFastmath(llvm::FastMathFlags flags) {
+		using enum Fastmath;
+
+		std::unordered_set<Fastmath> out;
+
+		if (flags.noNaNs()) {
+			out.insert(Nnan);
+		}
+
+		if (flags.noInfs()) {
+			out.insert(Ninf);
+		}
+
+		if (flags.noSignedZeros()) {
+			out.insert(Nsz);
+		}
+
+		if (flags.allowReciprocal()) {
+			out.insert(Arcp);
+		}
+
+		if (flags.allowContract()) {
+			out.insert(Contract);
+		}
+
+		if (flags.approxFunc()) {
+			out.insert(Afn);
+		}
+
+		if (flags.allowReassoc()) {
+			out.insert(Reassoc);
+		}
+
+		if (flags.isFast()) {
+			out.insert(Fast);
+		}
+
+		return out;
+	}
+
+	CConv getCConv(llvm::CallingConv::ID conv) {
+		switch (conv) {
+			case llvm::CallingConv::C: return CConv::ccc;
+			case llvm::CallingConv::CXX_FAST_TLS: return CConv::cxx_fast_tlscc;
+			default:
+				return CConv::ccc;
+		}
 	}
 }

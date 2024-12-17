@@ -20,7 +20,7 @@ namespace LL2W::CompilerUtil {
 #define CAST_METHOD(type, fn_name) \
 	type##Node * fn_name##Cast(const InstructionPtr &instruction) { \
 		if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) { \
-			if (llvm->getNode()->nodeType() == NodeType::type) \
+			if (llvm->getNodeType() == NodeType::type) \
 				return dynamic_cast<type##Node *>(llvm->getNode()); \
 		} \
 		return nullptr; \

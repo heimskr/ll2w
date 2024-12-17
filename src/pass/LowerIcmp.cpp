@@ -19,7 +19,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::Icmp)
+			if (!llvm || llvm->getNodeType() != NodeType::Icmp)
 				continue;
 			lowerIcmp(function, instruction, dynamic_cast<IcmpNode *>(llvm->getNode()));
 			to_remove.push_back(instruction);

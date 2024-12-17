@@ -1,6 +1,7 @@
 #pragma once
 
 #include "compiler/Instruction.h"
+#include "parser/Enums.h"
 
 #include <variant>
 
@@ -43,5 +44,7 @@ namespace LL2W {
 			InstructionNode * getNode() const;
 			llvm::Instruction * getLLVM() const;
 			bool isFromLLVM() const;
+
+			NodeType getNodeType() const;
 	};
 }

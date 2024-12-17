@@ -5,6 +5,14 @@
 #include <unordered_set>
 
 namespace LL2W {
+	enum class NodeType {
+		Metadata, Header, Attributes, Select, Alloca, Store, Load, Icmp, BrUncond, BrCond, CallInvoke, Call, Invoke,
+		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
+		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw,
+	};
+
+	enum class TailCallKind {None, Tail, MustTail, NoTail};
+
 	enum class Signedness: char {Unknown = 'i', Unsigned = 'u', Signed = 's'};
 
 	enum class Role {Source, Destination};
@@ -27,7 +35,7 @@ namespace LL2W {
 	enum class ThreadLocalMode {None, LocalDynamic, InitialExec, LocalExec, GeneralDynamic};
 	enum class UnnamedAddr {Default, Unnamed, LocalUnnamed};
 	enum class CConv {
-		Default, ccc, cxx_fast_tlscc, fastcc, ghccc, swiftcc, preserve_allcc, preserve_mostcc, x86_vectorcallcc, cc10,
+		ccc, cxx_fast_tlscc, fastcc, ghccc, swiftcc, preserve_allcc, preserve_mostcc, x86_vectorcallcc, cc10,
 		cc11, arm_apcscc, coldcc, webkit_jscc, cc64, cc65, cc66, ptx_device, x86_stdcallcc, cc67, cc68, cc69, cc70,
 		cc1023, anyregcc, cc71, cc72, cc75, msp430_intrcc, ptx_kernel, cc76, cc77, cc78, spir_func, x86_64_win64cc,
 		cc79, cc80, arm_aapcs_vfpcc, intel_ocl_bicc, x86_64_sysvcc, x86_fastcallcc, x86_thiscallcc, arm_aapcscc,
@@ -56,27 +64,28 @@ namespace LL2W {
 	enum class QueryType {Memory};
 	enum class LogicType {And, Or, Xor};
 
-	extern std::unordered_map<TypeType,   std::string> type_map;
-	extern std::unordered_map<ValueType,  std::string> value_map;
-	extern std::unordered_map<Linkage,    std::string> linkage_map;
-	extern std::unordered_map<Preemption, std::string> preemption_map;
-	extern std::unordered_map<CConv,      std::string> cconv_map;
-	extern std::unordered_map<RetAttr,    std::string> retattr_map;
-	extern std::unordered_map<ParAttr,    std::string> parattr_map;
-	extern std::unordered_map<FnAttr,     std::string> fnattr_map;
-	extern std::unordered_map<Fastmath,   std::string> fastmath_map;
-	extern std::unordered_map<Ordering,   std::string> ordering_map;
-	extern std::unordered_map<IcmpCond,   std::string> cond_map;
-	extern std::unordered_map<IcmpCond,   std::string> cond_op_map;
-	extern std::unordered_map<IcmpCond,   std::string> cond_op_map_with_sign;
-	extern std::unordered_map<std::string,   IcmpCond> cond_inv_map;
-	extern std::unordered_map<IcmpCond,      IcmpCond> cond_rev_map;
-	extern std::unordered_map<Conversion, std::string> conversion_map;
-	extern std::unordered_map<QueryType,  std::string> query_map;
-	extern std::unordered_map<LogicType,  std::string> logic_map;
-	extern std::unordered_map<std::string,  LogicType> logic_inv_map;
-	extern std::unordered_set<IcmpCond> signed_conds;
-	extern std::unordered_set<IcmpCond> unsigned_conds;
+	extern const std::unordered_map<TypeType,     std::string> &type_map;
+	extern const std::unordered_map<ValueType,    std::string> &value_map;
+	extern const std::unordered_map<Linkage,      std::string> &linkage_map;
+	extern const std::unordered_map<Preemption,   std::string> &preemption_map;
+	extern const std::unordered_map<CConv,        std::string> &cconv_map;
+	extern const std::unordered_map<RetAttr,      std::string> &retattr_map;
+	extern const std::unordered_map<ParAttr,      std::string> &parattr_map;
+	extern const std::unordered_map<FnAttr,       std::string> &fnattr_map;
+	extern const std::unordered_map<Fastmath,     std::string> &fastmath_map;
+	extern const std::unordered_map<Ordering,     std::string> &ordering_map;
+	extern const std::unordered_map<IcmpCond,     std::string> &cond_map;
+	extern const std::unordered_map<IcmpCond,     std::string> &cond_op_map;
+	extern const std::unordered_map<IcmpCond,     std::string> &cond_op_map_with_sign;
+	extern const std::unordered_map<std::string,     IcmpCond> &cond_inv_map;
+	extern const std::unordered_map<IcmpCond,        IcmpCond> &cond_rev_map;
+	extern const std::unordered_map<Conversion,   std::string> &conversion_map;
+	extern const std::unordered_map<QueryType,    std::string> &query_map;
+	extern const std::unordered_map<LogicType,    std::string> &logic_map;
+	extern const std::unordered_map<std::string,    LogicType> &logic_inv_map;
+	extern const std::unordered_map<TailCallKind, std::string> &tail_call_kind_map;
+	extern const std::unordered_set<IcmpCond> &signed_conds;
+	extern const std::unordered_set<IcmpCond> &unsigned_conds;
 
 	bool isSigned(IcmpCond);
 }

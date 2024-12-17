@@ -30,7 +30,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::Getelementptr)
+			if (!llvm || llvm->getNodeType() != NodeType::Getelementptr)
 				continue;
 
 			GetelementptrNode *node = dynamic_cast<GetelementptrNode *>(llvm->getNode());

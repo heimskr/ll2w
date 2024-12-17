@@ -6,7 +6,7 @@
 
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
-#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/raw_os_ostream.h>
 
 #include <iostream>
 
@@ -39,7 +39,7 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::isTerminal() const {
-		const NodeType type = getNode()->nodeType();
+		const NodeType type = getNodeType();
 		return type == NodeType::Ret || type == NodeType::Unreachable;
 	}
 
@@ -385,7 +385,7 @@ namespace LL2W {
 			return {};
 		}
 
-		switch (getNode()->nodeType()) {
+		switch (getNodeType()) {
 			case NodeType::BrCond: {
 				CAST(BrCondNode);
 				return {cast->ifFalse, cast->ifTrue};
@@ -412,7 +412,7 @@ namespace LL2W {
 	}
 
 	bool LLVMInstruction::isBlockTerminal() const {
-		switch (getNode()->nodeType()) {
+		switch (getNodeType()) {
 			case NodeType::BrCond:
 			case NodeType::BrUncond:
 			case NodeType::Switch:
@@ -448,5 +448,27 @@ namespace LL2W {
 
 	bool LLVMInstruction::isFromLLVM() const {
 		return std::holds_alternative<llvm::Instruction *>(source);
+	}
+
+	NodeType LLVMInstruction::getNodeType() const {
+		if (!isFromLLVM()) {
+			return getNodeType();
+		}
+
+		llvm::Instruction *llvm = getLLVM();
+
+		if (auto *branch = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
+			return branch->isConditional()? NodeType::BrCond : NodeType::BrUncond;
+		}
+
+		if (llvm::isa<llvm::CallInst>(llvm)) {
+			return NodeType::Call;
+		}
+
+		llvm::raw_os_ostream os(std::cerr);
+		llvm->print(os);
+		os << "\n";
+
+		throw std::runtime_error("Unknown LLVM instruction type");
 	}
 }

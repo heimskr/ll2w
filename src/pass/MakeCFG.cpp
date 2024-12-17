@@ -50,7 +50,7 @@ namespace LL2W::Passes {
 					function.cfg.link(*label, "exit");
 					exit_linked = true;
 				} else if (const LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
-					if (llvm->getNode()->nodeType() == NodeType::BrUncond) {
+					if (llvm->getNodeType() == NodeType::BrUncond) {
 						const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->getNode());
 						if (uncond->destination->substr(1) == *label) {
 							// The block unconditionally branches to itself, meaning it's an infinite loop.

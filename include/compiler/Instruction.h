@@ -9,6 +9,10 @@
 #include "instruction/InstructionMeta.h"
 #include "util/Makeable.h"
 
+namespace llvm {
+	class Instruction;
+}
+
 namespace LL2W {
 	class ASTNode;
 	class BasicBlock;

@@ -536,7 +536,7 @@ namespace LL2W::Passes {
 			if (llvm == nullptr)
 				continue;
 
-			const NodeType type = llvm->getNode()->nodeType();
+			const NodeType type = llvm->getNodeType();
 			if (type == NodeType::BasicMath) {
 				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->getNode()));
 			} else if (type == NodeType::Logic) {

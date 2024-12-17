@@ -28,13 +28,13 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || (llvm->getNode()->nodeType() != NodeType::Load && llvm->getNode()->nodeType() != NodeType::Store)) {
+			if (!llvm || (llvm->getNodeType() != NodeType::Load && llvm->getNodeType() != NodeType::Store)) {
 				continue;
 			}
 
-			if (llvm->getNode()->nodeType() == NodeType::Load) {
+			if (llvm->getNodeType() == NodeType::Load) {
 				lowerLoad(function, instruction, *llvm);
-			} else if (llvm->getNode()->nodeType() == NodeType::Store) {
+			} else if (llvm->getNodeType() == NodeType::Store) {
 				lowerStore(function, instruction, *llvm);
 			} else {
 				continue;

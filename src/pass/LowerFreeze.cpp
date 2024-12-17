@@ -12,7 +12,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::Freeze) {
+			if (!llvm || llvm->getNodeType() != NodeType::Freeze) {
 				continue;
 			}
 

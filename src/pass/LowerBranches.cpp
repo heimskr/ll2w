@@ -15,7 +15,7 @@ namespace LL2W::Passes {
 			const LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm)
 				continue;
-			const NodeType node_type = llvm->getNode()->nodeType();
+			const NodeType node_type = llvm->getNodeType();
 			if (node_type == NodeType::BrCond)
 				lowerBranch(function, instruction, dynamic_cast<BrCondNode *>(llvm->getNode()));
 			else if (node_type == NodeType::BrUncond)

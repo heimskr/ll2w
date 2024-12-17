@@ -4,6 +4,8 @@
 #include "compiler/Variable.h"
 #include "parser/ASTNode.h"
 
+#include <llvm/IR/Instructions.h>
+
 namespace LL2W {
 	bool Instruction::operator<(const Instruction &other) const {
 		return index < other.index;
@@ -18,16 +20,23 @@ namespace LL2W {
 	}
 
 	VariablePtr Instruction::doesRead(const VariablePtr &var) const {
-		if (read.count(var) != 0)
+		if (read.count(var) != 0) {
 			return var;
-		std::shared_ptr<BasicBlock> block = parent.lock();
-		for (const VariablePtr &read_var: read)
-			if (read_var->id == var->id)
+		}
+
+		BasicBlockPtr block = parent.lock();
+
+		for (const VariablePtr &read_var: read) {
+			if (read_var->id == var->id) {
 				return read_var;
+			}
+		}
+
 		for (Variable *alias: var->getAliases()) {
 			VariablePtr shared_alias = block->parent->getVariable(alias->id);
-			if (read.count(shared_alias) != 0)
+			if (read.count(shared_alias) != 0) {
 				return shared_alias;
+			}
 		}
 
 		return nullptr;
@@ -36,14 +45,20 @@ namespace LL2W {
 	VariablePtr Instruction::doesWrite(const VariablePtr &var) const {
 		if (written.count(var) != 0)
 			return var;
-		std::shared_ptr<BasicBlock> block = parent.lock();
-		for (const VariablePtr &written_var: written)
-			if (written_var->id == var->id)
+
+		BasicBlockPtr block = parent.lock();
+
+		for (const VariablePtr &written_var: written) {
+			if (written_var->id == var->id) {
 				return written_var;
+			}
+		}
+
 		for (Variable *alias: var->getAliases()) {
 			VariablePtr shared_alias = block->parent->getVariable(alias->id);
-			if (written.count(shared_alias) != 0)
+			if (written.count(shared_alias) != 0) {
 				return shared_alias;
+			}
 		}
 
 		return nullptr;

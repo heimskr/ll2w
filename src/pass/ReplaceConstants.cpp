@@ -16,7 +16,7 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (!llvm || llvm->getNode()->nodeType() == NodeType::Call) {
+			if (!llvm || llvm->getNodeType() == NodeType::Call) {
 				continue;
 			}
 

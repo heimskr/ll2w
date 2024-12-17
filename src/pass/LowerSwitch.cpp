@@ -17,7 +17,7 @@ namespace LL2W::Passes {
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {
 			auto llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (!llvm || llvm->getNode()->nodeType() != NodeType::Switch)
+			if (!llvm || llvm->getNodeType() != NodeType::Switch)
 				continue;
 			auto *sw = dynamic_cast<SwitchNode *>(llvm->getNode());
 

@@ -1,105 +1,140 @@
-#include <stdexcept>
-
 #include "parser/Enums.h"
 
-namespace LL2W {
-	std::unordered_map<TypeType, std::string> type_map {
-		{TypeType::None,    "None"},    {TypeType::Void,     "Void"},     {TypeType::Int,    "Int"},
-		{TypeType::Array,   "Array"},   {TypeType::Vector,   "Vector"},   {TypeType::Float,  "Float"},
-		{TypeType::Pointer, "Pointer"}, {TypeType::Function, "Function"}, {TypeType::Struct, "Struct"},
-		{TypeType::GlobalTemporary, "GlobalTemporary"}};
-
-	std::unordered_map<ValueType, std::string> value_map {
-		{ValueType::Double, "Double"}, {ValueType::Int,             "Int"            }, {ValueType::Null,    "Null"   },
-		{ValueType::Vector, "Vector"}, {ValueType::Bool,            "Bool"           }, {ValueType::Local,   "Local"  },
-		{ValueType::Global, "Global"}, {ValueType::Getelementptr,   "Getelementptr"  }, {ValueType::Void,    "Void"   },
-		{ValueType::Struct, "Struct"}, {ValueType::Array,           "Array"          }, {ValueType::CString, "CString"},
-		{ValueType::Undef,  "Undef" }, {ValueType::Zeroinitializer, "Zeroinitializer"}, {ValueType::Icmp,    "Icmp"   },
-		{ValueType::Logic,  "Logic" }};
-
-	std::unordered_map<Linkage, std::string> linkage_map {
-		{Linkage::Private,     "private"},      {Linkage::Appending,  "appending"},   {Linkage::Weak,    "weak"},
-		{Linkage::Linkonce,    "linkonce"},     {Linkage::ExternWeak, "extern_weak"}, {Linkage::WeakOdr, "weak_odr"},
-		{Linkage::LinkonceOdr, "linkonce_odr"}, {Linkage::External,   "external"},    {Linkage::Common,  "common"},
-		{Linkage::Internal,    "internal"},     {Linkage::AvailableExternally, "available_externally"}};
-
-	std::unordered_map<Preemption, std::string> preemption_map {
-		{Preemption::Default,  "default"}, {Preemption::DsoPreemptable, "dso_preemptable"},
-		{Preemption::DsoLocal, "dso_local"}};
-
-	std::unordered_map<CConv, std::string> cconv_map {
-		{CConv::Default, "default"}, {CConv::ccc, "ccc"}, {CConv::cxx_fast_tlscc, "cxx_fast_tlscc"},
-		{CConv::fastcc, "fastcc"}, {CConv::ghccc, "ghccc"}, {CConv::swiftcc, "swiftcc"},
-		{CConv::preserve_allcc, "preserve_allcc"}, {CConv::preserve_mostcc, "preserve_mostcc"},
-		{CConv::x86_vectorcallcc, "x86_vectorcallcc"}, {CConv::cc10, "cc10"}, {CConv::cc11, "cc11"},
-		{CConv::arm_apcscc, "arm_apcscc"}, {CConv::coldcc, "coldcc"}, {CConv::webkit_jscc, "webkit_jscc"},
-		{CConv::cc64, "cc64"}, {CConv::cc65, "cc65"}, {CConv::cc66, "cc66"}, {CConv::ptx_device, "ptx_device"},
-		{CConv::x86_stdcallcc, "x86_stdcallcc"}, {CConv::cc67, "cc67"}, {CConv::cc68, "cc68"}, {CConv::cc69, "cc69"},
-		{CConv::cc70, "cc70"}, {CConv::cc1023, "cc1023"}, {CConv::anyregcc, "anyregcc"}, {CConv::cc71, "cc71"},
-		{CConv::cc72, "cc72"}, {CConv::cc75, "cc75"}, {CConv::msp430_intrcc, "msp430_intrcc"},
-		{CConv::ptx_kernel, "ptx_kernel"}, {CConv::cc76, "cc76"}, {CConv::cc77, "cc77"}, {CConv::cc78, "cc78"},
-		{CConv::spir_func, "spir_func"}, {CConv::x86_64_win64cc, "x86_64_win64cc"}, {CConv::cc79, "cc79"},
-		{CConv::cc80, "cc80"}, {CConv::arm_aapcs_vfpcc, "arm_aapcs_vfpcc"}, {CConv::intel_ocl_bicc, "intel_ocl_bicc"},
-		{CConv::x86_64_sysvcc, "x86_64_sysvcc"}, {CConv::x86_fastcallcc, "x86_fastcallcc"},
-		{CConv::x86_thiscallcc, "x86_thiscallcc"}, {CConv::arm_aapcscc, "arm_aapcscc"},
-		{CConv::spir_kernel, "spir_kernel"}};
-	
-	std::unordered_map<RetAttr, std::string> retattr_map {
-		{RetAttr::Zeroext, "zeroext"}, {RetAttr::Signext, "signext"}, {RetAttr::Inreg, "inreg"},
-		{RetAttr::Noalias, "noalias"}, {RetAttr::Nonnull, "nonnull"}};
-
-	std::unordered_map<ParAttr, std::string> parattr_map {
-		{ParAttr::Byval,      "byval"},      {ParAttr::Inalloca,  "inalloca"},  {ParAttr::Sret,      "sret"},
-		{ParAttr::Nocapture,  "nocapture"},  {ParAttr::Readonly,  "readonly"},  {ParAttr::Swiftself, "swiftself"},
-		{ParAttr::Swifterror, "swifterror"}, {ParAttr::Immarg,    "immarg"},    {ParAttr::Nonnull,   "nonnull"},
-		{ParAttr::Returned,   "returned"},   {ParAttr::Nest,      "nest"},      {ParAttr::Nofree,    "nofree"},
-		{ParAttr::Zeroext,    "zeroext"},    {ParAttr::Signext,   "signext"},   {ParAttr::Inreg,     "inreg"},
-		{ParAttr::Noalias,    "noalias"},    {ParAttr::Writeonly, "writeonly"}, {ParAttr::Readnone, "readnone"}};
-
-	std::unordered_map<FnAttr, std::string> fnattr_map {
-		{FnAttr::alwaysinline,       "alwaysinline"},       {FnAttr::noredzone,           "noredzone"},
-		{FnAttr::convergent,         "convergent"},         {FnAttr::norecurse,           "norecurse"},
-		{FnAttr::inlinehint,         "inlinehint"},         {FnAttr::sspreq,              "sspreq"},
-		{FnAttr::sanitize_memory,    "sanitize_memory"},    {FnAttr::jumptable,           "jumptable"},
-		{FnAttr::minsize,            "minsize"},            {FnAttr::nobuiltin,           "nobuiltin"},
-		{FnAttr::noduplicate,        "noduplicate"},        {FnAttr::noimplicitfloat,     "noimplicitfloat"},
-		{FnAttr::builtin,            "builtin"},            {FnAttr::uwtable,             "uwtable"},
-		{FnAttr::nounwind,           "nounwind"},           {FnAttr::optnone,             "optnone"},
-		{FnAttr::optsize,            "optsize"},            {FnAttr::readnone,            "readnone"},
-		{FnAttr::naked,              "naked"},              {FnAttr::writeonly,           "writeonly"},
-		{FnAttr::argmemonly,         "argmemonly"},         {FnAttr::returns_twice,       "returns_twice"},
-		{FnAttr::safestack,          "safestack"},          {FnAttr::inaccessiblememonly, "inaccessiblememonly"},
-		{FnAttr::cold,               "cold"},               {FnAttr::noreturn,            "noreturn"},
-		{FnAttr::nonlazybind,        "nonlazybind"},        {FnAttr::sanitize_thread,     "sanitize_thread"},
-		{FnAttr::thunk,              "thunk"},              {FnAttr::sspstrong,           "sspstrong"},
-		{FnAttr::sanitize_address,   "sanitize_address"},   {FnAttr::noinline,            "noinline"},
-		{FnAttr::ssp,                "ssp"},                {FnAttr::speculatable,        "speculatable"},
-		{FnAttr::sanitize_hwaddress, "sanitize_hwaddress"}, {FnAttr::readonly,            "readonly"},
-		{FnAttr::willreturn,         "willreturn"},         {FnAttr::nosync,              "nosync"},
-		{FnAttr::inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"}};
-
-	std::unordered_map<Fastmath, std::string> fastmath_map {
-		{Fastmath::Nnan,    "nnan"},    {Fastmath::Ninf,     "ninf"},     {Fastmath::Nsz, "nsz"},
-		{Fastmath::Reassoc, "reassoc"}, {Fastmath::Contract, "contract"}, {Fastmath::Afn, "afn"},
-		{Fastmath::Arcp,    "arcp"},    {Fastmath::Fast,     "fast"}};
-
-	std::unordered_map<Ordering, std::string> ordering_map {
-		{Ordering::None,    "none"},    {Ordering::Unordered, "unordered"}, {Ordering::Monotonic, "monotonic"},
-		{Ordering::Acquire, "acquire"}, {Ordering::Release,   "release"},   {Ordering::AcqRel,    "acqrel"},
-		{Ordering::SeqCst, "seqcst"}};
-
-	std::unordered_map<IcmpCond, std::string> cond_map {
-		{IcmpCond::Eq,  "eq"},  {IcmpCond::Ne,  "ne"},  {IcmpCond::Ugt, "ugt"}, {IcmpCond::Uge, "uge"},
-		{IcmpCond::Ult, "ult"}, {IcmpCond::Ule, "ule"}, {IcmpCond::Sgt, "sgt"}, {IcmpCond::Sge, "sge"},
-		{IcmpCond::Slt, "slt"}, {IcmpCond::Sle, "sle"}};
-
-	std::unordered_map<IcmpCond, std::string> cond_op_map {
-		{IcmpCond::Eq,  "=="}, {IcmpCond::Ne,  "!="},
-		{IcmpCond::Ugt, ">"},  {IcmpCond::Uge, ">="}, {IcmpCond::Ult, "<"}, {IcmpCond::Ule, "<="},
-		{IcmpCond::Sgt, ">"},  {IcmpCond::Sge, ">="}, {IcmpCond::Slt, "<"}, {IcmpCond::Sle, "<="},
-		{IcmpCond::Xgt, ">"},  {IcmpCond::Xge, ">="}, {IcmpCond::Xlt, "<"}, {IcmpCond::Xle, "<="}};
+#include <stdexcept>
 
 // #define USE_SUBSCRIPTS
+
+namespace TypeMap {
+	using enum LL2W::TypeType;
+	std::unordered_map<LL2W::TypeType, std::string> map{
+		{None, "None"}, {Void, "Void"}, {Int, "Int"}, {Array, "Array"}, {Vector, "Vector"}, {Float, "Float"}, {Pointer, "Pointer"}, {Function, "Function"},
+		{Struct, "Struct"}, {GlobalTemporary, "GlobalTemporary"},
+	};
+}
+
+namespace ValueMap {
+	using enum LL2W::ValueType;
+	std::unordered_map<LL2W::ValueType, std::string> map{
+		{Double, "Double"}, {Int, "Int"}, {Null, "Null"}, {Vector, "Vector"}, {Bool, "Bool"}, {Local, "Local"}, {Global, "Global"}, {Getelementptr, "Getelementptr"},
+		{Void, "Void"}, {Struct, "Struct"}, {Array, "Array"}, {CString, "CString"}, {Undef, "Undef"}, {Zeroinitializer, "Zeroinitializer"}, {Icmp, "Icmp"}, {Logic, "Logic"},
+	};
+}
+
+namespace LinkageMap {
+	using enum LL2W::Linkage;
+	std::unordered_map<LL2W::Linkage, std::string> map{
+		{Private, "private"}, {Appending, "appending"}, {Weak, "weak"}, {Linkonce, "linkonce"}, {ExternWeak, "extern_weak"}, {WeakOdr, "weak_odr"},
+		{LinkonceOdr, "linkonce_odr"}, {External, "external"}, {Common, "common"}, {Internal, "internal"}, {AvailableExternally, "available_externally"},
+	};
+}
+
+namespace PreemptionMap {
+	using enum LL2W::Preemption;
+	std::unordered_map<LL2W::Preemption, std::string> map{
+		{Default, "default"}, {DsoPreemptable, "dso_preemptable"}, {DsoLocal, "dso_local"},
+	};
+}
+
+namespace CConvMap {
+	using enum LL2W::CConv;
+	std::unordered_map<LL2W::CConv, std::string> map{
+		{ccc, "ccc"}, {cxx_fast_tlscc, "cxx_fast_tlscc"}, {fastcc, "fastcc"}, {ghccc, "ghccc"}, {swiftcc, "swiftcc"}, {preserve_allcc, "preserve_allcc"},
+		{preserve_mostcc, "preserve_mostcc"}, {x86_vectorcallcc, "x86_vectorcallcc"}, {cc10, "cc10"}, {cc11, "cc11"}, {arm_apcscc, "arm_apcscc"},
+		{coldcc, "coldcc"}, {webkit_jscc, "webkit_jscc"}, {cc64, "cc64"}, {cc65, "cc65"}, {cc66, "cc66"}, {ptx_device, "ptx_device"},
+		{x86_stdcallcc, "x86_stdcallcc"}, {cc67, "cc67"}, {cc68, "cc68"}, {cc69, "cc69"}, {cc70, "cc70"}, {cc1023, "cc1023"}, {anyregcc, "anyregcc"},
+		{cc71, "cc71"}, {cc72, "cc72"}, {cc75, "cc75"}, {msp430_intrcc, "msp430_intrcc"}, {ptx_kernel, "ptx_kernel"}, {cc76, "cc76"}, {cc77, "cc77"},
+		{cc78, "cc78"}, {spir_func, "spir_func"}, {x86_64_win64cc, "x86_64_win64cc"}, {cc79, "cc79"}, {cc80, "cc80"}, {arm_aapcs_vfpcc, "arm_aapcs_vfpcc"},
+		{intel_ocl_bicc, "intel_ocl_bicc"}, {x86_64_sysvcc, "x86_64_sysvcc"}, {x86_fastcallcc, "x86_fastcallcc"}, {x86_thiscallcc, "x86_thiscallcc"},
+		{arm_aapcscc, "arm_aapcscc"}, {spir_kernel, "spir_kernel"},
+	};
+}
+
+namespace RetAttrMap {
+	using enum LL2W::RetAttr;
+	std::unordered_map<LL2W::RetAttr, std::string> map{
+		{Zeroext, "zeroext"}, {Signext, "signext"}, {Inreg, "inreg"}, {Noalias, "noalias"}, {Nonnull, "nonnull"},
+	};
+}
+
+namespace ParAttrMap {
+	using enum LL2W::ParAttr;
+	std::unordered_map<LL2W::ParAttr, std::string> map{
+		{Byval,     "byval"},     {Inalloca,   "inalloca"},   {Sret,     "sret"},    {Nocapture, "nocapture"}, {Readonly, "readonly"},
+		{Swiftself, "swiftself"}, {Swifterror, "swifterror"}, {Immarg,   "immarg"},  {Nonnull,   "nonnull"},   {Returned, "returned"},
+		{Nest,      "nest"},      {Nofree,     "nofree"},     {Zeroext,  "zeroext"}, {Signext,   "signext"},   {Inreg,    "inreg"},
+		{Noalias,   "noalias"},   {Writeonly,  "writeonly"},  {Readnone, "readnone"},
+	};
+}
+
+namespace FnAttrMap {
+	using enum LL2W::FnAttr;
+	std::unordered_map<LL2W::FnAttr, std::string> map{
+		{alwaysinline,     "alwaysinline"},     {noredzone,          "noredzone"},          {convergent,          "convergent"},
+		{norecurse,        "norecurse"},        {inlinehint,         "inlinehint"},         {sspreq,              "sspreq"},
+		{sanitize_memory,  "sanitize_memory"},  {jumptable,          "jumptable"},          {minsize,             "minsize"},
+		{nobuiltin,        "nobuiltin"},        {noduplicate,        "noduplicate"},        {noimplicitfloat,     "noimplicitfloat"},
+		{builtin,          "builtin"},          {uwtable,            "uwtable"},            {nounwind,            "nounwind"},
+		{optnone,         "optnone"},          {optsize,            "optsize"},            {readnone,            "readnone"},
+		{naked,            "naked"},            {writeonly,          "writeonly"},          {argmemonly,          "argmemonly"},
+		{returns_twice,    "returns_twice"},    {safestack,          "safestack"},          {inaccessiblememonly, "inaccessiblememonly"},
+		{cold,             "cold"},             {noreturn,           "noreturn"},           {nonlazybind,         "nonlazybind"},
+		{sanitize_thread,  "sanitize_thread"},  {thunk,              "thunk"},              {sspstrong,           "sspstrong"},
+		{sanitize_address, "sanitize_address"}, {noinline,           "noinline"},           {ssp,                 "ssp"},
+		{speculatable,     "speculatable"},     {sanitize_hwaddress, "sanitize_hwaddress"}, {readonly,            "readonly"},
+		{willreturn,       "willreturn"},       {nosync,             "nosync"},             {inaccessiblemem_or_argmemonly, "inaccessiblemem_or_argmemonly"},
+	};
+}
+
+namespace FastmathMap {
+	using enum LL2W::Fastmath;
+	std::unordered_map<LL2W::Fastmath, std::string> map{
+		{Nnan, "nnan"}, {Ninf, "ninf"}, {Nsz, "nsz"}, {Reassoc, "reassoc"}, {Contract, "contract"}, {Afn, "afn"}, {Arcp, "arcp"}, {Fast, "fast"},
+	};
+}
+
+namespace OrderingMap {
+	using enum LL2W::Ordering;
+	std::unordered_map<LL2W::Ordering, std::string> map{
+		{None, "none"}, {Unordered, "unordered"}, {Monotonic, "monotonic"}, {Acquire, "acquire"}, {Release, "release"}, {AcqRel, "acqrel"}, {SeqCst, "seqcst"},
+	};
+}
+
+namespace ConversionMap {
+	using enum LL2W::Conversion;
+	std::unordered_map<LL2W::Conversion, std::string> map{
+		{None, "none"}, {Trunc, "trunc"}, {Zext, "zext"}, {Sext, "sext"}, {Fptrunc, "fptrunc"}, {Fpext, "fpext"}, {Fptoui, "fptoui"}, {Fptosi, "fptosi"},
+		{Uitofp, "uitofp"}, {Sitofp, "sitofp"}, {Ptrtoint, "ptrtoint"}, {Inttoptr, "inttoptr"}, {Bitcast, "bitcast"}, {Addrspacecast, "addrspacecast"},
+	};
+}
+
+namespace QueryTypeMap {
+	using enum LL2W::QueryType;
+	std::unordered_map<LL2W::QueryType, std::string> map{
+		{Memory, "mem"},
+	};
+}
+
+namespace LogicTypeMaps {
+	using enum LL2W::LogicType;
+
+	std::unordered_map<LL2W::LogicType, std::string> map{
+		{And, "and"}, {Or, "or"}, {Xor, "xor"},
+	};
+
+	std::unordered_map<std::string, LL2W::LogicType> inv_map{
+		{"and", And}, {"or", Or}, {"xor", Xor},
+	};
+}
+
+namespace TailCallKindMap {
+	using enum LL2W::TailCallKind;
+	std::unordered_map<LL2W::TailCallKind, std::string> map{
+		{None, "none"}, {Tail, "tail"}, {MustTail, "musttail"}, {NoTail, "notail"},
+	};
+}
+
+namespace IcmpCondMaps {
+	using enum LL2W::IcmpCond;
 
 #ifdef USE_SUBSCRIPTS
 #define U(s) s "ᵤ"
@@ -110,61 +145,78 @@ namespace LL2W {
 #define S(s) s "s"
 #define X(s) s "x"
 #endif
-
-	std::unordered_map<IcmpCond, std::string> cond_op_map_with_sign {
-		{IcmpCond::Eq, "=="}, {IcmpCond::Ne, "!="},
-		{IcmpCond::Ugt, U(">")}, {IcmpCond::Uge, U(">=")}, {IcmpCond::Ult, U("<")}, {IcmpCond::Ule, U("<=")},
-		{IcmpCond::Sgt, S(">")}, {IcmpCond::Sge, S(">=")}, {IcmpCond::Slt, S("<")}, {IcmpCond::Sle, S("<=")},
-		{IcmpCond::Xgt, X(">")}, {IcmpCond::Xge, X(">=")}, {IcmpCond::Xlt, X("<")}, {IcmpCond::Xle, X("<=")}};
-
+	std::unordered_map<LL2W::IcmpCond, std::string> map_with_sign {
+		{Eq, "=="}, {Ne, "!="},
+		{Ugt, U(">")}, {Uge, U(">=")}, {Ult, U("<")}, {Ule, U("<=")},
+		{Sgt, S(">")}, {Sge, S(">=")}, {Slt, S("<")}, {Sle, S("<=")},
+		{Xgt, X(">")}, {Xge, X(">=")}, {Xlt, X("<")}, {Xle, X("<=")},
+	};
 #undef X
 #undef S
 #undef U
 
-	std::unordered_map<std::string, IcmpCond> cond_inv_map {
-		{ "eq", IcmpCond::Eq},  { "ne", IcmpCond::Ne},  {"ugt", IcmpCond::Ugt}, {"uge", IcmpCond::Uge},
-		{"ult", IcmpCond::Ult}, {"ule", IcmpCond::Ule}, {"sgt", IcmpCond::Sgt}, {"sge", IcmpCond::Sge},
-		{"slt", IcmpCond::Slt}, {"sle", IcmpCond::Sle}};
+	std::unordered_map<std::string, LL2W::IcmpCond> inv_map{
+		{"eq", Eq}, {"ne", Ne}, {"ugt", Ugt}, {"uge", Uge}, {"ult", Ult}, {"ule", Ule}, {"sgt", Sgt}, {"sge", Sge}, {"slt", Slt}, {"sle", Sle},
+	};
 
-	std::unordered_map<IcmpCond, IcmpCond> cond_rev_map {
-		{IcmpCond::Eq,  IcmpCond::Eq},  {IcmpCond::Ne,  IcmpCond::Ne},  {IcmpCond::Ugt, IcmpCond::Ult},
-		{IcmpCond::Uge, IcmpCond::Ule}, {IcmpCond::Ult, IcmpCond::Ugt}, {IcmpCond::Ule, IcmpCond::Uge},
-		{IcmpCond::Sgt, IcmpCond::Slt}, {IcmpCond::Sge, IcmpCond::Sle}, {IcmpCond::Slt, IcmpCond::Sgt},
-		{IcmpCond::Sle, IcmpCond::Sge}, {IcmpCond::Xge, IcmpCond::Xle}, {IcmpCond::Xgt, IcmpCond::Xlt},
-		{IcmpCond::Xlt, IcmpCond::Xgt}, {IcmpCond::Xle, IcmpCond::Xge}};
+	std::unordered_map<LL2W::IcmpCond, LL2W::IcmpCond> rev_map{
+		{Eq, Eq}, {Ne, Ne}, {Ugt, Ult}, {Uge, Ule}, {Ult, Ugt}, {Ule, Uge}, {Sgt, Slt}, {Sge, Sle}, {Slt, Sgt}, {Sle, Sge}, {Xge, Xle}, {Xgt, Xlt}, {Xlt, Xgt}, {Xle, Xge},
+	};
 
-	std::unordered_map<Conversion, std::string> conversion_map {
-		{Conversion::None,    "none"},    {Conversion::Trunc,    "trunc"},    {Conversion::Zext,     "zext"},
-		{Conversion::Sext,    "sext"},    {Conversion::Fptrunc,  "fptrunc"},  {Conversion::Fpext,    "fpext"},
-		{Conversion::Fptoui,  "fptoui"},  {Conversion::Fptosi,   "fptosi"},   {Conversion::Uitofp,   "uitofp"},
-		{Conversion::Sitofp,  "sitofp"},  {Conversion::Ptrtoint, "ptrtoint"}, {Conversion::Inttoptr, "inttoptr"},
-		{Conversion::Bitcast, "bitcast"}, {Conversion::Addrspacecast, "addrspacecast"}};
+	std::unordered_map<LL2W::IcmpCond, std::string> map{
+		{Eq, "eq"}, {Ne, "ne"}, {Ugt, "ugt"}, {Uge, "uge"}, {Ult, "ult"}, {Ule, "ule"}, {Sgt, "sgt"}, {Sge, "sge"}, {Slt, "slt"}, {Sle, "sle"},
+	};
 
-	std::unordered_map<QueryType, std::string> query_map {{QueryType::Memory, "mem"}};
+	std::unordered_map<LL2W::IcmpCond, std::string> op_map{
+		{Eq,  "=="}, {Ne,  "!="},
+		{Ugt, ">"},  {Uge, ">="}, {Ult, "<"}, {Ule, "<="},
+		{Sgt, ">"},  {Sge, ">="}, {Slt, "<"}, {Sle, "<="},
+		{Xgt, ">"},  {Xge, ">="}, {Xlt, "<"}, {Xle, "<="},
+	};
 
-	std::unordered_map<LogicType, std::string> logic_map {
-		{LogicType::And, "and"}, {LogicType::Or, "or"}, {LogicType::Xor, "xor"}};
+	std::unordered_set<LL2W::IcmpCond> signed_conds{Sgt, Sge, Sle, Slt};
 
-	std::unordered_map<std::string, LogicType> logic_inv_map {
-		{"and", LogicType::And}, {"or", LogicType::Or}, {"xor", LogicType::Xor}};
+	std::unordered_set<LL2W::IcmpCond> unsigned_conds{Ugt, Uge, Ule, Ult};
+}
 
-	std::unordered_set<IcmpCond> signed_conds {IcmpCond::Sgt, IcmpCond::Sge, IcmpCond::Sle, IcmpCond::Slt};
-
-	std::unordered_set<IcmpCond> unsigned_conds {IcmpCond::Ugt, IcmpCond::Uge, IcmpCond::Ule, IcmpCond::Ult};
+namespace LL2W {
+	const auto &type_map = TypeMap::map;
+	const auto &value_map = ValueMap::map;
+	const auto &linkage_map = LinkageMap::map;
+	const auto &preemption_map = PreemptionMap::map;
+	const auto &cconv_map = CConvMap::map;
+	const auto &retattr_map = RetAttrMap::map;
+	const auto &parattr_map = ParAttrMap::map;
+	const auto &fnattr_map = FnAttrMap::map;
+	const auto &fastmath_map = FastmathMap::map;
+	const auto &ordering_map = OrderingMap::map;
+	const auto &conversion_map = ConversionMap::map;
+	const auto &query_map = QueryTypeMap::map;
+	const auto &logic_map = LogicTypeMaps::map;
+	const auto &logic_inv_map = LogicTypeMaps::inv_map;
+	const auto &tail_call_kind_map = TailCallKindMap::map;
+	const auto &cond_inv_map = IcmpCondMaps::inv_map;
+	const auto &cond_rev_map = IcmpCondMaps::rev_map;
+	const auto &cond_map = IcmpCondMaps::map;
+	const auto &cond_op_map = IcmpCondMaps::op_map;
+	const auto &cond_op_map_with_sign = IcmpCondMaps::map_with_sign;
+	const auto &signed_conds = IcmpCondMaps::signed_conds;
+	const auto &unsigned_conds = IcmpCondMaps::unsigned_conds;
 
 	bool isSigned(IcmpCond cond) {
+		using enum IcmpCond;
 		switch (cond) {
-			case IcmpCond::Sge:
-			case IcmpCond::Sgt:
-			case IcmpCond::Slt:
-			case IcmpCond::Sle:
+			case Sge:
+			case Sgt:
+			case Slt:
+			case Sle:
 				return true;
-			case IcmpCond::Eq:
-			case IcmpCond::Ne:
-			case IcmpCond::Uge:
-			case IcmpCond::Ugt:
-			case IcmpCond::Ult:
-			case IcmpCond::Ule:
+			case Eq:
+			case Ne:
+			case Uge:
+			case Ugt:
+			case Ult:
+			case Ule:
 				return false;
 			default:
 				throw std::invalid_argument("Invalid IcmpCond in isSigned: " + std::to_string(int(cond)));

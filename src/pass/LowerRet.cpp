@@ -22,10 +22,10 @@ namespace LL2W::Passes {
 			if (!llvm) {
 				continue;
 			}
-			if (llvm->getNode()->nodeType() == NodeType::Unreachable) {
+			if (llvm->getNodeType() == NodeType::Unreachable) {
 				to_remove.push_back(instruction);
 			}
-			if (llvm->getNode()->nodeType() != NodeType::Ret) {
+			if (llvm->getNodeType() != NodeType::Ret) {
 				continue;
 			}
 

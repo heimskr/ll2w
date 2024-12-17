@@ -278,7 +278,7 @@ namespace LL2W::Passes {
 					if (middle_made) {
 						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
 						if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
-							auto type = parent_llvm->getNode()->nodeType();
+							auto type = parent_llvm->getNodeType();
 							if (type == NodeType::BrCond) {
 								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->getNode());
 								const std::string **cond_label =

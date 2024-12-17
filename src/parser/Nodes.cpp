@@ -1,7 +1,5 @@
-#include <iostream>
-#include <sstream>
-
 #include "compiler/Variable.h"
+#include "parser/EnumConversion.h"
 #include "parser/Lexer.h"
 #include "parser/Nodes.h"
 #include "parser/Parser.h"
@@ -9,6 +7,13 @@
 #include "parser/Util.h"
 #include "util/Deleter.h"
 #include "util/Util.h"
+
+#include <llvm/IR/FMF.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <iostream>
+#include <sstream>
 
 namespace LL2W {
 
@@ -137,8 +142,11 @@ namespace LL2W {
 
 // InstructionNode
 
-	InstructionNode::InstructionNode(const std::string *str): BaseNode(llvmParser, LLVM_INSTRUCTION, str) {}
-	InstructionNode::InstructionNode(): BaseNode(llvmParser, LLVM_INSTRUCTION, "") {}
+	InstructionNode::InstructionNode(const std::string *str):
+		BaseNode(llvmParser, LLVM_INSTRUCTION, str) {}
+
+	InstructionNode::InstructionNode():
+		BaseNode(llvmParser, LLVM_INSTRUCTION, "") {}
 
 	void InstructionNode::handleUnibangs(ASTNode *unibangs) {
 		for (const ASTNode *sub: *unibangs) {
@@ -149,6 +157,17 @@ namespace LL2W {
 			else if (sub->symbol == LLVMTOK_DBG)
 				debugIndex = sub->front()->atoi();
 		}
+	}
+
+	InstructionNode * InstructionNode::fromLLVM(llvm::Instruction *llvm) {
+		if (auto *call = llvm::dyn_cast<llvm::CallInst>(llvm)) {
+			return new CallNode(*call);
+		}
+
+		llvm::raw_os_ostream os(std::cerr);
+		llvm->print(os);
+		std::cerr << std::endl;
+		throw std::invalid_argument("Unhandled LLVM instruction");
 	}
 
 // Reader
@@ -295,16 +314,18 @@ namespace LL2W {
 		source = std::make_shared<Constant>(source_);
 		destination = std::make_shared<Constant>(destination_);
 		align = align_->atoi();
-		for (const std::pair<const Ordering, std::string> &pair: ordering_map)
+		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
 				break;
 			}
+		}
 
 		volatile_ = bool(volatile__);
 
-		if (syncscope_)
+		if (syncscope_) {
 			syncscope = StringSet::intern(syncscope_->extractName());
+		}
 
 		handleBangs(bangs);
 	}
@@ -534,38 +555,45 @@ namespace LL2W {
 
 // CallInvokeNode
 
-	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
-	                               ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants,
-	                               ASTNode *attribute_list, ASTNode *unibangs) {
-		Deleter deleter(unibangs, _result, _cconv, _retattrs, _addrspace, return_type, _args, function_name, _constants,
-			attribute_list);
+	CallInvokeNode::CallInvokeNode(const llvm::CallInst &llvm) {
+		llvm.getCallingConv();
+	}
+
+	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs) {
+		Deleter deleter(unibangs, _result, _cconv, _retattrs, _addrspace, return_type, _args, function_name, _constants, attribute_list);
 		handleUnibangs(unibangs);
 
-		if (_result)
+		if (_result) {
 			result = StringSet::intern(_result->extractName());
+		}
 
-		if (_cconv)
+		if (_cconv) {
 			cconv = _cconv->lexerInfo;
+		}
 
 		if (_retattrs) {
 			for (ASTNode *child: *_retattrs) {
 				const std::string &raname = *child->lexerInfo;
-				if (raname == "dereferenceable")
+				if (raname == "dereferenceable") {
 					dereferenceable = child->at(0)->atoi();
-				else
-					for (const std::pair<const RetAttr, std::string> &pair: retattr_map)
+				} else {
+					for (const std::pair<const RetAttr, std::string> &pair: retattr_map) {
 						if (raname == pair.second) {
 							retattrs.insert(pair.first);
 							break;
 						}
+					}
+				}
 			}
 		}
 
-		if (_addrspace)
+		if (_addrspace) {
 			addrspace = _addrspace->at(0)->atoi();
+		}
 
-		if (return_type)
+		if (return_type) {
 			returnType = getType(return_type);
+		}
 
 		if (_args) {
 			argumentsExplicit = true;
@@ -574,118 +602,147 @@ namespace LL2W {
 				argumentEllipsis = true;
 				typelist = _args->at(0);
 			} else if (_args->size() == 1) { // Either a typelist or an ellipsis is specified.
-				if (_args->at(0)->symbol == LLVMTOK_ELLIPSIS)
+				if (_args->at(0)->symbol == LLVMTOK_ELLIPSIS) {
 					argumentEllipsis = true;
-				else
+				} else {
 					typelist = _args->at(0);
+				}
 			}
-			if (typelist)
-				for (ASTNode *typenode: *typelist)
+			if (typelist) {
+				for (ASTNode *typenode: *typelist) {
 					argumentTypes.push_back(getType(typenode));
+				}
+			}
 		}
 
 		if (function_name) {
 			name = getValue(function_name);
-			if (!std::dynamic_pointer_cast<VariableValue>(name))
+			if (!std::dynamic_pointer_cast<VariableValue>(name)) {
 				throw std::runtime_error("Function name isn't a global or local variable");
+			}
 		}
 
-		if (_constants)
-			for (ASTNode *child: *_constants)
+		if (_constants) {
+			for (ASTNode *child: *_constants) {
 				constants.push_back(std::make_shared<Constant>(child));
+			}
+		}
 
-		if (attribute_list)
-			for (ASTNode *child: *attribute_list)
+		if (attribute_list) {
+			for (ASTNode *child: *attribute_list) {
 				attributeIndices.push_back(child->atoi());
+			}
+		}
 	}
 
 	std::vector<ValuePtr> CallInvokeNode::allValues() {
 		std::vector<ValuePtr> out;
 		out.reserve(constants.size() + 1);
-		for (ConstantPtr constant: constants)
+		for (ConstantPtr constant: constants) {
 			out.push_back(constant->value);
-		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
+		}
+		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name)) {
 			out.push_back(local);
+		}
 		return out;
 	}
 
 	std::vector<ValuePtr *> CallInvokeNode::allValuePointers() {
 		std::vector<ValuePtr *> out;
 		out.reserve(constants.size() + 1);
-		for (ConstantPtr &constant: constants)
+		for (ConstantPtr &constant: constants) {
 			out.push_back(&constant->value);
-		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name))
+		}
+		if (std::shared_ptr<LocalValue> local = std::dynamic_pointer_cast<LocalValue>(name)) {
 			out.push_back(&name);
+		}
 		return out;
 	}
 
 	std::vector<ConstantPtr *> CallInvokeNode::allConstantPointers() {
 		std::vector<ConstantPtr *> out;
-		for (ConstantPtr &ptr: constants)
+		for (ConstantPtr &ptr: constants) {
 			out.push_back(&ptr);
+		}
 		return out;
 	}
 
 	CallInvokeNode * CallInvokeNode::copyTo(CallInvokeNode &other) const {
 		other.constants.clear();
-		for (const auto &constant: constants)
-			if (constant)
+		for (const auto &constant: constants) {
+			if (constant) {
 				other.constants.push_back(constant->copy());
-			else
+			} else {
 				other.constants.push_back(nullptr);
+			}
+		}
 		other.argumentTypes.clear();
-		for (const auto &argument_type: argumentTypes)
-			if (argument_type)
+		for (const auto &argument_type: argumentTypes) {
+			if (argument_type) {
 				other.argumentTypes.push_back(argument_type->copy());
-			else
+			} else {
 				other.argumentTypes.push_back(nullptr);
+			}
+		}
 		return &other;
 	}
 
 // CallNode
 
-	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs,
-	                   ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant,
-	                   ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
-	                   CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant,
-	                                  _constants, attribute_list, unibangs) {
-		Deleter deleter(_tail);
-		if (_tail)
-			tail = _tail->lexerInfo;
-		getFastmath(fastmath, fastmath_flags);
-	}
+	CallNode::CallNode(const llvm::CallInst &llvm):
+		CallInvokeNode(llvm) {
+			tail = getTailCallKind(llvm.getTailCallKind());
+			fastmath = getFastmath(llvm.getFastMathFlags());
+		}
+
+	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
+	                   ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
+		CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant, _constants, attribute_list, unibangs) {
+			Deleter deleter(_tail);
+			if (_tail && _tail->lexerInfo) {
+				tail = getTailCallKind(*_tail->lexerInfo);
+			}
+			getFastmath(fastmath, fastmath_flags);
+		}
 
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
-		if (result)
+		if (result) {
 			out << getResult() << "\e[2m = ";
-		print(out, "\e[22;34m", tail, " ");
+		}
+		print(out, "\e[22;34m", tail_call_kind_map.at(tail), " ");
 		out << "\e[22;91mcall\e[39m" << fastmath;
-		if (!fastmath.empty())
+		if (!fastmath.empty()) {
 			out << "\e[2m .\e[22m";
+		}
 		print(out, " \e[34m", cconv, "\e[39;2m .\e[22m");
-		for (RetAttr attr: retattrs)
+		for (RetAttr attr: retattrs) {
 			out << " \e[34m" << retattr_map.at(attr) << "\e[39m";
+		}
 		print(out, " \e[34mdereferenceable\e[39;2m(\e[22m", dereferenceable, "\e[2m)\e[22m");
-		if (!retattrs.empty() || dereferenceable != -1)
+		if (!retattrs.empty() || dereferenceable != -1) {
 			out << " \e[2m.\e[22m";
+		}
 		print(out, " \e[34maddrspace\e[39;2m(\e[22m", addrspace, "\e[2m)\e[22m");
 		out << " " << *returnType;
 		if (argumentsExplicit) {
 			out << " \e[1;2m(\e[22m";
 			for (auto begin = argumentTypes.cbegin(), iter = begin, end = argumentTypes.cend(); iter != end; ++iter) {
-				if (iter != begin)
+				if (iter != begin) {
 					out << "\e[2m, \e[22m";
+				}
 				out << **iter;
 			}
-			if (argumentEllipsis)
+			if (argumentEllipsis) {
 				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[22m";
+			}
 			out << "\e[1;2m)\e[22m";
 		}
 		out << " " << *name << "\e[2m(\e[22m";
 		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
-			if (iter != begin)
+			if (iter != begin) {
 				out << "\e[2m,\e[22m ";
+			}
 			out << **iter;
 		}
 		out << "\e[2m)\e[22m";
