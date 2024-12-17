@@ -222,6 +222,10 @@ namespace LL2W {
 				case Shl:
 				case Mul:
 					return new BasicMathNode(*inst);
+				case And:
+				case Or:
+				case Xor:
+					return new LogicNode(*inst);
 				default:
 					break;
 			}
@@ -1367,6 +1371,13 @@ namespace LL2W {
 	}
 
 // LogicNode
+
+	LogicNode::LogicNode(const llvm::BinaryOperator &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		logicType = getLogicType(inst.getOpcode());
+		left = Constant::fromLLVM(*inst.getOperand(0));
+		right = Constant::fromLLVM(*inst.getOperand(1));
+	}
 
 	LogicNode::LogicNode(ASTNode *result_, ASTNode *logic_type, ASTNode *left_, ASTNode *right_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, logic_type, left_, right_);

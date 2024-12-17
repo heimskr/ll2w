@@ -27,4 +27,5 @@ namespace LL2W {
 	RetAttr getRetAttr(llvm::Attribute::AttrKind);
 	Ordering getOrdering(llvm::AtomicOrdering);
 	IcmpCond getIcmpCond(llvm::CmpInst::Predicate);
+	LogicType getLogicType(llvm::Instruction::BinaryOps);
 }

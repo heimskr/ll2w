@@ -45,7 +45,7 @@ namespace LL2W {
 	enum class Condition {Positive, Negative, Zero, Nonzero, None};
 	enum class PrintType {Dec, Bin, Hex, Char, Full};
 	enum class QueryType {Memory};
-	enum class LogicType {And, Or, Xor};
+	enum class LogicType {Invalid, And, Or, Xor};
 
 	extern const std::unordered_map<TypeType,     std::string> &type_map;
 	extern const std::unordered_map<ValueType,    std::string> &value_map;

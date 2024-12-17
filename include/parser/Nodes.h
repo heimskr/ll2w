@@ -479,10 +479,11 @@ namespace LL2W {
 	};
 
 	struct LogicNode: InstructionNode, Writer, Reader, Makeable<LogicNode> {
-		LogicType logicType;
+		LogicType logicType = LogicType::Invalid;
 		ConstantPtr left;
 		ConstantPtr right;
 
+		LogicNode(const llvm::BinaryOperator &);
 		LogicNode(ASTNode *result_, ASTNode *logic_type, ASTNode *left_, ASTNode *right_, ASTNode *unibangs);
 		LogicNode(const std::string *result_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_);
 		LogicNode(VariablePtr variable_, LogicType logic_type, ConstantPtr left_, ConstantPtr right_);

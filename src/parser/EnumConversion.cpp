@@ -365,4 +365,16 @@ namespace LL2W {
 				throw std::invalid_argument("Invalid icmp condition");
 		}
 	}
+
+	LogicType getLogicType(llvm::Instruction::BinaryOps type) {
+		using enum llvm::Instruction::BinaryOps;
+
+		switch (type) {
+			case And: return LogicType::And;
+			case Or: return LogicType::Or;
+			case Xor: return LogicType::Xor;
+			default:
+				throw std::invalid_argument("Invalid logic type");
+		}
+	}
 }
