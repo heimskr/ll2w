@@ -17,6 +17,7 @@
 namespace llvm {
 	class AllocaInst;
 	class BinaryOperator;
+	class BranchInst;
 	class CallInst;
 	class GetElementPtrInst;
 	class ICmpInst;
@@ -227,10 +228,13 @@ namespace LL2W {
 	};
 
 	struct BrUncondNode: InstructionNode {
-		const std::string *destination;
+		const std::string *destination = nullptr;
+
+		BrUncondNode(const llvm::BranchInst &);
 		BrUncondNode(const std::string *destination_): destination(destination_) {}
 		BrUncondNode(const std::string &destination_): BrUncondNode(StringSet::intern(destination_)) {}
 		BrUncondNode(ASTNode *node, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BrUncond; }
 		InstructionNode * copy() const override;
@@ -238,9 +242,12 @@ namespace LL2W {
 
 	struct BrCondNode: InstructionNode, Reader {
 		ConstantPtr condition;
-		const std::string *ifTrue, *ifFalse;
+		const std::string *ifTrue = nullptr;
+		const std::string *ifFalse = nullptr;
 
+		BrCondNode(const llvm::BranchInst &);
 		BrCondNode(ASTNode *constant, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::BrCond; }
 		std::vector<ValuePtr> allValues() override { return {condition->value}; }

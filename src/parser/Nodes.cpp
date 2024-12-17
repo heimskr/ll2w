@@ -193,6 +193,15 @@ namespace LL2W {
 			return new GetelementptrNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
+			if (inst->isConditional()) {
+				return new BrCondNode(*inst);
+			} else {
+				assert(inst->isUnconditional());
+				return new BrUncondNode(*inst);
+			}
+		}
+
 		if (auto *inst = llvm::dyn_cast<llvm::BinaryOperator>(llvm)) {
 			using enum llvm::Instruction::BinaryOps;
 			switch (inst->getOpcode()) {
@@ -594,6 +603,10 @@ namespace LL2W {
 
 // BrUncondNode
 
+	BrUncondNode::BrUncondNode(const llvm::BranchInst &inst) {
+		destination = StringSet::intern(getOperandName(*inst.getOperand(0)));
+	}
+
 	BrUncondNode::BrUncondNode(ASTNode *node, ASTNode *unibangs): BrUncondNode(node->lexerInfo) {
 		Deleter deleter(node, unibangs);
 		handleUnibangs(unibangs);
@@ -608,6 +621,13 @@ namespace LL2W {
 	}
 
 // BrCondNode
+
+	BrCondNode::BrCondNode(const llvm::BranchInst &inst) {
+		condition = Constant::fromLLVM(*inst.getCondition());
+		// Why are they backwards...?
+		ifFalse = StringSet::intern(getOperandName(*inst.getOperand(1)));
+		ifTrue = StringSet::intern(getOperandName(*inst.getOperand(2)));
+	}
 
 	BrCondNode::BrCondNode(ASTNode *constant, ASTNode *if_true, ASTNode *if_false, ASTNode *unibangs) {
 		Deleter deleter(unibangs, constant, if_true, if_false);
@@ -882,8 +902,9 @@ namespace LL2W {
 		alignstack = bool(_alignstack);
 		constraints = asm_constraints->lexerInfo;
 
-		if (_srcloc)
+		if (_srcloc) {
 			srcloc = _srcloc->atoi();
+		}
 	}
 
 	std::string AsmNode::debugExtra() const {
@@ -926,22 +947,24 @@ namespace LL2W {
 		if (argumentsExplicit) {
 			out << " \e[1;2m(\e[0m";
 			for (auto begin = argumentTypes.cbegin(), iter = begin, end = argumentTypes.cend(); iter != end; ++iter) {
-				if (iter != begin)
+				if (iter != begin) {
 					out << "\e[2m, \e[0m";
+				}
 				out << **iter;
 			}
-			if (argumentEllipsis)
+			if (argumentEllipsis) {
 				out << "\e[2m" << (argumentTypes.empty()? "" : ", ") << "...\e[0m";
+			}
 			out << "\e[1;2m)\e[0m";
 		}
 		out << " " << *name << "\e[2m(\e[0m";
 		for (auto begin = constants.begin(), iter = begin, end = constants.end(); iter != end; ++iter) {
-			if (iter != begin)
+			if (iter != begin) {
 				out << "\e[2m,\e[0m ";
+			}
 			out << **iter;
 		}
-		out << "\e[2m)\e[0;91m to \e[34mlabel %" << *normalLabel << " \e[91munwind\e[34m label %" << *exceptionLabel
-		    << "\e[0m";
+		out << "\e[2m)\e[0;91m to \e[34mlabel %" << *normalLabel << " \e[91munwind\e[34m label %" << *exceptionLabel << "\e[0m";
 		return out.str();
 	}
 
