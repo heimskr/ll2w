@@ -3,6 +3,7 @@
 #include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
+#include <llvm/IR/User.h>
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <algorithm>
@@ -310,4 +311,14 @@ namespace LL2W {
 		item.print(raw);
 		(raw << "\n").flush();
 	}
+
+	template <typename T>
+	std::string getOperandName(const T &item) {
+		std::string name;
+		llvm::raw_string_ostream os(name);
+		item.printAsOperand(os, false);
+		return name;
+	}
+
+	void dump(const llvm::User::const_op_range &);
 }

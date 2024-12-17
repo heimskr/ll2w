@@ -10,25 +10,12 @@ namespace LL2W {
 		Getelementptr, Ret, Landingpad, Conversion, BasicMath, Phi, Simple, Div, Rem, Logic, Shr, FMath, Switch,
 		ExtractValue, InsertValue, Resume, Unreachable, Asm, Freeze, DbgDeclare, Atomicrmw,
 	};
-
 	enum class TailCallKind {None, Tail, MustTail, NoTail};
-
 	enum class Signedness: char {Unknown = 'i', Unsigned = 'u', Signed = 's'};
-
 	enum class Role {Source, Destination};
-
-	enum class TypeType {
-		None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any,
-	};
-
-	enum class ValueType {
-		Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer,
-		Undef, Icmp, Logic, Poison
-	};
-
-	enum class Linkage {
-		Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External,
-		Common, Internal};
+	enum class TypeType {None, Void, Int, Array, Vector, Float, Pointer, Function, Struct, GlobalTemporary, Opaque, Any};
+	enum class ValueType {Double, Int, Null, Vector, Bool, Local, Global, Getelementptr, Void, Struct, Array, CString, Zeroinitializer, Undef, Icmp, Logic, Poison};
+	enum class Linkage {Default, Private, Appending, AvailableExternally, Weak, Linkonce, ExternWeak, LinkonceOdr, WeakOdr, External, Common, Internal};
 	enum class Preemption {Default, DsoPreemptable, DsoLocal};
 	enum class Visibility {Default, Hidden, Protected};
 	enum class DllStorageClass {None, Import, Export};
@@ -41,9 +28,7 @@ namespace LL2W {
 		cc79, cc80, arm_aapcs_vfpcc, intel_ocl_bicc, x86_64_sysvcc, x86_fastcallcc, x86_thiscallcc, arm_aapcscc,
 		spir_kernel};
 	enum class RetAttr {Zeroext, Signext, Inreg, Noalias, Nonnull};
-	enum class ParAttr {
-		Byval, Inalloca, Sret, Nocapture, Readonly, Swiftself, Swifterror, Immarg, Nonnull, Returned, Nest, Nofree,
-		Zeroext, Signext, Inreg, Noalias, Writeonly, Readnone};
+	enum class ParAttr {Byval, Inalloca, Sret, Nocapture, Readonly, Swiftself, Swifterror, Immarg, Nonnull, Returned, Nest, Nofree, Zeroext, Signext, Inreg, Noalias, Writeonly, Readnone};
 	enum class Deref {Default, Dereferenceable, DereferenceableOrNull};
 	enum class FnAttr {
 		alwaysinline, noredzone, convergent, norecurse, inlinehint, inaccessiblemem_or_argmemonly, sspreq,
@@ -56,9 +41,7 @@ namespace LL2W {
 	enum class StructShape {Default, Opaque, Packed};
 	enum class Ordering {None, Unordered, Monotonic, Acquire, Release, AcqRel, SeqCst};
 	enum class IcmpCond {Eq, Ne, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle, Xgt, Xge, Xlt, Xle};
-	enum class Conversion {
-		None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast,
-		Addrspacecast};
+	enum class Conversion {None, Trunc, Zext, Sext, Fptrunc, Fpext, Fptoui, Fptosi, Uitofp, Sitofp, Ptrtoint, Inttoptr, Bitcast, Addrspacecast};
 	enum class Condition {Positive, Negative, Zero, Nonzero, None};
 	enum class PrintType {Dec, Bin, Hex, Char, Full};
 	enum class QueryType {Memory};

@@ -155,6 +155,14 @@ namespace LL2W::Util {
 	}
 }
 
+namespace LL2W {
+	void dump(const llvm::User::const_op_range &range) {
+		for (const auto &operand: range) {
+			dump(*operand);
+		}
+	}
+}
+
 int strnatcmp(const std::string &left, const std::string &right) {
 	return strnatcmp(left.c_str(), right.c_str());
 }

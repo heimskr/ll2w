@@ -180,6 +180,10 @@ namespace LL2W {
 			return new LoadNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::PtrToIntInst>(llvm)) {
+			return new ConversionNode(*inst);
+		}
+
 		llvm::raw_os_ostream os(std::cerr);
 		llvm->print(os);
 		std::cerr << std::endl;
@@ -266,6 +270,7 @@ namespace LL2W {
 // AllocaNode
 
 	AllocaNode::AllocaNode(const llvm::AllocaInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
 		inalloca = inst.isUsedWithInAlloca();
 		const llvm::Value *array_size = inst.getArraySize();
 		assert(array_size != nullptr);
@@ -415,6 +420,7 @@ namespace LL2W {
 // LoadNode
 
 	LoadNode::LoadNode(const llvm::LoadInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
 		volatile_ = inst.isVolatile();
 		atomic = inst.isAtomic();
 		type = Type::fromLLVM(*inst.getType());
@@ -1088,6 +1094,14 @@ namespace LL2W {
 	}
 
 // ConversionNode
+
+	ConversionNode::ConversionNode(const llvm::PtrToIntInst &inst):
+		conversionType(Conversion::Ptrtoint) {
+			result = StringSet::intern(getOperandName(inst));
+			from = Type::fromLLVM(*inst.getOperand(0)->getType());
+			to = Type::fromLLVM(*inst.getType());
+			value = Constant::fromLLVM(*inst.getOperand(0))->value;
+		}
 
 	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
 	                               ASTNode *unibangs) {

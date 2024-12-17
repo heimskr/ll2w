@@ -19,6 +19,7 @@ namespace llvm {
 	class CallInst;
 	class Instruction;
 	class LoadInst;
+	class PtrToIntInst;
 	class ReturnInst;
 	class StoreInst;
 }
@@ -381,6 +382,8 @@ namespace LL2W {
 		TypePtr to;
 		ValuePtr value;
 		Conversion conversionType;
+
+		ConversionNode(const llvm::PtrToIntInst &);
 		ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
 		               ASTNode *unibangs);
 		std::string debugExtra() const override;
