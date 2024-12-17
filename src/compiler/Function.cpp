@@ -233,7 +233,7 @@ namespace LL2W {
 
 			std::list<InstructionPtr> instructions;
 			for (llvm::Instruction &instruction: block) {
-				instructions.push_back(std::make_shared<LLVMInstruction>(&instruction, ++instruction_index));
+				instructions.push_back(std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true));
 				linearInstructions.push_back(instructions.back());
 			}
 

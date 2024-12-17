@@ -124,7 +124,7 @@ namespace LL2W {
 
 	struct LocalValue: VariableValue, Makeable<LocalValue> {
 		std::shared_ptr<Variable> variable = nullptr;
-		LocalValue(const std::string *name): VariableValue(name) {}
+		LocalValue(const std::string *name);
 		LocalValue(const std::string &name): LocalValue(StringSet::intern(name)) {}
 		LocalValue(std::shared_ptr<Variable>);
 		LocalValue(const ASTNode *node);

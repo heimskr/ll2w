@@ -211,4 +211,121 @@ namespace LL2W {
 				throw std::invalid_argument("Invalid calling convention");
 		}
 	}
+
+	CConv getCConv(std::string_view cconv) {
+		using enum CConv;
+
+		if (cconv == "ccc") {
+			return ccc;
+		}
+
+		if (cconv == "cxx_fast_tlscc") {
+			return cxx_fast_tlscc;
+		}
+
+		if (cconv == "fastcc") {
+			return fastcc;
+		}
+
+		if (cconv == "ghccc") {
+			return ghccc;
+		}
+
+		if (cconv == "swiftcc") {
+			return swiftcc;
+		}
+
+		if (cconv == "preserve_allcc") {
+			return preserve_allcc;
+		}
+
+		if (cconv == "preserve_mostcc") {
+			return preserve_mostcc;
+		}
+
+		if (cconv == "x86_vectorcallcc") {
+			return x86_vectorcallcc;
+		}
+
+		if (cconv == "arm_apcscc") {
+			return arm_apcscc;
+		}
+
+		if (cconv == "coldcc") {
+			return coldcc;
+		}
+
+		if (cconv == "ptx_device") {
+			return ptx_device;
+		}
+
+		if (cconv == "x86_stdcallcc") {
+			return x86_stdcallcc;
+		}
+
+		if (cconv == "anyregcc") {
+			return anyregcc;
+		}
+
+		if (cconv == "msp430_intrcc") {
+			return msp430_intrcc;
+		}
+
+		if (cconv == "ptx_kernel") {
+			return ptx_kernel;
+		}
+
+		if (cconv == "spir_func") {
+			return spir_func;
+		}
+
+		if (cconv == "x86_64_win64cc") {
+			return x86_64_win64cc;
+		}
+
+		if (cconv == "arm_aapcs_vfpcc") {
+			return arm_aapcs_vfpcc;
+		}
+
+		if (cconv == "intel_ocl_bicc") {
+			return intel_ocl_bicc;
+		}
+
+		if (cconv == "x86_64_sysvcc") {
+			return x86_64_sysvcc;
+		}
+
+		if (cconv == "x86_fastcallcc") {
+			return x86_fastcallcc;
+		}
+
+		if (cconv == "x86_thiscallcc") {
+			return x86_thiscallcc;
+		}
+
+		if (cconv == "arm_aapcscc") {
+			return arm_aapcscc;
+		}
+
+		if (cconv == "spir_kernel") {
+			return spir_kernel;
+		}
+
+		throw std::invalid_argument("Invalid calling convention");
+	}
+
+	RetAttr getRetAttr(llvm::Attribute::AttrKind kind) {
+		using enum RetAttr;
+		using enum llvm::Attribute::AttrKind;
+
+		switch (kind) {
+			case ZExt: return Zeroext;
+			case SExt: return Signext;
+			case InReg: return Inreg;
+			case NoAlias: return Noalias;
+			case NonNull: return Nonnull;
+			default:
+				throw std::invalid_argument("Invalid return attribute");
+		}
+	}
 }

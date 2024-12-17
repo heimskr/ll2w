@@ -2,6 +2,7 @@
 
 #include "parser/Enums.h"
 
+#include <llvm/IR/Attributes.h>
 #include <llvm/IR/GlobalValue.h>
 #include <llvm/IR/Instructions.h>
 
@@ -22,4 +23,6 @@ namespace LL2W {
 	TailCallKind getTailCallKind(std::string_view);
 	std::unordered_set<Fastmath> getFastmath(llvm::FastMathFlags);
 	CConv getCConv(unsigned);
+	CConv getCConv(std::string_view);
+	RetAttr getRetAttr(llvm::Attribute::AttrKind);
 }

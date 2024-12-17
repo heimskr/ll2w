@@ -17,6 +17,7 @@
 namespace llvm {
 	class CallInst;
 	class Instruction;
+	class ReturnInst;
 }
 
 namespace LL2W {
@@ -237,7 +238,7 @@ namespace LL2W {
 			               ASTNode *attribute_list, ASTNode *unibangs);
 
 		public:
-			const std::string *cconv = nullptr;
+			CConv cconv = CConv::ccc;
 			std::unordered_set<RetAttr> retattrs;
 			std::vector<ConstantPtr> constants;
 			std::vector<int> attributeIndices;
@@ -328,6 +329,7 @@ namespace LL2W {
 		TypePtr type;
 		ValuePtr value;
 
+		RetNode(const llvm::ReturnInst &);
 		RetNode(ASTNode *unibangs);
 		RetNode(ASTNode *type_, ASTNode *value_, ASTNode *unibangs);
 		std::string debugExtra() const override;

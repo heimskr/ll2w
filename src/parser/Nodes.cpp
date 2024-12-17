@@ -164,6 +164,10 @@ namespace LL2W {
 			return new CallNode(*call);
 		}
 
+		if (auto *ret = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
+			return new RetNode(*ret);
+		}
+
 		llvm::raw_os_ostream os(std::cerr);
 		llvm->print(os);
 		std::cerr << std::endl;
@@ -556,7 +560,43 @@ namespace LL2W {
 // CallInvokeNode
 
 	CallInvokeNode::CallInvokeNode(const llvm::CallInst &llvm) {
-		llvm.getCallingConv();
+		cconv = getCConv(llvm.getCallingConv());
+
+		for (const auto &attr_list: llvm.getAttributes()) {
+			for (const auto &attr: attr_list) {
+				const llvm::Attribute::AttrKind kind = attr.getKindAsEnum();
+				if (llvm.hasRetAttr(kind)) {
+					retattrs.insert(getRetAttr(kind));
+				}
+			}
+		}
+
+		for (unsigned i = 0, max = llvm.getNumOperands(); i < max; ++i) {
+			llvm::Value *operand = llvm.getOperand(i);
+			if (i + 1 == max) {
+				std::string name_string;
+				llvm::raw_string_ostream os(name_string);
+				operand->printAsOperand(os, false);
+
+				if (name_string.empty()) {
+					throw std::runtime_error("Callee operand name is empty");
+				}
+
+				if (name_string[0] == '@') {
+					name = std::make_shared<GlobalValue>(name_string);
+				} else if (name_string[0] == '%') {
+					name = std::make_shared<LocalValue>(name_string.substr(1));
+				} else {
+					throw std::runtime_error("Invalid callee operand name");
+				}
+			} else {
+				constants.push_back(Constant::fromLLVM(*operand));
+			}
+		}
+
+		llvm::FunctionType *function_type = llvm.getFunctionType();
+		returnType = Type::fromLLVM(*function_type->getReturnType());
+		argumentEllipsis = function_type->isVarArg();
 	}
 
 	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs) {
@@ -568,7 +608,7 @@ namespace LL2W {
 		}
 
 		if (_cconv) {
-			cconv = _cconv->lexerInfo;
+			cconv = getCConv(*_cconv->lexerInfo);
 		}
 
 		if (_retattrs) {
@@ -715,7 +755,7 @@ namespace LL2W {
 		if (!fastmath.empty()) {
 			out << "\e[2m .\e[22m";
 		}
-		print(out, " \e[34m", cconv, "\e[39;2m .\e[22m");
+		print(out, " \e[34m", cconv_map.at(cconv), "\e[39;2m .\e[22m");
 		for (RetAttr attr: retattrs) {
 			out << " \e[34m" << retattr_map.at(attr) << "\e[39m";
 		}
@@ -799,7 +839,7 @@ namespace LL2W {
 		if (result)
 			out << getResult() << "\e[2m = ";
 		out << "\e[0;91minvoke\e[0m";
-		print(out, " \e[34m", cconv, "\e[0;2m .\e[0m");
+		print(out, " \e[34m", cconv_map.at(cconv), "\e[0;2m .\e[0m");
 		for (RetAttr attr: retattrs)
 			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
 		if (dereferenceable != -1)
@@ -902,6 +942,10 @@ namespace LL2W {
 	}
 
 // RetNode
+
+	RetNode::RetNode(const llvm::ReturnInst &llvm) {
+
+	}
 
 	RetNode::RetNode(ASTNode *unibangs): type(std::make_shared<VoidType>()), value(std::make_shared<VoidValue>()) {
 		Deleter deleter(unibangs);

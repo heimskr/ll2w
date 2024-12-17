@@ -93,12 +93,14 @@ namespace LL2W {
 		return out.str();
 	}
 
+	LocalValue::LocalValue(const std::string *name):
+		VariableValue(name->at(0) == '%'? StringSet::intern(name->substr(1)) : name) {}
+
 	LocalValue::LocalValue(VariablePtr variable_):
 		VariableValue(variable_->id), variable(std::move(variable_)) {}
 
-	LocalValue::LocalValue(const ASTNode *node): VariableValue(nullptr) {
-		name = node->lexerInfo->at(0) == '%'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
-	}
+	LocalValue::LocalValue(const ASTNode *node):
+		LocalValue(node->lexerInfo) {}
 
 	LocalValue::operator std::string() {
 		return "\e[32m" + (variable? std::string(*variable) : "%" + *name) + "\e[39m";

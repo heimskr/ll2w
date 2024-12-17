@@ -452,7 +452,7 @@ namespace LL2W {
 
 	NodeType LLVMInstruction::getNodeType() const {
 		if (!isFromLLVM()) {
-			return getNodeType();
+			return getNode()->nodeType();
 		}
 
 		llvm::Instruction *llvm = getLLVM();
