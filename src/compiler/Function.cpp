@@ -220,7 +220,7 @@ namespace LL2W {
 	void Function::extractBlocksLLVM() {
 		assert(llvmFunction != nullptr);
 
-		info() << "Function: " << *name << ". " << llvmFunction->size() << "\n";
+		info() << "Function: " << *name << '\n';
 		std::vector<const std::string *> preds;
 		int block_index = -1;
 		int instruction_index = -1;

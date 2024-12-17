@@ -542,16 +542,17 @@ namespace LL2W {
 	}
 
 	int StructType::alignment() const {
-		if (!node) {
+		if (!node && !types) {
 			// This is likely a named struct rather than a literal struct.
 			return knownStructs.at(barename())->alignment();
 		}
 
 		int largest = 0;
-		for (const TypePtr &type: node->types) {
+		for (const TypePtr &type: types.value()) {
 			const int subalignment = type->alignment();
-			if (largest < subalignment)
+			if (largest < subalignment) {
 				largest = subalignment;
+			}
 		}
 		return largest;
 	}

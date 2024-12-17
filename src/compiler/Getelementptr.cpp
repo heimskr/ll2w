@@ -51,8 +51,9 @@ namespace LL2W::Getelementptr {
 		// at the beginning of the insert functions.
 
 		if (indices.empty()) {
-			if (out_type)
+			if (out_type) {
 				*out_type = PointerType::make(type->copy());
+			}
 			return;
 		}
 
@@ -67,27 +68,29 @@ namespace LL2W::Getelementptr {
 				if (std::holds_alternative<long>(front)) {
 					const long offset = std::get<long>(front) * subbytes;
 					InstructionPtr add;
-					if (Util::outOfRange(offset))
+
+					if (Util::outOfRange(offset)) {
 						add = AddRInstruction::make(out_var, function.get64(instruction, offset), out_var);
-					else if (offset != 0)
+					} else if (offset != 0) {
 						add = AddIInstruction::make(out_var, int(offset), out_var);
-					if (add)
+					}
+
+					if (add) {
 						function.insertBefore(instruction, add)->setDebug(*instruction, true);
+					}
 				} else {
 					VariablePtr m8 = function.mx(8, instruction);
-					function.insertBefore(instruction, MultIInstruction::make(function.getVariable(
-						std::get<const std::string *>(front), false), int(subbytes)))->setDebug(*instruction, true);
-					function.insertBefore(instruction, MoveInstruction::make(function.lo(instruction), m8))
-						->setDebug(*instruction, true);
-					function.insertBefore(instruction, AddRInstruction::make(out_var, m8, out_var))
-						->setDebug(*instruction, true);
+					function.insertBefore(instruction, MultIInstruction::make(function.getVariable(std::get<const std::string *>(front), false), int(subbytes)))->setDebug(*instruction, true);
+					function.insertBefore(instruction, MoveInstruction::make(function.lo(instruction), m8))->setDebug(*instruction, true);
+					function.insertBefore(instruction, AddRInstruction::make(out_var, m8, out_var))->setDebug(*instruction, true);
 				}
 				insert_mutating(function, subtype, indices, instruction, out_var, out_type);
 				break;
 			}
 			case TypeType::Struct: {
-				if (!std::holds_alternative<long>(front))
+				if (!std::holds_alternative<long>(front)) {
 					throw std::runtime_error("Unable to index a struct with a pvar except in the first position");
+				}
 				std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
 				std::shared_ptr<StructNode> snode = stype->node;
 				if (!snode) {
@@ -97,18 +100,17 @@ namespace LL2W::Getelementptr {
 				const long index = std::get<long>(front);
 				const long offset = Util::updiv(PaddedStructs::getOffset(stype, index), 8);
 				// Too lazy to handle overflows here.
-				if (Util::outOfRange(offset))
-					warn() << "PaddedStructs offset " << offset << " is out of the integer range. Incorrect code will "
-					          "be produced.\n";
-				if (offset != 0)
-					function.insertBefore(instruction, AddIInstruction::make(out_var, int(offset), out_var))
-						->setDebug(*instruction, true);
+				if (Util::outOfRange(offset)) {
+					warn() << "PaddedStructs offset " << offset << " is out of the integer range. Incorrect code will be produced.\n";
+				}
+				if (offset != 0) {
+					function.insertBefore(instruction, AddIInstruction::make(out_var, int(offset), out_var))->setDebug(*instruction, true);
+				}
 				insert_mutating(function, snode->types.at(index), indices, instruction, out_var, out_type);
 				break;
 			}
 			default:
-				throw TypeError("Getelementptr::insert encountered an invalid type: " + std::string(*type) + " (" +
-					type_map.at(type->typeType()) + ")", type);
+				throw TypeError("Getelementptr::insert encountered an invalid type: " + std::string(*type) + " (" + type_map.at(type->typeType()) + ")", type);
 		}
 	}
 
