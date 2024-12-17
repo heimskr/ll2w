@@ -73,7 +73,9 @@ namespace LL2W {
 		}
 
 		for (llvm::Function &function: *llvmModule) {
-			functions.emplace(function.getName().str(), new Function(*this, &function)); // TODO: memleak
+			if (function.getInstructionCount() > 0) {
+				functions.emplace(function.getName().str(), new Function(*this, &function)); // TODO: memleak
+			}
 		}
 	}
 

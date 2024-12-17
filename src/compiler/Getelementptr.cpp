@@ -32,15 +32,13 @@ namespace LL2W::Getelementptr {
 			}
 			case TypeType::Struct: {
 				std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
-				std::shared_ptr<StructNode> snode = stype->node;
-				if (!snode) {
+				if (!stype->types) {
 					stype = StructType::knownStructs.at(stype->barename());
-					snode = stype->node;
 				}
-				return PaddedStructs::getOffset(stype, front)
-					+ compute_mutating(snode->types.at(front), indices, out_type);
+				return PaddedStructs::getOffset(stype, front) + compute_mutating(stype->types.value().at(front), indices, out_type);
 			}
-			default: throw TypeError("Getelementptr::compute encountered an invalid type: " + std::string(*type), type);
+			default:
+				throw TypeError("Getelementptr::compute encountered an invalid type: " + std::string(*type), type);
 		}
 	}
 

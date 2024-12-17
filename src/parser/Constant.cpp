@@ -187,7 +187,9 @@ namespace LL2W {
 					llvm::ConstantInt &decimal = llvm::cast<llvm::ConstantInt>(*expr_constant->getOperand(i));
 					decimals.emplace_back(decimal.getBitWidth(), static_cast<long>(decimal.getZExtValue()));
 				}
-				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, PointerType::makeOpaque(), Type::fromLLVM(*base->getType()), Constant::fromLLVM(*base)->value, std::move(decimals));
+				auto source_type = Type::fromLLVM(*llvm::cast<llvm::GetElementPtrInst>(expr_constant->getAsInstruction())->getSourceElementType());
+				auto pointer_type = PointerType::make(source_type);
+				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, std::move(pointer_type), std::move(source_type), Constant::fromLLVM(*base)->value, std::move(decimals));
 				return out;
 			}
 
