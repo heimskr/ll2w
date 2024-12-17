@@ -356,6 +356,7 @@ namespace LL2W {
 
 	AllocaNode::AllocaNode(const llvm::AllocaInst &inst) {
 		result = StringSet::intern(getOperandName(inst));
+		type = Type::fromLLVM(*inst.getType());
 		inalloca = inst.isUsedWithInAlloca();
 		const llvm::Value *array_size = inst.getArraySize();
 		assert(array_size != nullptr);
