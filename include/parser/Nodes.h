@@ -27,6 +27,7 @@ namespace llvm {
 	class PtrToIntInst;
 	class ReturnInst;
 	class StoreInst;
+	class SwitchInst;
 }
 
 namespace LL2W {
@@ -521,9 +522,12 @@ namespace LL2W {
 	struct SwitchNode: InstructionNode, Reader {
 		TypePtr type;
 		ValuePtr value;
-		const std::string *label;
+		const std::string *label = nullptr;
 		std::vector<std::tuple<TypePtr, ValuePtr, const std::string *>> table;
+
+		SwitchNode(const llvm::SwitchInst &);
 		SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::Switch; }
 		std::vector<ValuePtr> allValues() override { return {value}; }

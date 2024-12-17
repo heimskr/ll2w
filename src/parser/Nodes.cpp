@@ -193,6 +193,14 @@ namespace LL2W {
 			return new GetelementptrNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::PHINode>(llvm)) {
+			return new PhiNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::SwitchInst>(llvm)) {
+			return new SwitchNode(*inst);
+		}
+
 		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
 			if (inst->isConditional()) {
 				return new BrCondNode(*inst);
@@ -200,10 +208,6 @@ namespace LL2W {
 				assert(inst->isUnconditional());
 				return new BrUncondNode(*inst);
 			}
-		}
-
-		if (auto *inst = llvm::dyn_cast<llvm::PHINode>(llvm)) {
-			return new PhiNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::BinaryOperator>(llvm)) {
@@ -989,10 +993,13 @@ namespace LL2W {
 		for (const auto &index: inst.indices()) {
 			if (const auto *constant_int = llvm::dyn_cast<llvm::ConstantInt>(index.get())) {
 				indices.emplace_back(constant_int->getBitWidth(), static_cast<long>(constant_int->getValue().getRawData()[0]), false, false);
+			} else if (const auto *value = llvm::dyn_cast<llvm::Value>(index.get())) {
+				// TODO: maybe substr(1)
+				indices.emplace_back(value->getType()->getIntegerBitWidth(), StringSet::intern(getOperandName(*value)), false, true);
 			} else {
 				error();
 				dump(*index);
-				throw std::runtime_error("Unhandled getelementptr index (probably a pvar)");
+				throw std::runtime_error("Unhandled getelementptr index");
 			}
 		}
 	}
@@ -1461,6 +1468,17 @@ namespace LL2W {
 
 // SwitchNode
 
+	SwitchNode::SwitchNode(const llvm::SwitchInst &inst) {
+		type = Type::fromLLVM(*inst.getType());
+		value = Constant::fromLLVM(*inst.getCondition())->value;
+		label = StringSet::intern(getOperandName(*inst.getDefaultDest()));
+		for (const auto &fork: inst.cases()) {
+			const llvm::Value *value = fork.getCaseValue();
+			const llvm::BasicBlock *block = fork.getCaseSuccessor();
+			table.emplace_back(Type::fromLLVM(*value->getType()), Constant::fromLLVM(*value)->value, StringSet::intern(getOperandName(*block)));
+		}
+	}
+
 	SwitchNode::SwitchNode(ASTNode *type_, ASTNode *value_, ASTNode *label_, ASTNode *table_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, type_, value_, label_, table_);
 		handleUnibangs(unibangs);
@@ -1468,8 +1486,9 @@ namespace LL2W {
 		value = getValue(value_);
 		label = label_->extracted();
 		table.reserve(table_->size());
-		for (ASTNode *comma: *table_)
+		for (ASTNode *comma: *table_) {
 			table.push_back({getType(comma->at(0)), getValue(comma->at(1)), comma->at(2)->extracted()});
+		}
 	}
 
 	std::string SwitchNode::debugExtra() const {

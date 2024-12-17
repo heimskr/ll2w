@@ -226,10 +226,7 @@ namespace LL2W {
 		int instruction_index = -1;
 
 		for (llvm::BasicBlock &block: *llvmFunction) {
-			std::string label;
-			llvm::raw_string_ostream os(label);
-			block.printAsOperand(os, false);
-			const std::string *interned = StringSet::intern(std::move(label));
+			const std::string *label = StringSet::intern(getOperandName(block));
 
 			std::list<InstructionPtr> instructions;
 			for (llvm::Instruction &instruction: block) {
@@ -237,8 +234,8 @@ namespace LL2W {
 				linearInstructions.push_back(instructions.back());
 			}
 
-			blocks.push_back(std::make_shared<BasicBlock>(interned, std::move(preds), std::move(instructions)));
-			info() << "Pushed " << *interned << ".\n";
+			blocks.push_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
+			info() << "Pushed block " << *label << ".\n";
 		}
 	}
 
