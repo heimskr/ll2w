@@ -1103,6 +1103,7 @@ namespace LL2W {
 #endif
 		Passes::lowerSwitch(*this);
 		// Passes::minimizeBlocks(*this, true);
+		Passes::makeCFG(*this);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1145,6 +1146,7 @@ namespace LL2W {
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		// Passes::minimizeBlocks(*this, true);
+		Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);

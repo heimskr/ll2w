@@ -4,7 +4,7 @@
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
 // #define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
-#define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+// #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -44,8 +44,10 @@ namespace LL2W {
 		ConstantPtr constant;
 		ValuePtr value;
 		ASTLocation location;
-		GlobalData(const ConstantPtr &constant_, const ValuePtr &value_, const ASTLocation &location_):
-			constant(constant_), value(value_), location(location_) {}
+		GlobalData(ConstantPtr constant, ValuePtr value, ASTLocation location):
+			constant(std::move(constant)),
+			value(std::move(value)),
+			location(std::move(location)) {}
 	};
 
 	Program::Program(std::string_view source_code, llvm::LLVMContext &context) {
@@ -60,9 +62,6 @@ namespace LL2W {
 
 		for (const auto &symbol: llvmModule->getValueSymbolTable()) {
 			llvm::Value *value = symbol.getValue();
-
-			std::string str;
-			llvm::raw_string_ostream os(str);
 
 			if (auto *var = llvm::dyn_cast<llvm::GlobalVariable>(value)) {
 				globals.emplace('@' + symbol.getKey().str(), new GlobalVarDef(*var)); // TODO: memleak
