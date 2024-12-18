@@ -47,18 +47,24 @@ namespace LL2W {
 
 			if (ancestor[ancestor[v]] != nullptr) {
 				compress(ancestor[v]);
-				if (semi[label[ancestor[v]]] < semi[label[v]])
+				if (semi[label[ancestor[v]]] < semi[label[v]]) {
 					label[v] = label[ancestor[v]];
+				}
 				ancestor[v] = ancestor[ancestor[v]];
 			}
 		};
 
 		std::function<Node *(Node *)> eval = [&](Node *v) {
-			if (ancestor[v] == nullptr)
+			if (ancestor[v] == nullptr) {
 				return label[v];
+			}
+
 			compress(v);
-			if (semi[label[ancestor[v]]] >= semi[label[v]])
+
+			if (semi[label[ancestor[v]]] >= semi[label[v]]) {
 				return label[v];
+			}
+
 			return label[ancestor[v]];
 		};
 
@@ -76,8 +82,9 @@ namespace LL2W {
 
 			label[s] = label[w];
 			size[v] += size[w];
-			if (size[v] < 2 * size[w])
+			if (size[v] < 2 * size[w]) {
 				std::swap(s, child[v]);
+			}
 
 			while (s != nullptr) {
 				ancestor[s] = v;
@@ -91,17 +98,20 @@ namespace LL2W {
 			Node *w = vertex[i];
 			for (Node *v: pred[w]) {
 				Node *u = eval(v);
-				if (semi[u] < semi[w])
+				if (semi[u] < semi[w]) {
 					semi[w] = semi[u];
+				}
 			}
 
 			if (w == nullptr) {
+				continue;
 				graph.renderTo("w_null.png");
-				throw std::runtime_error("w is null (1)");
+				throw std::runtime_error(std::format("w is null at i = {}, gsize = {}", i, gsize));
 			}
 
-			if (vertex[semi[w]] == nullptr)
+			if (vertex[semi[w]] == nullptr) {
 				throw std::runtime_error("vertex[semi[w]] is null");
+			}
 
 			bucket[vertex[semi[w]]].insert(w);
 			link_(parent[w], w);
@@ -111,8 +121,9 @@ namespace LL2W {
 				Node *v = *iter;
 				iter = pwbucket.erase(iter);
 				Node *u = eval(v);
-				if (v == nullptr)
+				if (v == nullptr) {
 					throw std::runtime_error("v is null");
+				}
 				dom[v] = semi[u] < semi[v]? u : parent[w];
 			}
 		}
@@ -120,8 +131,10 @@ namespace LL2W {
 		for (size_t i = 1; i < gsize; ++i) {
 			Node *w = vertex[i];
 			if (dom[w] != vertex[semi[w]]) {
-				if (!w)
+				if (w == nullptr) {
+					continue;
 					throw std::runtime_error("w is null (2)");
+				}
 				dom[w] = dom[dom[w]];
 			}
 		}

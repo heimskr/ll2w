@@ -41,8 +41,9 @@ namespace LL2W::Passes {
 					} else {
 						TypePtr out_type;
 						const long offset = Util::updiv(Getelementptr::compute(gep, &out_type), 8l);
-						if (Util::outOfRange(offset))
+						if (Util::outOfRange(offset)) {
 							warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+						}
 						TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 						VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 						auto setsym = std::make_shared<SetInstruction>(new_var, gep_global->name);

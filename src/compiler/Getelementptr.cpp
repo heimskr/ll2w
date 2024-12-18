@@ -119,38 +119,41 @@ namespace LL2W::Getelementptr {
 		return compute_mutating(value->ptrType, indices, out_type);
 	}
 
-	void insert(Function &function, TypePtr type, std::list<std::variant<long, const std::string *>> indices,
-	            InstructionPtr instruction, VariablePtr &out_var, TypePtr *out_type) {
-		if (!out_var)
-			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
+	void insert(Function &function, TypePtr type, std::list<std::variant<long, const std::string *>> indices, InstructionPtr instruction, VariablePtr &out_var, TypePtr *out_type) {
+		if (!out_var) {
 			// out_var = function.newVariable(IntType::make(64), instruction->parent.lock());
+			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
+		}
 		insert_mutating(function, type, indices, instruction, out_var, out_type);
 	}
 
-	void insert(Function &function, const GetelementptrValue *value, std::shared_ptr<Instruction> instruction,
-	            VariablePtr &out_var, std::shared_ptr<Type> *out_type) {
+	void insert(Function &function, const GetelementptrValue *value, std::shared_ptr<Instruction> instruction, VariablePtr &out_var, std::shared_ptr<Type> *out_type) {
 		auto indices = getVariantIndices(*value);
-		if (!out_var)
-			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
+		if (!out_var) {
 			// out_var = function.newVariable(IntType::make(64), instruction->parent.lock());
+			throw std::invalid_argument("out_var must not be null in Getelementptr::insert");
+		}
 		insert_mutating(function, value->ptrType, indices, instruction, out_var, out_type);
 	}
 
 	std::list<long> getLongIndices(const GetelementptrValue &value) {
 		std::list<long> indices;
-		for (const auto &decimal_pair: value.decimals)
+		for (const auto &decimal_pair: value.decimals) {
 			if (!std::holds_alternative<long>(decimal_pair.second)) {
 				warn() << "GetelementptrValue decimal's second item is a pvar. Incorrect code will be produced.\n";
 				indices.push_back(0);
-			} else
+			} else {
 				indices.push_back(std::get<long>(decimal_pair.second));
+			}
+		}
 		return indices;
 	}
 
 	std::list<std::variant<long, const std::string *>> getVariantIndices(const GetelementptrValue &value) {
 		std::list<std::variant<long, const std::string *>> indices;
-		for (const auto &decimal_pair: value.decimals)
+		for (const auto &decimal_pair: value.decimals) {
 			indices.push_back(decimal_pair.second);
+		}
 		return indices;
 	}
 }

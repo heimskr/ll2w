@@ -230,27 +230,26 @@ namespace LL2W::Passes {
 						// safely insert instructions before the last instruction in the block. Or something?
 
 						bool should_relinearize = false;
-						function.insertBefore(middle_block->instructions.back(), new_instruction, true, false,
-							&should_relinearize);
+						function.insertBefore(middle_block->instructions.back(), new_instruction, true, false, &should_relinearize);
 						if (should_relinearize) {
 							function.relinearize();
 							iter = std::find(linear.begin(), linear.end(), instruction);
-							if (iter == linear.end())
-								warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @"
-								       << *function.name << "'s linear instructions.\n";
+							if (iter == linear.end()) {
+								warn() << "Couldn't find new instruction " << new_instruction->debugExtra() << " in @" << *function.name << "'s linear instructions.\n";
+							}
 						}
 
 						function.comment(new_instruction, comment);
 					} else {
 						middle_made = block_made = true;
-						const std::string *new_label = function.newLabel();
+						const std::string *new_label = StringSet::intern('%' + *function.newLabel());
 						comment += " (in new block " + *new_label + " whose parent is " + *block->label + ")";
-						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->label},
-							std::list<InstructionPtr>());
+						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->label}, std::list<InstructionPtr>());
 						middle_block->parent = &function;
 						auto block_iter = std::find(function.blocks.begin(), function.blocks.end(), block);
-						if (block_iter == function.blocks.end())
+						if (block_iter == function.blocks.end()) {
 							throw std::runtime_error("Can't find block in MovePhi");
+						}
 						function.blocks.insert(++block_iter, middle_block);
 						function.bbMap.try_emplace(new_label, middle_block);
 						function.bbLabels.insert(new_label);
@@ -267,8 +266,7 @@ namespace LL2W::Passes {
 						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
 						if (preds_iter == phi_block->preds.end()) {
 							function.cfg.renderTo("cfg_error.png");
-							throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " +
-								*phi_block->label);
+							throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " + *phi_block->label);
 						}
 						*preds_iter = new_label;
 						middle_block->instructions.push_back(new_llvm);
@@ -276,35 +274,36 @@ namespace LL2W::Passes {
 					}
 
 					if (middle_made) {
-						const std::string *percent_label = StringSet::intern("%" + *middle_block->label);
+						const std::string *percent_label = StringSet::intern(*middle_block->label);
 						if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
 							auto type = parent_llvm->getNodeType();
 							if (type == NodeType::BrCond) {
 								auto *cond = dynamic_cast<BrCondNode *>(parent_llvm->getNode());
 								const std::string **cond_label =
-									(StringSet::unquote(cond->ifTrue) == phi_block_label)?
-									&cond->ifTrue :
-									((StringSet::unquote(cond->ifFalse) == phi_block_label)?
-									&cond->ifFalse : nullptr);
-								if (cond_label == nullptr)
-									error() << "Cond node doesn't jump to block " << *phi_block_label << ": "
-											<< parent_llvm->debugExtra() << '\n';
-								else
+									(cond->ifTrue == phi_block_label)? &cond->ifTrue :
+									((cond->ifFalse == phi_block_label)? &cond->ifFalse : nullptr);
+								if (cond_label == nullptr) {
+									error() << "Cond node doesn't jump to block " << *phi_block_label << ": " << parent_llvm->debugExtra() << '\n';
+								} else {
 									*cond_label = percent_label;
+								}
 							} else if (type == NodeType::Switch) {
 								auto *switch_node = dynamic_cast<SwitchNode *>(parent_llvm->getNode());
-								if (CompilerUtil::labelsMatch(*switch_node->label, *phi_block_label))
+								if (CompilerUtil::labelsMatch(*switch_node->label, *phi_block_label)) {
 									switch_node->label = percent_label;
-								else
-									for (auto &[type, value, switch_label]: switch_node->table)
-										if (CompilerUtil::labelsMatch(*switch_label, *phi_block_label))
+								} else {
+									for (auto &[type, value, switch_label]: switch_node->table) {
+										if (CompilerUtil::labelsMatch(*switch_label, *phi_block_label)) {
 											switch_label = percent_label;
-							} else
-								error() << "Final instruction of block " << *block->label
-								        << " isn't a BrCond or Switch.\n";
-						} else
-							error() << "Final instruction of block " << *block->label
-							        << " isn't a BrCond or Switch.\n";
+										}
+									}
+								}
+							} else {
+								error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+							}
+						} else {
+							error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+						}
 						middle_block->extract();
 					}
 				} else {

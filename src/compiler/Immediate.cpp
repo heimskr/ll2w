@@ -66,7 +66,7 @@ namespace LL2W {
 			}
 		}
 		if (ampersand)
-			return "&" + *std::get<const std::string *>(imm);
+			return "&" + std::get<const std::string *>(imm)->substr(1);
 		return *std::get<const std::string *>(imm);
 	}
 

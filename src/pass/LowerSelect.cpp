@@ -18,10 +18,11 @@ namespace LL2W::Passes {
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNodeType() != NodeType::Select)
+			if (!llvm || llvm->getNodeType() != NodeType::Select) {
 				continue;
-			SelectNode *select = dynamic_cast<SelectNode *>(llvm->getNode());
+			}
 
+			SelectNode *select = dynamic_cast<SelectNode *>(llvm->getNode());
 			VariablePtr left_var, right_var;
 
 			// If the true-condition is an integer-like constant, we need to put it in a register.
@@ -34,13 +35,11 @@ namespace LL2W::Passes {
 				left_var = dynamic_cast<LocalValue *>(select->firstValue.get())->variable;
 			} else if (select->firstValue->isGlobal()) {
 				left_var = function.newVariable(select->firstType, instruction->parent.lock());
-				auto set = std::make_shared<SetInstruction>(left_var,
-					dynamic_cast<GlobalValue *>(select->firstValue.get())->name);
+				auto set = std::make_shared<SetInstruction>(left_var, dynamic_cast<GlobalValue *>(select->firstValue.get())->name);
 				function.insertBefore(instruction, set)->setDebug(llvm)->extract();
 			} else {
 				select->debug();
-				throw std::runtime_error("Invalid true-value in select instruction: " +
-					std::string(*select->firstValue));
+				throw std::runtime_error("Invalid true-value in select instruction: " + std::string(*select->firstValue));
 			}
 
 			// If the false-condition is an integer-like constant, we need to put it in a register.
@@ -75,8 +74,7 @@ namespace LL2W::Passes {
 				VariablePtr cond_var = dynamic_cast<LocalValue *>(select->conditionValue.get())->variable;
 				comp = std::make_shared<CompareIInstruction>(cond_var, 0);
 			} else {
-				throw std::runtime_error("Invalid condition-value in select instruction: " +
-					std::string(*select->conditionValue));
+				throw std::runtime_error("Invalid condition-value in select instruction: " + std::string(*select->conditionValue));
 			}
 
 			function.insertBefore(instruction, comp)->setDebug(llvm)->extract();
@@ -87,8 +85,9 @@ namespace LL2W::Passes {
 			to_remove.push_back(instruction);
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return to_remove.size();
 	}

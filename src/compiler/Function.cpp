@@ -97,6 +97,7 @@
 #include "util/Util.h"
 #include "Interactive.h"
 
+#include <llvm/IR/CFG.h>
 #include <llvm/IR/Function.h>
 #include <llvm/Support/raw_os_ostream.h>
 
@@ -222,7 +223,11 @@ namespace LL2W {
 		assert(llvmFunction != nullptr);
 		Timer timer{"ExtractBlocksLLVM"};
 
-		std::vector<const std::string *> preds;
+		linearInstructions.clear();
+		bbLabels.clear();
+		bbMap.clear();
+		blocks.clear();
+
 		int block_index = -1;
 		int instruction_index = -1;
 
@@ -239,9 +244,17 @@ namespace LL2W {
 				}
 			}
 
+			std::vector<const std::string *> preds;
+
+			for (const llvm::BasicBlock *predecessor: llvm::predecessors(&block)) {
+				preds.emplace_back(StringSet::intern(getOperandName(*predecessor)));
+			}
+
 			BasicBlockPtr new_block = blocks.emplace_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
 			new_block->parent = this;
 			new_block->index = ++block_index;
+			bbLabels.insert(new_block->label);
+			bbMap.emplace(new_block->label, new_block);
 
 			{
 				Timer timer{"InstructionExtractionLoop"};
@@ -314,7 +327,6 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
-		label = StringSet::unquote(label);
 		if (!bbMap.contains(label)) {
 			if (can_throw) {
 				std::cerr << "Want: " << *label << '\n';
@@ -797,8 +809,9 @@ namespace LL2W {
 	}
 
 	void Function::removeUselessBranch(BasicBlockPtr block) {
-		if (block->instructions.empty())
+		if (block->instructions.empty()) {
 			return;
+		}
 
 		InstructionPtr &back = block->instructions.back();
 
@@ -812,7 +825,9 @@ namespace LL2W {
 							remove(back);
 						}
 					}
-				} else throw std::runtime_error("branch is null in Function::removeUselessBranch");
+				} else {
+					throw std::runtime_error("branch is null in Function::removeUselessBranch");
+				}
 			}
 		}
 	}
@@ -845,8 +860,7 @@ namespace LL2W {
 			return nullptr;
 		}
 
-		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *>{block->label},
-			std::list<InstructionPtr>());
+		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *>{block->label}, std::list<InstructionPtr>());
 		new_block->parent = this;
 		bbLabels.insert(label);
 		bbMap.emplace(label, new_block);
@@ -1089,7 +1103,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		Passes::minimizeBlocks(*this);
+		Passes::minimizeBlocks(*this, true);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
