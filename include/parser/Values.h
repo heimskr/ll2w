@@ -136,13 +136,13 @@ namespace LL2W {
 	};
 
 	struct GlobalValue: VariableValue, Makeable<GlobalValue> {
-		GlobalValue(const std::string *name): VariableValue(name) {}
+		GlobalValue(const std::string *name);
 		GlobalValue(const std::string &name): GlobalValue(StringSet::intern(name)) {}
 		GlobalValue(const ASTNode *);
 		ValueType valueType() const override { return ValueType::Global; }
 		ValuePtr copy() const override { return std::make_shared<GlobalValue>(name); }
-		operator std::string() override { return "\e[32m@" + *name + "\e[39m"; }
-		std::string compile() const override { return "&" + *name; }
+		operator std::string() override { return "\e[32m" + *name + "\e[39m"; }
+		std::string compile() const override { return "&" + name->substr(1); }
 	};
 
 	struct GetelementptrValue: Value {

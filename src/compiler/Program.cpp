@@ -64,12 +64,12 @@ namespace LL2W {
 			llvm::raw_string_ostream os(str);
 
 			if (auto *var = llvm::dyn_cast<llvm::GlobalVariable>(value)) {
-				globals.emplace(symbol.getKey().str(), new GlobalVarDef(*var)); // TODO: memleak
+				globals.emplace('@' + symbol.getKey().str(), new GlobalVarDef(*var)); // TODO: memleak
 				continue;
 			}
 
 			if (auto *alias = llvm::dyn_cast<llvm::GlobalAlias>(value)) {
-				aliases.emplace(StringSet::intern(symbol.getKey().str()), new AliasDef(*alias));
+				aliases.emplace(StringSet::intern('@' + symbol.getKey().str()), new AliasDef(*alias));
 				continue;
 			}
 

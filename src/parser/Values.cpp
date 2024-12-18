@@ -85,8 +85,9 @@ namespace LL2W {
 		auto begin = values.cbegin();
 		for (auto iter = begin, end = values.cend(); iter != end; ++iter) {
 			const std::pair<TypePtr, ValuePtr> &pair = *iter;
-			if (iter != begin)
+			if (iter != begin) {
 				out << "\e[2m,\e[22m ";
+			}
 			out << std::string(*pair.first) << " " << std::string(*pair.second);
 		}
 		out << "\e[2m>\e[22m";
@@ -107,14 +108,17 @@ namespace LL2W {
 	}
 
 	VariablePtr LocalValue::getVariable(Function &function) {
-		if (variable)
-			return variable;
-		return variable = function.getVariable(*name);
+		if (!variable) {
+			variable = function.getVariable(*name);
+		}
+		return variable;
 	}
 
-	GlobalValue::GlobalValue(const ASTNode *node): VariableValue(nullptr) {
-		name = node->lexerInfo->at(0) == '@'? StringSet::intern(node->lexerInfo->substr(1)) : node->lexerInfo;
-	}
+	GlobalValue::GlobalValue(const std::string *name):
+		VariableValue(name->at(0) != '@'? StringSet::intern('@' + *name) : name) {}
+
+	GlobalValue::GlobalValue(const ASTNode *node):
+		GlobalValue(node->lexerInfo) {}
 
 	GetelementptrValue::GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
 	                                       const decltype(decimals) &decimals_):
@@ -356,15 +360,15 @@ namespace LL2W {
 			case LLVM_CONVERSION_EXPR:    return convertConversion(node);
 			default:
 				node->debug();
-				throw std::invalid_argument("Couldn't create Value from a node with symbol " +
-			                                std::string(llvmParser.getName(node->symbol)));
+				throw std::invalid_argument("Couldn't create Value from a node with symbol " + std::string(llvmParser.getName(node->symbol)));
 		}
 	}
 
 	ValuePtr convertConversion(ASTNode *node) {
 		// TODO: verify
-		if (node->at(0)->symbol == LLVM_CONSTANT)
+		if (node->at(0)->symbol == LLVM_CONSTANT) {
 			return Constant(node->at(0)).convert()->value;
+		}
 		return getValue(node->at(0));
 	}
 

@@ -7,6 +7,7 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalAlias.h>
 #include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_os_ostream.h>
@@ -161,6 +162,10 @@ namespace LL2W {
 	ConstantPtr Constant::fromLLVM(const llvm::Value &llvm_value) {
 		Timer timer{"Constant::fromLLVM"};
 
+		if (auto *global_alias = llvm::dyn_cast<llvm::GlobalAlias>(&llvm_value)) {
+			return Constant::fromLLVM(*global_alias->getAliasee());
+		}
+
 		ConstantPtr out = std::shared_ptr<Constant>(new Constant);
 
 		if (auto *int_constant = llvm::dyn_cast<llvm::ConstantInt>(&llvm_value)) {
@@ -222,8 +227,13 @@ namespace LL2W {
 		}
 
 		if (auto *global_constant = llvm::dyn_cast<llvm::GlobalVariable>(&llvm_value)) {
-			out->type = Type::fromLLVM(*global_constant->getType());
-			out->value = GlobalValue::make(global_constant->getName().str());
+			if (global_constant->getNumOperands() > 0) {
+				assert(global_constant->getNumOperands() == 1);
+				out->type = PointerType::make(Type::fromLLVM(*global_constant->getOperand(0)->getType()));
+			} else {
+				out->type = OpaqueType::make();
+			}
+			out->value = GlobalValue::make('@' + global_constant->getName().str());
 			return out;
 		}
 
@@ -235,7 +245,7 @@ namespace LL2W {
 
 		if (auto *function_value = llvm::dyn_cast<llvm::Function>(&llvm_value)) {
 			out->type = Type::fromLLVM(*function_value->getType());
-			out->value = std::make_shared<GlobalValue>(function_value->getName().str());
+			out->value = GlobalValue::make('@' + function_value->getName().str());
 			return out;
 		}
 

@@ -11,7 +11,7 @@
 
 namespace LL2W {
 	GlobalVarDef::GlobalVarDef(const llvm::GlobalVariable &llvm_var) {
-		name = llvm_var.getName().str();
+		name = '@' + llvm_var.getName().str();
 		linkage = getLinkage(llvm_var.getLinkage());
 		preemption = llvm_var.isDSOLocal()? Preemption::DsoLocal : Preemption::Default;
 		visibility = getVisibility(llvm_var.getVisibility());
@@ -48,35 +48,35 @@ namespace LL2W {
 		}
 
 		if (preemption_) {
-			if (*preemption_->lexerInfo == "dso_preemptable")
+			if (*preemption_->lexerInfo == "dso_preemptable") {
 				preemption = Preemption::DsoPreemptable;
-			else if (*preemption_->lexerInfo == "dso_local")
+			} else if (*preemption_->lexerInfo == "dso_local") {
 				preemption = Preemption::DsoLocal;
-			else
+			} else {
 				throw std::runtime_error("Invalid preemption in GlobalVarDef: \"" + *preemption_->lexerInfo + "\"");
+			}
 			delete preemption_;
 		}
 
 		if (visibility_) {
-			visibility = *visibility_->lexerInfo == "hidden"? Visibility::Hidden :
-				(*visibility_->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
+			visibility = *visibility_->lexerInfo == "hidden"? Visibility::Hidden : (*visibility_->lexerInfo == "protected"? Visibility::Protected : Visibility::Default);
 			delete visibility_;
 		}
 
 		if (dll_storage_class) {
-			dllStorageClass = *dll_storage_class->lexerInfo == "dllimport"?
-				DllStorageClass::Import : DllStorageClass::Export;
+			dllStorageClass = *dll_storage_class->lexerInfo == "dllimport"? DllStorageClass::Import : DllStorageClass::Export;
 			delete dll_storage_class;
 		}
 
 		if (thread_local_) {
 			const std::string &tl = *thread_local_->at(0)->lexerInfo;
-			if (tl == "localdynamic")
+			if (tl == "localdynamic") {
 				threadLocal = ThreadLocalMode::LocalDynamic;
-			else if (tl == "initialexec")
+			} else if (tl == "initialexec") {
 				threadLocal = ThreadLocalMode::InitialExec;
-			else if (tl == "localexec")
+			} else if (tl == "localexec") {
 				threadLocal = ThreadLocalMode::LocalExec;
+			}
 			delete thread_local_;
 		}
 
@@ -136,43 +136,57 @@ namespace LL2W {
 		std::stringstream out;
 		out << "\e[36m";
 
-		if (linkage != Linkage::Default)
+		if (linkage != Linkage::Default) {
 			out << " " << linkage_map.at(linkage);
+		}
+
 		switch (visibility) {
 			case Visibility::Hidden:    out << " hidden"; break;
 			case Visibility::Protected: out << " protected"; break;
 			default:;
 		}
+
 		switch (dllStorageClass) {
 			case DllStorageClass::Import: out << " import"; break;
 			case DllStorageClass::Export: out << " export"; break;
 			default:;
 		}
+
 		switch (threadLocal) {
 			case ThreadLocalMode::LocalDynamic: out << " localdynamic"; break;
 			case ThreadLocalMode::InitialExec:  out << " initialexec"; break;
 			case ThreadLocalMode::LocalExec:    out << " localexec"; break;
 			default:;
 		}
+
 		switch (unnamedAddr) {
 			case UnnamedAddr::Unnamed: out << " unnamed_addr"; break;
 			case UnnamedAddr::LocalUnnamed: out << " local_unnamed_addr"; break;
 			default:;
 		}
-		if (addrspace != -1)
+
+		if (addrspace != -1) {
 			out << " addrspace(" << addrspace << ")";
-		if (externallyInitialized)
+		}
+
+		if (externallyInitialized) {
 			out << " externally_initialized";
+		}
+
 		out << (isConstant? " constant" : " global");
 		// out << "\e[0m " << std::string(*type);
-		if (constant)
+
+		if (constant) {
 			out << " " << std::string(*constant);
-		else
+		} else {
 			out << " " << std::string(*type);
+		}
+
 		// if (initialValue) {
 		// 	if (initialValue->symbol == TOK_CSTRING)
 		// 		out << " \e[34mc\e[33m" << initialValue->lexerInfo->substr(1) << "\e[0m";
 		// }
+
 		return out.str();
 	}
 }

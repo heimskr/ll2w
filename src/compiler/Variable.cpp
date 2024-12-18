@@ -155,10 +155,11 @@ namespace LL2W {
 			std::string out = "(";
 			bool first = true;
 			for (const int reg: registers) {
-				if (first)
+				if (first) {
 					first = false;
-				else
+				} else {
 					out += " ";
+				}
 				out += "$" + WhyInfo::registerName(reg);
 			}
 			out += "):" + *id;
@@ -173,7 +174,7 @@ namespace LL2W {
 
 	std::string Variable::functionName() const {
 		const Function *function = getFunction();
-		return function? function->name->substr(1) : "?";
+		return function && function->name? function->name->substr(1) : "?";
 	}
 
 	Variable::ID Variable::parentID() const {
@@ -186,8 +187,7 @@ namespace LL2W {
 		std::cerr << *this << "{o" << *originalID << "}.makeAliasOf(" << *new_parent << "{o" << *new_parent->originalID
 		          << "}) \e[36m" << functionName() << "\e[39m " << this << "/" << new_parent.get();
 #endif
-		if (new_parent.get() == this || new_parent->parent.lock().get() == this
-		    || new_parent->aliases.count(this) != 0) {
+		if (new_parent.get() == this || new_parent->parent.lock().get() == this || new_parent->aliases.count(this) != 0) {
 #ifdef DEBUG_ALIASES
 			std::cerr << " \e[2m...\e[22;31mnope\e[39m\n";
 #endif
@@ -205,19 +205,24 @@ namespace LL2W {
 			alias->parent = new_parent;
 			new_parent->aliases.insert(alias);
 		}
-		for (const std::weak_ptr<BasicBlock> &def: definingBlocks)
+		for (const std::weak_ptr<BasicBlock> &def: definingBlocks) {
 			new_parent->definingBlocks.insert(def);
-		for (const std::weak_ptr<BasicBlock> &use: usingBlocks)
+		}
+		for (const std::weak_ptr<BasicBlock> &use: usingBlocks) {
 			new_parent->usingBlocks.insert(use);
-		for (const std::weak_ptr<Instruction> &def: definitions)
+		}
+		for (const std::weak_ptr<Instruction> &def: definitions) {
 			new_parent->definitions.insert(def.lock());
-		for (const std::weak_ptr<Instruction> &use: uses)
+		}
+		for (const std::weak_ptr<Instruction> &use: uses) {
 			new_parent->uses.insert(use.lock());
+		}
 #ifdef ADOPT_PARENT_ID
 		id = new_parent->id;
 #endif
-		if (!typeOverride)
+		if (!typeOverride) {
 			type = new_parent->type;
+		}
 		lastUse = new_parent->lastUse;
 		definingBlocks = new_parent->definingBlocks;
 		usingBlocks = new_parent->usingBlocks;
@@ -422,8 +427,7 @@ namespace LL2W {
 		static std::unordered_set<Variable::ID> warned;
 		if (!type) {
 			if (may_warn) {
-				warn() << "Variable::registersRequired: " << *this << " has no type in function " << functionName()
-				       << ".\n";
+				warn() << "Variable::registersRequired: " << *this << " has no type in function " << functionName() << ".\n";
 				if (warned.count(id) == 666) {
 					warned.insert(id);
 					std::cerr << std::string(10, '\n');
