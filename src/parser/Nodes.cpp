@@ -307,7 +307,7 @@ namespace LL2W {
 // SelectNode
 
 	SelectNode::SelectNode(const llvm::SelectInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		fastmath = getFastmath(inst.getFastMathFlags());
 		conditionType = Type::fromLLVM(*inst.getCondition()->getType());
 		firstType = Type::fromLLVM(*inst.getTrueValue()->getType());
@@ -364,7 +364,7 @@ namespace LL2W {
 // AllocaNode
 
 	AllocaNode::AllocaNode(const llvm::AllocaInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		type = Type::fromLLVM(*inst.getType());
 		inalloca = inst.isUsedWithInAlloca();
 		const llvm::Value *array_size = inst.getArraySize();
@@ -515,7 +515,7 @@ namespace LL2W {
 // LoadNode
 
 	LoadNode::LoadNode(const llvm::LoadInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		volatile_ = inst.isVolatile();
 		atomic = inst.isAtomic();
 		type = Type::fromLLVM(*inst.getType());
@@ -616,7 +616,7 @@ namespace LL2W {
 // IcmpNode
 
 	IcmpNode::IcmpNode(const llvm::ICmpInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		cond = getIcmpCond(inst.getPredicate());
 		left = Constant::fromLLVM(*inst.getOperand(0));
 		right = Constant::fromLLVM(*inst.getOperand(1));
@@ -718,7 +718,7 @@ namespace LL2W {
 // CallInvokeNode
 
 	CallInvokeNode::CallInvokeNode(const llvm::CallInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		cconv = getCConv(inst.getCallingConv());
 
 		for (const auto &attr_list: inst.getAttributes()) {
@@ -1049,7 +1049,7 @@ namespace LL2W {
 // GetelementptrNode
 
 	GetelementptrNode::GetelementptrNode(const llvm::GetElementPtrInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		inbounds = inst.isInBounds();
 		type = Type::fromLLVM(*inst.getType());
 		constant = Constant::fromLLVM(*inst.getPointerOperand());
@@ -1240,7 +1240,7 @@ namespace LL2W {
 // ConversionNode
 
 	ConversionNode::ConversionNode(const llvm::Instruction &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		from = Type::fromLLVM(*inst.getOperand(0)->getType());
 		to = Type::fromLLVM(*inst.getType());
 		value = Constant::fromLLVM(*inst.getOperand(0))->value;
@@ -1299,7 +1299,7 @@ namespace LL2W {
 // BasicMathNode
 
 	BasicMathNode::BasicMathNode(const llvm::BinaryOperator &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		oper = StringSet::intern(inst.getOpcodeName());
 		nuw = inst.hasNoUnsignedWrap();
 		nsw = inst.hasNoSignedWrap();
@@ -1338,7 +1338,7 @@ namespace LL2W {
 // PhiNode
 
 	PhiNode::PhiNode(const llvm::PHINode &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		type = Type::fromLLVM(*inst.getType());
 		for (unsigned i = 0, max = inst.getNumIncomingValues(); i < max; ++i) {
 			llvm::BasicBlock *block = inst.getIncomingBlock(i);
@@ -1414,7 +1414,7 @@ namespace LL2W {
 // DivNode
 
 	DivNode::DivNode(const llvm::BinaryOperator &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		divType = inst.getOpcode() == llvm::Instruction::BinaryOps::SDiv? DivType::Sdiv : DivType::Udiv;
 		exact = inst.isExact();
 	}
@@ -1437,7 +1437,7 @@ namespace LL2W {
 // RemNode
 
 	RemNode::RemNode(const llvm::BinaryOperator &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		remType = inst.getOpcode() == llvm::Instruction::BinaryOps::SRem? RemType::Srem : RemType::Urem;
 		exact = inst.isExact();
 	}
@@ -1460,7 +1460,7 @@ namespace LL2W {
 // LogicNode
 
 	LogicNode::LogicNode(const llvm::BinaryOperator &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		logicType = getLogicType(inst.getOpcode());
 		left = Constant::fromLLVM(*inst.getOperand(0));
 		right = Constant::fromLLVM(*inst.getOperand(1));
@@ -1513,7 +1513,7 @@ namespace LL2W {
 // ShrNode
 
 	ShrNode::ShrNode(const llvm::BinaryOperator &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		exact = inst.isExact();
 		shrType = inst.getOpcode() == llvm::Instruction::BinaryOps::AShr? ShrType::Ashr : ShrType::Lshr;
 		left = Constant::fromLLVM(*inst.getOperand(0))->value;
@@ -1628,7 +1628,7 @@ namespace LL2W {
 // ExtractValueNode
 
 	ExtractValueNode::ExtractValueNode(const llvm::ExtractValueInst &inst) {
-		result = StringSet::intern(getOperandName(inst));
+		result = tryOperandName(inst);
 		llvm::Value *accessed = inst.getOperand(0);
 		aggregateType = std::dynamic_pointer_cast<AggregateType>(Type::fromLLVM(*accessed->getType()));
 		assert(aggregateType != nullptr);

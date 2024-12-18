@@ -1,5 +1,6 @@
 #pragma once
 
+#include "parser/StringSet.h"
 #include "util/strnatcmp.h"
 #include "util/WeakCompare.h"
 
@@ -317,7 +318,22 @@ namespace LL2W {
 		std::string name;
 		llvm::raw_string_ostream os(name);
 		item.printAsOperand(os, false);
+		if (name == "<badref>") {
+			dump(item);
+			throw std::invalid_argument("Can't get operand name");
+		}
 		return name;
+	}
+
+	template <typename T>
+	const std::string * tryOperandName(const T &item) {
+		std::string name;
+		llvm::raw_string_ostream os(name);
+		item.printAsOperand(os, false);
+		if (name == "<badref>") {
+			return nullptr;
+		}
+		return StringSet::intern(std::move(name));
 	}
 
 	void dump(const llvm::User::const_op_range &);
