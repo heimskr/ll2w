@@ -1531,6 +1531,7 @@ namespace LL2W {
 
 	DivNode::DivNode(const llvm::BinaryOperator &inst) {
 		Timer timer{"ConstructDivNode"};
+		type = Type::fromLLVM(*inst.getType());
 		result = tryOperandName(inst);
 		divType = inst.getOpcode() == llvm::Instruction::BinaryOps::SDiv? DivType::Sdiv : DivType::Udiv;
 		exact = inst.isExact();
@@ -1555,6 +1556,7 @@ namespace LL2W {
 
 	RemNode::RemNode(const llvm::BinaryOperator &inst) {
 		Timer timer{"ConstructRemNode"};
+		type = Type::fromLLVM(*inst.getType());
 		result = tryOperandName(inst);
 		remType = inst.getOpcode() == llvm::Instruction::BinaryOps::SRem? RemType::Srem : RemType::Urem;
 		exact = inst.isExact();
@@ -1633,6 +1635,7 @@ namespace LL2W {
 
 	ShrNode::ShrNode(const llvm::BinaryOperator &inst) {
 		Timer timer{"ConstructShrNode"};
+		type = Type::fromLLVM(*inst.getType());
 		result = tryOperandName(inst);
 		exact = inst.isExact();
 		shrType = inst.getOpcode() == llvm::Instruction::BinaryOps::AShr? ShrType::Ashr : ShrType::Lshr;

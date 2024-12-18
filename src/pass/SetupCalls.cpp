@@ -46,7 +46,7 @@ namespace LL2W::Passes {
 				break;
 			} else if (function.parent.functions.count(*global) != 0) {
 				// When the arguments aren't explicit, we check the parent program's map of functions.
-				Function &func = *function.parent.functions.at('@' + *global);
+				Function &func = *function.parent.functions.at(*global);
 				ellipsis = func.isVariadic();
 				convention = func.getCallingConvention();
 				if (argument_types != nullptr) {
@@ -95,7 +95,7 @@ namespace LL2W::Passes {
 
 			if (auto iter = program.declarations.find(*global); iter != program.declarations.end()) {
 				debug_index = iter->second->debugIndex;
-			} else if (auto iter = program.functions.find('@' + *global); iter != program.functions.end()) {
+			} else if (auto iter = program.functions.find(*global); iter != program.functions.end()) {
 				debug_index = iter->second->debugIndex;
 			} else {
 				warn() << "Couldn't find declaration for function " << *global << '\n';

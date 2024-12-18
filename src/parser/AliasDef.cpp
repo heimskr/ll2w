@@ -103,7 +103,8 @@ namespace LL2W {
 	}
 
 	AliasDef::AliasDef(const llvm::GlobalAlias &llvm_alias) {
-		name = StringSet::intern(llvm_alias.getName().str());
+		name = StringSet::intern('@' + llvm_alias.getName().str());
+		aliasTo = StringSet::intern('@' + llvm_alias.getAliasee()->getName().str());
 		linkage = getLinkage(llvm_alias.getLinkage());
 		preemption = llvm_alias.isDSOLocal()? Preemption::DsoLocal : Preemption::Default;
 		visibility = getVisibility(llvm_alias.getVisibility());

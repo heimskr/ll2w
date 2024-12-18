@@ -132,7 +132,7 @@ namespace LL2W {
 			case NodeType::Invoke: {
 				CAST(CallInvokeNode);
 				write(cast->result, cast->returnType);
-				IFLV(cast->name, nullptr);
+				IFLV(cast->name, cast->returnType);
 				for (const ConstantPtr &constant: cast->constants) {
 					IFLV(constant->value, constant->type);
 				}
