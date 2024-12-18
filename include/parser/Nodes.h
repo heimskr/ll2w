@@ -24,6 +24,7 @@ namespace llvm {
 	class ICmpInst;
 	class InsertValueInst;
 	class Instruction;
+	class IntToPtrInst;
 	class LoadInst;
 	class PHINode;
 	class PtrToIntInst;
@@ -415,6 +416,7 @@ namespace LL2W {
 			ValuePtr value;
 			Conversion conversionType;
 
+			ConversionNode(const llvm::IntToPtrInst &);
 			ConversionNode(const llvm::PtrToIntInst &);
 			ConversionNode(const llvm::SExtInst &);
 			ConversionNode(const llvm::TruncInst &);

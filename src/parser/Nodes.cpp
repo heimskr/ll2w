@@ -69,8 +69,9 @@ namespace LL2W {
 	std::string HeaderNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[2;4m<label>:" << label << "; preds =";
-		for (const std::string *pred: preds)
+		for (const std::string *pred: preds) {
 			out << " %" << *pred;
+		}
 		out << "\e[0m";
 		return out.str();
 	}
@@ -83,18 +84,20 @@ namespace LL2W {
 		for (ASTNode *child: *node->at(1)) {
 			switch (child->symbol) {
 				case LLVMTOK_FNATTR_BASIC:
-					for (const std::pair<const FnAttr, std::string> &pair: fnattr_map)
+					for (const std::pair<const FnAttr, std::string> &pair: fnattr_map) {
 						if (*child->lexerInfo == pair.second) {
 							functionAttributes.insert(pair.first);
 							break;
 						}
+					}
 					break;
 				case LLVMTOK_PARATTR:
-					for (const std::pair<const ParAttr, std::string> &pair: parattr_map)
+					for (const std::pair<const ParAttr, std::string> &pair: parattr_map) {
 						if (*child->lexerInfo == pair.second) {
 							parameterAttributes.insert(pair.first);
 							break;
 						}
+					}
 					break;
 				case LLVMTOK_STRING:
 					stringAttributes.insert({child->extracted(), StringSet::intern("")});
@@ -104,8 +107,9 @@ namespace LL2W {
 					break;
 				case LLVMTOK_ALLOCSIZE:
 					allocsizeSize = child->at(0)->atoi();
-					if (1 < child->size())
+					if (1 < child->size()) {
 						allocsizeCount = child->at(1)->atoi();
+					}
 					break;
 				// Why oh why do these have to be ambiguous?
 				case LLVMTOK_WRITEONLY:
@@ -130,14 +134,19 @@ namespace LL2W {
 	std::string AttributesNode::debugExtra() const {
 		std::stringstream out;
 		out << "attributes #\e[92m" << index << "\e[0m \e[2m= { \e[0m";
-		for (FnAttr attr: functionAttributes)
+
+		for (FnAttr attr: functionAttributes) {
 			out << "\e[34m" << fnattr_map.at(attr) << "\e[0m ";
+		}
+
 		for (const std::pair<const std::string * const, const std::string *> &pair: stringAttributes) {
 			out << "\e[93m\"" << *pair.first << "\"\e[0m";
-			if (!pair.second->empty())
+			if (!pair.second->empty()) {
 				out << "\e[2m=\e[0;93m\"" << *pair.second << "\"\e[0m";
+			}
 			out << " ";
 		}
+
 		out << "\e[2m}\e[0m";
 		return out.str();
 	}
@@ -152,12 +161,13 @@ namespace LL2W {
 
 	void InstructionNode::handleUnibangs(ASTNode *unibangs) {
 		for (const ASTNode *sub: *unibangs) {
-			if (sub->symbol == LLVMTOK_PROF)
+			if (sub->symbol == LLVMTOK_PROF) {
 				prof = sub->front()->atoi();
-			else if (sub->symbol == LLVMTOK_CALLEES)
+			} else if (sub->symbol == LLVMTOK_CALLEES) {
 				callees = sub->front()->atoi();
-			else if (sub->symbol == LLVMTOK_DBG)
+			} else if (sub->symbol == LLVMTOK_DBG) {
 				debugIndex = sub->front()->atoi();
+			}
 		}
 	}
 
@@ -176,6 +186,10 @@ namespace LL2W {
 
 		if (auto *inst = llvm::dyn_cast<llvm::LoadInst>(llvm)) {
 			return new LoadNode(*inst);
+		}
+
+		if (auto *inst = llvm::dyn_cast<llvm::IntToPtrInst>(llvm)) {
+			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::PtrToIntInst>(llvm)) {
@@ -1245,6 +1259,11 @@ namespace LL2W {
 		to = Type::fromLLVM(*inst.getType());
 		value = Constant::fromLLVM(*inst.getOperand(0))->value;
 	}
+
+	ConversionNode::ConversionNode(const llvm::IntToPtrInst &inst):
+		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {
+			conversionType = Conversion::Inttoptr;
+		}
 
 	ConversionNode::ConversionNode(const llvm::PtrToIntInst &inst):
 		ConversionNode(static_cast<const llvm::Instruction &>(inst)) {

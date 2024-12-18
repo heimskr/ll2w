@@ -179,6 +179,7 @@ namespace LL2W {
 
 		if (auto *expr_constant = llvm::dyn_cast<llvm::ConstantExpr>(&llvm_value)) {
 			std::string_view op = expr_constant->getOpcodeName();
+
 			if (op == "getelementptr") {
 				out->type = Type::fromLLVM(*llvm_value.getType());
 				const llvm::Constant *base = expr_constant->getOperand(0);
@@ -193,6 +194,13 @@ namespace LL2W {
 				return out;
 			}
 
+			if (op == "inttoptr" || op == "ptrtoint") {
+				out->type = Type::fromLLVM(*llvm_value.getType());
+				out->value = Constant::fromLLVM(*expr_constant->getOperand(0))->value;
+				return out;
+			}
+
+			dump(*expr_constant);
 			throw std::runtime_error(std::format("Unknown ConstantExpr opcode: {}", op));
 		}
 
