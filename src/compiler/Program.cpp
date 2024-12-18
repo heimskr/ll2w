@@ -428,8 +428,8 @@ namespace LL2W {
 			global_data.try_emplace(name, constant, constant->value, global->location);
 		}
 
-		if (global_data.count("llvm.global_ctors") != 0) {
-			const GlobalData &def = global_data.at("llvm.global_ctors");
+		if (auto iter = global_data.find("@llvm.global_ctors"); iter != global_data.end()) {
+			const GlobalData &def = iter->second;
 			if (auto *array = dynamic_cast<const ArrayType *>(def.constant->type.get())) {
 				out << "%align 8\n\n@__ctors_start\n%8b llvm.global_ctors\n\n";
 				out << "@__ctors_end\n%8b llvm.global_ctors + " << (24 * array->count) << "\n\n";
@@ -473,9 +473,9 @@ namespace LL2W {
 		for (const auto &[name, stringified]: global_strings) {
 			out << "%align 8\n";
 			if (stringified.empty()) {
-				out << '@' << name << "\n%8b 0\n\n";
+				out << name << "\n%8b 0\n\n";
 			} else {
-				out << '@' << name << '\n' << stringified << "\n\n";
+				out << name << '\n' << stringified << "\n\n";
 			}
 		}
 
