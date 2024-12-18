@@ -19,8 +19,10 @@ namespace llvm {
 	class BinaryOperator;
 	class BranchInst;
 	class CallInst;
+	class ExtractValueInst;
 	class GetElementPtrInst;
 	class ICmpInst;
+	class InsertValueInst;
 	class Instruction;
 	class LoadInst;
 	class PHINode;
@@ -563,8 +565,10 @@ namespace LL2W {
 		std::shared_ptr<AggregateType> aggregateType;
 		ValuePtr aggregateValue;
 		std::vector<int> decimals;
-		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_,
-		                 ASTNode *unibangs);
+
+		ExtractValueNode(const llvm::ExtractValueInst &);
+		ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::ExtractValue; }
 		std::vector<ValuePtr> allValues() override { return {aggregateValue}; }
@@ -578,8 +582,10 @@ namespace LL2W {
 		ValuePtr aggregateValue;
 		ValuePtr value;
 		std::vector<int> decimals;
-		InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_,
-		                ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs);
+
+		InsertValueNode(const llvm::InsertValueInst &);
+		InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_, ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs);
+
 		std::string debugExtra() const override;
 		NodeType nodeType() const override { return NodeType::InsertValue; }
 		std::vector<ValuePtr> allValues() override { return {aggregateValue, value}; }

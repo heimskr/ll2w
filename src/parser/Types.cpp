@@ -558,13 +558,15 @@ namespace LL2W {
 	}
 
 	TypePtr StructType::extractType(std::list<int> indices) const {
-		TypePtr type = node->types.at(indices.front())->copy();
-		if (indices.size() == 1)
+		TypePtr type = types.value().at(indices.front())->copy();
+		if (indices.size() == 1) {
 			return type;
+		}
 
 		std::shared_ptr<AggregateType> aggregate = std::dynamic_pointer_cast<AggregateType>(type);
-		if (!aggregate)
+		if (!aggregate) {
 			throw std::runtime_error("Expected an AggregateType in StructType::extractType");
+		}
 
 		indices.pop_front();
 		type = aggregate->extractType(indices);
@@ -583,56 +585,71 @@ namespace LL2W {
 	}
 
 	bool StructType::operator==(const Type &other) const {
-		if (this == &other)
+		if (this == &other) {
 			return true;
+		}
+
 		// TODO: is this correct?
-		if (other.typeType() != TypeType::Struct)
+		if (other.typeType() != TypeType::Struct) {
 			return false;
-		const StructType &otherstruct = dynamic_cast<const StructType &>(other);
-		if (form != otherstruct.form || shape != otherstruct.shape)
+		}
+
+		const StructType &other_struct = dynamic_cast<const StructType &>(other);
+		if (form != other_struct.form || shape != other_struct.shape) {
 			return false;
-		if ((!name.empty() && name != otherstruct.name) || (name.empty() && !otherstruct.name.empty()))
+		}
+
+		if ((!name.empty() && name != other_struct.name) || (name.empty() && !other_struct.name.empty())) {
 			return false;
-		if (node) {
-			if (!otherstruct.node || node->types.size() != otherstruct.node->types.size())
+		}
+
+		if (types && other_struct.types) {
+			if (types->size() != other_struct.types->size()) {
 				return false;
-			for (size_t i = 0, max = node->types.size(); i < max; ++i)
-				if (*node->types[i] != *otherstruct.node->types[i])
+			}
+
+			for (size_t i = 0, max = types->size(); i < max; ++i) {
+				if (*(*types)[i] != *(*other_struct.types)[i]) {
 					return false;
+				}
+			}
 		}
 		return true;
 	}
 
 	std::shared_ptr<StructType> StructType::pad() {
-		if (padded)
+		if (padded) {
 			return std::dynamic_pointer_cast<StructType>(shared_from_this());
+		}
 
-		if (paddedChild)
+		if (paddedChild) {
 			return paddedChild;
+		}
 
 		auto out = std::make_shared<StructType>(name != "[anon]"? name + "$padded" : name, form, StructShape::Default);
-
 		out->node = std::make_shared<StructNode>(StructShape::Packed);
 
 		ssize_t largest = 1, current_width = 0, padding_items_added = 0;
-		for (TypePtr &subtype: node->types)
+		for (TypePtr &subtype: types.value()) {
 			largest = std::max(largest, subtype->width());
+		}
 
-		for (size_t i = 0; i < node->types.size(); ++i) {
-			const bool is_last = i == node->types.size() - 1;
-			TypePtr &subtype = node->types[i];
+		for (size_t i = 0; i < types->size(); ++i) {
+			const bool is_last = i == types->size() - 1;
+			TypePtr &subtype = (*types)[i];
 			const int type_width = subtype->width();
 			current_width += type_width;
-			const int next_width = is_last? largest : node->types[i + 1]->width();
-			if (subtype->typeType() == TypeType::Struct)
-				out->node->types.push_back(dynamic_cast<StructType *>(subtype.get())->pad());
-			else
-				out->node->types.push_back(subtype->copy());
+			const int next_width = is_last? largest : (*types)[i + 1]->width();
+			if (subtype->typeType() == TypeType::Struct) {
+				out->types->push_back(dynamic_cast<StructType *>(subtype.get())->pad());
+			} else {
+				out->types->push_back(subtype->copy());
+			}
 			out->paddingMap.emplace(i, i + padding_items_added);
 			if (next_width) {
 				int remaining = (next_width - current_width % next_width) % next_width;
 				while (0 < remaining) {
-					out->node->types.push_back(IntType::make(8, false));
+					out->types->push_back(IntType::make(8, false));
 					++padding_items_added;
 					remaining -= 8;
 					current_width += 8;

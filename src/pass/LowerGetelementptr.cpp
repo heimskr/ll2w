@@ -1,5 +1,3 @@
-#include <deque>
-
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
 #include "compiler/Instruction.h"
@@ -14,14 +12,16 @@
 #include "util/Timer.h"
 #include "util/Util.h"
 
+#include <deque>
+#include <ranges>
+
 // #define DEBUG_GETELEMENTPTR
 
 namespace LL2W::Passes {
 	static bool anyPvarInIndices(const std::vector<GetelementptrNode::Index> &indices) {
-		for (const auto &index: indices)
-			if (index.isPvar)
-				return true;
-		return false;
+		return std::ranges::any_of(indices, [](const auto &index) {
+			return index.isPvar;
+		});
 	}
 
 	int lowerGetelementptr(Function &function) {
@@ -30,8 +30,9 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNodeType() != NodeType::Getelementptr)
+			if (!llvm || llvm->getNodeType() != NodeType::Getelementptr) {
 				continue;
+			}
 
 			GetelementptrNode *node = dynamic_cast<GetelementptrNode *>(llvm->getNode());
 			// In all the getelementptr instructions I've seen, the source argument has always been a pvar, never a
@@ -48,17 +49,17 @@ namespace LL2W::Passes {
 			ValuePtr constant_value = node->allValues().front();
 			TypePtr constant_type = node->constant->convert()->type;
 
-			if (!constant_value->isLocal() && !constant_value->isGlobal())
+			if (!constant_value->isLocal() && !constant_value->isGlobal()) {
 				throw std::runtime_error("Expected a pvar or gvar as the pointer value in a getelementptr instruction");
+			}
 
 			VariablePtr pointer;
-			if (constant_value->isLocal())
+			if (constant_value->isLocal()) {
 				pointer = dynamic_cast<LocalValue *>(constant_value.get())->variable;
-			else {
+			} else {
 				GlobalValue *global = dynamic_cast<GlobalValue *>(constant_value.get());
 				pointer = function.newVariable(constant_type);
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name))
-					->setDebug(node);
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(pointer, global->name))->setDebug(node);
 			}
 
 			const TypeType tt = constant_type->typeType();
@@ -75,8 +76,7 @@ namespace LL2W::Passes {
 				VariablePtr var = node->variable;
 				VariablePtr lo = function.makePrecoloredVariable(WhyInfo::loOffset, instruction->parent.lock());
 				auto move = std::make_shared<MoveInstruction>(pointer, var);
-				function.insertBefore(instruction, move, "LowerGetelementptr(" + std::string(node->location) +
-					"): initial move -> " + var->plainString())->setDebug(node)->extract();
+				function.insertBefore(instruction, move, "LowerGetelementptr(" + std::string(node->location) + "): initial move -> " + var->plainString())->setDebug(node)->extract();
 				while (!indices.empty()) {
 					const auto &index = indices.front();
 					indices.pop_front();
@@ -89,43 +89,39 @@ namespace LL2W::Passes {
 							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
 							auto mult = std::make_shared<MultIInstruction>(pvar, static_cast<int>(type->width()));
 							auto add = std::make_shared<AddRInstruction>(var, lo, var);
-							function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location)
-								+ "): pointer/array, pvar -> " + var->plainString())->setDebug(node)->extract();
+							function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) + "): pointer/array, pvar -> " + var->plainString())->setDebug(node)->extract();
 							function.insertBefore(instruction, add)->setDebug(node)->extract();
 						} else if (tt == TypeType::Struct) {
-							throw std::runtime_error("pvar indices are invalid for struct types @ " +
-								std::string(node->location));
+							throw std::runtime_error("pvar indices are invalid for struct types @ " + std::string(node->location));
 						}
 					} else if (tt == TypeType::Pointer || tt == TypeType::Array) {
 						type = dynamic_cast<HasSubtype *>(type.get())->subtype;
-						auto add = std::make_shared<AddIInstruction>(var,
-							int(type->width() * std::get<long>(index.value)), var);
-						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
-							"): pointer/array, number -> " + var->plainString())->setDebug(node)->extract();
+						auto add = std::make_shared<AddIInstruction>(var, int(type->width() * std::get<long>(index.value)), var);
+						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) + "): pointer/array, number -> " + var->plainString())->setDebug(node)->extract();
 					} else if (tt == TypeType::Struct) {
 						std::shared_ptr<StructType> stype = std::dynamic_pointer_cast<StructType>(type);
-						std::shared_ptr<StructNode> snode = stype->node;
-						if (!snode) {
+						if (!stype->types) {
 							stype = StructType::knownStructs.at(stype->barename());
-							snode = stype->node;
 						}
 
 						std::list<long> index_list;
-						for (const GetelementptrNode::Index &index: indices)
+						for (const GetelementptrNode::Index &index: indices) {
 							index_list.push_back(std::get<long>(index.value));
+						}
 
 						TypePtr out_type;
 						long offset = Util::updiv(Getelementptr::compute(constant_type, index_list, &out_type), 8l);
-						if (Util::outOfRange(offset))
+						if (Util::outOfRange(offset)) {
 							warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
+						}
 						var->setType(out_type);
 
 						auto add = std::make_shared<AddIInstruction>(var, int(offset), var);
-						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) +
-							"): struct, number -> " + var->plainString())->setDebug(node)->extract();
-						type = snode->types.at(std::get<long>(index.value));
-					} else
+						function.insertBefore(instruction, add, "LowerGetelementptr(" + std::string(node->location) + "): struct, number -> " + var->plainString())->setDebug(node)->extract();
+						type = stype->types.value().at(std::get<long>(index.value));
+					} else {
 						throw std::runtime_error("Invalid type in GetelementPtr: " + std::string(*type));
+					}
 				}
 
 				var->setType(node->type = std::make_shared<PointerType>(type->copy()));
@@ -138,8 +134,9 @@ namespace LL2W::Passes {
 				int subwidth;
 				if (HasSubtype *has_subtype = dynamic_cast<HasSubtype *>(node->type.get())) {
 					subwidth = Util::updiv(has_subtype->subtype->width(), 8);
-				} else
+				} else {
 					throw std::runtime_error("Type " + std::string(*node->type) + " has no subtype");
+				}
 
 				// index * width
 				auto mult = std::make_shared<MultIInstruction>(index, subwidth);
@@ -149,8 +146,7 @@ namespace LL2W::Passes {
 				auto addskip = std::make_shared<AddIInstruction>(node->variable, skip, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) +
-					"): array/pointer-type, dynamic index -> " + node->variable->plainString());
+				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) + "): array/pointer-type, dynamic index -> " + node->variable->plainString());
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, addskip)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
@@ -161,15 +157,15 @@ namespace LL2W::Passes {
 				bool first = true;
 				for (const auto &index: node->indices) {
 					indices.push_back(index.value);
-					if (first)
+					if (first) {
 						first = false;
-					else
+					} else {
 						indices_str << ',';
+					}
 					indices_str << (std::holds_alternative<long>(index.value)?
-						std::to_string(std::get<long>(index.value)) :
-						"%" + *std::get<const std::string *>(index.value));
+						  std::to_string(std::get<long>(index.value))
+						: "%" + *std::get<const std::string *>(index.value));
 				}
-
 
 				TypePtr out_type;
 #ifdef DEBUG_GETELEMENTPTR
@@ -179,14 +175,14 @@ namespace LL2W::Passes {
 				// if (Util::outOfRange(offset))
 				// 	warn() << "Getelementptr offset inexplicably out of range: " << offset << '\n';
 				function.comment(instruction, "LowerGetelementptr(" + std::string(node->location) + "): struct-type: " +
-					constant_type->toString() + " -> " + node->variable->plainString() + ", indices=" +
-					indices_str.str());
+					constant_type->toString() + " -> " + node->variable->plainString() + ", indices=" + indices_str.str());
 
 				VariablePtr source;
-				if (node->constant->value->isLocal())
+				if (node->constant->value->isLocal()) {
 					source = dynamic_cast<LocalValue *>(node->constant->value.get())->getVariable(function);
-				else
+				} else {
 					source = function.makeVariable(node->constant->value, instruction, node->constant->type);
+				}
 				function.insertBefore(instruction, MoveInstruction::make(source, node->variable));
 
 				Getelementptr::insert(function, node->pointerType, indices, instruction, node->variable, &out_type);
@@ -220,17 +216,19 @@ namespace LL2W::Passes {
 				auto movelo = std::make_shared<MoveInstruction>(lo, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) +
-					"): pointer-type -> " + node->variable->plainString())->setDebug(node)->extract();
+				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) + "): pointer-type -> " + node->variable->plainString())->setDebug(node)->extract();
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
-			} else throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
+			} else {
+				throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
+			}
 
 			to_remove.push_back(instruction);
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return to_remove.size();
 	}

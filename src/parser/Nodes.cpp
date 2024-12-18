@@ -214,6 +214,10 @@ namespace LL2W {
 			return new ConversionNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::ExtractValueInst>(llvm)) {
+			return new ExtractValueNode(*inst);
+		}
+
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			return new UnreachableNode;
 		}
@@ -954,7 +958,7 @@ namespace LL2W {
 
 	AsmNode::AsmNode(const llvm::CallInst &inst):
 		CallInvokeNode(inst) {
-			llvm::InlineAsm *asm_value = llvm::cast<llvm::InlineAsm>(inst.getOperand(0));
+			llvm::InlineAsm *asm_value = llvm::cast<llvm::InlineAsm>(inst.getOperand(inst.getNumOperands() - 1));
 			contents = StringSet::intern(asm_value->getAsmString());
 			constraints = StringSet::intern(asm_value->getConstraintString());
 			sideeffect = asm_value->hasSideEffects();
@@ -1623,35 +1627,45 @@ namespace LL2W {
 
 // ExtractValueNode
 
-	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
-	                                   ASTNode *decimals_, ASTNode *unibangs) {
+	ExtractValueNode::ExtractValueNode(const llvm::ExtractValueInst &inst) {
+		result = StringSet::intern(getOperandName(inst));
+		llvm::Value *accessed = inst.getOperand(0);
+		aggregateType = std::dynamic_pointer_cast<AggregateType>(Type::fromLLVM(*accessed->getType()));
+		assert(aggregateType != nullptr);
+		for (auto index: inst.getIndices()) {
+			decimals.emplace_back(index);
+		}
+	}
+
+	ExtractValueNode::ExtractValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *decimals_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, aggregate_type, aggregate_value, decimals_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
 		TypePtr uncasted = getType(aggregate_type);
 		aggregateType = std::dynamic_pointer_cast<AggregateType>(uncasted);
 		if (!aggregateType) {
-			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: " +
-				std::string(*uncasted));
+			throw std::runtime_error("Type of extractvalue instruction isn't an aggregate type: " + std::string(*uncasted));
 		}
 		aggregateValue = getValue(aggregate_value);
-		for (ASTNode *decimal: *decimals_)
+		for (ASTNode *decimal: *decimals_) {
 			decimals.push_back(decimal->atoi());
+		}
 	}
 
 	std::string ExtractValueNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[34m%" << *result << " \e[39;2m= \e[22;91mextractvalue\e[39m " << *aggregateType << " "
-		    << *aggregateValue;
-		for (int decimal: decimals)
+		out << "\e[34m%" << *result << " \e[39;2m= \e[22;91mextractvalue\e[39m " << *aggregateType << " " << *aggregateValue;
+		for (int decimal: decimals) {
 			out << "\e[2m,\e[0m " << decimal;
+		}
 		return out.str();
 	}
 
 	InstructionNode * ExtractValueNode::copy() const {
 		auto out = std::make_unique<ExtractValueNode>(*this);
-		if (out->aggregateType)
-			out->aggregateType = std::dynamic_pointer_cast<AggregateType>(out->aggregateType);
+		if (out->aggregateType) {
+			out->aggregateType = std::dynamic_pointer_cast<AggregateType>(out->aggregateType->copy());
+		}
 		Util::copyPointer(out->aggregateValue);
 		return out.release();
 	}

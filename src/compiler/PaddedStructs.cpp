@@ -90,17 +90,19 @@ namespace LL2W::PaddedStructs {
 		// TODO: support ArrayType
 
 		int width_sum = 0;
-		for (int i = 0; i < index; ++i)
-			width_sum += struct_type->node->types.at(i)->width();
+		for (int i = 0; i < index; ++i) {
+			width_sum += struct_type->types.value().at(i)->width();
+		}
 
 		int skip, source_reg_index = 0;
 
 		// While 64 <= width sum, subtract 64 and skip a source register.
 		// The result will be the number of bits to skip in the first used source register.
-		for (skip = width_sum; 64 <= skip; skip -= 64)
+		for (skip = width_sum; 64 <= skip; skip -= 64) {
 			++source_reg_index;
+		}
 
-		auto extracted_type = struct_type->node->types.at(index);
+		auto extracted_type = struct_type->types.value().at(index);
 		int width_remaining = extracted_type->width();
 		int target_remaining = 64;
 		int target_reg_index = 0;
