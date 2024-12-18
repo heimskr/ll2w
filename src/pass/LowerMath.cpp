@@ -550,10 +550,11 @@ namespace LL2W::Passes {
 				}
 			} else if (type == NodeType::Rem) {
 				RemNode *rem = dynamic_cast<RemNode *>(llvm->getNode());
-				if (rem->remType == RemNode::RemType::Srem)
+				if (rem->remType == RemNode::RemType::Srem) {
 					lowerRem<true>(function, instruction, rem);
-				else
+				} else {
 					lowerRem<false>(function, instruction, rem);
+				}
 			} else if (type == NodeType::Shr) {
 				ShrNode *shr = dynamic_cast<ShrNode *>(llvm->getNode());
 				if (shr->shrType == ShrNode::ShrType::Ashr) {

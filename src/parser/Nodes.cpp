@@ -1535,6 +1535,8 @@ namespace LL2W {
 		result = tryOperandName(inst);
 		divType = inst.getOpcode() == llvm::Instruction::BinaryOps::SDiv? DivType::Sdiv : DivType::Udiv;
 		exact = inst.isExact();
+		left = Constant::fromLLVM(*inst.getOperand(0))->value;
+		right = Constant::fromLLVM(*inst.getOperand(1))->value;
 	}
 
 	DivNode::DivNode(ASTNode *result_, ASTNode *div, ASTNode *exact_,  ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
@@ -1560,6 +1562,8 @@ namespace LL2W {
 		result = tryOperandName(inst);
 		remType = inst.getOpcode() == llvm::Instruction::BinaryOps::SRem? RemType::Srem : RemType::Urem;
 		exact = inst.isExact();
+		left = Constant::fromLLVM(*inst.getOperand(0))->value;
+		right = Constant::fromLLVM(*inst.getOperand(1))->value;
 	}
 
 	RemNode::RemNode(ASTNode *result_, ASTNode *rem, ASTNode *exact_, ASTNode *type_, ASTNode *left_, ASTNode *right_, ASTNode *unibangs):
@@ -1744,8 +1748,9 @@ namespace LL2W {
 		Util::copyPointer(out->type);
 		Util::copyPointer(out->value);
 		out->table.clear();
-		for (const auto &[t, v, s]: table)
-			out->table.emplace_back(t? t->copy() : nullptr, v? v->copy() : nullptr, s);
+		for (const auto &[t, v, s]: table) {
+ 			out->table.emplace_back(t? t->copy() : nullptr, v? v->copy() : nullptr, s);
+		}
 		return out.release();
 	}
 
@@ -1756,6 +1761,7 @@ namespace LL2W {
 		result = tryOperandName(inst);
 		llvm::Value *accessed = inst.getOperand(0);
 		aggregateType = std::dynamic_pointer_cast<AggregateType>(Type::fromLLVM(*accessed->getType()));
+		aggregateValue = Constant::fromLLVM(*accessed)->value;
 		assert(aggregateType != nullptr);
 		for (auto index: inst.getIndices()) {
 			decimals.emplace_back(index);

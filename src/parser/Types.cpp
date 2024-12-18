@@ -627,6 +627,7 @@ namespace LL2W {
 		}
 
 		auto out = std::make_shared<StructType>(name != "[anon]"? name + "$padded" : name, form, StructShape::Default);
+		out->types.emplace();
 		out->node = std::make_shared<StructNode>(StructShape::Packed);
 
 		ssize_t largest = 1, current_width = 0, padding_items_added = 0;
@@ -636,14 +637,14 @@ namespace LL2W {
 
 		for (size_t i = 0; i < types->size(); ++i) {
 			const bool is_last = i == types->size() - 1;
-			TypePtr &subtype = (*types)[i];
-			const int type_width = subtype->width();
+			Type &subtype = *(*types)[i];
+			const int type_width = subtype.width();
 			current_width += type_width;
 			const int next_width = is_last? largest : (*types)[i + 1]->width();
-			if (subtype->typeType() == TypeType::Struct) {
-				out->types->push_back(dynamic_cast<StructType *>(subtype.get())->pad());
+			if (subtype.typeType() == TypeType::Struct) {
+				out->types->push_back(dynamic_cast<StructType *>(&subtype)->pad());
 			} else {
-				out->types->push_back(subtype->copy());
+				out->types->push_back(subtype.copy());
 			}
 			out->paddingMap.emplace(i, i + padding_items_added);
 			if (next_width) {
