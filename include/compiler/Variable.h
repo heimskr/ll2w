@@ -31,6 +31,7 @@ namespace LL2W {
 			using ID = const std::string *;
 
 			const ID originalID;
+			Function *owner = nullptr;
 			ID id;
 			TypePtr type = nullptr;
 			WeakSet<BasicBlock>  definingBlocks, usingBlocks;
@@ -46,8 +47,7 @@ namespace LL2W {
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
 
-			Variable(ID id_, TypePtr type_ = nullptr, WeakSet<BasicBlock> defining_blocks = {},
-			         WeakSet<BasicBlock> using_blocks = {});
+			Variable(Function &owner, ID, TypePtr = nullptr, WeakSet<BasicBlock> defining_blocks = {}, WeakSet<BasicBlock> using_blocks = {});
 
 			/** Calculates the sum of each use's estimated execution count. */
 			int64_t weight() const;

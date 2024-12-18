@@ -79,7 +79,7 @@ namespace LL2W::Passes {
 			if (shouldLoad) {
 				auto lock = function.parent.getLock();
 				auto load = std::make_shared<LoadIInstruction>(global.name, variable,
-					function.parent.symbolSize("@" + *global.name) / 8);
+					function.parent.symbolSize(*global.name) / 8);
 				function.insertBefore(instruction, load)->setDebug(*instruction)->extract();
 			} else {
 				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name))

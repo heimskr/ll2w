@@ -273,8 +273,8 @@ namespace LL2W {
 		const std::string *globalName;
 		GlobalTemporaryType(const std::string *globalName_): globalName(globalName_) {}
 		GlobalTemporaryType(const ASTNode *node): GlobalTemporaryType(StringSet::intern(node->extractName())) {}
-		operator std::string() override { return "\e[1;4m@" + *globalName + "\e[0m"; }
-		std::string toString() override { return "@" + *globalName; }
+		operator std::string() override { return "\e[1;4m" + *globalName + "\e[0m"; }
+		std::string toString() override { return *globalName; }
 		TypePtr copy() const override { return std::make_shared<GlobalTemporaryType>(globalName); }
 		ssize_t width() const override { return 64; }
 		int alignment() const override;

@@ -18,10 +18,11 @@ namespace LL2W {
 		return strnatcmp(left->id->c_str(), right->id->c_str()) == -1;
 	}
 
-	Variable::Variable(ID id_, TypePtr type_, WeakSet<BasicBlock> defining_blocks, WeakSet<BasicBlock> using_blocks):
-		originalID(id_),
-		id(id_),
-		type(type_),
+	Variable::Variable(Function &owner, ID id, TypePtr type, WeakSet<BasicBlock> defining_blocks, WeakSet<BasicBlock> using_blocks):
+		originalID(id),
+		owner(&owner),
+		id(id),
+		type(std::move(type)),
 		definingBlocks(std::move(defining_blocks)),
 		usingBlocks(std::move(using_blocks)) {}
 
@@ -84,8 +85,7 @@ namespace LL2W {
 	}
 
 	bool Variable::isAliasOf(const Variable &other) const {
-		return *this == other || aliases.count(const_cast<Variable *>(&other)) != 0
-			|| other.aliases.count(const_cast<Variable *>(this)) != 0;
+		return *this == other || aliases.count(const_cast<Variable *>(&other)) != 0 || other.aliases.count(const_cast<Variable *>(this)) != 0;
 	}
 
 	Variable::operator std::string() const {
@@ -168,8 +168,7 @@ namespace LL2W {
 	}
 
 	Function * Variable::getFunction() const {
-		return definingBlocks.empty()? (usingBlocks.empty()? nullptr : usingBlocks.begin()->lock()->parent)
-		                             : definingBlocks.begin()->lock()->parent;
+		return owner;
 	}
 
 	std::string Variable::functionName() const {
