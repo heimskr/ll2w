@@ -212,7 +212,7 @@ namespace LL2W {
 				}
 				auto source_type = Type::fromLLVM(*llvm::cast<llvm::GetElementPtrInst>(expr_constant->getAsInstruction())->getSourceElementType()); // TODO: memleak?
 				auto pointer_type = PointerType::make(source_type);
-				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, std::move(pointer_type), std::move(source_type), Constant::fromLLVM(*base)->value, std::move(decimals));
+				out->value = std::make_shared<GetelementptrValue>(true /* TODO */, std::move(source_type), std::move(pointer_type), Constant::fromLLVM(*base)->value, std::move(decimals));
 				return out;
 			}
 

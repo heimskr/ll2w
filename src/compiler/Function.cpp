@@ -1103,7 +1103,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		Passes::minimizeBlocks(*this, true);
+		Passes::minimizeBlocks(*this, false);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1634,15 +1634,15 @@ namespace LL2W {
 				upAndMark(p, var);
 			}
 		} catch (std::out_of_range &) {
+			debug();
 			std::cerr << "Couldn't find block " << *block->label << " in " << *name << " while computing liveness.\n";
 			if (!bbNodeMap.empty()) {
-				std::cerr << "bbNodeMap:";
+				std::cerr << "\nbbNodeMap:";
 				for (const auto &pair: bbNodeMap) {
 					std::cerr << ' ' << *pair.first->label;
 				}
-				std::cerr << '\n';
+				std::cerr << "\n\n";
 			}
-			debug();
 			throw;
 		}
 	}

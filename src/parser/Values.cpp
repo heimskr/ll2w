@@ -120,12 +120,14 @@ namespace LL2W {
 	GlobalValue::GlobalValue(const ASTNode *node):
 		GlobalValue(node->lexerInfo) {}
 
-	GetelementptrValue::GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
-	                                       const decltype(decimals) &decimals_):
-		inbounds(inbounds_), type(type_), ptrType(ptr_type), variable(variable_), decimals(decimals_) {}
+	GetelementptrValue::GetelementptrValue(bool inbounds, TypePtr type, TypePtr ptr_type, ValuePtr variable, decltype(decimals) decimals):
+		inbounds(inbounds),
+		type(std::move(type)),
+		ptrType(std::move(ptr_type)),
+		variable(std::move(variable)),
+		decimals(std::move(decimals)) {}
 
-	GetelementptrValue::GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
-	                                       ASTNode *decimal_list) {
+	GetelementptrValue::GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_, ASTNode *decimal_list) {
 		type = getType(type_);
 		ptrType = getType(ptr_type);
 		variable = getValue(variable_);

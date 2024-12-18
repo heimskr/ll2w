@@ -104,7 +104,7 @@ namespace LL2W {
 			}
 
 			if (w == nullptr) {
-				continue;
+				// continue;
 				graph.renderTo("w_null.png");
 				throw std::runtime_error(std::format("w is null at i = {}, gsize = {}", i, gsize));
 			}
@@ -132,7 +132,7 @@ namespace LL2W {
 			Node *w = vertex[i];
 			if (dom[w] != vertex[semi[w]]) {
 				if (w == nullptr) {
-					continue;
+					// continue;
 					throw std::runtime_error("w is null (2)");
 				}
 				dom[w] = dom[dom[w]];

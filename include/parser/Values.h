@@ -152,16 +152,12 @@ namespace LL2W {
 		// The first element represents the width of the integer type.
 		std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals {};
 
-		GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_,
-							ASTNode *decimal_list);
-		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_,
-							const decltype(decimals) &decimals_);
+		GetelementptrValue(ASTNode *inbounds_, ASTNode *type_, ASTNode *ptr_type, ASTNode *variable_, ASTNode *decimal_list);
+		GetelementptrValue(bool inbounds_, TypePtr type_, TypePtr ptr_type, ValuePtr variable_, decltype(decimals) decimals);
 		GetelementptrValue(const ASTNode *);
+
 		ValueType valueType() const override { return ValueType::Getelementptr; }
-		ValuePtr copy() const override {
-			return std::make_shared<GetelementptrValue>(inbounds, type->copy(), ptrType->copy(), variable->copy(),
-				decimals);
-		}
+		ValuePtr copy() const override { return std::make_shared<GetelementptrValue>(inbounds, type->copy(), ptrType->copy(), variable->copy(), decimals); }
 		operator std::string() override;
 		std::string compile() const override { return "UNSUPPORTED (Getelementptr)"; }
 	};
