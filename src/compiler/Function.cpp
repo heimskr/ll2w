@@ -164,6 +164,7 @@ namespace LL2W {
 		extractBlocks();
 		Passes::ignoreIntrinsics(*this);
 		if (linearInstructions.size() == 1) {
+			Timer timer{"InnerAnalysis"};
 			const auto &only = linearInstructions.front();
 			if (const auto *llvm = dynamic_cast<const LLVMInstruction *>(only.get())) {
 				if (const auto *ret = dynamic_cast<const RetNode *>(llvm->getNode())) {
@@ -219,6 +220,7 @@ namespace LL2W {
 
 	void Function::extractBlocksLLVM() {
 		assert(llvmFunction != nullptr);
+		Timer timer{"ExtractBlocksLLVM"};
 
 		std::vector<const std::string *> preds;
 		int block_index = -1;

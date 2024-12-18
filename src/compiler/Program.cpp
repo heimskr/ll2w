@@ -281,6 +281,7 @@ namespace LL2W {
 
 	void Program::analyze() {
 		info() << "Analyzing program.\n";
+		Timer timer{"ProgramAnalysis"};
 
 		auto run = [this](const std::string &name, Function *function) {
 			ValuePtr value;
@@ -326,6 +327,7 @@ namespace LL2W {
 
 		info() << "Analysis complete.\n";
 
+		timer.stop();
 		Timer::summary();
 		Timer::clear();
 	}
