@@ -1,9 +1,9 @@
-#define ANALYZE_MULTITHREADED
-#define COMPILE_MULTITHREADED
+// #define ANALYZE_MULTITHREADED
+// #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
-#define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
+// #define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -263,10 +263,11 @@ namespace LL2W {
 						const int64_t subindex = subnode->atoi();
 						if (basicTypeSets.contains(subindex)) {
 							const auto &typeset = basicTypeSets.at(subindex);
-							if (typeset->size() != 1)
+							if (typeset->size() != 1) {
 								error() << "Typeset " << subindex << " has a size of " << typeset->size() << '\n';
-							else
+							} else {
 								basicTypeLists[index].push_back(*typeset->begin());
+							}
 						} else if (derivedTypes.contains(subindex)) {
 							basicTypeLists[index].push_back(derivedTypes.at(subindex));
 						} else if (compositeTypes.contains(subindex)) {

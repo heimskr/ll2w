@@ -1,6 +1,7 @@
 #include "parser/ASTNode.h"
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 #include <llvm/IR/Constant.h>
@@ -18,32 +19,40 @@ namespace LL2W {
 	Constant::Constant() = default;
 
 	Constant::Constant(TypePtr type, ValuePtr value):
-		type(std::move(type)), value(std::move(value)) {}
+		type(std::move(type)),
+		value(std::move(value)) {}
 
-	Constant::Constant(TypePtr type, ValuePtr value, const ParAttrs &parattrs_, Conversion conversion_,
-	                   ConstantPtr conversion_source, TypePtr conversion_type):
-		type(std::move(type)), value(std::move(value)), parattrs(parattrs_), conversion(conversion_),
-		conversionSource(conversion_source), conversionType(conversion_type) {}
+	Constant::Constant(TypePtr type, ValuePtr value, const ParAttrs &parattrs_, Conversion conversion_, ConstantPtr conversion_source, TypePtr conversion_type):
+		type(std::move(type)),
+		value(std::move(value)),
+		parattrs(parattrs_),
+		conversion(conversion_),
+		conversionSource(conversion_source),
+		conversionType(conversion_type) {}
 
 	Constant::Constant(const ASTNode *node, TypePtr type_hint) {
 		if (node->symbol == LLVMTOK_DECIMAL) {
-			if (!type_hint)
+			if (!type_hint) {
 				throw std::runtime_error("Constant::Constant: type hint expected for decimal node");
+			}
 			type = type_hint;
 			value = std::make_shared<IntValue>(node);
 		} else if (node->symbol == LLVMTOK_NULL) {
-			if (!type_hint)
+			if (!type_hint) {
 				throw std::runtime_error("Constant::Constant: type hint expected for null node");
+			}
 			type = type_hint;
 			value = std::make_shared<NullValue>();
 		} else if (node->symbol == LLVMTOK_PVAR) {
-			if (!type_hint)
+			if (!type_hint) {
 				throw std::runtime_error("Constant::Constant: type hint expected for pvar node");
+			}
 			type = type_hint;
 			value = std::make_shared<LocalValue>(node);
 		} else if (node->symbol == LLVMTOK_GVAR) {
-			if (!type_hint)
+			if (!type_hint) {
 				throw std::runtime_error("Constant::Constant: type hint expected for gvar node");
+			}
 			type = type_hint;
 			value = std::make_shared<GlobalValue>(node);
 		} else if (node->symbol == LLVM_CONVERSION_EXPR) {
@@ -51,16 +60,18 @@ namespace LL2W {
 			// 	throw std::runtime_error("Constant::Constant: type hint expected for conversion expression node");
 			type = type_hint;
 			value = nullptr;
-			for (const std::pair<const Conversion, std::string> &pair: conversion_map)
+			for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
 				if (*node->lexerInfo == pair.second) {
 					conversion = pair.first;
 					break;
 				}
+			}
 			conversionSource = std::make_shared<Constant>(node->at(0));
 			conversionType = getType(node->at(1));
 		} else if (node->symbol == LLVMTOK_GETELEMENTPTR) {
-			if (!type_hint)
+			if (!type_hint) {
 				throw std::runtime_error("Constant::Constant: type hint expected for getelementptr node");
+			}
 			type = type_hint;
 			value = std::make_shared<GetelementptrValue>(node);
 		} else if (node->symbol == LLVMTOK_BOOL) {
@@ -93,14 +104,15 @@ namespace LL2W {
 				value = getValue(value_node);
 			}
 
-			if (2 < node->size())
+			if (2 < node->size()) {
 				parattrs = {*node->at(2)};
+			}
 		}
 	}
 
 	ConstantPtr Constant::copy() const {
-		return std::make_shared<Constant>(type? type->copy() : nullptr, value? value->copy() : nullptr, parattrs,
-			conversion, conversionSource? conversionSource->copy() : nullptr,
+		return std::make_shared<Constant>(type? type->copy() : nullptr, value? value->copy() : nullptr, parattrs, conversion,
+			conversionSource? conversionSource->copy() : nullptr,
 			conversionType? conversionType->copy() : nullptr);
 	}
 
@@ -132,19 +144,23 @@ namespace LL2W {
 	Constant::operator std::string() const {
 		std::stringstream out;
 		out << std::string(*type);
-		const std::string parattrs_str = parattrs;
-		if (!parattrs_str.empty())
+
+		if (std::string parattrs_str = parattrs; !parattrs_str.empty()) {
 			out << " " << parattrs_str;
+		}
+
 		if (value) {
 			out << " " << std::string(*value);
 		} else if (conversion != Conversion::None) {
-			out << " \e[91m" << conversion_map.at(conversion) << "\e[0m \e[2m(\e[0m" << std::string(*conversionSource)
-			    << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
+			out << " \e[91m" << conversion_map.at(conversion) << "\e[0m \e[2m(\e[0m" << std::string(*conversionSource) << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
 		}
+
 		return out.str();
 	}
 
 	ConstantPtr Constant::fromLLVM(const llvm::Value &llvm_value) {
+		Timer timer{"Constant::fromLLVM"};
+
 		ConstantPtr out = std::shared_ptr<Constant>(new Constant);
 
 		if (auto *int_constant = llvm::dyn_cast<llvm::ConstantInt>(&llvm_value)) {
@@ -181,6 +197,7 @@ namespace LL2W {
 			std::string_view op = expr_constant->getOpcodeName();
 
 			if (op == "getelementptr") {
+				Timer timer{"Constant::getelementptr"};
 				out->type = Type::fromLLVM(*llvm_value.getType());
 				const llvm::Constant *base = expr_constant->getOperand(0);
 				std::vector<std::pair<long, std::variant<long, const std::string *>>> decimals;
@@ -239,29 +256,20 @@ namespace LL2W {
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::AllocaInst>(&llvm_value)) {
-			std::string name;
-			llvm::raw_string_ostream os(name);
-			inst->printAsOperand(os, false);
 			out->type = PointerType::make(Type::fromLLVM(*inst->getAllocatedType()));
-			out->value = LocalValue::make(name);
+			out->value = LocalValue::make(getOperandName(*inst));
 			return out;
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::Instruction>(&llvm_value)) {
-			std::string name;
-			llvm::raw_string_ostream os(name);
-			inst->printAsOperand(os, false);
 			out->type = Type::fromLLVM(*inst->getType());
-			out->value = LocalValue::make(name);
+			out->value = LocalValue::make(getOperandName(*inst));
 			return out;
 		}
 
 		if (auto *argument = llvm::dyn_cast<llvm::Argument>(&llvm_value)) {
-			std::string name;
-			llvm::raw_string_ostream os(name);
-			argument->printAsOperand(os, false);
 			out->type = Type::fromLLVM(*argument->getType());
-			out->value = LocalValue::make(name);
+			out->value = LocalValue::make(getOperandName(*argument));
 			return out;
 		}
 

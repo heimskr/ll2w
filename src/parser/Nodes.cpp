@@ -806,44 +806,58 @@ namespace LL2W {
 
 	CallInvokeNode::CallInvokeNode(const llvm::CallInst &inst) {
 		Timer timer{"ConstructCallInvokeNode"};
-		result = tryOperandName(inst);
-		cconv = getCConv(inst.getCallingConv());
 
-		for (const auto &attr_list: inst.getAttributes()) {
-			for (const auto &attr: attr_list) {
-				const llvm::Attribute::AttrKind kind = attr.getKindAsEnum();
-				if (inst.hasRetAttr(kind)) {
-					retattrs.insert(getRetAttr(kind));
+		{
+			Timer subtimer{"ConstructCallInvokeNode::1"};
+			result = tryOperandName(inst);
+			cconv = getCConv(inst.getCallingConv());
+		}
+
+		{
+			Timer subtimer{"ConstructCallInvokeNode::2"};
+			for (const auto &attr_list: inst.getAttributes()) {
+				Timer subtimer{"ConstructCallInvokeNode::2 iter"};
+				for (const auto &attr: attr_list) {
+					const llvm::Attribute::AttrKind kind = attr.getKindAsEnum();
+					if (inst.hasRetAttr(kind)) {
+						retattrs.insert(getRetAttr(kind));
+					}
 				}
 			}
 		}
 
-		for (unsigned i = 0, max = inst.getNumOperands(); i < max; ++i) {
-			llvm::Value *operand = inst.getOperand(i);
-			if (i + 1 == max) {
-				std::string name_string = getOperandName(*operand);
+		{
+			Timer subtimer{"ConstructCallInvokeNode::3"};
+			for (unsigned i = 0, max = inst.getNumOperands(); i < max; ++i) {
+				llvm::Value *operand = inst.getOperand(i);
+				if (i + 1 == max) {
+					std::string name_string = getOperandName(*operand);
 
-				if (name_string.empty()) {
-					throw std::runtime_error("Callee operand name is empty");
-				}
+					if (name_string.empty()) {
+						throw std::runtime_error("Callee operand name is empty");
+					}
 
-				if (name_string[0] == '@') {
-					name = std::make_shared<GlobalValue>(name_string);
-				} else if (name_string[0] == '%') {
-					name = std::make_shared<LocalValue>(name_string);
-				} else if (llvm::isa<llvm::InlineAsm>(*operand)) {
-					continue;
-				} else {
-					throw std::runtime_error("Invalid callee operand name");
+					if (name_string[0] == '@') {
+						name = std::make_shared<GlobalValue>(name_string);
+					} else if (name_string[0] == '%') {
+						name = std::make_shared<LocalValue>(name_string);
+					} else if (llvm::isa<llvm::InlineAsm>(*operand)) {
+						continue;
+					} else {
+						throw std::runtime_error("Invalid callee operand name");
+					}
+				} else if (ConstantPtr constant = Constant::fromLLVM(*operand)) {
+					constants.push_back(constant);
 				}
-			} else if (ConstantPtr constant = Constant::fromLLVM(*operand)) {
-				constants.push_back(constant);
 			}
 		}
 
-		llvm::FunctionType *function_type = inst.getFunctionType();
-		returnType = Type::fromLLVM(*function_type->getReturnType());
-		argumentEllipsis = function_type->isVarArg();
+		{
+			Timer subtimer{"ConstructCallInvokeNode::4"};
+			llvm::FunctionType *function_type = inst.getFunctionType();
+			returnType = Type::fromLLVM(*function_type->getReturnType());
+			argumentEllipsis = function_type->isVarArg();
+		}
 	}
 
 	CallInvokeNode::CallInvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *function_name, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs) {
