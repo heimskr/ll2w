@@ -230,22 +230,28 @@ namespace LL2W {
 			const std::string *label = StringSet::intern(getOperandName(block));
 
 			std::list<InstructionPtr> instructions;
-			for (llvm::Instruction &instruction: block) {
-				auto llvm = std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true);
-				instructions.push_back(llvm);
-				linearInstructions.push_back(std::move(llvm));
+			{
+				Timer timer{"InstructionCreationLoop"};
+				for (llvm::Instruction &instruction: block) {
+					auto llvm = std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true);
+					instructions.push_back(llvm);
+					linearInstructions.push_back(std::move(llvm));
+				}
 			}
 
 			BasicBlockPtr new_block = blocks.emplace_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
 			new_block->parent = this;
 			new_block->index = ++block_index;
 
-			for (const InstructionPtr &instruction: new_block->instructions) {
-				instruction->parent = new_block;
-				instruction->extract();
-				for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written}) {
-					for (VariablePtr vptr: *variables) {
-						variableStore.insert({vptr->id, vptr});
+			{
+				Timer timer{"InstructionExtractionLoop"};
+				for (const InstructionPtr &instruction: new_block->instructions) {
+					instruction->parent = new_block;
+					instruction->extract();
+					for (const std::unordered_set<VariablePtr> *variables: {&instruction->read, &instruction->written}) {
+						for (VariablePtr vptr: *variables) {
+							variableStore.insert({vptr->id, vptr});
+						}
 					}
 				}
 			}

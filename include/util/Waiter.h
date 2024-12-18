@@ -11,6 +11,7 @@ namespace LL2W {
 			Waiter(size_t remaining_) noexcept;
 
 			Waiter & operator--() noexcept;
+			size_t operator--(int) noexcept;
 			void wait();
 			bool isDone() const noexcept;
 			void reset(size_t, bool force = false);

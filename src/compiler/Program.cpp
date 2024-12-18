@@ -34,6 +34,10 @@
 #include <sstream>
 #include <thread>
 
+namespace {
+	constexpr size_t PARALLELISM = 24;
+}
+
 namespace LL2W {
 	struct GlobalData {
 		ConstantPtr constant;
@@ -304,14 +308,14 @@ namespace LL2W {
 		};
 
 #ifdef ANALYZE_MULTITHREADED
-		ThreadPool pool(24);
+		ThreadPool pool(PARALLELISM);
 		pool.start();
 		Waiter waiter(functions.size());
 
 		for (auto &[name, function]: functions) {
 			pool.add([&waiter, &run, &name, function](ThreadPool &, size_t) {
 				run(name, function);
-				if (auto remaining = (--waiter).getRemaining(); remaining % 10 == 0) {
+				if (auto remaining = waiter--; remaining % 10 == 0) {
 					info() << "Remaining: " << remaining << "\n";
 				}
 			});
@@ -334,31 +338,41 @@ namespace LL2W {
 
 	void Program::compile() {
 		info() << "Compiling program.\n";
-#ifdef COMPILE_MULTITHREADED
-		std::vector<std::thread> threads;
-		threads.reserve(functions.size());
+		Timer timer{"ProgramCompilation"};
 
-		for (auto &pair: functions) {
-			threads.emplace_back(std::thread([&] {
-				pthread_setname_np(pthread_self(), pair.second->name->c_str());
-				pair.second->compile();
-			}));
+#ifdef COMPILE_MULTITHREADED
+		ThreadPool pool(PARALLELISM);
+		pool.start();
+		Waiter waiter(functions.size());
+
+		for (auto &[name, function]: functions) {
+			pool.add([&waiter, function](ThreadPool &, size_t) {
+				function->compile();
+				if (auto remaining = waiter--; remaining % 10 == 0) {
+					info() << "Remaining: " << remaining << "\n";
+				}
+			});
 		}
 
-		for (std::thread &thread: threads)
-			thread.join();
+		waiter.wait();
+		pool.join();
 #else
 		for (auto &[name, function]: functions) {
 #ifdef SINGLE_FUNCTION
 			if (*function->name == SINGLE_FUNCTION) {
 #endif
-				// std::cerr << "Compiling " << *function->name << "...\n";
+				// info() << "Compiling " << *function->name << "...\n";
 				function->compile();
 #ifdef SINGLE_FUNCTION
 			}
 #endif
 		}
 #endif
+
+		info() << "Compilation complete.\n";
+		timer.stop();
+		Timer::summary();
+		Timer::clear();
 	}
 
 	std::string Program::toString() {

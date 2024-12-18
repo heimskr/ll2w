@@ -5,9 +5,18 @@ namespace LL2W {
 		remaining(remaining_) {}
 
 	Waiter & Waiter::operator--() noexcept {
-		if (--remaining == 0)
+		if (--remaining == 0) {
 			condition.notify_all();
+		}
 		return *this;
+	}
+
+	size_t Waiter::operator--(int) noexcept {
+		size_t out = --remaining;
+		if (out == 0) {
+			condition.notify_all();
+		}
+		return out;
 	}
 
 	void Waiter::wait() {

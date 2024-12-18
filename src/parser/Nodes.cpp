@@ -6,6 +6,7 @@
 #include "parser/StringSet.h"
 #include "parser/Util.h"
 #include "util/Deleter.h"
+#include "util/Timer.h"
 #include "util/Util.h"
 
 #include <llvm/IR/InlineAsm.h>
@@ -23,12 +24,12 @@ namespace LL2W {
 
 	MetadataDef::MetadataDef(ASTNode *dotident_node, ASTNode *distinct_node, ASTNode *list):
 		BaseNode(llvmParser, LLVM_METADATA, StringSet::intern(dotident_node->concatenate().c_str())) {
-		locate(dotident_node);
-		if ((distinct = distinct_node != nullptr))
+			locate(dotident_node);
+			distinct = distinct_node != nullptr;
 			delete distinct_node;
-		adopt(dotident_node);
-		adopt(list);
-	}
+			adopt(dotident_node);
+			adopt(list);
+		}
 
 	std::string MetadataDef::debugExtra() const {
 		return " \e[36m" + std::string(distinct? "" : "not ") + "distinct\e[0m";
@@ -53,10 +54,11 @@ namespace LL2W {
 		preds.reserve(list->size());
 		for (const ASTNode *pred: *list) {
 			const std::string &pred_label = *pred->lexerInfo;
-			if (pred_label[1] == '"')
+			if (pred_label[1] == '"') {
 				preds.push_back(StringSet::intern(pred_label.substr(2, pred_label.size() - 3)));
-			else
+			} else {
 				preds.push_back(StringSet::intern(pred_label.substr(1)));
+			}
 		}
 	}
 
@@ -172,87 +174,110 @@ namespace LL2W {
 	}
 
 	InstructionNode * InstructionNode::fromLLVM(llvm::Instruction *llvm) {
+		Timer check_timer{"CheckInstruction"};
+
 		if (auto *inst = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
+			check_timer.stop();
 			return new RetNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::AllocaInst>(llvm)) {
+			check_timer.stop();
 			return new AllocaNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::StoreInst>(llvm)) {
+			check_timer.stop();
 			return new StoreNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::LoadInst>(llvm)) {
+			check_timer.stop();
 			return new LoadNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::IntToPtrInst>(llvm)) {
+			check_timer.stop();
 			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::PtrToIntInst>(llvm)) {
+			check_timer.stop();
 			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ICmpInst>(llvm)) {
+			check_timer.stop();
 			return new IcmpNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::GetElementPtrInst>(llvm)) {
+			check_timer.stop();
 			return new GetelementptrNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::PHINode>(llvm)) {
+			check_timer.stop();
 			return new PhiNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SwitchInst>(llvm)) {
+			check_timer.stop();
 			return new SwitchNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SelectInst>(llvm)) {
+			check_timer.stop();
 			return new SelectNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SExtInst>(llvm)) {
+			check_timer.stop();
 			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::TruncInst>(llvm)) {
+			check_timer.stop();
 			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ZExtInst>(llvm)) {
+			check_timer.stop();
 			return new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ExtractValueInst>(llvm)) {
+			check_timer.stop();
 			return new ExtractValueNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::InsertValueInst>(llvm)) {
+			check_timer.stop();
 			return new InsertValueNode(*inst);
 		}
 
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
+			check_timer.stop();
 			return new UnreachableNode;
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::CallInst>(llvm)) {
 			if (inst->isInlineAsm()) {
+				check_timer.stop();
 				return new AsmNode(*inst);
 			} else {
+				check_timer.stop();
 				return new CallNode(*inst);
 			}
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
 			if (inst->isConditional()) {
+				check_timer.stop();
 				return new BrCondNode(*inst);
 			} else {
 				assert(inst->isUnconditional());
+				check_timer.stop();
 				return new BrUncondNode(*inst);
 			}
 		}
@@ -264,25 +289,31 @@ namespace LL2W {
 				case Add:
 				case Shl:
 				case Mul:
+					check_timer.stop();
 					return new BasicMathNode(*inst);
 				case And:
 				case Or:
 				case Xor:
+					check_timer.stop();
 					return new LogicNode(*inst);
 				case LShr:
 				case AShr:
+					check_timer.stop();
 					return new ShrNode(*inst);
 				case SRem:
 				case URem:
+					check_timer.stop();
 					return new RemNode(*inst);
 				case SDiv:
 				case UDiv:
+					check_timer.stop();
 					return new DivNode(*inst);
 				default:
 					break;
 			}
 		}
 
+		check_timer.stop();
 		error();
 		dump(*llvm);
 		throw std::invalid_argument("Unhandled LLVM instruction");
@@ -325,6 +356,7 @@ namespace LL2W {
 // SelectNode
 
 	SelectNode::SelectNode(const llvm::SelectInst &inst) {
+		Timer timer{"ConstructSelectNode"};
 		result = tryOperandName(inst);
 		fastmath = getFastmath(inst.getFastMathFlags());
 		conditionType = Type::fromLLVM(*inst.getCondition()->getType());
@@ -338,6 +370,7 @@ namespace LL2W {
 	SelectNode::SelectNode(ASTNode *result_, ASTNode *fastmath_, ASTNode *condition_type, ASTNode *condition_value, ASTNode *type1, ASTNode *val1, ASTNode *type2, ASTNode *val2, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, condition_type, condition_value, type1, val1, type2, val2);
 		handleUnibangs(unibangs);
+
 		result = result_->extracted();
 		getFastmath(fastmath, fastmath_);
 		conditionType = getType(condition_type);
@@ -363,8 +396,7 @@ namespace LL2W {
 	std::string SelectNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[32m" << getResult() << " \e[2m= \e[0;91mselect\e[0;38;5;202m" << fastmath << " " << *conditionType
-		    << " " << *conditionValue << "\e[2m,\e[0m " << *firstType << " " << *firstValue << "\e[2m,\e[0m "
-		    << *secondType << " " << *secondValue;
+		    << " " << *conditionValue << "\e[2m,\e[0m " << *firstType << " " << *firstValue << "\e[2m,\e[0m " << *secondType << " " << *secondValue;
 		return out.str();
 	}
 
@@ -382,6 +414,7 @@ namespace LL2W {
 // AllocaNode
 
 	AllocaNode::AllocaNode(const llvm::AllocaInst &inst) {
+		Timer timer{"ConstructAllocaNode"};
 		result = tryOperandName(inst);
 		type = Type::fromLLVM(*inst.getType());
 		inalloca = inst.isUsedWithInAlloca();
@@ -393,9 +426,9 @@ namespace LL2W {
 		addrspace = static_cast<decltype(addrspace)>(inst.getAddressSpace());
 	}
 
-	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_,
-	                       ASTNode *addrspace_, ASTNode *unibangs) {
+	AllocaNode::AllocaNode(ASTNode *result_, ASTNode *inalloca_, ASTNode *type_, ASTNode *numelements_, ASTNode *align_, ASTNode *addrspace_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, inalloca_, type_, numelements_, align_, addrspace_);
+
 		handleUnibangs(unibangs);
 		result = result_->extracted();
 		inalloca = bool(inalloca_);
@@ -407,21 +440,25 @@ namespace LL2W {
 			numelementsValue = getValue(numelements_->at(1));
 		}
 
-		if (align_)
+		if (align_) {
 			align = align_->atoi();
+		}
 
-		if (addrspace_)
+		if (addrspace_) {
 			addrspace = addrspace_->atoi();
+		}
 	}
 
 	std::string AllocaNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91malloca\e[0m";
-		if (inalloca)
+		if (inalloca) {
 			out << " \e[38;5;202minalloca\e[0m";
+		}
 		out << " " << *type;
-		if (numelementsType)
+		if (numelementsType) {
 			out << "\e[2m,\e[0m " << *numelementsType << " " << *numelementsValue;
+		}
 		print(out, "\e[2m,\e[0;34m align\e[0m ", align);
 		print(out, "\e[2m,\e[0;34m addrspace\e[0m(", addrspace, ")");
 		return out.str();
@@ -437,6 +474,7 @@ namespace LL2W {
 // StoreNode
 
 	StoreNode::StoreNode(const llvm::StoreInst &inst) {
+		Timer timer{"ConstructStoreNode"};
 		volatile_ = inst.isVolatile();
 		atomic = inst.isAtomic();
 		source = Constant::fromLLVM(*inst.getOperand(0));
@@ -447,10 +485,10 @@ namespace LL2W {
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(source_, destination_, volatile__, align_, bangs);
+
 		atomic = false;
 		source = std::make_shared<Constant>(source_);
 		destination = std::make_shared<Constant>(destination_);
-
 		volatile_ = bool(volatile__);
 
 		if (align_)
@@ -461,10 +499,12 @@ namespace LL2W {
 
 	StoreNode::StoreNode(ASTNode *volatile__, ASTNode *source_, ASTNode *destination_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(source_, destination_, ordering_, align_, volatile__, syncscope_);
+
 		atomic = true;
 		source = std::make_shared<Constant>(source_);
 		destination = std::make_shared<Constant>(destination_);
 		align = align_->atoi();
+
 		for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
 			if (*ordering_->lexerInfo == pair.second) {
 				ordering = pair.first;
@@ -485,31 +525,38 @@ namespace LL2W {
 		debugIndex = bangs->debugIndex;
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
-			if (sub->symbol == LLVMTOK_NONTEMPORAL)
+			if (sub->symbol == LLVMTOK_NONTEMPORAL) {
 				nontemporalIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_INVARIANT_GROUP)
+			} else if (sub->symbol == LLVMTOK_INVARIANT_GROUP) {
 				invariantGroupIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_TBAA)
+			} else if (sub->symbol == LLVMTOK_TBAA) {
 				tbaa = sub->at(0)->atoi();
+			}
 		}
 	}
 
 	std::string StoreNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[91mstore\e[0m";
-		if (atomic)
+		if (atomic) {
 			out << " \e[38;5;202matomic\e[0m";
-		if (volatile_)
+		}
+		if (volatile_) {
 			out << " \e[38;5;202mvolatile\e[0m";
+		}
 		out << "\e[0m " << *source << "\e[2m,\e[0m " << *destination;
-		if (syncscope)
+		if (syncscope) {
 			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
-		if (align != -1)
+		}
+		if (align != -1) {
 			out << "\e[2m,\e[0;34m align \e[0m" << align;
-		if (nontemporalIndex != -1)
+		}
+		if (nontemporalIndex != -1) {
 			out << "\e[2m,\e[0;34m !nontemporal \e[0m" << nontemporalIndex;
-		if (invariantGroupIndex != -1)
+		}
+		if (invariantGroupIndex != -1) {
 			out << "\e[2m,\e[0;34m !invariant.group \e[0m" << invariantGroupIndex;
+		}
 		return out.str();
 	}
 
@@ -533,6 +580,7 @@ namespace LL2W {
 // LoadNode
 
 	LoadNode::LoadNode(const llvm::LoadInst &inst) {
+		Timer timer{"ConstructLoadNode"};
 		result = tryOperandName(inst);
 		volatile_ = inst.isVolatile();
 		atomic = inst.isAtomic();
@@ -544,6 +592,7 @@ namespace LL2W {
 
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(result_, type_, constant_, volatile__, align_, bangs);
+
 		atomic = false;
 		result = result_->extracted();
 		type = getType(type_);
@@ -559,6 +608,7 @@ namespace LL2W {
 
 	LoadNode::LoadNode(ASTNode *result_, ASTNode *volatile__, ASTNode *type_, ASTNode *constant_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *bangs) {
 		Deleter deleter(result_, type_, constant_, align_, ordering_, syncscope_, volatile__);
+
 		atomic = true;
 		result = result_->extracted();
 		type = getType(type_);
@@ -584,43 +634,51 @@ namespace LL2W {
 		debugIndex = bangs->debugIndex;
 		handleUnibangs(bangs);
 		for (const ASTNode *sub: *bangs) {
-			if (sub->symbol == LLVMTOK_NONTEMPORAL)
+			if (sub->symbol == LLVMTOK_NONTEMPORAL) {
 				nontemporalIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_INVARIANT_LOAD)
+			} else if (sub->symbol == LLVMTOK_INVARIANT_LOAD) {
 				invariantLoadIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_INVARIANT_GROUP)
+			} else if (sub->symbol == LLVMTOK_INVARIANT_GROUP) {
 				invariantGroupIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_NONNULL)
+			} else if (sub->symbol == LLVMTOK_NONNULL) {
 				nonnullIndex = sub->at(0)->atoi();
-			else if (sub->symbol == LLVMTOK_DEREFERENCEABLE)
+			} else if (sub->symbol == LLVMTOK_DEREFERENCEABLE) {
 				dereferenceable = sub->at(0)->lexerInfo;
-			else if (sub->symbol == LLVMTOK_DEREFERENCEABLE_OR_NULL)
+			} else if (sub->symbol == LLVMTOK_DEREFERENCEABLE_OR_NULL) {
 				dereferenceableOrNull = sub->at(0)->lexerInfo;
-			else if (sub->symbol == LLVMTOK_BANGALIGN)
+			} else if (sub->symbol == LLVMTOK_BANGALIGN) {
 				bangAlign = sub->at(0)->lexerInfo;
-			else if (sub->symbol == LLVMTOK_TBAA)
+			} else if (sub->symbol == LLVMTOK_TBAA) {
 				tbaa = sub->at(0)->atoi();
+			}
 		}
 	}
 
 	std::string LoadNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[0;91mload\e[0m";
-		if (atomic)
+		if (atomic) {
 			out << " \e[38;5;202matomic\e[0m";
-		if (volatile_)
+		}
+		if (volatile_) {
 			out << " \e[38;5;202mvolatile\e[0m";
+		}
 		out << "\e[0m " << *type << "\e[2m,\e[0m " << *constant;
-		if (syncscope)
+		if (syncscope) {
 			out << " \e[34msyncscope\e[0;2m(\e[0m\"" << *syncscope << "\"\e[2m)\e[0m";
-		if (ordering != Ordering::None)
+		}
+		if (ordering != Ordering::None) {
 			out << " \e[38;5;202m" << ordering_map.at(ordering) << "\e[0m";
-		if (align != -1)
+		}
+		if (align != -1) {
 			out << "\e[2m,\e[0;34m align \e[0m" << align;
-		if (nontemporalIndex != -1)
+		}
+		if (nontemporalIndex != -1) {
 			out << "\e[2m,\e[0;34m !nontemporal \e[0m" << nontemporalIndex;
-		if (invariantGroupIndex != -1)
+		}
+		if (invariantGroupIndex != -1) {
 			out << "\e[2m,\e[0;34m !invariant.group \e[0m" << invariantGroupIndex;
+		}
 		return out.str();
 	}
 
@@ -634,6 +692,7 @@ namespace LL2W {
 // IcmpNode
 
 	IcmpNode::IcmpNode(const llvm::ICmpInst &inst) {
+		Timer timer{"ConstructIcmpNode"};
 		result = tryOperandName(inst);
 		cond = getIcmpCond(inst.getPredicate());
 		left = Constant::fromLLVM(*inst.getOperand(0));
@@ -650,10 +709,18 @@ namespace LL2W {
 	}
 
 	IcmpNode::IcmpNode(const std::string *result_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_):
-		cond(cond_), left(left_->convert()), right(right_->convert()) { result = result_; }
+		cond(cond_),
+		left(left_->convert()),
+		right(right_->convert()) {
+			result = result_;
+		}
 
 	IcmpNode::IcmpNode(VariablePtr variable_, IcmpCond cond_, ConstantPtr left_, ConstantPtr right_):
-		cond(cond_), left(left_->convert()), right(right_->convert()) { variable = variable_; }
+		cond(cond_),
+		left(left_->convert()),
+		right(right_->convert()) {
+			variable = variable_;
+		}
 
 	std::string IcmpNode::debugExtra() const {
 		std::stringstream out;
@@ -687,6 +754,7 @@ namespace LL2W {
 // BrUncondNode
 
 	BrUncondNode::BrUncondNode(const llvm::BranchInst &inst) {
+		Timer timer{"ConstructBrUncondNode"};
 		destination = StringSet::intern(getOperandName(*inst.getOperand(0)));
 	}
 
@@ -706,6 +774,7 @@ namespace LL2W {
 // BrCondNode
 
 	BrCondNode::BrCondNode(const llvm::BranchInst &inst) {
+		Timer timer{"ConstructBranchNode"};
 		condition = Constant::fromLLVM(*inst.getCondition());
 		// Why are they backwards...?
 		ifFalse = StringSet::intern(getOperandName(*inst.getOperand(1)));
@@ -716,15 +785,15 @@ namespace LL2W {
 		Deleter deleter(unibangs, constant, if_true, if_false);
 		handleUnibangs(unibangs);
 		condition = Constant::make(constant)->convert();
-		if (!condition->type->isInt(1))
+		if (!condition->type->isInt(1)) {
 			llvmerror("Expected i1 for br condition type");
+		}
 		ifTrue = if_true->lexerInfo;
 		ifFalse = if_false->lexerInfo;
 	}
 
 	std::string BrCondNode::debugExtra() const {
-		return "\e[91mbr\e[39m " + std::string(*condition) + ", label \e[32m" + *ifTrue + "\e[39m, label "
-			"\e[32m" + *ifFalse + "\e[39m";
+		return "\e[91mbr\e[39m " + std::string(*condition) + ", label \e[32m" + *ifTrue + "\e[39m, label " "\e[32m" + *ifFalse + "\e[39m";
 	}
 
 	InstructionNode * BrCondNode::copy() const {
@@ -736,6 +805,7 @@ namespace LL2W {
 // CallInvokeNode
 
 	CallInvokeNode::CallInvokeNode(const llvm::CallInst &inst) {
+		Timer timer{"ConstructCallInvokeNode"};
 		result = tryOperandName(inst);
 		cconv = getCConv(inst.getCallingConv());
 
@@ -790,15 +860,15 @@ namespace LL2W {
 
 		if (_retattrs) {
 			for (ASTNode *child: *_retattrs) {
-				const std::string &raname = *child->lexerInfo;
-				if (raname == "dereferenceable") {
+				const std::string &retattr_name = *child->lexerInfo;
+				if (retattr_name == "dereferenceable") {
 					dereferenceable = child->at(0)->atoi();
-				} else {
-					for (const std::pair<const RetAttr, std::string> &pair: retattr_map) {
-						if (raname == pair.second) {
-							retattrs.insert(pair.first);
-							break;
-						}
+					continue;
+				}
+				for (const std::pair<const RetAttr, std::string> &pair: retattr_map) {
+					if (retattr_name == pair.second) {
+						retattrs.insert(pair.first);
+						break;
 					}
 				}
 			}
@@ -908,12 +978,12 @@ namespace LL2W {
 
 	CallNode::CallNode(const llvm::CallInst &inst):
 		CallInvokeNode(inst) {
+			Timer timer{"ConstructCallNode"};
 			tail = getTailCallKind(inst.getTailCallKind());
 			fastmath = getFastmath(inst.getFastMathFlags());
 		}
 
-	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
-	                   ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
+	CallNode::CallNode(ASTNode *_result, ASTNode *_tail, ASTNode *fastmath_flags, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants, ASTNode *attribute_list, ASTNode *unibangs):
 		CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant, _constants, attribute_list, unibangs) {
 			Deleter deleter(_tail);
 			if (_tail && _tail->lexerInfo) {
@@ -976,6 +1046,7 @@ namespace LL2W {
 
 	AsmNode::AsmNode(const llvm::CallInst &inst):
 		CallInvokeNode(inst) {
+			Timer timer{"ConstructAsmNode"};
 			llvm::InlineAsm *asm_value = llvm::cast<llvm::InlineAsm>(inst.getOperand(inst.getNumOperands() - 1));
 			contents = StringSet::intern(asm_value->getAsmString());
 			constraints = StringSet::intern(asm_value->getConstraintString());
@@ -983,9 +1054,7 @@ namespace LL2W {
 			alignstack = asm_value->isAlignStack();
 		}
 
-	AsmNode::AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect,
-	                 ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints,
-	                 ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs):
+	AsmNode::AsmNode(ASTNode *_result, ASTNode *_retattrs, ASTNode *return_type, ASTNode *_args, ASTNode *_sideeffect, ASTNode *_alignstack, ASTNode *_inteldialect, ASTNode *asm_string, ASTNode *asm_constraints, ASTNode *_constants, ASTNode *attribute_list, ASTNode *_srcloc, ASTNode *unibangs):
 		CallInvokeNode(_result, nullptr, _retattrs, nullptr, return_type, _args, nullptr, _constants, attribute_list, unibangs) {
 			Deleter deleter(asm_string, _sideeffect, _alignstack, _inteldialect, _srcloc, asm_constraints);
 			contents = asm_string->lexerInfo;
@@ -1010,9 +1079,7 @@ namespace LL2W {
 
 // InvokeNode
 
-	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace,
-	                       ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants,
-	                       ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs):
+	InvokeNode::InvokeNode(ASTNode *_result, ASTNode *_cconv, ASTNode *_retattrs, ASTNode *_addrspace, ASTNode *return_type, ASTNode *_args, ASTNode *constant, ASTNode *_constants, ASTNode *attribute_list, ASTNode *normal_label, ASTNode *exception_label, ASTNode *unibangs):
 		CallInvokeNode(_result, _cconv, _retattrs, _addrspace, return_type, _args, constant, _constants, attribute_list, unibangs) {
 			Deleter deleter(normal_label, exception_label);
 			normalLabel = StringSet::intern(normal_label->extractName());
@@ -1021,18 +1088,23 @@ namespace LL2W {
 
 	std::string InvokeNode::debugExtra() const {
 		std::stringstream out;
-		if (result)
+		if (result) {
 			out << getResult() << "\e[2m = ";
+		}
 		out << "\e[0;91minvoke\e[0m";
 		print(out, " \e[34m", cconv_map.at(cconv), "\e[0;2m .\e[0m");
-		for (RetAttr attr: retattrs)
+		for (RetAttr attr: retattrs) {
 			out << " \e[34m" << retattr_map.at(attr) << "\e[0m";
-		if (dereferenceable != -1)
+		}
+		if (dereferenceable != -1) {
 			out << " \e[34mdereferenceable\e[0;2m(\e[0m" << dereferenceable << "\e[2m)\e[0m";
-		if (!retattrs.empty() || dereferenceable != -1)
+		}
+		if (!retattrs.empty() || dereferenceable != -1) {
 			out << " \e[0;2m.\e[0m";
-		if (addrspace != -1)
+		}
+		if (addrspace != -1) {
 			out << " \e[34maddrspace\e[0;2m(\e[0m" << addrspace << "\e[2m)\e[0m";
+		}
 		out << " " << *returnType;
 		if (argumentsExplicit) {
 			out << " \e[1;2m(\e[0m";
@@ -1067,6 +1139,7 @@ namespace LL2W {
 // GetelementptrNode
 
 	GetelementptrNode::GetelementptrNode(const llvm::GetElementPtrInst &inst) {
+		Timer timer{"ConstructGetelementptrNode"};
 		result = tryOperandName(inst);
 		inbounds = inst.isInBounds();
 		type = Type::fromLLVM(*inst.getType());
@@ -1086,8 +1159,7 @@ namespace LL2W {
 		}
 	}
 
-	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_,
-	                                     ASTNode *indices_, ASTNode *unibangs) {
+	GetelementptrNode::GetelementptrNode(ASTNode *pvar, ASTNode *_inbounds, ASTNode *type_, ASTNode *constant_, ASTNode *indices_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, _inbounds, pvar, type_, constant_, indices_);
 		handleUnibangs(unibangs);
 		result = StringSet::intern(pvar->extractName());
@@ -1100,30 +1172,35 @@ namespace LL2W {
 			const long width = comma->at(0)->atoi(1);
 			const ASTNode &index = *comma->at(1);
 			const bool has_minrange = comma->size() == 3;
-			if (index.symbol == LLVMTOK_PVAR)
+			if (index.symbol == LLVMTOK_PVAR) {
 				indices.emplace_back(width, StringSet::intern(index.lexerInfo->substr(1)), has_minrange, true);
-			else
+			} else {
 				indices.emplace_back(width, index.atoi(), has_minrange, false);
+			}
 		}
 	}
 
 	std::string GetelementptrNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << " \e[2m= \e[0;91mgetelementptr\e[0m ";
-		if (inbounds)
+		if (inbounds) {
 			out << "\e[34minbounds\e[0m ";
+		}
 		out << *type << "\e[2m,\e[0m " << *constant << "\e[0m";
 		for (auto [width, value, minrange, pvar]: indices) {
 			out << "\e[2m,\e[0m ";
-			if (minrange)
+			if (minrange) {
 				out << "\e[34minrange\e[0m ";
+			}
 			out << "\e[33mi" << width << "\e[0m ";
-			if (pvar)
+			if (pvar) {
 				out << "\e[32m%";
-			if (std::holds_alternative<long>(value))
+			}
+			if (std::holds_alternative<long>(value)) {
 				out << std::get<long>(value) << "\e[0m";
-			else
+			} else {
 				out << *std::get<Variable::ID>(value) << "\e[0m";
+			}
 		}
 		return out.str();
 	}
@@ -1151,6 +1228,7 @@ namespace LL2W {
 // RetNode
 
 	RetNode::RetNode(const llvm::ReturnInst &inst) {
+		Timer timer{"ConstructRetNode"};
 		if (llvm::Value *return_value = inst.getReturnValue()) {
 			type = Type::fromLLVM(*return_value->getType());
 			value = Constant::fromLLVM(*return_value)->value;
@@ -1209,8 +1287,7 @@ namespace LL2W {
 		return out.release();
 	}
 
-	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs,
-	                               bool cleanup_) {
+	LandingpadNode::LandingpadNode(ASTNode *result_, ASTNode *type_, ASTNode *clauses_, ASTNode *unibangs, bool cleanup_) {
 		Deleter deleter(unibangs, result_, type_, clauses_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
@@ -1258,6 +1335,7 @@ namespace LL2W {
 // ConversionNode
 
 	ConversionNode::ConversionNode(const llvm::Instruction &inst) {
+		Timer timer{"ConstructConversionNode"};
 		result = tryOperandName(inst);
 		from = Type::fromLLVM(*inst.getOperand(0)->getType());
 		to = Type::fromLLVM(*inst.getType());
@@ -1289,25 +1367,24 @@ namespace LL2W {
 			conversionType = Conversion::Zext;
 		}
 
-	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_,
-	                               ASTNode *unibangs) {
+	ConversionNode::ConversionNode(ASTNode *result_, ASTNode *conv_op, ASTNode *from_, ASTNode *value_, ASTNode *to_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, conv_op, from_, value_, to_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
 		from = getType(from_);
 		value = getValue(value_);
 		to = getType(to_);
-		for (const std::pair<const Conversion, std::string> &pair: conversion_map)
+		for (const std::pair<const Conversion, std::string> &pair: conversion_map) {
 			if (*conv_op->lexerInfo == pair.second) {
 				conversionType = pair.first;
 				break;
 			}
+		}
 	}
 
 	std::string ConversionNode::debugExtra() const {
 		std::stringstream out;
-		out << getResult() << "\e[2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m " << *from
-		    << " " << *value << " \e[91mto\e[0m " << *to;
+		out << getResult() << "\e[2m = \e[0;91m" << conversion_map.at(conversionType) << "\e[0m " << *from << " " << *value << " \e[91mto\e[0m " << *to;
 		return out.str();
 	}
 
@@ -1322,6 +1399,7 @@ namespace LL2W {
 // BasicMathNode
 
 	BasicMathNode::BasicMathNode(const llvm::BinaryOperator &inst) {
+		Timer timer{"ConstructBasicMathNode"};
 		result = tryOperandName(inst);
 		oper = StringSet::intern(inst.getOpcodeName());
 		nuw = inst.hasNoUnsignedWrap();
@@ -1361,6 +1439,7 @@ namespace LL2W {
 // PhiNode
 
 	PhiNode::PhiNode(const llvm::PHINode &inst) {
+		Timer timer{"ConstructPhiNode"};
 		result = tryOperandName(inst);
 		type = Type::fromLLVM(*inst.getType());
 		for (unsigned i = 0, max = inst.getNumIncomingValues(); i < max; ++i) {
@@ -1437,6 +1516,7 @@ namespace LL2W {
 // DivNode
 
 	DivNode::DivNode(const llvm::BinaryOperator &inst) {
+		Timer timer{"ConstructDivNode"};
 		result = tryOperandName(inst);
 		divType = inst.getOpcode() == llvm::Instruction::BinaryOps::SDiv? DivType::Sdiv : DivType::Udiv;
 		exact = inst.isExact();
@@ -1460,6 +1540,7 @@ namespace LL2W {
 // RemNode
 
 	RemNode::RemNode(const llvm::BinaryOperator &inst) {
+		Timer timer{"ConstructRemNode"};
 		result = tryOperandName(inst);
 		remType = inst.getOpcode() == llvm::Instruction::BinaryOps::SRem? RemType::Srem : RemType::Urem;
 		exact = inst.isExact();
@@ -1483,6 +1564,7 @@ namespace LL2W {
 // LogicNode
 
 	LogicNode::LogicNode(const llvm::BinaryOperator &inst) {
+		Timer timer{"ConstructLogicNode"};
 		result = tryOperandName(inst);
 		logicType = getLogicType(inst.getOpcode());
 		left = Constant::fromLLVM(*inst.getOperand(0));
@@ -1536,6 +1618,7 @@ namespace LL2W {
 // ShrNode
 
 	ShrNode::ShrNode(const llvm::BinaryOperator &inst) {
+		Timer timer{"ConstructShrNode"};
 		result = tryOperandName(inst);
 		exact = inst.isExact();
 		shrType = inst.getOpcode() == llvm::Instruction::BinaryOps::AShr? ShrType::Ashr : ShrType::Lshr;
@@ -1602,6 +1685,7 @@ namespace LL2W {
 // SwitchNode
 
 	SwitchNode::SwitchNode(const llvm::SwitchInst &inst) {
+		Timer timer{"ConstructSwitchNode"};
 		type = Type::fromLLVM(*inst.getType());
 		value = Constant::fromLLVM(*inst.getCondition())->value;
 		label = StringSet::intern(getOperandName(*inst.getDefaultDest()));
@@ -1651,6 +1735,7 @@ namespace LL2W {
 // ExtractValueNode
 
 	ExtractValueNode::ExtractValueNode(const llvm::ExtractValueInst &inst) {
+		Timer timer{"ConstructExtractValueNode"};
 		result = tryOperandName(inst);
 		llvm::Value *accessed = inst.getOperand(0);
 		aggregateType = std::dynamic_pointer_cast<AggregateType>(Type::fromLLVM(*accessed->getType()));
@@ -1696,6 +1781,7 @@ namespace LL2W {
 // InsertValueNode
 
 	InsertValueNode::InsertValueNode(const llvm::InsertValueInst &inst) {
+		Timer timer{"ConstructInsertValueNode"};
 		result = tryOperandName(inst);
 		llvm::Value *inserted = inst.getOperand(0);
 		llvm::Value *accessed = inst.getOperand(1);
@@ -1770,8 +1856,7 @@ namespace LL2W {
 	}
 
 	std::string FreezeNode::debugExtra() const {
-		return "\e[34m%" + std::string(*result) + " \e[39;2m= \e[22;91mfreeze\e[39m " + std::string(*type) + ' ' +
-			std::string(*value) + '\n';
+		return std::format("\e[34m%{} \e[39;2m= \e[22;91mfreeze\e[39m {} {}\n", *result, std::string(*type), std::string(*value));
 	}
 
 	InstructionNode * FreezeNode::copy() const {
@@ -1783,8 +1868,7 @@ namespace LL2W {
 
 // DbgIntrinsicNode
 
-	DbgIntrinsicNode::DbgIntrinsicNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata,
-	                                   ASTNode *second_metadata, ASTNode *unibangs) {
+	DbgIntrinsicNode::DbgIntrinsicNode(ASTNode *type_, ASTNode *constant_, ASTNode *first_metadata, ASTNode *second_metadata, ASTNode *unibangs) {
 		Deleter deleter(unibangs, constant_, type_);
 		handleUnibangs(unibangs);
 		type = type_->symbol == LLVMTOK_DBG_VALUE? Type::Value : Type::Declare;
@@ -1793,8 +1877,10 @@ namespace LL2W {
 	}
 
 	std::string DbgIntrinsicNode::debugExtra() const {
-		if (type == Type::Invalid)
+		if (type == Type::Invalid) {
 			return "\e[101minvalid @llvm.dbg.* intrinsic\e[49m";
+		}
+
 		std::stringstream out;
 		out << "\e[91mcall \e[34mvoid @llvm.dbg." << (type == Type::Value? "value" : "declare") << "\e[39;2m(\e[22;34m";
 		out << "metadata\e[39m " << std::string(*constant) << "\e[2m,\e[22;34m metadata\e[39m ";
@@ -1819,44 +1905,47 @@ namespace LL2W {
 		{"umin", Op::Umin}, {"fadd", Op::Fadd}, {"fsub", Op::Fsub}, {"fmax", Op::Fmax}, {"fmin", Op::Fmin},
 	};
 
-	AtomicrmwNode::AtomicrmwNode(ASTNode *result_, ASTNode *_volatile_, ASTNode *op_, ASTNode *pointer_type,
-	                             ASTNode *pointer_, ASTNode *type_, ASTNode *value_, ASTNode *syncscope_,
-	                             ASTNode *ordering_, ASTNode *align_, ASTNode *unibangs):
-	opString(op_->lexerInfo) {
-		Deleter deleter(unibangs, _volatile_, op_, pointer_type, pointer_, type_, value_, syncscope_, ordering_,
-		                align_);
-		handleUnibangs(unibangs);
-		result = result_->extracted();
-		op = opMap.at(*opString);
-		pointerType = getType(pointer_type);
-		pointer = getValue(pointer_);
-		type = getType(type_);
-		value = getValue(value_);
-		if (syncscope_ != nullptr)
-			syncscope = syncscope_->extracted();
-		volatile_ = bool(_volatile_);
-		if (align_ != nullptr)
-			align = align_->atoi();
-		for (const std::pair<const Ordering, std::string> &pair: ordering_map)
-			if (*ordering_->lexerInfo == pair.second) {
-				ordering = pair.first;
-				break;
+	AtomicrmwNode::AtomicrmwNode(ASTNode *result_, ASTNode *_volatile_, ASTNode *op_, ASTNode *pointer_type, ASTNode *pointer_, ASTNode *type_, ASTNode *value_, ASTNode *syncscope_, ASTNode *ordering_, ASTNode *align_, ASTNode *unibangs):
+		opString(op_->lexerInfo) {
+			Deleter deleter(unibangs, _volatile_, op_, pointer_type, pointer_, type_, value_, syncscope_, ordering_, align_);
+			handleUnibangs(unibangs);
+			result = result_->extracted();
+			op = opMap.at(*opString);
+			pointerType = getType(pointer_type);
+			pointer = getValue(pointer_);
+			type = getType(type_);
+			value = getValue(value_);
+			if (syncscope_ != nullptr) {
+				syncscope = syncscope_->extracted();
 			}
-	}
+			volatile_ = bool(_volatile_);
+			if (align_ != nullptr) {
+				align = align_->atoi();
+			}
+			for (const std::pair<const Ordering, std::string> &pair: ordering_map) {
+				if (*ordering_->lexerInfo == pair.second) {
+					ordering = pair.first;
+					break;
+				}
+			}
+		}
 
 	std::string AtomicrmwNode::debugExtra() const {
 		std::stringstream out;
 		out << getResult() << "\e[2m = \e[22;91matomicrmw\e[39m";
-		if (volatile_)
+		if (volatile_) {
 			out << " \e[38;5;202mvolatile\e[39m";
-		out << " \e[91m" << *opString << "\e[39m " << *pointerType << ' ' << *pointer << "\e[2m,\e[22m " << *type << ' '
-		    << *value;
-		if (syncscope != nullptr)
+		}
+		out << " \e[91m" << *opString << "\e[39m " << *pointerType << ' ' << *pointer << "\e[2m,\e[22m " << *type << ' ' << *value;
+		if (syncscope != nullptr) {
 			out << " \e[34msyncscope\e[39;2m(\e[22m\"" << *syncscope << "\"\e[2m)\e[22m";
-		if (ordering != Ordering::None)
+		}
+		if (ordering != Ordering::None) {
 			out << " \e[38;5;202m" << ordering_map.at(ordering) << "\e[39m";
-		if (align != -1)
+		}
+		if (align != -1) {
 			out << "\e[2m,\e[22;34m align \e[39m" << align;
+		}
 		return out.str();
 	}
 
@@ -1872,8 +1961,9 @@ namespace LL2W {
 // Miscellaneous
 
 	ASTNode * ignoreConversion(ASTNode *node) {
-		if (*node->lexerInfo != "bitcast")
+		if (*node->lexerInfo != "bitcast") {
 			throw std::invalid_argument("Unexpected conversion expr in ignoreConversion: " + *node->lexerInfo);
+		}
 		return node->at(0)->at(1);
 	}
 }
