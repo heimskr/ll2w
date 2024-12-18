@@ -653,7 +653,6 @@ namespace LL2W {
 	}
 
 	int Program::symbolSize(const std::string &name) const {
-		info() << "symbolSize(" << name << ")\n";
 		GlobalVarDef *def = globals.at(name);
 
 		if (def->type) {

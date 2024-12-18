@@ -322,7 +322,17 @@ namespace LL2W {
 		std::string out;
 		for (size_t i = 0, max = value.size(); i < max; ++i) {
 			const char ch0 = value[i];
-			if (i < max - 2) {
+			if (ch0 == '\n') {
+				out += "\\n";
+			} else if (ch0 == '\r') {
+				out += "\\r";
+			} else if (ch0 == '\t') {
+				out += "\\t";
+			} else if (ch0 == '"') {
+				out += "\\\"";
+			} else if (ch0 == '\e') {
+				out += "\\x1b";
+			} else if (i < max - 2) {
 				const char ch1 = value[i + 1], ch2 = value[i + 2];
 				if (ch0 == '\\' && Util::isHex(ch1) && Util::isHex(ch2)) {
 					out += std::string("\\x") + ch1 + ch2;
