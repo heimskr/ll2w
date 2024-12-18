@@ -34,6 +34,7 @@ namespace LL2W {
 		private:
 			int64_t highestIndex = -1;
 			std::mutex mutex;
+			std::mutex analysisMutex;
 
 			void handleSets(const MetadataDef &);
 			void handleLists(const MetadataDef &);

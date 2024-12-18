@@ -232,6 +232,10 @@ namespace LL2W {
 			return new ExtractValueNode(*inst);
 		}
 
+		if (auto *inst = llvm::dyn_cast<llvm::InsertValueInst>(llvm)) {
+			return new InsertValueNode(*inst);
+		}
+
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			return new UnreachableNode;
 		}
@@ -1674,7 +1678,7 @@ namespace LL2W {
 	std::string ExtractValueNode::debugExtra() const {
 		std::stringstream out;
 		out << "\e[34m%" << *result << " \e[39;2m= \e[22;91mextractvalue\e[39m " << *aggregateType << " " << *aggregateValue;
-		for (int decimal: decimals) {
+		for (auto decimal: decimals) {
 			out << "\e[2m,\e[0m " << decimal;
 		}
 		return out.str();
@@ -1691,8 +1695,20 @@ namespace LL2W {
 
 // InsertValueNode
 
-	InsertValueNode::InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value,
-	                                 ASTNode *type_, ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs) {
+	InsertValueNode::InsertValueNode(const llvm::InsertValueInst &inst) {
+		result = tryOperandName(inst);
+		llvm::Value *inserted = inst.getOperand(0);
+		llvm::Value *accessed = inst.getOperand(1);
+		aggregateType = Type::fromLLVM(*accessed->getType());
+		aggregateValue = Constant::fromLLVM(*accessed)->value;
+		type = Type::fromLLVM(*inserted->getType()); // TODO: verify, should this be the type of the instruction itself?
+		value = Constant::fromLLVM(*inserted)->value;
+		for (auto index: inst.getIndices()) {
+			decimals.emplace_back(index);
+		}
+	}
+
+	InsertValueNode::InsertValueNode(ASTNode *result_, ASTNode *aggregate_type, ASTNode *aggregate_value, ASTNode *type_, ASTNode *value_, ASTNode *decimals_, ASTNode *unibangs) {
 		Deleter deleter(unibangs, result_, aggregate_type, aggregate_value, type_, value_, decimals_);
 		handleUnibangs(unibangs);
 		result = result_->extracted();
@@ -1700,16 +1716,17 @@ namespace LL2W {
 		aggregateValue = getValue(aggregate_value);
 		type = getType(type_);
 		value = getValue(value_);
-		for (ASTNode *decimal: *decimals_)
+		for (ASTNode *decimal: *decimals_) {
 			decimals.push_back(decimal->atoi());
+		}
 	}
 
 	std::string InsertValueNode::debugExtra() const {
 		std::stringstream out;
-		out << "\e[91minsertvalue\e[0m " << *aggregateType << " " << *aggregateValue << "\e[2m,\e[0m " << *type << " "
-		    << *value;
-		for (int decimal: decimals)
+		out << "\e[91minsertvalue\e[0m " << *aggregateType << " " << *aggregateValue << "\e[2m,\e[0m " << *type << " " << *value;
+		for (auto decimal: decimals) {
 			out << "\e[2m,\e[0m " << decimal;
+		}
 		return out.str();
 	}
 

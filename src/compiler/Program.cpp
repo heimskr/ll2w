@@ -1,4 +1,5 @@
-// #define COMPILE_MULTITHREADED
+#define ANALYZE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
@@ -13,7 +14,10 @@
 #include "parser/Parser.h"
 #include "parser/StructNode.h"
 #include "parser/Values.h"
+#include "util/ThreadPool.h"
+#include "util/Timer.h"
 #include "util/Util.h"
+#include "util/Waiter.h"
 
 #include <llvm/AsmParser/LLParser.h>
 #include <llvm/IR/Constants.h>
@@ -73,6 +77,7 @@ namespace LL2W {
 			warn() << "Symbol type: " << value->getValueID() << "\n";
 		}
 
+		info() << "Creating functions.\n";
 		for (llvm::Function &function: *llvmModule) {
 			if (function.getInstructionCount() > 0) {
 				functions.emplace(function.getName().str(), new Function(*this, &function)); // TODO: memleak
@@ -275,10 +280,14 @@ namespace LL2W {
 	}
 
 	void Program::analyze() {
-		for (auto &[name, function]: functions) {
+		info() << "Analyzing program.\n";
+
+		auto run = [this](const std::string &name, Function *function) {
 			ValuePtr value;
 			long simple_index = -1;
-			switch (function->analyze(&value, &simple_index)) {
+			const Function::Type analysis = function->analyze(&value, &simple_index);
+			std::unique_lock lock(analysisMutex);
+			switch (analysis) {
 				case Function::Type::Simple:
 					simpleFunctions.emplace(name.substr(1), simple_index);
 					break;
@@ -291,19 +300,48 @@ namespace LL2W {
 				default:
 					break;
 			}
+		};
+
+#ifdef ANALYZE_MULTITHREADED
+		ThreadPool pool(24);
+		pool.start();
+		Waiter waiter(functions.size());
+
+		for (auto &[name, function]: functions) {
+			pool.add([&waiter, &run, &name, function](ThreadPool &, size_t) {
+				run(name, function);
+				if (auto remaining = (--waiter).getRemaining(); remaining % 10 == 0) {
+					info() << "Remaining: " << remaining << "\n";
+				}
+			});
 		}
+
+		waiter.wait();
+		pool.join();
+#else
+		for (auto &[name, function]: functions) {
+			run(name, function);
+		}
+#endif
+
+		info() << "Analysis complete.\n";
+
+		Timer::summary();
+		Timer::clear();
 	}
 
 	void Program::compile() {
+		info() << "Compiling program.\n";
 #ifdef COMPILE_MULTITHREADED
 		std::vector<std::thread> threads;
 		threads.reserve(functions.size());
 
-		for (auto &pair: functions)
+		for (auto &pair: functions) {
 			threads.emplace_back(std::thread([&] {
 				pthread_setname_np(pthread_self(), pair.second->name->c_str());
 				pair.second->compile();
 			}));
+		}
 
 		for (std::thread &thread: threads)
 			thread.join();

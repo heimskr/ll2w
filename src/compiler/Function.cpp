@@ -186,7 +186,7 @@ namespace LL2W {
 							const Variable::ID pvar = dynamic_cast<const LocalValue *>(ret->value.get())->name;
 							if (isArgument(pvar)) {
 								if (simple_index_out) {
-									if (!Util::isNumeric(pvar)) {
+									if (!Util::isNumeric(std::string_view(*pvar).substr(1))) {
 										warn() << "Argument pvar isn't numeric; not classifying function as simple: " << *pvar << '\n';
 										break;
 									}
@@ -220,7 +220,6 @@ namespace LL2W {
 	void Function::extractBlocksLLVM() {
 		assert(llvmFunction != nullptr);
 
-		info() << "Function: " << *name << '\n';
 		std::vector<const std::string *> preds;
 		int block_index = -1;
 		int instruction_index = -1;
