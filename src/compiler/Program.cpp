@@ -4,6 +4,7 @@
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
 // #define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
+#define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -360,7 +361,7 @@ namespace LL2W {
 #else
 		for (auto &[name, function]: functions) {
 #ifdef SINGLE_FUNCTION
-			if (*function->name == SINGLE_FUNCTION) {
+			if (*function->name == "@" SINGLE_FUNCTION) {
 #endif
 				// info() << "Compiling " << *function->name << "...\n";
 				function->compile();
@@ -380,13 +381,18 @@ namespace LL2W {
 		std::stringstream out;
 		out << "#meta\n";
 		out << "name: \"" << Util::escape(sourceFilename.empty()? "Program" : sourceFilename) << "\"\n";
+
 		out << "\n#debug\n";
 		debugSection(&out);
+
 		out << "\n#text\n\n%data\n\n";
 		dataSection(out);
+
 		out << "\n%code\n\n";
-		if (functions.count("@main") == 1 || hasArg("-main"))
+		if (functions.count("@main") == 1 || hasArg("-main")) {
 			out << ":: main\n<halt>\n\n";
+		}
+
 		for (std::pair<const std::string, Function *> &pair: functions) {
 #ifdef SINGLE_FUNCTION
 			if (pair.first == SINGLE_FUNCTION)
@@ -561,9 +567,9 @@ namespace LL2W {
 			case ValueType::Zeroinitializer:
 				if (type) {
 					const auto width = type->width();
-					if (width % 8)
-						throw std::runtime_error("Invalid type width for null/undef/zeroinitializer value: " +
-							std::to_string(width) + "b");
+					if (width % 8) {
+						throw std::runtime_error("Invalid type width for null/undef/zeroinitializer value: " + std::to_string(width) + "b");
+					}
 					return "%fill " + std::to_string(width / 8) + " 0";
 				}
 				return "%1b 0";
@@ -572,7 +578,7 @@ namespace LL2W {
 			case ValueType::Global: {
 				const std::string *name = dynamic_cast<GlobalValue *>(value.get())->name;
 				referencedGlobals.insert(*name);
-				return "%8b " + *name;
+				return "%8b " + name->substr(1);
 			}
 			case ValueType::Getelementptr: {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());

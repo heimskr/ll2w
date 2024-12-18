@@ -442,8 +442,7 @@ namespace LL2W {
 				continue;
 			}
 #ifdef DEBUG_SPILL
-			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at "
-					  << definition->index << ", OID: " << variable->originalID << ")\n";
+			std::cerr << "  Trying to spill " << *variable << " (definition: " << definition->debugExtra() << " at " << definition->index << ", OID: " << variable->originalID << ")\n";
 #endif
 			auto store = std::make_shared<StackStoreInstruction>(location, variable);
 			auto next = after(definition);
@@ -466,8 +465,7 @@ namespace LL2W {
 
 			if (should_insert) {
 				insertAfter(definition, store, false);
-				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString() +
-					" into location=" + std::to_string(location.offset)));
+				insertBefore(store, std::make_shared<Comment>("Spill: stack store for " + variable->plainString() + " into location=" + std::to_string(location.offset)));
 				VariablePtr m6 = mx(6, definition);
 				definition->replaceWritten(variable, m6);
 				definition->extract();
@@ -834,22 +832,23 @@ namespace LL2W {
 
 	void Function::reindexInstructions() {
 		int index = -1;
-		for (InstructionPtr &instruction: linearInstructions)
+		for (InstructionPtr &instruction: linearInstructions) {
 			instruction->index = ++index;
+		}
 	}
 
 	void Function::reindexBlocks() {
 		int index = -1;
-		for (BasicBlockPtr &block: blocks)
+		for (BasicBlockPtr &block: blocks) {
 			block->index = ++index;
+		}
 	}
 
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
 		Timer timer("SplitBlock");
 		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
-		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label
-				  << " & " << *label << "\n";
+		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label << " & " << *label << "\n";
 #endif
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
@@ -1103,7 +1102,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		Passes::minimizeBlocks(*this, false);
+		// Passes::minimizeBlocks(*this, true);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1145,7 +1144,7 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
-		Passes::minimizeBlocks(*this, true);
+		// Passes::minimizeBlocks(*this, true);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
@@ -2237,8 +2236,9 @@ namespace LL2W {
 	}
 
 	void Function::makeInitialDebugIndex() {
-		if (debugIndex == -1)
+		if (debugIndex == -1) {
 			return;
+		}
 		auto lock = parent.getLock();
 		initialDebugIndex = parent.newDebugIndex();
 		Subprogram &subprogram = parent.subprograms.at(debugIndex);

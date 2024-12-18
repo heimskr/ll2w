@@ -209,8 +209,9 @@ namespace LL2W {
 		for (const auto &[id, var]: function->variableStore) {
 #ifdef DEBUG_COLORING
 			std::cerr << "%% " << *id << ' ' << *var << "; aliases:";
-			for (Variable *alias: pair.second->getAliases())
+			for (Variable *alias: var->getAliases()) {
 				std::cerr << ' ' << *alias;
+			}
 			std::cerr << '\n';
 #endif
 			const std::string *parent_id = var->parentID();
@@ -220,8 +221,9 @@ namespace LL2W {
 				node.colors = {var->registers.cbegin(), var->registers.cend()};
 #ifdef DEBUG_COLORING
 				info() << *var << ": " << var->registersRequired() << " required.";
-				if (var->type)
+				if (var->type) {
 					std::cerr << " " << std::string(*var->type);
+				}
 				std::cerr << "\n";
 #endif
 				node.colorsNeeded = var->registersRequired();
@@ -234,8 +236,9 @@ namespace LL2W {
 
 		std::vector<Variable::ID> labels;
 		labels.reserve(function->variableStore.size());
-		for (const auto &[id, var]: function->variableStore)
+		for (const auto &[id, var]: function->variableStore) {
 			labels.push_back(id);
+		}
 
 #ifndef CONSTRUCT_BY_BLOCK
 		// Maps a variable ID to a set of blocks in which the variable is live-in or live-out.
@@ -344,16 +347,19 @@ namespace LL2W {
 #endif
 		for (const auto &[block_id, vec]: vecs) {
 			const size_t size = vec.size();
-			if (size < 2)
+			if (size < 2) {
 				continue;
-			for (size_t i = 0; i < size - 1; ++i)
-				for (size_t j = i + 1; j < size; ++j)
+			}
+			for (size_t i = 0; i < size - 1; ++i) {
+				for (size_t j = i + 1; j < size; ++j) {
 					if (interference.hasLabel(*vec[i]) && interference.hasLabel(*vec[j])) {
 						interference.link(*vec[i], *vec[j], true);
 #ifdef DEBUG_COLORING
 						++links;
 #endif
 					}
+				}
+			}
 		}
 #endif
 
@@ -366,8 +372,9 @@ namespace LL2W {
 				// TODO: maybe we'll have to care about precoloredReads someday. Probably not.
 				intermediate->extractPrecolored();
 				const auto &written = intermediate->precoloredWritten;
-				if (written.empty())
+				if (written.empty()) {
 					continue;
+				}
 
 				const std::string label = "__ll2w_pc" + std::to_string(precolored_added++);
 				Node &node = interference.addNode(label);
@@ -377,8 +384,9 @@ namespace LL2W {
 				BasicBlockPtr block = intermediate->parent.lock();
 				for (const VariablePtr &var: block->allLive) {
 					const auto &pid = *var->parentID();
-					if (interference.hasLabel(pid))
+					if (interference.hasLabel(pid)) {
 						interference.link(label, pid, true);
+					}
 				}
 			}
 		}

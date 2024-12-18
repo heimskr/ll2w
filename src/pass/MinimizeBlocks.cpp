@@ -85,7 +85,7 @@ namespace LL2W::Passes {
 		for (const auto &[index, block]: added_blocks) {
 			function.bbLabels.insert(block->label);
 			function.bbMap.emplace(block->label, block);
-			for (const auto &predecessor: predecessors[index]) {
+			for (auto predecessor: predecessors[index]) {
 				block->preds.emplace_back(added_blocks.at(predecessor)->label);
 			}
 			function.blocks.emplace_back(block);
@@ -99,9 +99,9 @@ namespace LL2W::Passes {
 				// say, "abc".replace(a => b).replace(b => c) being different from "abc".replace(b => c / a => b).
 				// Except we're not doing that anymore, so we just have to hope the aforementioned weirdness doesn't
 				// ever happen.
-				for (const auto &[old_label, new_label]: label_replacements) {
+				for (auto [old_label, new_label]: label_replacements) {
 					instruction->replaceLabel(old_label, new_label);
-					instruction->replaceLabel(StringSet::intern("%" + *old_label), StringSet::intern("%" + *new_label));
+					instruction->replaceLabel(StringSet::intern('%' + *old_label), StringSet::intern('%' + *new_label));
 				}
 			}
 		}
