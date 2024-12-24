@@ -486,18 +486,12 @@ namespace LL2W {
 		if (name == "[anon]" || name.empty()) {
 			return typeString();
 		}
-		if (name.at(1) == '"') {
-			return "\e[32m%\e[33m" + name.substr(1) + "\e[39m";
-		}
 		return "\e[32m" + name + "\e[39m";
 	}
 
 	std::string StructType::toString() {
 		if (name == "[anon]" || name.empty()) {
 			return typeStringPlain();
-		}
-		if (name.at(1) == '"') {
-			return "%" + name.substr(1);
 		}
 		return name;
 	}

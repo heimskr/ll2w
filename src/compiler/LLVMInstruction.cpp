@@ -117,7 +117,7 @@ namespace LL2W {
 			}
 
 			case NodeType::BrUncond: {
-				// Unconditional branches don't read anything; their PVARs represent labels, not registers.
+				// Unconditional branches don't read anything; their pvars represent labels, not registers.
 				break;
 			}
 

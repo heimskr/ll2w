@@ -5,6 +5,7 @@
 // #define SINGLE_FUNCTION "@main"
 // #define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
 // #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+// #define SINGLE_FUNCTION "_ZN5Wasmc7Section7combineESt16initializer_listINSt3__117reference_wrapperIS0_EEE"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"

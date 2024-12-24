@@ -218,7 +218,6 @@ namespace LL2W {
 
 	void ColoringAllocator::afterSpill(VariablePtr spilled_var, std::span<VariablePtr> new_vars) {
 		Timer timer{"ColoringAllocator::afterSpill"};
-		info() << "Spilled " << *spilled_var << " with " << new_vars.size() << " variable(s) created\n";
 		Node &spilled_node = interference[*spilled_var->id];
 		const std::string &spilled_id = *spilled_var->id;
 

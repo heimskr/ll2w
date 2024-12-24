@@ -905,7 +905,7 @@ namespace LL2W {
 		blocks.insert(blockIter, new_block);
 
 		// Add an unconditional branch from the original block to the new block.
-		BrUncondNode *node = new BrUncondNode("%" + *label);
+		BrUncondNode *node = new BrUncondNode(*label);
 		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
 		branch->parent = block;
 		block->instructions.push_back(branch);
@@ -1869,7 +1869,7 @@ namespace LL2W {
 					if (iter != begin) {
 						stream << ',';
 					}
-					stream << " %" << **iter;
+					stream << ' ' << **iter;
 				}
 				stream << '.';
 				if (block_liveness) {
@@ -1880,7 +1880,7 @@ namespace LL2W {
 							if (iter != begin) {
 								stream << ',';
 							}
-							stream << " %" << *(*iter)->id;
+							stream << ' ' << *(*iter)->id;
 						}
 					}
 					if (!block->liveOut.empty()) {
@@ -1890,7 +1890,7 @@ namespace LL2W {
 							if (iter != begin) {
 								stream << ',';
 							}
-							stream << " %" << *(*iter)->id;
+							stream << ' ' << *(*iter)->id;
 						}
 					}
 				}
@@ -1957,7 +1957,7 @@ namespace LL2W {
 				} else {
 					stream << "   ";
 				}
-				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
+				stream << " \e[2m; \e[1m" << *id << '/' << *var->id << '/' << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks) {
 					if (auto locked = def.lock()) {
 						stream << " \e[1;2m" << std::setw(2) << *locked->getLabel() << "\e[22m";
@@ -1983,7 +1983,7 @@ namespace LL2W {
 				if (!aliases.empty()) {
 					stream << "  aliases =\e[1m";
 					for (const Variable *alias: aliases) {
-						stream << " " << *alias->id;
+						stream << ' ' << *alias->id;
 					}
 					stream << "\e[22;2m";
 				}
@@ -1991,14 +1991,14 @@ namespace LL2W {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveIn(var)) {
-							stream << " %" << *block->getLabel();
+							stream << ' ' << *block->getLabel();
 						}
 					}
 					stream << "\e[0m\n";
 					stream << "    \e[2m;      \e[31mout =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveOut(var)) {
-							stream << " %" << *block->getLabel();
+							stream << ' ' << *block->getLabel();
 						}
 					}
 					stream << "\e[0m\n";
@@ -2015,11 +2015,11 @@ namespace LL2W {
 				if (auto vparent = var->getParent().lock()) {
 					stream << "(parent = " << *vparent << ")";
 				}
-				stream << ":";
+				stream << ':';
 				for (Variable *alias: var->getAliases()) {
-					stream << " " << *alias;
+					stream << ' ' << *alias;
 				}
-				stream << "\n";
+				stream << '\n';
 			}
 			stream << "</Aliases>\n";
 		}
@@ -2029,7 +2029,7 @@ namespace LL2W {
 				for (Node *node: cfg.nodes()) {
 					if (node->data.has_value()) {
 						if (BasicBlockPtr bb = node->get<std::weak_ptr<BasicBlock>>().lock()) {
-							node->rename("\"" + node->label() + ":" + std::to_string(bb->estimatedExecutions) + "\"");
+							node->rename('"' + node->label() + ':' + std::to_string(bb->estimatedExecutions) + '"');
 						}
 					}
 				}

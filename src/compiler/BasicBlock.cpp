@@ -195,6 +195,6 @@ namespace LL2W {
 	}
 
 	std::ostream & operator<<(std::ostream &os, const BasicBlock &block) {
-		return os << "%" << *block.getLabel();
+		return os << *block.getLabel();
 	}
 }
