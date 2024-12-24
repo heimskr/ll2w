@@ -2235,6 +2235,29 @@ namespace LL2W {
 		}
 	}
 
+	void Function::shrink() {
+		delete allocator;
+		allocator = nullptr;
+		blocks.clear();
+		linearInstructions.clear();
+		variableStore.clear();
+		extraVariables.clear();
+		spilledVariables.clear();
+		savedRegisters.clear();
+		stack.clear();
+		bbMap.clear();
+		bbNodeMap.clear();
+		bbLabels.clear();
+		movePhiBlocks.clear();
+		categories.clear();
+		clobbers.clear();
+		cfg.clear();
+		dTree.reset();
+		djGraph.reset();
+		variableLocations.clear();
+		assemblerVariables.clear();
+	}
+
 	Graph Function::makeDependencyGraph() const {
 		Timer timer{"Function::makeDependencyGraph"};
 		Graph dependencies;

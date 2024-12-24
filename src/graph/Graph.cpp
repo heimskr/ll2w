@@ -1,3 +1,7 @@
+#include "graph/Graph.h"
+#include "graph/UncolorableError.h"
+#include "util/Util.h"
+
 #include <cassert>
 #include <cctype>
 #include <filesystem>
@@ -5,12 +9,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-
 #include <unistd.h>
 
-#include "graph/Graph.h"
-#include "graph/UncolorableError.h"
-#include "util/Util.h"
+#define NO_RENDERING
 
 namespace LL2W {
 	Graph::Graph() = default;
@@ -560,6 +561,10 @@ namespace LL2W {
 	}
 
 	void Graph::renderTo(std::string out_path, const std::string &direction) {
+#ifdef NO_RENDERING
+		(void) out_path;
+		(void) direction;
+#else
 		std::ofstream out;
 		std::string path = "/tmp/ll2w_graph_";
 		for (const char ch: out_path) {
@@ -598,6 +603,7 @@ namespace LL2W {
 				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 			}
 		}
+#endif
 	}
 
 	decltype(Graph::labelMap)::iterator Graph::begin() {

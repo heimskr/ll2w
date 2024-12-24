@@ -1,7 +1,7 @@
 // #define ANALYZE_MULTITHREADED
-// #define COMPILE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
-#define GRADUAL_CODE_PRINTING
+// #define GRADUAL_CODE_PRINTING
 
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "kernel_main"
@@ -13,7 +13,7 @@
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
 // #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
 // #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
-#define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
+// #define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -363,8 +363,12 @@ namespace LL2W {
 		Waiter waiter(functions.size());
 
 		for (auto &[name, function]: functions) {
-			pool.add([&waiter, function](ThreadPool &, size_t) {
+			pool.add([this, &waiter, &function](ThreadPool &, size_t) {
 				function->compile();
+				renderedFunctions.withLock([&] {
+					renderedFunctions[function->name] = function->toString();
+				});
+				function->shrink();
 
 #ifdef GRADUAL_CODE_PRINTING
 				std::unique_lock lock(gradualCodePrintingMutex);

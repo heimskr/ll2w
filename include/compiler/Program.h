@@ -12,6 +12,7 @@
 #include "compiler/TypeSet.h"
 #include "parser/AliasDef.h"
 #include "parser/FunctionHeader.h"
+#include "util/Lockable.h"
 
 #include <list>
 #include <memory>
@@ -44,39 +45,40 @@ namespace LL2W {
 			std::string outputArray(const ArrayValue &);
 
 		public:
-			std::map<std::string, Function *> functions;
+			std::unordered_map<std::string, Function *> functions;
 			std::string sourceFilename;
-			std::map<std::string, FunctionHeader *> declarations;
-			std::map<std::string, GlobalVarDef *> globals; // keys include the '@'
+			std::unordered_map<std::string, FunctionHeader *> declarations;
+			std::unordered_map<std::string, GlobalVarDef *> globals; // keys include the '@'
 			/** A set of all globals to which references were emitted while outputting the data section. Doesn't include
 			 *  the '@'. */
-			std::set<std::string> referencedGlobals;
-			std::map<int64_t, std::unordered_set<FnAttr>> fnattrs;
-			std::map<int64_t, std::unordered_set<ParAttr>> parattrs;
-			std::map<const std::string *, AliasDef *> aliases;
-			std::map<int64_t, File> files;
-			std::map<int64_t, Location> locations;
-			std::map<int64_t, Subprogram> subprograms;
-			std::map<const std::string *, int64_t> subprogramIndices;
-			std::map<int64_t, LexicalBlock> lexicalBlocks;
-			std::map<int64_t, LocalVariable> localVariables;
+			std::unordered_set<std::string> referencedGlobals;
+			std::unordered_map<int64_t, std::unordered_set<FnAttr>> fnattrs;
+			std::unordered_map<int64_t, std::unordered_set<ParAttr>> parattrs;
+			std::unordered_map<const std::string *, AliasDef *> aliases;
+			std::unordered_map<int64_t, File> files;
+			std::unordered_map<int64_t, Location> locations;
+			std::unordered_map<int64_t, Subprogram> subprograms;
+			std::unordered_map<const std::string *, int64_t> subprogramIndices;
+			std::unordered_map<int64_t, LexicalBlock> lexicalBlocks;
+			std::unordered_map<int64_t, LocalVariable> localVariables;
 			/** This is a (pointer to a) set of types instead of just one type because of nodes like "!1 = {!2, !3}". */
-			std::map<int64_t, std::shared_ptr<TypeSet>> basicTypeSets;
-			std::map<int64_t, std::vector<std::shared_ptr<LLVMType>>> basicTypeLists;
-			std::map<int64_t, int64_t> subroutineTypes;
-			std::map<int64_t, std::shared_ptr<DerivedType>> derivedTypes;
-			std::map<int64_t, std::shared_ptr<CompositeType>> compositeTypes;
+			std::unordered_map<int64_t, std::shared_ptr<TypeSet>> basicTypeSets;
+			std::unordered_map<int64_t, std::vector<std::shared_ptr<LLVMType>>> basicTypeLists;
+			std::unordered_map<int64_t, int64_t> subroutineTypes;
+			std::unordered_map<int64_t, std::shared_ptr<DerivedType>> derivedTypes;
+			std::unordered_map<int64_t, std::shared_ptr<CompositeType>> compositeTypes;
 			/** A set of all LLVM debug indices found in the program. */
-			std::set<int64_t> debugIndices;
+			std::unordered_set<int64_t> debugIndices;
 			/** A map of names of functions that do nothing except return an argument to the index of the argument they
 			 *  return. Names don't contain a leading @. */
-			std::map<std::string, int64_t> simpleFunctions;
+			std::unordered_map<std::string, int64_t> simpleFunctions;
 			/** A set of names of functions that do nothing but return void. Names don't contain a leading @. */
-			std::set<std::string> uselessFunctions;
+			std::unordered_set<std::string> uselessFunctions;
 			/** A map of names of functions that do nothing but return a constant to the constant they return.
 			 *  Names don't contain a leading @. */
-			std::map<std::string, std::shared_ptr<Value>> constantReturningFunctions;
+			std::unordered_map<std::string, std::shared_ptr<Value>> constantReturningFunctions;
 			std::unique_ptr<llvm::Module> llvmModule;
+			Lockable<std::unordered_map<const std::string *, std::string>> renderedFunctions;
 
 			Program(std::string_view, llvm::LLVMContext &);
 			Program(const ASTNode &);

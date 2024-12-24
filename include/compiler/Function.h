@@ -116,8 +116,7 @@ namespace LL2W {
 
 			std::unordered_set<Variable::ID> spilledVariables;
 
-			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by
-			 *  InsertPrologue. */
+			/** A list of physical registers that were pushed to the stack in the prologue. Filled in by InsertPrologue. */
 			std::list<int> savedRegisters;
 
 			/** Maps offsets to stack location information. */
@@ -186,7 +185,7 @@ namespace LL2W {
 
 			std::optional<bool> variadic;
 
-			Allocator::Result lastAllocationResult;
+			Allocator::Result lastAllocationResult = Allocator::Result::Invalid;
 
 			Function(const Function &) = delete;
 			Function(Function &&) = delete;
@@ -212,8 +211,7 @@ namespace LL2W {
 			/** Extracts read/written information from all instructions. */
 			void extractInstructions(bool force = false);
 
-			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the
-			 *  instructions. */
+			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the instructions. */
 			void relinearize();
 
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
@@ -243,30 +241,24 @@ namespace LL2W {
 			BasicBlockPtr after(BasicBlockPtr);
 
 			/** Inserts one instruction after another. Returns the inserted instruction. */
-			InstructionPtr insertAfter(InstructionPtr base,
-				InstructionPtr new_instruction, bool reindex = true);
+			InstructionPtr insertAfter(InstructionPtr base, InstructionPtr new_instruction, bool reindex = true);
 
 			/** Inserts one instruction before another. Returns the inserted instruction. */
 			InstructionPtr insertBefore(InstructionPtr base,
-				InstructionPtr new_instruction, bool reindex = true, bool linear_warn = true,
-				bool *should_relinearize_out = nullptr);
+				InstructionPtr new_instruction, bool reindex = true, bool linear_warn = true, bool *should_relinearize_out = nullptr);
 
 			/** Inserts one instruction before another and adds a comment before the inserted instruction.
 			 *  Returns the inserted instruction. */
-			InstructionPtr insertBefore(InstructionPtr base,
-				InstructionPtr new_instruction, const std::string &, bool reindex = true);
+			InstructionPtr insertBefore(InstructionPtr base, InstructionPtr new_instruction, const std::string &, bool reindex = true);
 
 			/** Inserts one instruction before another and adds a comment before the inserted instruction.
 			 *  Returns the inserted instruction. */
-			InstructionPtr insertBefore(InstructionPtr base,
-				InstructionPtr new_instruction, const char *, bool reindex = true);
+			InstructionPtr insertBefore(InstructionPtr base, InstructionPtr new_instruction, const char *, bool reindex = true);
 
 			/** Inserts a comment before an instruction. */
-			InstructionPtr comment(InstructionPtr, const std::string &,
-				bool reindex = true);
+			InstructionPtr comment(InstructionPtr, const std::string &, bool reindex = true);
 
-			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block
-			 *  if such a branch instruction exists. */
+			/** Removes in a given block a branch instruction that redundantly jumps to the immediately following block if such a branch instruction exists. */
 			void removeUselessBranch(BasicBlockPtr);
 
 			/** Reassigns indices to all instructions. */
@@ -410,6 +402,9 @@ namespace LL2W {
 			/** Through questionable methods, this function ensures that all variables with the same numeric ID share
 			 *  the same register assignment. */
 			void hackVariables();
+
+			/** Deletes data that's no longer needed after the function has been compiled. */
+			void shrink();
 
 			Graph makeDependencyGraph() const;
 
