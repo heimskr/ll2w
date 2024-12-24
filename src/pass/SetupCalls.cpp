@@ -85,7 +85,7 @@ namespace LL2W::Passes {
 
 		if (argument_types != nullptr) {
 			if (function.debugIndex == -1) {
-				warn() << "Couldn't find debug index for function " << *global << '\n';
+				// warn() << "Couldn't find debug index for function " << *global << '\n';
 				return;
 			}
 
@@ -125,9 +125,11 @@ namespace LL2W::Passes {
 					span = span.subspan(1);
 				}
 
-				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s)
-					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++)))
+				for (size_t s = 0, end = std::min(span.size(), argument_types->size()); s < end; ++s) {
+					if (auto int_type = std::dynamic_pointer_cast<IntType>(argument_types->at(i++))) {
 						int_type->setSignedness(span[s]->getSignedness(&function.parent));
+					}
+				}
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";
 				for (const auto &[key, val]: program.basicTypeLists) std::cerr << ' ' << key;

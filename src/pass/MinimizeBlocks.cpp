@@ -43,7 +43,7 @@ namespace LL2W::Passes {
 			added_blocks.emplace(index, new_block);
 
 			// Emplacing won't overwrite a preexisting key's value. This is important here.
-			label_replacements.emplace(old_parent->label, new_label);
+			label_replacements.emplace(old_parent->getLabel(), new_label);
 
 			new_block->instructions.emplace_back(instruction);
 			instruction->parent = new_block;
@@ -83,10 +83,10 @@ namespace LL2W::Passes {
 		function.blocksAreMinimized = true;
 
 		for (const auto &[index, block]: added_blocks) {
-			function.bbLabels.insert(block->label);
-			function.bbMap.emplace(block->label, block);
+			function.bbLabels.insert(block->getLabel());
+			function.bbMap.emplace(block->getLabel(), block);
 			for (auto predecessor: predecessors[index]) {
-				block->preds.emplace_back(added_blocks.at(predecessor)->label);
+				block->preds.emplace_back(added_blocks.at(predecessor)->getLabel());
 			}
 			function.blocks.emplace_back(block);
 		}

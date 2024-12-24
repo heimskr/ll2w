@@ -47,6 +47,8 @@ namespace LL2W {
 			bool isInt(int bit_width) const;
 			bool isPointer() const;
 			bool isVoid() const;
+			bool isOpaque() const;
+			bool isOpaquePointer() const;
 			/** Returns a Why type string without braces. */
 			virtual std::string whyString() const = 0;
 			virtual TypePtr unwrap() { return shared_from_this(); }

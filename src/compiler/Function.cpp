@@ -4,7 +4,7 @@
 #define DEBUG_VARS
 // #define DEBUG_RENDER
 // #define DEBUG_SPILL
-// #define DEBUG_SPLIT
+#define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
@@ -253,8 +253,8 @@ namespace LL2W {
 			BasicBlockPtr new_block = blocks.emplace_back(std::make_shared<BasicBlock>(label, std::move(preds), std::move(instructions)));
 			new_block->parent = this;
 			new_block->index = ++block_index;
-			bbLabels.insert(new_block->label);
-			bbMap.emplace(new_block->label, new_block);
+			bbLabels.insert(new_block->getLabel());
+			bbMap.emplace(new_block->getLabel(), new_block);
 
 			{
 				Timer timer{"InstructionExtractionLoop"};
@@ -288,8 +288,8 @@ namespace LL2W {
 			block->offset = offset;
 			block->parent = this;
 			block->index = ++block_index;
-			bbLabels.insert(block->label);
-			bbMap.emplace(block->label, block);
+			bbLabels.insert(block->getLabel());
+			bbMap.emplace(block->getLabel(), block);
 			for (std::shared_ptr<Instruction> &instruction: instructions) {
 				instruction->parent = block;
 				instruction->extract();
@@ -408,7 +408,11 @@ namespace LL2W {
 	}
 
 	Variable::ID Function::newLabel() {
-		return StringSet::intern('#' + std::to_string(++lastArtificialLabel));
+		auto *out = StringSet::intern("%#" + std::to_string(++lastArtificialLabel));
+		// if (*out == "%#548") {
+		// 	raise(SIGTRAP);
+		// }
+		return out;
 	}
 
 	VariablePtr Function::newVariable(const TypePtr &type, const BasicBlockPtr &definer) {
@@ -746,10 +750,10 @@ namespace LL2W {
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
 		if (blockIter == block->instructions.end()) {
-			warn() << "Couldn't find instruction in block " << *block->label << " of function " << *name << ": " << base->debugExtra() << '\n';
+			warn() << "Couldn't find instruction in block " << *block->getLabel() << " of function " << *name << ": " << base->debugExtra() << '\n';
 			std::cerr << "Index: " << block->index << '\n';
 			for (const auto &subblock: blocks) {
-				std::cerr << *subblock->label << '[' << subblock->index << "] ";
+				std::cerr << *subblock->getLabel() << '[' << subblock->index << "] ";
 			}
 			if (block->instructions.empty()) {
 				std::cerr << "\nInstruction list is empty.\n";
@@ -819,7 +823,7 @@ namespace LL2W {
 					BasicBlockPtr next = after(block);
 					if (next) {
 						const std::string destination = branch->destination->substr(1);
-						if (*next->label == destination) {
+						if (*next->getLabel() == destination) {
 							remove(back);
 						}
 					}
@@ -848,18 +852,18 @@ namespace LL2W {
 		Timer timer("SplitBlock");
 		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
-		std::cerr << "Splitting " << *block->label << " (" << block->instructions.size() << ") into " << *block->label << " & " << *label << "\n";
+		std::cerr << "Splitting " << *block->getLabel() << " (" << block->instructions.size() << ") into " << *block->getLabel() << " & " << *label << "\n";
 #endif
 		auto end = block->instructions.end();
 		auto iter = std::find(block->instructions.begin(), end, instruction);
 		if (iter == end) {
-#ifdef DEBUGS_SPLIT
-			warn() << "Can't split " << *block->label << ": instruction is at end of block\n";
+#ifdef DEBUG_SPLIT
+			warn() << "Can't split " << *block->getLabel() << ": instruction is at end of block\n";
 #endif
 			return nullptr;
 		}
 
-		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *>{block->label}, std::list<InstructionPtr>());
+		BasicBlockPtr new_block = std::make_shared<BasicBlock>(label, std::vector<const std::string *>{block->getLabel()}, std::list<InstructionPtr>());
 		new_block->parent = this;
 		bbLabels.insert(label);
 		bbMap.emplace(label, new_block);
@@ -883,7 +887,7 @@ namespace LL2W {
 
 		// Replace the old label with the new label in the preds of all basic blocks.
 		for (const BasicBlockPtr &possible_successor: blocks) {
-			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->label);
+			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->getLabel());
 			if (predIter != possible_successor->preds.end()) {
 				*predIter = label;
 			}
@@ -914,7 +918,7 @@ namespace LL2W {
 			}
 			auto *phi = dynamic_cast<PhiNode *>(llvm->getNode());
 			for (auto &[value, phi_label]: phi->pairs) {
-				if (phi_label == block->label) {
+				if (phi_label == block->getLabel()) {
 					phi_label = label;
 				}
 			}
@@ -931,8 +935,8 @@ namespace LL2W {
 		// Update the preds of all the blocks by replacing the after-block's label with the before-block's.
 		for (const BasicBlockPtr &block: blocks) {
 			for (const std::string *&pred: block->preds) {
-				if (pred == after->label) {
-					pred = before->label;
+				if (pred == after->getLabel()) {
+					pred = before->getLabel();
 				}
 			}
 		}
@@ -947,21 +951,19 @@ namespace LL2W {
 
 		// Replace the after-block's label with the before-block's in all instructions.
 		// TODO: When Why branches are implemented, add them here.
-		const std::string *before_p_label = StringSet::intern("%" + *before->label);
-		const std::string *after_p_label  = StringSet::intern("%" + *after->label);
-		const std::string *before_label   = before->label;
-		const std::string *after_label    = after->label;
+		const std::string *before_label = before->getLabel();
+		const std::string *after_label  = after->getLabel();
 		for (const InstructionPtr &instruction: linearInstructions) {
 			if (BrUncondNode *branch = CompilerUtil::brUncondCast(instruction)) {
-				if (branch->destination == after_p_label) {
-					branch->destination = before_p_label;
+				if (branch->destination == after_label) {
+					branch->destination = before_label;
 				}
 			} else if (BrCondNode *branch = CompilerUtil::brCondCast(instruction)) {
-				if (branch->ifTrue == after_p_label) {
-					branch->ifTrue = before_p_label;
+				if (branch->ifTrue == after_label) {
+					branch->ifTrue = before_label;
 				}
-				if (branch->ifFalse == after_p_label) {
-					branch->ifFalse = before_p_label;
+				if (branch->ifFalse == after_label) {
+					branch->ifFalse = before_label;
 				}
 			} else if (SwitchNode *sw = CompilerUtil::switchCast(instruction)) {
 				if (sw->label == after_label) {
@@ -1102,7 +1104,7 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		// Passes::minimizeBlocks(*this, true);
+		Passes::minimizeBlocks(*this, false);
 		Passes::makeCFG(*this);
 		forceLiveness();
 		updateInstructionNodes();
@@ -1145,7 +1147,7 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
-		// Passes::minimizeBlocks(*this, true);
+		Passes::minimizeBlocks(*this, true);
 		Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
@@ -1392,30 +1394,30 @@ namespace LL2W {
 		// }
 
 		const Node::Set &merge = merges.at(block);
-		const auto &defs = var->definingBlocks;
+		const WeakSet<BasicBlock> &defs = var->definingBlocks;
 
 		// M^r(n) = M(n) ∪ {n}
 		Node::Set m_r(merge.begin(), merge.end());
 		m_r.insert(block);
 
 		// for t ∈ uses(a)
-		for (auto weak_t: var->usingBlocks) {
-			auto t = weak_t.lock();
+		for (const auto &weak_t: var->usingBlocks) {
+			BasicBlockPtr t = weak_t.lock();
 			if (!t) {
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
 			}
 			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M^r (n)
-				if (m_r.count(&(*djGraph)[*t->label]) != 0) {
+				if (m_r.count(&(*djGraph)[*t->getLabel()]) != 0) {
 					return true;
 				}
-				auto t_node = &(*djGraph)[*t->label];
+				Node *t_node = &(*djGraph)[*t->getLabel()];
 				if (!t_node) {
-					// error() << "t_node (" << *t->label << ") is null in isLiveInUsingMergeSet\n";
+					// error() << "t_node (" << *t->getLabel() << ") is null in isLiveInUsingMergeSet\n";
 					break;
 				}
-				auto parent = djGraph->parent(*t_node, *djGraph->startNode);
+				Node *parent = djGraph->parent(*t_node, *djGraph->startNode);
 				if (!parent) {
 					// error() << "parent of " << t_node->label() << " is null in isLiveInUsingMergeSet\n";
 					break;
@@ -1471,10 +1473,10 @@ namespace LL2W {
 			// while t != def(a)
 			while (defs.count(t) == 0) {
 				// if t ∩ M_s(n)
-				if (m_s.count(&(*djGraph)[*t->label]) != 0) {
+				if (m_s.count(&(*djGraph)[*t->getLabel()]) != 0) {
 					return true;
 				}
-				auto t_node = &(*djGraph)[*t->label];
+				auto t_node = &(*djGraph)[*t->getLabel()];
 				if (!t_node) {
 					// error() << "t_node (" << *t->label << ") is null in isLiveOutUsingMergeSet\n";
 					break;
@@ -1506,11 +1508,11 @@ namespace LL2W {
 		for (const auto &[name, var]: variableStore) {
 			if (!var->hasSpecialRegister()) {
 				for (const auto &block: blocks) {
-					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
+					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->getLabel()], var)) {
 						block->liveIn.insert(var);
 						block->allLive.insert(var);
 					}
-					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
+					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->getLabel()], var)) {
 						block->liveOut.insert(var);
 						block->allLive.insert(var);
 					}
@@ -1520,11 +1522,11 @@ namespace LL2W {
 		for (const auto &[name, var]: extraVariables) {
 			if (!var->hasSpecialRegister()) {
 				for (const auto &block: blocks) {
-					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
+					if (isLiveInUsingMergeSet(mergesets, &(*djGraph)[*block->getLabel()], var)) {
 						block->liveIn.insert(var);
 						block->allLive.insert(var);
 					}
-					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->label], var)) {
+					if (isLiveOutUsingMergeSet(mergesets, &(*djGraph)[*block->getLabel()], var)) {
 						block->liveOut.insert(var);
 						block->allLive.insert(var);
 					}
@@ -1545,10 +1547,10 @@ namespace LL2W {
 		{
 			Timer subtimer("GoesTo");
 			for (auto &block: blocks) {
-				goes_to.try_emplace(block->label);
+				goes_to.try_emplace(block->getLabel());
 				for (auto &other: blocks) {
-					if (Util::contains(other->preds, block->label)) {
-						goes_to[block->label].push_back(other);
+					if (Util::contains(other->preds, block->getLabel())) {
+						goes_to[block->getLabel()].push_back(other);
 					}
 				}
 			}
@@ -1556,7 +1558,7 @@ namespace LL2W {
 
 		do {
 			for (auto &block: blocks) {
-				auto n = block->label;
+				auto n = block->getLabel();
 				in_[n]  = in[n];
 				out_[n] = out[n];
 				in[n] = block->read;
@@ -1567,7 +1569,7 @@ namespace LL2W {
 				}
 				out[n].clear();
 				for (auto &succ: goes_to.at(n)) {
-					for (auto &var: in[succ->label]) {
+					for (auto &var: in[succ->getLabel()]) {
 						out[n].insert(var);
 					}
 				}
@@ -1575,7 +1577,7 @@ namespace LL2W {
 
 			working = false;
 			for (auto &block: blocks) {
-				auto n = block->label;
+				auto n = block->getLabel();
 				if (!(Util::equal(in_[n], in[n]) && Util::equal(out_[n], out[n]))) {
 					working = true;
 					break;
@@ -1584,8 +1586,8 @@ namespace LL2W {
 		} while (working);
 
 		for (auto &block: blocks) {
-			block->liveIn  = std::unordered_set<VariablePtr>(in[block->label].cbegin(),  in[block->label].cend());
-			block->liveOut = std::unordered_set<VariablePtr>(out[block->label].cbegin(), out[block->label].cend());
+			block->liveIn  = std::unordered_set<VariablePtr>(in[block->getLabel()].cbegin(),  in[block->getLabel()].cend());
+			block->liveOut = std::unordered_set<VariablePtr>(out[block->getLabel()].cbegin(), out[block->getLabel()].cend());
 			block->allLive = Util::merge(block->liveIn, block->liveOut);
 		}
 	}
@@ -1636,11 +1638,11 @@ namespace LL2W {
 			}
 		} catch (std::out_of_range &) {
 			debug();
-			std::cerr << "Couldn't find block " << *block->label << " in " << *name << " while computing liveness.\n";
+			std::cerr << "Couldn't find block " << *block->getLabel() << " in " << *name << " while computing liveness.\n";
 			if (!bbNodeMap.empty()) {
 				std::cerr << "\nbbNodeMap:";
-				for (const auto &pair: bbNodeMap) {
-					std::cerr << ' ' << *pair.first->label;
+				for (const auto &[block, node]: bbNodeMap) {
+					std::cerr << ' ' << *block->getLabel();
 				}
 				std::cerr << "\n\n";
 			}
@@ -1850,7 +1852,7 @@ namespace LL2W {
 
 		if (do_blocks) {
 			for (const BasicBlockPtr &block: blocks) {
-				stream << "    \e[2m; \e[4;1m" << *block->label << "\e[22;2;4m @ " << block->index << ": preds =";
+				stream << "    \e[2m; \e[4;1m" << *block->getLabel() << "\e[22;2;4m @ " << block->index << ": preds =";
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 					if (iter != begin) {
 						stream << ',';
@@ -1946,7 +1948,7 @@ namespace LL2W {
 				stream << " \e[2m; \e[1m%" << *id << "/" << *var->id << "/" << *var->originalID << "\e[0;2m  defs (" << var->definitions.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &def: var->definingBlocks) {
 					if (auto locked = def.lock()) {
-						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
+						stream << " \e[1;2m" << std::setw(2) << *locked->getLabel() << "\e[22m";
 					} else {
 						stream << " \e[2m??\e[22m";
 					}
@@ -1954,7 +1956,7 @@ namespace LL2W {
 				stream << "  \e[0;2muses =";
 				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks) {
 					if (auto locked = use.lock()) {
-						stream << " \e[1;2m" << std::setw(2) << *locked->label << "\e[22m";
+						stream << " \e[1;2m" << std::setw(2) << *locked->getLabel() << "\e[22m";
 					} else {
 						stream << " \e[2m??\e[22m";
 					}
@@ -1977,14 +1979,14 @@ namespace LL2W {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveIn(var)) {
-							stream << " %" << *block->label;
+							stream << " %" << *block->getLabel();
 						}
 					}
 					stream << "\e[0m\n";
 					stream << "    \e[2m;      \e[31mout =\e[1m";
 					for (const BasicBlockPtr &block: blocks) {
 						if (block->isLiveOut(var)) {
-							stream << " %" << *block->label;
+							stream << " %" << *block->getLabel();
 						}
 					}
 					stream << "\e[0m\n";

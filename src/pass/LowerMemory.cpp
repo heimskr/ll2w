@@ -53,17 +53,13 @@ namespace LL2W::Passes {
 
 	void lowerLoad(Function &function, InstructionPtr &instruction, LLVMInstruction &llvm) {
 		LoadNode *node = dynamic_cast<LoadNode *>(llvm.getNode());
+
 		ConstantPtr converted = node->constant->convert();
 		if (!converted->value) {
 			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
 		}
-		int size;
-		try {
-			size = getLoadStoreSize(converted, instruction);
-		} catch (std::exception &) {
-			node->debug();
-			throw;
-		}
+
+		const int size = Util::updiv(node->type->width(), 8);
 		const ValueType value_type = converted->value->valueType();
 
 		std::string prefix = "LowerMemory(load @ " + std::string(node->location) + "): ";
@@ -118,15 +114,10 @@ namespace LL2W::Passes {
 			}
 		}
 
-		int size;
-		try {
-			size = getLoadStoreSize(converted, instruction);
-		} catch (std::exception &) {
-			node->debug();
-			throw;
-		}
-
-		ValuePtr source_value = node->source->convert()->value;
+		ConstantPtr source_constant = node->source->convert();
+		ValuePtr source_value = source_constant->value;
+		TypePtr source_type = source_constant->type;
+		auto size = Util::updiv(source_type->width(), 8);
 		const ValueType value_type = source_value->valueType();
 
 		if (source_value->isIntLike()) {
@@ -230,30 +221,6 @@ namespace LL2W::Passes {
 		} else {
 			node->debug();
 			throw std::runtime_error("Unexpected source ValueType in store instruction: " + value_map.at(value_type));
-		}
-	}
-
-	int getLoadStoreSize(ConstantPtr &constant, const InstructionPtr &instruction) {
-		PointerType *constant_ptr = dynamic_cast<PointerType *>(constant->type.get());
-		if (!constant_ptr) {
-			throw std::runtime_error("Expected a PointerType in the constant of a load/store instruction");
-		}
-
-		Type *subtype = constant_ptr->subtype.get();
-		if (IntType *constant_int = dynamic_cast<IntType *>(subtype)) {
-			const int width = constant_int->width();
-			if (width < 8) {
-				return 1;
-			}
-			return constant_int->width() / 8;
-		} else if (dynamic_cast<PointerType *>(subtype) || dynamic_cast<FunctionType *>(subtype)) {
-			return WhyInfo::pointerWidth;
-		} else if (StructType *constant_struct = dynamic_cast<StructType *>(subtype)) {
-			return constant_struct->width() / 8;
-		} else {
-			warn() << "getLoadStoreSize: Unexpected pointer subtype " + std::string(*constant_ptr->subtype) << " in " << instruction->debugExtra() << "\n";
-			return constant_ptr->subtype->width() / 8;
-			// return -1;
 		}
 	}
 }

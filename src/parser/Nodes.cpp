@@ -1,3 +1,4 @@
+#include "compiler/Getelementptr.h"
 #include "compiler/Variable.h"
 #include "parser/EnumConversion.h"
 #include "parser/Lexer.h"
@@ -1156,12 +1157,14 @@ namespace LL2W {
 		Timer timer{"ConstructGetelementptrNode"};
 		result = tryOperandName(inst);
 		inbounds = inst.isInBounds();
-		type = Type::fromLLVM(*inst.getType());
 		constant = Constant::fromLLVM(*inst.getPointerOperand());
+		type = PointerType::make(Type::fromLLVM(*inst.getResultElementType()));
 		pointerType = PointerType::make(Type::fromLLVM(*inst.getSourceElementType()));
+
 		for (const auto &index: inst.indices()) {
 			if (const auto *constant_int = llvm::dyn_cast<llvm::ConstantInt>(index.get())) {
-				indices.emplace_back(constant_int->getBitWidth(), static_cast<long>(constant_int->getValue().getRawData()[0]), false, false);
+				const int64_t index(constant_int->getValue().getRawData()[0]);
+				indices.emplace_back(constant_int->getBitWidth(), index, false, false);
 			} else if (const auto *value = llvm::dyn_cast<llvm::Value>(index.get())) {
 				// TODO: maybe substr(1)
 				indices.emplace_back(value->getType()->getIntegerBitWidth(), StringSet::intern(getOperandName(*value)), false, true);

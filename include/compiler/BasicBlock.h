@@ -26,15 +26,17 @@ namespace LL2W {
 	using VariablePtr = std::shared_ptr<Variable>;
 
 	class BasicBlock: public std::enable_shared_from_this<BasicBlock> {
-		private:
-			bool extracted = false;
-			void extract(const InstructionPtr &);
-
 		public:
 			using Label = const std::string *;
 			using LivePtr = std::unordered_set<VariablePtr> BasicBlock::*;
 
-			Label label;
+		private:
+			Label label = nullptr;
+
+			bool extracted = false;
+			void extract(const InstructionPtr &);
+
+		public:
 			int index = -1;
 			std::vector<Label> preds;
 			std::list<InstructionPtr> instructions;
@@ -51,7 +53,7 @@ namespace LL2W {
 			int estimatedExecutions = 0;
 			llvm::BasicBlock *llvmBlock = nullptr;
 
-			BasicBlock(Label, const std::vector<Label> & = {}, const std::list<InstructionPtr> & = {});
+			BasicBlock(Label, std::vector<Label> = {}, std::list<InstructionPtr> = {});
 
 			/** Extracts each instruction in the basic block. Returns a pair containing the total number of reads and
 			 *  the total number of writes in the basic block. */
@@ -80,6 +82,9 @@ namespace LL2W {
 
 			bool isLiveIn(const VariablePtr &) const;
 			bool isLiveOut(const VariablePtr &) const;
+
+			void setLabel(Label);
+			inline auto getLabel() const { return label; }
 	};
 
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;

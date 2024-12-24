@@ -47,7 +47,7 @@ namespace LL2W::Passes {
 			//     %9 = getelementptr inbounds [200 x i8], [200 x i8]* @_ZNSt3__16__itoaL10cDigitsLutE, i64 0, i64 %8
 
 			ValuePtr constant_value = node->allValues().front();
-			TypePtr constant_type = node->constant->convert()->type;
+			TypePtr constant_type = node->constant->convert()->refineType(function.parent);
 
 			if (!constant_value->isLocal() && !constant_value->isGlobal()) {
 				throw std::runtime_error("Expected a pvar or gvar as the pointer value in a getelementptr instruction");
@@ -82,8 +82,8 @@ namespace LL2W::Passes {
 					indices.pop_front();
 					const TypeType tt = type->typeType();
 					if (index.isPvar) {
-						VariablePtr pvar = std::holds_alternative<Variable::ID>(index.value)?
-							  function.getVariable(std::get<Variable::ID>(index.value))
+						VariablePtr pvar = std::holds_alternative<Variable::ID>(index.value)
+							? function.getVariable(std::get<Variable::ID>(index.value))
 							: function.getVariable(std::to_string(std::get<long>(index.value)));
 						if (tt == TypeType::Pointer || tt == TypeType::Array) {
 							type = dynamic_cast<HasSubtype *>(type.get())->subtype;
@@ -220,6 +220,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();
 			} else {
+				error() << instruction->debugExtra() << "\n";
 				throw std::runtime_error("Unsupported type in getelementptr instruction: " + type_map.at(tt));
 			}
 

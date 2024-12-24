@@ -1,3 +1,4 @@
+#include "compiler/Program.h"
 #include "parser/ASTNode.h"
 #include "parser/Constant.h"
 #include "parser/Lexer.h"
@@ -285,9 +286,22 @@ namespace LL2W {
 
 		llvm::raw_os_ostream os(error() << "Constant: ");
 		llvm_value.print(os, true);
-		std::cerr << std::endl;
-		std::println(error() << "ValueID: ", "{}", static_cast<int>(llvm_value.getValueID()));
+		(os << "\n").flush();
+
+		std::println(error(), "ValueID: {}", static_cast<int>(llvm_value.getValueID()));
 		throw std::invalid_argument("Invalid LLVM constant");
+	}
+
+	TypePtr Constant::refineType(const Program &program) const {
+		if (type->isOpaque()) {
+			if (value->isGlobal()) {
+				const auto *name = dynamic_cast<const GlobalValue &>(*value).name;
+				GlobalVarDef *def = program.globals.at(*name);
+				return PointerType::make(def->type);
+			}
+		}
+
+		return type;
 	}
 
 	std::ostream & operator<<(std::ostream &os, const Constant &constant) {

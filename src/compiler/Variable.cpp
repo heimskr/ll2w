@@ -513,11 +513,11 @@ namespace LL2W {
 		std::cerr << "\e[22m:\n";
 		std::cerr << "   Defining blocks:";
 		for (const std::weak_ptr<BasicBlock> &block: definingBlocks)
-			std::cerr << " %" << *block.lock()->label;
+			std::cerr << " %" << *block.lock()->getLabel();
 		std::cerr << "\n";
 		std::cerr << "   Using blocks:";
 		for (const std::weak_ptr<BasicBlock> &block: usingBlocks)
-			std::cerr << " %" << *block.lock()->label;
+			std::cerr << " %" << *block.lock()->getLabel();
 		std::cerr << "\n";
 		std::cerr << "   Last use: ";
 		if (InstructionPtr last_use = lastUse.lock())

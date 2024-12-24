@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <unordered_set>
-
 #include "Enums.h"
 #include "Types.h"
 #include "Values.h"
 #include "ParAttrs.h"
 #include "util/Makeable.h"
+
+#include <memory>
+#include <unordered_set>
 
 namespace llvm {
 	class Value;
@@ -15,6 +15,7 @@ namespace llvm {
 
 namespace LL2W {
 	class ASTNode;
+	class Program;
 
 	class Constant;
 	using ConstantPtr = std::shared_ptr<Constant>;
@@ -39,6 +40,8 @@ namespace LL2W {
 			operator std::string() const;
 
 			static ConstantPtr fromLLVM(const llvm::Value &);
+
+			TypePtr refineType(const Program &) const;
 
 		private:
 			Constant();

@@ -209,7 +209,7 @@ namespace LL2W::Passes {
 				new_instruction->parent = block;
 
 				if (block->instructions.empty()) {
-					warn() << "Block " << *block->label << " is empty.\n";
+					warn() << "Block " << *block->getLabel() << " is empty.\n";
 					continue;
 				}
 
@@ -222,9 +222,9 @@ namespace LL2W::Passes {
 					bool middle_made = false;
 
 					auto phi_block = llvm_instruction->parent.lock();
-					const std::string *phi_block_label = phi_block->label;
-					if (function.movePhiBlocks.contains({block->label, phi_block_label})) {
-						middle_block = function.movePhiBlocks.at({block->label, phi_block_label});
+					const std::string *phi_block_label = phi_block->getLabel();
+					if (function.movePhiBlocks.contains({block->getLabel(), phi_block_label})) {
+						middle_block = function.movePhiBlocks.at({block->getLabel(), phi_block_label});
 
 						// At this point, neither lowerSwitch nor lowerRet nor lowerBranches has been called, so we can
 						// safely insert instructions before the last instruction in the block. Or something?
@@ -243,8 +243,8 @@ namespace LL2W::Passes {
 					} else {
 						middle_made = block_made = true;
 						const std::string *new_label = StringSet::intern('%' + *function.newLabel());
-						comment += " (in new block " + *new_label + " whose parent is " + *block->label + ")";
-						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->label}, std::list<InstructionPtr>());
+						comment += " (in new block " + *new_label + " whose parent is " + *block->getLabel() + ")";
+						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->getLabel()}, std::list<InstructionPtr>());
 						middle_block->parent = &function;
 						auto block_iter = std::find(function.blocks.begin(), function.blocks.end(), block);
 						if (block_iter == function.blocks.end()) {
@@ -263,18 +263,18 @@ namespace LL2W::Passes {
 						middle_block->instructions.push_back(comment_node);
 						middle_block->instructions.push_back(new_instruction);
 
-						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->label);
+						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->getLabel());
 						if (preds_iter == phi_block->preds.end()) {
 							function.cfg.renderTo("cfg_error.png");
-							throw std::runtime_error("Couldn't find " + *block->label + " in the preds for " + *phi_block->label);
+							throw std::runtime_error("Couldn't find " + *block->getLabel() + " in the preds for " + *phi_block->getLabel());
 						}
 						*preds_iter = new_label;
 						middle_block->instructions.push_back(new_llvm);
-						function.movePhiBlocks.emplace(std::make_pair(block->label, phi_block_label), middle_block);
+						function.movePhiBlocks.emplace(std::make_pair(block->getLabel(), phi_block_label), middle_block);
 					}
 
 					if (middle_made) {
-						const std::string *percent_label = StringSet::intern(*middle_block->label);
+						const std::string *percent_label = StringSet::intern(*middle_block->getLabel());
 						if (auto *parent_llvm = dynamic_cast<LLVMInstruction *>(block->instructions.back().get())) {
 							auto type = parent_llvm->getNodeType();
 							if (type == NodeType::BrCond) {
@@ -299,10 +299,10 @@ namespace LL2W::Passes {
 									}
 								}
 							} else {
-								error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+								error() << "Final instruction of block " << *block->getLabel() << " isn't a BrCond or Switch.\n";
 							}
 						} else {
-							error() << "Final instruction of block " << *block->label << " isn't a BrCond or Switch.\n";
+							error() << "Final instruction of block " << *block->getLabel() << " isn't a BrCond or Switch.\n";
 						}
 						middle_block->extract();
 					}

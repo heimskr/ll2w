@@ -10,9 +10,12 @@ namespace LL2W::Passes {
 		std::list<InstructionPtr> to_remove;
 		for (auto iter = function.blocks.begin(), end = function.blocks.end(); iter != end; ++iter) {
 			BasicBlockPtr &block = *iter;
-			if (block->instructions.empty())
+			if (block->instructions.empty()) {
 				continue;
-			InstructionPtr &back = block->instructions.back();
+			}
+
+			const InstructionPtr &back = block->instructions.back();
+
 			if (LLVMInstruction *llback = dynamic_cast<LLVMInstruction *>(back.get())) {
 				if (llback->getNodeType() == NodeType::BrUncond) {
 					if (const BrUncondNode *branch = dynamic_cast<BrUncondNode *>(llback->getNode())) {
@@ -20,10 +23,13 @@ namespace LL2W::Passes {
 						++next;
 						if (next != end) {
 							const std::string destination = branch->destination->substr(1);
-							if (*(*next)->label == destination)
+							if (*(*next)->getLabel() == destination) {
 								to_remove.push_back(back);
+							}
 						}
-					} else throw std::runtime_error("branch is null in Function::removeUselessBranches");
+					} else {
+						throw std::runtime_error("branch is null in Function::removeUselessBranches");
+					}
 				}
 			}
 		}

@@ -18,7 +18,7 @@ namespace LL2W::Passes {
 
 		// First pass: add all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
-			const std::string *label = block->label;
+			const std::string *label = block->getLabel();
 			function.cfg += *label;
 			Node &node = function.cfg[*label];
 			node.data = std::weak_ptr<BasicBlock>(block);
@@ -32,7 +32,7 @@ namespace LL2W::Passes {
 
 		// Second pass: connect all the nodes.
 		for (BasicBlockPtr &block: function.blocks) {
-			const std::string *label = block->label;
+			const std::string *label = block->getLabel();
 			for (const std::string *pred: block->preds) {
 				if (function.cfg.hasLabel(*pred)) {
 					function.cfg.link(*pred, *label);
@@ -67,7 +67,7 @@ namespace LL2W::Passes {
 			// Sometimes there's an infinite loop without a block unconditionally branching to itself. The CFG might
 			// look like ([Start, A, B, C, Exit] : [Start -> A, A -> B, B -> C, C -> A]). In this case, we just pretend
 			// that the final block links to the exit node.
-			function.cfg.link(*function.blocks.back()->label, "exit");
+			function.cfg.link(*function.blocks.back()->getLabel(), "exit");
 
 		try {
 			function.dTree.emplace(function.cfg, function.cfg[0]);

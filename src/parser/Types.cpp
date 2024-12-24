@@ -37,6 +37,18 @@ namespace LL2W {
 		return typeType() == TypeType::Void;
 	}
 
+	bool Type::isOpaque() const {
+		return typeType() == TypeType::Opaque;
+	}
+
+	bool Type::isOpaquePointer() const {
+		if (auto *pointer = dynamic_cast<const PointerType *>(this)) {
+			return pointer->subtype->isOpaque();
+		}
+
+		return false;
+	}
+
 	TypePtr Type::fromLLVM(const llvm::Type &llvm_type) {
 		if (llvm_type.isPointerTy()) {
 			return PointerType::makeOpaque();
@@ -558,6 +570,8 @@ namespace LL2W {
 	}
 
 	TypePtr StructType::extractType(std::list<int> indices) const {
+		assert(!indices.empty());
+
 		TypePtr type = types.value().at(indices.front())->copy();
 		if (indices.size() == 1) {
 			return type;

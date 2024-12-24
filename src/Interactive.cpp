@@ -354,16 +354,16 @@ namespace LL2W {
 					}
 					info() << "Defining blocks:\n";
 					for (const std::weak_ptr<BasicBlock> &def: variable->definingBlocks)
-						std::cerr << DASH " %" << *def.lock()->label << "\n";
+						std::cerr << DASH " %" << *def.lock()->getLabel() << "\n";
 					info() << "Using blocks:\n";
 					for (const std::weak_ptr<BasicBlock> &use: variable->usingBlocks)
-						std::cerr << DASH " %" << *use.lock()->label << "\n";
+						std::cerr << DASH " %" << *use.lock()->getLabel() << "\n";
 					const auto spill_cost = variable->spillCost();
 					info() << "Spill cost: \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost))
 					       << "\e[22m\n";
 					bool live_in_anywhere = false, live_out_anywhere = false;
 					const auto sorted_blocks = Util::nsort(function->blocks,
-						[](const BasicBlockPtr &block) -> const auto & { return *block->label; }, true);
+						[](const BasicBlockPtr &block) -> const auto & { return *block->getLabel(); }, true);
 					for (const BasicBlockPtr &block: sorted_blocks)
 						if (block->isLiveIn(variable)) {
 							live_in_anywhere = true;
@@ -378,13 +378,13 @@ namespace LL2W {
 						info() << "Live-in at:\n";
 						for (const BasicBlockPtr &block: sorted_blocks)
 							if (block->isLiveIn(variable))
-								std::cerr << DASH " %" << *block->label << "\n";
+								std::cerr << DASH " %" << *block->getLabel() << "\n";
 					}
 					if (live_out_anywhere) {
 						info() << "Live-out at:\n";
 						for (const BasicBlockPtr &block: sorted_blocks)
 							if (block->isLiveOut(variable))
-								std::cerr << DASH " %" << *block->label << "\n";
+								std::cerr << DASH " %" << *block->getLabel() << "\n";
 					}
 				}
 			} else if (Util::isAny(first, {"rl", "resetlive"})) {
