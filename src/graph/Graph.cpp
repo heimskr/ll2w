@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-#define NO_RENDERING
+// #define NO_RENDERING
 
 namespace LL2W {
 	Graph::Graph() = default;
@@ -184,12 +184,12 @@ namespace LL2W {
 		throw std::out_of_range("Can't remove: no node with label \"" + label + "\" found");
 	}
 
-	Node & Graph::addNode(const std::string &label) {
+	Node & Graph::addNode(std::string label) {
 		if (hasLabel(label)) {
 			throw std::runtime_error("Can't add: a node with label \"" + label + "\" already exists");
 		}
 		Node *node = new Node(this, label);
-		labelMap.insert({label, node});
+		labelMap.emplace(std::move(label), node);
 		nodes_.push_back(node);
 		return *node;
 	}

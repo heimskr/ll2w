@@ -34,5 +34,8 @@ namespace LL2W {
 			 *  variable. If one was spilled, it returns Spilled; otherwise, it returns NotSpilled. If the graph was
 			 *  colorable, it returns Success. */
 			Result attempt() final;
+
+		private:
+			std::map<std::set<int>, Node *> cachedPrecolored;
 	};
 }

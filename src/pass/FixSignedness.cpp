@@ -174,11 +174,13 @@ namespace LL2W::Passes {
 #endif
 						bool should_change = instruction->typeMismatch();
 
+#ifdef DEBUG_FIXEDSIGNEDNESS
 						if (should_change) {
 							warn() << "Need to change " << *instruction << '\n';
 						} else {
 							success() << "No need to change " << *instruction << '\n';
 						}
+#endif
 
 						if (should_change) {
 							// If the fixes we tried previously have done nothing, then we/ have to bitcast to an alias
@@ -186,20 +188,26 @@ namespace LL2W::Passes {
 							VariablePtr *operand_ptr = nullptr;
 							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
 								operand_ptr = &((*rtype).*std::get<RType::RVariablePtr>(variant));
+#ifdef DEBUG_FIXEDSIGNEDNESS
 								std::cerr << "          rs: " << *rtype->rs << '\n';
 								std::cerr << "          rt: " << *rtype->rt << '\n';
 								std::cerr << "          rd: " << *rtype->rd << '\n';
 								std::cerr << "          mp: " << *operand_ptr << " -> " << **operand_ptr << '\n';
+#endif
 							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
 								operand_ptr = &((*itype).*std::get<IType::IVariablePtr>(variant));
+#ifdef DEBUG_FIXEDSIGNEDNESS
 								std::cerr << "          rs: " << *itype->rs << '\n';
 								std::cerr << "          rd: " << *itype->rd << '\n';
 								std::cerr << "          mp: " << *operand_ptr << " -> " << **operand_ptr << '\n';
+#endif
 							} else {
 								throw std::runtime_error("Non-R-/I-type in FixSignedness");
 							}
 
+#ifdef DEBUG_FIXEDSIGNEDNESS
 							info() << "Instruction: " << *instruction << '\n';
+#endif
 							VariablePtr &operand = *operand_ptr;
 							TypePtr inverted_copy;
 
@@ -211,13 +219,17 @@ namespace LL2W::Passes {
 								error() << *operand->type << '\n';
 								throw TypeError("Not an IntType or PointerType", operand->type);
 							}
+#ifdef DEBUG_FIXEDSIGNEDNESS
 							info() << "Function: \e[1m" << *function.name << "\e[22m\n";
 							info() << "Old instruction: " << instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
+#endif
 							auto bitcast = BitcastInstruction::make(operand, function, inverted_copy, instruction->parent.lock());
 							bitcast->setDebug(*instruction)->extract();
 							operand = bitcast->rd;
+#ifdef DEBUG_FIXEDSIGNEDNESS
 							info() << "New instruction: " << instruction << '\n';
 							info() << "Bitcast:         " << *bitcast << " \e[1m!" << bitcast->debugIndex << "\e[22m\n";
+#endif
 							function.insertBefore(instruction, bitcast);
 							++list_iter;
 						} else {

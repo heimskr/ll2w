@@ -1113,7 +1113,8 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		Passes::minimizeBlocks(*this, true);
+		// Passes::minimizeBlocks(*this, true);
+		Passes::makeCFG(*this);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1586,6 +1587,11 @@ namespace LL2W {
 				out[n].clear();
 				for (auto &succ: goes_to.at(n)) {
 					for (auto &var: in[succ->getLabel()]) {
+						// static size_t _ = 0;
+						// if (++_ == 1'000) {
+						// 	info() << "Rendering.\n";
+						// 	cfg.renderTo("cfg_infinite_liveness.svg");
+						// }
 						out[n].insert(var);
 					}
 				}
@@ -1647,6 +1653,7 @@ namespace LL2W {
 		try {
 			for (const Node *node: bbNodeMap.at(block.get())->in()) {
 				BasicBlockPtr p = node->get<std::weak_ptr<BasicBlock>>().lock();
+				assert(p != block);
 				// LiveOut(P) = LiveOut(P) ∪ {v}
 				p->liveOut.insert(var);
 				p->allLive.insert(var);

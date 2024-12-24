@@ -248,7 +248,12 @@ namespace LL2W {
 			};
 
 			BasicBlockPtr definer = new_var->onlyDefiner();
-			visit_block(definer);
+			// try {
+				visit_block(definer);
+			// } catch (const std::out_of_range &) {
+			// 	interference.renderTo("interference_OOR.svg");
+			// 	throw;
+			// }
 
 			for (const auto &weak_user: new_var->usingBlocks) {
 				if (BasicBlockPtr user = weak_user.lock(); user && user != definer) {
@@ -451,16 +456,26 @@ namespace LL2W {
 					continue;
 				}
 
-				const std::string label = "__ll2w_pc" + std::to_string(precolored_added++);
-				Node &node = interference.addNode(label);
-				node.colors = {written.begin(), written.end()};
+				std::set<int> set{written.begin(), written.end()};
+
+				Node *node = nullptr;
+
+				if (auto iter = cachedPrecolored.find(set); iter != cachedPrecolored.end()) {
+					node = iter->second;
+				} else {
+					std::string label = "__ll2w_pc" + std::to_string(precolored_added++);
+					node = &interference.addNode(std::move(label));
+					node->colors = set;
+					cachedPrecolored.emplace(std::move(set), node);
+				}
+
 				// Assumption: each basic block contains one instruction (i.e., they've all been minimized).
 				// Though does that assumption matter here?
 				BasicBlockPtr block = intermediate->parent.lock();
 				for (const VariablePtr &var: block->allLive) {
 					const auto &pid = *var->parentID();
 					if (interference.hasLabel(pid)) {
-						interference.link(label, pid, true);
+						node->link(interference[pid], true);
 					}
 				}
 			}

@@ -90,7 +90,7 @@ namespace LL2W {
 			Graph & operator-=(const Label &);
 
 			/** Adds a node with a given label. */
-			Node & addNode(const Label &);
+			Node & addNode(Label);
 
 			/** Adds a premade node to the graph. Note that this function doesn't check for label collisions. */
 			Node & addNode(Node *);

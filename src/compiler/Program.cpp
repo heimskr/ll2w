@@ -1,5 +1,5 @@
 // #define ANALYZE_MULTITHREADED
-#define COMPILE_MULTITHREADED
+// #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define GRADUAL_CODE_PRINTING
 
@@ -14,6 +14,8 @@
 // #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
 // #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 // #define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
+// #define SINGLE_FUNCTION "_ZNKSt3__110__function6__funcIZZN8Thurisaz11addCommandsERNS_3mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS2_7CommandENS_4lessIS9_EENS7_INS_4pairIKS9_SA_EEEEEEENK4$_31clERNS2_7ContextERKNS_6vectorIS9_NS7_IS9_EEEEEUlvE1_NS7_ISR_EEFvvEE7__cloneEPNS0_6__baseIST_EE"
+#define SINGLE_FUNCTION "__cxx_global_var_init.118"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -43,11 +45,12 @@
 #include <mutex>
 #include <print>
 #include <sstream>
+#include <syncstream>
 #include <thread>
 
 namespace {
 #if defined(ANALYZE_MULTITHREADED) || defined(COMPILE_MULTITHREADED)
-	constexpr size_t PARALLELISM = 24;
+	constexpr size_t PARALLELISM = 12;
 #endif
 
 #if defined(GRADUAL_CODE_PRINTING) && defined(COMPILE_MULTITHREADED) && !defined(SINGLE_FUNCTION)
@@ -362,22 +365,26 @@ namespace LL2W {
 		pool.start();
 		Waiter waiter(functions.size());
 
+		// std::osyncstream oss{std::cerr};
+		std::ostream &oss{std::cerr};
+
 		for (auto &[name, function]: functions) {
-			pool.add([this, &waiter, &function](ThreadPool &, size_t) {
+			pool.add([this, &waiter, &function, &oss](ThreadPool &, size_t) {
+				info(oss) << "Compiling " << *function->name << " ...\n";
 				function->compile();
 				renderedFunctions.withLock([&] {
 					renderedFunctions[function->name] = function->toString();
 				});
-				function->shrink();
 
 #ifdef GRADUAL_CODE_PRINTING
 				std::unique_lock lock(gradualCodePrintingMutex);
-				std::cout << function->toString() << std::endl;
+				oss << function->toString() << std::endl;
 				lock.unlock();
 #endif
+				function->shrink();
 
 				if (auto remaining = waiter--; remaining % 10 == 0) {
-					info() << "Remaining: " << remaining << "\n";
+					info(oss) << "Remaining: " << remaining << "\n";
 				}
 			});
 		}
