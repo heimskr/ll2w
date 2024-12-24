@@ -1,7 +1,3 @@
-#include <ranges>
-#include <span>
-#include <tuple>
-
 #include "compiler/BasicType.h"
 #include "compiler/Function.h"
 #include "compiler/Getelementptr.h"
@@ -25,9 +21,18 @@
 #include "util/Timer.h"
 #include "util/Util.h"
 
+#include <format>
+#include <ranges>
+#include <span>
+#include <tuple>
+
 // #define PUSH_ARGUMENT_REGISTERS
 
 namespace LL2W::Passes {
+	static std::string suspiciousSpush(int line) {
+		return std::format("Suspicious stack push ({})", line);
+	}
+
 	static void extractInfo(const std::string *global, Function &function, CallNode *call,
 	                        CallingConvention &convention, bool &ellipsis,
 	                        std::vector<TypePtr> *argument_types = nullptr, TypePtr *return_type = nullptr) {
@@ -140,7 +145,9 @@ namespace LL2W::Passes {
 				}
 			} catch (const std::out_of_range &) {
 				info() << "List indices:";
-				for (const auto &[key, val]: program.basicTypeLists) std::cerr << ' ' << key;
+				for (const auto &[key, val]: program.basicTypeLists) {
+					std::cerr << ' ' << key;
+				}
 				std::cerr << '\n';
 			}
 		}
@@ -246,7 +253,7 @@ namespace LL2W::Passes {
 				if (jump_var->isLess(arg_count)) {
 					VariablePtr new_var = function.newVariable(jump_var->type);
 					auto move = std::make_shared<MoveInstruction>(jump_var, new_var);
-					function.insertBefore(instruction, move, "jump_var -> new_var")->setDebug(*llvm)->extract();
+					function.insertBefore(instruction, std::move(move), "jump_var -> new_var")->setDebug(*llvm)->extract();
 					jump_var = new_var;
 				}
 			}
@@ -284,17 +291,18 @@ namespace LL2W::Passes {
 
 			// At this point, we're ready to insert the jump.
 			if (global_uptr) {
-				function.insertBefore(instruction, std::make_shared<JumpInstruction>(global_uptr->name, true))->setDebug(*llvm)->extract();
+				auto jump = std::make_shared<JumpInstruction>(global_uptr->name, true);
+				function.insertBefore(instruction, std::move(jump))->setDebug(*llvm)->extract();
 			} else {
 				auto jump = std::make_shared<JumpRegisterInstruction>(jump_var, true);
-				function.insertBefore(instruction, jump, "SetupCalls: jump to function pointer " + jump_var->plainString(), false)->setDebug(*llvm)->extract();
+				function.insertBefore(instruction, std::move(jump), "SetupCalls: jump to function pointer " + jump_var->plainString(), false)->setDebug(*llvm)->extract();
 			}
 
 			// Move the stack pointer up past the variables that were pushed onto the stack with pushCallValue.
 			if (0 < bytes_pushed) {
 				VariablePtr sp = function.sp(block);
 				auto add = std::make_shared<AddIInstruction>(sp, bytes_pushed, sp);
-				function.insertBefore(instruction, add, "SetupCalls: readjust stack pointer", false)->setDebug(*llvm)->extract();
+				function.insertBefore(instruction, std::move(add), "SetupCalls: readjust stack pointer", false)->setDebug(*llvm)->extract();
 			}
 
 			if (function.isVariadic()) {
@@ -307,8 +315,7 @@ namespace LL2W::Passes {
 				// Pop the argument registers from the stack.
 				for (i = std::min(15, arg_count - 1); 0 <= i; --i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(arg_variable), false)
-						->setDebug(*llvm)->extract();
+					function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(arg_variable), false)->setDebug(*llvm)->extract();
 				}
 			}
 #endif
@@ -318,7 +325,7 @@ namespace LL2W::Passes {
 				auto r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
 				r0->type = return_type;
 				auto move = std::make_shared<MoveInstruction>(r0, function.getVariable(*call->result));
-				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)->setDebug(*llvm)->extract();
+				function.insertBefore(instruction, std::move(move), "SetupCalls: move result from $r0", false)->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].insert(move);
 			}
 
@@ -354,8 +361,7 @@ namespace LL2W::Passes {
 				case 64:
 					return out;
 				case  1:
-					// If we're sign extending an i1, we can take advantage of the fact that 0 - 1 = all ones
-					// and 0 - 0 = all zeroes.
+					// If we're sign extending an i1, we can take advantage of the fact that 0 - 1 = all ones and 0 - 0 = all zeroes.
 					out = std::make_shared<SubRInstruction>(function.zero(instruction), source, destination);
 					break;
 				case  8:
@@ -380,7 +386,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, make_signext(local->variable, var));
 			}
 			// TODO: verify
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -394,8 +400,8 @@ namespace LL2W::Passes {
 			}
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -406,11 +412,11 @@ namespace LL2W::Passes {
 			set->setOriginalValue(constant->value);
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
 			if (signext) {
 				function.insertBefore(instruction, make_signext(new_var, new_var));
 			}
-			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -421,11 +427,11 @@ namespace LL2W::Passes {
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
 			if (signext) {
 				function.insertBefore(instruction, make_signext(new_var, new_var));
 			}
-			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -435,8 +441,8 @@ namespace LL2W::Passes {
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
-			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -460,14 +466,14 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, setsym)->setDebug(*instruction)->extract();
 			if (offset != 0) {
 				auto addi = std::make_shared<AddIInstruction>(new_var, int(offset), new_var);
-				function.insertAfter(setsym, addi)->setDebug(*instruction)->extract();
+				function.insertAfter(std::move(setsym), std::move(addi))->setDebug(*instruction)->extract();
 			}
 			if (signext) {
 				function.insertBefore(instruction, make_signext(new_var, new_var));
 			}
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
-			function.insertBefore(instruction, spush)->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -520,7 +526,7 @@ namespace LL2W::Passes {
 			// If it's a variable, move it into the argument register.
 			auto local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
-			auto out = function.insertBefore(instruction, move);
+			auto out = function.insertBefore(instruction, std::move(move));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
 				function.insertBefore(instruction, make_signext());
@@ -532,7 +538,7 @@ namespace LL2W::Passes {
 			// If it's an integer constant, set the argument register to it.
 			auto set = std::make_shared<SetInstruction>(new_var, constant->value->intValue(false));
 			set->setOriginalValue(constant->value);
-			auto out = function.insertBefore(instruction, set);
+			auto out = function.insertBefore(instruction, std::move(set));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
 				function.insertBefore(instruction, make_signext());
@@ -544,7 +550,7 @@ namespace LL2W::Passes {
 			// If it's a boolean constant, convert it to an integer and do the same.
 			auto bval = std::dynamic_pointer_cast<BoolValue>(constant->value);
 			auto set = std::make_shared<SetInstruction>(new_var, bval->value? 1 : 0);
-			auto out = function.insertBefore(instruction, set);
+			auto out = function.insertBefore(instruction, std::move(set));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
 				function.insertBefore(instruction, make_signext());
@@ -555,7 +561,7 @@ namespace LL2W::Passes {
 		if (value_type == ValueType::Null || value_type == ValueType::Undef) {
 			// If it's a null or undef constant, just use zero. No need to sign extend.
 			auto set = std::make_shared<SetInstruction>(new_var, 0);
-			auto out = function.insertBefore(instruction, set);
+			auto out = function.insertBefore(instruction, std::move(set));
 			out->setDebug(*instruction)->extract();
 			return out;
 		}
@@ -590,11 +596,11 @@ namespace LL2W::Passes {
 				if (offset == 0) {
 					auto move = std::make_shared<MoveInstruction>(local->getVariable(function), new_var);
 					function.insertBefore(instruction, move)->setDebug(*instruction)->extract();
-					out = move;
+					out = std::move(move);
 				} else {
 					auto addi = std::make_shared<AddIInstruction>(local->getVariable(function), int(offset), new_var);
 					function.insertBefore(instruction, addi)->setDebug(*instruction)->extract();
-					out = addi;
+					out = std::move(addi);
 				}
 
 				if (signext) {
@@ -616,7 +622,7 @@ namespace LL2W::Passes {
 			out->setDebug(*instruction)->extract();
 
 			if (offset != 0) {
-				function.insertAfter(setsym, std::make_shared<AddIInstruction>(new_var, int(offset), new_var))->setDebug(*instruction)->extract();
+				function.insertAfter(std::move(setsym), std::make_shared<AddIInstruction>(new_var, int(offset), new_var))->setDebug(*instruction)->extract();
 			}
 
 			if (signext) {
