@@ -146,9 +146,11 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			// Look for a call instruction.
-			std::shared_ptr<LLVMInstruction> llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
-			if (!llvm || llvm->getNodeType() != NodeType::Call)
+			auto llvm = std::dynamic_pointer_cast<LLVMInstruction>(instruction);
+			if (!llvm || llvm->getNodeType() != NodeType::Call) {
 				continue;
+			}
+
 			CallNode *call = dynamic_cast<CallNode *>(llvm->getNode());
 			BasicBlockPtr block = instruction->parent.lock();
 
@@ -175,11 +177,11 @@ namespace LL2W::Passes {
 						warn() << "Call to simple function " << name << " isn't Reg16.\n";
 					} else {
 						auto out = setupCallValue(function, call->variable, instruction, call->constants[simple_index]);
-						if (out)
+						if (out) {
 							function.comment(out, "SetupCallValue: simple function elision for " + name);
-						else
-							function.comment(instruction, "SetupCallValue: simple function elision for " + name +
-								" somewhere around here");
+						} else {
+							function.comment(instruction, "SetupCallValue: simple function elision for " + name + " somewhere around here");
+						}
 						to_remove.push_back(instruction);
 						continue;
 					}
@@ -195,8 +197,9 @@ namespace LL2W::Passes {
 			if (global_uptr) {
 				extractInfo(global_uptr->name, function, call, convention, ellipsis, &argument_types, &return_type);
 			} else {
-				for (ConstantPtr &ptr: call->constants)
+				for (ConstantPtr &ptr: call->constants) {
 					argument_types.push_back(ptr->type);
+				}
 				ellipsis = false;
 				convention = CallingConvention::Reg16;
 			}

@@ -839,7 +839,7 @@ namespace LL2W {
 					}
 
 					if (name_string[0] == '@') {
-						name = std::make_shared<GlobalValue>(name_string);
+						name = std::make_shared<GlobalValue>(operand->getName().str());
 					} else if (name_string[0] == '%') {
 						name = std::make_shared<LocalValue>(name_string);
 					} else if (llvm::isa<llvm::InlineAsm>(*operand)) {
