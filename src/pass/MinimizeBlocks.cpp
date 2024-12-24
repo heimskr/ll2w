@@ -34,7 +34,7 @@ namespace LL2W::Passes {
 				throw std::runtime_error("Instruction has an invalid index even after reindexing");
 			}
 
-			const std::string *new_label = StringSet::intern('M' + std::to_string(index));
+			const std::string *new_label = StringSet::intern("%M" + std::to_string(index));
 
 			BasicBlockPtr old_parent = instruction->parent.lock();
 
@@ -101,7 +101,6 @@ namespace LL2W::Passes {
 				// ever happen.
 				for (auto [old_label, new_label]: label_replacements) {
 					instruction->replaceLabel(old_label, new_label);
-					instruction->replaceLabel(StringSet::intern('%' + *old_label), StringSet::intern('%' + *new_label));
 				}
 			}
 		}

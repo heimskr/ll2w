@@ -20,7 +20,7 @@ namespace LL2W {
 	}
 
 	VariablePtr Instruction::doesRead(const VariablePtr &var) const {
-		if (read.count(var) != 0) {
+		if (read.contains(var)) {
 			return var;
 		}
 
@@ -34,7 +34,7 @@ namespace LL2W {
 
 		for (Variable *alias: var->getAliases()) {
 			VariablePtr shared_alias = block->parent->getVariable(alias->id);
-			if (read.count(shared_alias) != 0) {
+			if (read.contains(shared_alias)) {
 				return shared_alias;
 			}
 		}
@@ -43,8 +43,9 @@ namespace LL2W {
 	}
 
 	VariablePtr Instruction::doesWrite(const VariablePtr &var) const {
-		if (written.count(var) != 0)
+		if (written.contains(var)) {
 			return var;
+		}
 
 		BasicBlockPtr block = parent.lock();
 
@@ -56,7 +57,7 @@ namespace LL2W {
 
 		for (Variable *alias: var->getAliases()) {
 			VariablePtr shared_alias = block->parent->getVariable(alias->id);
-			if (written.count(shared_alias) != 0) {
+			if (written.contains(shared_alias)) {
 				return shared_alias;
 			}
 		}

@@ -242,7 +242,7 @@ namespace LL2W::Passes {
 						function.comment(new_instruction, comment);
 					} else {
 						middle_made = block_made = true;
-						const std::string *new_label = StringSet::intern('%' + *function.newLabel());
+						const std::string *new_label = StringSet::intern(*function.newLabel());
 						comment += " (in new block " + *new_label + " whose parent is " + *block->getLabel() + ")";
 						middle_block = std::make_shared<BasicBlock>(new_label, std::vector{block->getLabel()}, std::list<InstructionPtr>());
 						middle_block->parent = &function;

@@ -7,6 +7,8 @@
 // #define DEBUG_SELECTMOSTLIVE
 
 namespace LL2W {
+	void Allocator::afterSpill(VariablePtr, std::span<VariablePtr>) {}
+
 	VariablePtr Allocator::selectLowestSpillCost() const {
 		VariablePtr ptr;
 		int64_t lowest = INT64_MAX;

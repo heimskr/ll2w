@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_set>
 
@@ -25,6 +26,8 @@ namespace LL2W {
 			virtual ~Allocator() = default;
 
 			virtual bool needsCFG() const { return false; }
+			virtual void afterSpill(std::shared_ptr<Variable> spilled_var, std::span<std::shared_ptr<Variable>> new_vars);
+			virtual Result firstAttempt() = 0;
 			virtual Result attempt() = 0;
 			int getAttempts() const { return attempts; }
 			int getSpillCount() const { return spillCount; }

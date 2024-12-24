@@ -28,6 +28,7 @@
 
 int global_argc = -1;
 char **global_argv = nullptr;
+std::atomic<const std::string *> global_function_name;
 
 void compile(const std::string &, bool show_debug);
 void wasmparsertest(const std::string &);
@@ -62,6 +63,9 @@ int main(int argc, char **argv) {
 #ifdef CATCH
 	} catch (...) {
 		LL2W::Timer::summary();
+		if (const std::string *name = global_function_name.load()) {
+			std::cerr << "Caught exception in " << *name << ":\n";
+		}
 		throw;
 	}
 #endif
@@ -78,22 +82,34 @@ int main(int argc, char **argv) {
 }
 
 bool hasArg(const char *arg) {
-	if (global_argv)
-		for (int i = 0; i < global_argc; ++i)
-			if (strcmp(global_argv[i], arg) == 0)
+	if (global_argv) {
+		for (int i = 0; i < global_argc; ++i) {
+			if (strcmp(global_argv[i], arg) == 0) {
 				return true;
+			}
+		}
+	}
 	return false;
 }
 
 void compile(const std::string &filename, bool show_debug) {
 	std::ifstream file(filename);
-	if (!file.is_open())
+	if (!file.is_open()) {
 		throw std::runtime_error("Couldn't open file for reading");
+	}
 	std::string text;
 	file.seekg(0, std::ios::end);
 	text.reserve(file.tellg());
 	file.seekg(0, std::ios::beg);
 	text.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+	signal(SIGINT, +[](int) {
+		LL2W::Timer::summary();
+		if (const std::string *name = global_function_name.load()) {
+			std::cerr << "Canceled during analysis/compilation of \e[1m" << *name << "\e[22m.\n";
+		}
+		std::exit(128 + SIGINT);
+	});
 
 	// LL2W::llvmParser.in(text);
 	// LL2W::llvmParser.debug(false, false);

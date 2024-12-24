@@ -23,11 +23,13 @@ namespace LL2W::Passes {
 				std::shared_ptr<Instruction> prev_instruction;
 				for (InstructionPtr &instruction: block->instructions) {
 					int regular_written_count = 0;
-					for (const VariablePtr &variable: instruction->written)
-						if (variable->registers.empty())
+					for (const VariablePtr &variable: instruction->written) {
+						if (variable->registers.empty()) {
 							regular_written_count += variable->registersRequired();
-						else
+						} else {
 							regular_written_count += variable->nonSpecialCount();
+						}
+					}
 
 					if (WhyInfo::allocatableRegisters < defs + regular_written_count) {
 						auto new_block = function.splitBlock(block, prev_instruction);
@@ -45,8 +47,9 @@ namespace LL2W::Passes {
 			}
 
 			next:
-			if (!any_changed)
+			if (!any_changed) {
 				break;
+			}
 		}
 
 		return split_count;

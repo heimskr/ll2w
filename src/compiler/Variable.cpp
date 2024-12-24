@@ -333,8 +333,7 @@ namespace LL2W {
 
 	std::shared_ptr<BasicBlock> Variable::onlyDefiner() const {
 		if (definingBlocks.size() != 1) {
-			throw std::runtime_error("Variable has " + std::string(definingBlocks.empty()? "no" : "multiple") +
-				" defining blocks");
+			throw std::runtime_error("Variable has " + std::string(definingBlocks.empty()? "no" : "multiple") + " defining blocks");
 		}
 
 		return definingBlocks.begin()->lock();
@@ -343,10 +342,10 @@ namespace LL2W {
 	std::shared_ptr<Instruction> Variable::onlyDefinition() const {
 		if (definitions.size() != 1) {
 			std::cerr << "[Bad variable: " << *this << "]\n";
-			for (auto weak: definitions)
+			for (auto weak: definitions) {
 				std::cerr << "\e[31;2m-\e[0m " << weak.lock()->debugExtra() << "\n";
-			throw std::runtime_error("Variable has " + std::string(definitions.empty()? "no" : "multiple") +
-				" definitions");
+			}
+			throw std::runtime_error("Variable has " + std::string(definitions.empty()? "no" : "multiple") + " definitions");
 		}
 
 		return definitions.begin()->lock();
@@ -357,9 +356,11 @@ namespace LL2W {
 			sparent->setType(new_type);
 		} else {
 			type = new_type? new_type->copy() : nullptr;
-			for (Variable *alias: aliases)
-				if (!alias->typeOverride)
+			for (Variable *alias: aliases) {
+				if (!alias->typeOverride) {
 					alias->type = type;
+				}
+			}
 		}
 	}
 
@@ -369,12 +370,14 @@ namespace LL2W {
 			sparent->set##method(param); \
 		} else { \
 			field = param; \
-			for (Variable *alias: aliases) \
+			for (Variable *alias: aliases) { \
 				alias->field = param; \
+			} \
 		} \
 	}
 
 	VARSETTER(ID, ID, new_id, id)
+	VARSETTER(IsUtility, bool, new_utility, isUtility)
 	VARSETTER(DefiningBlocks, const decltype(Variable::definingBlocks) &, block, definingBlocks)
 	VARSETTER(Definitions, const decltype(Variable::definitions) &, defs, definitions)
 	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)
@@ -409,7 +412,7 @@ namespace LL2W {
 	}
 
 	bool Variable::allRegistersSpecial() const {
-		return !registers.empty() && !hasNonSpecialRegister();
+		return isUtility || (!registers.empty() && !hasNonSpecialRegister());
 	}
 
 	bool Variable::compareRegisters(const Variable &other) const {
@@ -427,8 +430,7 @@ namespace LL2W {
 		if (!type) {
 			if (may_warn) {
 				warn() << "Variable::registersRequired: " << *this << " has no type in function " << functionName() << ".\n";
-				if (warned.count(id) == 666) {
-					warned.insert(id);
+				if (warned.insert(id).second) {
 					std::cerr << std::string(10, '\n');
 					getFunction()->debug();
 					std::cerr << std::string(10, '\n');

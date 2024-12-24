@@ -22,18 +22,25 @@
 // #define SELECT_CHAITIN
 
 namespace LL2W {
+	ColoringAllocator::ColoringAllocator(Function &function):
+		Allocator(function),
+		interference("interference graph for " + *function.name) {}
+
+	Allocator::Result ColoringAllocator::firstAttempt() {
+		makeInterferenceGraph();
+		return attempt();
+	}
+
 	Allocator::Result ColoringAllocator::attempt() {
 		++attempts;
 #ifdef DEBUG_COLORING
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";
 #endif
 
-		makeInterferenceGraph();
 		Timer timer("ColoringAllocator::attempt");
 
 		try {
-			interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset,
-				WhyInfo::savedOffset + WhyInfo::savedCount - 1);
+			interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset, WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 		} catch (const UncolorableError &err) {
 #ifdef DEBUG_COLORING
 			std::cerr << "Coloring failed.\n";
@@ -50,10 +57,10 @@ namespace LL2W {
 			(void) highest_degree;
 #else
 			VariablePtr to_spill = selectHighestDegree(&highest_degree);
-			if (highest_degree == -1)
+			if (highest_degree == -1) {
 				throw std::runtime_error("highest_degree is -1");
+			}
 #endif
-
 			if (!to_spill) {
 				error() << "to_spill is null!\n";
 				throw std::runtime_error("to_spill is null");
@@ -71,8 +78,9 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 			info() << "Variable before climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
 #endif
-			while (auto sparent = to_spill->getParent().lock())
+			while (auto sparent = to_spill->getParent().lock()) {
 				to_spill = sparent;
+			}
 #ifdef DEBUG_COLORING
 			info() << "Variable after climbing parents: " << *to_spill << " (OID: " << to_spill->originalID << ")\n";
 #endif
@@ -93,8 +101,9 @@ namespace LL2W {
 #ifdef DEBUG_COLORING
 					std::cerr << split << " block" << (split == 1? " was" : "s were") << " split.\n";
 #endif
-					for (BasicBlockPtr &block: function->blocks)
+					for (BasicBlockPtr &block: function->blocks) {
 						block->extract();
+					}
 					Passes::makeCFG(*function);
 					function->extractVariables(true);
 					function->resetLiveness();
@@ -112,27 +121,31 @@ namespace LL2W {
 		}
 
 #ifdef DEBUG_COLORING
-		info() << "Spilling process complete. There " << (spillCount == 1? "was " : "were ") << spillCount << " spill"
-		       << (spillCount == 1? ".\n" : "s.\n");
+		info() << "Spilling process complete. There " << (spillCount == 1? "was " : "were ") << spillCount << " spill" << (spillCount == 1? ".\n" : "s.\n");
 #endif
 
 		for (const std::pair<const std::string, Node *> &pair: interference) {
-			if (!pair.second->data.has_value())
+			if (!pair.second->data.has_value()) {
 				continue;
+			}
+
 			auto ptr = pair.second->get<VariablePtr>();
 #ifdef DEBUG_COLORING
 			std::cerr << "Variable " << std::string(*ptr) << ": " << ptr->registersString() << " -> ( ";
-			for (const int color: pair.second->colors)
+			for (const int color: pair.second->colors) {
 				std::cerr << color << ' ';
+			}
 			std::cerr << ") a =";
-			for (const Variable *alias: ptr->getAliases())
+			for (const Variable *alias: ptr->getAliases()) {
 				std::cerr << ' ' << *alias;
+			}
 			std::cerr << '\n';
 #endif
 			if (ptr->registers.empty()) {
 				std::set<int> assigned;
-				for (const int color: pair.second->colors)
+				for (const int color: pair.second->colors) {
 					assigned.insert(color);
+				}
 				ptr->setRegisters(assigned);
 			}
 		}
@@ -148,24 +161,26 @@ namespace LL2W {
 			const size_t degree = node->degree();
 			// if (highest < degree && triedLabels.count(node->label()) == 0) {
 			// if (highest < degree && function->canSpill(node->get<VariablePtr>())) {
-			if (highest == SIZE_MAX || (highest < degree && !triedLabels.contains(node->label())
-					&& function->canSpill(node->get<VariablePtr>()))) {
+			if (highest == SIZE_MAX || (highest < degree && !triedLabels.contains(node->label()) && function->canSpill(node->get<VariablePtr>()))) {
 				highest_node = node;
 				highest = degree;
 			}
 		}
 
-		if (highest_node == nullptr)
-			throw NoChoiceError("Couldn't find node with highest degree out of " +
-				std::to_string(interference.nodes().size()) + " node(s)");
+		if (highest_node == nullptr) {
+			throw NoChoiceError("Couldn't find node with highest degree out of " + std::to_string(interference.nodes().size()) + " node(s)");
+		}
 
 		std::vector<const Node *> all_highest;
-		for (const Node *node: interference.nodes())
-			if (node->degree() == static_cast<size_t>(highest))
+		for (const Node *node: interference.nodes()) {
+			if (node->degree() == static_cast<size_t>(highest)) {
 				all_highest.push_back(node);
+			}
+		}
 
-		if (degree_out != nullptr)
+		if (degree_out != nullptr) {
 			*degree_out = highest;
+		}
 
 		return highest_node->get<VariablePtr>();
 	}
@@ -175,12 +190,14 @@ namespace LL2W {
 		int64_t lowest = INT64_MAX;
 		for (const Node *node: interference.nodes()) {
 			auto &var = node->get<VariablePtr>();
-			if (var->allRegistersSpecial() || !function->canSpill(var))
+			if (var->allRegistersSpecial() || !function->canSpill(var)) {
 				continue;
+			}
 			var->clearSpillCost();
 			const auto cost = var->spillCost();
-			if (cost == INT64_MAX)
+			if (cost == INT64_MAX) {
 				continue;
+			}
 			const size_t degree = node->degree();
 			const int64_t chaitin = static_cast<int64_t>(cost * 10000l / degree);
 			if (chaitin < lowest) {
@@ -198,6 +215,47 @@ namespace LL2W {
 	}
 
 // #undef DEBUG_COLORING
+
+	void ColoringAllocator::afterSpill(VariablePtr spilled_var, std::span<VariablePtr> new_vars) {
+		Timer timer{"ColoringAllocator::afterSpill"};
+		info() << "Spilled " << *spilled_var << " with " << new_vars.size() << " variable(s) created\n";
+		Node &spilled_node = interference[*spilled_var->id];
+		const std::string &spilled_id = *spilled_var->id;
+
+		spilled_node.unlink();
+
+		for (const VariablePtr &new_var: new_vars) {
+			interference.addNode(*new_var->id);
+		}
+
+		for (const VariablePtr &new_var: new_vars) {
+			auto visit_block = [&](BasicBlockPtr block) {
+				for (const VariablePtr &live: block->allLive) {
+					if (live != new_var && !live->allRegistersSpecial()) {
+						interference.link(*new_var->id, *live->id, true);
+					}
+				}
+			};
+
+			visit_block(new_var->onlyDefiner());
+
+			for (const auto &weak_user: new_var->usingBlocks) {
+				if (BasicBlockPtr user = weak_user.lock()) {
+					visit_block(user);
+				}
+			}
+		}
+
+		for (const auto &weak_definer: spilled_var->definingBlocks) {
+			if (BasicBlockPtr definer = weak_definer.lock()) {
+				for (const VariablePtr &live: definer->allLive) {
+					if (live != spilled_var && !live->allRegistersSpecial()) {
+						interference.link(spilled_id, *live->id, true);
+					}
+				}
+			}
+		}
+	}
 
 	void ColoringAllocator::makeInterferenceGraph() {
 		Timer timer("MakeInterferenceGraph");
@@ -245,8 +303,9 @@ namespace LL2W {
 		std::map<Variable::ID, std::unordered_set<int>> live;
 
 		for (const auto &[id, var]: function->variableStore) {
-			if (!var->registers.empty())
+			if (!var->registers.empty()) {
 				continue;
+			}
 #ifdef DEBUG_COLORING
 			info() << "Variable " << *var << ":\n";
 #endif
@@ -316,16 +375,14 @@ namespace LL2W {
 			// 	continue;
 			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
 				const auto index = bptr.lock()->index;
-				if (!sets[index].contains(parent_id)) {
-					vecs[index].push_back(parent_id);
-					sets[index].insert(parent_id);
+				if (sets[index].emplace(parent_id).second) {
+					vecs[index].emplace_back(parent_id);
 				}
 			}
 			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
 				const auto index = bptr.lock()->index;
-				if (!sets[index].contains(parent_id)) {
-					vecs[index].push_back(parent_id);
-					sets[index].insert(parent_id);
+				if (sets[index].emplace(parent_id).second) {
+					vecs[index].emplace_back(parent_id);
 				}
 			}
 		}
@@ -335,9 +392,8 @@ namespace LL2W {
 			auto &set = sets[block->index];
 			for (const VariablePtr &var: block->allLive) {
 				const Variable::ID parent_id = var->parentID();
-				if (!set.contains(parent_id)) {
-					vec.push_back(parent_id);
-					set.insert(parent_id);
+				if (set.emplace(parent_id).second) {
+					vec.emplace_back(parent_id);
 				}
 			}
 		}
@@ -352,12 +408,10 @@ namespace LL2W {
 			}
 			for (size_t i = 0; i < size - 1; ++i) {
 				for (size_t j = i + 1; j < size; ++j) {
-					if (interference.hasLabel(*vec[i]) && interference.hasLabel(*vec[j])) {
-						interference.link(*vec[i], *vec[j], true);
+					interference.link(*vec[i], *vec[j], true);
 #ifdef DEBUG_COLORING
-						++links;
+					++links;
 #endif
-					}
 				}
 			}
 		}

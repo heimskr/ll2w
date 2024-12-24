@@ -43,6 +43,8 @@ namespace LL2W {
 			bool fromPhi = false;
 			/** If true, changes to the parent variable's type won't be reflected in this variable. */
 			bool typeOverride = false;
+			/** Whether this is precolored with an $mx register. */
+			bool isUtility = false;
 
 			Variable *spilledFrom = nullptr; // Tentative.
 			std::list<Variable *> spilledTo; // Also tentative.
@@ -91,6 +93,7 @@ namespace LL2W {
 
 			void setID(ID);
 			void setType(TypePtr);
+			void setIsUtility(bool);
 			void setDefiningBlocks(const decltype(definingBlocks) &);
 			void setDefinitions(const decltype(definitions) &);
 			void setUses(const decltype(uses) &);

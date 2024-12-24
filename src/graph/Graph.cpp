@@ -13,7 +13,7 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	Graph::Graph() {}
+	Graph::Graph() = default;
 
 	Graph::Graph(const Graph &other) {
 		for (const auto &[label, node]: other) {
@@ -131,7 +131,7 @@ namespace LL2W {
 	Node & Graph::operator[](const std::string &label) const {
 		auto iter = labelMap.find(label);
 		if (iter == labelMap.end()) {
-			std::cerr << name << "\n";
+			std::cerr << this << ": " << name << "[" << label << "]\n";
 			const_cast<Graph *>(this)->renderTo("graph_error.png");
 			throw std::out_of_range("No node with label \"" + label + "\" found");
 		}
@@ -229,8 +229,9 @@ namespace LL2W {
 	}
 
 	void Graph::unlink() {
-		for (auto &pair: (*this))
+		for (auto &pair: *this) {
 			pair.second->unlink();
+		}
 	}
 
 	void Graph::cloneTo(Graph &out, std::unordered_map<Node *, Node *> *rename_map) {
@@ -521,7 +522,7 @@ namespace LL2W {
 		if (!reflexives.empty()) {
 			out << "\tnode [shape = doublecircle];";
 			for (Node *node: reflexives) {
-				out << " " << node->label();
+				out << " \"" << node->label() << '"';
 			}
 			out << ";\n";
 		}
@@ -530,26 +531,26 @@ namespace LL2W {
 		bool any_added = false;
 		for (Node *node: nodes_) {
 			if (node->isolated()) {
-				out << " " << node->label();
+				out << " \"" << node->label() << '"';
 				any_added = true;
 			}
 		}
 
 		if (any_added) {
-			out << ";";
+			out << ';';
 		}
-		out << "\n";
+		out << '\n';
 
 		for (const Node *node: nodes_) {
 			if (node->colors.size() == 1 && static_cast<size_t>(*node->colors.begin()) < colors.size()) {
-				out << "\t" << node->label() << " [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
+				out << "\t\"" << node->label() << "\" [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
 			}
 		}
 
 		for (const Node *node: nodes_) {
 			for (const Node *neighbor: node->out_) {
 				if (neighbor != node) {
-					out << "\t" << node->label() << " -> " << neighbor->label() << ";\n";
+					out << "\t\"" << node->label() << "\" -> \"" << neighbor->label() << "\";\n";
 				}
 			}
 		}

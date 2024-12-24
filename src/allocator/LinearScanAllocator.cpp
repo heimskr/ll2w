@@ -10,6 +10,10 @@ namespace LL2W {
 		return left->getEndpoint() < right->getEndpoint();
 	}
 
+	Allocator::Result LinearScanAllocator::firstAttempt() {
+		return attempt();
+	}
+
 	Allocator::Result LinearScanAllocator::attempt() {
 		assert(function != nullptr);
 		Timer timer("LinearScanAllocator::attempt");
@@ -128,11 +132,8 @@ namespace LL2W {
 			auto locked = spill->variable.lock();
 			assert(locked);
 			const bool spilled = function->spill(locked);
-			if (spilled) {
-				afterSpill();
-			} else {
-				warn() << "Couldn't spill interval " << *spill << " in LinearScanAllocator::spillAtInterval("
-				       << (__LINE__ - 5) << ")\n";
+			if (!spilled) {
+				warn() << "Couldn't spill interval " << *spill << " in LinearScanAllocator::spillAtInterval(line " << (__LINE__ - 2) << ")\n";
 			}
 			active.erase(spill);
 			active.insert(i);
@@ -142,17 +143,14 @@ namespace LL2W {
 		auto locked = i->variable.lock();
 		assert(locked);
 		const bool spilled = function->spill(locked);
-		if (spilled) {
-			afterSpill();
-		} else {
-			warn() << "Couldn't spill interval " << *i << " in LinearScanAllocator::spillAtInterval("
-					<< (__LINE__ - 5) << ")\n";
+		if (!spilled) {
+			warn() << "Couldn't spill interval " << *i << " in LinearScanAllocator::spillAtInterval(line " << (__LINE__ - 2) << ")\n";
 		}
 
 		return spilled;
 	}
 
-	void LinearScanAllocator::afterSpill() {
+	void LinearScanAllocator::afterSpill(VariablePtr, std::span<VariablePtr>) {
 		++spillCount;
 		assert(function);
 		function->forceLiveness();

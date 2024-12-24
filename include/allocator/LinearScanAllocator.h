@@ -20,6 +20,7 @@ namespace LL2W {
 		public:
 			using Allocator::Allocator;
 
+			Result firstAttempt() override;
 			Result attempt() override;
 
 		private:
@@ -31,6 +32,6 @@ namespace LL2W {
 			std::vector<IntervalPtr> getIntervals() const;
 			void expireOldIntervals(const IntervalPtr &);
 			bool spillAtInterval(const IntervalPtr &);
-			void afterSpill();
+			void afterSpill(std::shared_ptr<Variable> spilled_var, std::span<std::shared_ptr<Variable>> new_vars) final;
 	};
 }

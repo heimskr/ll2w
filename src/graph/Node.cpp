@@ -29,14 +29,15 @@ namespace LL2W {
 	}
 
 	bool Node::link(Node *other, bool bidirectional) {
-		bool already_linked = out_.contains(other);
+		bool already_linked = !out_.insert(other).second;
+
 		if (!already_linked) {
-			out_.insert(other);
 			other->in_.insert(this);
 		}
 
-		if (bidirectional && other != this)
+		if (bidirectional && other != this) {
 			other->link(*this);
+		}
 
 		return already_linked;
 	}
@@ -58,8 +59,15 @@ namespace LL2W {
 	}
 
 	void Node::unlink() {
-		for (Node *other: out_)
+		for (Node *other: in_) {
+			other->out_.erase(this);
+		}
+
+		for (Node *other: out_) {
 			other->in_.erase(this);
+		}
+
+		in_.clear();
 		out_.clear();
 	}
 

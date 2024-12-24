@@ -13,8 +13,8 @@
 // #define DEBUG_ALIASES
 #define DEBUG_STACK
 // #define DEBUG_LABELS
-#define STRICT_READ_CHECK
-#define STRICT_WRITTEN_CHECK
+// #define STRICT_READ_CHECK
+// #define STRICT_WRITTEN_CHECK
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
 // #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
@@ -36,6 +36,7 @@
 #include "instruction/SetInstruction.h"
 #include "instruction/StackLoadInstruction.h"
 #include "instruction/StackStoreInstruction.h"
+#include "main.h"
 #include "options.h"
 #include "parser/ASTNode.h"
 #include "parser/FunctionArgs.h"
@@ -162,6 +163,7 @@ namespace LL2W {
 	}
 
 	Function::Type Function::analyze(ValuePtr *value_out, long *simple_index_out) {
+		global_function_name = name;
 		extractBlocks();
 		Passes::ignoreIntrinsics(*this);
 		if (linearInstructions.size() == 1) {
@@ -409,7 +411,7 @@ namespace LL2W {
 
 	Variable::ID Function::newLabel() {
 		auto *out = StringSet::intern("%#" + std::to_string(++lastArtificialLabel));
-		// if (*out == "%#548") {
+		// if (*out == "%#190") {
 		// 	raise(SIGTRAP);
 		// }
 		return out;
@@ -498,13 +500,16 @@ namespace LL2W {
 			debug();
 		}
 
+		std::vector<VariablePtr> new_variables;
+		new_variables.reserve(32);
+
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
-			InstructionPtr &instruction = *iter;
 #ifdef STRICT_READ_CHECK
-			if (VariablePtr read = instruction->doesRead(variable)) {
+			if (VariablePtr read = (*iter)->doesRead(variable)) {
 #else
-			if (instruction->read.count(variable) != 0) {
+			if ((*iter)->read.contains(variable)) {
 #endif
+				InstructionPtr instruction = *iter;
 				VariablePtr new_var = newVariable(variable->type, instruction->parent.lock());
 				const std::string old_extra = instruction->debugExtra();
 #ifdef STRICT_READ_CHECK
@@ -537,10 +542,10 @@ namespace LL2W {
 					load->extract();
 					out = true;
 #ifdef DEBUG_SPILL
-				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": "
-						  << load->debugExtra() << "\n";
+				std::cerr << "      Inserting a stack load before " << instruction->debugExtra() << ": " << load->debugExtra() << "\n";
 #endif
 					markSpilled(new_var);
+					new_variables.emplace_back(std::move(new_var));
 				} else {
 #ifdef DEBUG_SPILL
 					std::cerr << "      Removing variable " << *new_var << "\n";
@@ -562,6 +567,7 @@ namespace LL2W {
 		extractVariables(true); // Reset stale use/define data.
 		computeLiveness();
 		markSpilled(variable);
+		allocator->afterSpill(variable, new_variables);
 		return out;
 	}
 
@@ -1104,8 +1110,8 @@ namespace LL2W {
 		Passes::coalescePhi(*this, true);
 #endif
 		Passes::lowerSwitch(*this);
-		Passes::minimizeBlocks(*this, false);
-		Passes::makeCFG(*this);
+		Passes::minimizeBlocks(*this, true);
+		// Passes::makeCFG(*this);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1147,8 +1153,8 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
-		Passes::minimizeBlocks(*this, true);
-		Passes::makeCFG(*this);
+		// Passes::minimizeBlocks(*this, true);
+		// Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
@@ -1172,6 +1178,7 @@ namespace LL2W {
 	}
 
 	void Function::compile() {
+		global_function_name = name;
 		Timer timer("Function_" + *name);
 
 		initialCompile();
@@ -1184,9 +1191,11 @@ namespace LL2W {
 #ifdef FN_CATCH_EXCEPTIONS
 		try {
 #endif
-			while (allocator->attempt() != Allocator::Result::Success) {
+			Allocator::Result allocator_result = allocator->firstAttempt();
+			while (allocator_result != Allocator::Result::Success) {
 				extractInstructions();
 				extractVariables();
+				allocator_result = allocator->attempt();
 			}
 #ifdef FN_CATCH_EXCEPTIONS
 		} catch (std::exception &err) {
@@ -1224,10 +1233,13 @@ namespace LL2W {
 		if (WhyInfo::assemblerCount <= index) {
 			throw std::invalid_argument("Index too high for assembler-reserved registers: " + std::to_string(index));
 		}
-		if (!assemblerVariables.contains(index)) {
-			assemblerVariables.emplace(index, makePrecoloredVariable(WhyInfo::assemblerOffset + index, definer));
+		auto iter = assemblerVariables.find(index);
+		if (iter == assemblerVariables.end()) {
+			VariablePtr variable = makePrecoloredVariable(WhyInfo::assemblerOffset + index, definer);
+			variable->setIsUtility(true);
+			iter = assemblerVariables.emplace(index, std::move(variable)).first;
 		}
-		VariablePtr &found = assemblerVariables.at(index);
+		VariablePtr &found = iter->second;
 		if (definer) {
 			found->addDefiner(definer);
 		}
@@ -1636,7 +1648,7 @@ namespace LL2W {
 				p->allLive.insert(var);
 				upAndMark(p, var);
 			}
-		} catch (std::out_of_range &) {
+		} catch (const std::out_of_range &) {
 			debug();
 			std::cerr << "Couldn't find block " << *block->getLabel() << " in " << *name << " while computing liveness.\n";
 			if (!bbNodeMap.empty()) {
