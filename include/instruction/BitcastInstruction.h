@@ -13,9 +13,8 @@ namespace LL2W {
 
 	/** Copies one register into another, but with a different type. */
 	struct BitcastInstruction: LinkedSD<RType>, Makeable<BitcastInstruction> {
-		BitcastInstruction(VariablePtr rs_, VariablePtr rd_, int index_ = -1);
-		BitcastInstruction(VariablePtr rs_, Function &, std::shared_ptr<Type>, std::shared_ptr<BasicBlock> = nullptr,
-		                   int index_ = -1);
+		BitcastInstruction(VariablePtr rs, VariablePtr rd, int index = -1);
+		BitcastInstruction(VariablePtr rs, Function &, std::shared_ptr<Type>, std::shared_ptr<BasicBlock> = nullptr, int index_ = -1);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

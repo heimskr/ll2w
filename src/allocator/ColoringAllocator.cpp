@@ -216,21 +216,33 @@ namespace LL2W {
 	void ColoringAllocator::afterSpill(VariablePtr spilled_var, std::span<VariablePtr> new_vars) {
 		Timer timer{"ColoringAllocator::afterSpill"};
 
+		for (const auto &[label, node]: interference) {
+			if (!node->data.has_value()) {
+				continue;
+			}
+
+			VariablePtr var = std::any_cast<VariablePtr>(node->data);
+			if (!var->allRegistersSpecial()) {
+				node->colors.clear();
+			}
+		}
+
 		Node &spilled_node = interference[*spilled_var->id];
 		spilled_node.unlink();
 
 		for (const VariablePtr &new_var: new_vars) {
-			Node &node = interference.addNode(*new_var->id);
-			node.data = new_var;
-			node.colors = {new_var->registers.cbegin(), new_var->registers.cend()};
-		}
+			Node &new_node = interference.addNode(*new_var->id);
+			new_node.data = new_var;
+			new_node.colors = {new_var->registers.cbegin(), new_var->registers.cend()};
+			new_node.colorsNeeded = new_var->registersRequired();
 
-		for (const VariablePtr &new_var: new_vars) {
 			auto visit_block = [&](BasicBlockPtr block) {
 				for (VariablePtr mentioned: block->mentioned) {
 					mentioned = mentioned->climbParents();
 					if (mentioned != new_var && !mentioned->allRegistersSpecial()) {
-						interference.link(*new_var->id, *mentioned->id, true);
+						Node &mentioned_node = interference[*mentioned->id];
+						mentioned_node.colors.clear();
+						new_node.link(mentioned_node, true);
 					}
 				}
 			};
@@ -250,7 +262,9 @@ namespace LL2W {
 				for (VariablePtr mentioned: definer->mentioned) {
 					mentioned = mentioned->climbParents();
 					if (mentioned != spilled_var && !mentioned->allRegistersSpecial()) {
-						spilled_node.link(interference[*mentioned->id], true);
+						Node &mentioned_node = interference[*mentioned->id];
+						mentioned_node.colors.clear();
+						spilled_node.link(mentioned_node, true);
 					}
 				}
 			}
@@ -277,6 +291,7 @@ namespace LL2W {
 				Node &node = interference.addNode(*parent_id);
 				node.data = var;
 				node.colors = {var->registers.cbegin(), var->registers.cend()};
+				node.colorsNeeded = var->registersRequired();
 #ifdef DEBUG_COLORING
 				info() << *var << ": " << var->registersRequired() << " required.";
 				if (var->type) {
@@ -284,7 +299,6 @@ namespace LL2W {
 				}
 				std::cerr << "\n";
 #endif
-				node.colorsNeeded = var->registersRequired();
 #ifdef DEBUG_COLORING
 			} else {
 				// std::cerr << "Skipping " << *var << " (" << *id << "): parent (" << *parent_id << ") is in graph\n";

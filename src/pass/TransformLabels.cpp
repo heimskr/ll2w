@@ -6,16 +6,18 @@
 
 namespace LL2W::Passes {
 	size_t transformLabels(Function &function) {
-		Timer timer("TransformLabels");
+		Timer timer{"TransformLabels"};
 		size_t changed = 0;
 
-		for (const InstructionPtr &instruction: function.linearInstructions)
-			if (auto jtype = std::dynamic_pointer_cast<JType<>>(instruction))
+		for (const InstructionPtr &instruction: function.linearInstructions) {
+			if (auto jtype = std::dynamic_pointer_cast<JType<>>(instruction)) {
 				if (jtype->needsTransformation) {
 					const auto transformed = function.transformLabel(*std::get<const std::string *>(jtype->addr));
 					jtype->addr = StringSet::intern(transformed);
 					++changed;
 				}
+			}
+		}
 
 		return changed;
 	}

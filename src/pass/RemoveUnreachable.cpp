@@ -6,19 +6,18 @@
 
 namespace LL2W::Passes {
 	size_t removeUnreachable(Function &function) {
-		Timer timer("RemoveUnreachable");
-		std::list<decltype(function.linearInstructions)::iterator> to_remove;
+		Timer timer{"RemoveUnreachable"};
+		std::vector<InstructionPtr> to_remove;
 
-		auto end = function.linearInstructions.end();
-		for (auto iter = function.linearInstructions.begin(); iter != end; ++iter) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(iter->get());
+		for (const InstructionPtr &instruction: function.linearInstructions) {
+			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (llvm && llvm->getNodeType() == NodeType::Unreachable) {
-				to_remove.push_back(iter);
+				to_remove.emplace_back(instruction);
 			}
 		}
 
-		for (auto &iter: to_remove) {
-			function.linearInstructions.erase(iter);
+		for (InstructionPtr &instruction: to_remove) {
+			function.remove(std::move(instruction));
 		}
 
 		return to_remove.size();

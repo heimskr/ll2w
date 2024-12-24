@@ -330,17 +330,19 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::getBlock(const std::string *label, bool can_throw) const {
-		if (!bbMap.contains(label)) {
-			if (can_throw) {
-				std::cerr << "Want: " << *label << '\n';
-				for (const auto &[bname, block]: bbMap) {
-					std::cerr << "- " << *bname << '\n';
-				}
-				throw std::runtime_error("Couldn't find block " + *label + " in function " + *name);
-			}
-			return nullptr;
+		if (auto iter = bbMap.find(label); iter != bbMap.end()) {
+			return iter->second;
 		}
-		return bbMap.at(label);
+
+		if (can_throw) {
+			std::cerr << "Want: " << *label << '\n';
+			for (const auto &[bname, block]: bbMap) {
+				std::cerr << "- " << *bname << '\n';
+			}
+			throw std::runtime_error("Couldn't find block " + *label + " in function " + *name);
+		}
+
+		return nullptr;
 	}
 
 	void Function::extractVariables(bool reset) {
@@ -1112,7 +1114,6 @@ namespace LL2W {
 #endif
 		Passes::lowerSwitch(*this);
 		Passes::minimizeBlocks(*this, true);
-		// Passes::makeCFG(*this);
 		forceLiveness();
 		updateInstructionNodes();
 		reindexBlocks();
@@ -1146,7 +1147,6 @@ namespace LL2W {
 		Passes::lowerClobber(*this);
 		Passes::lowerStack(*this);
 		const bool naked = isNaked();
-		info() << "naked: " << naked << "\n";
 		if (!naked) {
 			Passes::insertPrologue(*this);
 		}
@@ -1157,7 +1157,6 @@ namespace LL2W {
 		Passes::lowerVarargsSecond(*this);
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
-		// Passes::minimizeBlocks(*this, true);
 		Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);

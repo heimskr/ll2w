@@ -22,24 +22,29 @@ namespace LL2W {
 		std::reference_wrapper<VariablePtr> operand;
 
 		bool operator<(const ConflictTableKey &other) const {
-			if (static_cast<int>(role) < static_cast<int>(other.role))
+			if (static_cast<int>(role) < static_cast<int>(other.role)) {
 				return true;
-			if (static_cast<int>(role) > static_cast<int>(other.role))
+			}
+			if (static_cast<int>(role) > static_cast<int>(other.role)) {
 				return false;
-			if (!operand.get() && other.operand.get())
+			}
+			if (!operand.get() && other.operand.get()) {
 				return true;
-			if (!other.operand.get())
+			}
+			if (!other.operand.get()) {
 				return false;
+			}
 			return operand.get()->id < other.operand.get()->id;
 		}
 
 		operator std::string() const {
 			std::ostringstream ss;
 			ss << '(' << (role == Role::Source? "src" : "dst") << ", ";
-			if (operand.get())
+			if (operand.get()) {
 				ss << *operand.get();
-			else
+			} else {
 				ss << "\e[1mnull\e[22m";
+			}
 			ss << ')';
 			return ss.str();
 		}
@@ -81,8 +86,7 @@ namespace LL2W::Passes {
 				try {
 					if (instruction->fixSignedness()) { // || instruction->typeMismatch()) {
 						// any_changed = true;
-						changed_pairs.emplace_back(old + " \e[1m!" + std::to_string(instruction->debugIndex) + "\e[22m",
-							instruction->debugExtra());
+						changed_pairs.emplace_back(old + " \e[1m!" + std::to_string(instruction->debugIndex) + "\e[22m", instruction->debugExtra());
 						changed.insert(instruction);
 					}
 				} catch (const SignednessSharingError &err) {
@@ -99,8 +103,9 @@ namespace LL2W::Passes {
 			if (timer.difference() > std::chrono::seconds(20)) {
 				function.debug();
 				info() << "Last changed (" << changed.size() << "):\n";
-				for (const auto &[o, n]: changed_pairs)
+				for (const auto &[o, n]: changed_pairs) {
 					std::cerr << "    " << o << "\n -> " << n << '\n';
+				}
 				throw std::runtime_error("FixSignedness took too long");
 			}
 
@@ -111,8 +116,9 @@ namespace LL2W::Passes {
 		success() << *function.name << '\n';
 #endif
 
-		if (last_changed.empty())
+		if (last_changed.empty()) {
 			return;
+		}
 
 #ifdef DEBUG_FIXEDSIGNEDNESS
 		warn() << "Some left over:\n";
@@ -127,17 +133,22 @@ namespace LL2W::Passes {
 			std::cerr << "    " << instruction << '\n';
 #endif
 			if (auto r_type = std::dynamic_pointer_cast<RType>(instruction)) {
-				if (r_type->rs)
+				if (r_type->rs) {
 					conflict_map[{r_type->rsRole(), r_type->rs}].emplace_back(r_type, &RType::rs);
-				if (r_type->rt)
+				}
+				if (r_type->rt) {
 					conflict_map[{r_type->rtRole(), r_type->rt}].emplace_back(r_type, &RType::rt);
-				if (r_type->rd)
+				}
+				if (r_type->rd) {
 					conflict_map[{r_type->rdRole(), r_type->rd}].emplace_back(r_type, &RType::rd);
+				}
 			} else if (auto i_type = std::dynamic_pointer_cast<IType>(instruction)) {
-				if (i_type->rs)
+				if (i_type->rs) {
 					conflict_map[{i_type->rsRole(), i_type->rs}].emplace_back(i_type, &IType::rs);
-				if (i_type->rs)
+				}
+				if (i_type->rs) {
 					conflict_map[{i_type->rdRole(), i_type->rd}].emplace_back(i_type, &IType::rd);
+				}
 			}
 		}
 
@@ -163,10 +174,11 @@ namespace LL2W::Passes {
 #endif
 						bool should_change = instruction->typeMismatch();
 
-						if (should_change)
+						if (should_change) {
 							warn() << "Need to change " << *instruction << '\n';
-						else
+						} else {
 							success() << "No need to change " << *instruction << '\n';
+						}
 
 						if (should_change) {
 							// If the fixes we tried previously have done nothing, then we/ have to bitcast to an alias
@@ -174,19 +186,20 @@ namespace LL2W::Passes {
 							VariablePtr *operand_ptr = nullptr;
 							if (auto rtype = std::dynamic_pointer_cast<RType>(instruction)) {
 								operand_ptr = &((*rtype).*std::get<RType::RVariablePtr>(variant));
-								std::cerr << "          rs: " << &rtype->rs << '\n';
-								std::cerr << "          rt: " << &rtype->rt << '\n';
-								std::cerr << "          rd: " << &rtype->rd << '\n';
-								std::cerr << "          mp: " << operand_ptr << " -> " << operand_ptr->get() << '\n';
+								std::cerr << "          rs: " << *rtype->rs << '\n';
+								std::cerr << "          rt: " << *rtype->rt << '\n';
+								std::cerr << "          rd: " << *rtype->rd << '\n';
+								std::cerr << "          mp: " << *operand_ptr << " -> " << **operand_ptr << '\n';
 							} else if (auto itype = std::dynamic_pointer_cast<IType>(instruction)) {
 								operand_ptr = &((*itype).*std::get<IType::IVariablePtr>(variant));
-								std::cerr << "          rs: " << &itype->rs << '\n';
-								std::cerr << "          rd: " << &itype->rd << '\n';
-								std::cerr << "          mp: " << operand_ptr << " -> " << operand_ptr->get() << '\n';
-							} else
+								std::cerr << "          rs: " << *itype->rs << '\n';
+								std::cerr << "          rd: " << *itype->rd << '\n';
+								std::cerr << "          mp: " << *operand_ptr << " -> " << **operand_ptr << '\n';
+							} else {
 								throw std::runtime_error("Non-R-/I-type in FixSignedness");
-							std::cerr << '\n';
-							info() << "Instruction(" << *instruction << ")\n";
+							}
+
+							info() << "Instruction: " << *instruction << '\n';
 							VariablePtr &operand = *operand_ptr;
 							TypePtr inverted_copy;
 
@@ -200,21 +213,22 @@ namespace LL2W::Passes {
 							}
 							info() << "Function: \e[1m" << *function.name << "\e[22m\n";
 							info() << "Old instruction: " << instruction << " \e[1m!" << instruction->debugIndex << "\e[22m\n";
-							auto bitcast = BitcastInstruction::make(operand, function, inverted_copy,
-								instruction->parent.lock());
+							auto bitcast = BitcastInstruction::make(operand, function, inverted_copy, instruction->parent.lock());
 							bitcast->setDebug(*instruction)->extract();
 							operand = bitcast->rd;
 							info() << "New instruction: " << instruction << '\n';
 							info() << "Bitcast:         " << *bitcast << " \e[1m!" << bitcast->debugIndex << "\e[22m\n";
 							function.insertBefore(instruction, bitcast);
 							++list_iter;
-						} else
+						} else {
 							list.erase(list_iter++);
+						}
 					}
 				}
 
-				if (1 < list.size())
+				if (1 < list.size()) {
 					done = false;
+				}
 			}
 		} while (!done);
 	}
@@ -225,10 +239,11 @@ namespace LL2W::Passes {
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			VariablePtr rd;
 
-			if (auto move = std::dynamic_pointer_cast<MoveInstruction>(instruction))
+			if (auto move = std::dynamic_pointer_cast<MoveInstruction>(instruction)) {
 				rd = move->rd;
-			else if (auto set = std::dynamic_pointer_cast<SetInstruction>(instruction))
+			} else if (auto set = std::dynamic_pointer_cast<SetInstruction>(instruction)) {
 				rd = set->rd;
+			}
 
 			// Sign argument registers that are moved into.
 			if (rd && rd->isArgumentRegister()) {
