@@ -58,10 +58,8 @@ namespace LL2W::Passes {
 					auto sub = std::make_shared<SubIInstruction>(base, offset, m2);
 					// [$m2] -> %var
 					auto load = std::make_shared<LoadRInstruction>(m2, stack_load->result);
-					function.insertBefore(instruction, sub,  "LowerStack: base - offset -> $m2 for " + plain_string)
-						->setDebug(stack_load)->extract();
-					function.insertBefore(instruction, load, "LowerStack: [$m2] -> " + plain_string)
-						->setDebug(stack_load)->extract();
+					function.insertBefore(instruction, sub,  "LowerStack: base - offset -> $m2 for " + plain_string)->setDebug(stack_load)->extract();
+					function.insertBefore(instruction, load, "LowerStack: [$m2] -> " + plain_string)->setDebug(stack_load)->extract();
 				}
 			} else continue;
 

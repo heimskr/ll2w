@@ -343,7 +343,7 @@ namespace LL2W {
 	}
 
 	void Function::extractVariables(bool reset) {
-		Timer timer("ExtractVariables");
+		Timer timer{"ExtractVariables"};
 		if (reset) {
 			for (auto &map: {variableStore, extraVariables}) {
 				for (const auto &[id, var]: map) {
@@ -398,7 +398,7 @@ namespace LL2W {
 	}
 
 	void Function::relinearize() {
-		Timer timer("Relinearize");
+		Timer timer{"Relinearize"};
 		linearInstructions.clear();
 		int index = -1;
 		for (BasicBlockPtr &block: blocks) {
@@ -576,7 +576,7 @@ namespace LL2W {
 	}
 
 	bool Function::isSpilled(VariablePtr variable) const {
-		return spilledVariables.count(variable->originalID) != 0;
+		return spilledVariables.contains(variable->originalID);
 	}
 
 	bool Function::canSpill(VariablePtr variable) {
@@ -643,7 +643,7 @@ namespace LL2W {
 				}
 			}
 #else
-			if (instruction->read.count(variable) != 0 && instruction->canReplaceRead(variable)) {
+			if (instruction->read.contains(variable) && instruction->canReplaceRead(variable)) {
 				return true;
 			}
 #endif
@@ -855,7 +855,7 @@ namespace LL2W {
 	}
 
 	BasicBlockPtr Function::splitBlock(BasicBlockPtr block, InstructionPtr instruction) {
-		Timer timer("SplitBlock");
+		Timer timer{"SplitBlock"};
 		const std::string *label = newLabel();
 #ifdef DEBUG_SPLIT
 		std::cerr << "Splitting " << *block->getLabel() << " (" << block->instructions.size() << ") into " << *block->getLabel() << " & " << *label << "\n";
@@ -1012,7 +1012,7 @@ namespace LL2W {
 	}
 
 	void Function::updateInstructionNodes() {
-		Timer timer("UpdateInstructionNodes");
+		Timer timer{"UpdateInstructionNodes"};
 		for (const InstructionPtr &instruction: linearInstructions) {
 			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm) {
@@ -1057,7 +1057,7 @@ namespace LL2W {
 	}
 
 	void Function::initialCompile() {
-		Timer timer("InitialCompile");
+		Timer timer{"InitialCompile"};
 		extractBlocks();
 		makeInitialDebugIndex();
 		Passes::ignoreIntrinsics(*this);
@@ -1124,10 +1124,13 @@ namespace LL2W {
 		// if (*name == "@main") {
 		// 	debug();
 		// }
+
+		Passes::discardUnusedVars(*this);
 	}
 
 	void Function::finalCompile() {
-		Timer timer("FinalCompile");
+		success() << "Starting final compilation.\n";
+		Timer timer{"FinalCompile"};
 		Passes::lowerInsertvalue(*this);
 		Passes::readjustStackSkip(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
@@ -1157,7 +1160,6 @@ namespace LL2W {
 		Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
-		debug();
 		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);
 		forceLiveness();
@@ -1188,7 +1190,7 @@ namespace LL2W {
 		debug();
 #endif
 
-		Timer regalloc_timer("RegisterAllocation");
+		Timer regalloc_timer{"RegisterAllocation"};
 #ifdef FN_CATCH_EXCEPTIONS
 		try {
 #endif
@@ -1248,7 +1250,7 @@ namespace LL2W {
 	}
 
 	void Function::forceLiveness() {
-		Timer timer("ForceLiveness");
+		Timer timer{"ForceLiveness"};
 		extractInstructions(true);
 		for (const BasicBlockPtr &block: blocks) {
 			block->extract(true);
@@ -1340,7 +1342,7 @@ namespace LL2W {
 			return getVariable(id, arguments->at(Util::parseLong(id)).type, getEntry());
 		}
 
-		if (extraVariables.count(id) != 0) {
+		if (extraVariables.contains(id) != 0) {
 			return extraVariables.at(id);
 		}
 
@@ -1363,17 +1365,18 @@ namespace LL2W {
 	}
 
 	VariablePtr Function::getVariable(Variable::ID id, const TypePtr type, BasicBlockPtr definer) {
-		const size_t vcount = variableStore.count(id), ecount = extraVariables.count(id);
-		if (vcount == 0 && ecount == 0) {
+		const bool in_variable_store = variableStore.contains(id);
+		const bool in_extra_variables = extraVariables.contains(id);
+		if (!in_variable_store && !in_extra_variables) {
 			assert(type != nullptr);
-			auto out = variableStore.emplace(id, std::make_shared<Variable>(*this, id, type? type->copy() : nullptr)).first->second;
+			VariablePtr out = variableStore.emplace(id, std::make_shared<Variable>(*this, id, type? type->copy() : nullptr)).first->second;
 			if (definer) {
 				out->addDefiner(definer);
 			}
 			return out;
 		}
 		VariablePtr out;
-		if (ecount) {
+		if (in_extra_variables) {
 			out = extraVariables.at(id);
 		} else {
 			out = variableStore.at(id);
@@ -1420,9 +1423,9 @@ namespace LL2W {
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
 			}
 			// while t != def(a)
-			while (defs.count(t) == 0) {
+			while (!defs.contains(t)) {
 				// if t ∩ M^r (n)
-				if (m_r.count(&(*djGraph)[*t->getLabel()]) != 0) {
+				if (m_r.contains(&(*djGraph)[*t->getLabel()])) {
 					return true;
 				}
 				Node *t_node = &(*djGraph)[*t->getLabel()];
@@ -1455,7 +1458,7 @@ namespace LL2W {
 		const auto &defs = var->definingBlocks;
 
 		// if def(a) = n
-		if (defs.count(bbMap.at(StringSet::intern(block->label()))) != 0) {
+		if (defs.contains(bbMap.at(StringSet::intern(block->label())))) {
 			// return uses(a)\def(a) = ∅
 			// At least, I assume the use of φ in the PDF actually refers to the empty set.
 			auto difference = var->usingBlocks;
@@ -1484,9 +1487,9 @@ namespace LL2W {
 				throw std::runtime_error("Couldn't lock std::weak_ptr while computing liveness");
 			}
 			// while t != def(a)
-			while (defs.count(t) == 0) {
+			while (!defs.contains(t)) {
 				// if t ∩ M_s(n)
-				if (m_s.count(&(*djGraph)[*t->getLabel()]) != 0) {
+				if (m_s.contains(&(*djGraph)[*t->getLabel()])) {
 					return true;
 				}
 				auto t_node = &(*djGraph)[*t->getLabel()];
@@ -1508,7 +1511,7 @@ namespace LL2W {
 	}
 
 	void Function::computeLivenessMS() {
-		Timer timer("ComputeLivenessMS");
+		Timer timer{"ComputeLivenessMS"};
 
 		if (!djGraph.has_value()) {
 			throw std::runtime_error("Can't compute liveness with merge sets when the DJ graph is empty");
@@ -1549,7 +1552,7 @@ namespace LL2W {
 	}
 
 	void Function::computeLivenessTraditional() {
-		Timer timer("ComputeLivenessTraditional");
+		Timer timer{"ComputeLivenessTraditional"};
 		// https://www.classes.cs.uchicago.edu/archive/2004/spring/22620-1/docs/liveness.pdf, page 9
 		std::map<BasicBlock::Label, std::set<VariablePtr>> in, out, in_, out_;
 		std::map<BasicBlock::Label, std::vector<BasicBlockPtr>> goes_to;
@@ -1558,7 +1561,7 @@ namespace LL2W {
 
 		// Oh no.
 		{
-			Timer subtimer("GoesTo");
+			Timer subtimer{"GoesTo"};
 			for (auto &block: blocks) {
 				goes_to.try_emplace(block->getLabel());
 				for (auto &other: blocks) {
@@ -1576,7 +1579,7 @@ namespace LL2W {
 				out_[n] = out[n];
 				in[n] = block->read;
 				for (auto &var: out[n]) {
-					if (block->written.count(var) == 0) {
+					if (!block->written.contains(var)) {
 						in[n].insert(var);
 					}
 				}
@@ -1664,7 +1667,7 @@ namespace LL2W {
 	}
 
 	void Function::computeLivenessUAM() {
-		Timer timer("ComputeLivenessUAM");
+		Timer timer{"ComputeLivenessUAM"};
 		for (const BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
@@ -1682,7 +1685,7 @@ namespace LL2W {
 	}
 
 	void Function::hackLiveness() {
-		Timer timer("HackLiveness");
+		Timer timer{"HackLiveness"};
 		for (const auto &[id, var]: variableStore) {
 			const auto &defines = var->definingBlocks;
 			const auto &uses = var->usingBlocks;
@@ -1705,7 +1708,7 @@ namespace LL2W {
 	}
 
 	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(const VariablePtr &var, BasicBlock::LivePtr lptr) const {
-		Timer timer("GetLive");
+		Timer timer{"GetLive"};
 		std::unordered_set<std::shared_ptr<BasicBlock>> out;
 		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<VariablePtr> aliases;
@@ -1736,7 +1739,7 @@ namespace LL2W {
 	}
 
 	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {
-		Timer timer("IsLiveOutAnywhere");
+		Timer timer{"IsLiveOutAnywhere"};
 		const auto &alias_pointers = var->getAliases();
 		std::unordered_set<VariablePtr> aliases;
 		for (const auto &[id, subvar]: variableStore) {
@@ -1756,7 +1759,7 @@ namespace LL2W {
 	}
 
 	std::string Function::toString() {
-		Timer timer("Function::toString");
+		Timer timer{"Function::toString"};
 		std::stringstream out;
 		out << *name << "\n";
 		for (InstructionPtr &instruction: linearInstructions) {
@@ -1769,7 +1772,7 @@ namespace LL2W {
 			const int dbg = instruction->debugIndex;
 			if (dbg != -1 && instruction->showDebug()) {
 				auto lock = parent.getLock();
-				if (parent.locations.count(dbg) != 0) {
+				if (parent.locations.contains(dbg)) {
 					out << " !" << parent.locations.at(dbg).index;
 				} else {
 					warn() << "Couldn't find location for !" << dbg << "\n";
@@ -1953,7 +1956,7 @@ namespace LL2W {
 			all_vars.insert(extraVariables.cbegin(), extraVariables.cend());
 
 			for (auto &[id, var]: all_vars) {
-				if (extraVariables.count(id) != 0) {
+				if (extraVariables.contains(id)) {
 					stream << "\e[31m[e]\e[39m";
 				} else {
 					stream << "   ";
@@ -2061,14 +2064,14 @@ namespace LL2W {
 		}
 
 		const FunctionHeader *header = dynamic_cast<const FunctionHeader *>(astnode->children.front());
-		if (header->fnattrs.count(FnAttr::naked) != 0) {
+		if (header->fnattrs.contains(FnAttr::naked)) {
 			return true;
 		}
 		if (header->fnattrsIndex == -1) {
 			return false;
 		}
 		auto lock = parent.getLock();
-		return parent.fnattrs.at(header->fnattrsIndex).count(FnAttr::naked) != 0;
+		return parent.fnattrs.at(header->fnattrsIndex).contains(FnAttr::naked);
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable, bool create, bool *created) {
@@ -2177,7 +2180,7 @@ namespace LL2W {
 	}
 
 	void Function::hackVariables() {
-		Timer timer("HackVariables");
+		Timer timer{"HackVariables"};
 		std::list<VariablePtr> all_vars;
 
 		for (auto &pair: extraVariables) {
@@ -2233,7 +2236,7 @@ namespace LL2W {
 	}
 
 	Graph Function::makeDependencyGraph() const {
-		Timer timer("Function::makeDependencyGraph");
+		Timer timer{"Function::makeDependencyGraph"};
 		Graph dependencies;
 
 		for (const auto &[id, var]: variableStore) {

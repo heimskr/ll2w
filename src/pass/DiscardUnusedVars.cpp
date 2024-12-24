@@ -29,7 +29,7 @@ namespace LL2W::Passes {
 	}
 
 	size_t discardUnusedVars(Function &function) {
-		Timer timer("DiscardUnusedVars");
+		Timer timer{"DiscardUnusedVars"};
 
 		size_t discarded = 0;
 		std::list<InstructionPtr> to_remove;
@@ -45,19 +45,22 @@ namespace LL2W::Passes {
 				}
 
 				++discarded;
-				info() << "Discarding " << *var << " in " << *function.name << '\n';
+				// info() << "Discarding " << *var << " in " << *function.name << '\n';
 
 				for (const auto &weak_definition: var->definitions) {
-					// std::cerr << "    " << weak_definition.lock()->debugExtra() << '\n';
-					to_remove.push_back(weak_definition.lock());
+					if (InstructionPtr definition = weak_definition.lock()) {
+						// std::cerr << "    " << *definition << '\n';
+						to_remove.push_back(std::move(definition));
+					}
 				}
 			}
 		}
 
 		for (const InstructionPtr &instruction: to_remove) {
 			auto iter = std::find(function.linearInstructions.begin(), function.linearInstructions.end(), instruction);
-			if (iter != function.linearInstructions.begin() && std::dynamic_pointer_cast<Comment>(*--iter))
+			if (iter != function.linearInstructions.begin() && std::dynamic_pointer_cast<Comment>(*--iter)) {
 				function.remove(*iter);
+			}
 			function.remove(instruction);
 		}
 

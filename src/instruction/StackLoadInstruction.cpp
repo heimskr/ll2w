@@ -10,9 +10,10 @@ namespace LL2W {
 		written.clear();
 		extracted = true;
 
-		if (!secretWrites)
+		if (result && !secretWrites) {
 			// TODO: verify.
 			written = {result};
+		}
 
 		return {read.size(), written.size()};
 	}
@@ -20,7 +21,7 @@ namespace LL2W {
 	std::string StackLoadInstruction::debugExtra() const {
 		return "\e[1m[load  " + std::string(*result) + "\e[1m from " + std::to_string(location.offset) + "]\e[22m";
 	}
-	
+
 	Instruction * StackLoadInstruction::copy() const {
 		return new StackLoadInstruction(*this);
 	}
