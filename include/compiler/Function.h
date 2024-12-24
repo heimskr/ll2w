@@ -14,6 +14,7 @@
 #include "graph/DJGraph.h"
 #include "graph/DTree.h"
 #include "parser/FunctionArgs.h"
+#include "util/WeakCompare.h"
 
 namespace llvm {
 	class Function;
@@ -140,7 +141,7 @@ namespace LL2W {
 			 *  left off after other things have occurred. For example, SetupCalls uses this to record the moves from
 			 *  result registers into variables in case the variable is larger than one physical register and the move
 			 *  needs to be split up after register allocation. */
-			std::unordered_map<std::string, std::unordered_set<InstructionPtr>> categories;
+			std::unordered_map<std::string, WeakSet<Instruction>> categories;
 
 			/** Stores stack locations for register clobbering. */
 			std::unordered_map<int, const StackLocation *> clobbers;

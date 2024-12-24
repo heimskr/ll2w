@@ -16,7 +16,7 @@ namespace LL2W::Passes {
 		auto sp = function.sp(entry);
 		auto sub = std::make_shared<SubIInstruction>(sp, 0, sp);
 		function.insertBefore(function.linearInstructions.front(), sub, "InsertStackSkip")->setDebug(function.initialDebugIndex)->extract();
-		function.categories["StackSkip"].insert(sub);
+		function.categories["StackSkip"].emplace(sub);
 	}
 
 	void readjustStackSkip(Function &function) {
@@ -24,9 +24,9 @@ namespace LL2W::Passes {
 			return;
 		}
 
-		Timer timer("ReadjustStackSkip");
+		Timer timer{"ReadjustStackSkip"};
 
-		if (function.categories.count("StackSkip") == 0) {
+		if (!function.categories.contains("StackSkip")) {
 			throw std::runtime_error("No StackSkip category found in function " + *function.name);
 		}
 
@@ -37,6 +37,6 @@ namespace LL2W::Passes {
 		}
 
 		// We need to add an offset of 8 because spush subtracts and then writes to memory.
-		dynamic_cast<SubIInstruction &>(**set.begin()).imm = function.spillSize + 8;
+		dynamic_cast<SubIInstruction &>(*set.begin()->lock()).imm = function.spillSize + 8;
 	}
 }

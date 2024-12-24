@@ -19,19 +19,24 @@
 namespace LL2W::Passes {
 	void coalescePhi(Function &function, bool variablesOnly) {
 		Timer timer("CoalescePhi");
-		std::list<InstructionPtr> to_remove;
+		std::vector<InstructionPtr> to_remove;
 		std::unordered_set<Variable *> vars_to_erase;
 		bool should_relinearize = false;
 
 		// Scan through each instruction in order.
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (const InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
+
+			if (llvm_instruction == nullptr || !llvm_instruction->isPhi()) {
 				continue;
+			}
+
 			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
-			if (phi_node == nullptr)
+
+			if (phi_node == nullptr) {
 				throw std::runtime_error("phi_node is null in Function::coalescePhi");
+			}
 
 			// Otherwise, get its written temporary. This is what the other temporaries will be merged to.
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
@@ -39,8 +44,7 @@ namespace LL2W::Passes {
 
 			if (variablesOnly) {
 				for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
-					const LocalValue *local = pair.first->isLocal()?
-						dynamic_cast<LocalValue *>(pair.first.get()) : nullptr;
+					const LocalValue *local = pair.first->isLocal()? dynamic_cast<LocalValue *>(pair.first.get()) : nullptr;
 					if (local != nullptr) {
 						VariablePtr to_alias = function.getVariable(*local->name);
 						// to_alias->makeAliasOf(*target);
@@ -50,8 +54,7 @@ namespace LL2W::Passes {
 				}
 			} else {
 				for (const std::pair<ValuePtr, const std::string *> &pair: phi_node->pairs) {
-					const std::shared_ptr<LocalValue> local = pair.first->isLocal()?
-						std::dynamic_pointer_cast<LocalValue>(pair.first) : nullptr;
+					const std::shared_ptr<LocalValue> local = pair.first->isLocal()? std::dynamic_pointer_cast<LocalValue>(pair.first) : nullptr;
 					if (!local) {
 						if (pair.first->isIntLike() || pair.first->isGlobal()) {
 							// On rare occasions, one or more operands of a ϕ-instruction can be constants like "true".
@@ -61,23 +64,24 @@ namespace LL2W::Passes {
 							// On even rarer occasions, the operands can be global variables.
 							BasicBlockPtr block = function.bbMap.at(pair.second);
 							InstructionPtr new_instr;
-							if (pair.first->isIntLike())
+							if (pair.first->isIntLike()) {
 								new_instr = std::make_shared<SetInstruction>(target, pair.first->intValue(false));
-							else
-								new_instr = std::make_shared<SetInstruction>(target,
-									dynamic_cast<GlobalValue *>(pair.first.get())->name);
+							} else {
+								new_instr = std::make_shared<SetInstruction>(target, dynamic_cast<GlobalValue *>(pair.first.get())->name);
+							}
 							new_instr->parent = block;
 							if (block->instructions.empty()) {
 								block->insertBeforeTerminal(new_instr);
 								should_relinearize = true;
-							} else
+							} else {
 								function.insertBefore(block->instructions.back(), new_instr);
+							}
 							target->addDefinition(new_instr);
 							target->addDefiner(block);
 							new_instr->extract();
-						} else
-							warn() << "Value " << std::string(*pair.first) << " isn't intlike or global in "
-							       << phi_node->debugExtra() << '\n';
+						} else {
+							warn() << "Value " << std::string(*pair.first) << " isn't intlike or global in " << phi_node->debugExtra() << '\n';
+						}
 #ifdef REMOVE_OLD_TEMPORARIES
 					} else {
 						// Remove the old temporary from the variable store, then copy the name and type of the target
@@ -94,14 +98,13 @@ namespace LL2W::Passes {
 						} catch (const std::out_of_range &err) {
 							// Sometimes, the same variable will appear multiple times in the table, e.g.
 							//     %41 = phi i32 [ %39, %28 ], [ %19, %24 ], [ %19, %16 ]
-							// We do nothing if we've already aliased the variable and removed it from the variable
-							// store.
+							// We do nothing if we've already aliased the variable and removed it from the variable store.
 						}
 #endif
 					}
 				}
 
-				to_remove.push_back(instruction);
+				to_remove.emplace_back(instruction);
 				target->removeDefiner(phi_definer);
 				target->removeDefinition(instruction);
 			}
@@ -116,9 +119,12 @@ namespace LL2W::Passes {
 		std::unordered_set<Variable::ID> visited;
 		for (const auto &[id, var]: function.variableStore) {
 			Variable::ID name = var->originalID;
-			if (visited.contains(name))
+			if (visited.contains(name)) {
 				continue;
+			}
+
 			visited.insert(name);
+
 			for (Node *node: dependencies.BFS(*name)) {
 				auto *nodevar = node->get<Variable *>();
 				if (nodevar != var.get()) {
@@ -150,8 +156,7 @@ namespace LL2W::Passes {
 		auto iter = linear.begin();
 		// Scan through each instruction in order.
 		for (; iter != linear.end();) {
-			auto instruction = *iter;
-			// bool removed = false;
+			InstructionPtr instruction = *iter;
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm_instruction || !llvm_instruction->isPhi()) {
@@ -160,8 +165,10 @@ namespace LL2W::Passes {
 			}
 
 			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
-			if (phi_node == nullptr)
+
+			if (phi_node == nullptr) {
 				throw std::runtime_error("phi_node is null in Function::movePhi");
+			}
 
 			VariablePtr target = function.getVariable(*phi_node->result, phi_node->type);
 			target->fromPhi = true;
@@ -169,13 +176,14 @@ namespace LL2W::Passes {
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				const LocalValue *local = value->isLocal()? dynamic_cast<LocalValue *>(value.get()) : nullptr;
 				BasicBlockPtr block;
+
 				try {
 					block = function.bbMap.at(block_label);
 				} catch (const std::out_of_range &) {
-					error() << "Couldn't find " << *block_label << " in " << *function.name << "'s bbMap.\n"
-					           "    bbMap entries (" << function.bbMap.size() << "):\n";
-					for (const auto &[bbname, bb]: function.bbMap)
+					error() << "Couldn't find " << *block_label << " in " << *function.name << "'s bbMap.\n    bbMap entries (" << function.bbMap.size() << "):\n";
+					for (const auto &[bbname, bb]: function.bbMap) {
 						std::cerr << "    - " << *bbname << '\n';
+					}
 					std::cerr << "    Phi node: " << phi_node->debugExtra() << '\n';
 					throw;
 				}
@@ -187,7 +195,7 @@ namespace LL2W::Passes {
 				if (local != nullptr) {
 					comment = "MovePhi: " + local->variable->plainString() + " -> " + target->plainString();
 					new_instruction = std::make_shared<MoveInstruction>(local->variable, target);
-					function.categories["MovePhi"].insert(new_instruction);
+					function.categories["MovePhi"].emplace(new_instruction);
 				} else if (value->valueType() == ValueType::Undef) {
 					// Do nothing for undef values. This allows us to insert moves in cutPhi.
 					continue;
@@ -197,12 +205,10 @@ namespace LL2W::Passes {
 						new_instruction = std::make_shared<SetInstruction>(target, value->intValue(false));
 					} else {
 						comment = "MovePhi: global -> " + target->plainString();
-						new_instruction = std::make_shared<SetInstruction>(target,
-							dynamic_cast<GlobalValue *>(value.get())->name);
+						new_instruction = std::make_shared<SetInstruction>(target, dynamic_cast<GlobalValue *>(value.get())->name);
 					}
 				} else {
-					warn() << "Value " << std::string(*value) << " isn't intlike or global in "
-					       << phi_node->debugExtra() << '\n';
+					warn() << "Value " << std::string(*value) << " isn't intlike or global in " << phi_node->debugExtra() << '\n';
 					continue;
 				}
 
@@ -260,8 +266,8 @@ namespace LL2W::Passes {
 
 						auto comment_node = std::make_shared<Comment>(comment);
 						comment_node->parent = new_instruction->parent = middle_block;
-						middle_block->instructions.push_back(comment_node);
-						middle_block->instructions.push_back(new_instruction);
+						middle_block->instructions.emplace_back(comment_node);
+						middle_block->instructions.emplace_back(new_instruction);
 
 						auto preds_iter = std::find(phi_block->preds.begin(), phi_block->preds.end(), block->getLabel());
 						if (preds_iter == phi_block->preds.end()) {
@@ -269,7 +275,7 @@ namespace LL2W::Passes {
 							throw std::runtime_error("Couldn't find " + *block->getLabel() + " in the preds for " + *phi_block->getLabel());
 						}
 						*preds_iter = new_label;
-						middle_block->instructions.push_back(new_llvm);
+						middle_block->instructions.emplace_back(new_llvm);
 						function.movePhiBlocks.emplace(std::make_pair(block->getLabel(), phi_block_label), middle_block);
 					}
 
@@ -325,8 +331,9 @@ namespace LL2W::Passes {
 			Passes::makeCFG(function);
 		}
 
-		for (InstructionPtr &ptr: to_remove)
+		for (InstructionPtr &ptr: to_remove) {
 			function.remove(ptr);
+		}
 	}
 
 	static Graph getDependencies(Function &function) {
@@ -336,21 +343,27 @@ namespace LL2W::Passes {
 		for (const InstructionPtr &instruction: function.linearInstructions) {
 			// If it isn't an LLVMInstruction whose node is a PhiNode, continue scanning.
 			auto *llvm_instruction = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (llvm_instruction == nullptr || !llvm_instruction->isPhi())
+			if (llvm_instruction == nullptr || !llvm_instruction->isPhi()) {
 				continue;
-			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
-			if (phi_node == nullptr)
-				throw std::runtime_error("phi_node is null");
+			}
 
-			if (!dependencies.hasLabel(*phi_node->result))
+			const auto *phi_node = dynamic_cast<const PhiNode *>(llvm_instruction->getNode());
+
+			if (phi_node == nullptr) {
+				throw std::runtime_error("phi_node is null");
+			}
+
+			if (!dependencies.hasLabel(*phi_node->result)) {
 				dependencies.addNode(*phi_node->result);
+			}
 
 			for (const auto &[value, block_label]: phi_node->pairs) {
 				if (value->valueType() == ValueType::Local) {
 					auto *local = dynamic_cast<LocalValue *>(value.get());
 					const std::string &name = *local->name;
-					if (!dependencies.hasLabel(name))
+					if (!dependencies.hasLabel(name)) {
 						dependencies.addNode(name);
+					}
 					dependencies.link(name, *phi_node->result);
 				}
 			}
@@ -375,12 +388,12 @@ namespace LL2W::Passes {
 			any_done = false;
 			std::list<Graph> components = dependencies.components();
 			for (Graph &graph: components) {
-				if (graph.size() <= WEB_MAX)
+				if (graph.size() <= WEB_MAX) {
 					continue;
+				}
 				const auto bridges = graph.bridges();
 				if (bridges.empty()) {
-					warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph "
-						"components.\n";
+					warn() << "Couldn't find a bridge in one of function " << *function.name << "'s phi graph components.\n";
 					continue;
 				}
 				ssize_t min_diff = SSIZE_MAX;
@@ -388,33 +401,37 @@ namespace LL2W::Passes {
 				const std::pair<Graph::Label, Graph::Label> *min_pair = nullptr;
 				for (const auto &pair: bridges) {
 					const bool should_swap = !graph[pair.first].out().contains(&graph[pair.second]);
-					if (should_swap)
+
+					if (should_swap) {
 						graph.unlink(pair.second, pair.first);
-					else
+					} else {
 						graph.unlink(pair.first, pair.second);
-					const ssize_t diff =
-						std::abs(static_cast<int64_t>(graph.size()) -
-							2l * static_cast<int64_t>(graph.undirectedSearch(*graph.begin()->second).size()));
-					if (should_swap)
+					}
+
+					const ssize_t diff = std::abs(static_cast<int64_t>(graph.size()) - 2l * static_cast<int64_t>(graph.undirectedSearch(*graph.begin()->second).size()));
+
+					if (should_swap) {
 						graph.link(pair.second, pair.first);
-					else
+					} else {
 						graph.link(pair.first, pair.second);
+					}
+
 					if (diff < min_diff) {
 						min_diff = diff;
 						min_pair = &pair;
 						min_swap = should_swap;
 					}
 				}
-				if (min_pair == nullptr)
-					throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " +
-						std::to_string(SSIZE_MAX) + " nodes?");
-				auto source      = function.getVariable(
-					StringSet::intern(min_swap? min_pair->second : min_pair->first));
-				auto destination = function.getVariable(
-					StringSet::intern(min_swap? min_pair->first : min_pair->second));
+
+				if (min_pair == nullptr) {
+					throw std::runtime_error("min_pair is inexplicably null; do you have a phi graph component with " + std::to_string(SSIZE_MAX) + " nodes?");
+				}
+
+				auto source      = function.getVariable(StringSet::intern(min_swap? min_pair->second : min_pair->first));
+				auto destination = function.getVariable(StringSet::intern(min_swap? min_pair->first  : min_pair->second));
 				// Can't add definitions while iterating over definitions.
-				std::list<InstructionPtr> definitions_to_add;
-				std::list<BasicBlockPtr> definers_to_add;
+				std::vector<InstructionPtr> definitions_to_add;
+				std::vector<BasicBlockPtr> definers_to_add;
 				for (const auto &definition: destination->definitions) {
 					auto *llvm = dynamic_cast<LLVMInstruction *>(definition.lock().get());
 					if (llvm == nullptr || !llvm->isPhi()) {
@@ -424,27 +441,28 @@ namespace LL2W::Passes {
 							continue;
 						}
 
-						throw std::runtime_error("Definition of " + std::string(*destination) +
-							" isn't a ϕ-instruction: " + definition.lock()->debugExtra());
+						throw std::runtime_error("Definition of " + std::string(*destination) + " isn't a ϕ-instruction: " + definition.lock()->debugExtra());
 					}
+
 					auto *phi = dynamic_cast<PhiNode *>(llvm->getNode());
+
 					for (auto &[value, block_label]: phi->pairs) {
 						if (value->isLocal()) {
 							auto *local = dynamic_cast<LocalValue *>(value.get());
 							if (local->variable && *local->variable == *source) {
 								auto block = function.bbMap.at(block_label);
 								auto move = std::make_shared<MoveInstruction>(source, destination);
-								const std::string comment = "CutPhi: " + source->plainString() + " -> " +
-									destination->plainString();
+								const std::string comment = "CutPhi: " + source->plainString() + " -> " + destination->plainString();
 								if (block->instructions.empty()) {
 									block->insertBeforeTerminal(move);
 									function.comment(move, comment); // TODO: does this work before relinearization?
 									should_relinearize = true;
-								} else
+								} else {
 									function.insertBefore(block->instructions.back(), move, comment);
+								}
 								move->setDebug(phi)->extract();
-								definitions_to_add.push_back(move);
-								definers_to_add.push_back(block);
+								definitions_to_add.emplace_back(move);
+								definers_to_add.emplace_back(block);
 								insertions.insert(move);
 								value.reset(new UndefValue);
 								any_done = true;
@@ -452,14 +470,19 @@ namespace LL2W::Passes {
 						}
 					}
 				}
-				for (const auto &definition: definitions_to_add)
-					destination->addDefinition(definition);
-				for (const auto &definer: definers_to_add)
-					destination->addDefiner(definer);
+
+				for (auto &&definition: definitions_to_add) {
+					destination->addDefinition(std::move(definition));
+				}
+
+				for (auto &&definer: definers_to_add) {
+					destination->addDefiner(std::move(definer));
+				}
 			}
 		}
 
-		if (should_relinearize)
+		if (should_relinearize) {
 			function.relinearize();
+		}
 	}
 }

@@ -12,8 +12,14 @@ namespace LL2W::Passes {
 
 		std::list<InstructionPtr> to_remove;
 
-		for (const InstructionPtr &instruction: function.categories["SetupCalls:MoveFromResult"]) { // $r0 -> %var
+		for (const auto &weak_instruction: function.categories["SetupCalls:MoveFromResult"]) { // $r0 -> %var
+			InstructionPtr instruction = weak_instruction.lock();
+			if (!instruction) {
+				continue;
+			}
+
 			auto move = dynamic_cast<MoveInstruction *>(instruction.get());
+			assert(move != nullptr);
 
 			size_t register_count = move->rd->registers.size();
 
@@ -25,8 +31,7 @@ namespace LL2W::Passes {
 			auto iter = move->rd->registers.begin();
 			for (size_t i = 0; i < register_count; ++i) {
 				auto rx = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, instruction->parent.lock());
-				auto new_move = std::make_shared<MoveInstruction>(rx,
-					function.makePrecoloredVariable(*iter++, instruction->parent.lock()));
+				auto new_move = std::make_shared<MoveInstruction>(rx, function.makePrecoloredVariable(*iter++, instruction->parent.lock()));
 				function.insertBefore(instruction, new_move)->setDebug(move)->extract();
 			}
 
@@ -34,8 +39,9 @@ namespace LL2W::Passes {
 			++changed;
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return changed;
 	}
