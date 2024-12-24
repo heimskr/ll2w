@@ -3,15 +3,17 @@
 
 namespace LL2W {
 	ExtractionResult JumpRegisterInstruction::extract(bool force) {
-		if (extracted && !force)
+		if (extracted && !force) {
 			return {read.size(), written.size()};
+		}
 
 		read.clear();
 		written.clear();
 		extracted = true;
 
-		if (rd && !secretReads)
+		if (rd && !secretReads) {
 			read.insert(rd); // I'm foolish and put a variable that's read—not written to—in rd. It really should be rs.
+		}
 
 		return {read.size(), written.size()};
 	}
@@ -48,7 +50,7 @@ namespace LL2W {
 	bool JumpRegisterInstruction::isBlockTerminal() const {
 		return condition == Condition::None && !link;
 	}
-	
+
 	Instruction * JumpRegisterInstruction::copy() const {
 		return new JumpRegisterInstruction(*this);
 	}

@@ -5,6 +5,29 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
+	static bool canDiscard(const VariablePtr &var) {
+		if (var->usingBlocks.empty()) {
+			return true;
+		}
+
+		if (var->definingBlocks.size() != 1 || var->usingBlocks.size() != 1) {
+			return false;
+		}
+
+		BasicBlockPtr definer = var->definingBlocks.begin()->lock();
+		if (!definer) {
+			return false;
+		}
+
+		BasicBlockPtr user = var->usingBlocks.begin()->lock();
+		if (!user) {
+			return false;
+		}
+
+		assert(definer == user);
+		return false;
+	}
+
 	size_t discardUnusedVars(Function &function) {
 		Timer timer("DiscardUnusedVars");
 
@@ -13,11 +36,16 @@ namespace LL2W::Passes {
 
 		for (const auto &[var_id, var]: function.variableStore) {
 			if (!var->hasSpecialRegister() && !var->definitions.empty()) {
-				if (function.isLiveOutAnywhere(var))
+				if (function.isLiveOutAnywhere(var)) {
 					continue;
+				}
+
+				if (!canDiscard(var)) {
+					continue;
+				}
 
 				++discarded;
-				// info() << "Discarding " << *var << " in " << *function.name << '\n';
+				info() << "Discarding " << *var << " in " << *function.name << '\n';
 
 				for (const auto &weak_definition: var->definitions) {
 					// std::cerr << "    " << weak_definition.lock()->debugExtra() << '\n';

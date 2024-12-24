@@ -9,17 +9,20 @@
 
 namespace LL2W::Passes {
 	void replaceStoresAndLoads(Function &function) {
-		Timer timer("ReplaceStoresAndLoads");
-		std::list<InstructionPtr> to_remove, &linearInstructions = function.linearInstructions;
-		bool any_changed;
+		Timer timer{"ReplaceStoresAndLoads"};
+		std::list<InstructionPtr> to_remove;
+		bool any_changed{};
 
 		auto check_unique_load = [&](const InstructionPtr &check, const StackLocation &location) -> bool {
-			for (InstructionPtr &instruction: linearInstructions) {
-				if (instruction == check)
+			for (InstructionPtr &instruction: function.linearInstructions) {
+				if (instruction == check) {
 					continue;
+				}
+
 				auto *load = dynamic_cast<StackLoadInstruction *>(instruction.get());
-				if (load && load->location.offset == location.offset)
+				if (load && load->location.offset == location.offset) {
 					return false;
+				}
 			}
 
 			return true;
@@ -27,26 +30,33 @@ namespace LL2W::Passes {
 
 		do {
 			any_changed = false;
-			for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
-				InstructionPtr &start = *iter;
+			for (auto iter = function.linearInstructions.begin(), end = function.linearInstructions.end(); iter != end; ++iter) {
+				const InstructionPtr &start = *iter;
+
 				auto *store = dynamic_cast<StackStoreInstruction *>(start.get());
-				if (!store)
+				if (!store) {
 					continue;
+				}
+
 				auto iter2 = iter;
 				for (++iter2; iter2 != end; ++iter2) {
-					InstructionPtr &next = *iter2;
+					const InstructionPtr &next = *iter2;
 					auto *load = dynamic_cast<StackLoadInstruction *>(next.get());
-					if (!load && !dynamic_cast<StackStoreInstruction *>(next.get()))
-						break;
-					if (!load)
+
+					if (!load) {
+						if (!dynamic_cast<StackStoreInstruction *>(next.get())) {
+							break;
+						}
 						continue;
+					}
+
 					if (store->location.offset == load->location.offset) {
 						// If this is the only load for this stack location, we can safely remove the store.
-						if (check_unique_load(start, store->location))
+						if (check_unique_load(start, store->location)) {
 							to_remove.push_back(start);
+						}
 						to_remove.push_back(next);
-						function.insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result))
-							->setDebug(store)->extract();
+						function.insertBefore(start, std::make_shared<MoveInstruction>(store->variable, load->result))->setDebug(store)->extract();
 						any_changed = true;
 						goto remove_instructions;
 					}
@@ -54,8 +64,10 @@ namespace LL2W::Passes {
 			}
 
 			remove_instructions:
-			for (InstructionPtr &instruction: to_remove)
+			for (const InstructionPtr &instruction: to_remove) {
 				function.remove(instruction);
+			}
+
 			to_remove.clear();
 		} while (any_changed);
 	}

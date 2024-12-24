@@ -842,14 +842,14 @@ namespace LL2W {
 
 	void Function::reindexInstructions() {
 		int index = -1;
-		for (InstructionPtr &instruction: linearInstructions) {
+		for (const InstructionPtr &instruction: linearInstructions) {
 			instruction->index = ++index;
 		}
 	}
 
 	void Function::reindexBlocks() {
 		int index = -1;
-		for (BasicBlockPtr &block: blocks) {
+		for (const BasicBlockPtr &block: blocks) {
 			block->index = ++index;
 		}
 	}
@@ -1154,9 +1154,10 @@ namespace LL2W {
 		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		// Passes::minimizeBlocks(*this, true);
-		// Passes::makeCFG(*this);
+		Passes::makeCFG(*this);
 		computeLiveness();
 		Passes::discardUnusedVars(*this);
+		debug();
 		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);
 		forceLiveness();
@@ -1165,7 +1166,7 @@ namespace LL2W {
 		Passes::signChars(*this);
 		hackVariables();
 		forceLiveness();
-		for (InstructionPtr &instruction: linearInstructions) {
+		for (const InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
 				auto lock = parent.getLock();
 				parent.debugIndices.insert(instruction->debugIndex);
@@ -1179,7 +1180,7 @@ namespace LL2W {
 
 	void Function::compile() {
 		global_function_name = name;
-		Timer timer("Function_" + *name);
+		Timer timer{"Function_" + *name};
 
 		initialCompile();
 
@@ -1965,7 +1966,7 @@ namespace LL2W {
 						stream << " \e[2m??\e[22m";
 					}
 				}
-				stream << "  \e[0;2muses =";
+				stream << "  \e[0;2muses (" << var->uses.size() << ") =";
 				for (const std::weak_ptr<BasicBlock> &use: var->usingBlocks) {
 					if (auto locked = use.lock()) {
 						stream << " \e[1;2m" << std::setw(2) << *locked->getLabel() << "\e[22m";

@@ -242,14 +242,14 @@ namespace LL2W::Passes {
 				const int reg = WhyInfo::temporaryOffset + offset;
 				auto clobber = function.clobber(instruction, reg);
 				clobbers.push_back(clobber);
-				clobbers_by_reg.emplace(reg, clobber);
+				clobbers_by_reg.emplace(reg, std::move(clobber));
 			}
 
 			// Next, if applicable, we account for the situation where the jump is to an argument register. Because it
 			// may be overwritten right before the jump, we'd need to copy it to a temporary variable and jump to that.
 			VariablePtr jump_var;
 			if (!global_uptr) {
-				jump_var = dynamic_cast<LocalValue *>(name_value)->variable;
+				jump_var = dynamic_cast<LocalValue &>(*name_value).variable;
 				if (jump_var->isLess(arg_count)) {
 					VariablePtr new_var = function.newVariable(jump_var->type);
 					auto move = std::make_shared<MoveInstruction>(jump_var, new_var);
@@ -338,8 +338,9 @@ namespace LL2W::Passes {
 			function.reindexInstructions();
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (const InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		function.extractVariables();
 	}

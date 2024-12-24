@@ -366,6 +366,7 @@ namespace LL2W {
 				// info() << "Compiling " << *function->name << "...\n";
 				function->compile();
 #ifdef SINGLE_FUNCTION
+				// function->debug();
 			}
 #endif
 		}

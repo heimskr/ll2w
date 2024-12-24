@@ -7,9 +7,10 @@ namespace LL2W {
 	struct JumpRegisterInstruction: public RType, public Conditional {
 		bool link;
 
-		JumpRegisterInstruction(VariablePtr rd_, bool link_ = false,
-		Condition condition_ = Condition::None, int index_ = -1):
-			RType(nullptr, nullptr, std::move(rd_), index_), Conditional(condition_), link(link_) {}
+		JumpRegisterInstruction(VariablePtr rd, bool link = false, Condition condition = Condition::None, int index = -1):
+			RType(nullptr, nullptr, std::move(rd), index),
+			Conditional(condition),
+			link(link) {}
 
 		std::pair<char, char> extract(bool = false) override;
 		bool replaceRead(const VariablePtr &, const VariablePtr &) override;
