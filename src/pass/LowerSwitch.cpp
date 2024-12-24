@@ -34,7 +34,7 @@ namespace LL2W::Passes {
 					std::cerr << instruction->debugExtra() << '\n';
 					throw TypeError("Expected int constant in table of switch instruction", type);
 				}
-				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(), m0, IcmpCond::Eq);
+				auto comp = std::make_shared<ComparisonIInstruction>(switch_var, value->intValue(true, true), m0, IcmpCond::Eq);
 				comp->setOriginalValue(value);
 				auto jump = std::make_shared<JumpConditionalInstruction>(m0, label, false);
 				jump->needsTransformation = true;

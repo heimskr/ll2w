@@ -46,9 +46,9 @@ namespace LL2W {
 		return valueType() == ValueType::Getelementptr;
 	}
 
-	int Value::intValue(bool can_warn) {
+	int Value::intValue(bool can_warn, bool allow_wrap) {
 		long val = longValue();
-		if (can_warn && (INT_MAX < val || val < INT_MIN)) {
+		if (can_warn && ((allow_wrap? UINT_MAX : INT_MAX) < val || val < INT_MIN)) {
 #ifdef THROW_ON_OVERFLOW
 			throw std::runtime_error("Value " + std::to_string(val) + " is outside the integer range");
 #else

@@ -1,5 +1,5 @@
 // #define ANALYZE_MULTITHREADED
-// #define COMPILE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 #define GRADUAL_CODE_PRINTING
 
@@ -12,6 +12,7 @@
 // #define SINGLE_FUNCTION "_Z3prcc"
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
 // #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
+// #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -38,15 +39,20 @@
 #include <atomic>
 #include <format>
 #include <iostream>
+#include <mutex>
 #include <print>
 #include <sstream>
 #include <thread>
 
-#if defined(ANALYZE_MULTITHREADED) || defined(COMPILE_MULTITHREADED)
 namespace {
+#if defined(ANALYZE_MULTITHREADED) || defined(COMPILE_MULTITHREADED)
 	constexpr size_t PARALLELISM = 24;
-}
 #endif
+
+#ifdef GRADUAL_CODE_PRINTING
+	std::mutex gradualCodePrintingMutex;
+#endif
+}
 
 namespace LL2W {
 	struct GlobalData {
@@ -358,6 +364,13 @@ namespace LL2W {
 		for (auto &[name, function]: functions) {
 			pool.add([&waiter, function](ThreadPool &, size_t) {
 				function->compile();
+
+#ifdef GRADUAL_CODE_PRINTING
+				std::unique_lock lock(gradualCodePrintingMutex);
+				std::cout << function->toString() << std::endl;
+				lock.unlock();
+#endif
+
 				if (auto remaining = waiter--; remaining % 10 == 0) {
 					info() << "Remaining: " << remaining << "\n";
 				}
@@ -371,13 +384,14 @@ namespace LL2W {
 #ifdef SINGLE_FUNCTION
 			if (*function->name == "@" SINGLE_FUNCTION) {
 #endif
-				info() << "Compiling " << *function->name << "...\n";
+				info() << "Compiling " << *function->name << " ...\n";
 				function->compile();
 
 #ifdef SINGLE_FUNCTION
 				function->debug();
 			}
 #elif defined(GRADUAL_CODE_PRINTING)
+				std::unique_lock lock(gradualCodePrintingMutex);
 				std::cout << function->toString() << std::endl;
 #endif
 		}
