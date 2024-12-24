@@ -227,7 +227,8 @@ namespace LL2W {
 
 		for (const VariablePtr &new_var: new_vars) {
 			auto visit_block = [&](BasicBlockPtr block) {
-				for (const VariablePtr &mentioned: block->mentioned) {
+				for (VariablePtr mentioned: block->mentioned) {
+					mentioned = mentioned->climbParents();
 					if (mentioned != new_var && !mentioned->allRegistersSpecial()) {
 						interference.link(*new_var->id, *mentioned->id, true);
 					}
@@ -246,7 +247,8 @@ namespace LL2W {
 
 		for (const auto &weak_definer: spilled_var->definingBlocks) {
 			if (BasicBlockPtr definer = weak_definer.lock()) {
-				for (const VariablePtr &mentioned: definer->mentioned) {
+				for (VariablePtr mentioned: definer->mentioned) {
+					mentioned = mentioned->climbParents();
 					if (mentioned != spilled_var && !mentioned->allRegistersSpecial()) {
 						spilled_node.link(interference[*mentioned->id], true);
 					}

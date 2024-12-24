@@ -4,8 +4,8 @@
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "@main"
 // #define SINGLE_FUNCTION "@_ZL21update_offset_to_basePKcl"
-// #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
-#define SINGLE_FUNCTION "_ZN5Timer5queueElRKNSt3__18functionIFvvEEE"
+#define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+// #define SINGLE_FUNCTION "_ZN5Timer5queueElRKNSt3__18functionIFvvEEE"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"

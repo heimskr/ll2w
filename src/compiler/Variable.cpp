@@ -258,6 +258,14 @@ namespace LL2W {
 		registers = new_parent->registers; // ???
 	}
 
+	std::shared_ptr<Variable> Variable::climbParents() {
+		VariablePtr out = shared_from_this();
+		while (auto locked = out->parent.lock()) {
+			out = std::move(locked);
+		}
+		return out;
+	}
+
 	void Variable::addDefiner(std::shared_ptr<BasicBlock> block) {
 		if (auto sparent = parent.lock()) {
 			sparent->addDefiner(block);

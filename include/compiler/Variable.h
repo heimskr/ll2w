@@ -77,6 +77,7 @@ namespace LL2W {
 			void makeAliasOf(std::shared_ptr<Variable>);
 
 			std::weak_ptr<Variable> getParent() const { return parent; }
+			std::shared_ptr<Variable> climbParents();
 			const std::set<Variable *, VariableCompare> & getAliases() const { return aliases; }
 
 			void addDefiner(std::shared_ptr<BasicBlock>);
