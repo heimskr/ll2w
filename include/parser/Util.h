@@ -10,7 +10,7 @@ namespace LL2W {
 
 	void getFastmath(std::unordered_set<Fastmath> &, ASTNode *, bool destroy = true);
 
-	void print(std::ostream &, const std::unordered_set<Fastmath> &, bool initial_space = true);
+	void print(std::ostream &, const std::unordered_set<Fastmath> &, bool initial_space = false);
 	std::ostream & operator<<(std::ostream &, const std::unordered_set<Fastmath> &);
 
 	/** Prints three strings if the middle isn't null. */

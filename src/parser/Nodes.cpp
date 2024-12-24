@@ -1010,22 +1010,30 @@ namespace LL2W {
 	std::string CallNode::debugExtra() const {
 		std::stringstream out;
 		if (result) {
-			out << getResult() << "\e[2m = ";
+			std::print(out, "{} \e[2m=\e[22m ", getResult());
 		}
-		print(out, "\e[22;34m", tail_call_kind_map.at(tail), " ");
-		out << "\e[22;91mcall\e[39m" << fastmath;
-		if (!fastmath.empty()) {
-			out << "\e[2m .\e[22m";
+		if (tail != TailCallKind::None) {
+			std::print(out, "\e[34m{} \e[39m", tail_call_kind_map.at(tail));
 		}
-		print(out, " \e[34m", cconv_map.at(cconv), "\e[39;2m .\e[22m");
+		std::print(out, "\e[91mcall\e[39m");
+		for (Fastmath item: fastmath) {
+			std::print(out, " \e[34m{}\e[39m", fastmath_map.at(item));
+		}
+		if (cconv != CConv::ccc) {
+			std::print(out, " \e[34m{}\e[39m", cconv_map.at(cconv));
+		}
 		for (RetAttr attr: retattrs) {
-			out << " \e[34m" << retattr_map.at(attr) << "\e[39m";
+			std::print(out, " \e[34m{}\e[39m", retattr_map.at(attr));
 		}
-		print(out, " \e[34mdereferenceable\e[39;2m(\e[22m", dereferenceable, "\e[2m)\e[22m");
-		if (!retattrs.empty() || dereferenceable != -1) {
-			out << " \e[2m.\e[22m";
+		if (dereferenceable != -1) {
+			std::print(out, " \e[34mdereferenceable\e[39;2m(\e[22m{}\e[2m)\e[22m", dereferenceable);
 		}
-		print(out, " \e[34maddrspace\e[39;2m(\e[22m", addrspace, "\e[2m)\e[22m");
+		for (RetAttr item: retattrs) {
+			std::print(out, " \e[2m{}\e[22m", retattr_map.at(item));
+		}
+		if (addrspace != -1) {
+			std::print(out, " \e[34maddrspace\e[39;2m(\e[22m{}\e[2m)\e[22m", addrspace);
+		}
 		out << " " << *returnType;
 		if (argumentsExplicit) {
 			out << " \e[1;2m(\e[22m";

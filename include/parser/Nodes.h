@@ -281,7 +281,8 @@ namespace LL2W {
 			std::unordered_set<RetAttr> retattrs;
 			std::vector<ConstantPtr> constants;
 			std::vector<int> attributeIndices;
-			int dereferenceable = -1, addrspace = -1;
+			int dereferenceable = -1;
+			int addrspace = -1;
 
 			// For functions with varargs (and optionally for non-varargs functions), the function argument types can be
 			// specified after the function return type.

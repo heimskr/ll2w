@@ -307,10 +307,14 @@ namespace LL2W::Passes {
 			// If the call specified a result variable, move $r0 into that variable.
 			if (call->result) {
 				auto r0 = function.makePrecoloredVariable(WhyInfo::returnValueOffset, block);
+				if (return_type) {
+					info() << "return type is " << *return_type << " for " << instruction->debugExtra() << "\n";
+				} else {
+					info() << "return type is null for " << instruction->debugExtra() << "\n";
+				}
 				r0->type = return_type;
 				auto move = std::make_shared<MoveInstruction>(r0, function.getVariable(*call->result));
-				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)
-					->setDebug(*llvm)->extract();
+				function.insertBefore(instruction, move, "SetupCalls: move result from $r0", false)->setDebug(*llvm)->extract();
 				function.categories["SetupCalls:MoveFromResult"].insert(move);
 			}
 

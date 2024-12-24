@@ -55,3 +55,4 @@ report.tasks
 strace_out
 callgrind.*
 *.log
+*.tmp
