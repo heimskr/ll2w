@@ -4,7 +4,7 @@
 #define DEBUG_VARS
 // #define DEBUG_RENDER
 // #define DEBUG_SPILL
-#define DEBUG_SPLIT
+// #define DEBUG_SPLIT
 #define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS

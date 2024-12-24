@@ -10,7 +10,8 @@
 // #define SINGLE_FUNCTION "_ZN5Timer5queueElRKNSt3__18functionIFvvEEE"
 // #define SINGLE_FUNCTION "_GLOBAL__sub_I_Instructions.cpp"
 // #define SINGLE_FUNCTION "_Z3prcc"
-#define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
+// #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
+// #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"

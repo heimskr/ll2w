@@ -44,14 +44,9 @@ namespace LL2W::Passes {
 							throw std::runtime_error("Encountered hex escape near end of string");
 						}
 						text.push_back(static_cast<char>(Util::parseLong(std::string {next, *++begin}, 16)));
-					} else if (next == '\\') {
-						text.push_back('\\');
-					} else if (next == 'n') {
-						text.push_back('\n');
-					} else if (next == 'r') {
-						text.push_back('\r');
-					} else if (next == 't') {
-						text.push_back('\t');
+					} else if (next == '\\' || next == 'n' || next == 'r' || next == 't') {
+						text += '\\';
+						text += next;
 					} else {
 						throw std::runtime_error("Unknown escape: \\" + std::string(1, next));
 					}
@@ -68,7 +63,7 @@ namespace LL2W::Passes {
 
 			if (wasmParser.errorCount != 0) {
 				std::cerr << "\e[31mWASM parsing failed for ASM node at " << asm_node->location << "\e[39m\n";
-				std::cerr << "\e[31mFull text: [\e[1m" << *asm_node->contents << "\e[22m]\e[39m\n";
+				std::cerr << "\e[31mFull text: [\e[1m" << *asm_node->contents << "\e[22m] -> [\e[1m" << text << "\e[22m]\e[39m\n";
 			}
 
 			if (wasmParser.errorCount == 0 && !wasmLexer.failed) {
