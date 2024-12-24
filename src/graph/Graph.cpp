@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-// #define NO_RENDERING
+#define NO_RENDERING
 
 namespace LL2W {
 	Graph::Graph() = default;

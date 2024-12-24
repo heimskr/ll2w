@@ -230,11 +230,20 @@ namespace LL2W {
 		Node &spilled_node = interference[*spilled_var->id];
 		spilled_node.unlink();
 
+		std::vector<Node *> new_nodes;
+		new_nodes.reserve(new_vars.size());
+
 		for (const VariablePtr &new_var: new_vars) {
 			Node &new_node = interference.addNode(*new_var->id);
 			new_node.data = new_var;
 			new_node.colors = {new_var->registers.cbegin(), new_var->registers.cend()};
 			new_node.colorsNeeded = new_var->registersRequired();
+			new_nodes.emplace_back(&new_node);
+		}
+
+		size_t i = 0;
+		for (const VariablePtr &new_var: new_vars) {
+			Node &new_node = *new_nodes[i++];
 
 			auto visit_block = [&](BasicBlockPtr block) {
 				for (VariablePtr mentioned: block->mentioned) {
