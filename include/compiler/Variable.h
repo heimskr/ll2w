@@ -94,12 +94,12 @@ namespace LL2W {
 			void setID(ID);
 			void setType(TypePtr);
 			void setIsUtility(bool);
-			void setDefiningBlocks(const decltype(definingBlocks) &);
-			void setDefinitions(const decltype(definitions) &);
-			void setUses(const decltype(uses) &);
-			void setUsingBlocks(const decltype(usingBlocks) &);
+			void setDefiningBlocks(decltype(definingBlocks));
+			void setDefinitions(decltype(definitions));
+			void setUses(decltype(uses));
+			void setUsingBlocks(decltype(usingBlocks));
 			void setLastUse(decltype(lastUse));
-			void setRegisters(const decltype(registers) &);
+			void setRegisters(decltype(registers));
 
 			/** Returns true if the variable has one register and that register is an argument register. */
 			bool isArgumentRegister() const;

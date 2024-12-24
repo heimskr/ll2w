@@ -364,26 +364,26 @@ namespace LL2W {
 		}
 	}
 
-#define VARSETTER(method, type, param, field) \
+#define VARSETTER(method, type, field) \
 	void Variable::set##method(type param) { \
 		if (auto sparent = parent.lock()) { \
-			sparent->set##method(param); \
+			sparent->set##method(std::move(param)); \
 		} else { \
-			field = param; \
 			for (Variable *alias: aliases) { \
 				alias->field = param; \
 			} \
+			field = std::move(param); \
 		} \
 	}
 
-	VARSETTER(ID, ID, new_id, id)
-	VARSETTER(IsUtility, bool, new_utility, isUtility)
-	VARSETTER(DefiningBlocks, const decltype(Variable::definingBlocks) &, block, definingBlocks)
-	VARSETTER(Definitions, const decltype(Variable::definitions) &, defs, definitions)
-	VARSETTER(Uses, const decltype(Variable::uses) &, new_uses, uses)
-	VARSETTER(UsingBlocks, const decltype(Variable::usingBlocks) &, blocks, usingBlocks)
-	VARSETTER(LastUse, decltype(Variable::lastUse), use, lastUse);
-	VARSETTER(Registers, const decltype(Variable::registers) &, new_registers, registers);
+	VARSETTER(ID, ID, id)
+	VARSETTER(IsUtility, bool, isUtility)
+	VARSETTER(DefiningBlocks, decltype(Variable::definingBlocks), definingBlocks)
+	VARSETTER(Definitions, decltype(Variable::definitions), definitions)
+	VARSETTER(Uses, decltype(Variable::uses), uses)
+	VARSETTER(UsingBlocks, decltype(Variable::usingBlocks), usingBlocks)
+	VARSETTER(LastUse, decltype(Variable::lastUse), lastUse);
+	VARSETTER(Registers, decltype(Variable::registers), registers);
 
 	bool Variable::isArgumentRegister() const {
 		return registers.size() == 1 && WhyInfo::isArgumentRegister(*registers.begin());

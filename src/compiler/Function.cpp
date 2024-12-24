@@ -1554,7 +1554,7 @@ namespace LL2W {
 	void Function::computeLivenessTraditional() {
 		Timer timer{"ComputeLivenessTraditional"};
 		// https://www.classes.cs.uchicago.edu/archive/2004/spring/22620-1/docs/liveness.pdf, page 9
-		std::map<BasicBlock::Label, std::set<VariablePtr>> in, out, in_, out_;
+		std::map<BasicBlock::Label, std::unordered_set<VariablePtr>> in, out, in_, out_;
 		std::map<BasicBlock::Label, std::vector<BasicBlockPtr>> goes_to;
 
 		bool working;
