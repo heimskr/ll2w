@@ -42,9 +42,11 @@
 #include <sstream>
 #include <thread>
 
+#if defined(ANALYZE_MULTITHREADED) || defined(COMPILE_MULTITHREADED)
 namespace {
 	constexpr size_t PARALLELISM = 24;
 }
+#endif
 
 namespace LL2W {
 	struct GlobalData {
@@ -369,7 +371,7 @@ namespace LL2W {
 #ifdef SINGLE_FUNCTION
 			if (*function->name == "@" SINGLE_FUNCTION) {
 #endif
-				// info() << "Compiling " << *function->name << "...\n";
+				info() << "Compiling " << *function->name << "...\n";
 				function->compile();
 
 #ifdef SINGLE_FUNCTION
