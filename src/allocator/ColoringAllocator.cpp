@@ -142,11 +142,8 @@ namespace LL2W {
 			std::cerr << '\n';
 #endif
 			if (ptr->registers.empty()) {
-				std::set<int> assigned;
-				for (const int color: pair.second->colors) {
-					assigned.insert(color);
-				}
-				ptr->setRegisters(assigned);
+				const auto &colors = pair.second->colors;
+				ptr->setRegisters({colors.begin(), colors.end()});
 			}
 		}
 
@@ -218,9 +215,8 @@ namespace LL2W {
 
 	void ColoringAllocator::afterSpill(VariablePtr spilled_var, std::span<VariablePtr> new_vars) {
 		Timer timer{"ColoringAllocator::afterSpill"};
-		Node &spilled_node = interference[*spilled_var->id];
-		const std::string &spilled_id = *spilled_var->id;
 
+		Node &spilled_node = interference[*spilled_var->id];
 		spilled_node.unlink();
 
 		for (const VariablePtr &new_var: new_vars) {
@@ -229,17 +225,18 @@ namespace LL2W {
 
 		for (const VariablePtr &new_var: new_vars) {
 			auto visit_block = [&](BasicBlockPtr block) {
-				for (const VariablePtr &live: block->allLive) {
-					if (live != new_var && !live->allRegistersSpecial()) {
-						interference.link(*new_var->id, *live->id, true);
+				for (const VariablePtr &mentioned: block->mentioned) {
+					if (mentioned != new_var && !mentioned->allRegistersSpecial()) {
+						interference.link(*new_var->id, *mentioned->id, true);
 					}
 				}
 			};
 
-			visit_block(new_var->onlyDefiner());
+			BasicBlockPtr definer = new_var->onlyDefiner();
+			visit_block(definer);
 
 			for (const auto &weak_user: new_var->usingBlocks) {
-				if (BasicBlockPtr user = weak_user.lock()) {
+				if (BasicBlockPtr user = weak_user.lock(); user && user != definer) {
 					visit_block(user);
 				}
 			}
@@ -247,9 +244,9 @@ namespace LL2W {
 
 		for (const auto &weak_definer: spilled_var->definingBlocks) {
 			if (BasicBlockPtr definer = weak_definer.lock()) {
-				for (const VariablePtr &live: definer->allLive) {
-					if (live != spilled_var && !live->allRegistersSpecial()) {
-						interference.link(spilled_id, *live->id, true);
+				for (const VariablePtr &mentioned: definer->mentioned) {
+					if (mentioned != spilled_var && !mentioned->allRegistersSpecial()) {
+						spilled_node.link(interference[*mentioned->id], true);
 					}
 				}
 			}

@@ -20,11 +20,15 @@ namespace LL2W {
 		instruction->extract();
 
 		for (auto read_var: instruction->read) {
-			read.insert(read_var);
+			if (read.insert(read_var).second) {
+				mentioned.insert(std::move(read_var));
+			}
 		}
 
 		for (auto written_var: instruction->written) {
-			written.insert(written_var);
+			if (written.insert(written_var).second) {
+				mentioned.insert(std::move(written_var));
+			}
 		}
 
 		if (instruction->isPhi()) {
@@ -32,11 +36,15 @@ namespace LL2W {
 		}
 
 		for (auto read_var: instruction->read) {
-			nonPhiRead.insert(read_var);
+			if (nonPhiRead.insert(read_var).second) {
+				nonPhiMentioned.insert(std::move(read_var));
+			}
 		}
 
 		for (auto written_var: instruction->written) {
-			nonPhiWritten.insert(written_var);
+			if (nonPhiWritten.insert(written_var).second) {
+				nonPhiMentioned.insert(std::move(written_var));
+			}
 		}
 	}
 
@@ -49,8 +57,10 @@ namespace LL2W {
 
 		read.clear();
 		written.clear();
+		mentioned.clear();
 		nonPhiWritten.clear();
 		nonPhiRead.clear();
+		nonPhiMentioned.clear();
 
 		for (const InstructionPtr &instruction: instructions) {
 			extract(instruction);
@@ -62,8 +72,10 @@ namespace LL2W {
 	void BasicBlock::unextract() {
 		read.clear();
 		written.clear();
+		mentioned.clear();
 		nonPhiWritten.clear();
 		nonPhiRead.clear();
+		nonPhiMentioned.clear();
 		extracted = false;
 	}
 

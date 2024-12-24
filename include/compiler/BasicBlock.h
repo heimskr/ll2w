@@ -40,7 +40,12 @@ namespace LL2W {
 			int index = -1;
 			std::vector<Label> preds;
 			std::list<InstructionPtr> instructions;
-			std::set<VariablePtr> read, written, nonPhiWritten, nonPhiRead;
+			std::unordered_set<VariablePtr> read;
+			std::unordered_set<VariablePtr> written;
+			std::unordered_set<VariablePtr> mentioned;
+			std::unordered_set<VariablePtr> nonPhiWritten;
+			std::unordered_set<VariablePtr> nonPhiRead;
+			std::unordered_set<VariablePtr> nonPhiMentioned;
 			std::unordered_set<VariablePtr> liveIn, liveOut;
 			/** Contains everything in liveIn and liveOut. */
 			std::unordered_set<VariablePtr> allLive;
