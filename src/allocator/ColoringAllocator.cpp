@@ -220,7 +220,9 @@ namespace LL2W {
 		spilled_node.unlink();
 
 		for (const VariablePtr &new_var: new_vars) {
-			interference.addNode(*new_var->id);
+			Node &node = interference.addNode(*new_var->id);
+			node.data = new_var;
+			node.colors = {new_var->registers.cbegin(), new_var->registers.cend()};
 		}
 
 		for (const VariablePtr &new_var: new_vars) {

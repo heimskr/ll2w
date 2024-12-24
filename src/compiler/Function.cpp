@@ -1129,7 +1129,6 @@ namespace LL2W {
 	}
 
 	void Function::finalCompile() {
-		success() << "Starting final compilation.\n";
 		Timer timer{"FinalCompile"};
 		Passes::lowerInsertvalue(*this);
 		Passes::readjustStackSkip(*this);
