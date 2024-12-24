@@ -385,8 +385,11 @@ namespace LL2W {
 
 		for (const auto &[id, var]: function->variableStore) {
 			const Variable::ID parent_id = var->parentID();
-			// if (!var->registers.empty())
-			// 	continue;
+
+			if (var->allRegistersSpecial()) {
+				continue;
+			}
+
 			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
 				const auto index = bptr.lock()->index;
 				if (sets[index].emplace(parent_id).second) {
@@ -405,6 +408,10 @@ namespace LL2W {
 			auto &vec = vecs[block->index];
 			auto &set = sets[block->index];
 			for (const VariablePtr &var: block->allLive) {
+				if (var->allRegistersSpecial()) {
+					continue;
+				}
+
 				const Variable::ID parent_id = var->parentID();
 				if (set.emplace(parent_id).second) {
 					vec.emplace_back(parent_id);

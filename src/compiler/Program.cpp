@@ -1,5 +1,5 @@
 // #define ANALYZE_MULTITHREADED
-#define COMPILE_MULTITHREADED
+// #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 #define GRADUAL_CODE_PRINTING
 
@@ -13,6 +13,7 @@
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
 // #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
 // #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
+#define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -49,7 +50,7 @@ namespace {
 	constexpr size_t PARALLELISM = 24;
 #endif
 
-#ifdef GRADUAL_CODE_PRINTING
+#if defined(GRADUAL_CODE_PRINTING) && defined(COMPILE_MULTITHREADED) && !defined(SINGLE_FUNCTION)
 	std::mutex gradualCodePrintingMutex;
 #endif
 }
@@ -391,7 +392,6 @@ namespace LL2W {
 				function->debug();
 			}
 #elif defined(GRADUAL_CODE_PRINTING)
-				std::unique_lock lock(gradualCodePrintingMutex);
 				std::cout << function->toString() << std::endl;
 #endif
 		}

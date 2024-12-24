@@ -414,7 +414,7 @@ namespace LL2W {
 
 	Variable::ID Function::newLabel() {
 		auto *out = StringSet::intern("%#" + std::to_string(++lastArtificialLabel));
-		// if (*out == "%#11") {
+		// if (*out == "%#6") {
 		// 	raise(SIGTRAP);
 		// }
 		return out;
