@@ -15,21 +15,24 @@
 namespace LL2W::Passes {
 	int lowerRet(Function &function) {
 		Timer timer("LowerRet");
-		std::list<InstructionPtr> to_remove;
+		std::vector<InstructionPtr> to_remove;
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+		for (const InstructionPtr &instruction: function.linearInstructions) {
+			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm) {
 				continue;
 			}
+
 			if (llvm->getNodeType() == NodeType::Unreachable) {
 				to_remove.push_back(instruction);
+				continue;
 			}
+
 			if (llvm->getNodeType() != NodeType::Ret) {
 				continue;
 			}
 
-			RetNode *ret = dynamic_cast<RetNode *>(llvm->getNode());
+			auto *ret = dynamic_cast<RetNode *>(llvm->getNode());
 
 			BasicBlockPtr block = instruction->parent.lock();
 			if (!block) {
@@ -54,12 +57,13 @@ namespace LL2W::Passes {
 				// std::cerr << "Banishing " << *var << " in LowerRet.\n";
 				function.extraVariables.emplace(var->id, var);
 				if (var->multireg()) {
-					if (WhyInfo::returnValueCount < var->registers.size())
+					if (WhyInfo::returnValueCount < var->registers.size()) {
 						throw std::runtime_error("Too many registers for " + var->plainString() + " in LowerRet");
+					}
 					auto iter = var->registers.begin();
 					for (size_t i = 0; i < var->registers.size(); ++i) {
-						auto subvar = function.makePrecoloredVariable(*iter++, block);
-						auto retreg = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, block);
+						VariablePtr subvar = function.makePrecoloredVariable(*iter++, block);
+						VariablePtr retreg = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, block);
 						function.insertBefore(instruction, std::make_shared<MoveInstruction>(subvar, retreg), false)->setDebug(llvm)->extract();
 					}
 				} else {
@@ -68,8 +72,7 @@ namespace LL2W::Passes {
 			}
 
 			// Pop all the general-purpose registers that were saved in the prologue.
-			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend();
-			     iter != end; ++iter) {
+			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend(); iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
 				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(variable), false)->setDebug(llvm)->extract();
 			}
@@ -87,8 +90,9 @@ namespace LL2W::Passes {
 
 		function.reindexInstructions();
 
-		for (InstructionPtr &instruction: to_remove)
+		for (const InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return to_remove.size();
 	}

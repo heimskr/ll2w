@@ -132,6 +132,7 @@ namespace LL2W {
 		llvmFunction(function),
 		parent(program) {
 			name = StringSet::intern('@' + function->getName().str());
+			naked = function->hasFnAttribute(llvm::Attribute::Naked);
 			variadic = function->isVarArg();
 			arguments = new std::vector<FunctionArgument>;
 			for (const llvm::Argument &argument: function->args()) {
@@ -1145,6 +1146,7 @@ namespace LL2W {
 		Passes::lowerClobber(*this);
 		Passes::lowerStack(*this);
 		const bool naked = isNaked();
+		info() << "naked: " << naked << "\n";
 		if (!naked) {
 			Passes::insertPrologue(*this);
 		}
