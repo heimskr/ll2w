@@ -295,7 +295,18 @@ namespace LL2W::Passes {
 
 			// At this point, we're ready to insert the jump.
 			if (global_uptr) {
-				auto jump = std::make_shared<JumpInstruction>(global_uptr->name, true);
+				const std::string *target = global_uptr->name;
+
+				for (;;) {
+					if (auto iter = function.parent.aliases.find(target); iter != function.parent.aliases.end()) {
+						target = iter->second->aliasTo;
+						assert(target != nullptr);
+					} else {
+						break;
+					}
+				}
+
+				auto jump = std::make_shared<JumpInstruction>(target, true);
 				function.insertBefore(instruction, std::move(jump))->setDebug(*llvm)->extract();
 			} else {
 				auto jump = std::make_shared<JumpRegisterInstruction>(jump_var, true);
