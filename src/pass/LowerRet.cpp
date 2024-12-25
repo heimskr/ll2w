@@ -23,11 +23,6 @@ namespace LL2W::Passes {
 				continue;
 			}
 
-			if (llvm->getNodeType() == NodeType::Unreachable) {
-				to_remove.push_back(instruction);
-				continue;
-			}
-
 			if (llvm->getNodeType() != NodeType::Ret) {
 				continue;
 			}

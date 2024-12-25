@@ -1159,11 +1159,11 @@ namespace LL2W {
 			Passes::insertPrologue(*this);
 		}
 		Passes::loadArgumentsReadjust(*this);
+		Passes::removeUnreachable(*this);
 		if (!naked) {
 			Passes::lowerRet(*this);
 		}
 		Passes::lowerVarargsSecond(*this);
-		Passes::removeUnreachable(*this);
 		Passes::breakUpBigSets(*this);
 		Passes::makeCFG(*this);
 		computeLiveness();
