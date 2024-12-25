@@ -24,6 +24,7 @@
 // #define SINGLE_FUNCTION "strprint"
 // #define SINGLE_FUNCTION "_ZN8MBREntry5debugEv"
 // #define SINGLE_FUNCTION "_ZN6Paging6Tables5resetEb"
+// #define SINGLE_FUNCTION "_ZNSt3__14pairIKNS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEN8Thurisaz7CommandEEC2IRA5_KcRS9_TnNS_9enable_ifIXclsr10_CheckArgsE17__enable_implicitIT_T0_EEEbE4typeELb0EEEOSH_OSI_"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -380,7 +381,7 @@ namespace LL2W {
 		Waiter waiter(functions.size());
 
 		for (auto &[name, function]: functions) {
-			pool.add([this, &waiter, &function](ThreadPool &, size_t) {
+			pool.add([&](ThreadPool &, size_t) {
 				// info() << "Compiling " << *function->name << " ...\n";
 				function->compile();
 #ifdef GRADUAL_CODE_PRINTING
@@ -388,7 +389,8 @@ namespace LL2W {
 				std::cerr << function->toString() << std::endl;
 				lock.unlock();
 #endif
-				if (auto remaining = waiter--; remaining % 10 == 0 || remaining < 10) {
+				auto remaining = waiter--;
+				if (remaining % 100 == 0 || (remaining < 100 && remaining % 10 == 0) || remaining < 10) {
 					info() << "Remaining: " << remaining << "\n";
 				}
 			});
