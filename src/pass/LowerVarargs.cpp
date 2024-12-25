@@ -26,7 +26,7 @@ namespace LL2W::Passes {
 					}
 
 					GlobalValue *global = dynamic_cast<GlobalValue *>(call->name.get());
-					if (*global->name == "llvm.va_start") {
+					if (*global->name == "@llvm.va_start") {
 						function.comment(instruction, "llvm.va_start removed.");
 
 						if (call->constants.size() != 1) {
@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 						any_changed = true;
 						to_remove.push_back(instruction);
 						continue;
-					} else if (*global->name == "llvm.va_end") {
+					} else if (*global->name == "@llvm.va_end") {
 						to_remove.push_back(instruction);
 					}
 				}
