@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-#define NO_RENDERING
+// #define NO_RENDERING
 
 namespace LL2W {
 	Graph::Graph() = default;
@@ -195,7 +195,7 @@ namespace LL2W {
 	}
 
 	Node & Graph::addNode(Node *node) {
-		labelMap.insert({node->label(), node});
+		labelMap.emplace(node->label(), node);
 		nodes_.push_back(node);
 		return *node;
 	}
@@ -507,12 +507,23 @@ namespace LL2W {
 	std::string Graph::toDot(const std::string &direction) {
 		std::list<Node *> reflexives;
 		for (Node *node: nodes_) {
-			// node->rename("\"" + node->label() + "_i" + std::to_string(node->in_.size()) + "_o" +
-			// 	std::to_string(node->out_.size()) + "\"");
 			if (node->reflexive()) {
 				reflexives.push_back(node);
 			}
 		}
+
+		auto filter = [](std::string_view label) -> std::string {
+			if (label.starts_with("%")) {
+				// graphviz acts weird with labels that begin with %
+				label.remove_prefix(1);
+			}
+
+			if (label.size() >= 23) {
+				return std::string(label.substr(0, 20)) + "...";
+			}
+
+			return std::string(label);
+		};
 
 		std::ostringstream out;
 		out << "digraph rendered_graph {\n";
@@ -523,7 +534,7 @@ namespace LL2W {
 		if (!reflexives.empty()) {
 			out << "\tnode [shape = doublecircle];";
 			for (Node *node: reflexives) {
-				out << " \"" << node->label() << '"';
+				out << " \"" << filter(node->label()) << '"';
 			}
 			out << ";\n";
 		}
@@ -532,7 +543,7 @@ namespace LL2W {
 		bool any_added = false;
 		for (Node *node: nodes_) {
 			if (node->isolated()) {
-				out << " \"" << node->label() << '"';
+				out << " \"" << filter(node->label()) << '"';
 				any_added = true;
 			}
 		}
@@ -544,14 +555,14 @@ namespace LL2W {
 
 		for (const Node *node: nodes_) {
 			if (node->colors.size() == 1 && static_cast<size_t>(*node->colors.begin()) < colors.size()) {
-				out << "\t\"" << node->label() << "\" [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
+				out << "\t\"" << filter(node->label()) << "\" [fillcolor=" << colors.at(*node->colors.begin()) << "];\n";
 			}
 		}
 
 		for (const Node *node: nodes_) {
 			for (const Node *neighbor: node->out_) {
 				if (neighbor != node) {
-					out << "\t\"" << node->label() << "\" -> \"" << neighbor->label() << "\";\n";
+					out << "\t\"" << filter(node->label()) << "\" -> \"" << filter(neighbor->label()) << "\";\n";
 				}
 			}
 		}
@@ -565,7 +576,7 @@ namespace LL2W {
 		(void) out_path;
 		(void) direction;
 #else
-		std::ofstream out;
+		// std::string path = "/tmp/ll2w_graph_" + std::to_string(std::chrono::system_clock::now().time_since_epoch().count()) + ".dot";
 		std::string path = "/tmp/ll2w_graph_";
 		for (const char ch: out_path) {
 			if (std::isdigit(ch) || std::isalpha(ch) || ch == '_') {
@@ -573,11 +584,10 @@ namespace LL2W {
 			}
 		}
 		path += ".dot";
-		out.open(path);
-		out << toDot(direction);
-		out.close();
 
-		if (out_path.substr(0, 2) == "./") {
+		std::ofstream(path) << toDot(direction);
+
+		if (std::string_view(out_path).substr(0, 2) == "./") {
 			out_path = (std::filesystem::current_path() / out_path.substr(2)).string();
 		}
 
@@ -597,7 +607,7 @@ namespace LL2W {
 		const char *typearg = type.c_str();
 
 		if (fork() == 0) {
-			if (4096 <= allEdges().size()) {
+			if (4096 >= allEdges().size()) {
 				execlp("dot", "dot", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);
 			} else {
 				execlp("sfdp", "sfdp", "-x", "-Goverlap=scale", typearg, path.c_str(), "-o", out_path.c_str(), nullptr);

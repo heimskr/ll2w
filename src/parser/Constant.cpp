@@ -145,16 +145,21 @@ namespace LL2W {
 
 	Constant::operator std::string() const {
 		std::stringstream out;
-		out << std::string(*type);
+
+		if (type) {
+			out << std::string(*type);
+		} else {
+			out << "\e[31mnulltype\e[39m";
+		}
 
 		if (std::string parattrs_str = parattrs; !parattrs_str.empty()) {
-			out << " " << parattrs_str;
+			out << ' ' << parattrs_str;
 		}
 
 		if (value) {
-			out << " " << std::string(*value);
+			out << ' ' << std::string(*value);
 		} else if (conversion != Conversion::None) {
-			out << " \e[91m" << conversion_map.at(conversion) << "\e[0m \e[2m(\e[0m" << std::string(*conversionSource) << " to " << std::string(*conversionType) << "\e[2m)\e[0m";
+			out << " \e[91m" << conversion_map.at(conversion) << "\e[39m \e[2m(\e[22m" << std::string(*conversionSource) << " to " << std::string(*conversionType) << "\e[2m)\e[22m";
 		}
 
 		return out.str();
