@@ -2,22 +2,14 @@
 
 #include "parser/Enums.h"
 
+#include <format>
+
 namespace LL2W {
 	struct HasSize {
 		WASMSize size = WASMSize::Word;
 
-		HasSize(WASMSize size):
-			size(size) {}
+		HasSize(WASMSize);
 
-		inline std::string sizeSuffix() const {
-			switch (size) {
-				case WASMSize::Word:  return "";
-				case WASMSize::Half:  return " /h";
-				case WASMSize::Short: return " /s";
-				case WASMSize::Byte:  return " /b";
-				default:
-					return " /?";
-			}
-		}
+		std::string sizeSuffix() const;
 	};
 }

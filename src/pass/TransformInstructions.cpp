@@ -19,32 +19,30 @@ namespace LL2W::Passes {
 
 		for (InstructionPtr &instruction: function.linearInstructions) {
 			if (auto li = std::dynamic_pointer_cast<LoadIInstruction>(instruction)) {
-				const auto li_size = li->rd->type->width() / 8;
-				if (li_size == 4 || li_size == 2) {
+				if (li->size == WASMSize::Half || li->size == WASMSize::Short) {
 					// TODO: verify
 					auto var = function.newVariable(std::make_shared<PointerType>(IntType::make(64)), li->parent.lock());
 					auto set = std::make_shared<SetInstruction>(var, li->imm);
-					auto l = std::make_shared<LoadRInstruction>(var, li->rd, static_cast<WASMSize>(li_size));
+					auto l = std::make_shared<LoadRInstruction>(var, li->rd, li->size);
 					function.insertBefore(li, set)->setDebug(li->debugIndex)->extract();
 					function.insertBefore(li, l)->setDebug(li->debugIndex)->extract();
 					to_remove.push_back(li);
-				} else if (li_size == 3) {
+				} else if (li->size == WASMSize::I24) {
 					// Sometimes, if you have a packed struct, you might get something like
 					//     %14 = load i24, i24* %13
 					// which normally translates to something like
 					//     [$t9] -> $ta /3
 					// Why has no instructions for 24-bit loads, so we have to apply a mask here.
-					// TODO(typed): fix?
-					// li->size = 4;
+					li->size = WASMSize::Half;
 					auto andi = std::make_shared<AndIInstruction>(li->rd, 0xffffff, li->rd);
 					// I don't use insertAfter all that often. Neat.
 					function.insertAfter(li, andi)->setDebug(li->debugIndex)->extract();
-				} else continue;
+				} else {
+					continue;
+				}
 			} else if (auto l = std::dynamic_pointer_cast<LoadRInstruction>(instruction)) {
-				const auto l_size = l->rd->type->width() / 8;
-				if (l_size == 3) {
-					// TODO(typed): fix?
-					// l->size = 4;
+				if (l->size == WASMSize::I24) {
+					l->size = WASMSize::Half;
 					auto andi = std::make_shared<AndIInstruction>(l->rd, 0xffffff, l->rd);
 					function.insertAfter(l, andi)->setDebug(l->debugIndex)->extract();
 				}

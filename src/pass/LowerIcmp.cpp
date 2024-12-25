@@ -63,6 +63,7 @@ namespace LL2W::Passes {
 
 		VariablePtr rs = dynamic_cast<LocalValue *>(value1.get())->variable;
 		VariablePtr rd = node->variable;
+		rd->setType(IntType::make(1, false));
 
 		const ValueType type2 = value2->valueType();
 

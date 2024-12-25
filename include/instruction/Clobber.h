@@ -59,11 +59,11 @@ namespace LL2W {
 		VariablePtr source;
 		VariablePtr destination;
 
-		SemiUnclobber(int reg_, VariablePtr source_, VariablePtr destination_, int index_ = -1):
-			IntermediateInstruction(index_),
-			reg(reg_),
-			source(std::move(source_)),
-			destination(std::move(destination_)) {}
+		SemiUnclobber(int reg, VariablePtr source, VariablePtr destination, int index = -1):
+			IntermediateInstruction(index),
+			reg(reg),
+			source(std::move(source)),
+			destination(std::move(destination)) {}
 
 		std::string debugExtra() const override { return toString(); }
 		std::string toString() const override;

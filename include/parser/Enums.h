@@ -47,7 +47,7 @@ namespace LL2W {
 	enum class PrintType {Dec, Bin, Hex, Char, Full};
 	enum class QueryType {Memory};
 	enum class LogicType {Invalid, And, Or, Xor};
-	enum class WASMSize: uint8_t {Invalid = 0, Word = 8, Half = 4, Short = 2, Byte = 1};
+	enum class WASMSize: uint8_t {Invalid = 0, Word = 8, Half = 4, I24 = 3, Short = 2, Byte = 1};
 
 	extern const std::unordered_map<TypeType,     std::string> &type_map;
 	extern const std::unordered_map<ValueType,    std::string> &value_map;

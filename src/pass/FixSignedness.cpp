@@ -230,7 +230,7 @@ namespace LL2W::Passes {
 							info() << "New instruction: " << instruction << '\n';
 							info() << "Bitcast:         " << *bitcast << " \e[1m!" << bitcast->debugIndex << "\e[22m\n";
 #endif
-							function.insertBefore(instruction, bitcast);
+							// function.insertBefore(instruction, bitcast);
 							++list_iter;
 						} else {
 							list.erase(list_iter++);

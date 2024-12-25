@@ -22,6 +22,8 @@
 // #define SINGLE_FUNCTION "_ZN5Wasmc7Section7combineESt16initializer_listINSt3__117reference_wrapperIS0_EEE"
 // #define SINGLE_FUNCTION "_ZNSt3__13mapIl11ProcessDataNS_4lessIlEENS_9allocatorINS_4pairIKlS1_EEEEE11try_emplaceIJRlRPA256_mRmN6Paging6TablesERPvRKmEEENS5_INS_14__map_iteratorINS_15__tree_iteratorINS_12__value_typeIlS1_EEPNS_11__tree_nodeISP_SI_EElEEEEbEERS6_DpOT_"
 // #define SINGLE_FUNCTION "strprint"
+// #define SINGLE_FUNCTION "_ZN8MBREntry5debugEv"
+// #define SINGLE_FUNCTION "_ZN6Paging6Tables5resetEb"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -377,7 +379,7 @@ namespace LL2W {
 
 		for (auto &[name, function]: functions) {
 			pool.add([this, &waiter, &function](ThreadPool &, size_t) {
-				info() << "Compiling " << *function->name << " ...\n";
+				// info() << "Compiling " << *function->name << " ...\n";
 				function->compile();
 #ifdef GRADUAL_CODE_PRINTING
 				std::unique_lock lock(gradualCodePrintingMutex);

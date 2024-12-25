@@ -19,9 +19,10 @@
 
 namespace LL2W::Passes {
 	template <typename I = MoveInstruction>
-	void lowerBasicConversion(Function &function, InstructionPtr &instruction, ConversionNode *node) {
-		if (!node->value->isLocal())
+	static void lowerBasicConversion(Function &function, const InstructionPtr &instruction, ConversionNode *node) {
+		if (!node->value->isLocal()) {
 			throw std::runtime_error("Expected a pvar in " + conversion_map.at(node->conversionType) + " conversion");
+		}
 		VariablePtr source = dynamic_cast<LocalValue *>(node->value.get())->variable;
 		node->variable->setType(node->to);
 		auto new_instruction = std::make_shared<I>(source, node->variable);
@@ -31,20 +32,21 @@ namespace LL2W::Passes {
 
 	size_t lowerConversions(Function &function) {
 		Timer timer("LowerConversions");
-		std::list<InstructionPtr> to_remove;
+		std::vector<InstructionPtr> to_remove;
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
-			if (!llvm || llvm->getNodeType() != NodeType::Conversion)
+		for (const InstructionPtr &instruction: function.linearInstructions) {
+			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			if (!llvm || llvm->getNodeType() != NodeType::Conversion) {
 				continue;
+			}
 
 			ConversionNode *conversion = dynamic_cast<ConversionNode *>(llvm->getNode());
 			const Conversion type = conversion->conversionType;
 
 			switch (type) {
-				case Conversion::Bitcast:
-					lowerBasicConversion<BitcastInstruction>(function, instruction, conversion);
-					break;
+				// case Conversion::Bitcast:
+				// 	lowerBasicConversion<BitcastInstruction>(function, instruction, conversion);
+				// 	break;
 				case Conversion::Zext:
 				case Conversion::Ptrtoint:
 				case Conversion::Inttoptr:
@@ -64,18 +66,22 @@ namespace LL2W::Passes {
 			to_remove.push_back(instruction);
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (const InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return to_remove.size();
 	}
 
-	void lowerTrunc(Function &function, InstructionPtr &instruction, ConversionNode *conversion) {
-		if (!conversion->to->isInt())
+	void lowerTrunc(Function &function, const InstructionPtr &instruction, ConversionNode *conversion) {
+		if (!conversion->to->isInt()) {
 			throw std::runtime_error("Trunc conversion expected to convert to an integer type");
+		}
 
-		if (!conversion->value->isLocal())
+		if (!conversion->value->isLocal()) {
 			throw std::runtime_error("Expected a pvar in zext conversion");
+		}
+
 		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
 		VariablePtr destination = conversion->variable;
 
@@ -99,34 +105,36 @@ namespace LL2W::Passes {
 		}
 	}
 
-	void lowerSext(Function &function, InstructionPtr &instruction, ConversionNode *conversion) {
-		if (!conversion->from->isInt() || !conversion->to->isInt())
+	void lowerSext(Function &function, const InstructionPtr &instruction, ConversionNode *conversion) {
+		if (!conversion->from->isInt() || !conversion->to->isInt()) {
 			throw std::runtime_error("Expected from and to types to be integer types in sext conversion");
+		}
 
-		if (!conversion->value->isLocal())
+		if (!conversion->value->isLocal()) {
 			throw std::runtime_error("Expected a pvar in zext conversion");
+		}
+
 		VariablePtr source = dynamic_cast<LocalValue *>(conversion->value.get())->variable;
 		VariablePtr destination = conversion->variable;
 
 		const int from = conversion->from->width(), to = conversion->to->width();
 
+		assert(from == source->type->width());
+
 		// TODO(typed): update properly for the new typed sext instructions
 
 		if (from == 32 && to == 64) {
-			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
-				->setDebug(conversion)->extract();
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))->setDebug(conversion)->extract();
 		} else if (from == 16 && (to == 32 || to == 64)) {
-			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
-				->setDebug(conversion)->extract();
-			if (to == 32)
-				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
-					->setDebug(conversion)->extract();
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))->setDebug(conversion)->extract();
+			if (to == 32) {
+				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))->setDebug(conversion)->extract();
+			}
 		} else if (from == 8 && (to == 32 || to == 64)) {
-			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))
-				->setDebug(conversion)->extract();
-			if (to == 32)
-				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))
-					->setDebug(conversion)->extract();
+			function.insertBefore(instruction, std::make_shared<SextRInstruction>(source, destination))->setDebug(conversion)->extract();
+			if (to == 32) {
+				function.insertBefore(instruction, std::make_shared<LuiInstruction>(destination, 0))->setDebug(conversion)->extract();
+			}
 		} else if (to == 64 || to == 32 || to == 16) {
 			// Credit for formula: Sean Eron Anderson <seander@cs.stanford.edu>
 			// http://graphics.stanford.edu/~seander/bithacks.html
@@ -140,8 +148,10 @@ namespace LL2W::Passes {
 			auto xorr = std::make_shared<XorRInstruction>(source, m0, destination);
 			// $dst -= $m0
 			auto sub = std::make_shared<SubRInstruction>(destination, m0, destination);
-			for (const InstructionPtr &inst: std::initializer_list<InstructionPtr> {set1, shift, xorr, sub})
+
+			for (const InstructionPtr &inst: std::initializer_list<InstructionPtr> {set1, shift, xorr, sub}) {
 				function.insertBefore(instruction, inst)->setDebug(conversion)->extract();
+			}
 
 			if (to == 32) {
 				auto zero = function.makePrecoloredVariable(WhyInfo::zeroOffset, instruction->parent.lock());
@@ -152,9 +162,9 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, lui)->setDebug(conversion)->extract();
 				function.insertBefore(instruction, andi)->setDebug(conversion)->extract();
 			}
-		} else
-			throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported (" +
-				std::string(conversion->location) + ")");
+		} else {
+			throw std::runtime_error("Sign extensions to widths other than 64 and 32 are currently unsupported (" + std::string(conversion->location) + ")");
+		}
 		// TODO: support other destination widths
 	}
 }
