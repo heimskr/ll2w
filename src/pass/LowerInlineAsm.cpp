@@ -136,7 +136,8 @@ namespace LL2W::Passes {
 					map.emplace(StringSet::intern("$0"), asm_node->variable);
 				}
 
-				std::list<InstructionPtr> init_instructions;
+				std::vector<InstructionPtr> init_instructions;
+				init_instructions.reserve(split_constraints.size());
 
 				i = 0;
 				for (; constr_iter != end && *constr_iter == "r"; ++constr_iter) {
@@ -144,11 +145,15 @@ namespace LL2W::Passes {
 					VariablePtr var;
 					if (constant->value->isIntLike()) {
 						var = function.newVariable(constant->type);
-						init_instructions.push_back(std::make_shared<SetInstruction>(var, constant->value->intValue()));
-					} else if (constant->value->valueType() == ValueType::Local) {
-						var = dynamic_cast<LocalValue *>(constant->value.get())->variable;
+						init_instructions.emplace_back(std::make_shared<SetInstruction>(var, constant->value->intValue()));
+					} else if (constant->value->isLocal()) {
+						var = dynamic_cast<LocalValue &>(*constant->value).variable;
+					} else if (constant->value->isGlobal()) {
+						var = function.newVariable(constant->type);
+						init_instructions.emplace_back(std::make_shared<SetInstruction>(var, dynamic_cast<GlobalValue &>(*constant->value).name));
 					} else {
-						throw std::runtime_error("Unhandled value type in asm constraints: " + std::to_string(static_cast<int>(constant->value->valueType())));
+						error() << llvm->debugExtra() << '\n';
+						throw std::runtime_error("Unhandled value type in asm constraints: " + value_map.at(constant->value->valueType()));
 					}
 
 					map.emplace(StringSet::intern("$" + std::to_string(i + output_count)), var);
@@ -163,7 +168,7 @@ namespace LL2W::Passes {
 						InstructionPtr comment = std::make_shared<Comment>("*init start");
 						function.insertAfter(last, comment);
 						last = comment;
-						for (InstructionPtr &to_add: init_instructions) {
+						for (const InstructionPtr &to_add: init_instructions) {
 							function.insertAfter(last, to_add)->setDebug(asm_node)->extract();
 							last = to_add;
 						}
