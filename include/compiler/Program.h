@@ -26,10 +26,11 @@ namespace llvm {
 }
 
 namespace LL2W {
-	struct ArrayValue;
-	class  ASTNode;
-	struct StructValue;
+	class ASTNode;
 	class Value;
+	struct ArrayValue;
+	struct StructType;
+	struct StructValue;
 
 	class Program {
 		private:
@@ -39,7 +40,7 @@ namespace LL2W {
 
 			void handleSets(const MetadataDef &);
 			void handleLists(const MetadataDef &);
-			std::string outputStruct(const StructValue &);
+			std::string outputStruct(std::shared_ptr<StructType>, const StructValue &);
 			std::string valuePrefix(size_t bitwidth);
 			std::string outputValue(const TypePtr &type, const ValuePtr &value);
 			std::string outputArray(const ArrayValue &);

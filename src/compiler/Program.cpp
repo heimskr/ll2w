@@ -74,10 +74,12 @@ namespace LL2W {
 	struct GlobalData {
 		ConstantPtr constant;
 		ValuePtr value;
+		TypePtr type;
 		ASTLocation location;
-		GlobalData(ConstantPtr constant, ValuePtr value, ASTLocation location):
+		GlobalData(ConstantPtr constant, ValuePtr value, TypePtr type, ASTLocation location):
 			constant(std::move(constant)),
 			value(std::move(value)),
+			type(std::move(type)),
 			location(std::move(location)) {}
 	};
 
@@ -442,6 +444,7 @@ namespace LL2W {
 #endif
 			out << pair.second->toString() << "\n";
 		}
+
 		return out.str();
 	}
 
@@ -452,11 +455,6 @@ namespace LL2W {
 		for (const std::pair<const std::string, GlobalVarDef *> &pair: globals) {
 			const std::string &name = pair.first;
 			GlobalVarDef *global = pair.second;
-
-			if (global->linkage == Linkage::External) {
-				continue;
-			}
-
 			ConstantPtr constant = global->constant;
 
 			if (!constant) {
@@ -465,19 +463,18 @@ namespace LL2W {
 			}
 
 			constant = constant->convert();
-			global_data.try_emplace(name, constant, constant->value, global->location);
+			global_data.try_emplace(name, constant, constant->value, global->type, global->location);
 		}
 
 		if (auto iter = global_data.find("@llvm.global_ctors"); iter != global_data.end()) {
 			const GlobalData &def = iter->second;
-			if (auto *array = dynamic_cast<const ArrayType *>(def.constant->type.get())) {
+			if (auto *array = dynamic_cast<const ArrayType *>(def.type.get())) {
 				out << "%align 8\n\n@__ctors_start\n%8b llvm.global_ctors\n\n";
 				out << "@__ctors_end\n%8b llvm.global_ctors + " << (24 * array->count) << "\n\n";
-			} else if (!def.constant->type) {
+			} else if (!def.type) {
 				throw std::runtime_error("@llvm.global_ctors was expected to be an array but has no type");
 			} else {
-				throw std::runtime_error("@llvm.global_ctors was expected to be an array but is " +
-					def.constant->type->toString());
+				throw std::runtime_error("@llvm.global_ctors was expected to be an array but is " + def.type->toString());
 			}
 		}
 
@@ -487,7 +484,7 @@ namespace LL2W {
 			changed = false;
 			for (const auto &[name, data]: global_data) {
 				if (data.value) {
-					std::string stringified = outputValue(data.constant->type, data.value);
+					std::string stringified = outputValue(data.type, data.value);
 					if (!stringified.empty()) {
 						global_strings.emplace(name, std::move(stringified));
 						changed = true;
@@ -528,7 +525,7 @@ namespace LL2W {
 		}
 	}
 
-	std::string Program::outputStruct(const StructValue &structval) {
+	std::string Program::outputStruct(std::shared_ptr<StructType> struct_type, const StructValue &structval) {
 		std::string out;
 		bool first = true;
 		const bool packed = structval.packed;
@@ -551,8 +548,9 @@ namespace LL2W {
 				out += outputValue(constant->type, constant->value);
 			}
 		} else {
-			auto snode = std::make_shared<StructNode>(types, packed? StructShape::Packed : StructShape::Default);
-			auto stype = std::make_shared<StructType>(snode);
+			// auto snode = std::make_shared<StructNode>(types, StructShape::Default);
+			// snode->name = structval.
+			// auto stype = std::make_shared<StructType>(snode);
 			int sum = 0, i = 0;
 			for (const ConstantPtr &constant: constants) {
 				if (first) {
@@ -560,7 +558,7 @@ namespace LL2W {
 				} else {
 					out += '\n';
 				}
-				const int offset = PaddedStructs::getOffset(stype, i++) / 8;
+				const int offset = PaddedStructs::getOffset(struct_type, i++) / 8;
 				const int difference = offset - sum;
 				if (difference < 0) {
 					throw std::runtime_error("Difference between struct offset and total width is negative");
@@ -614,7 +612,7 @@ namespace LL2W {
 				}
 				return "%1b 0";
 			case ValueType::Struct:
-				return outputStruct(*dynamic_cast<StructValue *>(value.get()));
+				return outputStruct(std::dynamic_pointer_cast<StructType>(type), dynamic_cast<StructValue &>(*value));
 			case ValueType::Global: {
 				const std::string *name = dynamic_cast<GlobalValue *>(value.get())->name;
 				referencedGlobals.insert(*name);

@@ -7,29 +7,43 @@
 #include "parser/Parser.h"
 
 namespace LL2W {
-	StructNode::StructNode(std::initializer_list<TypePtr>  types_, StructShape shape_):
-		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types(types_) {}
+	StructNode::StructNode(std::initializer_list<TypePtr>  types, StructShape shape):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""),
+		name(StringSet::intern("[anon]")),
+		shape(shape),
+		types(types) {}
 
-	StructNode::StructNode(const std::vector<TypePtr> &types_, StructShape shape_):
-		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types(types_) {}
+	StructNode::StructNode(std::vector<TypePtr> types, StructShape shape):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""),
+		name(StringSet::intern("[anon]")),
+		shape(shape),
+		types(std::move(types)) {}
 
-	StructNode::StructNode(StructShape shape_):
-		ASTNode(llvmParser, LLVM_STRUCTDEF, ""), name(StringSet::intern("[anon]")), shape(shape_), types{} {}
+	StructNode::StructNode(StructShape shape):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, ""),
+		name(StringSet::intern("[anon]")),
+		shape(shape),
+		types{} {}
 
-	StructNode::StructNode(StructShape shape_, ASTNode *left, ASTNode *types_):
-	ASTNode(llvmParser, LLVM_STRUCTDEF, left->lexerInfo), name(StringSet::intern(left->extractName())), shape(shape_) {
-		if (left->symbol == LLVMTOK_CLASSVAR)
-			form = StructForm::Class;
-		else if (left->symbol == LLVMTOK_UNIONVAR)
-			form = StructForm::Union;
-		delete left;
-		addTypes(types_);
-	}
+	StructNode::StructNode(StructShape shape, ASTNode *left, ASTNode *types):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, left->lexerInfo),
+		name(StringSet::intern(left->extractName())),
+		shape(shape) {
+			if (left->symbol == LLVMTOK_CLASSVAR) {
+				form = StructForm::Class;
+			} else if (left->symbol == LLVMTOK_UNIONVAR) {
+				form = StructForm::Union;
+			}
+			delete left;
+			addTypes(types);
+		}
 
-	StructNode::StructNode(StructShape shape_, ASTNode *types_):
-	ASTNode(llvmParser, LLVM_STRUCTDEF, "[anon]"), name(StringSet::intern("[anon]")), shape(shape_) {
-		addTypes(types_);
-	}
+	StructNode::StructNode(StructShape shape, ASTNode *types):
+		ASTNode(llvmParser, LLVM_STRUCTDEF, "[anon]"),
+		name(StringSet::intern("[anon]")),
+		shape(shape) {
+			addTypes(types);
+		}
 
 	void StructNode::addTypes(ASTNode *types_) {
 		if (types_) {

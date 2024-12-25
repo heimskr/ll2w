@@ -19,8 +19,8 @@ namespace LL2W {
 			StructForm form = StructForm::Struct;
 			std::vector<TypePtr> types;
 
-			StructNode(std::initializer_list<TypePtr>  , StructShape);
-			StructNode(const     std::vector<TypePtr> &, StructShape);
+			StructNode(std::initializer_list<TypePtr>, StructShape);
+			StructNode(std::vector<TypePtr>, StructShape);
 			StructNode(StructShape);
 
 			StructNode(StructShape, ASTNode *left, ASTNode *types_);
