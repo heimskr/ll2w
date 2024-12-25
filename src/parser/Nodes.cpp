@@ -1817,8 +1817,8 @@ namespace LL2W {
 	InsertValueNode::InsertValueNode(const llvm::InsertValueInst &inst) {
 		Timer timer{"ConstructInsertValueNode"};
 		result = tryOperandName(inst);
-		llvm::Value *inserted = inst.getOperand(0);
-		llvm::Value *accessed = inst.getOperand(1);
+		llvm::Value *inserted = inst.getOperand(1);
+		llvm::Value *accessed = inst.getOperand(0);
 		aggregateType = Type::fromLLVM(*accessed->getType());
 		aggregateValue = Constant::fromLLVM(*accessed)->value;
 		type = Type::fromLLVM(*inserted->getType()); // TODO: verify, should this be the type of the instruction itself?

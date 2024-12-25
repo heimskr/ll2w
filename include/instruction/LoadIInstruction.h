@@ -1,13 +1,14 @@
 #pragma once
 
+#include "instruction/HasSize.h"
 #include "instruction/IType.h"
 
 namespace LL2W {
 	/**
 	 * [imm] -> $rd
 	 */
-	struct LoadIInstruction: IType {
-		LoadIInstruction(Immediate imm_, VariablePtr rd_, int index_ = -1);
+	struct LoadIInstruction: IType, HasSize {
+		LoadIInstruction(Immediate imm, VariablePtr rd, WASMSize);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

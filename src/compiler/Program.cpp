@@ -18,7 +18,14 @@
 // #define SINGLE_FUNCTION "__cxx_global_var_init.118"
 // #define SINGLE_FUNCTION "_ZN6Kernel4loopEv"
 // #define SINGLE_FUNCTION "_ZL11_out_buffercPvmm"
-#define SINGLE_FUNCTION "fctprintf"
+// #define SINGLE_FUNCTION "fctprintf"
+// #define SINGLE_FUNCTION "_ZN5Wasmc7Section7combineESt16initializer_listINSt3__117reference_wrapperIS0_EEE"
+// #define SINGLE_FUNCTION "_ZNSt3__13mapIl11ProcessDataNS_4lessIlEENS_9allocatorINS_4pairIKlS1_EEEEE11try_emplaceIJRlRPA256_mRmN6Paging6TablesERPvRKmEEENS5_INS_14__map_iteratorINS_15__tree_iteratorINS_12__value_typeIlS1_EEPNS_11__tree_nodeISP_SI_EElEEEEbEERS6_DpOT_"
+#define SINGLE_FUNCTION "strprint"
+
+#ifdef SINGLE_FUNCTION
+#undef COMPILE_MULTITHREADED
+#endif
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
@@ -53,7 +60,7 @@
 
 namespace {
 #if defined(ANALYZE_MULTITHREADED) || defined(COMPILE_MULTITHREADED)
-	constexpr size_t PARALLELISM = 12;
+	constexpr size_t PARALLELISM = 24;
 #endif
 
 #if defined(GRADUAL_CODE_PRINTING) && defined(COMPILE_MULTITHREADED) && !defined(SINGLE_FUNCTION)
@@ -375,16 +382,16 @@ namespace LL2W {
 			pool.add([this, &waiter, &function, &oss](ThreadPool &, size_t) {
 				info(oss) << "Compiling " << *function->name << " ...\n";
 				function->compile();
-				renderedFunctions.withLock([&] {
-					renderedFunctions[function->name] = function->toString();
-				});
+				// renderedFunctions.withLock([&] {
+				// 	renderedFunctions[function->name] = function->toString();
+				// });
 
 #ifdef GRADUAL_CODE_PRINTING
 				std::unique_lock lock(gradualCodePrintingMutex);
 				oss << function->toString() << std::endl;
 				lock.unlock();
 #endif
-				function->shrink();
+				// function->shrink();
 
 				if (auto remaining = waiter--; remaining % 10 == 0) {
 					info(oss) << "Remaining: " << remaining << "\n";

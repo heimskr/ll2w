@@ -379,58 +379,59 @@ namespace LL2W {
 		}
 	}
 
-	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_):
-	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo) {
+	WASMMemoryNode::WASMMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+	WASMInstructionNode(sym), rs(rs_->lexerInfo), rd(rd_->lexerInfo), isByte(!!byte_) {
 		delete rs_;
 		delete rd_;
+		delete byte_;
 	}
 
-	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_):
-		WASMMemoryNode(WASM_COPYNODE, rs_, rd_) {}
+	WASMCopyNode::WASMCopyNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+		WASMMemoryNode(WASM_COPYNODE, rs_, rd_, byte_) {}
 
 	std::string WASMCopyNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]");
+		return dim("[") + cyan(*rs) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMCopyNode::operator std::string() const {
-		return "[" + *rs + "] -> [" + *rd + "]";
+		return "[" + *rs + "] -> [" + *rd + "]" + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMCopyNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd));
+		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd), isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
-	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_):
-		WASMMemoryNode(WASM_LOADNODE, rs_, rd_) {}
+	WASMLoadNode::WASMLoadNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+		WASMMemoryNode(WASM_LOADNODE, rs_, rd_, byte_) {}
 
 	std::string WASMLoadNode::debugExtra() const {
-		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd);
+		return dim("[") + cyan(*rs) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
 	}
 
 	WASMLoadNode::operator std::string() const {
-		return "[" + *rs + "] -> " + *rd;
+		return "[" + *rs + "] -> " + *rd + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLoadNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd));
+		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd), isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
-	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_):
-		WASMMemoryNode(WASM_STORENODE, rs_, rd_) {}
+	WASMStoreNode::WASMStoreNode(ASTNode *rs_, ASTNode *rd_, ASTNode *byte_):
+		WASMMemoryNode(WASM_STORENODE, rs_, rd_, byte_) {}
 
 	std::string WASMStoreNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]");
+		return cyan(*rs) + dim(" -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMStoreNode::operator std::string() const {
-		return *rs + " -> [" + *rd + "]";
+		return *rs + " -> [" + *rd + "]" + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMStoreNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd));
+		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd), isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
 	WASMSetNode::WASMSetNode(ASTNode *imm_, ASTNode *rd_):
@@ -451,56 +452,59 @@ namespace LL2W {
 		return std::make_unique<SetInstruction>(convertVariable(function, map, rd), imm);
 	}
 
-	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_):
-	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMLiNode::WASMLiNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
+	WASMInstructionNode(WASM_LINODE), rd(rd_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete imm_;
 		delete rd_;
+		delete byte_;
 	}
 
 	std::string WASMLiNode::debugExtra() const {
-		return dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd);
+		return dim("[") + colorize(imm) + dim("] -> ") + cyan(*rd) + (isByte? " /b" : "");
 	}
 
 	WASMLiNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> " + *rd;
+		return "[" + toString(imm) + "] -> " + *rd + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLiNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<LoadIInstruction>(imm, convertVariable(function, map, rd));
+		return std::make_unique<LoadIInstruction>(imm, convertVariable(function, map, rd), isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
-	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_):
-	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)) {
+	WASMSiNode::WASMSiNode(ASTNode *rs_, ASTNode *imm_, ASTNode *byte_):
+	WASMInstructionNode(WASM_SINODE), rs(rs_->lexerInfo), imm(getImmediate(imm_)), isByte(!!byte_) {
 		delete rs_;
 		delete imm_;
+		delete byte_;
 	}
 
 	std::string WASMSiNode::debugExtra() const {
-		return cyan(*rs) + dim(" -> [") + colorize(imm) + dim("]");
+		return cyan(*rs) + dim(" -> [") + colorize(imm) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMSiNode::operator std::string() const {
-		return *rs + " -> [" + toString(imm) + "]";
+		return *rs + " -> [" + toString(imm) + "]" + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMSiNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<StoreIInstruction>(convertVariable(function, map, rs), imm);
+		return std::make_unique<StoreIInstruction>(convertVariable(function, map, rs), imm, isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
-	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_): WASMLiNode(imm_, rd_) {
-		symbol = WASM_LNINODE;
-	}
+	WASMLniNode::WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_):
+		WASMLiNode(imm_, rd_, byte_) {
+			symbol = WASM_LNINODE;
+		}
 
 	std::string WASMLniNode::debugExtra() const {
-		return dim("[") + colorize(imm) + dim("] -> [") + cyan(*rd) + dim("]");
+		return dim("[") + colorize(imm) + dim("] -> [") + cyan(*rd) + dim("]") + (isByte? " /b" : "");
 	}
 
 	WASMLniNode::operator std::string() const {
-		return "[" + toString(imm) + "] -> [" + *rd + "]";
+		return "[" + toString(imm) + "] -> [" + *rd + "]" + (isByte? " /b" : "");
 	}
 
 	std::unique_ptr<WhyInstruction> WASMLniNode::convert(Function &function, VarMap &map) {
-		return std::make_unique<LoadIndirectIInstruction>(imm, convertVariable(function, map, rd));
+		return std::make_unique<LoadIndirectIInstruction>(imm, convertVariable(function, map, rd), isByte? WASMSize::Byte : WASMSize::Word);
 	}
 
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rt_):

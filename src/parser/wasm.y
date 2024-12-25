@@ -125,6 +125,8 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_IO "io"
 %token WASMTOK_DI "%di"
 %token WASMTOK_EI "%ei"
+%token WASMTOK_BYTE "/b"
+%token WASMTOK_HALF "/h"
 %token WASMTOK_REG
 %token WASMTOK_NUMBER
 %token WASMTOK_CHAR
@@ -185,23 +187,24 @@ op_srlii: immediate ">>>" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $
 
 op_sraii: immediate ">>" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $3, $5); D($4); };
 
-op_c: "[" reg "]" "->" "[" reg "]" { $$ = new WASMCopyNode($2, $6); D($1, $3, $4, $5, $7); };
+op_c: "[" reg "]" "->" "[" reg "]" _byte { $$ = new WASMCopyNode($2, $6, $8); D($1, $3, $4, $5, $7); };
+_byte: "/b" | { $$ = nullptr; };
 
-op_l: "[" reg "]" "->" reg { $$ = new WASMLoadNode($2, $5); D($1, $3, $4); };
+op_l: "[" reg "]" "->" reg _byte { $$ = new WASMLoadNode($2, $5, $6); D($1, $3, $4); };
 
-op_s: reg "->" "[" reg "]" { $$ = new WASMStoreNode($1, $4); D($2, $3, $5); };
+op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3, $5); };
 
 op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 
 op_divii: immediate "/" reg "->" reg { $$ = new WASMDiviINode($1, $3, $5); D($2, $4); };
 
-op_li: "[" immediate "]" "->" reg { $$ = new WASMLiNode($2, $5); D($1, $3, $4); };
+op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
 
-op_si: reg "->" "[" immediate "]" { $$ = new WASMSiNode($1, $4); D($2, $3, $5); };
+op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 
 op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6); D($3, $5); };
 
-op_lni: "[" immediate "]" "->" "[" reg "]" { $$ = new WASMLniNode($2, $6); D($1, $3, $4, $5, $7); };
+op_lni: "[" immediate "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
 
 op_trans: "translate" reg "->" reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
 

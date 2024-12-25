@@ -1,11 +1,12 @@
 #pragma once
 
+#include "instruction/HasSize.h"
 #include "instruction/IType.h"
 
 namespace LL2W {
 	/** $rs -> [imm] */
-	struct StoreIInstruction: IType {
-		StoreIInstruction(VariablePtr rs_, Immediate imm_, int index_ = -1);
+	struct StoreIInstruction: IType, HasSize {
+		StoreIInstruction(VariablePtr rs, Immediate imm, WASMSize);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

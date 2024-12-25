@@ -1072,6 +1072,7 @@ namespace LL2W {
 		Timer timer{"InitialCompile"};
 		extractBlocks();
 		makeInitialDebugIndex();
+		Passes::makeCFG(*this);
 		Passes::ignoreIntrinsics(*this);
 		Passes::insertStackSkip(*this);
 		Passes::fillLocalValues(*this);

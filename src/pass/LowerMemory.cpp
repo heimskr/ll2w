@@ -22,7 +22,7 @@
 
 namespace LL2W::Passes {
 	size_t lowerMemory(Function &function) {
-		Timer timer("LowerMemory");
+		Timer timer{"LowerMemory"};
 		size_t replaced_count = 0;
 		std::list<InstructionPtr> to_remove;
 
@@ -59,7 +59,7 @@ namespace LL2W::Passes {
 			throw std::runtime_error("Constant lacks value in lowerLoad: " + std::string(*converted));
 		}
 
-		const int size = Util::updiv(node->type->width(), 8);
+		const auto size = static_cast<WASMSize>(Util::updiv(node->type->width(), 8));
 		const ValueType value_type = converted->value->valueType();
 
 		std::string prefix = "LowerMemory(load @ " + std::string(node->location) + "): ";
@@ -117,7 +117,7 @@ namespace LL2W::Passes {
 		ConstantPtr source_constant = node->source->convert();
 		ValuePtr source_value = source_constant->value;
 		TypePtr source_type = source_constant->type;
-		auto size = Util::updiv(source_type->width(), 8);
+		const auto size = static_cast<WASMSize>(Util::updiv(source_type->width(), 8));
 		const ValueType value_type = source_value->valueType();
 
 		if (source_value->isIntLike()) {
@@ -153,7 +153,7 @@ namespace LL2W::Passes {
 				if (symsize == 1 || symsize == 8) {
 					InstructionPtr store;
 					try {
-						store = std::make_shared<StoreIInstruction>(m1, global->name, symsize);
+						store = std::make_shared<StoreIInstruction>(m1, global->name, static_cast<WASMSize>(symsize));
 					} catch (const std::out_of_range &) {
 						throw std::runtime_error("Couldn't find global variable @" + *global->name);
 					}
@@ -162,7 +162,7 @@ namespace LL2W::Passes {
 				} else if (symsize == 2 || symsize == 4) {
 					VariablePtr new_var = function.newVariable(node->destination->type, instruction->parent.lock());
 					function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name), "LowerMemory: global -> temp")->setDebug(&llvm)->extract();
-					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(m1, new_var, symsize), "LowerMemory: $m1 -> [temp]")->setDebug(&llvm)->extract();
+					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(m1, new_var, static_cast<WASMSize>(symsize)), "LowerMemory: $m1 -> [temp]")->setDebug(&llvm)->extract();
 				} else {
 					throw std::runtime_error("$m1 -> [global] failed: invalid symbol size: " + std::to_string(symsize));
 				}
@@ -203,9 +203,9 @@ namespace LL2W::Passes {
 					auto set = std::make_shared<SetInstruction>(new_var, global->name);
 					function.insertBefore(instruction, set, "LowerMemory: " + svar->plainString() + " -> [global]")->setDebug(&llvm)->extract();
 					set->setOriginalValue(converted->value);
-					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(svar, new_var, symsize))->setDebug(&llvm)->extract();
+					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(svar, new_var, static_cast<WASMSize>(symsize)))->setDebug(&llvm)->extract();
 				} else {
-					auto store = std::make_shared<StoreIInstruction>(svar, global->name, symsize);
+					auto store = std::make_shared<StoreIInstruction>(svar, global->name, static_cast<WASMSize>(symsize));
 					function.insertBefore(instruction, store, "LowerMemory: " + svar->plainString() + " -> [global]")->setDebug(&llvm)->extract();
 				}
 			} else if (converted->value->isIntLike()) {

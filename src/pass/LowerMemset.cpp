@@ -15,26 +15,30 @@
 
 namespace LL2W::Passes {
 	size_t lowerMemset(Function &function) {
-		Timer timer("LowerMemset");
+		Timer timer{"LowerMemset"};
 		size_t replaced = 0;
-		std::list<InstructionPtr> to_remove, &linear = function.linearInstructions;
+		auto &linear = function.linearInstructions;
+		std::vector<InstructionPtr> to_remove;
 
 		for (auto iter = linear.begin(), end = linear.end(); iter != end;) {
-			InstructionPtr &instruction = *iter;
+			const InstructionPtr &instruction = *iter;
 			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || llvm->getNodeType() != NodeType::Call) {
 				++iter;
 				continue;
 			}
+
 			CallNode *call = dynamic_cast<CallNode *>(llvm->getNode());
 			if (!call->name->isGlobal()) {
 				++iter;
 				continue;
 			}
+
 			BasicBlockPtr block = instruction->parent.lock();
 			GlobalValue *global = dynamic_cast<GlobalValue *>(call->name.get());
-			const std::string &name = *global->name;
-			if (name.substr(0, sizeof("llvm.memset.") - 1) != "llvm.memset.") {
+			std::string_view name(*global->name);
+
+			if (!name.starts_with("llvm.memset.")) {
 				++iter;
 				continue;
 			}
@@ -51,49 +55,59 @@ namespace LL2W::Passes {
 					++iter;
 					continue;
 				} catch (const std::exception &err) {
-					error() << "Failed to replace memset.p0i8.i64 intrinsic: " << err.what() << "\n";
+					error() << "Failed to replace memset.p0i8.i64 intrinsic: " << err.what() << '\n';
 				}
-			} else throw std::runtime_error("Unhandled memset intrinsic: " + name);
+			} else {
+				throw std::runtime_error("Unhandled memset intrinsic: " + std::string(name));
+			}
+
 			++iter;
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (const InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return replaced;
 	}
 
-	void setupMemsetValue(Function &function, const ConstantPtr &constant, std::shared_ptr<Instruction> &instruction,
-	std::shared_ptr<Variable> &variable, bool shouldLoad) {
+	void setupMemsetValue(Function &function, const ConstantPtr &constant, const InstructionPtr &instruction, VariablePtr &variable, bool shouldLoad) {
 		ValuePtr value = constant->value;
 		if (value->isIntLike()) {
 			variable = function.newVariable(constant->type);
 			auto set = std::make_shared<SetInstruction>(variable, value->intValue(false));
 			set->setOriginalValue(value);
 			function.insertBefore(instruction, set)->setDebug(*instruction)->extract();
-		} else if (value->isLocal()) {
+			return;
+		}
+
+		if (value->isLocal()) {
 			variable = dynamic_cast<LocalValue *>(value.get())->getVariable(function);
-		} else if (value->isGlobal()) {
+			return;
+		}
+
+		if (value->isGlobal()) {
 			GlobalValue &global = *dynamic_cast<GlobalValue *>(value.get());
 			variable = function.newVariable(constant->type);
 			if (shouldLoad) {
 				auto lock = function.parent.getLock();
-				auto load = std::make_shared<LoadIInstruction>(global.name, variable,
-					function.parent.symbolSize(*global.name) / 8);
+				auto load = std::make_shared<LoadIInstruction>(global.name, variable, static_cast<WASMSize>(function.parent.symbolSize(*global.name) / 8));
 				function.insertBefore(instruction, load)->setDebug(*instruction)->extract();
 			} else {
-				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name))
-					->setDebug(*instruction)->extract();
+				function.insertBefore(instruction, std::make_shared<SetInstruction>(variable, global.name))->setDebug(*instruction)->extract();
 			}
-		} else if (value->isGetelementptr()) {
-			if (shouldLoad)
+			return;
+		}
+
+		if (value->isGetelementptr()) {
+			if (shouldLoad) {
 				throw std::runtime_error("shouldLoad not expected for a getelementptr value");
+			}
 			GetelementptrValue &gep = *dynamic_cast<GetelementptrValue *>(value.get());
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep.variable);
 			if (!gep_global) {
 				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
-				function.insertBefore(instruction, std::make_shared<InvalidInstruction>())
-					->setDebug(*instruction)->extract();
+				function.insertBefore(instruction, std::make_shared<InvalidInstruction>())->setDebug(*instruction)->extract();
 				return;
 			}
 			TypePtr out_type;
@@ -101,15 +115,16 @@ namespace LL2W::Passes {
 			TypePtr ptr_type = std::make_shared<PointerType>(out_type);
 			VariablePtr new_var = function.newVariable(ptr_type, instruction->parent.lock());
 			function.comment(instruction, "Getelementptr in LowerMemset");
-			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, gep_global->name))
-				->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, gep_global->name))->setDebug(*instruction)->extract();
 			if (offset == 0) {
 				variable = new_var;
 			} else {
 				variable = function.newVariable(ptr_type, instruction->parent.lock());
-				function.insertBefore(instruction, std::make_shared<AddIInstruction>(new_var, offset, variable))
-					->setDebug(*instruction)->extract();
+				function.insertBefore(instruction, std::make_shared<AddIInstruction>(new_var, offset, variable))->setDebug(*instruction)->extract();
 			}
-		} else throw std::runtime_error("Unhandled value in LowerMemset: " + std::string(*value));
+			return;
+		}
+
+		throw std::runtime_error("Unhandled value in LowerMemset: " + std::string(*value));
 	}
 }

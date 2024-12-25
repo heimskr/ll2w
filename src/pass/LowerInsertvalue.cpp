@@ -30,14 +30,19 @@ namespace LL2W::Passes {
 			const ValueType avtype = iv->aggregateValue->valueType();
 
 			if (iv->aggregateType->typeType() != TypeType::Struct) {
-				warn() << "Skipping non-struct insertvalue: " << instruction->debugExtra() << '\n';
+				warn() << "Skipping non-struct (" << *iv->aggregateType << ") insertvalue: " << instruction->debugExtra() << '\n';
 				continue;
 			}
 
 			StructType *aggregate_struct = dynamic_cast<StructType *>(iv->aggregateType.get());
 
-			if (aggregate_struct->node->types.empty()) {
-				warn() << "Skipping insertvalue with empty type: " << instruction->debugExtra() << '\n';
+			if (!aggregate_struct->types) {
+				warn() << "Skipping insertvalue with no types: " << instruction->debugExtra() << '\n';
+				continue;
+			}
+
+			if (aggregate_struct->types->empty()) {
+				warn() << "Skipping insertvalue with empty types: " << instruction->debugExtra() << '\n';
 				continue;
 			}
 
@@ -47,7 +52,7 @@ namespace LL2W::Passes {
 			}
 
 			bool skip = false;
-			for (const auto &type: aggregate_struct->node->types) {
+			for (const auto &type: *aggregate_struct->types) {
 				const TypeType tt = type->typeType();
 				if (tt != TypeType::Int && tt != TypeType::Pointer) {
 					skip = true;

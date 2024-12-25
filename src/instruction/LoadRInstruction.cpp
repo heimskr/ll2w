@@ -2,17 +2,18 @@
 #include "instruction/LoadRInstruction.h"
 
 namespace LL2W {
-	LoadRInstruction::LoadRInstruction(VariablePtr rs_, VariablePtr rd_, int index_):
-		LinkedSD(std::move(rs_), nullptr, std::move(rd_), index_) {}
+	LoadRInstruction::LoadRInstruction(VariablePtr rs, VariablePtr rd, WASMSize size):
+		LinkedSD(std::move(rs), nullptr, std::move(rd)),
+		HasSize(size) {}
 
 	std::string LoadRInstruction::debugExtra() const {
-		return "\e[2m[\e[0;91m" + std::string(*rs) + "\e[0;2m] ->\e[0m " + std::string(*rd);
+		return "\e[2m[\e[0;91m" + std::string(*rs) + "\e[0;2m] ->\e[0m " + std::string(*rd) + sizeSuffix();
 	}
 
 	std::string LoadRInstruction::toString() const {
-		return "[" + rs->toString() + "] -> " + rd->toString();
+		return "[" + rs->toString() + "] -> " + rd->toString() + sizeSuffix();
 	}
-	
+
 	Instruction * LoadRInstruction::copy() const {
 		return new LoadRInstruction(*this);
 	}
