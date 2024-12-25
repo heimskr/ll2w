@@ -74,7 +74,11 @@ namespace LL2W::Passes {
 			// Pop all the general-purpose registers that were saved in the prologue.
 			for (auto begin = function.savedRegisters.rbegin(), iter = begin, end = function.savedRegisters.rend(); iter != end; ++iter) {
 				VariablePtr variable = function.makePrecoloredVariable(*iter, block);
-				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(variable), false)->setDebug(llvm)->extract();
+#ifdef ENABLE_WHY_TYPES
+				function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(std::move(variable)), false)->setDebug(llvm)->extract();
+#else
+				function.insertBefore(instruction, std::make_shared<StackPopInstruction>(std::move(variable)), false)->setDebug(llvm)->extract();
+#endif
 			}
 
 			// Insert the epilogue (minus the jump).

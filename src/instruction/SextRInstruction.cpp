@@ -1,18 +1,25 @@
 #include "compiler/Variable.h"
 #include "instruction/SextRInstruction.h"
 
+#include <format>
+
 namespace LL2W {
-	SextRInstruction::SextRInstruction(VariablePtr rs_, VariablePtr rd_, int index_):
-		LinkedSD(std::move(rs_), nullptr, std::move(rd_), index_) {}
+	static std::string getMnemonic(const VariablePtr &rs) {
+		int width = rs->type->width();
+		return std::format("sext{}", std::max(width, 8));
+	}
+
+	SextRInstruction::SextRInstruction(VariablePtr rs, VariablePtr rd):
+		LinkedSD(std::move(rs), nullptr, std::move(rd)) {}
 
 	std::string SextRInstruction::debugExtra() const {
-		return "\e[1msext\e[22m " + std::string(*rs) + " \e[2m->\e[22m " + std::string(*rd);
+		return "\e[1m" + getMnemonic(rs) + "\e[22m " + std::string(*rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 
 	std::string SextRInstruction::toString() const {
-		return "sext " + rs->toString() + " -> " + rd->toString();
+		return getMnemonic(rs) + ' ' + rs->toString() + " -> " + rd->toString();
 	}
-	
+
 	Instruction * SextRInstruction::copy() const {
 		return new SextRInstruction(*this);
 	}

@@ -6,6 +6,7 @@
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubIInstruction.h"
 #include "instruction/TypedPushInstruction.h"
+#include "options.h"
 #include "pass/InsertPrologue.h"
 #include "util/Timer.h"
 
@@ -52,7 +53,11 @@ namespace LL2W::Passes {
 		for (int reg: written) {
 			function.savedRegisters.push_back(reg);
 			VariablePtr variable = function.makePrecoloredVariable(reg, front_block);
+#ifdef ENABLE_WHY_TYPES
 			function.insertBefore(first, std::make_shared<TypedPushInstruction>(variable), false)->setDebug(*first)->extract();
+#else
+			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false)->setDebug(*first)->extract();
+#endif
 			function.initialPushedBytes += 8;
 		}
 

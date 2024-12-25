@@ -21,24 +21,28 @@ namespace LL2W::Passes {
 	size_t lowerMemcpy(Function &function) {
 		Timer timer("LowerMemcpy");
 		size_t replaced = 0;
-		std::list<InstructionPtr> to_remove, &linear = function.linearInstructions;
+		auto &linear = function.linearInstructions;
+		std::vector<InstructionPtr> to_remove;
 
 		for (auto iter = linear.begin(), end = linear.end(); iter != end;) {
-			InstructionPtr &instruction = *iter;
-			LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
+			const InstructionPtr &instruction = *iter;
+			auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get());
 			if (!llvm || llvm->getNodeType() != NodeType::Call) {
 				++iter;
 				continue;
 			}
-			CallNode *call = dynamic_cast<CallNode *>(llvm->getNode());
+
+			auto *call = dynamic_cast<CallNode *>(llvm->getNode());
 			if (!call->name->isGlobal()) {
 				++iter;
 				continue;
 			}
+
 			BasicBlockPtr block = instruction->parent.lock();
-			GlobalValue *global = dynamic_cast<GlobalValue *>(call->name.get());
-			const std::string &name = *global->name;
-			if (name.substr(0, sizeof("llvm.memcpy.") - 1) != "llvm.memcpy.") {
+			auto *global = dynamic_cast<GlobalValue *>(call->name.get());
+			std::string_view name(*global->name);
+
+			if (!name.starts_with("llvm.memcpy.")) {
 				++iter;
 				continue;
 			}
@@ -47,17 +51,17 @@ namespace LL2W::Passes {
 				try {
 					VariablePtr dest_arg, src_arg, len_arg;
 
-					ConstantPtr converted0 = call->constants[0]->convert(),
-					            converted1 = call->constants[1]->convert(),
-					            converted2 = call->constants[2]->convert();
+					ConstantPtr converted0 = call->constants[0]->convert();
+					ConstantPtr converted1 = call->constants[1]->convert();
+					ConstantPtr converted2 = call->constants[2]->convert();
 
 					setupMemsetValue(function, converted0, instruction, dest_arg, false);
 					setupMemsetValue(function, converted1, instruction, src_arg,  false);
 					setupMemsetValue(function, converted2, instruction, len_arg,  true);
 
-					VariablePtr a0 = function.ax(0, instruction),
-					            a1 = function.ax(1, instruction),
-					            a2 = function.ax(2, instruction);
+					VariablePtr a0 = function.ax(0, instruction);
+					VariablePtr a1 = function.ax(1, instruction);
+					VariablePtr a2 = function.ax(2, instruction);
 
 					auto push0 = std::make_shared<StackPushInstruction>(a0);
 					auto push1 = std::make_shared<StackPushInstruction>(a1);
@@ -76,10 +80,10 @@ namespace LL2W::Passes {
 					function.insertBefore(instruction, move0, false)->setDebug(llvm)->extract();
 					function.insertBefore(instruction, move1, false)->setDebug(llvm)->extract();
 					function.insertBefore(instruction, move2, false)->setDebug(llvm)->extract();
-					function.insertBefore(instruction, jump, false)->setDebug(llvm)->extract();
-					function.insertBefore(instruction, pop2, false)->setDebug(llvm)->extract();
-					function.insertBefore(instruction, pop1, false)->setDebug(llvm)->extract();
-					function.insertBefore(instruction, pop0, false)->setDebug(llvm)->extract();
+					function.insertBefore(instruction, jump,  false)->setDebug(llvm)->extract();
+					function.insertBefore(instruction, pop2,  false)->setDebug(llvm)->extract();
+					function.insertBefore(instruction, pop1,  false)->setDebug(llvm)->extract();
+					function.insertBefore(instruction, pop0,  false)->setDebug(llvm)->extract();
 
 					to_remove.push_back(instruction);
 					++iter;
@@ -87,13 +91,16 @@ namespace LL2W::Passes {
 				} catch (const std::exception &err) {
 					error() << "Failed to replace memcpy.p0i8.p0i8.i64 intrinsic: " << err.what() << "\n";
 				}
-			} else throw std::runtime_error("Unhandled memcpy intrinsic: " + name);
+			} else {
+				throw std::runtime_error("Unhandled memcpy intrinsic: " + std::string(name));
+			}
 			++iter;
 		}
 
 		if (!to_remove.empty()) {
-			for (InstructionPtr &instruction: to_remove)
+			for (const InstructionPtr &instruction: to_remove) {
 				function.remove(instruction);
+			}
 			function.reindexInstructions();
 		}
 

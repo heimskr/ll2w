@@ -230,7 +230,11 @@ namespace LL2W::Passes {
 			if (convention == CallingConvention::Reg16) {
 				for (i = 0; i < arg_count && i < WhyInfo::argumentCount; ++i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<TypedPushInstruction>(arg_variable), false)->setDebug(*llvm)->extract();
+#ifdef ENABLE_WHY_TYPES
+					function.insertBefore(instruction, std::make_shared<TypedPushInstruction>(std::move(arg_variable)), false)->setDebug(*llvm)->extract();
+#else
+					function.insertBefore(instruction, std::make_shared<StackPushInstruction>(std::move(arg_variable)), false)->setDebug(*llvm)->extract();
+#endif
 				}
 			}
 #endif
@@ -315,7 +319,11 @@ namespace LL2W::Passes {
 				// Pop the argument registers from the stack.
 				for (i = std::min(15, arg_count - 1); 0 <= i; --i) {
 					VariablePtr arg_variable = function.makePrecoloredVariable(WhyInfo::argumentOffset + i, block);
-					function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(arg_variable), false)->setDebug(*llvm)->extract();
+#ifdef ENABLE_WHY_TYPES
+					function.insertBefore(instruction, std::make_shared<TypedPopInstruction>(std::move(arg_variable)), false)->setDebug(*llvm)->extract();
+#else
+					function.insertBefore(instruction, std::make_shared<StackPopInstruction>(std::move(arg_variable)), false)->setDebug(*llvm)->extract();
+#endif
 				}
 			}
 #endif

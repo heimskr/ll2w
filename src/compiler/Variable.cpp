@@ -1,13 +1,13 @@
-#include <iostream>
-#include <climits>
-#include <sstream>
-
 #include "compiler/BasicBlock.h"
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/Variable.h"
 #include "options.h"
 #include "util/Util.h"
+
+#include <iostream>
+#include <climits>
+#include <sstream>
 
 // #define DEBUG_ALIASES
 // #define VARIABLE_EXTRA
@@ -110,7 +110,11 @@ namespace LL2W {
 	Variable::operator std::string() const {
 		std::stringstream out;
 		if (registers.empty()) {
+#ifdef ENABLE_WHY_TYPES
 			out << "\e[32m" << *id << "\e[2m{" << whyString(type) << "}\e[22;39m";
+#else
+			out << "\e[32m" << *id << "\e[39m";
+#endif
 		} else {
 			out << "\e[92m";
 			if (1 < registers.size()) {
@@ -128,7 +132,11 @@ namespace LL2W {
 			if (1 < registers.size()) {
 				out << ')';
 			}
+#ifdef ENABLE_WHY_TYPES
 			out << "\e[39;2m:\e[32m" << *id << '{' << whyString(type) << "}\e[39;22m";
+#else
+			out << "\e[39;2m:\e[32m" << *id << "\e[39;22m";
+#endif
 		}
 #ifdef VARIABLE_EXTRA
 		auto sparent = parent.lock();
@@ -166,7 +174,11 @@ namespace LL2W {
 		}
 
 		if (registers.size() == 1) {
+#ifdef ENABLE_WHY_TYPES
 			return '$' + WhyInfo::registerName(*registers.begin()) + '{' + whyString(type) + '}';
+#else
+			return '$' + WhyInfo::registerName(*registers.begin());
+#endif
 		}
 
 		return *this;

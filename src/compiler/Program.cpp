@@ -1,5 +1,5 @@
 // #define ANALYZE_MULTITHREADED
-// #define COMPILE_MULTITHREADED
+#define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define GRADUAL_CODE_PRINTING
 
@@ -21,7 +21,7 @@
 // #define SINGLE_FUNCTION "fctprintf"
 // #define SINGLE_FUNCTION "_ZN5Wasmc7Section7combineESt16initializer_listINSt3__117reference_wrapperIS0_EEE"
 // #define SINGLE_FUNCTION "_ZNSt3__13mapIl11ProcessDataNS_4lessIlEENS_9allocatorINS_4pairIKlS1_EEEEE11try_emplaceIJRlRPA256_mRmN6Paging6TablesERPvRKmEEENS5_INS_14__map_iteratorINS_15__tree_iteratorINS_12__value_typeIlS1_EEPNS_11__tree_nodeISP_SI_EElEEEEbEERS6_DpOT_"
-#define SINGLE_FUNCTION "strprint"
+// #define SINGLE_FUNCTION "strprint"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -375,26 +375,17 @@ namespace LL2W {
 		pool.start();
 		Waiter waiter(functions.size());
 
-		// std::osyncstream oss{std::cerr};
-		std::ostream &oss{std::cerr};
-
 		for (auto &[name, function]: functions) {
-			pool.add([this, &waiter, &function, &oss](ThreadPool &, size_t) {
-				info(oss) << "Compiling " << *function->name << " ...\n";
+			pool.add([this, &waiter, &function](ThreadPool &, size_t) {
+				info() << "Compiling " << *function->name << " ...\n";
 				function->compile();
-				// renderedFunctions.withLock([&] {
-				// 	renderedFunctions[function->name] = function->toString();
-				// });
-
 #ifdef GRADUAL_CODE_PRINTING
 				std::unique_lock lock(gradualCodePrintingMutex);
-				oss << function->toString() << std::endl;
+				std::cerr << function->toString() << std::endl;
 				lock.unlock();
 #endif
-				// function->shrink();
-
-				if (auto remaining = waiter--; remaining % 10 == 0) {
-					info(oss) << "Remaining: " << remaining << "\n";
+				if (auto remaining = waiter--; remaining % 10 == 0 || remaining < 10) {
+					info() << "Remaining: " << remaining << "\n";
 				}
 			});
 		}
@@ -631,12 +622,12 @@ namespace LL2W {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
 
 				auto validate = [value](GetelementptrValue *gep) {
-					for (const auto &[width, decimal]: gep->decimals)
+					for (const auto &[width, decimal]: gep->decimals) {
 						if (!std::holds_alternative<long>(decimal)) {
 							std::cerr << *value << '\n';
-							throw std::runtime_error("Found an invalid decimal in a getelementptr expression in "
-								"Program::outputValue");
+							throw std::runtime_error("Found an invalid decimal in a getelementptr expression in Program::outputValue");
 						}
+					}
 				};
 
 				validate(gep);
@@ -654,10 +645,10 @@ namespace LL2W {
 				}
 
 				if (gep->variable->valueType() != ValueType::Global)
-					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got "
-						"type " + value_map.at(gep->variable->valueType()) + " instead");
+					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got type "
+						+ value_map.at(gep->variable->valueType()) + " instead");
 
-				return "%8b " + *dynamic_cast<GlobalValue &>(*gep->variable).name + "+" + std::to_string(offset) + (comment_changed? comment : "");
+				return "%8b " + dynamic_cast<GlobalValue &>(*gep->variable).name->substr(1) + " + " + std::to_string(offset) + (comment_changed? comment : "");
 			}
 			default:
 				std::cerr << *value << '\n';
