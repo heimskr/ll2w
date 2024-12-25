@@ -414,7 +414,7 @@ namespace LL2W {
 
 	Variable::ID Function::newLabel() {
 		auto *out = StringSet::intern("%#" + std::to_string(++lastArtificialLabel));
-		// if (*out == "%#755") {
+		// if (*out == "%#58") {
 		// 	raise(SIGTRAP);
 		// }
 		return out;
@@ -877,6 +877,12 @@ namespace LL2W {
 		bbLabels.insert(label);
 		bbMap.emplace(label, new_block);
 
+		Node &new_node = cfg.addNode(*label);
+		new_node.data = std::weak_ptr(new_block);
+		bbNodeMap[new_block.get()] = &new_node;
+		Node &old_node = cfg[*block->getLabel()];
+		old_node.link(new_node);
+
 		for (++iter; iter != end;) {
 			for (const VariablePtr &var: (*iter)->written) {
 				var->removeDefiner(block);
@@ -898,6 +904,9 @@ namespace LL2W {
 		for (const BasicBlockPtr &possible_successor: blocks) {
 			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->getLabel());
 			if (predIter != possible_successor->preds.end()) {
+				Node &node = cfg[**predIter];
+				old_node.unlink(node);
+				new_node.link(node);
 				*predIter = label;
 			}
 		}

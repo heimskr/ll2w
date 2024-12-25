@@ -15,7 +15,10 @@
 // #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 // #define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
 // #define SINGLE_FUNCTION "_ZNKSt3__110__function6__funcIZZN8Thurisaz11addCommandsERNS_3mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS2_7CommandENS_4lessIS9_EENS7_INS_4pairIKS9_SA_EEEEEEENK4$_31clERNS2_7ContextERKNS_6vectorIS9_NS7_IS9_EEEEEUlvE1_NS7_ISR_EEFvvEE7__cloneEPNS0_6__baseIST_EE"
-#define SINGLE_FUNCTION "__cxx_global_var_init.118"
+// #define SINGLE_FUNCTION "__cxx_global_var_init.118"
+// #define SINGLE_FUNCTION "_ZN6Kernel4loopEv"
+// #define SINGLE_FUNCTION "_ZL11_out_buffercPvmm"
+#define SINGLE_FUNCTION "fctprintf"
 
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
