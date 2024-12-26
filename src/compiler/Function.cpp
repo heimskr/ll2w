@@ -348,8 +348,8 @@ namespace LL2W {
 	void Function::extractVariables(bool reset) {
 		Timer timer{"ExtractVariables"};
 		if (reset) {
-			for (auto &map: {variableStore, extraVariables}) {
-				for (const auto &[id, var]: map) {
+			for (auto *map: {&variableStore, &extraVariables}) {
+				for (const auto &[id, var]: *map) {
 					var->setUsingBlocks({});
 					var->setDefiningBlocks({});
 					var->setDefinitions({});
@@ -359,7 +359,7 @@ namespace LL2W {
 			}
 		}
 
-		for (BasicBlockPtr &block: blocks) {
+		for (const BasicBlockPtr &block: blocks) {
 			for (VariablePtr read_var: block->read) {
 				read_var->addUsingBlock(block);
 			}
@@ -371,13 +371,14 @@ namespace LL2W {
 					read_var->setLastUse(instruction);
 					read_var->addUse(instruction);
 				}
-				for (VariablePtr written_var: instruction->written)
+				for (VariablePtr written_var: instruction->written) {
 					written_var->addDefinition(instruction);
+				}
 			}
 		}
 
-		for (auto &map: {variableStore, extraVariables}) {
-			for (const auto &[id, var]: map) {
+		for (auto *map: {&variableStore, &extraVariables}) {
+			for (const auto &[id, var]: *map) {
 				if (var->definingBlocks.empty()) {
 					// Function arguments aren't defined by any instruction.
 					// They're implicitly defined in the first block.
@@ -414,6 +415,7 @@ namespace LL2W {
 
 	Variable::ID Function::newLabel() {
 		auto *out = StringSet::intern("%$" + std::to_string(++lastArtificialLabel));
+		// if (*out == "%$175") raise(SIGTRAP);
 		return out;
 	}
 
@@ -1167,6 +1169,7 @@ namespace LL2W {
 		Passes::breakUpBigSets(*this);
 		Passes::makeCFG(*this);
 		computeLiveness();
+		extractVariables(true);
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
 		Passes::transformLabels(*this);

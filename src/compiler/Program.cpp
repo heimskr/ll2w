@@ -595,13 +595,16 @@ namespace LL2W {
 		switch (value->valueType()) {
 			case ValueType::CString:
 				return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
+
 			case ValueType::Array:
 				return outputArray(dynamic_cast<ArrayValue &>(*value.get()));
+
 			case ValueType::Int: {
 				const auto int_width = dynamic_cast<IntType *>(type.get())->bitWidth;
 				const std::string stringified = std::to_string(dynamic_cast<IntValue *>(value.get())->longValue());
 				return valuePrefix(int_width) + stringified;
 			}
+
 			case ValueType::Null:
 			case ValueType::Undef:
 			case ValueType::Zeroinitializer:
@@ -613,13 +616,16 @@ namespace LL2W {
 					return "%fill " + std::to_string(width / 8) + " 0";
 				}
 				return "%1b 0";
+
 			case ValueType::Struct:
 				return outputStruct(std::dynamic_pointer_cast<StructType>(type), dynamic_cast<StructValue &>(*value));
+
 			case ValueType::Global: {
 				const std::string *name = dynamic_cast<GlobalValue *>(value.get())->name;
 				referencedGlobals.insert(*name);
 				return "%8b " + name->substr(1);
 			}
+
 			case ValueType::Getelementptr: {
 				GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value.get());
 
@@ -646,16 +652,16 @@ namespace LL2W {
 					offset += new_offset;
 				}
 
-				if (gep->variable->valueType() != ValueType::Global)
-					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got type "
-						+ value_map.at(gep->variable->valueType()) + " instead");
+				if (gep->variable->valueType() != ValueType::Global) {
+					throw std::runtime_error("Expected source of a getelementptr expression to be a global, but got type " + value_map.at(gep->variable->valueType()) + " instead");
+				}
 
 				return "%8b " + dynamic_cast<GlobalValue &>(*gep->variable).name->substr(1) + " + " + std::to_string(offset) + (comment_changed? comment : "");
 			}
+
 			default:
 				std::cerr << *value << '\n';
-				throw std::runtime_error("Unhandled ValueType in Program::outputValue: " +
-					value_map.at(value->valueType()));
+				throw std::runtime_error("Unhandled ValueType in Program::outputValue: " + value_map.at(value->valueType()));
 		}
 	}
 
@@ -663,10 +669,11 @@ namespace LL2W {
 		std::string out;
 		bool first = true;
 		for (const ConstantPtr &constant: array.constants) {
-			if (first)
+			if (first) {
 				first = false;
-			else
-				out += "\n";
+			} else {
+				out += '\n';
+			}
 			ConstantPtr converted = constant->convert();
 			out += outputValue(converted->type, converted->value);
 		}

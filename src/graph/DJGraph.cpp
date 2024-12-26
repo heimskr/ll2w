@@ -12,12 +12,15 @@ namespace LL2W {
 		DTree dt(graph, start);
 		dt.cloneTo(*this);
 		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
-		for (const auto &[src, dest]: graph.allEdges()) {
-			if (doms.at(dest->label()).count(src->label()) != 0)
-				continue;
-			link(src->label(), dest->label());
-			jEdges.push_back({&(*this)[src->label()], &(*this)[dest->label()]});
-			jMap[&(*this)[src->label()]].insert(&(*this)[dest->label()]);
+		for (auto &[source_label, src]: graph) {
+			for (Node *destination: *src) {
+				if (!doms.at(destination->label()).contains(source_label)) {
+					continue;
+				}
+				link(source_label, destination->label());
+				jEdges.emplace_back(&(*this)[source_label], &(*this)[destination->label()]);
+				jMap[&(*this)[source_label]].emplace(&(*this)[destination->label()]);
+			}
 		}
 		startNode = &(*this)[start.label()];
 	}

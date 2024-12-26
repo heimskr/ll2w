@@ -35,7 +35,7 @@ namespace LL2W::Passes {
 		std::list<InstructionPtr> to_remove;
 
 		for (const auto &[var_id, var]: function.variableStore) {
-			if (!var->hasSpecialRegister() && !var->definitions.empty()) {
+			if (!var->hasSpecialRegister() && !var->definitions.empty() && var->uses.empty()) {
 				if (function.isLiveOutAnywhere(var)) {
 					continue;
 				}
@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 				}
 
 				++discarded;
-				// info() << "Discarding " << *var << " in " << *function.name << '\n';
+				info() << "Discarding " << *var << " in " << *function.name << '\n';
 
 				for (const auto &weak_definition: var->definitions) {
 					if (InstructionPtr definition = weak_definition.lock()) {

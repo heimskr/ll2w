@@ -498,7 +498,7 @@ namespace LL2W {
 		std::vector<std::pair<Node *, Node *>> out;
 		for (Node *node: nodes_) {
 			for (Node *successor: *node) {
-				out.push_back({node, successor});
+				out.emplace_back(node, successor);
 			}
 		}
 		return out;

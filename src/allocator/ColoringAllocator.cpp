@@ -184,8 +184,13 @@ namespace LL2W {
 
 	VariablePtr ColoringAllocator::selectChaitin() const {
 		VariablePtr out;
-		int64_t lowest = INT64_MAX;
+		double lowest = std::numeric_limits<double>::infinity();
+
 		for (const Node *node: interference.nodes()) {
+			if (!node->data.has_value()) {
+				continue;
+			}
+
 			auto &var = node->get<VariablePtr>();
 			if (var->allRegistersSpecial() || !function->canSpill(var)) {
 				continue;
@@ -196,7 +201,8 @@ namespace LL2W {
 				continue;
 			}
 			const size_t degree = node->degree();
-			const int64_t chaitin = static_cast<int64_t>(cost * 10000l / degree);
+			assert(degree > 0);
+			const double chaitin = static_cast<double>(cost) / degree;
 			if (chaitin < lowest) {
 				lowest = chaitin;
 				out = var;

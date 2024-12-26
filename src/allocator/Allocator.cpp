@@ -35,7 +35,7 @@ namespace LL2W {
 		Timer timer("SelectMostLive");
 		VariablePtr ptr;
 		size_t highest = SIZE_MAX;
-		for (const auto *map: {&function->variableStore, &function->extraVariables})
+		for (const auto *map: {&function->variableStore, &function->extraVariables}) {
 			for (const auto &[id, var]: *map) {
 				if (var->allRegistersSpecial()) {
 #ifdef DEBUG_SELECTMOSTLIVE
@@ -57,6 +57,7 @@ namespace LL2W {
 					ptr = var;
 				}
 			}
+		}
 
 		if (!ptr) {
 			function->debug();

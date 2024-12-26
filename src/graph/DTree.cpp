@@ -206,13 +206,17 @@ namespace LL2W {
 	std::string DTree::commonDominator(const std::vector<std::string> &label) {
 		std::vector<Node *> nodes;
 		nodes.reserve(label.size());
-		for (const std::string &label: label)
+
+		for (const std::string &label: label) {
 			nodes.push_back(&(*this)[label]);
+		}
+
 		return commonDominator(nodes);
 	}
 
 	std::unordered_map<Node *, Node *> DTree::immediateDominators() const {
 		std::unordered_map<Node *, Node *> out;
+
 		for (Node *node: nodes()) {
 			for (Node *successor: *node) {
 				assert(!out.contains(successor));
@@ -228,15 +232,20 @@ namespace LL2W {
 
 		// For each node, add its parent to the set, and its parent's parent, and so on.
 		for (Node *node: nodes()) {
-			out_map[node] = {};
-			if (node->in().empty())
+			Node::Set &set = out_map[node];
+
+			if (node->in().empty()) {
 				continue;
+			}
+
 			Node *parent = *node->in().begin();
+
 			for (;;) {
-				out_map[node].insert(parent);
+				set.emplace(parent);
 				// Stop when we've reached the root. The node will have either no parent or only itself as its parent.
-				if (parent->in().empty() || *parent->in().begin() == parent)
+				if (parent->in().empty() || *parent->in().begin() == parent) {
 					break;
+				}
 				parent = *parent->in().begin();
 			}
 		}
@@ -249,8 +258,9 @@ namespace LL2W {
 		for (const auto &[node, set]: strictDominators()) {
 			const std::string &label = node->label();
 			out_map.insert({label, {}});
-			for (Node *sub: set)
+			for (Node *sub: set) {
 				out_map[label].insert(sub->label());
+			}
 		}
 
 		return out_map;

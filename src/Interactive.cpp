@@ -390,8 +390,9 @@ namespace LL2W {
 			} else if (Util::isAny(first, {"rl", "resetlive"})) {
 				GET_FN();
 				function->resetLiveness();
-				for (BasicBlockPtr &block: function->blocks)
+				for (const BasicBlockPtr &block: function->blocks) {
 					block->extract(true);
+				}
 				function->extractVariables(true);
 				function->computeLiveness();
 				info() << "Recomputed liveness data for \e[1m" << *function->name << "\e[22m.\n";
