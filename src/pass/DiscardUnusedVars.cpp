@@ -45,7 +45,7 @@ namespace LL2W::Passes {
 				}
 
 				++discarded;
-				info() << "Discarding " << *var << " in " << *function.name << '\n';
+				// info() << "Discarding " << *var << " in " << *function.name << '\n';
 
 				for (const auto &weak_definition: var->definitions) {
 					if (InstructionPtr definition = weak_definition.lock()) {
