@@ -23,11 +23,6 @@ namespace LL2W {
 			/** Creates an interference graph of all the function's variables. */
 			void makeInterferenceGraph();
 
-			/** Selects the variable whose corresponding node in the interference graph has the highest degree. */
-			std::shared_ptr<Variable> selectHighestDegree(int *degree_out = nullptr) const;
-
-			std::shared_ptr<Variable> selectChaitin() const;
-
 			Result firstAttempt() final;
 
 			/** Makes an attempt to allocate registers. If the graph is uncolorable, the function attempts to spill a
@@ -37,5 +32,13 @@ namespace LL2W {
 
 		private:
 			std::map<std::set<int>, Node *> cachedPrecolored;
+			Result attemptOld();
+
+			std::shared_ptr<Variable> select() const;
+
+			/** Selects the variable whose corresponding node in the interference graph has the highest degree. */
+			std::shared_ptr<Variable> selectHighestDegree(int *degree_out = nullptr) const;
+
+			std::shared_ptr<Variable> selectChaitin() const;
 	};
 }

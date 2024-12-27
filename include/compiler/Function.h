@@ -227,7 +227,10 @@ namespace LL2W {
 			VariablePtr newVariable(const TypePtr &, const BasicBlockPtr & = nullptr);
 
 			/** Tries to spill a variable. Returns true if any instructions were inserted. */
-			bool spill(VariablePtr, bool doDebug = false);
+			bool spill(VariablePtr, bool do_debug = false);
+
+			/** Tries to spill multiple variables. Returns how many spills occurred went through. */
+			size_t spillBatch(std::span<const VariablePtr>, bool do_debug = false);
 
 			void markSpilled(VariablePtr);
 
@@ -238,10 +241,10 @@ namespace LL2W {
 			bool isArgument(Variable::ID) const;
 
 			/** Returns the first instruction in the function that isn't a label or a comment. */
-			InstructionPtr firstInstruction(bool includeComments = false);
+			InstructionPtr firstInstruction(bool include_comments = false);
 
 			/** Returns a pointer to the instruction following a given instruction. */
-			InstructionPtr after(InstructionPtr);
+			InstructionPtr after(InstructionPtr, bool skip_comments = false);
 
 			/** Returns a pointer to the basic block following a given basic block. */
 			BasicBlockPtr after(BasicBlockPtr);

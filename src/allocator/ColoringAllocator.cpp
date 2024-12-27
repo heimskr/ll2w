@@ -32,6 +32,61 @@ namespace LL2W {
 	}
 
 	Allocator::Result ColoringAllocator::attempt() {
+		Timer timer{"ColoringAllocator::attempt"};
+
+		constexpr int max_batch_size = 8;
+
+		std::vector<VariablePtr> batch;
+
+		for (int i = 0; i < max_batch_size; ++i) {
+			try {
+				Timer timer{"GraphColor"};
+				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset, WhyInfo::savedOffset + WhyInfo::savedCount - 1);
+				break;
+			} catch (const UncolorableError &) {
+				VariablePtr to_spill = select();
+				lastSpillAttempt = to_spill;
+				triedIDs.insert(to_spill->id);
+				triedLabels.insert(*to_spill->id);
+				interference -= *to_spill->id;
+				batch.emplace_back(std::move(to_spill));
+			}
+		}
+
+		if (batch.empty()) {
+			return Result::Success;
+		}
+
+		if (auto count = function->spillBatch(batch); count > 0) {
+			spillCount += count;
+			return Result::Spilled;
+		}
+
+		return Result::NotSpilled;
+	}
+
+	VariablePtr ColoringAllocator::select() const {
+#ifdef SELECT_LOWEST_COST
+		VariablePtr to_spill = selectLowestSpillCost();
+#elif defined(SELECT_CHAITIN)
+		VariablePtr to_spill = selectChaitin();
+#elif defined(SELECT_MOST_LIVE)
+		VariablePtr to_spill = selectMostLive();
+#else
+		int highest_degree = -1;
+		VariablePtr to_spill = selectHighestDegree(&highest_degree);
+		if (highest_degree == -1) {
+			throw std::runtime_error("highest_degree is -1");
+		}
+#endif
+		if (!to_spill) {
+			throw std::runtime_error("to_spill is null");
+		}
+
+		return to_spill;
+	}
+
+	Allocator::Result ColoringAllocator::attemptOld() {
 		++attempts;
 #ifdef DEBUG_COLORING
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";

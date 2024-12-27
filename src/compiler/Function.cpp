@@ -476,6 +476,7 @@ namespace LL2W {
 
 		const StackLocation &location = getSpill(variable, true);
 
+		Timer definition_loop_timer{"Spill::LoopDefinitions"};
 		for (std::weak_ptr<Instruction> weak_definition: variable->definitions) {
 			InstructionPtr definition = weak_definition.lock();
 			// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
@@ -525,6 +526,7 @@ namespace LL2W {
 #endif
 			}
 		}
+		definition_loop_timer.stop();
 
 #ifdef DEBUG_SPILL
 		if (!out) {
@@ -539,6 +541,7 @@ namespace LL2W {
 		std::vector<VariablePtr> new_variables;
 		new_variables.reserve(32);
 
+		Timer instruction_loop_timer{"Spill::InstructionLoop"};
 		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
 #ifdef STRICT_READ_CHECK
 			if (VariablePtr read = (*iter)->doesRead(variable)) {
@@ -593,22 +596,147 @@ namespace LL2W {
 #ifdef DEBUG_SPILL
 		std::cerr << "\n";
 #endif
+		instruction_loop_timer.stop();
 
-		// TODO: can some of this be targeted to just the spilled variable?
-		reindexInstructions();
-		resetLiveness();
-		for (BasicBlockPtr &block: blocks) {
-			block->extract(true);
+		{
+			Timer timer{"Spill::Reset+Extract"};
+			// TODO: can some of this be targeted to just the spilled variable?
+			reindexInstructions();
+			resetLiveness();
+			for (BasicBlockPtr &block: blocks) {
+				block->extract(true);
+			}
+			extractVariables(true); // Reset stale use/define data.
 		}
-		extractVariables(true); // Reset stale use/define data.
-		computeLiveness();
+
+		{
+			Timer timer{"Spill::RecomputeLiveness"};
+			computeLiveness();
+		}
+
 		markSpilled(variable);
-		allocator->afterSpill(variable, new_variables);
+
+		{
+			Timer timer{"Spill::AfterSpill"};
+			allocator->afterSpill(variable, new_variables);
+		}
+
 		return out;
 	}
 
+	size_t Function::spillBatch(std::span<const VariablePtr> batch, bool) {
+		Timer timer{"SpillBatch"};
+
+		size_t count = 0;
+
+		for (const VariablePtr &variable: batch) {
+			if (variable->definitions.empty()) {
+				debug();
+				variable->debug();
+				throw std::runtime_error("Can't spill variable: no definitions");
+			}
+
+			const StackLocation &location = getSpill(variable, true);
+
+			bool good = false;
+
+			Timer definitions_timer{"SpillBatch::DefinitionLoop"};
+			for (const std::weak_ptr<Instruction> &weak_definition: variable->definitions) {
+				InstructionPtr definition = weak_definition.lock();
+				// Because ϕ-instructions are eventually removed after aliasing the variables, they don't count as a real
+				// definition here.
+				if (!definition || definition->isPhi()) {
+					continue;
+				}
+
+				auto store = std::make_shared<StackStoreInstruction>(location, variable);
+
+				if (InstructionPtr next = after(definition, true)) {
+					if (auto other_store = std::dynamic_pointer_cast<StackStoreInstruction>(next)) {
+						if (*other_store == *store) {
+							continue;
+						}
+					}
+				}
+
+				insertAfter(definition, store, false);
+				comment(store, std::format("Spill: stack store for {} into location={}", variable->plainString(), location.offset), false);
+				VariablePtr m6 = mx(6, definition);
+				definition->replaceWritten(variable, m6);
+				definition->extract();
+				store->variable = m6;
+				store->extract();
+				good = true;
+			}
+			definitions_timer.stop();
+
+			if (!good) {
+				throw std::runtime_error("No definitions stored");
+			}
+
+			good = false;
+			std::vector<VariablePtr> new_variables;
+			new_variables.reserve(32);
+
+			Timer instructions_timer{"SpillBatch::InstructionLoop"};
+			for (const std::weak_ptr<Instruction> &weak_use: variable->uses) {
+				InstructionPtr use = weak_use.lock();
+				if (!use) {
+					continue;
+				}
+
+				VariablePtr new_variable = newVariable(variable->type, use->parent.lock());
+				if (use->replaceRead(variable, new_variable)) {
+					auto load = std::make_shared<StackLoadInstruction>(new_variable, location);
+					insertBefore(use, std::move(load), std::format("Spill: stack load: location={}", location.offset), false)->extract();
+					use->extract();
+					good = true;
+				} else {
+					variableStore.erase(new_variable->id);
+				}
+			}
+			instructions_timer.stop();
+
+			if (!good) {
+				throw std::runtime_error("No uses loaded");
+			}
+
+			++count;
+			markSpilled(variable);
+
+			Timer after_spill_timer{"SpillBatch::AfterSpill"};
+			allocator->afterSpill(variable, new_variables);
+		}
+
+		if (count == 0) {
+			return 0;
+		}
+
+		{
+			Timer timer{"SpillBatch::Reset+Extract"};
+			reindexInstructions();
+			resetLiveness();
+			for (const BasicBlockPtr &block: blocks) {
+				block->extract(true);
+			}
+			extractVariables(true);
+		}
+
+		{
+			Timer timer{"SpillBatch::MakeCFG"};
+			Passes::makeCFG(*this);
+		}
+
+		{
+			Timer timer{"SpillBatch::RecomputeLiveness"};
+			computeLiveness();
+		}
+
+		return count;
+	}
+
 	void Function::markSpilled(VariablePtr variable) {
-		spilledVariables.insert(variable->originalID);
+		spilledVariables.emplace(variable->originalID);
 	}
 
 	bool Function::isSpilled(VariablePtr variable) const {
@@ -709,10 +837,26 @@ namespace LL2W {
 		return nullptr;
 	}
 
-	InstructionPtr Function::after(InstructionPtr instruction) {
+	InstructionPtr Function::after(InstructionPtr instruction, bool skip_comments) {
 		auto iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
 		++iter;
-		return iter == linearInstructions.end()? nullptr : *iter;
+
+		if (iter == linearInstructions.end()) {
+			return nullptr;
+		}
+
+		if (!skip_comments) {
+			return *iter;
+		}
+
+		while (dynamic_cast<Comment *>(iter->get()) != nullptr) {
+			auto old = iter++;
+			if (iter == linearInstructions.end()) {
+				return *old;
+			}
+		}
+
+		return *iter;
 	}
 
 	BasicBlockPtr Function::after(BasicBlockPtr block) {
@@ -1235,8 +1379,11 @@ namespace LL2W {
 #endif
 			Allocator::Result allocator_result = allocator->firstAttempt();
 			while (allocator_result != Allocator::Result::Success) {
-				extractInstructions();
-				extractVariables();
+				{
+					Timer timer{"PostSpillExtraction"};
+					extractInstructions();
+					extractVariables();
+				}
 				allocator_result = allocator->attempt();
 			}
 #ifdef FN_CATCH_EXCEPTIONS
@@ -2242,20 +2389,26 @@ namespace LL2W {
 	}
 
 	StackLocation & Function::getSpill(VariablePtr variable, bool create, bool *created) {
+		Timer timer{"GetSpill"};
+
 		if (created) {
 			*created = false;
 		}
-		for (std::pair<const int, StackLocation> &pair: stack) {
-			if (pair.second.variable->id == variable->id && pair.second.purpose == StackLocation::Purpose::Spill) {
-				return pair.second;
+
+		for (auto &[offset, location]: stack) {
+			if (location.variable->id == variable->id && location.purpose == StackLocation::Purpose::Spill) {
+				return location;
 			}
 		}
+
 		if (create) {
 			if (created) {
 				*created = true;
 			}
+
 			return addToStack(variable, StackLocation::Purpose::Spill);
 		}
+
 		throw std::out_of_range("Couldn't find a spill location for " + variable->plainString());
 	}
 
