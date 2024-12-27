@@ -19,13 +19,14 @@ namespace LL2W::Passes {
 		std::vector<InstructionPtr> to_remove;
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {
-			if (LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
-				if (CallNode *call = dynamic_cast<CallNode *>(llvm->getNode())) {
+			if (auto *llvm = dynamic_cast<LLVMInstruction *>(instruction.get())) {
+				if (auto *call = dynamic_cast<CallNode *>(llvm->getNode())) {
 					if (!call->name->isGlobal()) {
 						continue;
 					}
 
 					GlobalValue *global = dynamic_cast<GlobalValue *>(call->name.get());
+
 					if (*global->name == "@llvm.va_start") {
 						function.comment(instruction, "llvm.va_start removed.");
 
@@ -39,13 +40,14 @@ namespace LL2W::Passes {
 						}
 
 						VariablePtr var = dynamic_cast<LocalValue *>(call->constants[0]->value.get())->variable;
-						// function.insertBefore(instruction, std::make_shared<MoveInstruction>(m2, var));
 						auto store = std::make_shared<StoreRInstruction>(m2, var, static_cast<WASMSize>(var->type->width() / 8));
 						function.insertBefore(instruction, std::move(store), "m2 -> [var]")->setDebug(llvm)->extract();
 						any_changed = true;
 						to_remove.push_back(instruction);
 						continue;
-					} else if (*global->name == "@llvm.va_end") {
+					}
+
+					if (*global->name == "@llvm.va_end") {
 						to_remove.push_back(instruction);
 					}
 				}
