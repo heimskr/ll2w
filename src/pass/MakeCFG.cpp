@@ -29,7 +29,7 @@ namespace LL2W::Passes {
 			Node &node = function.cfg.addNode(live_point->getName());
 			node.data = std::weak_ptr(std::static_pointer_cast<LivePoint>(live_point));
 			live_point->cfgNode = &node;
-			function.lpNodeMap.emplace(live_point.get(), &node);
+			function.lpNodeMap.emplace(live_point, &node);
 		}
 
 		std::string exit_label = "$exit";

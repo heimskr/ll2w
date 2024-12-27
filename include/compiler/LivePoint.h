@@ -55,6 +55,8 @@ namespace LL2W {
 			virtual std::unordered_set<VariablePtr> & getRead() = 0;
 			virtual std::unordered_set<VariablePtr> & getWritten() = 0;
 			virtual int getIndex() const = 0;
+			virtual std::string debugExtra() const = 0;
+
 			std::string getName() const;
 	};
 }

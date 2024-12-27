@@ -29,7 +29,8 @@
 // #define SINGLE_FUNCTION "vsnprintf_"
 // #define SINGLE_FUNCTION "__cxx_global_var_init.4"
 // #define SINGLE_FUNCTION "printf"
-#define SINGLE_FUNCTION "isupper"
+// #define SINGLE_FUNCTION "isupper"
+// #define SINGLE_FUNCTION "_ZL12_ntoa_formatPFvcPvmmEPcmmS2_mbjjjj"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED

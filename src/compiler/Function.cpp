@@ -1090,6 +1090,7 @@ namespace LL2W {
 
 	void Function::initialCompile() {
 		Timer timer{"InitialCompile"};
+		const bool naked = isNaked();
 		extractBlocks();
 		makeInitialDebugIndex();
 		Passes::makeCFG(*this);
@@ -1144,22 +1145,20 @@ namespace LL2W {
 #endif
 		Passes::lowerSwitch(*this);
 		// Passes::minimizeBlocks(*this, true);
-		Passes::makeCFG(*this);
-		forceLiveness();
+		if (!naked) {
+			Passes::makeCFG(*this);
+			forceLiveness();
+		}
 		updateInstructionNodes();
 		reindexBlocks();
-		initialDone = true;
+		if (!naked) {
 #ifndef MOVE_PHI
-		// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
-		Passes::coalescePhi(*this);
+			// Coalesce ϕ-instructions a second time, removing them instead of only gently aliasing variables.
+			Passes::coalescePhi(*this);
 #endif
-
-		// if (*name == "@main") {
-		// 	debug();
-		// }
-
-		Passes::discardUnusedVars(*this);
-		forceLiveness();
+			Passes::discardUnusedVars(*this);
+		}
+		initialDone = true;
 	}
 
 	void Function::finalCompile() {
@@ -1188,15 +1187,17 @@ namespace LL2W {
 		}
 		Passes::lowerVarargsSecond(*this);
 		Passes::breakUpBigSets(*this);
-		Passes::makeCFG(*this);
-		extractVariables(true);
-		Passes::discardUnusedVars(*this);
-		Passes::mergeAllBlocks(*this);
-		Passes::transformLabels(*this);
-		Passes::insertLabels(*this);
-		Passes::fixSignedness(*this);
-		Passes::signChars(*this);
-		hackVariables();
+		if (!naked) {
+			Passes::makeCFG(*this);
+			extractVariables(true);
+			Passes::discardUnusedVars(*this);
+			Passes::mergeAllBlocks(*this);
+			Passes::transformLabels(*this);
+			Passes::insertLabels(*this);
+			Passes::fixSignedness(*this);
+			Passes::signChars(*this);
+			hackVariables();
+		}
 		for (const InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
 				auto lock = parent.getLock();
@@ -1702,17 +1703,25 @@ namespace LL2W {
 
 		// for each P ∈ CFG_preds(B) do
 		try {
-			for (const Node *node: lpNodeMap.at(live_point.get())->in()) {
-				LivePointPtr p = node->get<LivePointWeakPtr>().lock();
-				assert(p != nullptr);
-				assert(p != live_point);
-				// LiveOut(P) = LiveOut(P) ∪ {v}
-				p->insertLiveOut(var);
-				upAndMark(std::move(p), var);
+			/// for (const Node *node: lpNodeMap.at(live_point)->in()) {
+			/// 	LivePointPtr p = node->get<LivePointWeakPtr>().lock();
+			/// 	assert(p != nullptr);
+			/// 	assert(p != live_point);
+			/// 	// LiveOut(P) = LiveOut(P) ∪ {v}
+			/// 	p->insertLiveOut(var);
+			/// 	upAndMark(std::move(p), var);
+			/// }
+			for (const auto &weak_predecessor: live_point->predecessors) {
+				if (LivePointPtr predecessor = weak_predecessor.lock()) {
+					// LiveOut(P) = LiveOut(P) ∪ {v}
+					predecessor->insertLiveOut(var);
+					upAndMark(std::move(predecessor), var);
+				}
 			}
 		} catch (const std::out_of_range &) {
 			debug();
-			std::cerr << "Couldn't find live point " << live_point->getName() << " in " << *name << " while computing liveness.\n";
+			error() << "Couldn't find live point " << live_point->getName() << " in " << *name << " while computing liveness.\n";
+			error() << live_point->debugExtra() << '\n';
 			if (!lpNodeMap.empty()) {
 				std::cerr << "\nlpNodeMap:";
 				for (const auto &[lp, node]: lpNodeMap) {
