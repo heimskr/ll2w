@@ -32,10 +32,11 @@ namespace LL2W {
 	}
 
 	VariablePtr Allocator::selectMostLive(int *liveness_out) const {
-		Timer timer("SelectMostLive");
+		Timer timer{"SelectMostLive"};
 		VariablePtr ptr;
 		size_t highest = SIZE_MAX;
-		for (const auto *map: {&function->variableStore, &function->extraVariables}) {
+
+		for (const auto *map: {&function->variableStore}) {
 			for (const auto &[id, var]: *map) {
 				if (var->allRegistersSpecial()) {
 #ifdef DEBUG_SELECTMOSTLIVE
@@ -51,9 +52,10 @@ namespace LL2W {
 					continue;
 				}
 
-				const size_t sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
-				if (highest == SIZE_MAX || (highest < sum && !triedIDs.contains(var->originalID))) {
-					highest = sum;
+				// const size_t sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
+				const size_t count = function->getLiveCount(var);
+				if (highest == SIZE_MAX || (highest < count && !triedIDs.contains(var->originalID))) {
+					highest = count;
 					ptr = var;
 				}
 			}
@@ -64,11 +66,13 @@ namespace LL2W {
 			throw std::runtime_error("Couldn't select variable with highest liveness in function " + *function->name);
 		}
 
-		if (liveness_out != nullptr)
+		if (liveness_out != nullptr) {
 			*liveness_out = highest;
+		}
 
-		if (!function->canSpill(ptr))
+		if (!function->canSpill(ptr)) {
 			warn() << "Impossibility detected: can't spill " << *ptr << "\n";
+		}
 
 		return ptr;
 	}

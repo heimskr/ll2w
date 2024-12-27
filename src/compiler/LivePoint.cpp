@@ -30,6 +30,10 @@ namespace LL2W {
 		return false;
 	}
 
+	bool LivePoint::isLive(const VariablePtr &variable) const {
+		return liveIn.contains(variable) || liveOut.contains(variable);
+	}
+
 	void LivePoint::clearLive() {
 		liveIn.clear();
 		liveOut.clear();

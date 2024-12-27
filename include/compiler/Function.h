@@ -86,6 +86,9 @@ namespace LL2W {
 			void computeLivenessUAM();
 			void upAndMark(LivePointPtr, VariablePtr);
 
+			void computeLivenessNonSSA();
+			void upAndMarkNonSSA(LivePointPtr, VariablePtr);
+
 			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::SetPtr) const;
 
 		public:
@@ -365,6 +368,8 @@ namespace LL2W {
 
 			/** Returns a set of all points where a given variable or any of its aliases are live-out. */
 			std::unordered_set<LivePointPtr> getLiveOut(const VariablePtr &) const;
+
+			size_t getLiveCount(const VariablePtr &) const;
 
 			/** Returns whether the variable's live-out set is non-empty. */
 			bool isLiveOutAnywhere(const VariablePtr &) const;

@@ -29,12 +29,14 @@ namespace LL2W {
 		public:
 			WeakSet<LivePoint> predecessors;
 			WeakSet<LivePoint> successors;
+			VariablePtr marker;
 			Node *cfgNode = nullptr;
 
 			LivePoint() = default;
 
 			bool isLiveIn(const VariablePtr &) const;
 			bool isLiveOut(const VariablePtr &) const;
+			bool isLive(const VariablePtr &) const;
 			void clearLive();
 			void eraseLive(const VariablePtr &);
 

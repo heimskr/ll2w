@@ -15,7 +15,7 @@
 #include "util/Timer.h"
 #include "util/Util.h"
 
-// #define DEBUG_COLORING
+#define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 #define SELECT_MOST_LIVE
@@ -37,9 +37,10 @@ namespace LL2W {
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";
 #endif
 
-		Timer timer("ColoringAllocator::attempt");
+		Timer timer{"ColoringAllocator::attempt"};
 
 		try {
+			Timer timer{"GraphColor"};
 			interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset, WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 		} catch (const UncolorableError &err) {
 #ifdef DEBUG_COLORING

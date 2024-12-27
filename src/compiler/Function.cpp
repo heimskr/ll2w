@@ -462,6 +462,8 @@ namespace LL2W {
 	}
 
 	bool Function::spill(VariablePtr variable, bool doDebug) {
+		Timer timer{"Spill"};
+
 		bool out = false;
 		// Right after the definition of the variable to be spilled, store its value onto the stack in the proper
 		// location. For each use of the original variable, replace the original variable with a new variable, and right
@@ -1682,7 +1684,8 @@ namespace LL2W {
 #elif defined(MERGE_SET_LIVENESS)
 		computeLivenessMS();
 #else
-		computeLivenessUAM();
+		// computeLivenessUAM();
+		computeLivenessNonSSA();
 #endif
 	}
 
@@ -1808,7 +1811,66 @@ namespace LL2W {
 		timer.stop();
 		/// hackLiveness();
 	}
-	//*/
+
+	void Function::computeLivenessNonSSA() {
+		std::unordered_map<VariablePtr, std::vector<InstructionPtr>> defs;
+		std::unordered_map<VariablePtr, std::vector<InstructionPtr>> upward_exposed;
+
+		for (const InstructionPtr &instruction: linearInstructions) {
+			std::unordered_set<VariablePtr> &read = instruction->getRead();
+			std::unordered_set<VariablePtr> &written = instruction->getWritten();
+			std::unordered_set<VariablePtr> accesses = Util::merge(read, written);
+
+			for (const VariablePtr &variable: accesses) {
+				if (read.contains(variable)) {
+					std::vector<InstructionPtr> &exposed = upward_exposed[variable];
+					if (exposed.empty() || exposed.back() != instruction) {
+						exposed.emplace_back(instruction);
+					}
+				} else {
+					defs[variable].emplace_back(instruction);
+				}
+			}
+		}
+
+		for (const auto &[id, variable]: variableStore) {
+			for (const InstructionPtr &def: defs[variable]) {
+				def->marker = variable;
+			}
+
+			for (const InstructionPtr &exposed: upward_exposed[variable]) {
+				if (exposed->insertLiveIn(variable)) {
+					for (const LivePointWeakPtr &weak_predecessor: exposed->predecessors) {
+						if (LivePointPtr predecessor = weak_predecessor.lock()) {
+							upAndMarkNonSSA(std::move(predecessor), variable);
+						}
+					}
+				}
+			}
+		}
+
+		for (const InstructionPtr &instruction: linearInstructions) {
+			instruction->marker.reset();
+		}
+	}
+
+	void Function::upAndMarkNonSSA(LivePointPtr point, VariablePtr variable) {
+		point->insertLiveOut(variable);
+
+		if (point->marker == variable) {
+			return;
+		}
+
+		if (!point->insertLiveIn(variable)) {
+			return;
+		}
+
+		for (const LivePointWeakPtr &weak_predecessor: point->predecessors) {
+			if (LivePointPtr predecessor = weak_predecessor.lock()) {
+				upAndMarkNonSSA(std::move(predecessor), variable);
+			}
+		}
+	}
 
 	void Function::hackLiveness() {
 		throw std::logic_error("Don't use hackLiveness");
@@ -1859,6 +1921,16 @@ namespace LL2W {
 
 	std::unordered_set<LivePointPtr> Function::getLiveOut(const VariablePtr &var) const {
 		return getLive(var, LivePoint::liveOutPtr);
+	}
+
+	size_t Function::getLiveCount(const VariablePtr &variable) const {
+		size_t count = 0;
+
+		for (const auto &live_point: livePoints) {
+			count += live_point->isLive(variable);
+		}
+
+		return count;
 	}
 
 	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {
