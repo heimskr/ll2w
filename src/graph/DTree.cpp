@@ -255,11 +255,11 @@ namespace LL2W {
 
 	std::unordered_map<std::string, std::unordered_set<std::string>> DTree::strictDominatorLabels() const {
 		std::unordered_map<std::string, std::unordered_set<std::string>> out_map;
+
 		for (const auto &[node, set]: strictDominators()) {
-			const std::string &label = node->label();
-			out_map.insert({label, {}});
+			auto &out_set = out_map[node->label()];
 			for (Node *sub: set) {
-				out_map[label].insert(sub->label());
+				out_set.emplace(sub->label());
 			}
 		}
 

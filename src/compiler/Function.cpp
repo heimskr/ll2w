@@ -400,8 +400,8 @@ namespace LL2W {
 		Timer timer{"Relinearize"};
 		linearInstructions.clear();
 		int index = -1;
-		for (BasicBlockPtr &block: blocks) {
-			for (InstructionPtr &instruction: block->instructions) {
+		for (const BasicBlockPtr &block: blocks) {
+			for (const InstructionPtr &instruction: block->instructions) {
 				instruction->index = ++index;
 				linearInstructions.push_back(instruction);
 			}
@@ -411,6 +411,12 @@ namespace LL2W {
 	void Function::linkLivePoints() {
 		static_assert(std::derived_from<Instruction, LivePoint>);
 		static_assert(!std::derived_from<BasicBlock, LivePoint>);
+		Timer timer{"LinkLivePoints"};
+
+		for (const auto &live_point: livePoints) {
+			live_point->predecessors.clear();
+			live_point->successors.clear();
+		}
 
 		auto link = [](const LivePointPtr &from, const LivePointPtr &to) {
 			from->successors.emplace(to);
@@ -779,7 +785,8 @@ namespace LL2W {
 
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
 		if (linear_warn && linearIter == linearInstructions.end()) {
-			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->debugExtra() << '\n';
+			debug();
+			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->getIndex() << ' ' << base->debugExtra() << '\n';
 			throw std::runtime_error("Couldn't find instruction in linearInstructions in " + *name);
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
@@ -1680,16 +1687,24 @@ namespace LL2W {
 	}
 
 	void Function::upAndMark(LivePointPtr live_point, VariablePtr var) {
+		Timer timer{"UpAndMark"};
 		auto instruction = std::dynamic_pointer_cast<Instruction>(live_point);
 		assert(instruction != nullptr);
 
+		// info() << "UAM for variable " << *var << " in live point \e[2m" << live_point->getIndex() << "\e[22m " << live_point->debugExtra() << "\n";
+
 		// if def(v) ∈ B (φ excluded) then return
-		if (!var->fromPhi && !instruction->isPhi() && live_point->getWritten().contains(var)) {
+		if (!instruction->isPhi() && var->definitions.contains(instruction)) {
+			// info() << "def(v) ∈ B (φ excluded)\n";
 			return;
 		}
+		// if (!var->fromPhi && !instruction->isPhi() && live_point->getWritten().contains(var)) {
+		// 	return;
+		// }
 
 		// if v ∈ LiveIn(B) then return
 		if (live_point->isLiveIn(var)) {
+			// info() << "v ∈ LiveIn(B)\n";
 			return;
 		}
 
@@ -1698,11 +1713,12 @@ namespace LL2W {
 
 		// if v ∈ PhiDefs(B) then return
 		if (instruction->isPhi() && live_point->getWritten().contains(var)) {
+			// info() << "v ∈ PhiDefs(B)\n";
 			return;
 		}
 
 		// for each P ∈ CFG_preds(B) do
-		try {
+		// try {
 			/// for (const Node *node: lpNodeMap.at(live_point)->in()) {
 			/// 	LivePointPtr p = node->get<LivePointWeakPtr>().lock();
 			/// 	assert(p != nullptr);
@@ -1718,19 +1734,23 @@ namespace LL2W {
 					upAndMark(std::move(predecessor), var);
 				}
 			}
-		} catch (const std::out_of_range &) {
-			debug();
-			error() << "Couldn't find live point " << live_point->getName() << " in " << *name << " while computing liveness.\n";
-			error() << live_point->debugExtra() << '\n';
-			if (!lpNodeMap.empty()) {
-				std::cerr << "\nlpNodeMap:";
-				for (const auto &[lp, node]: lpNodeMap) {
-					std::cerr << ' ' << lp->getName();
-				}
-				std::cerr << "\n\n";
-			}
-			throw;
-		}
+		// } catch (const std::out_of_range &) {
+		// 	debug();
+		// 	error() << "Couldn't find live point " << live_point->getName() << " in " << *name << " while computing liveness.\n";
+		// 	error() << live_point->debugExtra() << '\n';
+		// 	if (!lpNodeMap.empty()) {
+		// 		std::cerr << "\nlpNodeMap:";
+		// 		for (const auto &[weak_lp, node]: lpNodeMap) {
+		// 			if (LivePointPtr lp = weak_lp.lock()) {
+		// 				std::cerr << ' ' << lp->getName();
+		// 			} else {
+		// 				std::cerr << " \e[31mexp.\e[39m";
+		// 			}
+		// 		}
+		// 		std::cerr << "\n\n";
+		// 	}
+		// 	throw;
+		// }
 	}
 
 	void Function::computeLivenessUAM() {
@@ -1747,18 +1767,43 @@ namespace LL2W {
 			// }
 		}
 
-		for (const auto &live_point: livePoints) {
-			if (live_point->isPhi()) {
-				const auto &written = live_point->getWritten();
-				assert(written.size() == 1);
-				live_point->insertLiveOut(*written.begin());
-				upAndMark(live_point, *written.begin());
+
+		for (const InstructionPtr &instruction: linearInstructions) {
+			if (instruction->isPhi()) {
+				for (const VariablePtr &variable: instruction->getRead()) {
+					instruction->insertLiveOut(variable);
+					upAndMark(instruction, variable);
+				}
 			} else {
-				for (const VariablePtr &variable: live_point->getRead()) {
-					upAndMark(live_point, variable);
+				for (const VariablePtr &variable: instruction->getRead()) {
+					upAndMark(instruction, variable);
 				}
 			}
 		}
+
+		// for (const auto &[id, variable]: variableStore) {
+		// 	for (const auto &weak_use: variable->uses) {
+		// 		if (InstructionPtr use = weak_use.lock()) {
+		// 			if (use->isPhi()) {
+		// 				use->insertLiveOut(variable);
+		// 			}
+		// 			upAndMark(std::move(use), variable);
+		// 		}
+		// 	}
+		// }
+
+		// for (const auto &live_point: livePoints) {
+		// 	if (live_point->isPhi()) {
+		// 		const auto &written = live_point->getWritten();
+		// 		assert(written.size() == 1);
+		// 		live_point->insertLiveOut(*written.begin());
+		// 		upAndMark(live_point, *written.begin());
+		// 	} else {
+		// 		for (const VariablePtr &variable: live_point->getRead()) {
+		// 			upAndMark(live_point, variable);
+		// 		}
+		// 	}
+		// }
 
 		timer.stop();
 		/// hackLiveness();

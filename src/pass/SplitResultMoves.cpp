@@ -7,10 +7,8 @@
 
 namespace LL2W::Passes {
 	size_t splitResultMoves(Function &function) {
-		Timer timer("SplitResultMoves");
-		size_t changed = 0;
-
-		std::list<InstructionPtr> to_remove;
+		Timer timer{"SplitResultMoves"};
+		std::vector<InstructionPtr> to_remove;
 
 		for (const auto &weak_instruction: function.categories["SetupCalls:MoveFromResult"]) { // $r0 -> %var
 			InstructionPtr instruction = weak_instruction.lock();
@@ -18,17 +16,21 @@ namespace LL2W::Passes {
 				continue;
 			}
 
-			auto move = dynamic_cast<MoveInstruction *>(instruction.get());
+			auto *move = dynamic_cast<MoveInstruction *>(instruction.get());
 			assert(move != nullptr);
 
 			size_t register_count = move->rd->registers.size();
 
-			if (register_count < 2)
+			if (register_count < 2) {
 				continue;
-			if (WhyInfo::returnValueCount < register_count)
+			}
+
+			if (WhyInfo::returnValueCount < register_count) {
 				throw std::runtime_error("Cannot split multireg return values: too many return value registers needed");
+			}
 
 			auto iter = move->rd->registers.begin();
+
 			for (size_t i = 0; i < register_count; ++i) {
 				auto rx = function.makePrecoloredVariable(WhyInfo::returnValueOffset + i, instruction->parent.lock());
 				auto new_move = std::make_shared<MoveInstruction>(rx, function.makePrecoloredVariable(*iter++, instruction->parent.lock()));
@@ -36,13 +38,16 @@ namespace LL2W::Passes {
 			}
 
 			to_remove.push_back(instruction);
-			++changed;
 		}
 
-		for (InstructionPtr &instruction: to_remove) {
-			function.remove(instruction);
+		for (const InstructionPtr &instruction: to_remove) {
+			function.remove(instruction, false);
 		}
 
-		return changed;
+		if (!to_remove.empty()) {
+			function.reindexInstructions();
+		}
+
+		return to_remove.size();
 	}
 }

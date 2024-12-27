@@ -50,16 +50,18 @@ int main(int argc, char **argv) {
 	try {
 #endif
 		if (argc == 3) {
-			LL2W::Timer timer("Compile");
-			if (strcmp(argv[1], "-d") == 0)
+			LL2W::Timer timer{"Main"};
+			if (strcmp(argv[1], "-d") == 0) {
 				compile(argv[2], true);
-			else
+			} else {
 				compile(argv[1], false);
+			}
 		} else if (argc == 2) {
-			LL2W::Timer timer("Compile");
+			LL2W::Timer timer{"Main"};
 			compile(argv[1], false);
-		} else
+		} else {
 			usage();
+		}
 #ifdef CATCH
 	} catch (...) {
 		LL2W::Timer::summary();

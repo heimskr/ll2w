@@ -130,7 +130,7 @@ namespace LL2W {
 			std::map<const std::string *, BasicBlockPtr> bbMap;
 
 			/** Maps live points to their corresponding CFG nodes. */
-			std::unordered_map<LivePointPtr, Node *> lpNodeMap;
+			WeakMap<LivePoint, Node *> lpNodeMap;
 
 			/** MovePhi can insert blocks between a pair of blocks. This maps those pairs to the created blocks so that
 			 *  extra blocks won't be created. */

@@ -1,19 +1,33 @@
+#include "graph/DJGraph.h"
+#include "graph/DTree.h"
+#include "util/Timer.h"
+#include "util/Util.h"
+
 #include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
 
-#include "graph/DJGraph.h"
-#include "graph/DTree.h"
-
 namespace LL2W {
 	DJGraph::DJGraph(Graph &graph, const std::string &label): DJGraph(graph, graph[label]) {}
 	DJGraph::DJGraph(Graph &graph, Node &start) {
-		DTree dt(graph, start);
-		dt.cloneTo(*this);
-		std::unordered_map<std::string, std::unordered_set<std::string>> doms = dt.strictDominatorLabels();
+		Timer timer{"DJGraph"};
+		std::unordered_map<std::string, std::unordered_set<std::string>> doms;
+		{
+			Timer construct_timer{"DJGraph::DTree::Construct"};
+			DTree dt(graph, start);
+			construct_timer.stop();
+
+			Timer clone_timer{"DJGraph::DTree::Clone"};
+			dt.cloneTo(*this);
+			clone_timer.stop();
+
+			doms = dt.strictDominatorLabels();
+		}
 		for (auto &[source_label, src]: graph) {
+			Timer timer{"DJGraph::Outer"};
 			for (Node *destination: *src) {
+				Timer timer{"DJGraph::Inner"};
 				if (!doms.at(destination->label()).contains(source_label)) {
 					continue;
 				}

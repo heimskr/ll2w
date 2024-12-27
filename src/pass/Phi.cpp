@@ -147,12 +147,14 @@ namespace LL2W::Passes {
 	}
 
 	void movePhi(Function &function) {
-		Timer timer("MovePhi");
-		std::list<InstructionPtr> to_remove;
+		Timer timer{"MovePhi"};
+		auto &linear = function.linearInstructions;
+		std::vector<InstructionPtr> to_remove;
+		to_remove.reserve(linear.size());
 
 		bool block_made = false;
 
-		auto &linear = function.linearInstructions;
+		Timer scan_timer{"MovePhi::Scan"};
 		auto iter = linear.begin();
 		// Scan through each instruction in order.
 		for (; iter != linear.end();) {
@@ -321,17 +323,25 @@ namespace LL2W::Passes {
 				target->addDefinition(new_instruction);
 			}
 
+			to_remove.emplace_back(instruction);
 			++iter;
-			function.remove(instruction);
+		}
+		scan_timer.stop();
+
+		{
+			Timer timer{"MovePhi::Remove"};
+			for (const InstructionPtr &ptr: to_remove) {
+				function.remove(ptr, false);
+			}
 		}
 
 		if (block_made) {
+			Timer timer{"MovePhi::BlockMade"};
 			function.relinearize();
 			Passes::makeCFG(function);
-		}
-
-		for (InstructionPtr &ptr: to_remove) {
-			function.remove(ptr);
+		} else if (!to_remove.empty()) {
+			Timer timer{"MovePhi::Reindex"};
+			function.reindexInstructions();
 		}
 	}
 

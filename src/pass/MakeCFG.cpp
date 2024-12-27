@@ -20,16 +20,15 @@ namespace LL2W::Passes {
 		function.lpNodeMap.clear();
 		function.linkLivePoints();
 
-		std::vector<LivePointPtr> nice_blocks;
-		nice_blocks.reserve(function.blocks.size());
-
-		// First pass: add all the nodes.
-		for (const auto &live_point: function.livePoints) {
-			nice_blocks.emplace_back(live_point);
-			Node &node = function.cfg.addNode(live_point->getName());
-			node.data = std::weak_ptr(std::static_pointer_cast<LivePoint>(live_point));
-			live_point->cfgNode = &node;
-			function.lpNodeMap.emplace(live_point, &node);
+		{
+			Timer timer{"MakeCFG::First"};
+			// First pass: add all the nodes.
+			for (const auto &live_point: function.livePoints) {
+				Node &node = function.cfg.addNode(live_point->getName());
+				node.data = std::weak_ptr(std::static_pointer_cast<LivePoint>(live_point));
+				live_point->cfgNode = &node;
+				function.lpNodeMap[live_point] = &node;
+			}
 		}
 
 		std::string exit_label = "$exit";
@@ -38,34 +37,37 @@ namespace LL2W::Passes {
 
 		bool exit_linked = false;
 
-		// Second pass: connect all the nodes.
-		for (const auto &live_point: function.livePoints) {
-			std::string name = live_point->getName();
-			for (const auto &weak_predecessor: live_point->predecessors) {
-				if (auto predecessor = weak_predecessor.lock()) {
-					std::string predecessor_name = predecessor->getName();
-					if (function.cfg.hasLabel(predecessor_name)) {
-						function.cfg.link(predecessor_name, name);
-					} else {
-						warn() << "Predicate \e[1m" << predecessor_name << "\e[22m doesn't correspond to any CFG node in function \e[1m" << *function.name << "\e[22m\n";
-						for (const auto &pair: function.cfg) {
-							std::cerr << "- " << pair.first << '\n';
+		{
+			Timer timer{"MakeCFG::Second"};
+			// Second pass: connect all the nodes.
+			for (const auto &live_point: function.livePoints) {
+				std::string name = live_point->getName();
+				for (const auto &weak_predecessor: live_point->predecessors) {
+					if (auto predecessor = weak_predecessor.lock()) {
+						std::string predecessor_name = predecessor->getName();
+						if (function.cfg.hasLabel(predecessor_name)) {
+							function.cfg.link(predecessor_name, name);
+						} else {
+							warn() << "Predecessor \e[1m" << predecessor_name << "\e[22m doesn't correspond to any CFG node in function \e[1m" << *function.name << "\e[22m\n";
+							for (const auto &pair: function.cfg) {
+								std::cerr << "- " << pair.first << '\n';
+							}
 						}
 					}
 				}
-			}
 
-			if (live_point->isTerminal()) {
-				function.cfg.link(name, exit_label);
-				exit_linked = true;
-			} else if (const auto *llvm = dynamic_cast<LLVMInstruction *>(live_point.get())) {
-				if (llvm->getNodeType() == NodeType::BrUncond) {
-					const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->getNode());
-					if (uncond->destination == live_point->parent.lock()->getLabel()) {
-						// The block unconditionally branches to itself, meaning it's an infinite loop.
-						// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
-						function.cfg.link(name, exit_label);
-						exit_linked = true;
+				if (live_point->isTerminal()) {
+					function.cfg.link(name, exit_label);
+					exit_linked = true;
+				} else if (const auto *llvm = dynamic_cast<LLVMInstruction *>(live_point.get())) {
+					if (llvm->getNodeType() == NodeType::BrUncond) {
+						const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->getNode());
+						if (uncond->destination == live_point->parent.lock()->getLabel()) {
+							// The block unconditionally branches to itself, meaning it's an infinite loop.
+							// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
+							function.cfg.link(name, exit_label);
+							exit_linked = true;
+						}
 					}
 				}
 			}
@@ -78,22 +80,27 @@ namespace LL2W::Passes {
 			function.cfg.link(function.blocks.back()->instructions.back()->getName(), exit_label);
 		}
 
-#ifdef CATCH_DTREE
-		try {
-#endif
-			function.dTree.emplace(function.cfg, function.cfg[0]);
-#ifdef CATCH_DTREE
-		} catch (std::exception &err) {
-			function.debug();
-			error() << "Constructing DTree failed in function " << *function.name << " for start node "
-			        << function.cfg[0].label() << ": " << err.what() << std::endl;
-			function.cfg.renderTo("cfg_error.png", "LR");
-			throw;
-		}
-#endif
-		function.dTree->name = "DTree";
-		function.djGraph.emplace(function.cfg, function.cfg[0]);
-		function.djGraph->name = "DJ Graph";
+// #ifdef CATCH_DTREE
+// 		try {
+// #endif
+// 			Timer dtree_timer{"MakeCFG::DTree"};
+// 			function.dTree.emplace(function.cfg, function.cfg[0]);
+// 			dtree_timer.stop();
+// #ifdef CATCH_DTREE
+// 		} catch (std::exception &err) {
+// 			function.debug();
+// 			error() << "Constructing DTree failed in function " << *function.name << " for start node "
+// 			        << function.cfg[0].label() << ": " << err.what() << std::endl;
+// 			function.cfg.renderTo("cfg_error.png", "LR");
+// 			throw;
+// 		}
+// #endif
+// 		function.dTree->name = "DTree";
+// 		{
+// 			Timer timer{"MakeCFG::DJGraph"};
+// 			function.djGraph.emplace(function.cfg, function.cfg[0]);
+// 		}
+// 		function.djGraph->name = "DJ Graph";
 		// Walking the CFG is necessary if we use spill costs for anything.
 		// walkCFG(function, 1000, 0, 1000);
 		return function.cfg;

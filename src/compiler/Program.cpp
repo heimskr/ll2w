@@ -31,6 +31,9 @@
 // #define SINGLE_FUNCTION "printf"
 // #define SINGLE_FUNCTION "isupper"
 // #define SINGLE_FUNCTION "_ZL12_ntoa_formatPFvcPvmmEPcmmS2_mbjjjj"
+// #define SINGLE_FUNCTION "_ZN6Kernel5mountERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS0_10shared_ptrIN2FS6DriverEEE"
+// #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser5parseEv"
+#define SINGLE_FUNCTION "_ZN8Thurisaz11addCommandsERNSt3__13mapINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS_7CommandENS0_4lessIS7_EENS5_INS0_4pairIKS7_S8_EEEEEE"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
