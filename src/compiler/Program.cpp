@@ -2,7 +2,7 @@
 #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define GRADUAL_CODE_PRINTING
-// #define DEBUG_SINGLE_FUNCTION
+#define DEBUG_SINGLE_FUNCTION
 
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "kernel_main"
@@ -29,6 +29,7 @@
 // #define SINGLE_FUNCTION "vsnprintf_"
 // #define SINGLE_FUNCTION "__cxx_global_var_init.4"
 // #define SINGLE_FUNCTION "printf"
+#define SINGLE_FUNCTION "isupper"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -371,7 +372,7 @@ namespace LL2W {
 		info() << "Analysis complete.\n";
 
 		timer.stop();
-		Timer::summary();
+		// Timer::summary();
 		Timer::clear();
 	}
 

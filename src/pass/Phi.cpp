@@ -258,7 +258,6 @@ namespace LL2W::Passes {
 						}
 						function.blocks.insert(++block_iter, middle_block);
 						function.bbMap.try_emplace(new_label, middle_block);
-						function.bbLabels.insert(new_label);
 
 						auto *uncond = new BrUncondNode(phi_block_label);
 						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);

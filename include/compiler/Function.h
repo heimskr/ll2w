@@ -83,8 +83,8 @@ namespace LL2W {
 			/** Computes liveness using a traditional, non-SSA method. Broken. Do not use. */
 			void computeLivenessTraditional();
 
-			// void computeLivenessUAM();
-			// void upAndMark(LivePointPtr, VariablePtr);
+			void computeLivenessUAM();
+			void upAndMark(LivePointPtr, VariablePtr);
 
 			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::SetPtr) const;
 
@@ -108,6 +108,8 @@ namespace LL2W {
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<InstructionPtr> linearInstructions;
 
+			std::list<InstructionPtr> &livePoints = linearInstructions;
+
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<Variable::ID, VariablePtr> variableStore;
 
@@ -127,11 +129,8 @@ namespace LL2W {
 			 *  for the function's basic blocks. */
 			std::map<const std::string *, BasicBlockPtr> bbMap;
 
-			/** Maps basic blocks to their corresponding CFG nodes. */
-			std::unordered_map<const BasicBlock *, Node *> bbNodeMap;
-
-			/** A set of the labels of all the function's basic blocks. */
-			std::unordered_set<const std::string *> bbLabels;
+			/** Maps live points to their corresponding CFG nodes. */
+			std::unordered_map<const LivePoint *, Node *> lpNodeMap;
 
 			/** MovePhi can insert blocks between a pair of blocks. This maps those pairs to the created blocks so that
 			 *  extra blocks won't be created. */
@@ -215,6 +214,9 @@ namespace LL2W {
 			/** Recreates linearInstructions from each BasicBlock's vector of instructions and renumbers the instructions. */
 			void relinearize();
 
+			/** Populates the predecessors/successors fields of all the live points. */
+			void linkLivePoints();
+
 			/** Returns a label that hasn't yet been used for a basic block or variable. */
 			Variable::ID newLabel();
 
@@ -276,9 +278,6 @@ namespace LL2W {
 
 			/** Creates a precolored variable corresponding to a given $mx (assembler-reserved) register. */
 			VariablePtr makeAssemblerVariable(unsigned char, BasicBlockPtr);
-
-			/** Returns a given basic block's CFG node. */
-			Node & operator[](const BasicBlock &) const;
 
 			/** Returns the number of arguments the function takes. */
 			int getArity() const;

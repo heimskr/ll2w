@@ -162,6 +162,10 @@ namespace LL2W {
 				return false;
 			}
 
+			virtual bool traditionallyIgnored() const {
+				return false;
+			}
+
 			std::unordered_set<VariablePtr> & getRead() final;
 			std::unordered_set<VariablePtr> & getWritten() final;
 			int getIndex() const final;

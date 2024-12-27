@@ -14,5 +14,7 @@ namespace LL2W {
 		std::string toString() const override;
 
 		Instruction * copy() const override;
+
+		bool traditionallyIgnored() const override { return true; }
 	};
 }

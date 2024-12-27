@@ -111,6 +111,19 @@ void compile(const std::string &filename, bool show_debug) {
 		std::exit(128 + SIGINT);
 	});
 
+	signal(SIGUSR1, +[](int) {
+		LL2W::Timer::summary(); // probably not safe but whatever
+		if (const std::string *name = global_function_name.load()) {
+			std::cerr << "\e[1m" << *name << "\e[22m\n";
+		}
+	});
+
+	signal(SIGSEGV, +[](int) {
+		LL2W::Timer::summary();
+		std::cerr << "Segfault!\n";
+		std::exit(128 + SIGSEGV);
+	});
+
 	// LL2W::llvmParser.in(text);
 	// LL2W::llvmParser.debug(false, false);
 	// LL2W::llvmParser.parse();

@@ -77,13 +77,11 @@ namespace LL2W::Passes {
 		// for (const auto &[old_label, new_label]: label_replacements)
 		// 	std::cerr << "    " << *old_label << " \e[2m->\e[22m " << *new_label << '\n';
 
-		function.bbLabels.clear();
 		function.bbMap.clear();
 		function.blocks.clear();
 		function.blocksAreMinimized = true;
 
 		for (const auto &[index, block]: added_blocks) {
-			function.bbLabels.insert(block->getLabel());
 			function.bbMap.emplace(block->getLabel(), block);
 			for (auto predecessor: predecessors[index]) {
 				block->preds.emplace_back(added_blocks.at(predecessor)->getLabel());

@@ -41,4 +41,26 @@ namespace LL2W {
 			allLive.erase(variable);
 		}
 	}
+
+	bool LivePoint::insertLiveIn(VariablePtr variable) {
+		if (liveIn.emplace(variable).second) {
+			allLive.emplace(std::move(variable));
+			return true;
+		}
+
+		return false;
+	}
+
+	bool LivePoint::insertLiveOut(VariablePtr variable) {
+		if (liveOut.emplace(variable).second) {
+			allLive.emplace(std::move(variable));
+			return true;
+		}
+
+		return false;
+	}
+
+	std::string LivePoint::getName() const {
+		return std::to_string(getIndex());
+	}
 }

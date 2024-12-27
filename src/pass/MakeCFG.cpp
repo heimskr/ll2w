@@ -14,66 +14,58 @@ namespace LL2W::Passes {
 	CFG & makeCFG(Function &function) {
 		Timer timer{"MakeCFG"};
 
+		function.reindexInstructions();
 		function.cfg.clear();
 		function.cfg.name = "CFG for " + *function.name;
-		function.bbNodeMap.clear();
+		function.lpNodeMap.clear();
+		function.linkLivePoints();
 
-		std::vector<BasicBlockPtr> nice_blocks;
+		std::vector<LivePointPtr> nice_blocks;
 		nice_blocks.reserve(function.blocks.size());
 
 		// First pass: add all the nodes.
-		for (const BasicBlockPtr &block: function.blocks) {
-			if (block->preds.empty() && block->instructions.size() == 1) {
-				if (auto llvm = std::dynamic_pointer_cast<LLVMInstruction>(*block->instructions.begin())) {
-					if (llvm->getNodeType() == NodeType::Unreachable) {
-						// Sometimes llvm inserts blocks with no preds and no instructions except one `unreachable` instruction.
-						// We don't like these blocks because they ruin the D-tree construction.
-						// Today is Christmas so we'll put these blocks on the naughty list.
-						continue;
-					}
-				}
-			}
-
-			nice_blocks.emplace_back(block);
-			const std::string *label = block->getLabel();
-			Node &node = function.cfg.addNode(*label);
-			node.data = std::weak_ptr(block);
-			block->node = &node;
-			function.bbNodeMap.emplace(block.get(), &node);
+		for (const auto &live_point: function.livePoints) {
+			nice_blocks.emplace_back(live_point);
+			Node &node = function.cfg.addNode(live_point->getName());
+			node.data = std::weak_ptr(std::static_pointer_cast<LivePoint>(live_point));
+			live_point->cfgNode = &node;
+			function.lpNodeMap.emplace(live_point.get(), &node);
 		}
 
-		function.cfg += "exit";
+		std::string exit_label = "$exit";
+
+		function.cfg += exit_label;
 
 		bool exit_linked = false;
 
 		// Second pass: connect all the nodes.
-		for (const BasicBlockPtr &block: nice_blocks) {
-			const std::string *label = block->getLabel();
-			for (const std::string *pred: block->preds) {
-				if (function.cfg.hasLabel(*pred)) {
-					function.cfg.link(*pred, *label);
-				} else {
-					warn() << "Predicate \e[1m" << *pred << "\e[22m doesn't correspond to any CFG node in function \e[1m" << *function.name << "\e[22m\n";
-					for (const auto &pair: function.cfg) {
-						std::cerr << "- " << pair.first << '\n';
+		for (const auto &live_point: function.livePoints) {
+			std::string name = live_point->getName();
+			for (const auto &weak_predecessor: live_point->predecessors) {
+				if (auto predecessor = weak_predecessor.lock()) {
+					std::string predecessor_name = predecessor->getName();
+					if (function.cfg.hasLabel(predecessor_name)) {
+						function.cfg.link(predecessor_name, name);
+					} else {
+						warn() << "Predicate \e[1m" << predecessor_name << "\e[22m doesn't correspond to any CFG node in function \e[1m" << *function.name << "\e[22m\n";
+						for (const auto &pair: function.cfg) {
+							std::cerr << "- " << pair.first << '\n';
+						}
 					}
 				}
 			}
 
-			if (!block->instructions.empty()) {
-				InstructionPtr &back = block->instructions.back();
-				if (back->isTerminal()) {
-					function.cfg.link(*label, "exit");
-					exit_linked = true;
-				} else if (const LLVMInstruction *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
-					if (llvm->getNodeType() == NodeType::BrUncond) {
-						const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->getNode());
-						if (uncond->destination == label) {
-							// The block unconditionally branches to itself, meaning it's an infinite loop.
-							// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
-							function.cfg.link(*label, "exit");
-							exit_linked = true;
-						}
+			if (live_point->isTerminal()) {
+				function.cfg.link(name, exit_label);
+				exit_linked = true;
+			} else if (const auto *llvm = dynamic_cast<LLVMInstruction *>(live_point.get())) {
+				if (llvm->getNodeType() == NodeType::BrUncond) {
+					const BrUncondNode *uncond = dynamic_cast<BrUncondNode *>(llvm->getNode());
+					if (uncond->destination == live_point->parent.lock()->getLabel()) {
+						// The block unconditionally branches to itself, meaning it's an infinite loop.
+						// Let's pretend for the sake of the DTree algorithms that it's connected to the exit.
+						function.cfg.link(name, exit_label);
+						exit_linked = true;
 					}
 				}
 			}
@@ -83,7 +75,7 @@ namespace LL2W::Passes {
 			// Sometimes there's an infinite loop without a block unconditionally branching to itself. The CFG might
 			// look like ([Start, A, B, C, Exit] : [Start -> A, A -> B, B -> C, C -> A]). In this case, we just pretend
 			// that the final block links to the exit node.
-			function.cfg.link(*function.blocks.back()->getLabel(), "exit");
+			function.cfg.link(function.blocks.back()->instructions.back()->getName(), exit_label);
 		}
 
 #ifdef CATCH_DTREE
@@ -107,7 +99,7 @@ namespace LL2W::Passes {
 		return function.cfg;
 	}
 
-	void walkCFG(Function &function, size_t walks, unsigned int seed, size_t inner_limit) {
+	/* void walkCFG(Function &function, size_t walks, unsigned int seed, size_t inner_limit) {
 		Timer timer{"WalkCFG"};
 		srand(seed == 0? time(NULL) : seed);
 		for (size_t walk = 0; walk < walks; ++walk) {
@@ -135,5 +127,5 @@ namespace LL2W::Passes {
 
 		// Increase the random walk counter once we're done doing all the walks.
 		function.walkCount += walks;
-	}
+	} */
 }

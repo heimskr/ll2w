@@ -23,6 +23,7 @@ namespace LL2W {
 		}
 
 		bool maySpill() const override { return false; }
+		bool traditionallyIgnored() const override { return true; }
 
 		std::shared_ptr<SemiUnclobber> makeSemi(const VariablePtr &destination);
 		Instruction * copy() const override {
@@ -45,6 +46,7 @@ namespace LL2W {
 		}
 
 		bool maySpill() const override { return false; }
+		bool traditionallyIgnored() const override { return true; }
 
 		std::pair<int, int> extractPrecolored() override {
 			precoloredWritten = {reg};
@@ -67,6 +69,8 @@ namespace LL2W {
 
 		std::string debugExtra() const override { return toString(); }
 		std::string toString() const override;
+
+		bool traditionallyIgnored() const override { return true; }
 
 		ExtractionResult extract(bool force) override;
 

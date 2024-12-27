@@ -47,7 +47,6 @@ namespace LL2W {
 			std::unordered_set<VariablePtr> nonPhiMentioned;
 			/** A set of all variables used by ϕ-instructions in this block. */
 			std::unordered_set<VariablePtr> phiUses;
-			Node *node = nullptr;
 			Function *parent = nullptr;
 			/** The total number of instructions in all basic blocks preceding this one. */
 			int offset = -1;
