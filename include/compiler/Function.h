@@ -9,6 +9,7 @@
 #include "allocator/Allocator.h"
 #include "compiler/BasicBlock.h"
 #include "compiler/CFG.h"
+#include "compiler/LivePoint.h"
 #include "compiler/StackLocation.h"
 #include "compiler/Variable.h"
 #include "graph/DJGraph.h"
@@ -69,23 +70,23 @@ namespace LL2W {
 			void extractBlocksLLVM();
 			void extractBlocksASTNode();
 
-			void computeLivenessUAM();
 
 			/** If a variable is defined in one block and used only in that block, mark it as not live anywhere. */
-			void hackLiveness();
+			[[deprecated]] void hackLiveness();
 
 			bool isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
 			bool isLiveOutUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
 
 			/** Computes liveness using merge sets. Seems to be broken? */
-			void computeLivenessMS();
+			// void computeLivenessMS();
 
 			/** Computes liveness using a traditional, non-SSA method. Broken. Do not use. */
 			void computeLivenessTraditional();
 
-			void upAndMark(BasicBlockPtr, VariablePtr);
+			// void computeLivenessUAM();
+			// void upAndMark(LivePointPtr, VariablePtr);
 
-			std::unordered_set<BasicBlockPtr> getLive(const VariablePtr &, BasicBlock::LivePtr) const;
+			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::LivePtr) const;
 
 		public:
 			Program &parent;
@@ -360,11 +361,11 @@ namespace LL2W {
 			/** Resets the liveness data for all variables. */
 			void resetLiveness();
 
-			/** Returns a set of all blocks where a given variable or any of its aliases are live-in. */
-			std::unordered_set<BasicBlockPtr> getLiveIn(const VariablePtr &) const;
+			/** Returns a set of all points where a given variable or any of its aliases are live-in. */
+			std::unordered_set<LivePointPtr> getLiveIn(const VariablePtr &) const;
 
-			/** Returns a set of all blocks where a given variable or any of its aliases are live-out. */
-			std::unordered_set<BasicBlockPtr> getLiveOut(const VariablePtr &) const;
+			/** Returns a set of all points where a given variable or any of its aliases are live-out. */
+			std::unordered_set<LivePointPtr> getLiveOut(const VariablePtr &) const;
 
 			/** Returns whether the variable's live-out set is non-empty. */
 			bool isLiveOutAnywhere(const VariablePtr &) const;
@@ -381,7 +382,7 @@ namespace LL2W {
 			void debug() { debug(std::cerr); }
 
 			/** Prints debug information about the function. */
-			void debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written,
+			void debug(bool do_blocks, bool linear, bool vars, bool read_written,
 			           bool var_liveness, bool render, bool estimations, bool aliases, bool stack, bool liveness,
 			           std::ostream & = std::cerr);
 

@@ -28,7 +28,6 @@ namespace LL2W {
 	class BasicBlock: public std::enable_shared_from_this<BasicBlock> {
 		public:
 			using Label = const std::string *;
-			using LivePtr = std::unordered_set<VariablePtr> BasicBlock::*;
 
 		private:
 			Label label = nullptr;
@@ -46,9 +45,6 @@ namespace LL2W {
 			std::unordered_set<VariablePtr> nonPhiWritten;
 			std::unordered_set<VariablePtr> nonPhiRead;
 			std::unordered_set<VariablePtr> nonPhiMentioned;
-			std::unordered_set<VariablePtr> liveIn, liveOut;
-			/** Contains everything in liveIn and liveOut. */
-			std::unordered_set<VariablePtr> allLive;
 			/** A set of all variables used by ϕ-instructions in this block. */
 			std::unordered_set<VariablePtr> phiUses;
 			Node *node = nullptr;
@@ -84,9 +80,6 @@ namespace LL2W {
 
 			/** Returns the number of instructions in the basic block that define a variable. */
 			int countDefinitions();
-
-			bool isLiveIn(const VariablePtr &) const;
-			bool isLiveOut(const VariablePtr &) const;
 
 			void setLabel(Label);
 			inline auto getLabel() const { return label; }

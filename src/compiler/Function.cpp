@@ -8,7 +8,6 @@
 #define DEBUG_READ_WRITTEN
 // #define DISABLE_COMMENTS
 // #define DEBUG_ESTIMATIONS
-#define DEBUG_BLOCK_LIVENESS
 #define DEBUG_VAR_LIVENESS
 // #define DEBUG_ALIASES
 #define DEBUG_STACK
@@ -18,7 +17,7 @@
 // #define FN_CATCH_EXCEPTIONS
 #define MOVE_PHI // Insert moves instead of coalescing ϕ-instructions.
 // #define MERGE_SET_LIVENESS // Whether to use the slow and possibly badly implemented merge set method for liveness.
-// #define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
+#define TRADITIONAL_LIVENESS // Whether to calculate liveness using a traditional, non-SSA algorithm.
 
 #include "allocator/ColoringAllocator.h"
 #include "allocator/LinearScanAllocator.h"
@@ -1521,6 +1520,7 @@ namespace LL2W {
 		return false;
 	}
 
+	/*
 	void Function::computeLivenessMS() {
 		Timer timer{"ComputeLivenessMS"};
 
@@ -1561,66 +1561,64 @@ namespace LL2W {
 			}
 		}
 	}
+	*/
 
 	void Function::computeLivenessTraditional() {
 		Timer timer{"ComputeLivenessTraditional"};
 		// https://www.classes.cs.uchicago.edu/archive/2004/spring/22620-1/docs/liveness.pdf, page 9
-		std::map<BasicBlock::Label, std::unordered_set<VariablePtr>> in, out, in_, out_;
-		std::map<BasicBlock::Label, std::vector<BasicBlockPtr>> goes_to;
+		std::unordered_map<LivePointPtr, std::unordered_set<VariablePtr>> in, out, in_, out_;
+		std::unordered_map<LivePointPtr, std::vector<LivePointPtr>> goes_to;
 
-		bool working;
-
-		// Oh no.
 		{
 			Timer subtimer{"GoesTo"};
-			for (auto &block: blocks) {
-				goes_to.try_emplace(block->getLabel());
-				for (auto &other: blocks) {
-					if (Util::contains(other->preds, block->getLabel())) {
-						goes_to[block->getLabel()].push_back(other);
+			for (const auto &live_point: linearInstructions) {
+				auto &vec = goes_to[live_point];
+				for (const BasicBlock::Label label: live_point->getLabels()) {
+					const auto &instructions = getBlock(label)->instructions;
+					if (instructions.empty()) {
+						throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));
 					}
+					vec.emplace_back(instructions.front());
 				}
 			}
 		}
 
+		bool working = true;
+
 		do {
-			for (auto &block: blocks) {
-				auto n = block->getLabel();
-				in_[n]  = in[n];
-				out_[n] = out[n];
-				in[n] = block->read;
-				for (auto &var: out[n]) {
-					if (!block->written.contains(var)) {
-						in[n].insert(var);
+			for (const auto &live_point: linearInstructions) {
+				in_[live_point] = std::move(in[live_point]);
+				out_[live_point] = std::move(out[live_point]);
+				in[live_point] = live_point->read;
+
+				auto &in_lp = in[live_point];
+				for (const VariablePtr &variable: out_[live_point]) {
+					if (!live_point->written.contains(variable)) {
+						in_lp.emplace(variable);
 					}
 				}
-				out[n].clear();
-				for (auto &succ: goes_to.at(n)) {
-					for (auto &var: in[succ->getLabel()]) {
-						// static size_t _ = 0;
-						// if (++_ == 1'000) {
-						// 	info() << "Rendering.\n";
-						// 	cfg.renderTo("cfg_infinite_liveness.svg");
-						// }
-						out[n].insert(var);
+
+				auto &out_lp = out[live_point];
+				for (const LivePointPtr &successor: goes_to.at(live_point)) {
+					for (const VariablePtr &variable: in[successor]) {
+						out_lp.emplace(variable);
 					}
 				}
 			}
 
 			working = false;
-			for (auto &block: blocks) {
-				auto n = block->getLabel();
-				if (!(Util::equal(in_[n], in[n]) && Util::equal(out_[n], out[n]))) {
+			for (const auto &live_point: linearInstructions) {
+				if (in_.at(live_point) != in.at(live_point) || out_.at(live_point) != out.at(live_point)) {
 					working = true;
 					break;
 				}
 			}
 		} while (working);
 
-		for (auto &block: blocks) {
-			block->liveIn  = std::unordered_set<VariablePtr>(in[block->getLabel()].cbegin(),  in[block->getLabel()].cend());
-			block->liveOut = std::unordered_set<VariablePtr>(out[block->getLabel()].cbegin(), out[block->getLabel()].cend());
-			block->allLive = Util::merge(block->liveIn, block->liveOut);
+		for (const auto &live_point: linearInstructions) {
+			live_point->setLiveIn(std::move(in.at(live_point)));
+			live_point->setLiveOut(std::move(out.at(live_point)));
+			live_point->setAllLive(Util::merge(live_point->getLiveIn(), live_point->getLiveOut()));
 		}
 	}
 
@@ -1634,6 +1632,7 @@ namespace LL2W {
 #endif
 	}
 
+	/*
 	void Function::upAndMark(BasicBlockPtr block, VariablePtr var) {
 		for (const auto &instruction: block->instructions) {
 			if (instruction->isPhi()) {
@@ -1700,59 +1699,57 @@ namespace LL2W {
 		timer.stop();
 		hackLiveness();
 	}
+	*/
 
 	void Function::hackLiveness() {
+		throw std::logic_error("Don't use hackLiveness");
 		Timer timer{"HackLiveness"};
 		for (const auto &[id, var]: variableStore) {
 			const auto &defines = var->definingBlocks;
 			const auto &uses = var->usingBlocks;
 			if (defines.size() == 1 && uses.size() == 1 && defines.begin()->lock() == uses.begin()->lock()) {
-				for (const BasicBlockPtr &block: blocks) {
-					block->liveIn.erase(var);
-					block->liveOut.erase(var);
-					block->allLive.erase(var);
+				for (const auto &live_point: linearInstructions) {
+					live_point->eraseLive(var);
 				}
 			}
 		}
 	}
 
 	void Function::resetLiveness() {
-		for (BasicBlockPtr &block: blocks) {
-			block->liveIn.clear();
-			block->liveOut.clear();
-			block->allLive.clear();
+		for (const auto &live_point: linearInstructions) {
+			live_point->clearLive();
 		}
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>> Function::getLive(const VariablePtr &var, BasicBlock::LivePtr lptr) const {
+	std::unordered_set<LivePointPtr> Function::getLive(const VariablePtr &var, LivePoint::LivePtr lptr) const {
 		Timer timer{"GetLive"};
-		std::unordered_set<std::shared_ptr<BasicBlock>> out;
+		std::unordered_set<std::shared_ptr<LivePoint>> out;
 		const auto &alias_pointers = var->getAliases();
-		std::unordered_set<VariablePtr> aliases;
+		std::unordered_set<VariablePtr> aliases{var};
+
 		for (const auto &[id, subvar]: variableStore) {
 			if (alias_pointers.contains(subvar.get())) {
 				aliases.insert(subvar);
 			}
 		}
-		aliases.insert(var);
+
 		for (const auto &alias: aliases) {
-			for (const auto &block: blocks) {
-				if (((*block).*lptr).contains(alias)) {
-					out.insert(block);
+			for (const auto &live_point: linearInstructions) {
+				if (((*live_point).*lptr).contains(alias)) {
+					out.emplace(live_point);
 				}
 			}
 		}
+
 		return out;
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>>
-	Function::getLiveIn(const VariablePtr &var) const {
-		return getLive(var, &BasicBlock::liveIn);
+	std::unordered_set<LivePointPtr> Function::getLiveIn(const VariablePtr &var) const {
+		return getLive(var, LivePoint::liveInPtr);
 	}
 
-	std::unordered_set<std::shared_ptr<BasicBlock>>
-	Function::getLiveOut(const VariablePtr &var) const {
-		return getLive(var, &BasicBlock::liveOut);
+	std::unordered_set<LivePointPtr> Function::getLiveOut(const VariablePtr &var) const {
+		return getLive(var, LivePoint::liveOutPtr);
 	}
 
 	bool Function::isLiveOutAnywhere(const VariablePtr &var) const {
@@ -1766,8 +1763,8 @@ namespace LL2W {
 		}
 		aliases.insert(var);
 		for (const auto &alias: aliases) {
-			for (const auto &block: blocks) {
-				if (block->liveOut.contains(alias)) {
+			for (const auto &live_point: linearInstructions) {
+				if (live_point->getLiveOut().contains(alias)) {
 					return true;
 				}
 			}
@@ -1833,11 +1830,6 @@ namespace LL2W {
 #else
 			false,
 #endif
-#ifdef DEBUG_BLOCK_LIVENESS
-			true,
-#else
-			false,
-#endif
 #ifdef DEBUG_READ_WRITTEN
 			true,
 #else
@@ -1877,7 +1869,7 @@ namespace LL2W {
 		);
 	}
 
-	void Function::debug(bool do_blocks, bool linear, bool vars, bool block_liveness, bool read_written, bool var_liveness, bool render,
+	void Function::debug(bool do_blocks, bool linear, bool vars, bool read_written, bool var_liveness, bool render,
 						 bool estimations, bool aliases, bool stack, bool show_labels, std::ostream &stream) {
 		if (do_blocks || linear || vars) {
 			stream << headerString() + " \e[94m{\e[39m\n";
@@ -1893,28 +1885,6 @@ namespace LL2W {
 					stream << ' ' << **iter;
 				}
 				stream << '.';
-				if (block_liveness) {
-					if (!block->liveIn.empty()) {
-						stream << "; live-in =";
-						const auto &liveIn = block->liveIn;
-						for (auto begin = liveIn.begin(), iter = begin, end = liveIn.end(); iter != end; ++iter) {
-							if (iter != begin) {
-								stream << ',';
-							}
-							stream << ' ' << *(*iter)->id;
-						}
-					}
-					if (!block->liveOut.empty()) {
-						stream << "; live-out =";
-						const auto &liveOut = block->liveOut;
-						for (auto begin = liveOut.begin(), iter = begin, end = liveOut.end(); iter != end; ++iter) {
-							if (iter != begin) {
-								stream << ',';
-							}
-							stream << ' ' << *(*iter)->id;
-						}
-					}
-				}
 				stream << "\e[22;24m\n";
 				if (read_written) {
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
@@ -2010,16 +1980,16 @@ namespace LL2W {
 				}
 				if (var_liveness) {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
-					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveIn(var)) {
-							stream << ' ' << *block->getLabel();
+					for (const auto &live_point: linearInstructions) {
+						if (live_point->isLiveIn(var)) {
+							stream << ' ' << live_point->index;
 						}
 					}
 					stream << "\e[0m\n";
 					stream << "    \e[2m;      \e[31mout =\e[1m";
-					for (const BasicBlockPtr &block: blocks) {
-						if (block->isLiveOut(var)) {
-							stream << ' ' << *block->getLabel();
+					for (const auto &live_point: linearInstructions) {
+						if (live_point->isLiveOut(var)) {
+							stream << ' ' << live_point->index;
 						}
 					}
 					stream << "\e[0m\n";

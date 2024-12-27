@@ -14,13 +14,7 @@
 
 namespace LL2W::Passes {
 	static bool isLive(const InstructionPtr &instruction, int reg) {
-		BasicBlockPtr block = instruction->parent.lock();
-
-		if (!block) {
-			throw std::runtime_error("Couldn't lock instruction block in LowerClobber");
-		}
-
-		return std::ranges::any_of(block->allLive, [reg](const VariablePtr &var) {
+		return std::ranges::any_of(instruction->getAllLive(), [reg](const VariablePtr &var) {
 			return var->registers.contains(reg);
 		});
 	}

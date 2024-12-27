@@ -96,12 +96,14 @@ namespace LL2W {
 			}
 		}
 
-		// for (InstructionPtr instruction: parent->categories["MovePhi"])
-		// 	if (instruction->parent.lock().get() == this)
+		// for (InstructionPtr instruction: parent->categories["MovePhi"]) {
+		// 	if (instruction->parent.lock().get() == this) {
 		// 		if (auto *move = dynamic_cast<MoveInstruction *>(instruction.get())) {
-					// std::cerr << "Phi: " << *move->rs << " (" << move->debugExtra() << ")\n";
-					// phiUses.insert(move->rs);
-				// }
+		// 			std::cerr << "Phi: " << *move->rs << " (" << move->debugExtra() << ")\n";
+		// 			phiUses.insert(move->rs);
+		// 		}
+		// 	}
+		// }
 	}
 
 	std::vector<std::shared_ptr<BasicBlock>> BasicBlock::goesTo() const {
@@ -171,34 +173,6 @@ namespace LL2W {
 		}
 
 		extract(instruction);
-	}
-
-	bool BasicBlock::isLiveIn(const VariablePtr &var) const {
-		if (0 < liveIn.count(var)) {
-			return true;
-		}
-
-		for (const VariablePtr &live_in: liveIn) {
-			if (live_in->id == var->id) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool BasicBlock::isLiveOut(const VariablePtr &var) const {
-		if (0 < liveOut.count(var)) {
-			return true;
-		}
-
-		for (const VariablePtr &live_out: liveOut) {
-			if (live_out->id == var->id) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	void BasicBlock::setLabel(Label new_label) {

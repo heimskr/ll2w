@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "compiler/ExtractionResult.h"
+#include "compiler/LivePoint.h"
 #include "instruction/InstructionMeta.h"
 #include "util/Makeable.h"
 
@@ -20,7 +21,7 @@ namespace LL2W {
 
 	using VariablePtr = std::shared_ptr<Variable>;
 
-	class Instruction {
+	class Instruction: public LivePoint {
 		protected:
 			bool extracted = false;
 			Instruction(int index_): index(index_) {}
@@ -28,7 +29,8 @@ namespace LL2W {
 		public:
 			std::weak_ptr<BasicBlock> parent;
 
-			std::unordered_set<std::shared_ptr<Variable>> read, written;
+			std::unordered_set<VariablePtr> read;
+			std::unordered_set<VariablePtr> written;
 
 			/** The order of the instruction within the entire function in its linearized representation. */
 			int index;
@@ -159,6 +161,9 @@ namespace LL2W {
 			virtual bool typeMismatch() const {
 				return false;
 			}
+
+			std::unordered_set<VariablePtr> & getRead() final;
+			std::unordered_set<VariablePtr> & getWritten() final;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;
