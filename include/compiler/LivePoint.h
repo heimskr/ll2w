@@ -11,7 +11,7 @@ namespace LL2W {
 	/** Represents a point where variables can be live-in/live-out. This used to be basic blocks, but now it's instructions. */
 	class LivePoint {
 		public:
-			using LivePtr = std::unordered_set<VariablePtr> LivePoint::*;
+			using SetPtr = std::unordered_set<VariablePtr> LivePoint::*;
 
 		private:
 			std::unordered_set<VariablePtr> liveIn, liveOut;
@@ -26,8 +26,8 @@ namespace LL2W {
 			void clearLive();
 			void eraseLive(const VariablePtr &);
 
-			static inline LivePtr liveInPtr = &LivePoint::liveIn;
-			static inline LivePtr liveOutPtr = &LivePoint::liveOut;
+			static inline SetPtr liveInPtr = &LivePoint::liveIn;
+			static inline SetPtr liveOutPtr = &LivePoint::liveOut;
 
 			inline const auto & getLiveIn() const { return liveIn; }
 			inline const auto & getLiveOut() const { return liveOut; }
@@ -39,6 +39,7 @@ namespace LL2W {
 
 			virtual std::unordered_set<VariablePtr> & getRead() = 0;
 			virtual std::unordered_set<VariablePtr> & getWritten() = 0;
+			virtual int getIndex() const = 0;
 	};
 
 	using LivePointPtr = std::shared_ptr<LivePoint>;

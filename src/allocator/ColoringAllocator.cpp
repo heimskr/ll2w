@@ -410,24 +410,26 @@ namespace LL2W {
 				continue;
 			}
 
-			for (const std::weak_ptr<BasicBlock> &bptr: var->definingBlocks) {
-				const auto index = bptr.lock()->index;
+			for (const auto &weak_def: var->definitions) {
+				const auto index = weak_def.lock()->index;
 				if (sets[index].emplace(parent_id).second) {
 					vecs[index].emplace_back(parent_id);
 				}
 			}
-			for (const std::weak_ptr<BasicBlock> &bptr: var->usingBlocks) {
-				const auto index = bptr.lock()->index;
+
+			for (const auto &weak_use: var->uses) {
+				const auto index = weak_use.lock()->index;
 				if (sets[index].emplace(parent_id).second) {
 					vecs[index].emplace_back(parent_id);
 				}
 			}
 		}
 
-		for (const std::shared_ptr<BasicBlock> &block: function->blocks) {
-			auto &vec = vecs[block->index];
-			auto &set = sets[block->index];
-			for (const VariablePtr &var: block->allLive) {
+		for (const auto &live_point: function->linearInstructions) {
+			auto index = live_point->getIndex();
+			auto &vec = vecs[index];
+			auto &set = sets[index];
+			for (const VariablePtr &var: live_point->getAllLive()) {
 				if (var->allRegistersSpecial()) {
 					continue;
 				}
@@ -484,10 +486,7 @@ namespace LL2W {
 					cachedPrecolored.emplace(std::move(set), node);
 				}
 
-				// Assumption: each basic block contains one instruction (i.e., they've all been minimized).
-				// Though does that assumption matter here?
-				BasicBlockPtr block = intermediate->parent.lock();
-				for (const VariablePtr &var: block->allLive) {
+				for (const VariablePtr &var: intermediate->getAllLive()) {
 					const auto &pid = *var->parentID();
 					if (interference.hasLabel(pid)) {
 						node->link(interference[pid], true);

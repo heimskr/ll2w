@@ -1,5 +1,5 @@
-#include "compiler/BasicBlock.h"
 #include "compiler/Function.h"
+#include "compiler/Instruction.h"
 #include "compiler/Interval.h"
 #include "compiler/Variable.h"
 #include "util/Timer.h"
@@ -27,11 +27,12 @@ namespace LL2W {
 		// lastUse = last_use_iter == var->usingBlocks.end()? firstDefinition : *last_use_iter;
 	}
 
-	std::optional<int>
-	Interval::getFirst(Function &function, const std::shared_ptr<Variable> &var, BasicBlock::LivePtr lptr) const {
-		for (const auto &block: function.blocks)
-			if ((block.get()->*lptr).contains(var))
-				return block->index;
+	std::optional<int> Interval::getFirst(Function &function, const std::shared_ptr<Variable> &var, LivePoint::SetPtr set_ptr) const {
+		for (const auto &live_point: function.linearInstructions) {
+			if (((*live_point).*set_ptr).contains(var)) {
+				return live_point->index;
+			}
+		}
 		return std::nullopt;
 	}
 
@@ -60,20 +61,20 @@ namespace LL2W {
 	int Interval::calculateStartpoint(Function &function) {
 		auto locked = variable.lock();
 		assert(locked);
-		constexpr static auto live_ptr = &BasicBlock::liveOut;
-		int calc = getFirst(function, locked, live_ptr).value_or(INT_MAX);
-		for (Variable *alias: locked->getAliases())
-			calc = std::min(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(INT_MAX));
+		int calc = getFirst(function, locked, LivePoint::liveOutPtr).value_or(INT_MAX);
+		for (Variable *alias: locked->getAliases()) {
+			calc = std::min(calc, getFirst(function, alias->shared_from_this(), LivePoint::liveOutPtr).value_or(INT_MAX));
+		}
 		return calc != INT_MAX? calc : guess();
 	}
 
 	int Interval::calculateEndpoint(Function &function) {
 		auto locked = variable.lock();
 		assert(locked);
-		constexpr static auto live_ptr = &BasicBlock::liveIn;
-		int calc = getFirst(function, locked, live_ptr).value_or(INT_MIN);
-		for (Variable *alias: locked->getAliases())
-			calc = std::max(calc, getFirst(function, alias->shared_from_this(), live_ptr).value_or(INT_MIN));
+		int calc = getFirst(function, locked, LivePoint::liveInPtr).value_or(INT_MIN);
+		for (Variable *alias: locked->getAliases()) {
+			calc = std::max(calc, getFirst(function, alias->shared_from_this(), LivePoint::liveInPtr).value_or(INT_MIN));
+		}
 		return calc != INT_MIN? calc : guess();
 	}
 

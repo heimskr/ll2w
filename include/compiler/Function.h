@@ -86,7 +86,7 @@ namespace LL2W {
 			// void computeLivenessUAM();
 			// void upAndMark(LivePointPtr, VariablePtr);
 
-			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::LivePtr) const;
+			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::SetPtr) const;
 
 		public:
 			Program &parent;

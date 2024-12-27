@@ -7,7 +7,7 @@
 #include "allocator/Allocator.h"
 
 namespace LL2W {
-	struct Interval;
+	class Interval;
 
 	using IntervalPtr = std::shared_ptr<Interval>;
 

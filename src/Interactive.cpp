@@ -172,7 +172,6 @@ namespace LL2W {
 				const bool doBlocks      = !Util::contains(split, "-blocks");
 				const bool linear        =  Util::contains(split, "linear");
 				const bool vars          =  Util::contains(split, "vars");
-				const bool blockLiveness =  Util::contains(split, "blive");
 				const bool readWritten   =  Util::contains(split, "rw");
 				const bool varLiveness   =  Util::contains(split, "vlive");
 				const bool render        =  Util::contains(split, "render");
@@ -180,8 +179,7 @@ namespace LL2W {
 				const bool aliases       =  Util::contains(split, "aliases") || Util::contains(split, "al");
 				const bool stack         =  Util::contains(split, "stack") || Util::contains(split, "st");
 				const bool labels        =  Util::contains(split, "labels") || Util::contains(split, "lb");
-				function->debug(doBlocks, linear, vars, blockLiveness, readWritten, varLiveness, render, estimations,
-					aliases, stack, labels);
+				function->debug(doBlocks, linear, vars, readWritten, varLiveness, render, estimations, aliases, stack, labels);
 			} else if (Util::isAny(first, {"st", "status"})) {
 				GET_FN();
 				info() << "Initial:    " << (function->initialDone? "done" : "not done") << "\n";
@@ -361,6 +359,7 @@ namespace LL2W {
 					const auto spill_cost = variable->spillCost();
 					info() << "Spill cost: \e[1m" << (spill_cost == INT64_MAX? "∞" : std::to_string(spill_cost))
 					       << "\e[22m\n";
+					/*
 					bool live_in_anywhere = false, live_out_anywhere = false;
 					const auto sorted_blocks = Util::nsort(function->blocks,
 						[](const BasicBlockPtr &block) -> const auto & { return *block->getLabel(); }, true);
@@ -386,6 +385,7 @@ namespace LL2W {
 							if (block->isLiveOut(variable))
 								std::cerr << DASH " %" << *block->getLabel() << "\n";
 					}
+					*/
 				}
 			} else if (Util::isAny(first, {"rl", "resetlive"})) {
 				GET_FN();

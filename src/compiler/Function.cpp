@@ -1721,7 +1721,7 @@ namespace LL2W {
 		}
 	}
 
-	std::unordered_set<LivePointPtr> Function::getLive(const VariablePtr &var, LivePoint::LivePtr lptr) const {
+	std::unordered_set<LivePointPtr> Function::getLive(const VariablePtr &var, LivePoint::SetPtr set_ptr) const {
 		Timer timer{"GetLive"};
 		std::unordered_set<std::shared_ptr<LivePoint>> out;
 		const auto &alias_pointers = var->getAliases();
@@ -1735,7 +1735,7 @@ namespace LL2W {
 
 		for (const auto &alias: aliases) {
 			for (const auto &live_point: linearInstructions) {
-				if (((*live_point).*lptr).contains(alias)) {
+				if (((*live_point).*set_ptr).contains(alias)) {
 					out.emplace(live_point);
 				}
 			}

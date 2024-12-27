@@ -81,6 +81,10 @@ namespace LL2W {
 		return written;
 	}
 
+	int Instruction::getIndex() const {
+		return index;
+	}
+
 	std::ostream & operator<<(std::ostream &os, const Instruction &instruction) {
 		return os << instruction.debugExtra();
 	}

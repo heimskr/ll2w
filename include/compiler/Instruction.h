@@ -164,6 +164,7 @@ namespace LL2W {
 
 			std::unordered_set<VariablePtr> & getRead() final;
 			std::unordered_set<VariablePtr> & getWritten() final;
+			int getIndex() const final;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;
