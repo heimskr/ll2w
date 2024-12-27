@@ -156,7 +156,7 @@ namespace LL2W::Passes {
 	void setupCalls(Function &function) {
 		auto lock = function.parent.getLock();
 		Timer timer{"SetupCalls"};
-		int i{};
+		ssize_t i{};
 		std::list<InstructionPtr> to_remove;
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {

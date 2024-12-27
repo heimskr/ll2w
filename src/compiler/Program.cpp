@@ -28,6 +28,7 @@
 // #define SINGLE_FUNCTION "_ZNSt3__14pairIKNS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEN8Thurisaz7CommandEEC2IRA5_KcRS9_TnNS_9enable_ifIXclsr10_CheckArgsE17__enable_implicitIT_T0_EEEbE4typeELb0EEEOSH_OSI_"
 // #define SINGLE_FUNCTION "vsnprintf_"
 // #define SINGLE_FUNCTION "__cxx_global_var_init.4"
+// #define SINGLE_FUNCTION "printf"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED

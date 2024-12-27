@@ -1574,7 +1574,8 @@ namespace LL2W {
 
 		{
 			Timer subtimer{"GoesTo"};
-			for (const auto &live_point: linearInstructions) {
+			for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
+				InstructionPtr live_point = *iter;
 				auto &vec = goes_to[live_point];
 				for (const BasicBlock::Label label: live_point->getLabels()) {
 					if (label->at(0) != '%') {
@@ -1585,6 +1586,11 @@ namespace LL2W {
 						throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));
 					}
 					vec.emplace_back(instructions.front());
+				}
+
+				auto next_iter = std::next(iter);
+				if (next_iter != end && !live_point->isBlockTerminal()) {
+					vec.emplace_back(*next_iter);
 				}
 			}
 		}
@@ -1883,38 +1889,36 @@ namespace LL2W {
 
 		if (do_blocks) {
 			for (const BasicBlockPtr &block: blocks) {
-				stream << "    \e[2m; \e[4;1m" << *block->getLabel() << "\e[22;2;4m @ " << block->index << ": preds =";
+				std::print(stream, "    \e[2m; \e[4;1m{}\e[22;2;4m @ {}: preds =", *block->getLabel(), block->index);
 				for (auto begin = block->preds.begin(), iter = begin, end = block->preds.end(); iter != end; ++iter) {
 					if (iter != begin) {
-						stream << ',';
+						std::print(stream, ",");
 					}
 					stream << ' ' << **iter;
 				}
-				stream << '.';
-				stream << "\e[22;24m\n";
+				std::println(stream, ".\e[22;24m");
 				if (read_written) {
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
-						int read, written;
-						std::tie(read, written) = instruction->extract();
-						stream << "\e[s    " << instruction->debugExtra() << "\e[u\e[2m" << read << " " << written << "\e[0m\n";
+						const auto [read, written] = instruction->extract();
+						std::println(stream, "\e[s          {}\e[u{:5} \e[2m{:d} {:d}\e[0m", instruction->debugExtra(), instruction->index, read, written);
 						if (show_labels) {
 							if (auto labels = instruction->getLabels(); !labels.empty()) {
-								stream << "    Labels:";
+								std::print(stream, "    Labels:");
 								for (const auto *label: labels) {
-									stream << " \e[1m" << *label << "\e[22m";
+									std::print(stream, " \e[1m{}\e[22m", *label);
 								}
-								stream << '\n';
+								std::println(stream);
 							} else {
-								stream << "    No labels.\n";
+								std::println(stream, "    No labels.");
 							}
 						}
 					}
 				} else {
 					for (const std::shared_ptr<Instruction> &instruction: block->instructions) {
-						stream << "    " << instruction->debugExtra() << "\n";
+						std::println(stream, "{:5} {}", instruction->index, instruction->debugExtra());
 					}
 				}
-				stream << "\n";
+				std::println(stream);
 			}
 		}
 		if (linear) {
