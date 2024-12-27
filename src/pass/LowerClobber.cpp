@@ -45,26 +45,24 @@ namespace LL2W::Passes {
 					auto store = std::make_shared<StackStoreInstruction>(*location, precolored);
 					auto load = std::make_shared<StackLoadInstruction>(precolored, *location);
 
-					function.comment(clobber, "Clobber $" + reg_name);
+					function.comment(clobber, "Clobber $" + reg_name, false);
 					function.insertBefore(clobber, store, false)->setDebug(*instruction, false)->setSecret()->extract();
-					function.comment(clobber->unclobber, "Unclobber $" + reg_name);
+					function.comment(clobber->unclobber, "Unclobber $" + reg_name, false);
 					function.insertBefore(clobber->unclobber, load, false)->setDebug(*instruction, true);
 					for (const auto &semi: clobber->semis) {
-						function.comment(semi, "Semiunclobber $" + reg_name + " into " + semi->destination->toString());
+						function.comment(semi, "Semiunclobber $" + reg_name + " into " + semi->destination->toString(), false);
 						auto semi_load = std::make_shared<StackLoadInstruction>(semi->destination, *location);
 						function.insertBefore(semi, semi_load, false)->setDebug(*semi, true);
 					}
 				} else {
 					for (const auto &semi: clobber->semis) {
-						function.comment(semi, "Semiunclobber $" + reg_name + " into " + semi->destination->toString());
+						function.comment(semi, "Semiunclobber $" + reg_name + " into " + semi->destination->toString(), false);
 						auto precolored = function.makePrecoloredVariable(reg, instruction->parent.lock());
 						// TODO(typed): consider inserting an assertion to validate type nonnullness.
 						precolored->type = semi->destination->type;
 						function.insertBefore<MoveInstruction, false>(semi, precolored, semi->destination);
 					}
 				}
-
-				// function.forceLiveness();
 
 				to_remove.push_back(clobber);
 				to_remove.push_back(clobber->unclobber);
@@ -74,10 +72,12 @@ namespace LL2W::Passes {
 			}
 		}
 
-		function.reindexInstructions();
-
 		for (const InstructionPtr &instruction: to_remove) {
-			function.remove(instruction);
+			function.remove(instruction, false);
+		}
+
+		if (!to_remove.empty()) {
+			function.reindexInstructions();
 		}
 
 		return to_remove.size();

@@ -1303,21 +1303,25 @@ namespace LL2W {
 		return added;
 	}
 
-	void Function::remove(InstructionPtr instruction) {
+	void Function::remove(InstructionPtr instruction, bool adjust_indices) {
 		instruction->parent.lock()->instructions.remove(instruction);
 		auto found = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);
 		if (found != linearInstructions.end()) {
 			auto iter = found;
 			++iter;
 			linearInstructions.erase(found);
-			for (auto end = linearInstructions.end(); iter != end; ++iter) {
-				--(*iter)->index;
+			if (adjust_indices) {
+				for (auto end = linearInstructions.end(); iter != end; ++iter) {
+					--(*iter)->index;
+				}
 			}
 		}
 
-		for (auto &[id, var]: variableStore) {
-			var->removeUse(instruction);
-			var->removeDefinition(instruction);
+		for (const auto *store: {&instruction->read, &instruction->written}) {
+			for (const VariablePtr &variable: *store) {
+				variable->removeUse(instruction);
+				variable->removeDefinition(instruction);
+			}
 		}
 	}
 

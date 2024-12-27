@@ -2,6 +2,7 @@
 #define COMPILE_MULTITHREADED
 // #define HIDE_PRINTS
 // #define GRADUAL_CODE_PRINTING
+// #define DEBUG_SINGLE_FUNCTION
 
 // #define SINGLE_FUNCTION "@\"_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZ4mainE3$_0EEEEE6_M_runEv\""
 // #define SINGLE_FUNCTION "kernel_main"
@@ -26,6 +27,7 @@
 // #define SINGLE_FUNCTION "_ZN6Paging6Tables5resetEb"
 // #define SINGLE_FUNCTION "_ZNSt3__14pairIKNS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEEN8Thurisaz7CommandEEC2IRA5_KcRS9_TnNS_9enable_ifIXclsr10_CheckArgsE17__enable_implicitIT_T0_EEEbE4typeELb0EEEOSH_OSI_"
 // #define SINGLE_FUNCTION "vsnprintf_"
+// #define SINGLE_FUNCTION "__cxx_global_var_init.4"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -408,7 +410,9 @@ namespace LL2W {
 				function->compile();
 
 #ifdef SINGLE_FUNCTION
+#ifdef DEBUG_SINGLE_FUNCTION
 				function->debug();
+#endif
 			}
 #elif defined(GRADUAL_CODE_PRINTING)
 				std::cout << function->toString() << std::endl;

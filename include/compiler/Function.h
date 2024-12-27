@@ -316,7 +316,7 @@ namespace LL2W {
 			                           int64_t align = 1);
 
 			/** Removes an instruction from the function. */
-			void remove(InstructionPtr);
+			void remove(InstructionPtr, bool adjust_indices = true);
 
 			/** Removes a basic block from the function. Any function that calls this should also be sure to relinearize
 			 *  instructions after calling this. */
