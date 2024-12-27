@@ -24,12 +24,12 @@ namespace LL2W {
 	const std::string * StringSet::unquote(const std::string *str) {
 		if (2 <= str->size()) {
 			if ((*str)[0] == '%') {
-				if ((*str)[1] == '"' && str->back() == '"')
-					return intern(str->substr(2, str->size() - 3));
-				return intern(str->substr(1));
-			}
-			if ((*str)[0] == '"' && str->back() == '"')
+				if ((*str)[1] == '"' && str->back() == '"') {
+					return intern('%' + str->substr(2, str->size() - 3));
+				}
+			} else if ((*str)[0] == '"' && str->back() == '"') {
 				return intern(str->substr(1, str->size() - 2));
+			}
 		}
 		return str;
 	}

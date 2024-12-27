@@ -11,8 +11,8 @@ namespace LL2W {
 
 namespace LL2W::Passes {
 	/** Replaces LLVM branches with Why instructions. Returns the number of instructions replaced. */
-	int lowerBranches(Function &);
+	size_t lowerBranches(Function &);
 
-	void lowerBranch(Function &, std::shared_ptr<Instruction> &, BrCondNode *);
-	void lowerBranch(Function &, std::shared_ptr<Instruction> &, BrUncondNode *);
+	void lowerBranch(Function &, const std::shared_ptr<Instruction> &, BrCondNode *);
+	void lowerBranch(Function &, const std::shared_ptr<Instruction> &, BrUncondNode *);
 }

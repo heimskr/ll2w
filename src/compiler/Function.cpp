@@ -1171,13 +1171,12 @@ namespace LL2W {
 		extractVariables(true);
 		Passes::discardUnusedVars(*this);
 		Passes::mergeAllBlocks(*this);
-		Passes::transformLabels(*this);
 		forceLiveness();
+		Passes::transformLabels(*this);
 		Passes::insertLabels(*this);
 		Passes::fixSignedness(*this);
 		Passes::signChars(*this);
 		hackVariables();
-		forceLiveness();
 		for (const InstructionPtr &instruction: linearInstructions) {
 			if (instruction->debugIndex != -1) {
 				auto lock = parent.getLock();
@@ -1574,6 +1573,9 @@ namespace LL2W {
 			for (const auto &live_point: linearInstructions) {
 				auto &vec = goes_to[live_point];
 				for (const BasicBlock::Label label: live_point->getLabels()) {
+					if (label->at(0) != '%') {
+						continue;
+					}
 					const auto &instructions = getBlock(label)->instructions;
 					if (instructions.empty()) {
 						throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));

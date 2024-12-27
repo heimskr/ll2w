@@ -14,6 +14,7 @@ namespace LL2W::Passes {
 				if (jtype->needsTransformation) {
 					const auto transformed = function.transformLabel(*std::get<const std::string *>(jtype->addr));
 					jtype->addr = StringSet::intern(transformed);
+					jtype->needsTransformation = false;
 					++changed;
 				}
 			}
