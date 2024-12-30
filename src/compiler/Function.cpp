@@ -139,7 +139,8 @@ namespace LL2W {
 				if (type->isMetadataTy()) {
 					continue;
 				}
-				arguments->emplace_back(LL2W::Type::fromLLVM(*type), argument.getName().str());
+
+				arguments->emplace_back(LL2W::Type::fromLLVM(*type), getOperandName(argument));
 			}
 			returnType = LL2W::Type::fromLLVM(*function->getReturnType());
 #ifdef USE_LINEAR_SCAN
@@ -267,6 +268,13 @@ namespace LL2W {
 						}
 					}
 				}
+			}
+		}
+
+		for (const BasicBlockPtr &block: blocks) {
+			const std::string *label = block->getLabel();
+			for (const BasicBlock::Label &predecessor: block->preds) {
+				getBlock(predecessor)->succs.emplace_back(label);
 			}
 		}
 	}
@@ -409,8 +417,6 @@ namespace LL2W {
 	}
 
 	void Function::linkLivePoints() {
-		static_assert(std::derived_from<Instruction, LivePoint>);
-		static_assert(!std::derived_from<BasicBlock, LivePoint>);
 		Timer timer{"LinkLivePoints"};
 
 		for (const auto &live_point: livePoints) {
@@ -423,26 +429,36 @@ namespace LL2W {
 			to->predecessors.emplace(from);
 		};
 
-		for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
-			InstructionPtr live_point = *iter;
-
-			for (const BasicBlock::Label label: live_point->getLabels()) {
-				if (label->at(0) != '%') {
-					continue;
-				}
-				const auto &instructions = getBlock(label)->instructions;
-				if (instructions.empty()) {
-					throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));
-				}
-				link(live_point, instructions.front());
-			}
-
-			if (!live_point->isBlockTerminal()) {
-				if (auto next_iter = std::next(iter); next_iter != end) {
-					link(live_point, *next_iter);
-				}
+		static_assert(!std::derived_from<Instruction, LivePoint>);
+		static_assert(std::derived_from<BasicBlock, LivePoint>);
+		for (const BasicBlockPtr &block: blocks) {
+			for (BasicBlock::Label label: block->preds) {
+				link(getBlock(label), block);
 			}
 		}
+
+		// static_assert(std::derived_from<Instruction, LivePoint>);
+		// static_assert(!std::derived_from<BasicBlock, LivePoint>);
+		// for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
+		// 	InstructionPtr live_point = *iter;
+
+		// 	for (const BasicBlock::Label label: live_point->getLabels()) {
+		// 		if (label->at(0) != '%') {
+		// 			continue;
+		// 		}
+		// 		const auto &instructions = getBlock(label)->instructions;
+		// 		if (instructions.empty()) {
+		// 			throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));
+		// 		}
+		// 		link(live_point, instructions.front());
+		// 	}
+
+		// 	if (!live_point->isBlockTerminal()) {
+		// 		if (auto next_iter = std::next(iter); next_iter != end) {
+		// 			link(live_point, *next_iter);
+		// 		}
+		// 	}
+		// }
 	}
 
 	Variable::ID Function::newLabel() {
@@ -624,8 +640,16 @@ namespace LL2W {
 		return out;
 	}
 
-	size_t Function::spillBatch(std::span<const VariablePtr> batch, bool) {
+	size_t Function::spillBatch(std::span<const VariablePtr> batch, bool do_debug) {
 		Timer timer{"SpillBatch"};
+
+		if (do_debug) {
+			info() << "SpillBatch: batch size = " << batch.size() << ':';
+			for (const VariablePtr &variable: batch) {
+				std::cerr << ' ' << *variable;
+			}
+			std::cerr << '\n';
+		}
 
 		size_t count = 0;
 
@@ -704,8 +728,12 @@ namespace LL2W {
 			++count;
 			markSpilled(variable);
 
-			Timer after_spill_timer{"SpillBatch::AfterSpill"};
-			allocator->afterSpill(variable, new_variables);
+			// Timer after_spill_timer{"SpillBatch::AfterSpill"};
+			// allocator->afterSpill(variable, new_variables);
+		}
+
+		if (do_debug) {
+			info() << "SpillBatch: spill count = " << count << '\n';
 		}
 
 		if (count == 0) {
@@ -932,7 +960,7 @@ namespace LL2W {
 		auto linearIter = std::find(linearInstructions.begin(), linearInstructions.end(), base);
 		if (linear_warn && linearIter == linearInstructions.end()) {
 			debug();
-			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->getIndex() << ' ' << base->debugExtra() << '\n';
+			warn() << "Couldn't find instruction in linearInstructions in " << *name << ": " << base->index << ' ' << base->debugExtra() << '\n';
 			throw std::runtime_error("Couldn't find instruction in linearInstructions in " + *name);
 		}
 		auto blockIter = std::find(block->instructions.begin(), block->instructions.end(), base);
@@ -1054,11 +1082,11 @@ namespace LL2W {
 		new_block->parent = this;
 		bbMap.emplace(label, new_block);
 
-		/// Node &new_node = cfg.addNode(*label);
-		/// new_node.data = std::weak_ptr(new_block);
-		/// lpNodeMap[new_block.get()] = &new_node;
-		/// Node &old_node = cfg[*block->getLabel()];
-		/// old_node.link(new_node);
+		Node &new_node = cfg.addNode(*label);
+		new_node.data = std::weak_ptr(new_block);
+		lpNodeMap[new_block] = &new_node;
+		Node &old_node = cfg[*block->getLabel()];
+		old_node.link(new_node);
 
 		for (++iter; iter != end;) {
 			for (const VariablePtr &var: (*iter)->written) {
@@ -1077,14 +1105,19 @@ namespace LL2W {
 			block->instructions.erase(iter++);
 		}
 
-		// Replace the old label with the new label in the preds of all basic blocks.
-		for (const BasicBlockPtr &possible_successor: blocks) {
-			auto predIter = std::find(possible_successor->preds.begin(), possible_successor->preds.end(), block->getLabel());
-			if (predIter != possible_successor->preds.end()) {
-				/// Node &node = cfg[**predIter];
+		// Replace the old label with the new label in the preds/succs of all basic blocks.
+		for (const BasicBlockPtr &possibility: blocks) {
+			auto pred_iter = std::find(possibility->preds.begin(), possibility->preds.end(), block->getLabel());
+			if (pred_iter != possibility->preds.end()) {
+				/// Node &node = cfg[**pred_iter];
 				/// old_node.unlink(node);
 				/// new_node.link(node);
-				*predIter = label;
+				*pred_iter = label;
+			}
+
+			auto succ_iter = std::find(possibility->succs.begin(), possibility->succs.end(), block->getLabel());
+			if (succ_iter != possibility->succs.end()) {
+				*succ_iter = label;
 			}
 		}
 
@@ -1343,7 +1376,7 @@ namespace LL2W {
 		if (!naked) {
 			Passes::makeCFG(*this);
 			extractVariables(true);
-			Passes::discardUnusedVars(*this);
+			// Passes::discardUnusedVars(*this);
 			Passes::mergeAllBlocks(*this);
 			Passes::transformLabels(*this);
 			Passes::insertLabels(*this);
@@ -1751,24 +1784,15 @@ namespace LL2W {
 
 		{
 			Timer subtimer{"Traditional::GoesTo"};
-			for (auto iter = linearInstructions.begin(), end = linearInstructions.end(); iter != end; ++iter) {
-				InstructionPtr live_point = *iter;
+			for (auto iter = livePoints.begin(), end = livePoints.end(); iter != end; ++iter) {
+				auto live_point = *iter;
 
 				auto &vec = goes_to[live_point];
-				for (const BasicBlock::Label label: live_point->getLabels()) {
+				for (const BasicBlock::Label label: live_point->succs) {
 					if (label->at(0) != '%') {
 						continue;
 					}
-					const auto &instructions = getBlock(label)->instructions;
-					if (instructions.empty()) {
-						throw std::runtime_error(std::format("BasicBlock {} has no instructions", *label));
-					}
-					vec.emplace_back(instructions.front());
-				}
-
-				auto next_iter = std::next(iter);
-				if (next_iter != end && !live_point->isBlockTerminal()) {
-					vec.emplace_back(*next_iter);
+					vec.emplace_back(getBlock(label));
 				}
 			}
 		}
@@ -1777,11 +1801,7 @@ namespace LL2W {
 
 		do {
 			Timer subtimer{"Traditional::WorkingLoop"};
-			for (const auto &live_point: linearInstructions) {
-				if (live_point->traditionallyIgnored()) {
-					// continue;
-				}
-
+			for (const auto &live_point: livePoints) {
 				in_[live_point] = std::move(in[live_point]);
 				out_[live_point] = std::move(out[live_point]);
 				in[live_point] = live_point->read;
@@ -1802,10 +1822,10 @@ namespace LL2W {
 			}
 
 			working = false;
-			for (const auto &live_point: linearInstructions) {
-				if (live_point->traditionallyIgnored()) {
-					continue;
-				}
+			for (const auto &live_point: livePoints) {
+				// if (live_point->traditionallyIgnored()) {
+				// 	continue;
+				// }
 
 				if (in_.at(live_point) != in.at(live_point) || out_.at(live_point) != out.at(live_point)) {
 					working = true;
@@ -1814,10 +1834,10 @@ namespace LL2W {
 			}
 		} while (working);
 
-		for (const auto &live_point: linearInstructions) {
-			if (live_point->traditionallyIgnored()) {
-				continue;
-			}
+		for (const auto &live_point: livePoints) {
+			// if (live_point->traditionallyIgnored()) {
+			// 	continue;
+			// }
 
 			live_point->setLiveIn(std::move(in.at(live_point)));
 			live_point->setLiveOut(std::move(out.at(live_point)));
@@ -1831,26 +1851,30 @@ namespace LL2W {
 #elif defined(MERGE_SET_LIVENESS)
 		computeLivenessMS();
 #else
-		// computeLivenessUAM();
-		computeLivenessNonSSA();
+		computeLivenessUAM();
+		// computeLivenessNonSSA();
 #endif
 	}
 
 	void Function::upAndMark(LivePointPtr live_point, VariablePtr var) {
 		Timer timer{"UpAndMark"};
-		auto instruction = std::dynamic_pointer_cast<Instruction>(live_point);
-		assert(instruction != nullptr);
+
+		static_assert(std::derived_from<BasicBlock, LivePoint>);
+		auto block = std::dynamic_pointer_cast<BasicBlock>(live_point);
+		assert(block != nullptr);
+
+		// static_assert(std::derived_from<Instruction, LivePoint>);
+		// auto instruction = std::dynamic_pointer_cast<Instruction>(live_point);
+		// assert(instruction != nullptr);
 
 		// info() << "UAM for variable " << *var << " in live point \e[2m" << live_point->getIndex() << "\e[22m " << live_point->debugExtra() << "\n";
 
 		// if def(v) ∈ B (φ excluded) then return
-		if (!instruction->isPhi() && var->definitions.contains(instruction)) {
-			// info() << "def(v) ∈ B (φ excluded)\n";
+		if (block->nonPhiWritten.contains(var)) {
+		// if (!instruction->isPhi() && var->definitions.contains(instruction)) {
+		// if (!var->fromPhi && !instruction->isPhi() && live_point->getWritten().contains(var)) {
 			return;
 		}
-		// if (!var->fromPhi && !instruction->isPhi() && live_point->getWritten().contains(var)) {
-		// 	return;
-		// }
 
 		// if v ∈ LiveIn(B) then return
 		if (live_point->isLiveIn(var)) {
@@ -1862,28 +1886,29 @@ namespace LL2W {
 		live_point->insertLiveIn(var);
 
 		// if v ∈ PhiDefs(B) then return
-		if (instruction->isPhi() && live_point->getWritten().contains(var)) {
+		if (block->inPhiDefs(var)) {
+		// if (instruction->isPhi() && live_point->getWritten().contains(var)) {
 			// info() << "v ∈ PhiDefs(B)\n";
 			return;
 		}
 
 		// for each P ∈ CFG_preds(B) do
 		// try {
-			/// for (const Node *node: lpNodeMap.at(live_point)->in()) {
-			/// 	LivePointPtr p = node->get<LivePointWeakPtr>().lock();
-			/// 	assert(p != nullptr);
-			/// 	assert(p != live_point);
-			/// 	// LiveOut(P) = LiveOut(P) ∪ {v}
-			/// 	p->insertLiveOut(var);
-			/// 	upAndMark(std::move(p), var);
-			/// }
-			for (const auto &weak_predecessor: live_point->predecessors) {
-				if (LivePointPtr predecessor = weak_predecessor.lock()) {
-					// LiveOut(P) = LiveOut(P) ∪ {v}
-					predecessor->insertLiveOut(var);
-					upAndMark(std::move(predecessor), var);
-				}
+			for (const Node *node: lpNodeMap.at(live_point)->in()) {
+				LivePointPtr p = node->get<LivePointWeakPtr>().lock();
+				assert(p != nullptr);
+				assert(p != live_point);
+				// LiveOut(P) = LiveOut(P) ∪ {v}
+				p->insertLiveOut(var);
+				upAndMark(std::move(p), var);
 			}
+			// for (const auto &weak_predecessor: live_point->predecessors) {
+			// 	if (LivePointPtr predecessor = weak_predecessor.lock()) {
+			// 		// LiveOut(P) = LiveOut(P) ∪ {v}
+			// 		predecessor->insertLiveOut(var);
+			// 		upAndMark(std::move(predecessor), var);
+			// 	}
+			// }
 		// } catch (const std::out_of_range &) {
 		// 	debug();
 		// 	error() << "Couldn't find live point " << live_point->getName() << " in " << *name << " while computing liveness.\n";
@@ -1908,28 +1933,29 @@ namespace LL2W {
 		for (const BasicBlockPtr &block: blocks) {
 			block->extractPhi();
 			block->extract();
-			// for (const VariablePtr &var: block->phiUses) {
-			// 	block->liveOut.insert(var);
-			// 	upAndMark(block, var);
-			// }
-			// for (const VariablePtr &var: block->nonPhiRead) {
-			// 	upAndMark(block, var);
-			// }
-		}
-
-
-		for (const InstructionPtr &instruction: linearInstructions) {
-			if (instruction->isPhi()) {
-				for (const VariablePtr &variable: instruction->getRead()) {
-					instruction->insertLiveOut(variable);
-					upAndMark(instruction, variable);
-				}
-			} else {
-				for (const VariablePtr &variable: instruction->getRead()) {
-					upAndMark(instruction, variable);
-				}
+			for (const VariablePtr &var: block->phiUses) {
+				block->insertLiveOut(var);
+				upAndMark(block, var);
+			}
+			for (const VariablePtr &var: block->nonPhiRead) {
+				upAndMark(block, var);
 			}
 		}
+
+		// for (const InstructionPtr &instruction: linearInstructions) {
+		// 	if (instruction->isPhi()) {
+		// 		for (const VariablePtr &variable: instruction->getRead()) {
+		// 			instruction->insertLiveOut(variable);
+		// 			upAndMark(instruction, variable);
+		// 		}
+		// 	} else {
+		// 		for (const VariablePtr &variable: instruction->getRead()) {
+		// 			upAndMark(instruction, variable);
+		// 		}
+		// 	}
+		// }
+
+
 
 		// for (const auto &[id, variable]: variableStore) {
 		// 	for (const auto &weak_use: variable->uses) {
@@ -1956,9 +1982,10 @@ namespace LL2W {
 		// }
 
 		timer.stop();
-		/// hackLiveness();
+		hackLiveness();
 	}
 
+	/*
 	void Function::computeLivenessNonSSA() {
 		std::unordered_map<VariablePtr, std::vector<InstructionPtr>> defs;
 		std::unordered_map<VariablePtr, std::vector<InstructionPtr>> upward_exposed;
@@ -2018,15 +2045,16 @@ namespace LL2W {
 			}
 		}
 	}
+	*/
 
 	void Function::hackLiveness() {
-		throw std::logic_error("Don't use hackLiveness");
+		// throw std::logic_error("Don't use hackLiveness");
 		Timer timer{"HackLiveness"};
 		for (const auto &[id, var]: variableStore) {
 			const auto &defines = var->definingBlocks;
 			const auto &uses = var->usingBlocks;
 			if (defines.size() == 1 && uses.size() == 1 && defines.begin()->lock() == uses.begin()->lock()) {
-				for (const auto &live_point: linearInstructions) {
+				for (const auto &live_point: livePoints) {
 					live_point->eraseLive(var);
 				}
 			}
@@ -2034,7 +2062,7 @@ namespace LL2W {
 	}
 
 	void Function::resetLiveness() {
-		for (const auto &live_point: linearInstructions) {
+		for (const auto &live_point: livePoints) {
 			live_point->clearLive();
 		}
 	}
@@ -2052,7 +2080,7 @@ namespace LL2W {
 		}
 
 		for (const auto &alias: aliases) {
-			for (const auto &live_point: linearInstructions) {
+			for (const auto &live_point: livePoints) {
 				if (((*live_point).*set_ptr).contains(alias)) {
 					out.emplace(live_point);
 				}
@@ -2071,6 +2099,8 @@ namespace LL2W {
 	}
 
 	size_t Function::getLiveCount(const VariablePtr &variable) const {
+		Timer timer{"GetLiveCount"};
+
 		size_t count = 0;
 
 		for (const auto &live_point: livePoints) {
@@ -2091,7 +2121,7 @@ namespace LL2W {
 		}
 		aliases.insert(var);
 		for (const auto &alias: aliases) {
-			for (const auto &live_point: linearInstructions) {
+			for (const auto &live_point: livePoints) {
 				if (live_point->getLiveOut().contains(alias)) {
 					return true;
 				}
@@ -2307,14 +2337,14 @@ namespace LL2W {
 				std::println(stream);
 				if (var_liveness) {
 					stream << "    \e[2m;      \e[32min  =\e[1m";
-					for (const auto &live_point: linearInstructions) {
+					for (const auto &live_point: livePoints) {
 						if (live_point->isLiveIn(var)) {
 							stream << ' ' << live_point->index;
 						}
 					}
 					stream << "\e[0m\n";
 					stream << "    \e[2m;      \e[31mout =\e[1m";
-					for (const auto &live_point: linearInstructions) {
+					for (const auto &live_point: livePoints) {
 						if (live_point->isLiveOut(var)) {
 							stream << ' ' << live_point->index;
 						}

@@ -56,6 +56,25 @@ namespace LL2W::Passes {
 					}
 				}
 
+				if (!live_point->instructions.empty()) {
+					auto &back = live_point->instructions.back();
+					if (back->isTerminal()) {
+						function.cfg.link(name, exit_label);
+						exit_linked = true;
+					} else if (const auto *llvm = dynamic_cast<LLVMInstruction *>(back.get())) {
+						if (llvm->getNodeType() == NodeType::BrUncond) {
+							const BrUncondNode *uncond = static_cast<BrUncondNode *>(llvm->getNode());
+							if (uncond->destination == live_point->getLabel()) {
+								// The block unconditionally branches to itself, meaning it's an infinite loop.
+								// Let's prertend for the sake of the DTree algorithms that it's connected to the exit.
+								function.cfg.link(name, exit_label);
+								exit_linked = true;
+							}
+						}
+					}
+				}
+
+				/*
 				if (live_point->isTerminal()) {
 					function.cfg.link(name, exit_label);
 					exit_linked = true;
@@ -70,6 +89,7 @@ namespace LL2W::Passes {
 						}
 					}
 				}
+				*/
 			}
 		}
 
@@ -77,7 +97,7 @@ namespace LL2W::Passes {
 			// Sometimes there's an infinite loop without a block unconditionally branching to itself. The CFG might
 			// look like ([Start, A, B, C, Exit] : [Start -> A, A -> B, B -> C, C -> A]). In this case, we just pretend
 			// that the final block links to the exit node.
-			function.cfg.link(function.blocks.back()->instructions.back()->getName(), exit_label);
+			function.cfg.link(function.blocks.back()->getName(), exit_label);
 		}
 
 // #ifdef CATCH_DTREE

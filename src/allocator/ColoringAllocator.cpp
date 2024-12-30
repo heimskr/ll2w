@@ -15,7 +15,7 @@
 #include "util/Timer.h"
 #include "util/Util.h"
 
-#define DEBUG_COLORING
+// #define DEBUG_COLORING
 #define CONSTRUCT_BY_BLOCK
 // #define SELECT_LOWEST_COST
 #define SELECT_MOST_LIVE
@@ -32,23 +32,27 @@ namespace LL2W {
 	}
 
 	Allocator::Result ColoringAllocator::attempt() {
+		return attemptOld();
+
 		Timer timer{"ColoringAllocator::attempt"};
 
 		constexpr int max_batch_size = 8;
 
 		std::vector<VariablePtr> batch;
 
+		Graph clone = interference;
+
 		for (int i = 0; i < max_batch_size; ++i) {
 			try {
 				Timer timer{"GraphColor"};
-				interference.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset, WhyInfo::savedOffset + WhyInfo::savedCount - 1);
+				clone.color(Graph::ColoringAlgorithm::Greedy, WhyInfo::temporaryOffset, WhyInfo::savedOffset + WhyInfo::savedCount - 1);
 				break;
 			} catch (const UncolorableError &) {
 				VariablePtr to_spill = select();
 				lastSpillAttempt = to_spill;
 				triedIDs.insert(to_spill->id);
 				triedLabels.insert(*to_spill->id);
-				interference -= *to_spill->id;
+				clone -= *to_spill->id;
 				batch.emplace_back(std::move(to_spill));
 			}
 		}
@@ -57,11 +61,15 @@ namespace LL2W {
 			return Result::Success;
 		}
 
-		if (auto count = function->spillBatch(batch); count > 0) {
+		if (auto count = function->spillBatch(batch, true); count > 0) {
 			spillCount += count;
+			info() << "Spilled.\n";
+			makeInterferenceGraph();
+			info() << "Remade.\n";
 			return Result::Spilled;
 		}
 
+		info() << "Didn't spill.\n";
 		return Result::NotSpilled;
 	}
 
@@ -92,7 +100,7 @@ namespace LL2W {
 		std::cerr << "Allocating for \e[1m" << *function->name << "\e[22m.\n";
 #endif
 
-		Timer timer{"ColoringAllocator::attempt"};
+		Timer timer{"ColoringAllocator::attemptOld"};
 
 		try {
 			Timer timer{"GraphColor"};
@@ -355,7 +363,7 @@ namespace LL2W {
 #endif
 
 		for (const auto &[id, var]: function->variableStore) {
-#ifdef DEBUG_COLORING
+#ifdef DEBUG_COLORING_2
 			std::cerr << "%% " << *id << ' ' << *var << "; aliases:";
 			for (Variable *alias: var->getAliases()) {
 				std::cerr << ' ' << *alias;
@@ -368,27 +376,28 @@ namespace LL2W {
 				node.data = var;
 				node.colors = {var->registers.cbegin(), var->registers.cend()};
 				node.colorsNeeded = var->registersRequired();
-#ifdef DEBUG_COLORING
+#ifdef DEBUG_COLORING_2
 				info() << *var << ": " << var->registersRequired() << " required.";
 				if (var->type) {
 					std::cerr << " " << std::string(*var->type);
 				}
 				std::cerr << "\n";
 #endif
-#ifdef DEBUG_COLORING
+#ifdef DEBUG_COLORING_2
 			} else {
 				// std::cerr << "Skipping " << *var << " (" << *id << "): parent (" << *parent_id << ") is in graph\n";
 #endif
 			}
 		}
 
+
+#ifndef CONSTRUCT_BY_BLOCK
 		std::vector<Variable::ID> labels;
 		labels.reserve(function->variableStore.size());
 		for (const auto &[id, var]: function->variableStore) {
 			labels.push_back(id);
 		}
 
-#ifndef CONSTRUCT_BY_BLOCK
 		// Maps a variable ID to a set of blocks in which the variable is live-in or live-out.
 		std::map<Variable::ID, std::unordered_set<int>> live;
 
@@ -466,14 +475,16 @@ namespace LL2W {
 				continue;
 			}
 
-			for (const auto &weak_def: var->definitions) {
+			static_assert(std::derived_from<BasicBlock, LivePoint>);
+			static_assert(!std::derived_from<Instruction, LivePoint>);
+			for (const auto &weak_def: var->definingBlocks) {
 				const auto index = weak_def.lock()->index;
 				if (sets[index].emplace(parent_id).second) {
 					vecs[index].emplace_back(parent_id);
 				}
 			}
 
-			for (const auto &weak_use: var->uses) {
+			for (const auto &weak_use: var->usingBlocks) {
 				const auto index = weak_use.lock()->index;
 				if (sets[index].emplace(parent_id).second) {
 					vecs[index].emplace_back(parent_id);
@@ -481,7 +492,7 @@ namespace LL2W {
 			}
 		}
 
-		for (const auto &live_point: function->linearInstructions) {
+		for (const auto &live_point: function->livePoints) {
 			auto index = live_point->getIndex();
 			auto &vec = vecs[index];
 			auto &set = sets[index];
@@ -497,9 +508,6 @@ namespace LL2W {
 			}
 		}
 
-#ifdef DEBUG_COLORING
-		info() << "Label count: " << labels.size() << "\n";
-#endif
 		for (const auto &[block_id, vec]: vecs) {
 			const size_t size = vec.size();
 			if (size < 2) {
@@ -515,6 +523,8 @@ namespace LL2W {
 			}
 		}
 #endif
+
+		cachedPrecolored.clear();
 
 		// With all that out of the way, we have to add some precolored nodes to tell the graph coloring algorithm not
 		// to assign certain registers to certain variables. As of this writing, only unclobber instructions cause
@@ -542,10 +552,13 @@ namespace LL2W {
 					cachedPrecolored.emplace(std::move(set), node);
 				}
 
-				for (const VariablePtr &var: intermediate->getAllLive()) {
+				for (const VariablePtr &var: intermediate->parent.lock()->getAllLive()) {
 					const auto &pid = *var->parentID();
 					if (interference.hasLabel(pid)) {
 						node->link(interference[pid], true);
+#ifdef DEBUG_COLORING
+						++links;
+#endif
 					}
 				}
 			}

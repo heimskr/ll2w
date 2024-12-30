@@ -13,7 +13,6 @@
 // #define SINGLE_FUNCTION "_Z3prcc"
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser15applyRelocationEmm"
 // #define SINGLE_FUNCTION "_ZN6Kernel12startProcessEPKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE"
-// #define SINGLE_FUNCTION "_ZL10_vsnprintfPFvcPvmmEPcmPKcS_"
 // #define SINGLE_FUNCTION "_ZN6Kernel6panicfEPKcz"
 // #define SINGLE_FUNCTION "_ZNKSt3__110__function6__funcIZZN8Thurisaz11addCommandsERNS_3mapINS_12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEENS2_7CommandENS_4lessIS9_EENS7_INS_4pairIKS9_SA_EEEEEEENK4$_31clERNS2_7ContextERKNS_6vectorIS9_NS7_IS9_EEEEEUlvE1_NS7_ISR_EEFvvEE7__cloneEPNS0_6__baseIST_EE"
 // #define SINGLE_FUNCTION "__cxx_global_var_init.118"
@@ -33,12 +32,13 @@
 // #define SINGLE_FUNCTION "_ZL12_ntoa_formatPFvcPvmmEPcmmS2_mbjjjj"
 // #define SINGLE_FUNCTION "_ZN6Kernel5mountERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS0_10shared_ptrIN2FS6DriverEEE"
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser5parseEv"
-#define SINGLE_FUNCTION "_ZN8Thurisaz11addCommandsERNSt3__13mapINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS_7CommandENS0_4lessIS7_EENS5_INS0_4pairIKS7_S8_EEEEEE"
+// #define SINGLE_FUNCTION "_ZN8Thurisaz11addCommandsERNSt3__13mapINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS_7CommandENS0_4lessIS7_EENS5_INS0_4pairIKS7_S8_EEEEEE"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
 #endif
 
+#include "allocator/ColoringAllocator.h"
 #include "compiler/BasicBlock.h"
 #include "compiler/BasicType.h"
 #include "compiler/Getelementptr.h"
@@ -418,6 +418,7 @@ namespace LL2W {
 #ifdef SINGLE_FUNCTION
 #ifdef DEBUG_SINGLE_FUNCTION
 				function->debug();
+				// dynamic_cast<ColoringAllocator &>(*function->allocator).interference.renderTo("final_interference.png");
 #endif
 			}
 #elif defined(GRADUAL_CODE_PRINTING)

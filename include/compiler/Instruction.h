@@ -21,7 +21,7 @@ namespace LL2W {
 
 	using VariablePtr = std::shared_ptr<Variable>;
 
-	class Instruction: public LivePoint {
+	class Instruction {
 		protected:
 			bool extracted = false;
 			Instruction(int index_): index(index_) {}
@@ -58,7 +58,7 @@ namespace LL2W {
 			/** Returns whether this instruction comes after another instruction. */
 			bool operator>(const Instruction &) const;
 
-			std::string debugExtra() const override { return ""; }
+			virtual std::string debugExtra() const { return ""; }
 			virtual std::string toString() const;
 
 			/** Attempts to replace a variable read by the instruction with another variable. Should be overridden by
@@ -165,10 +165,6 @@ namespace LL2W {
 			virtual bool traditionallyIgnored() const {
 				return false;
 			}
-
-			std::unordered_set<VariablePtr> & getRead() final;
-			std::unordered_set<VariablePtr> & getWritten() final;
-			int getIndex() const final;
 	};
 
 	using InstructionPtr = std::shared_ptr<Instruction>;

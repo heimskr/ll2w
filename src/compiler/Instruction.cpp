@@ -73,18 +73,6 @@ namespace LL2W {
 		return setDebug(node->debugIndex);
 	}
 
-	std::unordered_set<VariablePtr> & Instruction::getRead() {
-		return read;
-	}
-
-	std::unordered_set<VariablePtr> & Instruction::getWritten() {
-		return written;
-	}
-
-	int Instruction::getIndex() const {
-		return index;
-	}
-
 	std::ostream & operator<<(std::ostream &os, const Instruction &instruction) {
 		return os << instruction.debugExtra();
 	}

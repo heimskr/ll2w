@@ -33,6 +33,7 @@ namespace LL2W {
 			Node *cfgNode = nullptr;
 
 			LivePoint() = default;
+			virtual ~LivePoint() = default;
 
 			bool isLiveIn(const VariablePtr &) const;
 			bool isLiveOut(const VariablePtr &) const;
@@ -58,7 +59,6 @@ namespace LL2W {
 			virtual std::unordered_set<VariablePtr> & getWritten() = 0;
 			virtual int getIndex() const = 0;
 			virtual std::string debugExtra() const = 0;
-
-			std::string getName() const;
+			virtual std::string getName() const = 0;
 	};
 }

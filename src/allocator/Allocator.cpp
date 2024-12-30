@@ -45,16 +45,14 @@ namespace LL2W {
 					continue;
 				}
 
-				if (!function->canSpill(var)) {
-#ifdef DEBUG_SELECTMOSTLIVE
-					std::cerr << "Skipping " << *var << ": can't spill\n";
-#endif
-					continue;
-				}
-
-				// const size_t sum = function->getLiveIn(var).size() + function->getLiveOut(var).size();
 				const size_t count = function->getLiveCount(var);
 				if (highest == SIZE_MAX || (highest < count && !triedIDs.contains(var->originalID))) {
+					if (!function->canSpill(var)) {
+#ifdef DEBUG_SELECTMOSTLIVE
+						std::cerr << "Skipping " << *var << ": can't spill\n";
+#endif
+						continue;
+					}
 					highest = count;
 					ptr = var;
 				}

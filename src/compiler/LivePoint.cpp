@@ -63,8 +63,4 @@ namespace LL2W {
 
 		return false;
 	}
-
-	std::string LivePoint::getName() const {
-		return std::to_string(getIndex());
-	}
 }

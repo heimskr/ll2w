@@ -141,6 +141,7 @@ namespace LL2W {
 	}
 
 	bool BasicBlock::inPhiDefs(const VariablePtr &var) const {
+		Timer timer{"BasicBlock::inPhiDefs"};
 		bool found_in_written = false;
 		for (const VariablePtr &other: written) {
 			if (*var == *other) {
@@ -178,6 +179,26 @@ namespace LL2W {
 	void BasicBlock::setLabel(Label new_label) {
 		assert(new_label != nullptr);
 		label = new_label;
+	}
+
+	std::unordered_set<VariablePtr> & BasicBlock::getRead() {
+		return read;
+	}
+
+	std::unordered_set<VariablePtr> & BasicBlock::getWritten() {
+		return written;
+	}
+
+	int BasicBlock::getIndex() const {
+		return index;
+	}
+
+	std::string BasicBlock::debugExtra() const {
+		return *getLabel();
+	}
+
+	std::string BasicBlock::getName() const {
+		return *getLabel();
 	}
 
 	std::ostream & operator<<(std::ostream &os, const BasicBlock &block) {

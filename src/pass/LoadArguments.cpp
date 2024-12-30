@@ -24,8 +24,8 @@ namespace LL2W::Passes {
 			std::shared_ptr<LoadRInstruction> first_load;
 			for (int arg = arity - 1; min <= arg; --arg) {
 				const FunctionArgument &fn_arg = function.arguments->at(arg - min);
-				// TODO: change to allow non-numeric argument variables.
-				VariablePtr arg_var = function.getVariable(StringSet::intern(std::to_string(arg)), fn_arg.type, entry);
+				assert(fn_arg.name != nullptr);
+				VariablePtr arg_var = function.getVariable(fn_arg.name, fn_arg.type, entry);
 				VariablePtr m0 = function.mx(0, entry);
 				VariablePtr sp = function.sp(entry);
 

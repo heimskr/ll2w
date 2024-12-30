@@ -70,9 +70,8 @@ namespace LL2W {
 			void extractBlocksLLVM();
 			void extractBlocksASTNode();
 
-
 			/** If a variable is defined in one block and used only in that block, mark it as not live anywhere. */
-			[[deprecated]] void hackLiveness();
+			void hackLiveness();
 
 			bool isLiveInUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
 			bool isLiveOutUsingMergeSet(const Node::Map &merges, Node *block, VariablePtr var);
@@ -86,8 +85,8 @@ namespace LL2W {
 			void computeLivenessUAM();
 			void upAndMark(LivePointPtr, VariablePtr);
 
-			void computeLivenessNonSSA();
-			void upAndMarkNonSSA(LivePointPtr, VariablePtr);
+			// void computeLivenessNonSSA();
+			// void upAndMarkNonSSA(LivePointPtr, VariablePtr);
 
 			std::unordered_set<LivePointPtr> getLive(const VariablePtr &, LivePoint::SetPtr) const;
 
@@ -111,7 +110,7 @@ namespace LL2W {
 			/** A list of all instructions in the order they appear in the source code. */
 			std::list<InstructionPtr> linearInstructions;
 
-			std::list<InstructionPtr> &livePoints = linearInstructions;
+			std::list<BasicBlockPtr> &livePoints = blocks;
 
 			/** Maps numeric labels to variables. This is the main storage for the function's variables. */
 			std::map<Variable::ID, VariablePtr> variableStore;

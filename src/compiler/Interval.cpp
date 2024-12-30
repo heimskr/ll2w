@@ -28,7 +28,7 @@ namespace LL2W {
 	}
 
 	std::optional<int> Interval::getFirst(Function &function, const std::shared_ptr<Variable> &var, LivePoint::SetPtr set_ptr) const {
-		for (const auto &live_point: function.linearInstructions) {
+		for (const auto &live_point: function.livePoints) {
 			if (((*live_point).*set_ptr).contains(var)) {
 				return live_point->index;
 			}

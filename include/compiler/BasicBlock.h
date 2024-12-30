@@ -1,5 +1,8 @@
 #pragma once
 
+#include "compiler/LivePoint.h"
+#include "parser/Nodes.h"
+
 #include <list>
 #include <map>
 #include <memory>
@@ -7,8 +10,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include "parser/Nodes.h"
 
 namespace llvm {
 	class BasicBlock;
@@ -25,7 +26,7 @@ namespace LL2W {
 	using InstructionPtr = std::shared_ptr<Instruction>;
 	using VariablePtr = std::shared_ptr<Variable>;
 
-	class BasicBlock: public std::enable_shared_from_this<BasicBlock> {
+	class BasicBlock: public std::enable_shared_from_this<BasicBlock>, public LivePoint {
 		public:
 			using Label = const std::string *;
 
@@ -38,6 +39,7 @@ namespace LL2W {
 		public:
 			int index = -1;
 			std::vector<Label> preds;
+			std::vector<Label> succs;
 			std::list<InstructionPtr> instructions;
 			std::unordered_set<VariablePtr> read;
 			std::unordered_set<VariablePtr> written;
@@ -82,6 +84,12 @@ namespace LL2W {
 
 			void setLabel(Label);
 			inline auto getLabel() const { return label; }
+
+			std::string debugExtra() const final;
+			std::unordered_set<VariablePtr> & getRead() final;
+			std::unordered_set<VariablePtr> & getWritten() final;
+			int getIndex() const final;
+			std::string getName() const final;
 	};
 
 	using BasicBlockPtr = std::shared_ptr<BasicBlock>;

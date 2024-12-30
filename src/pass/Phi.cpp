@@ -338,6 +338,7 @@ namespace LL2W::Passes {
 		if (block_made) {
 			Timer timer{"MovePhi::BlockMade"};
 			function.relinearize();
+			function.reindexBlocks();
 			Passes::makeCFG(function);
 		} else if (!to_remove.empty()) {
 			Timer timer{"MovePhi::Reindex"};

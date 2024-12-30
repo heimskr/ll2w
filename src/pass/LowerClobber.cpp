@@ -13,8 +13,8 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	static bool isLive(const InstructionPtr &instruction, int reg) {
-		return std::ranges::any_of(instruction->getAllLive(), [reg](const VariablePtr &var) {
+	static bool isLive(const BasicBlockPtr &live_point, int reg) {
+		return std::ranges::any_of(live_point->getAllLive(), [reg](const VariablePtr &var) {
 			return var->registers.contains(reg);
 		});
 	}
@@ -28,7 +28,7 @@ namespace LL2W::Passes {
 				const int reg = clobber->reg;
 				const std::string reg_name = WhyInfo::registerName(reg);
 				assert(reg == clobber->unclobber->reg);
-				if (isLive(instruction, reg)) {
+				if (isLive(instruction->parent.lock(), reg)) {
 					// TODO: check liveness of register at unclobber location?
 					VariablePtr precolored = function.makePrecoloredVariable(reg, instruction->parent.lock());
 					const StackLocation *location = nullptr;

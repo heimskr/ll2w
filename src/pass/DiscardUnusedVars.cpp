@@ -4,6 +4,8 @@
 #include "pass/DiscardUnusedVars.h"
 #include "util/Timer.h"
 
+// #define DEBUG_DISCARD
+
 namespace LL2W::Passes {
 	static bool canDiscard(const VariablePtr &var) {
 		if (var->usingBlocks.empty()) {
@@ -45,11 +47,15 @@ namespace LL2W::Passes {
 				}
 
 				++discarded;
-				// info() << "Discarding " << *var << " in " << *function.name << '\n';
+#ifdef DEBUG_DISCARD
+				info() << "Discarding " << *var << " in " << *function.name << '\n';
+#endif
 
 				for (const auto &weak_definition: var->definitions) {
 					if (InstructionPtr definition = weak_definition.lock()) {
-						// std::cerr << "    " << *definition << '\n';
+#ifdef DEBUG_DISCARD
+						std::cerr << "    " << *definition << '\n';
+#endif
 						to_remove.push_back(std::move(definition));
 					}
 				}

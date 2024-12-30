@@ -133,7 +133,7 @@ namespace LL2W {
 		auto iter = labelMap.find(label);
 		if (iter == labelMap.end()) {
 			std::cerr << this << ": " << name << "[" << label << "]\n";
-			const_cast<Graph *>(this)->renderTo("graph_error.png");
+			const_cast<Graph *>(this)->renderTo("graph_error.svg");
 			throw std::out_of_range("No node with label \"" + label + "\" found");
 		}
 		return *iter->second;
@@ -239,16 +239,17 @@ namespace LL2W {
 		out.reset();
 
 		// Maps old nodes to new nodes.
-		std::unordered_map<Node *, Node *> node_map {};
+		std::unordered_map<Node *, Node *> node_map;
 		for (Node *node: nodes_) {
 			Node *new_node = new Node(&out, node->label());
-			node_map.insert({node, new_node});
-			out.nodes_.push_back(new_node);
-			out.labelMap.insert({node->label(), new_node});
+			node_map[node] = new_node;
+			out.nodes_.emplace_back(new_node);
+			out.labelMap[node->label()] = new_node;
 		}
 
 		for (auto &pair: node_map) {
-			Node *old_node = pair.first, *new_node = pair.second;
+			Node *old_node = pair.first;
+			Node *new_node = pair.second;
 			for (Node *old_link: old_node->out_) {
 				new_node->link(node_map.at(old_link), false);
 			}
