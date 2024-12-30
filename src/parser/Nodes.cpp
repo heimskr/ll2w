@@ -1492,7 +1492,7 @@ namespace LL2W {
 		std::stringstream out;
 		out << getResult() << " \e[0;2m= \e[0;91mphi\e[0m" << fastmath << " " << *type;
 		for (const std::pair<ValuePtr, const std::string *> &pair: pairs)
-			out << " \e[2m[\e[0m" << *pair.first << "\e[2m,\e[0;32m %" << *pair.second << "\e[0;2m]\e[0m";
+			out << " \e[2m[\e[0m" << *pair.first << "\e[2m,\e[0;32m " << *pair.second << "\e[0;2m]\e[0m";
 		return out.str();
 	}
 
