@@ -138,15 +138,18 @@ namespace LL2W {
 		for (const ASTNode *node: root) {
 			if (node->symbol == LLVM_STRUCTDEF) {
 				const StructNode *struct_node = dynamic_cast<const StructNode *>(node);
-				if (!struct_node)
+				if (!struct_node) {
 					throw std::runtime_error("struct_node is null in Program::Program");
+				}
 				StructType::knownStructs.emplace(*struct_node->name, std::make_shared<StructType>(struct_node));
 			}
 		}
 
 		for (ASTNode *node: root) {
-			if (node == nullptr)
+			if (node == nullptr) {
 				continue;
+			}
+
 			switch (node->symbol) {
 				case LLVM_FUNCTION_DEF:
 					functions.emplace(*node->lexerInfo, new Function(*this, *node));
@@ -154,8 +157,9 @@ namespace LL2W {
 				case LLVMTOK_DECLARE: {
 					ASTNode *header_node = node->front();
 					auto *header = dynamic_cast<FunctionHeader *>(header_node);
-					if (header->debugIndex == -1 && 1 < node->size())
+					if (header->debugIndex == -1 && 1 < node->size()) {
 						header->debugIndex = node->at(1)->front()->atoi();
+					}
 					declarations.emplace(header->lexerInfo->substr(1), header);
 					break;
 				}
@@ -165,7 +169,9 @@ namespace LL2W {
 				case LLVM_GLOBAL_DEF:
 					if (GlobalVarDef *global = dynamic_cast<GlobalVarDef *>(node)) {
 						globals.emplace(*node->lexerInfo, global);
-					} else throw std::runtime_error("Node with token GLOBAL_DEF isn't an instance of GlobalVarDef");
+					} else {
+						throw std::runtime_error("Node with token GLOBAL_DEF isn't an instance of GlobalVarDef");
+					}
 					break;
 				case LLVMTOK_ATTRIBUTES: {
 					AttributesNode *attrnode = dynamic_cast<AttributesNode *>(node);
@@ -244,17 +250,23 @@ namespace LL2W {
 
 		// If we have a line like "!3 = !{!1, !2}" and the list contains any BasicTypes, add each BasicType in the list
 		// to !3's set of BasicTypes. Note that this won't work recursively in all instances.
-		for (auto iter = root.rbegin(), rend = root.rend(); iter != rend; ++iter)
-			if (auto *def = dynamic_cast<MetadataDef *>(*iter))
+		for (auto iter = root.rbegin(), rend = root.rend(); iter != rend; ++iter) {
+			if (auto *def = dynamic_cast<MetadataDef *>(*iter)) {
 				handleSets(*def);
+			}
+		}
 
-		for (ASTNode *node: root)
-			if (auto *def = dynamic_cast<MetadataDef *>(node))
+		for (ASTNode *node: root) {
+			if (auto *def = dynamic_cast<MetadataDef *>(node)) {
 				handleSets(*def);
+			}
+		}
 
-		for (ASTNode *node: root)
-			if (auto *def = dynamic_cast<MetadataDef *>(node))
+		for (ASTNode *node: root) {
+			if (auto *def = dynamic_cast<MetadataDef *>(node)) {
 				handleLists(*def);
+			}
+		}
 
 		for (auto &[index, location]: locations) {
 			if (subprograms.count(location.scope) != 0) {
@@ -264,8 +276,9 @@ namespace LL2W {
 				do {
 					location.scope = lexicalBlocks.at(location.scope).scope;
 				} while (lexicalBlocks.count(location.scope) != 0);
-			} else
+			} else {
 				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
+			}
 		}
 	}
 
@@ -282,10 +295,12 @@ namespace LL2W {
 				if (subnode->symbol == LLVMTOK_METABANG && subnode->lexerInfo != nullstr) {
 					const int64_t subindex = subnode->atoi();
 					if (basicTypeSets.contains(subindex)) {
-						if (!basicTypeSets.contains(index))
+						if (!basicTypeSets.contains(index)) {
 							basicTypeSets.emplace(index, std::make_shared<TypeSet>());
-						for (const auto &basic_type: *basicTypeSets.at(subindex))
+						}
+						for (const auto &basic_type: *basicTypeSets.at(subindex)) {
 							basicTypeSets[index]->insert(basic_type);
+						}
 					}
 				}
 			}
@@ -606,7 +621,7 @@ namespace LL2W {
 	std::string Program::outputValue(const TypePtr &type, const ValuePtr &value) {
 		switch (value->valueType()) {
 			case ValueType::CString:
-				return "%stringz \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
+				return "%stringz \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + '"';
 
 			case ValueType::Array:
 				return outputArray(dynamic_cast<ArrayValue &>(*value.get()));
@@ -623,7 +638,7 @@ namespace LL2W {
 				if (type) {
 					const auto width = type->width();
 					if (width % 8) {
-						throw std::runtime_error("Invalid type width for null/undef/zeroinitializer value: " + std::to_string(width) + "b");
+						throw std::runtime_error("Invalid type width for null/undef/zeroinitializer value: " + std::to_string(width) + 'b');
 					}
 					return "%fill " + std::to_string(width / 8) + " 0";
 				}
@@ -695,25 +710,29 @@ namespace LL2W {
 	void Program::debugSection(std::ostream *out) {
 		int i = 0;
 		for (auto &[index, file]: files) {
-			if (out)
+			if (out) {
 				*out << "1 \"" << Util::escape(file.filename) << "\"\n";
+			}
 			file.index = i++;
 		}
 		for (auto &[index, subprogram]: subprograms) {
-			if (out)
+			if (out) {
 				*out << "2 \"" << Util::escape(subprogram.getName()) << "\"\n";
+			}
 			subprogram.index = i++;
 		}
 		for (auto &[index, location]: locations) {
 			if (files.count(location.file) == 0) {
 				warn() << "Couldn't find file " << location.file << " from location " << index << ".\n";
 			} else if (subprograms.count(location.scope) != 0) {
-				if (out)
-					*out << "3 " << files.at(location.file).index << " " << location.line << " " << location.column
-					     << " " << subprograms.at(location.scope).index << "\n";
+				if (out) {
+					*out << "3 " << files.at(location.file).index << ' ' << location.line << ' ' << location.column
+					     << ' ' << subprograms.at(location.scope).index << "\n";
+				}
 				location.index = i++;
-			} else
+			} else {
 				warn() << "Couldn't find scope " << location.scope << " from location " << index << ".\n";
+			}
 		}
 	}
 
