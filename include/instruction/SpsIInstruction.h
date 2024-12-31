@@ -7,8 +7,8 @@ namespace LL2W {
 	/**
 	 * $rs -> [$fp - imm]
 	 */
-	struct SpsIInstruction: IType, HasSize {
-		SpsIInstruction(Immediate imm, VariablePtr rd, WASMSize);
+	struct SpsIInstruction: IType {
+		SpsIInstruction(Immediate imm, VariablePtr rs);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

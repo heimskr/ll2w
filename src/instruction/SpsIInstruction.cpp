@@ -2,12 +2,11 @@
 #include "instruction/SpsIInstruction.h"
 
 namespace LL2W {
-	SpsIInstruction::SpsIInstruction(Immediate imm, VariablePtr rd, WASMSize size):
-		IType(nullptr, std::move(imm), std::move(rd)),
-		HasSize(size) {}
+	SpsIInstruction::SpsIInstruction(Immediate imm, VariablePtr rs):
+		IType(std::move(rs), std::move(imm), nullptr) {}
 
 	std::string SpsIInstruction::debugExtra() const {
-		return std::string(*rs) + "\e[2m -> [\e[22;92m$fp\e[39;2m - \e[22m" + colorize(imm, *rd, 1) + "\e[2m]\e[22m";
+		return std::string(*rs) + "\e[2m -> [\e[22;92m$fp\e[39;2m - \e[22m" + colorize(imm, false) + "\e[2m]\e[22m";
 	}
 
 	std::string SpsIInstruction::toString() const {
