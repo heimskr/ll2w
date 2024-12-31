@@ -347,7 +347,7 @@ namespace LL2W::Passes {
 	}
 
 	static Graph getDependencies(Function &function) {
-		Timer timer("GetDependencies");
+		Timer timer{"GetDependencies"};
 		Graph dependencies;
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {
