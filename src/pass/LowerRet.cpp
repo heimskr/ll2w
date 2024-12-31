@@ -14,7 +14,7 @@
 
 namespace LL2W::Passes {
 	int lowerRet(Function &function) {
-		Timer timer("LowerRet");
+		Timer timer{"LowerRet"};
 		std::vector<InstructionPtr> to_remove;
 
 		for (const InstructionPtr &instruction: function.linearInstructions) {

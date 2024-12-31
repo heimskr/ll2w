@@ -606,7 +606,7 @@ namespace LL2W {
 	std::string Program::outputValue(const TypePtr &type, const ValuePtr &value) {
 		switch (value->valueType()) {
 			case ValueType::CString:
-				return "%string \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
+				return "%stringz \"" + dynamic_cast<CStringValue *>(value.get())->reescape() + "\"";
 
 			case ValueType::Array:
 				return outputArray(dynamic_cast<ArrayValue &>(*value.get()));
