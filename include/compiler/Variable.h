@@ -108,6 +108,7 @@ namespace LL2W {
 			bool hasSpecialRegister() const;
 			/** Returns true if the variable has at least one register that isn't special purpose. */
 			bool hasNonSpecialRegister() const;
+			bool hasRegister(int) const;
 			/** Returns the number of non-special-purpose registers. */
 			size_t nonSpecialCount() const;
 			/** Returns true if the variable has at least one register and all registers are special-purpose. */

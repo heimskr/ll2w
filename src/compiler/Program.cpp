@@ -33,6 +33,7 @@
 // #define SINGLE_FUNCTION "_ZN6Kernel5mountERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS0_10shared_ptrIN2FS6DriverEEE"
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser5parseEv"
 // #define SINGLE_FUNCTION "_ZN8Thurisaz11addCommandsERNSt3__13mapINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS_7CommandENS0_4lessIS7_EENS5_INS0_4pairIKS7_S8_EEEEEE"
+// #define SINGLE_FUNCTION "_ZN6Paging6Tables7initPMMEv"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED
@@ -433,7 +434,7 @@ namespace LL2W {
 #ifdef SINGLE_FUNCTION
 #ifdef DEBUG_SINGLE_FUNCTION
 				function->debug();
-				// dynamic_cast<ColoringAllocator &>(*function->allocator).interference.renderTo("final_interference.png");
+				// dynamic_cast<ColoringAllocator &>(*function->allocator).interference.renderTo("final_interference.svg");
 #endif
 			}
 #elif defined(GRADUAL_CODE_PRINTING)

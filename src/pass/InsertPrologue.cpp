@@ -39,7 +39,7 @@ namespace LL2W::Passes {
 
 		// Next, we need to push any variables that are written to.
 		std::set<int> written;
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (const InstructionPtr &instruction: function.linearInstructions) {
 			for (const VariablePtr &variable: instruction->written) {
 				for (const int reg: variable->registers) {
 					if (!WhyInfo::isSpecialPurpose(reg) && WhyInfo::isCalleeSaved(reg)) {
@@ -58,7 +58,7 @@ namespace LL2W::Passes {
 #else
 			function.insertBefore(first, std::make_shared<StackPushInstruction>(variable), false)->setDebug(*first)->extract();
 #endif
-			function.initialPushedBytes += 8;
+			function.initialPushedBytes.value() += 8;
 		}
 
 		function.insertBefore(first, std::make_shared<MoveInstruction>(sp, fp), false)->setDebug(*first)->extract();

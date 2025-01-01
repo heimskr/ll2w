@@ -184,7 +184,7 @@ namespace LL2W::Passes {
 
 				if (function.parent.simpleFunctions.count(name) != 0) {
 					CallingConvention convention;
-					bool ellipsis;
+					bool ellipsis{};
 					const long simple_index = function.parent.simpleFunctions.at(name);
 					extractInfo(global_uptr->name, function, call, convention, ellipsis, nullptr);
 					// TODO: Instructions inserted here won't be touched by SplitResultMoves. This might be an issue.
@@ -206,9 +206,9 @@ namespace LL2W::Passes {
 			}
 
 			// Now we need to find out about the function's arguments because we need to know how to call it.
-			CallingConvention convention;
+			CallingConvention convention{};
 			std::vector<TypePtr> argument_types;
-			bool ellipsis;
+			bool ellipsis{};
 			TypePtr return_type;
 
 			if (global_uptr) {
@@ -239,17 +239,7 @@ namespace LL2W::Passes {
 			}
 #endif
 
-			// Clobber caller-saved registers as necessary.
-			std::vector<std::shared_ptr<Clobber>> clobbers;
-			ClobberMap clobbers_by_reg;
-			for (int offset = 0; offset < WhyInfo::temporaryCount; ++offset) {
-				const int reg = WhyInfo::temporaryOffset + offset;
-				auto clobber = function.clobber(instruction, reg);
-				clobbers.push_back(clobber);
-				clobbers_by_reg.emplace(reg, std::move(clobber));
-			}
-
-			// Next, if applicable, we account for the situation where the jump is to an argument register. Because it
+			// If applicable, we account for the situation where the jump is to an argument register. Because it
 			// may be overwritten right before the jump, we'd need to copy it to a temporary variable and jump to that.
 			VariablePtr jump_var;
 			if (!global_uptr) {
@@ -289,8 +279,18 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, std::make_shared<StackPushInstruction>(m2))->setDebug(*llvm)->extract();
 			}
 
-			// Once we're done putting the arguments in the proper place, remove the variables from the call
-			// instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
+			// Clobber caller-saved registers as necessary.
+			std::vector<std::shared_ptr<Clobber>> clobbers;
+			ClobberMap clobbers_by_reg;
+			for (int offset = 0; offset < WhyInfo::temporaryCount; ++offset) {
+				const int reg = WhyInfo::temporaryOffset + offset;
+				auto clobber = function.clobber(instruction, reg);
+				clobbers.push_back(clobber);
+				clobbers_by_reg.emplace(reg, std::move(clobber));
+			}
+
+			// Once we're done putting the arguments in the proper place and clobbering caller-saved registers, remove the variables
+			// from the call instruction's set of read variables so the register allocator doesn't try to insert any spills/loads.
 			llvm->read.clear();
 
 			// At this point, we're ready to insert the jump.
@@ -537,6 +537,7 @@ namespace LL2W::Passes {
 					throw std::runtime_error("Invalid sign extension in setupCallValue: " + std::to_string(signext));
 			}
 			out->setDebug(*instruction)->extract();
+			out->meta.emplace(InstructionMeta::IgnoreForClobbers); // TODO!: verify
 			return out;
 		};
 
@@ -546,6 +547,7 @@ namespace LL2W::Passes {
 			// If it's a variable, move it into the argument register.
 			auto local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
+			move->meta.emplace(InstructionMeta::IgnoreForClobbers);
 			auto out = function.insertBefore(instruction, std::move(move));
 			out->setDebug(*instruction)->extract();
 			if (signext) {

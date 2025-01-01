@@ -11,7 +11,7 @@ namespace LL2W::Passes {
 			return;
 		}
 
-		Timer timer("InsertStackSkip");
+		Timer timer{"InsertStackSkip"};
 		BasicBlockPtr entry = function.getEntry();
 		auto sp = function.sp(entry);
 		auto sub = std::make_shared<SubIInstruction>(sp, 0, sp);
@@ -26,11 +26,12 @@ namespace LL2W::Passes {
 
 		Timer timer{"ReadjustStackSkip"};
 
-		if (!function.categories.contains("StackSkip")) {
+		auto iter = function.categories.find("StackSkip");
+		if (iter == function.categories.end()) {
 			throw std::runtime_error("No StackSkip category found in function " + *function.name);
 		}
 
-		const auto &set = function.categories.at("StackSkip");
+		const auto &set = iter->second;
 
 		if (set.size() != 1) {
 			throw std::runtime_error("Expected size of StackSkip set to be exactly one, but it's " + std::to_string(set.size()));

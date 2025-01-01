@@ -37,7 +37,7 @@ namespace LL2W::Util {
 	std::string translateBacktrace(const std::vector<std::string> &);
 
 	template <typename T>
-	inline T upalign(T num, long alignment) {
+	inline T upalign(T num, std::type_identity_t<T> alignment) {
 		return num + ((alignment - (num % alignment)) % alignment);
 	}
 

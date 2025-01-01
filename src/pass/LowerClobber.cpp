@@ -13,10 +13,70 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	static bool isLive(const BasicBlockPtr &live_point, int reg) {
-		return std::ranges::any_of(live_point->getAllLive(), [reg](const VariablePtr &var) {
+	static bool isLive(const BasicBlockPtr &block, int reg) {
+		assert(block != nullptr);
+		return std::ranges::any_of(block->getAllLive(), [reg](const VariablePtr &var) {
 			return var->registers.contains(reg);
 		});
+	}
+
+	static bool isLive(const std::shared_ptr<Clobber> &clobber) {
+		Timer timer{"Clobber::IsLive"};
+
+		BasicBlockPtr block = clobber->parent.lock();
+		const auto reg = clobber->reg;
+
+		if (isLive(block, reg)) {
+			return true;
+		}
+
+		// Sometimes a variable will be defined before the clobber but in the same block, and used after the clobber but
+		// also in the same block. If the defining blocks count and the using blocks count are both 1, then the variable
+		// will be considered not live anywhere, but it still needs to be clobbered.
+
+		const auto clobber_index = clobber->index;
+
+		for (const InstructionPtr &instruction: block->instructions) {
+			// Don't look for definitions after the clobber,
+			if (clobber_index <= instruction->index) {
+				break;
+			}
+
+			for (const VariablePtr &written: instruction->written) {
+				// Skip this variable if it's not assigned the clobbered register.
+				if (!written->hasRegister(reg)) {
+					continue;
+				}
+
+				// Skip this variable if it's defined in multiple blocks.
+				if (written->definingBlocks.size() > 1) {
+					continue;
+				}
+
+				// Skip this variable if it's not used anywhere.
+				if (written->uses.empty()) {
+					continue;
+				}
+
+				// Skip this variable if it has no definitions in this block before the clobber.
+				if (!written->definitions.iterate([&](InstructionPtr &&definition) {
+					return definition->parent.lock() == block && definition->index < clobber_index;
+				})) {
+					continue;
+				}
+
+				// Skip this variable if there are no uses in this block after the clobber.
+				if (!written->uses.iterate([&](InstructionPtr &&use) {
+					return use->parent.lock() == block && use->index > clobber_index;
+				})) {
+					continue;
+				}
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	size_t lowerClobber(Function &function) {
@@ -28,7 +88,7 @@ namespace LL2W::Passes {
 				const int reg = clobber->reg;
 				const std::string reg_name = WhyInfo::registerName(reg);
 				assert(reg == clobber->unclobber->reg);
-				if (isLive(instruction->parent.lock(), reg)) {
+				if (isLive(clobber)) {
 					// TODO: check liveness of register at unclobber location?
 					VariablePtr precolored = function.makePrecoloredVariable(reg, instruction->parent.lock());
 					const StackLocation *location = nullptr;

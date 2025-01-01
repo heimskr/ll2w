@@ -463,6 +463,10 @@ namespace LL2W {
 		return false;
 	}
 
+	bool Variable::hasRegister(int reg) const {
+		return registers.contains(reg);
+	}
+
 	size_t Variable::nonSpecialCount() const {
 		size_t count = 0;
 		for (const auto reg: registers) {

@@ -1365,8 +1365,8 @@ namespace LL2W {
 		const bool naked = isNaked();
 		if (!naked) {
 			Passes::insertPrologue(*this);
+			Passes::loadArgumentsReadjust(*this);
 		}
-		Passes::loadArgumentsReadjust(*this);
 		Passes::removeUnreachable(*this);
 		if (!naked) {
 			Passes::lowerRet(*this);
@@ -1982,7 +1982,7 @@ namespace LL2W {
 		// }
 
 		timer.stop();
-		hackLiveness();
+		// hackLiveness();
 	}
 
 	/*
@@ -2048,7 +2048,7 @@ namespace LL2W {
 	*/
 
 	void Function::hackLiveness() {
-		// throw std::logic_error("Don't use hackLiveness");
+		throw std::logic_error("Don't use hackLiveness");
 		Timer timer{"HackLiveness"};
 		for (const auto &[id, var]: variableStore) {
 			const auto &defines = var->definingBlocks;

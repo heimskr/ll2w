@@ -37,7 +37,7 @@ namespace LL2W {
 	 * Reg16: The first sixteen arguments are put in registers $a0 through $af, left-to-right. The rest are pushed to
 	 *        the stack right-to-left.
 	 */
-	enum class CallingConvention {StackOnly, Reg16};
+	enum class CallingConvention {Invalid = 0, StackOnly, Reg16};
 
 	/**
 	 * Represents a function and contains code for converting functions from LLVM's intermediate representation into Why
@@ -169,7 +169,7 @@ namespace LL2W {
 			bool blocksAreMinimized = false;
 
 			/** The number of bytes pushed to the stack when InsertPrologue saves registers, including $fp and $sp. */
-			int initialPushedBytes = -1;
+			std::optional<int> initialPushedBytes;
 
 			int debugIndex = -1;
 			int initialDebugIndex = -1;
