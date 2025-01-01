@@ -7,3 +7,4 @@ $m5: Used for storing prologue size
 $m6: Used for spilled variables
 $m7: Not used; reserved for pseudoinstruction expansion by wasmc
 $m8: Used for Getelementptr temporary values
+$m9: Used for StackSkip

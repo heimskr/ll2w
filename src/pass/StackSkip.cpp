@@ -1,6 +1,7 @@
 #include "compiler/Function.h"
 #include "instruction/MoveInstruction.h"
-#include "instruction/SubIInstruction.h"
+#include "instruction/SetInstruction.h"
+#include "instruction/SubRInstruction.h"
 #include "pass/InsertLabels.h"
 #include "pass/StackSkip.h"
 #include "util/Timer.h"
@@ -13,10 +14,14 @@ namespace LL2W::Passes {
 
 		Timer timer{"InsertStackSkip"};
 		BasicBlockPtr entry = function.getEntry();
-		auto sp = function.sp(entry);
-		auto sub = std::make_shared<SubIInstruction>(sp, 0, sp);
-		function.insertBefore(function.linearInstructions.front(), sub, "InsertStackSkip")->setDebug(function.initialDebugIndex)->extract();
-		function.categories["StackSkip"].emplace(sub);
+		VariablePtr sp = function.sp(entry);
+		VariablePtr m9 = function.mx(9, entry);
+		auto set = std::make_shared<SetInstruction>(m9, 0);
+		auto sub = std::make_shared<SubRInstruction>(sp, m9, sp);
+		InstructionPtr anchor = function.linearInstructions.front();
+		function.insertBefore(anchor, set, "InsertStackSkip")->setDebug(function.initialDebugIndex)->extract();
+		function.insertBefore(anchor, std::move(sub))->setDebug(function.initialDebugIndex)->extract();
+		function.categories["StackSkip"].emplace(std::move(set));
 	}
 
 	void readjustStackSkip(Function &function) {
@@ -38,6 +43,6 @@ namespace LL2W::Passes {
 		}
 
 		// We need to add an offset of 8 because spush subtracts and then writes to memory.
-		dynamic_cast<SubIInstruction &>(*set.begin()->lock()).imm = function.stackSize + 8;
+		dynamic_cast<IType &>(*set.begin()->lock()).imm = function.stackSize + 8;
 	}
 }
