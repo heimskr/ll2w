@@ -14,7 +14,7 @@ namespace LL2W {
 		std::vector<std::shared_ptr<SemiUnclobber>> semis;
 
 		Clobber(int reg_):
-			IntermediateInstruction(index_), reg(reg_) {}
+			IntermediateInstruction(), reg(reg_) {}
 
 		std::string debugExtra() const override { return toString(); }
 
@@ -37,7 +37,7 @@ namespace LL2W {
 		int reg;
 
 		Unclobber(int reg_):
-			IntermediateInstruction(index_), reg(reg_) {}
+			IntermediateInstruction(), reg(reg_) {}
 
 		std::string debugExtra() const override { return toString(); }
 
@@ -53,7 +53,7 @@ namespace LL2W {
 			return {0, 1};
 		}
 
-		Instruction * copy() const override { return new Unclobber(reg, index); }
+		Instruction * copy() const override { return new Unclobber(reg); }
 	};
 
 	struct SemiUnclobber: IntermediateInstruction, Makeable<SemiUnclobber> {
@@ -62,7 +62,6 @@ namespace LL2W {
 		VariablePtr destination;
 
 		SemiUnclobber(int reg, VariablePtr source, VariablePtr destination):
-			IntermediateInstruction(index),
 			reg(reg),
 			source(std::move(source)),
 			destination(std::move(destination)) {}
@@ -76,6 +75,6 @@ namespace LL2W {
 
 		std::pair<int, int> extractPrecolored() override;
 
-		Instruction * copy() const override { return new SemiUnclobber(reg, source, destination, index); }
+		Instruction * copy() const override { return new SemiUnclobber(reg, source, destination); }
 	};
 }

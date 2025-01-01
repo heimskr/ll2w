@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	PageStackInstruction::PageStackInstruction(bool is_push, VariablePtr rs_):
-		RType(rs_, nullptr, nullptr, index_), isPush(is_push) {}
+		RType(rs_, nullptr, nullptr), isPush(is_push) {}
 
 	std::string PageStackInstruction::debugExtra() const {
 		if (!rs)

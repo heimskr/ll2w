@@ -231,7 +231,6 @@ namespace LL2W {
 		blocks.clear();
 
 		int block_index = -1;
-		int instruction_index = -1;
 
 		for (llvm::BasicBlock &block: *llvmFunction) {
 			const std::string *label = StringSet::intern(getOperandName(block));
@@ -240,7 +239,7 @@ namespace LL2W {
 			{
 				Timer timer{"InstructionCreationLoop"};
 				for (llvm::Instruction &instruction: block) {
-					auto llvm = std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), ++instruction_index, true);
+					auto llvm = std::make_shared<LLVMInstruction>(InstructionNode::fromLLVM(&instruction), true);
 					instructions.push_back(llvm);
 					linearInstructions.push_back(std::move(llvm));
 				}
@@ -285,7 +284,6 @@ namespace LL2W {
 		std::vector<const std::string *> preds;
 		std::list<std::shared_ptr<Instruction>> instructions;
 		int offset = 0;
-		int instruction_index = -1;
 		int block_index = -1;
 		linearInstructions.clear();
 		bbMap.clear();
@@ -321,7 +319,7 @@ namespace LL2W {
 				label = header->label;
 				preds = header->preds;
 			} else if (InstructionNode *instruction = dynamic_cast<InstructionNode *>(child)) {
-				instructions.push_back(std::make_shared<LLVMInstruction>(instruction, ++instruction_index));
+				instructions.push_back(std::make_shared<LLVMInstruction>(instruction));
 				linearInstructions.push_back(instructions.back());
 			}
 		}
@@ -592,7 +590,7 @@ namespace LL2W {
 					instruction->read.erase(variable);
 #endif
 					instruction->read.insert(new_var);
-					auto load = std::make_shared<StackLoadInstruction>(new_var, location, -1);
+					auto load = std::make_shared<StackLoadInstruction>(new_var, location);
 					insertBefore(instruction, load, "Spill: stack load: location=" + std::to_string(location.offset));
 					load->extract();
 					out = true;
@@ -1129,7 +1127,7 @@ namespace LL2W {
 
 		// Add an unconditional branch from the original block to the new block.
 		BrUncondNode *node = new BrUncondNode(*label);
-		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, -1, true);
+		std::shared_ptr<LLVMInstruction> branch = std::make_shared<LLVMInstruction>(node, true);
 		branch->parent = block;
 		block->instructions.push_back(branch);
 		iter = std::find(linearInstructions.begin(), linearInstructions.end(), instruction);

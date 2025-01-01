@@ -2,7 +2,8 @@
 #include "instruction/Comment.h"
 
 namespace LL2W {
-	Comment::Comment(const std::string &text_): WhyInstruction(index_), text(text_) {}
+	Comment::Comment(std::string text):
+		text(std::move(text)) {}
 
 	std::string Comment::debugExtra() const {
 		return "\e[35m// " + text + "\e[22;39m";

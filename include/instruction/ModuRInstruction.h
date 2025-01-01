@@ -7,5 +7,6 @@ namespace LL2W {
 		using RType::RType;
 		std::string debugExtra() const override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }

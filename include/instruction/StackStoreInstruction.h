@@ -12,7 +12,6 @@ namespace LL2W {
 		std::shared_ptr<Variable> originalVariable;
 
 		StackStoreInstruction(StackLocation location_, std::shared_ptr<Variable> variable_):
-			IntermediateInstruction(index_),
 			location(std::move(location_)),
 			variable(variable_),
 			originalVariable(std::move(variable_)) {}

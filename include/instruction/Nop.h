@@ -4,7 +4,7 @@
 
 namespace LL2W {
 	struct Nop: WhyInstruction {
-		Nop(int index_ = -1);
+		Nop();
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

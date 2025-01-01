@@ -1,14 +1,12 @@
-#ifndef INSTRUCTION_DIVURINSTRUCTION_H_
-#define INSTRUCTION_DIVURINSTRUCTION_H_
+#pragma once
 
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct DivuRInstruction: public RType {
+	struct DivuRInstruction: RType {
 		using RType::RType;
 		std::string debugExtra() const override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }
-
-#endif

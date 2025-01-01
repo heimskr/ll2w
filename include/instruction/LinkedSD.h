@@ -6,8 +6,9 @@ namespace LL2W {
 		using T::T;
 
 		bool fixSignedness() override {
-			if (this->rs->type && this->rd->type)
+			if (this->rs->type && this->rd->type) {
 				return this->rs->type->shareSignedness(this->rd->type);
+			}
 			return false;
 		}
 	};

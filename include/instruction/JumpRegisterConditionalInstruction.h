@@ -10,7 +10,7 @@ namespace LL2W {
 
 		JumpRegisterConditionalInstruction(VariablePtr rs_, VariablePtr rd_,
 		bool link_ = false):
-			RType(std::move(rs_), nullptr, std::move(rd_), index_), link(link_) {}
+			RType(std::move(rs_), nullptr, std::move(rd_)), link(link_) {}
 
 		std::pair<char, char> extract(bool = false) override;
 		bool replaceRead(const VariablePtr &, const VariablePtr &) override;

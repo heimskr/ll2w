@@ -2,7 +2,7 @@
 
 namespace LL2W {
 	JumpInstruction::JumpInstruction(ValueType addr_, bool link_, Condition condition_):
-		JType(nullptr, addr_, link_, index_), Conditional(condition_) {}
+		JType(nullptr, addr_, link_), Conditional(condition_) {}
 
 	std::string JumpInstruction::debugExtra() const {
 		return "\e[2m" + conditionPrefix() + (link? "::" : ":") + "\e[0m " + colorize(addr);

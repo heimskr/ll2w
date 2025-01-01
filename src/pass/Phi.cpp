@@ -262,7 +262,7 @@ namespace LL2W::Passes {
 						function.bbMap.try_emplace(new_label, middle_block);
 
 						auto *uncond = new BrUncondNode(phi_block_label);
-						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, -1, true);
+						auto new_llvm = std::make_shared<LLVMInstruction>(uncond, true);
 						new_llvm->parent = middle_block;
 
 						auto comment_node = std::make_shared<Comment>(comment);

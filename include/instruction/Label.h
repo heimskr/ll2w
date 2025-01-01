@@ -6,7 +6,7 @@ namespace LL2W {
 	struct Label: WhyInstruction {
 		std::string name;
 
-		Label(const std::string &name_);
+		Label(std::string name);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

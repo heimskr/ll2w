@@ -1,14 +1,13 @@
-#ifndef INSTRUCTION_DIVUIIINSTRUCTION_H_
-#define INSTRUCTION_DIVUIIINSTRUCTION_H_
+#pragma once
 
 #include "instruction/IType.h"
+#include "instruction/LinkedSD.h"
 
 namespace LL2W {
-	struct DivuiIInstruction: public IType<> {
-		using IType::IType;
+	struct DivuiIInstruction: LinkedSD<IType> {
+		using LinkedSD::LinkedSD;
 		std::string debugExtra() const override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }
-
-#endif

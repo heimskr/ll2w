@@ -407,7 +407,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, make_signext(local->variable, var));
 			}
 			// TODO: verify
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var))->setDebug(*instruction)->extract();
 			return size;
 		}
 

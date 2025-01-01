@@ -1,16 +1,14 @@
-#ifndef INSTRUCTION_SIZEDSTACKPUSHINSTRUCTION_H_
-#define INSTRUCTION_SIZEDSTACKPUSHINSTRUCTION_H_
+#pragma once
 
 #include "instruction/RType.h"
 
 namespace LL2W {
-	struct SizedStackPushInstruction: public RType {
+	struct SizedStackPushInstruction: RType {
 		int size; // in bytes
-		SizedStackPushInstruction(std::shared_ptr<Variable> rs_, int size_, int index_);
-		SizedStackPushInstruction(std::shared_ptr<Variable> rs_);
+		SizedStackPushInstruction(VariablePtr rs, int size_);
+		SizedStackPushInstruction(VariablePtr rs);
 		std::string debugExtra() const override;
 		std::string toString() const override;
+		Instruction * copy() const override;
 	};
 }
-
-#endif

@@ -2,7 +2,7 @@
 #include "instruction/RestInstruction.h"
 
 namespace LL2W {
-	RestInstruction::RestInstruction(int index_):
+	RestInstruction::RestInstruction():
 		RType(nullptr, nullptr, nullptr) {}
 
 	std::string RestInstruction::debugExtra() const {

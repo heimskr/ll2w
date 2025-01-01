@@ -9,4 +9,8 @@ namespace LL2W {
 	std::string DivuiIInstruction::toString() const {
 		return LL2W::toString(imm) + " / " + rs->toString() + " -> " + rd->toString() + " /u";
 	}
+
+	Instruction * DivuiIInstruction::copy() const {
+		return new DivuiIInstruction(*this);
+	}
 }

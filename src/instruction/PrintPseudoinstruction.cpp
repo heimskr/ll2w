@@ -7,7 +7,7 @@ namespace LL2W {
 		IType(nullptr, imm_, nullptr) {}
 
 	PrintPseudoinstruction::PrintPseudoinstruction(const std::string *text_, bool):
-		IType(nullptr, 0, nullptr, index_), text(text_) {}
+		IType(nullptr, 0, nullptr), text(text_) {}
 
 	PrintPseudoinstruction::PrintPseudoinstruction(const std::string &text_):
 		PrintPseudoinstruction(StringSet::intern(text_), false) {}

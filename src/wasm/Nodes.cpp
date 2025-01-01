@@ -554,7 +554,7 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMChNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd), 4);
+		return std::make_unique<CopyRInstruction>(conv(rs), conv(rd), WASMSize::Half);
 	}
 
 	WASMLhNode::WASMLhNode(ASTNode *rs_, ASTNode *rd_):
@@ -570,7 +570,7 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMLhNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd), 4);
+		return std::make_unique<LoadRInstruction>(conv(rs), conv(rd), WASMSize::Half);
 	}
 
 	WASMShNode::WASMShNode(ASTNode *rs_, ASTNode *rd_):
@@ -586,7 +586,7 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMShNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd), 4);
+		return std::make_unique<StoreRInstruction>(conv(rs), conv(rd), WASMSize::Half);
 	}
 
 	WASMCmpNode::WASMCmpNode(ASTNode *rs_, ASTNode *rt_):
@@ -790,8 +790,9 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMSizedStackNode::convert(Function &function, VarMap &map) {
 		auto conv = [&](const std::string *str) { return convertVariable(function, map, str); };
-		if (isPush)
+		if (isPush) {
 			return std::make_unique<SizedStackPushInstruction>(conv(rs), size);
+		}
 		return std::make_unique<SizedStackPopInstruction>(conv(rs), size);
 	}
 
@@ -1242,8 +1243,8 @@ namespace LL2W {
 
 	std::unique_ptr<WhyInstruction> WASMPseudoPrintNode::convert(Function &, VarMap &) {
 		if (text)
-			return std::make_unique<PrintPseudoinstruction>(text, true, -1);
-		return std::make_unique<PrintPseudoinstruction>(imm, -1);
+			return std::make_unique<PrintPseudoinstruction>(text, true);
+		return std::make_unique<PrintPseudoinstruction>(imm);
 	}
 
 	WASMRestNode::WASMRestNode(): WASMInstructionNode(WASM_RESTNODE) {}

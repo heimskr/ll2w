@@ -24,7 +24,7 @@ namespace LL2W {
 	class Instruction {
 		protected:
 			bool extracted = false;
-			Instruction(int index_): index(index_) {}
+			Instruction() = default;
 
 		public:
 			std::weak_ptr<BasicBlock> parent;

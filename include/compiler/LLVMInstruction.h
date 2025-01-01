@@ -17,8 +17,8 @@ namespace LL2W {
 			std::variant<InstructionNode *, llvm::Instruction *> source;
 			bool ownsNode = false;
 
-			LLVMInstruction(InstructionNode *source, int index, bool owns_node = false);
-			LLVMInstruction(llvm::Instruction *source, int index);
+			LLVMInstruction(InstructionNode *source, bool owns_node = false);
+			LLVMInstruction(llvm::Instruction *source);
 
 			virtual ~LLVMInstruction();
 

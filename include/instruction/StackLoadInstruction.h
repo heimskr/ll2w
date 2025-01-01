@@ -4,14 +4,13 @@
 #include "instruction/IntermediateInstruction.h"
 
 namespace LL2W {
-	class Variable;
-
 	struct StackLoadInstruction: IntermediateInstruction {
-		std::shared_ptr<Variable> result;
+		VariablePtr result;
 		StackLocation location;
 
-		StackLoadInstruction(std::shared_ptr<Variable> result, StackLocation location):
-			IntermediateInstruction(index), result(std::move(result)), location(std::move(location)) {}
+		StackLoadInstruction(VariablePtr result, StackLocation location):
+			result(std::move(result)),
+			location(std::move(location)) {}
 
 		ExtractionResult extract(bool force = false) override;
 		std::string debugExtra() const override;

@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** ] $rd */
 	struct StackPopInstruction: RType {
-		StackPopInstruction(VariablePtr rd_);
+		StackPopInstruction(VariablePtr rd);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

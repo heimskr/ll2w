@@ -2,13 +2,14 @@
 #include "instruction/SizedStackPopInstruction.h"
 
 namespace LL2W {
-	SizedStackPopInstruction::SizedStackPopInstruction(std::shared_ptr<Variable> rd_, int size_):
-		RType(nullptr, nullptr, rd_, index_), size(size_) {}
+	SizedStackPopInstruction::SizedStackPopInstruction(VariablePtr rd, int size):
+		RType(nullptr, nullptr, std::move(rd)), size(size) {}
 
-	SizedStackPopInstruction::SizedStackPopInstruction(std::shared_ptr<Variable> rd_):
-	RType(nullptr, nullptr, rd_, index_) {
-		if (rd_->type)
-			size = rd_->type->width() / 8;
+	SizedStackPopInstruction::SizedStackPopInstruction(VariablePtr rd_):
+	RType(nullptr, nullptr, std::move(rd_)) {
+		if (rd->type) {
+			size = rd->type->width() / 8;
+		}
 		else throw std::runtime_error("SizedStackPopInstruction given neither size nor type");
 	}
 
@@ -18,5 +19,9 @@ namespace LL2W {
 
 	std::string SizedStackPopInstruction::toString() const {
 		return "]:" + std::to_string(size) + " " + rd->toString();
+	}
+
+	Instruction * SizedStackPopInstruction::copy() const {
+		return new SizedStackPopInstruction(*this);
 	}
 }

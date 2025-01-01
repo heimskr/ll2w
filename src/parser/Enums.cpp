@@ -158,7 +158,7 @@ namespace {
 		};
 
 		std::unordered_map<LL2W::IcmpCond, LL2W::IcmpCond> rev_map{
-			{Eq, Eq}, {Ne, Ne}, {Ugt, Ult}, {Uge, Ule}, {Ult, Ugt}, {Ule, Uge}, {Sgt, Slt}, {Sge, Sle}, {Slt, Sgt}, {Sle, Sge}, {Xge, Xle}, {Xgt, Xlt}, {Xlt, Xgt}, {Xle, Xge},
+			{Eq, Eq}, {Ne, Ne}, {Ugt, Ult}, {Uge, Ule}, {Ult, Ugt}, {Ule, Uge}, {Sgt, Slt}, {Sge, Sle}, {Slt, Sgt}, {Sle, Sge},
 		};
 
 		std::unordered_map<LL2W::IcmpCond, std::string> map{
@@ -169,7 +169,6 @@ namespace {
 			{Eq,  "=="}, {Ne,  "!="},
 			{Ugt, ">"},  {Uge, ">="}, {Ult, "<"}, {Ule, "<="},
 			{Sgt, ">"},  {Sge, ">="}, {Slt, "<"}, {Sle, "<="},
-			{Xgt, ">"},  {Xge, ">="}, {Xlt, "<"}, {Xle, "<="},
 		};
 
 		std::unordered_set<LL2W::IcmpCond> signed_conds{Sgt, Sge, Sle, Slt};

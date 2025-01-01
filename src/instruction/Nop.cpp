@@ -2,7 +2,7 @@
 #include "instruction/Nop.h"
 
 namespace LL2W {
-	Nop::Nop(int index_): WhyInstruction(index_) {}
+	Nop::Nop() = default;
 
 	std::string Nop::debugExtra() const {
 		return "<>";
@@ -11,7 +11,7 @@ namespace LL2W {
 	std::string Nop::toString() const {
 		return "<>";
 	}
-	
+
 	Instruction * Nop::copy() const {
 		return new Nop(*this);
 	}

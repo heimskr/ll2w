@@ -9,9 +9,9 @@ namespace LL2W {
 		{Condition::Nonzero,  "!="},
 	};
 
-	SelectInstruction::SelectInstruction(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, Condition condition_,
-	int index_):
-		RType(rs_, rt_, rd_, index_), condition(condition_) {}
+	SelectInstruction::SelectInstruction(VariablePtr rs, VariablePtr rt, VariablePtr rd, Condition condition):
+		RType(std::move(rs), std::move(rt), std::move(rd)),
+		condition(condition) {}
 
 	std::string SelectInstruction::debugExtra() const {
 		return "\e[2m[\e[22m" + std::string(*rs) + " " + std::string(operMap.at(condition)) + " " + std::string(*rt) +
@@ -22,7 +22,7 @@ namespace LL2W {
 		return "[" + rs->toString() + " " + std::string(operMap.at(condition)) + " " + rt->toString() + "] -> " +
 			rd->toString();
 	}
-	
+
 	Instruction * SelectInstruction::copy() const {
 		return new SelectInstruction(*this);
 	}

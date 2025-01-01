@@ -18,8 +18,7 @@
 #define CAST(t) auto *cast = dynamic_cast<t *>(getNode()); if (!cast) break
 
 namespace LL2W {
-	LLVMInstruction::LLVMInstruction(InstructionNode *source, int index, bool owns_node):
-		Instruction(index),
+	LLVMInstruction::LLVMInstruction(InstructionNode *source, bool owns_node):
 		source(source),
 		ownsNode(owns_node) {
 			if (source != nullptr) {
@@ -27,8 +26,7 @@ namespace LL2W {
 			}
 		}
 
-	LLVMInstruction::LLVMInstruction(llvm::Instruction *source, int index):
-		Instruction(index),
+	LLVMInstruction::LLVMInstruction(llvm::Instruction *source):
 		source(source),
 		ownsNode(false) {}
 
