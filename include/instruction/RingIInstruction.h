@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** %ring imm */
 	struct RingIInstruction: IType {
-		RingIInstruction(Immediate imm_, int index_ = -1);
+		RingIInstruction(Immediate imm_);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

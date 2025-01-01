@@ -91,9 +91,12 @@ using AN = LL2W::ASTNode;
 %token WASMTOK_LXNOR "!xx"
 %token WASMTOK_LXOR "xx"
 %token WASMTOK_SEMICOLON ";"
+%token WASMTOK_UNSIGNED "/u"
 %token WASMTOK_LEQ "<="
 %token WASMTOK_DEQ "=="
 %token WASMTOK_GEQ ">="
+%token WASMTOK_BYTE "/b"
+%token WASMTOK_HALF "/h"
 %token WASMTOK_NEWLINE "\n"
 %token WASMTOK_NOTEQUAL "!="
 %token WASMTOK_IF "if"
@@ -158,28 +161,29 @@ program: program statement { $$ = $1->adopt($2); }
 statement: operation;
 endop: "\n" | ";";
 
-operation: op_r     | op_mult  | op_multi | op_lui   | op_i     | op_c    | op_l      | op_s    | op_set   | op_divii
-         | op_li    | op_si    | op_ms    | op_lni   | op_cmp   | op_cmpi | op_sel    | op_j    | op_jc    | op_jr
-         | op_jrc   | op_mv    | op_spush | op_spop  | op_nop   | op_int  | op_rit    | op_time | op_timei | op_ext
-         | op_ringi | op_ring  | op_page  | op_setpt | label    | op_svpg | op_qmem   | op_di   | op_ei    | op_sllii
-         | op_srlii | op_sraii | op_sext  | op_trans | op_ppush | op_ppop | op_svring | op_svtime;
+operation: op_r    | op_mult   | op_multi  | op_lui   | op_i      | op_c     | op_l     | op_s    | op_set   | op_divii
+         | op_li   | op_si     | op_ms     | op_lni   | op_ch     | op_lh    | op_sh    | op_cmp  | op_cmpi  | op_sel
+         | op_j    | op_jc     | op_jr     | op_jrc   | op_mv     | op_spush | op_spop  | op_nop  | op_int   | op_rit
+         | op_time | op_timei  | op_ext    | op_ringi | op_sspush | op_sspop | op_ring  | op_page | op_setpt | label
+         | op_svpg | op_qmem   | op_di     | op_ei    | op_sllii  | op_srlii | op_sraii | op_sext | op_trans | op_ppush
+         | op_ppop | op_svring | op_svtime;
 
 label: "@" ident { $$ = new WASMLabelNode($2); D($1); };
 
-op_r: reg basic_oper reg "->" reg { $$ = new RNode($1, $2, $3, $5); D($4); }
-    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4); D($3); }  // rt will be "~" to indicate this is a unary op
-    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4); D($3); }; // Same here.
-
+op_r: reg basic_oper reg "->" reg _unsigned { $$ = new RNode($1, $2, $3, $5, $6); D($4); }
+    | "~" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }  // rt will be "~" to indicate this is a unary op
+    | "!" reg "->" reg { $$ = new RNode($2, $1, $1, $4, nullptr); D($3); }; // Same here.
 basic_oper: "+" | "-" | "&" | "|" | "&&" | "||" | "x" | "~x" | "!&&" | "!||" | "~&" | "~|" | "/" | "!xx" | "xx" | "%"
           | "<" | "<=" | "==" | ">" | ">=" | "<<" | ">>>" | ">>" | "!";
+_unsigned: "/u" | { $$ = nullptr; };
 
-op_mult: reg "*" reg { $$ = new WASMMultRNode($1, $3); D($2); };
+op_mult: reg "*" reg _unsigned { $$ = new WASMMultRNode($1, $3, $4); D($2); };
 
-op_multi: reg "*" immediate { $$ = new WASMMultINode($1, $3); D($2); };
+op_multi: reg "*" immediate _unsigned { $$ = new WASMMultINode($1, $3, $4); D($2); };
 
 op_lui: "lui" ":" immediate "->" reg { $$ = new WASMLuiNode($3, $5); D($1, $2, $4); };
 
-op_i: reg basic_oper immediate "->" reg { $$ = new INode($1, $2, $3, $5); D($4); };
+op_i: reg basic_oper immediate "->" reg _unsigned { $$ = new INode($1, $2, $3, $5, $6); D($4); };
 
 op_sllii: immediate "<<" reg "->" reg { $$ = new WASMInverseShiftNode($1, $2, $3, $5); D($4); };
 
@@ -196,15 +200,21 @@ op_s: reg "->" "[" reg "]" _byte { $$ = new WASMStoreNode($1, $4, $6); D($2, $3,
 
 op_set: immediate "->" reg { $$ = new WASMSetNode($1, $3); D($2); };
 
-op_divii: immediate "/" reg "->" reg { $$ = new WASMDiviINode($1, $3, $5); D($2, $4); };
+op_divii: immediate "/" reg "->" reg _unsigned { $$ = new WASMDiviINode($1, $3, $5, $6); D($2, $4); };
 
 op_li: "[" immediate "]" "->" reg _byte { $$ = new WASMLiNode($2, $5, $6); D($1, $3, $4); };
 
 op_si: reg "->" "[" immediate "]" _byte { $$ = new WASMSiNode($1, $4, $6); D($2, $3, $5); };
 
-op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6); D($3, $5); };
+op_ms: "memset" reg "x" reg "->" reg { $$ = new RNode($2, $1, $4, $6, nullptr); D($3, $5); };
 
 op_lni: "[" immediate "]" "->" "[" reg "]" _byte { $$ = new WASMLniNode($2, $6, $8); D($1, $3, $4, $5, $7); };
+
+op_ch: "[" reg "]" "->" "[" reg "]" "/h" { $$ = new WASMChNode($2, $6); D($1, $3, $4, $5, $7, $8); };
+
+op_lh: "[" reg "]" "->" reg "/h" { $$ = new WASMLhNode($2, $5); D($1, $3, $4, $6); };
+
+op_sh: reg "->" "[" reg "]" "/h" { $$ = new WASMShNode($1, $4); D($2, $3, $5, $6); };
 
 op_trans: "translate" reg "->" reg { $$ = new WASMTransNode($2, $4); D($1, $3); };
 
@@ -249,6 +259,10 @@ op_ring: "%ring" reg { $$ = new WASMRingRNode($2); D($1); };
 op_svring: "%ring" "->" reg { $$ = new WASMSvringNode($3); D($1, $2); };
 
 op_ringi: "%ring" immediate { $$ = new WASMRingINode($2); D($1); };
+
+op_sspush: "[" ":" number reg { $$ = new WASMSizedStackNode($3, $4, true);  D($1, $2); };
+
+op_sspop:  "]" ":" number reg { $$ = new WASMSizedStackNode($3, $4, false); D($1, $2); };
 
 op_ext: op_print | op_pprint | op_sleep | op_halt | op_rest | op_io;
 

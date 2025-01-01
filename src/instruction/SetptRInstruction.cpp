@@ -2,8 +2,8 @@
 #include "instruction/SetptRInstruction.h"
 
 namespace LL2W {
-	SetptRInstruction::SetptRInstruction(VariablePtr rs_, VariablePtr rt_, int index_):
-		RType(std::move(rs_), std::move(rt_), nullptr, index_) {}
+	SetptRInstruction::SetptRInstruction(VariablePtr rs_, VariablePtr rt_):
+		RType(std::move(rs_), std::move(rt_), nullptr) {}
 
 	std::string SetptRInstruction::debugExtra() const {
 		if (!rt)
@@ -16,7 +16,7 @@ namespace LL2W {
 			return "%setpt " + rs->toString();
 		return ": %setpt " + rs->toString() + " " + rt->toString();
 	}
-	
+
 	Instruction * SetptRInstruction::copy() const {
 		return new SetptRInstruction(*this);
 	}

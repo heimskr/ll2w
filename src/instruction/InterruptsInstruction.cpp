@@ -2,8 +2,8 @@
 #include "instruction/InterruptsInstruction.h"
 
 namespace LL2W {
-	InterruptsInstruction::InterruptsInstruction(bool enable_, int index_):
-		RType(nullptr, nullptr, nullptr, index_), enable(enable_) {}
+	InterruptsInstruction::InterruptsInstruction(bool enable):
+		RType(nullptr, nullptr, nullptr), enable(enable) {}
 
 	std::string InterruptsInstruction::debugExtra() const {
 		return "\e[34m" + std::string(enable? "%ei" : "%di") + "\e[39m";
@@ -12,7 +12,7 @@ namespace LL2W {
 	std::string InterruptsInstruction::toString() const {
 		return enable? "%ei" : "%di";
 	}
-	
+
 	Instruction * InterruptsInstruction::copy() const {
 		return new InterruptsInstruction(*this);
 	}

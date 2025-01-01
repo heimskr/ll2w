@@ -2,7 +2,7 @@
 #include "instruction/PageStackInstruction.h"
 
 namespace LL2W {
-	PageStackInstruction::PageStackInstruction(bool is_push, VariablePtr rs_, int index_):
+	PageStackInstruction::PageStackInstruction(bool is_push, VariablePtr rs_):
 		RType(rs_, nullptr, nullptr, index_), isPush(is_push) {}
 
 	std::string PageStackInstruction::debugExtra() const {
@@ -16,7 +16,7 @@ namespace LL2W {
 			return std::string(isPush? "[" : "]") + " %page";
 		return ": " + std::string(isPush? "[" : "]") + " %page " + rs->toString();
 	}
-	
+
 	Instruction * PageStackInstruction::copy() const {
 		return new PageStackInstruction(*this);
 	}

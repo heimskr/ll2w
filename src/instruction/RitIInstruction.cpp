@@ -2,8 +2,8 @@
 #include "instruction/RitIInstruction.h"
 
 namespace LL2W {
-	RitIInstruction::RitIInstruction(Immediate imm_, int index_):
-		IType(nullptr, std::move(imm_), nullptr, index_) {}
+	RitIInstruction::RitIInstruction(Immediate imm_):
+		IType(nullptr, std::move(imm_), nullptr) {}
 
 	std::string RitIInstruction::debugExtra() const {
 		return "\e[36m%rit\e[39m " + colorize(imm);
@@ -12,7 +12,7 @@ namespace LL2W {
 	std::string RitIInstruction::toString() const {
 		return "%rit " + LL2W::toString(imm);
 	}
-	
+
 	Instruction * RitIInstruction::copy() const {
 		return new RitIInstruction(*this);
 	}

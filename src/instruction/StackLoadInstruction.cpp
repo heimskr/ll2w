@@ -3,8 +3,9 @@
 
 namespace LL2W {
 	ExtractionResult StackLoadInstruction::extract(bool force) {
-		if (extracted && !force)
+		if (extracted && !force) {
 			return {read.size(), written.size()};
+		}
 
 		read.clear();
 		written.clear();

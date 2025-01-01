@@ -3,13 +3,13 @@
 
 namespace LL2W {
 	std::string NandIInstruction::debugExtra() const {
-		return std::string(*rs) + " \e[2m~&\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
+		return std::string(*rs) + " \e[2m~&\e[22m " + colorize(imm, *rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 
 	std::string NandIInstruction::toString() const {
-		return rs->toString() + " ~& " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
+		return rs->toString() + " ~& " + LL2W::toString(imm) + " -> " + rd->toString();
 	}
-	
+
 	Instruction * NandIInstruction::copy() const {
 		return new NandIInstruction(*this);
 	}

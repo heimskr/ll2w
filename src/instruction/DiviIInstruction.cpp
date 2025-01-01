@@ -7,9 +7,9 @@ namespace LL2W {
 	}
 
 	std::string DiviIInstruction::toString() const {
-		return LL2W::toString(imm, *rs) + " / " + rs->toString() + " -> " + rd->toString();
+		return LL2W::toString(imm) + " / " + rs->toString() + " -> " + rd->toString();
 	}
-	
+
 	Instruction * DiviIInstruction::copy() const {
 		return new DiviIInstruction(*this);
 	}

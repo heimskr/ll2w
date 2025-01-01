@@ -22,7 +22,7 @@ namespace LL2W {
 			VariablePtr rd;
 			Immediate imm;
 
-			IType(VariablePtr rs_, Immediate imm_, VariablePtr rd_, int index_ = -1);
+			IType(VariablePtr rs, Immediate imm, VariablePtr rd);
 
 			IType * setOriginalValue(const ValuePtr &);
 

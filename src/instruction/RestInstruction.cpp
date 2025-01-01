@@ -3,7 +3,7 @@
 
 namespace LL2W {
 	RestInstruction::RestInstruction(int index_):
-		RType(nullptr, nullptr, nullptr, index_) {}
+		RType(nullptr, nullptr, nullptr) {}
 
 	std::string RestInstruction::debugExtra() const {
 		return "<\e[36mrest\e[39m>";
@@ -12,7 +12,7 @@ namespace LL2W {
 	std::string RestInstruction::toString() const {
 		return "<rest>";
 	}
-	
+
 	Instruction * RestInstruction::copy() const {
 		return new RestInstruction(*this);
 	}

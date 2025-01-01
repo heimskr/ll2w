@@ -141,19 +141,15 @@ namespace {
 #ifdef USE_SUBSCRIPTS
 #define U(s) s "ᵤ"
 #define S(s) s "ₛ"
-#define X(s) s "ₓ"
 #else
 #define U(s) s "u"
 #define S(s) s "s"
-#define X(s) s "x"
 #endif
 		std::unordered_map<LL2W::IcmpCond, std::string> map_with_sign {
 			{Eq, "=="}, {Ne, "!="},
 			{Ugt, U(">")}, {Uge, U(">=")}, {Ult, U("<")}, {Ule, U("<=")},
 			{Sgt, S(">")}, {Sge, S(">=")}, {Slt, S("<")}, {Sle, S("<=")},
-			{Xgt, X(">")}, {Xge, X(">=")}, {Xlt, X("<")}, {Xle, X("<=")},
 		};
-#undef X
 #undef S
 #undef U
 

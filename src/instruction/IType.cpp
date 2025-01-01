@@ -2,17 +2,15 @@
 
 namespace LL2W {
 	std::string IType::operDebug(const char *oper) const {
-		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[22m " + colorize(imm, *rs) +
-			" \e[2m->\e[22m " + std::string(*rd);
+		return std::string(*rs) + " \e[2m" + std::string(oper) + "\e[22m " + colorize(imm, *rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 
 	std::string IType::operString(const char *oper) const {
-		return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm, *rs) + " -> " +
-			rd->toString();
+		return rs->toString() + " " + std::string(oper) + " " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
 	}
 
-	IType::IType(VariablePtr rs_, Immediate imm_, VariablePtr rd_, int index_):
-		WhyInstruction(index_), rs(std::move(rs_)), rd(std::move(rd_)), imm(std::move(imm_)) {}
+	IType::IType(VariablePtr rs, Immediate imm, VariablePtr rd):
+		WhyInstruction(-1), rs(std::move(rs)), rd(std::move(rd)), imm(std::move(imm)) {}
 
 	IType * IType::setOriginalValue(const ValuePtr &value) {
 		originalValue = value;
@@ -20,17 +18,21 @@ namespace LL2W {
 	}
 
 	ExtractionResult IType::extract(bool force) {
-		if (extracted && !force)
+		if (extracted && !force) {
 			return {read.size(), written.size()};
+		}
 
 		read.clear();
 		written.clear();
 		extracted = true;
 
-		if (rs && !secretReads)
+		if (rs && !secretReads) {
 			read.insert(rs);
-		if (rd && !secretWrites)
+		}
+
+		if (rd && !secretWrites) {
 			written.insert(rd);
+		}
 
 		return {read.size(), written.size()};
 	}
@@ -62,26 +64,38 @@ namespace LL2W {
 	}
 
 	bool IType::operator==(const Instruction &other) const {
-		if (typeid(*this) != typeid(other))
+		if (this == &other) {
+			return true;
+		}
+
+		if (typeid(*this) != typeid(other)) {
 			return false;
+		}
+
 		const auto &other_i = dynamic_cast<const IType &>(other);
-		return rs == other_i.rs && imm == other_i.imm && rd == other_i.rd &&
-			originalValue == other_i.originalValue;
+		return rs == other_i.rs && imm == other_i.imm && rd == other_i.rd && originalValue == other_i.originalValue;
 	}
 
 	std::vector<IType::IVariablePtr> IType::findDifferences(const IType &other) const {
 		std::vector<IVariablePtr> out;
 		out.reserve(2);
-		if (*rs != *other.rs)
+
+		if (*rs != *other.rs) {
 			out.push_back(&IType::rs);
-		if (*rd != *other.rd)
+		}
+
+		if (*rd != *other.rd) {
 			out.push_back(&IType::rd);
+		}
+
 		return out;
 	}
 
 	bool IType::typeMismatch() const {
-		if (rs && rd)
+		if (rs && rd) {
 			return !rs->compatible(*rd);
+		}
+
 		return false;
 	}
 }

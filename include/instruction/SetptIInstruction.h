@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** setpt imm */
 	struct SetptIInstruction: IType {
-		SetptIInstruction(Immediate imm_, int index_ = -1);
+		SetptIInstruction(Immediate imm_);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

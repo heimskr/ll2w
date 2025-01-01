@@ -3,14 +3,14 @@
 #include "util/Util.h"
 
 namespace LL2W {
-	PrintPseudoinstruction::PrintPseudoinstruction(Immediate imm_, int index_):
-		IType(nullptr, imm_, nullptr, index_) {}
+	PrintPseudoinstruction::PrintPseudoinstruction(Immediate imm_):
+		IType(nullptr, imm_, nullptr) {}
 
-	PrintPseudoinstruction::PrintPseudoinstruction(const std::string *text_, bool, int index_):
+	PrintPseudoinstruction::PrintPseudoinstruction(const std::string *text_, bool):
 		IType(nullptr, 0, nullptr, index_), text(text_) {}
 
-	PrintPseudoinstruction::PrintPseudoinstruction(const std::string &text_, int index_):
-		PrintPseudoinstruction(StringSet::intern(text_), false, index_) {}
+	PrintPseudoinstruction::PrintPseudoinstruction(const std::string &text_):
+		PrintPseudoinstruction(StringSet::intern(text_), false) {}
 
 	std::string PrintPseudoinstruction::debugExtra() const {
 		return "<\e[36mp\e[39m \"" + (text? *text : colorize(imm, false)) + "\">";
@@ -19,7 +19,7 @@ namespace LL2W {
 	std::string PrintPseudoinstruction::toString() const {
 		return "<p \"" + (text? *text : LL2W::toString(imm, false)) + "\">";
 	}
-	
+
 	Instruction * PrintPseudoinstruction::copy() const {
 		return new PrintPseudoinstruction(*this);
 	}

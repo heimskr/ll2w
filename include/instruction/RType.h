@@ -1,6 +1,7 @@
 #pragma once
 
 #include "instruction/WhyInstruction.h"
+#include "parser/Enums.h"
 
 namespace LL2W {
 	class RType: public WhyInstruction {
@@ -15,7 +16,7 @@ namespace LL2W {
 			VariablePtr rt;
 			VariablePtr rd;
 
-			RType(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, int index_ = -1);
+			RType(VariablePtr rs, VariablePtr rt, VariablePtr rd);
 
 			ExtractionResult extract(bool force = false) override;
 			bool replaceRead(const VariablePtr &, const VariablePtr &) override;

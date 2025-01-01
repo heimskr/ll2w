@@ -4,9 +4,9 @@
 
 namespace LL2W {
 	struct InterruptsInstruction: RType {
-		const bool enable;
+		bool enable{};
 
-		InterruptsInstruction(bool enable_, int index_ = -1);
+		InterruptsInstruction(bool enable);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

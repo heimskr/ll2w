@@ -7,11 +7,11 @@ namespace LL2W {
 		HasSize(size) {}
 
 	std::string LoadIndirectIInstruction::debugExtra() const {
-		return "\e[2m[\e[22m" + colorize(imm, *rd) + "\e[2m] -> [\e[22m" + std::string(*rd) + "\e[2m]\e[22m";
+		return "\e[2m[\e[22m" + colorize(imm, *rd) + "\e[2m] -> [\e[22m" + std::string(*rd) + "\e[2m]\e[22m" + sizeSuffix();
 	}
 
 	std::string LoadIndirectIInstruction::toString() const {
-		return "[" + LL2W::toString(imm, *rd) + "] -> [" + rd->toString() + "]";
+		return "[" + LL2W::toString(imm, *rd) + "] -> [" + rd->toString() + "]" + sizeSuffix();
 	}
 
 	Instruction * LoadIndirectIInstruction::copy() const {

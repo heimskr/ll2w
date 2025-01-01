@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** %page -> $rd */
 	struct SvpgInstruction: RType {
-		SvpgInstruction(VariablePtr rd_, int index_ = -1);
+		SvpgInstruction(VariablePtr rd_);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

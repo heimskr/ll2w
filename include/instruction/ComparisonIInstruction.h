@@ -7,10 +7,13 @@
 #include <unordered_map>
 
 namespace LL2W {
-	/** $rs == (<=, <...) $rt -> $rd */
+	/**
+	 * $rs == (<=, <...) $rt -> $rd (/u)
+	 */
 	struct ComparisonIInstruction: IType, ComparisonInstruction {
-		ComparisonIInstruction(VariablePtr rs_, Immediate imm_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):
-			IType(rs_, imm_, rd_, index_), ComparisonInstruction(cond_) {}
+		ComparisonIInstruction(VariablePtr rs, Immediate imm, VariablePtr rd, IcmpCond cond):
+			IType(std::move(rs), std::move(imm), std::move(rd)),
+			ComparisonInstruction(cond) {}
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

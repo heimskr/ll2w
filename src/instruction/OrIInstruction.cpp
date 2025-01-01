@@ -3,13 +3,13 @@
 
 namespace LL2W {
 	std::string OrIInstruction::debugExtra() const {
-		return std::string(*rs) + " \e[2m|\e[0m " + colorize(imm, *rs) + " \e[2m->\e[0m " + std::string(*rd);
+		return std::string(*rs) + " \e[2m|\e[22m " + colorize(imm, *rs) + " \e[2m->\e[22m " + std::string(*rd);
 	}
 
 	std::string OrIInstruction::toString() const {
-		return rs->toString() + " | " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
+		return rs->toString() + " | " + LL2W::toString(imm) + " -> " + rd->toString();
 	}
-	
+
 	Instruction * OrIInstruction::copy() const {
 		return new OrIInstruction(*this);
 	}

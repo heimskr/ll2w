@@ -123,7 +123,7 @@ namespace LL2W {
 			std::vector<std::string> signednessBacktrace;
 	};
 
-	struct AggregateType: Type {
+	struct AggregateType: public Type {
 		virtual TypePtr extractType(std::list<int> indices) const = 0;
 		TypePtr extractType(const std::vector<int> &indices) const {
 			return extractType(std::list<int>(indices.begin(), indices.end()));
@@ -154,7 +154,7 @@ namespace LL2W {
 		TypeCPtr unwrapAll() const override { return subtype->unwrapAll(); }
 	};
 
-	struct VectorType: ArrayType {
+	struct VectorType: public ArrayType {
 		TypeType typeType() const override { return TypeType::Vector; }
 		using ArrayType::ArrayType;
 		operator std::string() override;
@@ -179,7 +179,7 @@ namespace LL2W {
 		std::string whyString() const override { return "F"; }
 	};
 
-	struct PointerType: Type, HasSubtype {
+	struct PointerType: public Type, public HasSubtype {
 		TypeType typeType() const override { return TypeType::Pointer; }
 		PointerType(TypePtr subtype_): HasSubtype(std::move(subtype_)) {}
 		operator std::string() override;

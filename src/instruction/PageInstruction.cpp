@@ -2,7 +2,7 @@
 #include "instruction/PageInstruction.h"
 
 namespace LL2W {
-	PageInstruction::PageInstruction(bool on_, int index_):
+	PageInstruction::PageInstruction(bool on_):
 		RType(nullptr, nullptr, nullptr, index_), on(on_) {}
 
 	std::string PageInstruction::debugExtra() const {
@@ -12,7 +12,7 @@ namespace LL2W {
 	std::string PageInstruction::toString() const {
 		return "%page " + std::string(on? "on" : "off");
 	}
-	
+
 	Instruction * PageInstruction::copy() const {
 		return new PageInstruction(*this);
 	}

@@ -57,8 +57,9 @@ namespace LL2W {
 	struct RNode: WASMInstructionNode {
 		const std::string *rs, *oper, *rt, *rd;
 		int operToken;
+		bool isUnsigned;
 
-		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_);
+		RNode(ASTNode *rs_, ASTNode *oper_, ASTNode *rt_, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::RType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -69,8 +70,9 @@ namespace LL2W {
 		const std::string *rs, *oper, *rd;
 		int operToken;
 		Immediate imm;
+		bool isUnsigned;
 
-		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_);
+		INode(ASTNode *rs_, ASTNode *oper_, ASTNode *imm, ASTNode *rd_, ASTNode *unsigned_);
 		WASMNodeType nodeType() const override { return WASMNodeType::IType; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -146,6 +148,36 @@ namespace LL2W {
 	struct WASMLniNode: WASMLiNode {
 		WASMLniNode(ASTNode *imm_, ASTNode *rd_, ASTNode *byte_);
 		WASMNodeType nodeType() const override { return WASMNodeType::Lni; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMHalfMemoryNode: WASMInstructionNode {
+		const std::string *rs, *rd;
+
+		WASMHalfMemoryNode(int sym, ASTNode *rs_, ASTNode *rd_);
+	};
+
+	struct WASMChNode: WASMHalfMemoryNode {
+		WASMChNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Ch; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMLhNode: WASMHalfMemoryNode {
+		WASMLhNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Lh; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
+	struct WASMShNode: WASMHalfMemoryNode {
+		WASMShNode(ASTNode *rs_, ASTNode *rd_);
+		WASMNodeType nodeType() const override { return WASMNodeType::Sh; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
@@ -232,10 +264,24 @@ namespace LL2W {
 		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
 	};
 
+	// Used for both sspush and sspop.
+	struct WASMSizedStackNode: WASMInstructionNode {
+		long size;
+		const std::string *rs;
+		bool isPush;
+
+		WASMSizedStackNode(ASTNode *size_, ASTNode *rs_, bool is_push);
+		WASMNodeType nodeType() const override { return WASMNodeType::SizedStack; }
+		std::string debugExtra() const override;
+		operator std::string() const override;
+		std::unique_ptr<WhyInstruction> convert(Function &, VarMap &) override;
+	};
+
 	struct WASMMultRNode: WASMInstructionNode {
 		const std::string *rs, *rt;
+		bool isUnsigned;
 
-		WASMMultRNode(ASTNode *rs_, ASTNode *rt_);
+		WASMMultRNode(ASTNode *rs_, ASTNode *rt_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::MultR; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -245,8 +291,9 @@ namespace LL2W {
 	struct WASMMultINode: WASMInstructionNode {
 		const std::string *rs;
 		Immediate imm;
+		bool isUnsigned;
 
-		WASMMultINode(ASTNode *rs_, ASTNode *imm_);
+		WASMMultINode(ASTNode *rs_, ASTNode *imm_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::MultI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;
@@ -256,8 +303,9 @@ namespace LL2W {
 	struct WASMDiviINode: WASMInstructionNode {
 		const std::string *rs, *rd;
 		Immediate imm;
+		bool isUnsigned;
 
-		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_);
+		WASMDiviINode(ASTNode *imm_, ASTNode *rs_, ASTNode *rd_, ASTNode *unsigned_ = nullptr);
 		WASMNodeType nodeType() const override { return WASMNodeType::DiviI; }
 		std::string debugExtra() const override;
 		operator std::string() const override;

@@ -9,8 +9,9 @@
 namespace LL2W {
 	/** $rs == (<=, <...) $rt -> $rd */
 	struct ComparisonRInstruction: RType, ComparisonInstruction {
-		ComparisonRInstruction(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, IcmpCond cond_, int index_ = -1):
-			RType(rs_, rt_, rd_, index_), ComparisonInstruction(cond_) {}
+		ComparisonRInstruction(VariablePtr rs, VariablePtr rt, VariablePtr rd, IcmpCond cond):
+			RType(std::move(rs), std::move(rt), std::move(rd)),
+			ComparisonInstruction(cond) {}
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

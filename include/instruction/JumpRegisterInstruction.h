@@ -7,7 +7,7 @@ namespace LL2W {
 	struct JumpRegisterInstruction: public RType, public Conditional {
 		bool link;
 
-		JumpRegisterInstruction(VariablePtr rd, bool link = false, Condition condition = Condition::None, int index = -1):
+		JumpRegisterInstruction(VariablePtr rd, bool link = false, Condition condition = Condition::None):
 			RType(nullptr, nullptr, std::move(rd), index),
 			Conditional(condition),
 			link(link) {}

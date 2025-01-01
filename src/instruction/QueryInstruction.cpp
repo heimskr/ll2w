@@ -2,7 +2,7 @@
 #include "instruction/QueryInstruction.h"
 
 namespace LL2W {
-	QueryInstruction::QueryInstruction(QueryType type_, VariablePtr rd_, int index_):
+	QueryInstruction::QueryInstruction(QueryType type_, VariablePtr rd_):
 		RType(nullptr, nullptr, std::move(rd_), index_), type(type_) {}
 
 	std::string QueryInstruction::debugExtra() const {
@@ -12,7 +12,7 @@ namespace LL2W {
 	std::string QueryInstruction::toString() const {
 		return "? " + query_map.at(type) + " -> " + rd->toString();
 	}
-	
+
 	Instruction * QueryInstruction::copy() const {
 		return new QueryInstruction(*this);
 	}

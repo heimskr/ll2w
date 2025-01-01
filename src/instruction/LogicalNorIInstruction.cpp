@@ -7,9 +7,9 @@ namespace LL2W {
 	}
 
 	std::string LogicalNorIInstruction::toString() const {
-		return rs->toString() + " !|| " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
+		return rs->toString() + " !|| " + LL2W::toString(imm) + " -> " + rd->toString();
 	}
-	
+
 	Instruction * LogicalNorIInstruction::copy() const {
 		return new LogicalNorIInstruction(*this);
 	}

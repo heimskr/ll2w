@@ -5,7 +5,7 @@
 
 namespace LL2W {
 	struct JumpInstruction: JType<>, Conditional {
-		JumpInstruction(ValueType addr_, bool link_, Condition condition_ = Condition::None, int index_ = -1);
+		JumpInstruction(ValueType addr_, bool link_, Condition condition_ = Condition::None);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

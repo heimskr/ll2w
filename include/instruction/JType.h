@@ -16,7 +16,7 @@ namespace LL2W {
 		bool link;
 		bool needsTransformation = false;
 
-		JType(VariablePtr rs_, T addr_, bool link_, int index_ = -1):
+		JType(VariablePtr rs_, T addr_, bool link_):
 			WhyInstruction(index_), rs(std::move(rs_)), addr(std::move(addr_)), link(link_) {}
 
 		ExtractionResult extract(bool force = false) override {

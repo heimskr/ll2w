@@ -8,7 +8,7 @@ namespace LL2W {
 	struct DeferredDestinationMoveInstruction: RType {
 		int registerIndex;
 
-		DeferredDestinationMoveInstruction(VariablePtr rs_, VariablePtr rd_, int register_index, int index_ = -1);
+		DeferredDestinationMoveInstruction(VariablePtr rs_, VariablePtr rd_, int register_index);
 
 		std::string debugExtra() const override;
 		std::string toString() const override;

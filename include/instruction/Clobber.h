@@ -13,7 +13,7 @@ namespace LL2W {
 		std::shared_ptr<Unclobber> unclobber;
 		std::vector<std::shared_ptr<SemiUnclobber>> semis;
 
-		Clobber(int reg_, int index_ = -1):
+		Clobber(int reg_):
 			IntermediateInstruction(index_), reg(reg_) {}
 
 		std::string debugExtra() const override { return toString(); }
@@ -36,7 +36,7 @@ namespace LL2W {
 	struct Unclobber: IntermediateInstruction, Makeable<Unclobber> {
 		int reg;
 
-		Unclobber(int reg_, int index_ = -1):
+		Unclobber(int reg_):
 			IntermediateInstruction(index_), reg(reg_) {}
 
 		std::string debugExtra() const override { return toString(); }
@@ -61,7 +61,7 @@ namespace LL2W {
 		VariablePtr source;
 		VariablePtr destination;
 
-		SemiUnclobber(int reg, VariablePtr source, VariablePtr destination, int index = -1):
+		SemiUnclobber(int reg, VariablePtr source, VariablePtr destination):
 			IntermediateInstruction(index),
 			reg(reg),
 			source(std::move(source)),

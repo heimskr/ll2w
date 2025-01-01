@@ -7,9 +7,9 @@ namespace LL2W {
 	}
 
 	std::string ShiftLeftLogicalInverseIInstruction::toString() const {
-		return LL2W::toString(imm, *rd) + " << " + rs->toString() + " -> " + rd->toString();
+		return LL2W::toString(imm) + " << " + rs->toString() + " -> " + rd->toString();
 	}
-	
+
 	Instruction * ShiftLeftLogicalInverseIInstruction::copy() const {
 		return new ShiftLeftLogicalInverseIInstruction(*this);
 	}

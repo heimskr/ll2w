@@ -10,6 +10,7 @@
 #include "instruction/MoveInstruction.h"
 #include "instruction/SetInstruction.h"
 #include "instruction/SextRInstruction.h"
+#include "instruction/SizedStackPushInstruction.h"
 #include "instruction/StackPopInstruction.h"
 #include "instruction/StackPushInstruction.h"
 #include "instruction/SubRInstruction.h"
@@ -406,7 +407,7 @@ namespace LL2W::Passes {
 				function.insertBefore(instruction, make_signext(local->variable, var));
 			}
 			// TODO: verify
-			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::make_shared<StackPushInstruction>(var, -1))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -421,7 +422,7 @@ namespace LL2W::Passes {
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -436,7 +437,7 @@ namespace LL2W::Passes {
 			if (signext) {
 				function.insertBefore(instruction, make_signext(new_var, new_var));
 			}
-			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -451,7 +452,7 @@ namespace LL2W::Passes {
 			if (signext) {
 				function.insertBefore(instruction, make_signext(new_var, new_var));
 			}
-			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush))->setDebug(*instruction)->extract();
 			return size;
 		}
 
@@ -462,7 +463,7 @@ namespace LL2W::Passes {
 			// TODO: verify
 			auto spush = std::make_shared<StackPushInstruction>(new_var);
 			function.insertBefore(instruction, std::move(set))->setDebug(*instruction)->extract();
-			function.insertBefore(instruction, std::move(spush), suspiciousSpush(__LINE__))->setDebug(*instruction)->extract();
+			function.insertBefore(instruction, std::move(spush))->setDebug(*instruction)->extract();
 			return size;
 		}
 

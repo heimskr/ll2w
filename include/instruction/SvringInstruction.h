@@ -5,7 +5,7 @@
 namespace LL2W {
 	/** %ring -> $rd */
 	struct SvringInstruction: RType {
-		SvringInstruction(VariablePtr rd_, int index_ = -1);
+		SvringInstruction(VariablePtr rd_);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

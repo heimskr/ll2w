@@ -6,7 +6,7 @@ namespace LL2W {
 	struct IOInstruction: RType {
 		const std::string *ident = nullptr;
 
-		IOInstruction(const std::string *ident_, int index_ = -1);
+		IOInstruction(const std::string *ident_);
 		std::string debugExtra() const override;
 		std::string toString() const override;
 		Instruction * copy() const override;

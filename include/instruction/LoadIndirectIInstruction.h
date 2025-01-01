@@ -2,6 +2,7 @@
 
 #include "instruction/HasSize.h"
 #include "instruction/IType.h"
+#include "instruction/SizedInstruction.h"
 
 namespace LL2W {
 	/** [imm] -> [$rd] */

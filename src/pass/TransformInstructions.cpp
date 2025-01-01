@@ -14,10 +14,10 @@
 
 namespace LL2W::Passes {
 	size_t transformInstructions(Function &function) {
-		Timer timer("TransformInstructions");
-		std::list<InstructionPtr> to_remove;
+		Timer timer{"TransformInstructions"};
+		std::vector<InstructionPtr> to_remove;
 
-		for (InstructionPtr &instruction: function.linearInstructions) {
+		for (const InstructionPtr &instruction: function.linearInstructions) {
 			if (auto li = std::dynamic_pointer_cast<LoadIInstruction>(instruction)) {
 				if (li->size == WASMSize::Half || li->size == WASMSize::Short) {
 					// TODO: verify
@@ -83,8 +83,9 @@ namespace LL2W::Passes {
 			 }
 		}
 
-		for (InstructionPtr &instruction: to_remove)
+		for (const InstructionPtr &instruction: to_remove) {
 			function.remove(instruction);
+		}
 
 		return to_remove.size();
 	}

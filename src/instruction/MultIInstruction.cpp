@@ -3,17 +3,17 @@
 
 namespace LL2W {
 	/** $rs * imm */
-	MultIInstruction::MultIInstruction(VariablePtr rs_, Immediate imm_, int index_):
-		IType(std::move(rs_), std::move(imm_), nullptr, index_) {}
+	MultIInstruction::MultIInstruction(VariablePtr rs, Immediate imm):
+		IType(std::move(rs), std::move(imm), nullptr) {}
 
 	std::string MultIInstruction::debugExtra() const {
-		return std::string(*rs) + " \e[2m*\e[0m " + colorize(imm, *rs);
+		return std::string(*rs) + " \e[2m*\e[22m " + colorize(imm, *rs);
 	}
 
 	std::string MultIInstruction::toString() const {
-		return rs->toString() + " * " + LL2W::toString(imm, *rs);
+		return rs->toString() + " * " + LL2W::toString(imm);
 	}
-	
+
 	Instruction * MultIInstruction::copy() const {
 		return new MultIInstruction(*this);
 	}

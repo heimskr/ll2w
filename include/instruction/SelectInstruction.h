@@ -12,7 +12,7 @@ namespace LL2W {
 		public:
 			Condition condition;
 
-			SelectInstruction(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, Condition condition_, int index_ = -1);
+			SelectInstruction(VariablePtr rs_, VariablePtr rt_, VariablePtr rd_, Condition condition_);
 			std::string debugExtra() const override;
 			std::string toString() const override;
 			Instruction * copy() const override;

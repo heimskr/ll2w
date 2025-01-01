@@ -6,7 +6,7 @@ namespace LL2W {
 	struct Comment: WhyInstruction {
 		std::string text;
 
-		Comment(const std::string &text_, int index_ = -1);
+		Comment(const std::string &text_);
 
 		bool showDebug() const override { return false; }
 

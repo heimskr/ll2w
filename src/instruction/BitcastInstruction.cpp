@@ -3,11 +3,11 @@
 #include "instruction/BitcastInstruction.h"
 
 namespace LL2W {
-	BitcastInstruction::BitcastInstruction(VariablePtr rs, VariablePtr rd, int index):
-		LinkedSD(std::move(rs), nullptr, std::move(rd), index) {}
+	BitcastInstruction::BitcastInstruction(VariablePtr rs, VariablePtr rd):
+		LinkedSD(std::move(rs), nullptr, std::move(rd)) {}
 
-	BitcastInstruction::BitcastInstruction(VariablePtr rs_, Function &function, TypePtr new_type, BasicBlockPtr block, int index):
-		LinkedSD(std::move(rs_), nullptr, nullptr, index) {
+	BitcastInstruction::BitcastInstruction(VariablePtr rs_, Function &function, TypePtr new_type, BasicBlockPtr block):
+		LinkedSD(std::move(rs_), nullptr, nullptr) {
 			if (function.variableFreeze) {
 				if (rs->registers.size() != 1) {
 					info() << "rs registers: " << rs->registersString() << " in " << *rs << "\n";

@@ -3,12 +3,11 @@
 
 namespace LL2W {
 	std::string ComparisonIInstruction::debugExtra() const {
-		return std::string(*rs) + " \e[2m" + cond_op_map_with_sign.at(cond) + "\e[22m " + colorize(imm, *rs) +
-			" \e[2m->\e[22m " + std::string(*rd);
+		return std::string(*rs) + " \e[2m" + cond_op_map.at(cond) + "\e[22m " + colorize(imm) + " \e[2m->\e[22m " + std::string(*rd) + (isUnsigned()? " \e[2m/u\e[22m" : "");
 	}
 
 	std::string ComparisonIInstruction::toString() const {
-		return rs->toString() + " " + cond_op_map.at(cond) + " " + LL2W::toString(imm, *rs) + " -> " + rd->toString();
+		return rs->toString() + " " + cond_op_map.at(cond) + " " + LL2W::toString(imm) + " -> " + rd->toString() + (isUnsigned()? " /u" : "");
 	}
 
 	bool ComparisonIInstruction::fixSignedness() {
@@ -19,7 +18,7 @@ namespace LL2W {
 			return rs->setSigned(false) || out;
 		return out;
 	}
-	
+
 	Instruction * ComparisonIInstruction::copy() const {
 		return new ComparisonIInstruction(*this);
 	}

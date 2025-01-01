@@ -9,7 +9,7 @@ namespace LL2W {
 		JumpRegisterConditionalInstruction() = delete;
 
 		JumpRegisterConditionalInstruction(VariablePtr rs_, VariablePtr rd_,
-		bool link_ = false, int index_ = -1):
+		bool link_ = false):
 			RType(std::move(rs_), nullptr, std::move(rd_), index_), link(link_) {}
 
 		std::pair<char, char> extract(bool = false) override;

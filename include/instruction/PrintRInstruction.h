@@ -8,7 +8,7 @@ namespace LL2W {
 		public:
 			PrintType type;
 
-			PrintRInstruction(VariablePtr rs_, PrintType, int index_ = -1);
+			PrintRInstruction(VariablePtr rs_, PrintType);
 			std::string debugExtra() const override;
 			std::string toString() const override;
 			Instruction * copy() const override;

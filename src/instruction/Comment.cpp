@@ -2,7 +2,7 @@
 #include "instruction/Comment.h"
 
 namespace LL2W {
-	Comment::Comment(const std::string &text_, int index_): WhyInstruction(index_), text(text_) {}
+	Comment::Comment(const std::string &text_): WhyInstruction(index_), text(text_) {}
 
 	std::string Comment::debugExtra() const {
 		return "\e[35m// " + text + "\e[22;39m";
@@ -11,7 +11,7 @@ namespace LL2W {
 	std::string Comment::toString() const {
 		return "// " + text;
 	}
-	
+
 	Instruction * Comment::copy() const {
 		return new Comment(*this);
 	}

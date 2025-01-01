@@ -3,6 +3,7 @@
 #include "instruction/HasSize.h"
 #include "instruction/LinkedST.h"
 #include "instruction/RType.h"
+#include "instruction/SizedInstruction.h"
 
 namespace LL2W {
 	/** $rs -> [$rt] */
