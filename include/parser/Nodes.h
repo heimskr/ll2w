@@ -93,8 +93,11 @@ namespace LL2W {
 
 		public:
 			int prof = -1, callees = -1;
+			llvm::Instruction *llvmSource = nullptr;
+
 			InstructionNode(const std::string *str);
 			InstructionNode();
+
 			std::string style() const override { return "\e[36m"; }
 			virtual InstructionNode * copy() const = 0;
 

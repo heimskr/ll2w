@@ -1,8 +1,5 @@
 // Sorry for all the repetition.
 
-#include <climits>
-#include <iostream>
-
 #include "compiler/Function.h"
 #include "compiler/Instruction.h"
 #include "compiler/LLVMInstruction.h"
@@ -38,6 +35,11 @@
 #include "instruction/XorRInstruction.h"
 #include "pass/LowerMath.h"
 #include "util/Timer.h"
+
+#include <llvm/IR/Instruction.h>
+
+#include <climits>
+#include <iostream>
 
 namespace LL2W::Passes {
 	template <bool Signed>
@@ -130,10 +132,11 @@ namespace LL2W::Passes {
 				std::swap(left, right);
 				left_var = dynamic_cast<LocalValue *>(left.get())->variable;
 			} else if (left->isIntLike() && right->isIntLike()) {
-				const long applied = I::apply(left->longValue(), right->longValue());
-				auto set = SetInstruction::make(node->variable, int(applied));
+				const auto applied = I::apply(left->longValue(), right->longValue());
+				auto set = SetInstruction::make(node->variable, static_cast<int>(applied));
 				set->setOriginalValue(IntValue::make(applied));
-				function.insertBefore(instruction, set)->setDebug(node)->extract();
+				std::string comment = std::format("LowerCommutative: ({}, {}) -> {}", left->longValue(), right->longValue(), applied);
+				function.insertBefore(instruction, std::move(set), std::move(comment))->setDebug(node)->extract();
 				return;
 			} else if (left->isGlobal()) {
 				auto *global_name = dynamic_cast<GlobalValue *>(left.get())->name;
@@ -163,14 +166,17 @@ namespace LL2W::Passes {
 			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
 		} else if (right->isIntLike()) {
 			InstructionPtr new_instruction;
+			std::string comment;
 			if (right->overflows()) {
 				new_instruction = std::make_shared<R>(left_var, function.get64(instruction, right->longValue()), node->variable);
+				comment = std::format("LowerMath: get64'd {}", right->longValue());
 			} else {
 				auto new_i = std::make_shared<I>(left_var, right->intValue(), node->variable);
 				new_i->setOriginalValue(right);
 				new_instruction = new_i;
+				comment = std::format("LowerMath: no overflow for int value {} == long value {}", right->intValue(), right->longValue());
 			}
-			function.insertBefore(instruction, new_instruction)->setDebug(node)->extract();
+			function.insertBefore(instruction, new_instruction, std::move(comment))->setDebug(node)->extract();
 		} else {
 			error() << std::string(*right) << '\n';
 			throw std::runtime_error("Unexpected value type in " + getName(node) + " instruction: " + value_map.at(right->valueType()));
@@ -434,8 +440,7 @@ namespace LL2W::Passes {
 				auto m0 = function.m0(instruction);
 				InstructionPtr reverse;
 				if (left->overflows()) {
-					reverse = std::make_shared<SubRInstruction>(right_var,
-						function.get64(instruction, left->longValue()), m0);
+					reverse = std::make_shared<SubRInstruction>(right_var, function.get64(instruction, left->longValue()), m0);
 				} else {
 					auto subi = std::make_shared<SubIInstruction>(right_var, left->intValue(false), m0);
 					subi->setOriginalValue(left);
@@ -530,25 +535,42 @@ namespace LL2W::Passes {
 			}
 
 			const NodeType type = llvm->getNodeType();
+
 			if (type == NodeType::BasicMath) {
 				lowerMath(function, instruction, dynamic_cast<BasicMathNode *>(llvm->getNode()));
-			} else if (type == NodeType::Logic) {
+				to_remove.emplace_back(instruction);
+				continue;
+			}
+
+			if (type == NodeType::Logic) {
 				lowerLogic(function, instruction, dynamic_cast<LogicNode *>(llvm->getNode()));
-			} else if (type == NodeType::Div) {
+				to_remove.emplace_back(instruction);
+				continue;
+			}
+
+			if (type == NodeType::Div) {
 				auto *div = dynamic_cast<DivNode *>(llvm->getNode());
 				if (div->divType == DivNode::DivType::Udiv) {
 					lowerDiv<false>(function, instruction, div);
 				} else if (div->divType == DivNode::DivType::Sdiv) {
 					lowerDiv<true>(function, instruction, div);
 				}
-			} else if (type == NodeType::Rem) {
+				to_remove.emplace_back(instruction);
+				continue;
+			}
+
+			if (type == NodeType::Rem) {
 				auto *rem = dynamic_cast<RemNode *>(llvm->getNode());
 				if (rem->remType == RemNode::RemType::Srem) {
 					lowerRem<true>(function, instruction, rem);
 				} else {
 					lowerRem<false>(function, instruction, rem);
 				}
-			} else if (type == NodeType::Shr) {
+				to_remove.emplace_back(instruction);
+				continue;
+			}
+
+			if (type == NodeType::Shr) {
 				auto *shr = dynamic_cast<ShrNode *>(llvm->getNode());
 				if (shr->shrType == ShrNode::ShrType::Ashr) {
 					// If we're arithmetic-shifting a smaller value to the right, we need to sign extend it.
@@ -568,11 +590,9 @@ namespace LL2W::Passes {
 				} else {
 					lowerNoncommutativeOrInverse<ShiftRightLogicalRInstruction, ShiftRightLogicalIInstruction, ShiftRightLogicalInverseIInstruction>(function, instruction, shr);
 				}
-			} else {
+				to_remove.emplace_back(instruction);
 				continue;
 			}
-
-			to_remove.push_back(instruction);
 		}
 
 		for (const InstructionPtr &instruction: to_remove) {

@@ -995,6 +995,7 @@ namespace LL2W {
 		block->instructions.insert(blockIter, new_instruction);
 
 		if (reindex && can_insert_linear) {
+			Timer timer{"InsertBefore::Reindex"};
 			new_instruction->index = base->index;
 			for (auto end = linearInstructions.end(); linearIter != end; ++linearIter) {
 				++(*linearIter)->index;

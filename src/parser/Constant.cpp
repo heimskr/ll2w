@@ -176,7 +176,7 @@ namespace LL2W {
 
 		if (auto *int_constant = llvm::dyn_cast<llvm::ConstantInt>(&llvm_value)) {
 			out->type = IntType::make(int_constant->getBitWidth());
-			out->value = IntValue::make(int_constant->getZExtValue());
+			out->value = IntValue::make(int_constant->getSExtValue());
 			return out;
 		}
 

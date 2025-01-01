@@ -6,6 +6,7 @@
 #include "parser/Parser.h"
 #include "parser/StringSet.h"
 #include "parser/Util.h"
+#include "util/Defer.h"
 #include "util/Deleter.h"
 #include "util/Timer.h"
 #include "util/Util.h"
@@ -177,109 +178,116 @@ namespace LL2W {
 	InstructionNode * InstructionNode::fromLLVM(llvm::Instruction *llvm) {
 		Timer check_timer{"CheckInstruction"};
 
+		InstructionNode *out = nullptr;
+		Defer defer([&] {
+			if (out != nullptr) {
+				out->llvmSource = llvm;
+			}
+		});
+
 		if (auto *inst = llvm::dyn_cast<llvm::ReturnInst>(llvm)) {
 			check_timer.stop();
-			return new RetNode(*inst);
+			return out = new RetNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::AllocaInst>(llvm)) {
 			check_timer.stop();
-			return new AllocaNode(*inst);
+			return out = new AllocaNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::StoreInst>(llvm)) {
 			check_timer.stop();
-			return new StoreNode(*inst);
+			return out = new StoreNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::LoadInst>(llvm)) {
 			check_timer.stop();
-			return new LoadNode(*inst);
+			return out = new LoadNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::IntToPtrInst>(llvm)) {
 			check_timer.stop();
-			return new ConversionNode(*inst);
+			return out = new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::PtrToIntInst>(llvm)) {
 			check_timer.stop();
-			return new ConversionNode(*inst);
+			return out = new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ICmpInst>(llvm)) {
 			check_timer.stop();
-			return new IcmpNode(*inst);
+			return out = new IcmpNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::GetElementPtrInst>(llvm)) {
 			check_timer.stop();
-			return new GetelementptrNode(*inst);
+			return out = new GetelementptrNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::PHINode>(llvm)) {
 			check_timer.stop();
-			return new PhiNode(*inst);
+			return out = new PhiNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SwitchInst>(llvm)) {
 			check_timer.stop();
-			return new SwitchNode(*inst);
+			return out = new SwitchNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SelectInst>(llvm)) {
 			check_timer.stop();
-			return new SelectNode(*inst);
+			return out = new SelectNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::SExtInst>(llvm)) {
 			check_timer.stop();
-			return new ConversionNode(*inst);
+			return out = new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::TruncInst>(llvm)) {
 			check_timer.stop();
-			return new ConversionNode(*inst);
+			return out = new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ZExtInst>(llvm)) {
 			check_timer.stop();
-			return new ConversionNode(*inst);
+			return out = new ConversionNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::ExtractValueInst>(llvm)) {
 			check_timer.stop();
-			return new ExtractValueNode(*inst);
+			return out = new ExtractValueNode(*inst);
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::InsertValueInst>(llvm)) {
 			check_timer.stop();
-			return new InsertValueNode(*inst);
+			return out = new InsertValueNode(*inst);
 		}
 
 		if (llvm::isa<llvm::UnreachableInst>(*llvm)) {
 			check_timer.stop();
-			return new UnreachableNode;
+			return out = new UnreachableNode;
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::CallInst>(llvm)) {
 			if (inst->isInlineAsm()) {
 				check_timer.stop();
-				return new AsmNode(*inst);
+				return out = new AsmNode(*inst);
 			} else {
 				check_timer.stop();
-				return new CallNode(*inst);
+				return out = new CallNode(*inst);
 			}
 		}
 
 		if (auto *inst = llvm::dyn_cast<llvm::BranchInst>(llvm)) {
 			if (inst->isConditional()) {
 				check_timer.stop();
-				return new BrCondNode(*inst);
+				return out = new BrCondNode(*inst);
 			} else {
 				assert(inst->isUnconditional());
 				check_timer.stop();
-				return new BrUncondNode(*inst);
+				return out = new BrUncondNode(*inst);
 			}
 		}
 
@@ -291,24 +299,24 @@ namespace LL2W {
 				case Shl:
 				case Mul:
 					check_timer.stop();
-					return new BasicMathNode(*inst);
+					return out = new BasicMathNode(*inst);
 				case And:
 				case Or:
 				case Xor:
 					check_timer.stop();
-					return new LogicNode(*inst);
+					return out = new LogicNode(*inst);
 				case LShr:
 				case AShr:
 					check_timer.stop();
-					return new ShrNode(*inst);
+					return out = new ShrNode(*inst);
 				case SRem:
 				case URem:
 					check_timer.stop();
-					return new RemNode(*inst);
+					return out = new RemNode(*inst);
 				case SDiv:
 				case UDiv:
 					check_timer.stop();
-					return new DivNode(*inst);
+					return out = new DivNode(*inst);
 				default:
 					break;
 			}
