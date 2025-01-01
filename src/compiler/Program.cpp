@@ -34,6 +34,7 @@
 // #define SINGLE_FUNCTION "_ZN5Wasmc12BinaryParser5parseEv"
 // #define SINGLE_FUNCTION "_ZN8Thurisaz11addCommandsERNSt3__13mapINS0_12basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEENS_7CommandENS0_4lessIS7_EENS5_INS0_4pairIKS7_S8_EEEEEE"
 // #define SINGLE_FUNCTION "_ZN6Paging6Tables7initPMMEv"
+// #define SINGLE_FUNCTION "_ZN6Paging6Tables6assignEPA256_mlhhhhhhPvh"
 
 #ifdef SINGLE_FUNCTION
 #undef COMPILE_MULTITHREADED

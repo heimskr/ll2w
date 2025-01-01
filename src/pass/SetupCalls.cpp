@@ -548,10 +548,10 @@ namespace LL2W::Passes {
 			auto local = std::dynamic_pointer_cast<LocalValue>(constant->value);
 			auto move = std::make_shared<MoveInstruction>(local->variable, new_var);
 			move->meta.emplace(InstructionMeta::IgnoreForClobbers);
-			auto out = function.insertBefore(instruction, std::move(move));
+			auto out = function.insertBefore(instruction, std::move(move), "Ignored for clobbers (move)");
 			out->setDebug(*instruction)->extract();
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 			return out;
 		}
@@ -563,7 +563,7 @@ namespace LL2W::Passes {
 			auto out = function.insertBefore(instruction, std::move(set));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 			return out;
 		}
@@ -575,7 +575,7 @@ namespace LL2W::Passes {
 			auto out = function.insertBefore(instruction, std::move(set));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 			return out;
 		}
@@ -626,7 +626,7 @@ namespace LL2W::Passes {
 				}
 
 				if (signext) {
-					function.insertBefore(instruction, make_signext());
+					function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 				}
 
 				return out;
@@ -648,7 +648,7 @@ namespace LL2W::Passes {
 			}
 
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 
 			return out;
@@ -659,7 +659,7 @@ namespace LL2W::Passes {
 			auto out = function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name));
 			out->setDebug(*instruction)->extract();
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 			return out;
 		}
@@ -669,7 +669,7 @@ namespace LL2W::Passes {
 			auto node = IcmpNode::make(new_var, icmp->cond, icmp->left, icmp->right);
 			Passes::lowerIcmp(function, instruction, node.get());
 			if (signext) {
-				function.insertBefore(instruction, make_signext());
+				function.insertBefore(instruction, make_signext(), "Ignored for clobbers (signext)");
 			}
 			return nullptr; // Whatever.
 		}

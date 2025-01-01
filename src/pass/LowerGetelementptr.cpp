@@ -146,7 +146,7 @@ namespace LL2W::Passes {
 				auto addskip = std::make_shared<AddIInstruction>(node->variable, skip, node->variable);
 				// result += base pointer
 				auto add = std::make_shared<AddRInstruction>(node->variable, pointer, node->variable);
-				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) + "): array/pointer-type, dynamic index -> " + node->variable->plainString());
+				function.insertBefore(instruction, mult, "LowerGetelementptr(" + std::string(node->location) + "): array/pointer-type, dynamic index " + index->plainString() + " -> " + node->variable->plainString());
 				function.insertBefore(instruction, movelo)->setDebug(node)->extract();
 				function.insertBefore(instruction, addskip)->setDebug(node)->extract();
 				function.insertBefore(instruction, add)->setDebug(node)->extract();

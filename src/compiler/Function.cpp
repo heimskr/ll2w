@@ -1350,7 +1350,6 @@ namespace LL2W {
 	void Function::finalCompile() {
 		Timer timer{"FinalCompile"};
 		Passes::lowerInsertvalue(*this);
-		Passes::readjustStackSkip(*this);
 		Passes::updateArgumentLoads(*this, stackSize - initialStackSize);
 		Passes::replaceStoresAndLoads(*this);
 		Passes::lowerStack(*this);
@@ -1362,6 +1361,7 @@ namespace LL2W {
 		Passes::lowerBranches(*this);
 		Passes::lowerClobber(*this);
 		Passes::lowerStack(*this);
+		Passes::readjustStackSkip(*this);
 		const bool naked = isNaked();
 		if (!naked) {
 			Passes::insertPrologue(*this);
