@@ -12,12 +12,8 @@
 #include "util/Timer.h"
 
 namespace LL2W::Passes {
-	static int getOffset(const Function &function, const StackLocation &location) {
-		int offset = location.offset;
-		if (location.purpose != StackLocation::Purpose::Spill) {
-			offset += function.spillSize + 8; // TODO: verify "+ 8"
-		}
-		return offset;
+	static int getOffset(const Function &, const StackLocation &location) {
+		return location.offset;
 	}
 
 	int lowerStack(Function &function) {
