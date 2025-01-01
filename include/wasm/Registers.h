@@ -1,7 +1,8 @@
 #pragma once
 
 #include <map>
+#include <string>
 
 namespace LL2W {
-	extern std::map<const std::string *, int> registerMap;
+	const std::map<const std::string *, int> & registerMap();
 }

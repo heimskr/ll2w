@@ -182,18 +182,20 @@ namespace LL2W {
 
 	WASMBaseNode::WASMBaseNode(int sym): ASTNode(wasmParser, sym) {}
 
-	std::shared_ptr<Variable> WASMInstructionNode::convertVariable(Function &function, VarMap &map,
+	VariablePtr WASMInstructionNode::convertVariable(Function &function, VarMap &map,
 	const std::string *name) {
-		if (name->substr(0, 2) == "$$")
-			return function.makePrecoloredVariable(registerMap.at(name), nullptr);
-		if (map.count(name) == 0) {
-			// TODO: verify using i64 as a default type.
-			std::shared_ptr<Variable> new_var = function.newVariable(IntType::make(64));
-			map.emplace(name, new_var);
-			return new_var;
-		} else {
-			return map.at(name);
+		if (name->starts_with("$$")) {
+			return function.makePrecoloredVariable(registerMap().at(name), nullptr);
 		}
+
+		if (auto iter = map.find(name); iter != map.end()) {
+			return iter->second;
+		}
+
+		// TODO: verify using i64 as a default type.
+		VariablePtr new_var = function.newVariable(IntType::make(64));
+		map.emplace(name, new_var);
+		return new_var;
 	}
 
 	WASMImmediateNode::WASMImmediateNode(ASTNode *node): WASMBaseNode(WASM_IMMEDIATE), imm(getImmediate(node)) {
