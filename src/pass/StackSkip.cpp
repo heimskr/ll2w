@@ -38,6 +38,6 @@ namespace LL2W::Passes {
 		}
 
 		// We need to add an offset of 8 because spush subtracts and then writes to memory.
-		dynamic_cast<SubIInstruction &>(*set.begin()->lock()).imm = function.stackSize + 8; // TODO: verify whether it's stackSize or spillSize
+		dynamic_cast<SubIInstruction &>(*set.begin()->lock()).imm = function.stackSize + 8;
 	}
 }
