@@ -33,10 +33,10 @@ namespace LL2W::Passes {
 				}
 
 			for (ValuePtr *value: reader->allValuePointers()) {
-				if (GetelementptrValue *gep = dynamic_cast<GetelementptrValue *>(value->get())) {
+				if (auto *gep = dynamic_cast<GetelementptrValue *>(value->get())) {
 					std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 					if (!gep_global) {
-						warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+						warn() << "Not sure what to do when the argument of getelementptr isn't a global in replaceConstants.\n" << *gep << '\n';
 						function.insertBefore(instruction, std::make_shared<InvalidInstruction>());
 					} else {
 						TypePtr out_type;

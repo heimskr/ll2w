@@ -472,7 +472,7 @@ namespace LL2W::Passes {
 			std::shared_ptr<GetelementptrValue> gep = std::dynamic_pointer_cast<GetelementptrValue>(constant->value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep->variable);
 			if (!gep_global) {
-				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				warn() << "Not sure what to do when the argument of getelementptr isn't a global in pushCallValue.\n" << *gep << '\n';
 				function.insertBefore(instruction, InvalidInstruction::make());
 				return 0;
 			}

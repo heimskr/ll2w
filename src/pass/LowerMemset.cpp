@@ -103,10 +103,10 @@ namespace LL2W::Passes {
 			if (shouldLoad) {
 				throw std::runtime_error("shouldLoad not expected for a getelementptr value");
 			}
-			GetelementptrValue &gep = *dynamic_cast<GetelementptrValue *>(value.get());
+			GetelementptrValue &gep = dynamic_cast<GetelementptrValue &>(*value);
 			std::shared_ptr<GlobalValue> gep_global = std::dynamic_pointer_cast<GlobalValue>(gep.variable);
 			if (!gep_global) {
-				warn() << "Not sure what to do when the argument of getelementptr isn't a global.\n";
+				warn() << "Not sure what to do when the argument of getelementptr isn't a global in setupMemsetValue.\n" << gep << '\n';
 				function.insertBefore(instruction, std::make_shared<InvalidInstruction>())->setDebug(*instruction)->extract();
 				return;
 			}
