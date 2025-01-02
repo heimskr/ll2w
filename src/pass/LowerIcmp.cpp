@@ -38,7 +38,7 @@ namespace LL2W::Passes {
 
 		const int width = node->getType()->width();
 		if (isSigned(cond) && int_type && width < 64) {
-			if (width == 32) {
+			if (width == 32 || width == 16) {
 				VariablePtr rs_alias = function.newVariable(IntType::make(64, true), instruction->parent.lock());
 				rs_alias->typeOverride = true;
 				rs_alias->makeAliasOf(rs);
@@ -141,7 +141,7 @@ namespace LL2W::Passes {
 
 		const int width = node->getType()->width();
 		if ((isSigned(cond) || imm < 0) && int_type && width < 64) {
-			if (width == 32) {
+			if (width == 32 || width == 16) {
 				VariablePtr rs_alias = function.newVariable(IntType::make(64, true), instruction->parent.lock());
 				rs_alias->typeOverride = true;
 				rs_alias->makeAliasOf(rs);

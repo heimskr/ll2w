@@ -1082,7 +1082,7 @@ namespace LL2W {
 		bbMap.emplace(label, new_block);
 
 		Node &new_node = cfg.addNode(*label);
-		new_node.data = std::weak_ptr(new_block);
+		new_node.data = std::weak_ptr(std::static_pointer_cast<LivePoint>(new_block));
 		lpNodeMap[new_block] = &new_node;
 		Node &old_node = cfg[*block->getLabel()];
 		old_node.link(new_node);

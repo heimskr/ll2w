@@ -105,9 +105,6 @@ WASM_SINGLE_REG			("$"[0-9]+)
 "<<"						{ WASMRTOKEN(LL) }
 ">>"						{ WASMRTOKEN(RA) }
 "io"						{ WASMRTOKEN(IO) }
-"/b"						{ WASMRTOKEN(BYTE) }
-"/h"						{ WASMRTOKEN(HALF) }
-"/s"						{ WASMRTOKEN(SHORT) }
 
 ";"							{ WASMRTOKEN(SEMICOLON) }
 "/"							{ WASMRTOKEN(SLASH) }
