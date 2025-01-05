@@ -162,7 +162,7 @@ namespace LL2W::Passes {
 				set->setOriginalValue(value);
 				function.insertBefore(instruction, set, "LowerMemory: imm -> $m1")->setDebug(&llvm)->extract();
 
-				const int symsize = Util::updiv(function.parent.symbolSize(*global->name), 8);
+				const int symsize = Util::updiv(node->source->type->width(), 8);
 
 				// $m1 -> [global]
 				if (symsize == 1 || symsize == 8) {
@@ -179,6 +179,7 @@ namespace LL2W::Passes {
 					function.insertBefore(instruction, std::make_shared<SetInstruction>(new_var, global->name), "LowerMemory: global -> temp")->setDebug(&llvm)->extract();
 					function.insertBefore(instruction, std::make_shared<StoreRInstruction>(m1, new_var, static_cast<WASMSize>(symsize)), "LowerMemory: $m1 -> [temp]")->setDebug(&llvm)->extract();
 				} else {
+					error() << *instruction << '\n';
 					throw std::runtime_error("$m1 -> [global] failed: invalid symbol size: " + std::to_string(symsize));
 				}
 			} else if (converted->value->isIntLike()) {
