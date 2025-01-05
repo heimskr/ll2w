@@ -606,17 +606,18 @@ namespace LL2W {
 	}
 
 	std::string Program::valuePrefix(size_t bitwidth) {
-		if (bitwidth % 8 != 0) {
+		if (bitwidth % 8 != 0 && bitwidth != 1) {
 			throw std::runtime_error("Int width (" + std::to_string(bitwidth) + "b) isn't a multiple of 8");
 		}
 
-		switch (bitwidth / 8) {
-			case 8: return "%8b ";
-			case 4: return "%4b ";
-			case 2: return "%2b ";
+		switch (bitwidth) {
+			case 64: return "%8b ";
+			case 32: return "%4b ";
+			case 16: return "%2b ";
+			case 8:
 			case 1: return "%1b ";
 			default:
-				throw std::runtime_error("Invalid int width: " + std::to_string(bitwidth / 8) + "B");
+				throw std::runtime_error("Invalid int width: " + std::to_string(bitwidth) + "b");
 		}
 	}
 
