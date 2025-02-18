@@ -22,7 +22,7 @@ namespace LL2W::Passes {
 		}
 
 		for (const InstructionPtr &instruction: to_remove) {
-			function.remove(std::move(instruction));
+			function.remove(instruction);
 		}
 
 		return to_remove.size();

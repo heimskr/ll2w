@@ -116,7 +116,7 @@ namespace LL2W::Passes {
 		}
 
 		std::shared_ptr<LocalValue> local;
-		GlobalValue *global;
+		GlobalValue *global = nullptr;
 
 		if (converted->value->isGetelementptr()) {
 			local = function.replaceGetelementptrValue(std::dynamic_pointer_cast<GetelementptrValue>(converted->value), instruction);

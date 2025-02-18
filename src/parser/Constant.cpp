@@ -243,7 +243,7 @@ namespace LL2W {
 			return out;
 		}
 
-		if (auto *null_constant = llvm::dyn_cast<llvm::ConstantPointerNull>(&llvm_value)) {
+		if (llvm::dyn_cast<llvm::ConstantPointerNull>(&llvm_value)) {
 			out->type = PointerType::makeOpaque();
 			out->value = std::make_shared<NullValue>();
 			return out;

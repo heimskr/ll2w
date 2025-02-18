@@ -178,28 +178,28 @@ namespace {
 }
 
 namespace LL2W {
-	const auto &type_map = TypeMap::map;
-	const auto &value_map = ValueMap::map;
-	const auto &linkage_map = LinkageMap::map;
-	const auto &preemption_map = PreemptionMap::map;
-	const auto &cconv_map = CConvMap::map;
-	const auto &retattr_map = RetAttrMap::map;
-	const auto &parattr_map = ParAttrMap::map;
-	const auto &fnattr_map = FnAttrMap::map;
-	const auto &fastmath_map = FastmathMap::map;
-	const auto &ordering_map = OrderingMap::map;
-	const auto &conversion_map = ConversionMap::map;
-	const auto &query_map = QueryTypeMap::map;
-	const auto &logic_map = LogicTypeMaps::map;
-	const auto &logic_inv_map = LogicTypeMaps::inv_map;
-	const auto &tail_call_kind_map = TailCallKindMap::map;
-	const auto &cond_inv_map = IcmpCondMaps::inv_map;
-	const auto &cond_rev_map = IcmpCondMaps::rev_map;
-	const auto &cond_map = IcmpCondMaps::map;
-	const auto &cond_op_map = IcmpCondMaps::op_map;
-	const auto &cond_op_map_with_sign = IcmpCondMaps::map_with_sign;
-	const auto &signed_conds = IcmpCondMaps::signed_conds;
-	const auto &unsigned_conds = IcmpCondMaps::unsigned_conds;
+	const decltype(TypeMap::map) &type_map = TypeMap::map;
+	const decltype(ValueMap::map) &value_map = ValueMap::map;
+	const decltype(LinkageMap::map) &linkage_map = LinkageMap::map;
+	const decltype(PreemptionMap::map) &preemption_map = PreemptionMap::map;
+	const decltype(CConvMap::map) &cconv_map = CConvMap::map;
+	const decltype(RetAttrMap::map) &retattr_map = RetAttrMap::map;
+	const decltype(ParAttrMap::map) &parattr_map = ParAttrMap::map;
+	const decltype(FnAttrMap::map) &fnattr_map = FnAttrMap::map;
+	const decltype(FastmathMap::map) &fastmath_map = FastmathMap::map;
+	const decltype(OrderingMap::map) &ordering_map = OrderingMap::map;
+	const decltype(ConversionMap::map) &conversion_map = ConversionMap::map;
+	const decltype(QueryTypeMap::map) &query_map = QueryTypeMap::map;
+	const decltype(LogicTypeMaps::map) &logic_map = LogicTypeMaps::map;
+	const decltype(LogicTypeMaps::inv_map) &logic_inv_map = LogicTypeMaps::inv_map;
+	const decltype(TailCallKindMap::map) &tail_call_kind_map = TailCallKindMap::map;
+	const decltype(IcmpCondMaps::inv_map) &cond_inv_map = IcmpCondMaps::inv_map;
+	const decltype(IcmpCondMaps::rev_map) &cond_rev_map = IcmpCondMaps::rev_map;
+	const decltype(IcmpCondMaps::map) &cond_map = IcmpCondMaps::map;
+	const decltype(IcmpCondMaps::op_map) &cond_op_map = IcmpCondMaps::op_map;
+	const decltype(IcmpCondMaps::map_with_sign) &cond_op_map_with_sign = IcmpCondMaps::map_with_sign;
+	const decltype(IcmpCondMaps::signed_conds) &signed_conds = IcmpCondMaps::signed_conds;
+	const decltype(IcmpCondMaps::unsigned_conds) &unsigned_conds = IcmpCondMaps::unsigned_conds;
 
 	bool isSigned(IcmpCond cond) {
 		using enum IcmpCond;

@@ -99,7 +99,11 @@ namespace LL2W {
 		llvm::SMDiagnostic err;
 		llvm::SmallVector<char> vector(source_code.begin(), source_code.end());
 		llvmModule = llvm::getLazyIRModule(std::make_unique<llvm::SmallVectorMemoryBuffer>(std::move(vector)), err, context);
-		assert(llvmModule != nullptr);
+
+		if (llvmModule == nullptr) {
+			error() << err.getMessage().str() << '\n';
+			assert(llvmModule != nullptr);
+		}
 
 		for (llvm::StructType *llvm_struct: llvmModule->getIdentifiedStructTypes()) {
 			StructType::knownStructs.emplace(llvm_struct->getName(), std::make_shared<StructType>(*llvm_struct));
